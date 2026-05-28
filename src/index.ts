@@ -195,3 +195,21 @@ export type {
   AgentKernelContextPriority,
   AgentKernelRepoContextReference,
 } from './kernel/agent-kernel-context-packet.js';
+
+export { planAgentKernelProviderRoute } from './kernel/agent-kernel-provider-routing-gateway.js';
+export {
+  AGENT_KERNEL_PROVIDER_ROUTE_FINDING_CODES,
+  AGENT_KERNEL_PROVIDER_ROUTE_SEVERITIES,
+  AGENT_KERNEL_PROVIDER_ROUTE_TYPES,
+  AGENT_KERNEL_PROVIDER_ROUTING_BLOCK_ID,
+  AGENT_KERNEL_PROVIDER_ROUTING_PHASE_ID,
+  AGENT_KERNEL_PROVIDER_ROUTING_PR_ID,
+} from './kernel/agent-kernel-provider-routing-gateway.js';
+export type {
+  AgentKernelProviderRouteFinding,
+  AgentKernelProviderRouteFindingCode,
+  AgentKernelProviderRoutePlan,
+  AgentKernelProviderRoutePolicy,
+  AgentKernelProviderRouteSeverity,
+  AgentKernelProviderRouteType,
+} from './kernel/agent-kernel-provider-routing-gateway.js';
