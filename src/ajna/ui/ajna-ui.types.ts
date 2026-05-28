@@ -53,6 +53,30 @@ export interface AjnaUiDryRunCommentPreview {
   readonly dryRun: boolean;
 }
 
+export interface AjnaUiTimelineStepViewModel {
+  readonly label: string;
+  readonly detail: string;
+  readonly status: 'INFO' | 'PASS' | 'WARN' | 'BLOCKED';
+}
+
+export interface AjnaUiFileInsightFlagsViewModel {
+  readonly largeDelta: boolean;
+  readonly protectedPath: boolean;
+  readonly configurationRisk: boolean;
+  readonly testOnlySignal: boolean;
+}
+
+export interface AjnaUiFileInsightViewModel {
+  readonly path: string;
+  readonly lane: AjnaUiRiskLane;
+  readonly additions: number;
+  readonly deletions: number;
+  readonly totalDelta: number;
+  readonly score: number;
+  readonly severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'UNKNOWN';
+  readonly flags: AjnaUiFileInsightFlagsViewModel;
+}
+
 export interface AjnaReviewPanelViewModel {
   readonly repository: string;
   readonly pullRequestNumber?: number;
@@ -60,4 +84,6 @@ export interface AjnaReviewPanelViewModel {
   readonly riskLanes: readonly AjnaUiRiskLaneViewModel[];
   readonly ciSummary?: AjnaUiCiSummaryViewModel;
   readonly commentPreview: AjnaUiDryRunCommentPreview;
+  readonly timeline?: readonly AjnaUiTimelineStepViewModel[];
+  readonly fileInsights?: readonly AjnaUiFileInsightViewModel[];
 }
