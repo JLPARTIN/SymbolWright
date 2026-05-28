@@ -84,3 +84,19 @@ export type {
   CodemindRepositoryIdentity,
   CodemindTestEvidenceContext,
 } from './repo-context/repo-context.types.js';
+
+export {
+  assertGithubPrContextIsReadOnly,
+  createReadOnlyGithubPrContextResponse,
+} from './github/github-pr-context-contract.js';
+export {
+  CODEMIND_GITHUB_PR_ADAPTER_MODES,
+  CODEMIND_GITHUB_PR_CONTEXT_INPUTS,
+} from './github/github-pr-context.types.js';
+export type {
+  CodemindGithubPrAdapterMode,
+  CodemindGithubPrContextAdapterRequest,
+  CodemindGithubPrContextAdapterResponse,
+  CodemindGithubPrContextInput,
+  CodemindGithubPullRequestIdentity,
+} from './github/github-pr-context.types.js';
