@@ -177,3 +177,21 @@ export type {
   AgentKernelSkillValidationReport,
   AgentKernelSkillValidationSeverity,
 } from './kernel/agent-kernel-skill-validator.js';
+
+export { buildAgentKernelContextPacket } from './kernel/agent-kernel-context-packet.js';
+export {
+  AGENT_KERNEL_CONTEXT_PACKET_BLOCK_ID,
+  AGENT_KERNEL_CONTEXT_PACKET_PHASE_ID,
+  AGENT_KERNEL_CONTEXT_PACKET_PR_ID,
+  AGENT_KERNEL_CONTEXT_PACKET_SECTIONS,
+  AGENT_KERNEL_CONTEXT_PRIORITIES,
+} from './kernel/agent-kernel-context-packet.js';
+export type {
+  AgentKernelContextPacket,
+  AgentKernelContextPacketBoundary,
+  AgentKernelContextPacketBuilderInput,
+  AgentKernelContextPacketItem,
+  AgentKernelContextPacketSection,
+  AgentKernelContextPriority,
+  AgentKernelRepoContextReference,
+} from './kernel/agent-kernel-context-packet.js';
