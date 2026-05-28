@@ -13,8 +13,11 @@ import {
   AGENT_KERNEL_DEFAULT_SKILLS,
 } from './agent-kernel-defaults.js';
 
+const DEFAULT_AGENT_KERNEL_ROLES: readonly AgentKernelRole[] = ['orchestrator'];
+
 function uniqueRoles(roles: readonly AgentKernelRole[]): readonly AgentKernelRole[] {
-  return [...new Set(roles.length > 0 ? roles : ['orchestrator'])];
+  const candidateRoles = roles.length > 0 ? roles : DEFAULT_AGENT_KERNEL_ROLES;
+  return [...new Set(candidateRoles)];
 }
 
 function buildWorkflowSteps(
