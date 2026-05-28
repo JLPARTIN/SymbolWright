@@ -213,3 +213,19 @@ export type {
   AgentKernelProviderRouteSeverity,
   AgentKernelProviderRouteType,
 } from './kernel/agent-kernel-provider-routing-gateway.js';
+
+export { preflightAgentKernelRouteExecution } from './kernel/agent-kernel-route-execution-preflight.js';
+export {
+  AGENT_KERNEL_ROUTE_PREFLIGHT_BLOCK_ID,
+  AGENT_KERNEL_ROUTE_PREFLIGHT_FINDING_CODES,
+  AGENT_KERNEL_ROUTE_PREFLIGHT_PHASE_ID,
+  AGENT_KERNEL_ROUTE_PREFLIGHT_PR_ID,
+  AGENT_KERNEL_ROUTE_PREFLIGHT_SEVERITIES,
+} from './kernel/agent-kernel-route-execution-preflight.js';
+export type {
+  AgentKernelRouteExecutionPolicy,
+  AgentKernelRouteExecutionPreflightDecision,
+  AgentKernelRoutePreflightFinding,
+  AgentKernelRoutePreflightFindingCode,
+  AgentKernelRoutePreflightSeverity,
+} from './kernel/agent-kernel-route-execution-preflight.js';
