@@ -102,14 +102,20 @@ export async function buildAjnaReviewRequestFromGithubPr(
   }
 
   const githubContext = await readGithubPullRequestContext(client, input.target);
+  const requestOptionsBase = {
+    requireCiEvidence: input.requireCiEvidence,
+    requireTestEvidence: input.requireTestEvidence,
+  };
+  const requestOptions = input.operatorIntent
+    ? {
+        ...requestOptionsBase,
+        operatorIntent: input.operatorIntent,
+      }
+    : requestOptionsBase;
   const ajnaReviewRequest = mapGithubContextToAjnaReviewRequest(
     input.requestId,
     githubContext,
-    {
-      operatorIntent: input.operatorIntent,
-      requireCiEvidence: input.requireCiEvidence,
-      requireTestEvidence: input.requireTestEvidence,
-    },
+    requestOptions,
   );
 
   return {
