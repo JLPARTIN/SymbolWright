@@ -48,19 +48,30 @@ function mapChangedFile(
   const path = normalizePath(file.filename);
   const totalDelta = file.additions + file.deletions;
   const protectedPath = isProtectedPath(path);
-
-  return {
+  const changedFile: CodemindChangedFileContext = {
     path,
-    previousPath: file.previous_filename
-      ? normalizePath(file.previous_filename)
-      : undefined,
     changeType: mapGithubFileStatus(file.status),
     additions: file.additions,
     deletions: file.deletions,
-    impactLevel: protectedPath ? 'HIGH' : totalDelta > 250 ? 'HIGH' : totalDelta > 75 ? 'MEDIUM' : 'LOW',
+    impactLevel: protectedPath
+      ? 'HIGH'
+      : totalDelta > 250
+        ? 'HIGH'
+        : totalDelta > 75
+          ? 'MEDIUM'
+          : 'LOW',
     protectedPath,
     notes: file.patch ? ['Patch summary available.'] : [],
   };
+
+  if (file.previous_filename) {
+    return {
+      ...changedFile,
+      previousPath: normalizePath(file.previous_filename),
+    };
+  }
+
+  return changedFile;
 }
 
 export function createGithubReadClient(
@@ -68,11 +79,16 @@ export function createGithubReadClient(
 ): CodemindGithubReadClient {
   return {
     async getJson<T>(path: string): Promise<T> {
+      const headers: Record<string, string> = {
+        Accept: 'application/vnd.github+json',
+      };
+
+      if (options.token) {
+        headers.Authorization = `Bearer ${options.token}`;
+      }
+
       const response = await fetch(`${options.apiBaseUrl}${path}`, {
-        headers: {
-          Accept: 'application/vnd.github+json',
-          ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
-        },
+        headers,
       });
 
       if (!response.ok) {
