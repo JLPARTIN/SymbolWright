@@ -3,7 +3,7 @@
 **Status:** Foundation migration note  
 **Source repository:** `JLPARTIN/AELIB--X1YA0I`  
 **Target repository:** `JLPARTIN/JLPARTIN-CodeMind`  
-**Purpose:** Record which AELIB-side CODEFORGE/CODEMIND concepts are being carried forward into the standalone CodeMind platform.
+**Purpose:** Record which AELIB-side coding-agent concepts are being carried forward into the standalone CodeMind platform.
 
 ---
 
@@ -35,7 +35,7 @@ AELIB remains the synthetic-brain architecture. CodeMind becomes the coding-agen
 
 ## 2. What Was Extracted Conceptually
 
-The original AELIB work used the name `CODEFORGE` for a governed coding-agent layer. That work is being adapted into CodeMind-native language.
+Earlier AELIB-side work defined a governed coding-agent layer. That work is being adapted into CodeMind-native language.
 
 Useful carry-forward concepts:
 
@@ -57,13 +57,13 @@ trust boundaries for repo files, logs, PR text, generated output, and project in
 
 ## 3. Naming Migration
 
-| AELIB-era term | CodeMind-era term |
+| Earlier AELIB-side concept | CodeMind-era term |
 |---|---|
-| CODEFORGE | CodeMind Platform |
-| CODEFORGE adapter | CodeMind runtime adapter |
-| CODEFORGE permission model | CodeMind tool permission model |
-| CODEFORGE CLI | CodeMind CLI |
-| CODEFORGE skill cards | CodeMind skill cards |
+| governed coding-agent layer | CodeMind Platform |
+| coding adapter | CodeMind runtime adapter |
+| permission model | CodeMind tool permission model |
+| terminal command surface | CodeMind CLI |
+| skill cards | CodeMind skill cards |
 | PR review helper | Ajna Review Cortex |
 
 Ajna is not the whole product. Ajna is a native CodeMind capability focused on deep PR review, hidden-risk detection, and merge-readiness.
