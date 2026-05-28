@@ -1,0 +1,30 @@
+{
+  "name": "codemind",
+  "version": "0.1.0",
+  "description": "Standalone AI coding-agent platform for repo intelligence, code generation, bug fixing, planning, PR review, and merge-readiness.",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [
+    "codemind",
+    "coding-agent",
+    "repo-intelligence",
+    "pr-review",
+    "merge-readiness",
+    "ajna"
+  ],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.4"
+  }
+}
