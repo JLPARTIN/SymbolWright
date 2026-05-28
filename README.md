@@ -34,7 +34,7 @@ Write actions, command execution, PR creation, and merge operations require expl
 
 ## Relationship to AELIB-X1YA0I
 
-CodeMind is extracted from earlier AELIB-side CODEFORGE/CODEMIND planning work, but it is now being developed as its own standalone platform.
+CodeMind is extracted from earlier AELIB-side coding-agent planning work, but it is now being developed as its own standalone platform.
 
 AELIB-X1YA0I may later integrate CodeMind through a thin governed external adapter.
 
