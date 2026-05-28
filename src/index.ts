@@ -34,3 +34,27 @@ export type {
   CodemindToolCategory,
   CodemindTrustZone,
 } from './permissions/codemind-permission.types.js';
+
+export {
+  canAjnaDeclareMergeReady,
+  deriveAjnaMergeReadiness,
+  isAjnaBlockedStatus,
+} from './ajna/ajna-merge-readiness.js';
+export {
+  AJNA_EVIDENCE_CLASSES,
+  AJNA_FINDING_CATEGORIES,
+  AJNA_MERGE_READINESS_STATUSES,
+  AJNA_RISK_LEVELS,
+} from './ajna/ajna-review.types.js';
+export type {
+  AjnaEvidenceClass,
+  AjnaEvidenceRef,
+  AjnaFindingCategory,
+  AjnaMergeReadiness,
+  AjnaMergeReadinessStatus,
+  AjnaReviewFinding,
+  AjnaReviewRequest,
+  AjnaReviewResponse,
+  AjnaReviewSubject,
+  AjnaRiskLevel,
+} from './ajna/ajna-review.types.js';
