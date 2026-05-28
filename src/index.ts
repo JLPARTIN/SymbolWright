@@ -40,6 +40,7 @@ export {
   deriveAjnaMergeReadiness,
   isAjnaBlockedStatus,
 } from './ajna/ajna-merge-readiness.js';
+export { renderAjnaReviewReport } from './ajna/ajna-review-renderer.js';
 export {
   AJNA_EVIDENCE_CLASSES,
   AJNA_FINDING_CATEGORIES,
