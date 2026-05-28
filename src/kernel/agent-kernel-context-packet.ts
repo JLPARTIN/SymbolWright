@@ -96,6 +96,20 @@ function pushIfAllowed(
   omittedSections.push(item.section);
 }
 
+function withOptionalRepoContext(
+  packet: AgentKernelContextPacket,
+  repoContext?: AgentKernelRepoContextReference,
+): AgentKernelContextPacket {
+  if (!repoContext) {
+    return packet;
+  }
+
+  return {
+    ...packet,
+    repoContext,
+  };
+}
+
 export function buildAgentKernelContextPacket(
   input: AgentKernelContextPacketBuilderInput,
 ): AgentKernelContextPacket {
@@ -109,15 +123,15 @@ export function buildAgentKernelContextPacket(
   const blockingSkillReports = input.skillValidations.filter((report) => !report.valid);
 
   if (!planning.accepted) {
-    warnings.push('Planning decision is not accepted; packet is context-only and not provider-actionable.');
+    warnings.push('Planning decision is not accepted; packet is context-only.');
   }
 
   if (!workflow.valid) {
-    warnings.push('Workflow validation is not valid; packet is context-only and not provider-actionable.');
+    warnings.push('Workflow validation is not valid; packet is context-only.');
   }
 
   if (blockingSkillReports.length > 0) {
-    warnings.push('One or more skill validations are not valid; packet is context-only and not provider-actionable.');
+    warnings.push('One or more skill validations are not valid; packet is context-only.');
   }
 
   pushIfAllowed(items, omittedSections, maxSections, {
@@ -195,8 +209,7 @@ export function buildAgentKernelContextPacket(
   });
 
   const providerReady = planning.accepted && workflow.valid && blockingSkillReports.length === 0;
-
-  return {
+  const packet: AgentKernelContextPacket = {
     packetId: input.packetId,
     blockId: AGENT_KERNEL_CONTEXT_PACKET_BLOCK_ID,
     prId: AGENT_KERNEL_CONTEXT_PACKET_PR_ID,
@@ -204,7 +217,6 @@ export function buildAgentKernelContextPacket(
     sourcePlanningRequestId: planning.requestId,
     providerReady,
     providerInvoked: false,
-    repoContext: input.repoContext,
     items,
     boundary: {
       maxSections,
@@ -215,4 +227,6 @@ export function buildAgentKernelContextPacket(
     },
     warnings,
   };
+
+  return withOptionalRepoContext(packet, input.repoContext);
 }
