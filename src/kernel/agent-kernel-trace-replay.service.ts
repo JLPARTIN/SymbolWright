@@ -7,6 +7,7 @@ import {
   type AgentKernelTraceFrame,
   type AgentKernelTraceReplayInput,
   type AgentKernelTraceReplayReport,
+  type AgentKernelTraceReplaySummary,
 } from './agent-kernel-trace.types.js';
 
 const EXPECTED_LINEAGE: readonly AgentKernelBlockId[] = AGENT_KERNEL_TRACE_BLOCK_IDS;
@@ -102,6 +103,24 @@ function collectWarnings(frames: readonly AgentKernelTraceFrame[]): readonly str
   return frames.flatMap((frame) => frame.warnings.map((warning) => `${frame.blockId}: ${warning}`));
 }
 
+function buildReplaySummary(
+  frames: readonly AgentKernelTraceFrame[],
+  warningCount: number,
+): AgentKernelTraceReplaySummary {
+  const summary: AgentKernelTraceReplaySummary = {
+    frameCount: frames.length,
+    warningCount,
+  };
+  const firstFrame = frames[0];
+  const lastFrame = frames[frames.length - 1];
+
+  return {
+    ...summary,
+    ...(firstFrame ? { firstBlockId: firstFrame.blockId } : {}),
+    ...(lastFrame ? { lastBlockId: lastFrame.blockId } : {}),
+  };
+}
+
 export class AgentKernelTraceReplayService {
   replay(input: AgentKernelTraceReplayInput): AgentKernelTraceReplayReport {
     const frames = input.frames.filter((frame) => frame.executionId === input.executionId);
@@ -129,12 +148,7 @@ export class AgentKernelTraceReplayService {
       invariantsValid: invariantViolations.length === 0,
       invariantViolations,
       warnings,
-      summary: {
-        frameCount: frames.length,
-        firstBlockId: frames[0]?.blockId,
-        lastBlockId: frames.at(-1)?.blockId,
-        warningCount: warnings.length,
-      },
+      summary: buildReplaySummary(frames, warnings.length),
     };
   }
 }
