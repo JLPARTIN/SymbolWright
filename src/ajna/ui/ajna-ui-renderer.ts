@@ -1,7 +1,9 @@
 import type {
   AjnaReviewPanelViewModel,
   AjnaUiCiSummaryViewModel,
+  AjnaUiFileInsightViewModel,
   AjnaUiRiskLaneViewModel,
+  AjnaUiTimelineStepViewModel,
 } from './ajna-ui.types.js';
 
 function renderRiskLanes(lanes: readonly AjnaUiRiskLaneViewModel[]): string {
@@ -29,6 +31,37 @@ function renderCiSummary(summary?: AjnaUiCiSummaryViewModel): string {
   ].join('\n');
 }
 
+function renderTimeline(
+  timeline?: readonly AjnaUiTimelineStepViewModel[],
+): string {
+  if (!timeline || timeline.length === 0) {
+    return '- No timeline available.';
+  }
+
+  return timeline
+    .map((step) => `- **${step.label}:** ${step.detail} (${step.status})`)
+    .join('\n');
+}
+
+function renderFileInsights(
+  insights?: readonly AjnaUiFileInsightViewModel[],
+): string {
+  if (!insights || insights.length === 0) {
+    return '- No file insights available.';
+  }
+
+  return insights
+    .map((file) => [
+      `- **${file.path}**`,
+      `  - Lane: ${file.lane}`,
+      `  - Delta: +${file.additions} / -${file.deletions} (${file.totalDelta})`,
+      `  - Score: ${file.score}`,
+      `  - Severity: ${file.severity}`,
+      `  - Flags: largeDelta=${file.flags.largeDelta}, protectedPath=${file.flags.protectedPath}, configurationRisk=${file.flags.configurationRisk}, testOnlySignal=${file.flags.testOnlySignal}`,
+    ].join('\n'))
+    .join('\n');
+}
+
 export function renderAjnaReviewPanelMarkdown(
   model: AjnaReviewPanelViewModel,
 ): string {
@@ -47,9 +80,17 @@ export function renderAjnaReviewPanelMarkdown(
     `- **Operator decision required:** ${model.readiness.operatorDecisionRequired ? 'Yes' : 'No'}`,
     `- **Summary:** ${model.readiness.summary}`,
     '',
+    '## Review Timeline',
+    '',
+    renderTimeline(model.timeline),
+    '',
     '## Risk Lanes',
     '',
     renderRiskLanes(model.riskLanes),
+    '',
+    '## Diff-Aware File Insights',
+    '',
+    renderFileInsights(model.fileInsights),
     '',
     '## CI Summary',
     '',
