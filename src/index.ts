@@ -100,3 +100,31 @@ export type {
   CodemindGithubPrContextInput,
   CodemindGithubPullRequestIdentity,
 } from './github/github-pr-context.types.js';
+
+export {
+  AGENT_KERNEL_DEFAULT_ROLE_PROFILES,
+  AGENT_KERNEL_DEFAULT_SKILLS,
+} from './kernel/agent-kernel-defaults.js';
+export { planAgentKernel01 } from './kernel/agent-kernel-planner.js';
+export {
+  AGENT_KERNEL_BLOCK_ID,
+  AGENT_KERNEL_MEMORY_SCOPES,
+  AGENT_KERNEL_PHASE_ID,
+  AGENT_KERNEL_PHASES,
+  AGENT_KERNEL_PR_ID,
+  AGENT_KERNEL_ROLES,
+  AGENT_KERNEL_SKILL_RISK_CLASSES,
+  AGENT_KERNEL_STEP_KINDS,
+} from './kernel/agent-kernel.types.js';
+export type {
+  AgentKernelMemoryScope,
+  AgentKernelPhase,
+  AgentKernelPlanningDecision,
+  AgentKernelPlanningRequest,
+  AgentKernelRole,
+  AgentKernelRoleProfile,
+  AgentKernelSkillDeclaration,
+  AgentKernelSkillRiskClass,
+  AgentKernelStepKind,
+  AgentKernelWorkflowStep,
+} from './kernel/agent-kernel.types.js';
