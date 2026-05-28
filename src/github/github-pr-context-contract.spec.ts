@@ -64,18 +64,17 @@ describe('GitHub PR context adapter contracts', () => {
     expect(assertGithubPrContextIsReadOnly(response)).toBe(true);
   });
 
-  it('fails read-only assertion if a write path is enabled', () => {
+  it('fails read-only assertion if an unsafe candidate enables a write path', () => {
     const response = createReadOnlyGithubPrContextResponse(
       makeRequest(),
       makeContext(),
     );
+    const unsafeCandidate = {
+      ...response,
+      githubWriteEnabled: true,
+    } as unknown as Parameters<typeof assertGithubPrContextIsReadOnly>[0];
 
-    expect(
-      assertGithubPrContextIsReadOnly({
-        ...response,
-        githubWriteEnabled: true,
-      }),
-    ).toBe(false);
+    expect(assertGithubPrContextIsReadOnly(unsafeCandidate)).toBe(false);
   });
 
   it('preserves pull request identity from the request', () => {
