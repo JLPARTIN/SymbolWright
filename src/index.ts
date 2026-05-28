@@ -128,3 +128,18 @@ export type {
   AgentKernelStepKind,
   AgentKernelWorkflowStep,
 } from './kernel/agent-kernel.types.js';
+
+export { validateAgentKernelWorkflow } from './kernel/agent-kernel-workflow-validator.js';
+export {
+  AGENT_KERNEL_WORKFLOW_FINDING_CODES,
+  AGENT_KERNEL_WORKFLOW_FINDING_SEVERITIES,
+  AGENT_KERNEL_WORKFLOW_VALIDATOR_BLOCK_ID,
+  AGENT_KERNEL_WORKFLOW_VALIDATOR_PHASE_ID,
+  AGENT_KERNEL_WORKFLOW_VALIDATOR_PR_ID,
+} from './kernel/agent-kernel-workflow-validator.js';
+export type {
+  AgentKernelWorkflowFindingCode,
+  AgentKernelWorkflowFindingSeverity,
+  AgentKernelWorkflowValidationFinding,
+  AgentKernelWorkflowValidationReport,
+} from './kernel/agent-kernel-workflow-validator.js';
