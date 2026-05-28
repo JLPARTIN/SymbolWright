@@ -58,3 +58,28 @@ export type {
   AjnaReviewSubject,
   AjnaRiskLevel,
 } from './ajna/ajna-review.types.js';
+
+export {
+  countProtectedChangedFiles,
+  getHighestRepoImpactLevel,
+  hasRequiredEvidenceState,
+  summarizeReadOnlyRepoContext,
+} from './repo-context/repo-context-summary.js';
+export type { CodemindRepoContextSummary } from './repo-context/repo-context-summary.js';
+export {
+  CODEMIND_EVIDENCE_STATES,
+  CODEMIND_REPO_FILE_CHANGE_TYPES,
+  CODEMIND_REPO_FILE_IMPACT_LEVELS,
+} from './repo-context/repo-context.types.js';
+export type {
+  CodemindChangedFileContext,
+  CodemindCiEvidenceContext,
+  CodemindDiffHunkContext,
+  CodemindEvidenceState,
+  CodemindReadOnlyRepoContext,
+  CodemindRepoFileChangeType,
+  CodemindRepoFileImpactLevel,
+  CodemindRepoRef,
+  CodemindRepositoryIdentity,
+  CodemindTestEvidenceContext,
+} from './repo-context/repo-context.types.js';
