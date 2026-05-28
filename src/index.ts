@@ -65,6 +65,7 @@ export {
   hasRequiredEvidenceState,
   summarizeReadOnlyRepoContext,
 } from './repo-context/repo-context-summary.js';
+export type { CodemindRepoContextSummary } from './repo-context/repo-context-summary.js';
 export {
   CODEMIND_EVIDENCE_STATES,
   CODEMIND_REPO_FILE_CHANGE_TYPES,
@@ -76,7 +77,6 @@ export type {
   CodemindDiffHunkContext,
   CodemindEvidenceState,
   CodemindReadOnlyRepoContext,
-  CodemindRepoContextSummary,
   CodemindRepoFileChangeType,
   CodemindRepoFileImpactLevel,
   CodemindRepoRef,
