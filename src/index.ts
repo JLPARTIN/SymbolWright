@@ -229,3 +229,19 @@ export type {
   AgentKernelRoutePreflightFindingCode,
   AgentKernelRoutePreflightSeverity,
 } from './kernel/agent-kernel-route-execution-preflight.js';
+
+export { buildCodemindProofHarnessReport } from './testing/codemind-proof-harness.js';
+export {
+  CODEMIND_PROOF_HARNESS_BLOCK_ID,
+  CODEMIND_PROOF_HARNESS_DOMAINS,
+  CODEMIND_PROOF_HARNESS_PHASE_ID,
+  CODEMIND_PROOF_HARNESS_PR_ID,
+  CODEMIND_PROOF_HARNESS_STATES,
+} from './testing/codemind-proof-harness.js';
+export type {
+  CodemindProofHarnessDomain,
+  CodemindProofHarnessDomainInput,
+  CodemindProofHarnessDomainReport,
+  CodemindProofHarnessReport,
+  CodemindProofHarnessState,
+} from './testing/codemind-proof-harness.js';
