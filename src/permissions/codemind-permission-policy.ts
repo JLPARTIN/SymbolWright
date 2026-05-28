@@ -27,15 +27,17 @@ export function resolveHighestDisposition(
     return 'ASK';
   }
 
-  return dispositions.reduce<CodemindPermissionDisposition>((highest, current) =>
-    rankDisposition(current) > rankDisposition(highest) ? current : highest,
+  return dispositions.reduce<CodemindPermissionDisposition>(
+    (highest, current) =>
+      rankDisposition(current) > rankDisposition(highest) ? current : highest,
+    'ALLOW',
   );
 }
 
 function protectedHitForTarget(target: string): CodemindProtectedPathHit | undefined {
   const normalizedTarget = target.trim().replaceAll('\\', '/');
 
-  const protectedPatterns: readonly Array<{
+  const protectedPatterns: ReadonlyArray<{
     readonly pattern: string;
     readonly protectedClass: CodemindProtectedPathHit['protectedClass'];
     readonly disposition: CodemindProtectedPathHit['disposition'];
