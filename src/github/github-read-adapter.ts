@@ -84,7 +84,7 @@ export function createGithubReadClient(
       };
 
       if (options.token) {
-        headers.Authorization = `Bearer ${options.token}`;
+        headers['Authorization'] = `Bearer ${options.token}`;
       }
 
       const response = await fetch(`${options.apiBaseUrl}${path}`, {
