@@ -13,6 +13,18 @@ function makeViewModel(): AjnaReviewPanelViewModel {
       summary: 'Review needs operator confirmation.',
       operatorDecisionRequired: true,
     },
+    timeline: [
+      {
+        label: 'Scope Loaded',
+        detail: '2 changed file(s) loaded for review.',
+        status: 'INFO',
+      },
+      {
+        label: 'Readiness Decision',
+        detail: 'NEEDS_OPERATOR_DECISION',
+        status: 'WARN',
+      },
+    ],
     riskLanes: [
       {
         lane: 'ci',
@@ -23,6 +35,23 @@ function makeViewModel(): AjnaReviewPanelViewModel {
         lane: 'tests',
         count: 2,
         severity: 'MEDIUM',
+      },
+    ],
+    fileInsights: [
+      {
+        path: '.github/workflows/ci.yml',
+        lane: 'ci',
+        additions: 12,
+        deletions: 2,
+        totalDelta: 14,
+        score: 6,
+        severity: 'CRITICAL',
+        flags: {
+          largeDelta: false,
+          protectedPath: true,
+          configurationRisk: true,
+          testOnlySignal: false,
+        },
       },
     ],
     ciSummary: {
@@ -49,8 +78,11 @@ describe('Ajna UI renderer', () => {
     expect(markdown).toContain('**Repository:** JLPARTIN/JLPARTIN-CodeMind');
     expect(markdown).toContain('**Ruling:** NEEDS_OPERATOR_DECISION');
     expect(markdown).toContain('**Confidence:** 86.0%');
+    expect(markdown).toContain('**Scope Loaded:** 2 changed file(s) loaded for review. (INFO)');
     expect(markdown).toContain('**ci:** 1 file(s), severity HIGH');
     expect(markdown).toContain('**tests:** 2 file(s), severity MEDIUM');
+    expect(markdown).toContain('**.github/workflows/ci.yml**');
+    expect(markdown).toContain('Severity: CRITICAL');
     expect(markdown).toContain('**Healthy:** No');
     expect(markdown).toContain('**Dry run:** Yes');
     expect(markdown).toContain('Preview only.');
@@ -66,7 +98,9 @@ describe('Ajna UI renderer', () => {
     };
     const markdown = renderAjnaReviewPanelMarkdown(model);
 
+    expect(markdown).toContain('No timeline available.');
     expect(markdown).toContain('No risk lanes detected.');
+    expect(markdown).toContain('No file insights available.');
     expect(markdown).toContain('No CI data available.');
     expect(markdown).toContain('**Pull request:** Not provided');
   });
