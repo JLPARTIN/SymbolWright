@@ -143,3 +143,37 @@ export type {
   AgentKernelWorkflowValidationFinding,
   AgentKernelWorkflowValidationReport,
 } from './kernel/agent-kernel-workflow-validator.js';
+
+export {
+  createAgentKernelSkillProposal,
+  getAgentKernelSkillRegistrySnapshot,
+  lookupAgentKernelSkill,
+  rankAgentKernelSkillRisk,
+  reviewAgentKernelSkillProposal,
+} from './kernel/agent-kernel-skill-registry.js';
+export {
+  AGENT_KERNEL_SKILL_PROPOSAL_STATUSES,
+  AGENT_KERNEL_SKILL_REGISTRY_BLOCK_ID,
+  AGENT_KERNEL_SKILL_REGISTRY_PHASE_ID,
+  AGENT_KERNEL_SKILL_REGISTRY_PR_ID,
+} from './kernel/agent-kernel-skill-registry.js';
+export type {
+  AgentKernelSkillLookupResult,
+  AgentKernelSkillProposal,
+  AgentKernelSkillProposalReview,
+  AgentKernelSkillProposalStatus,
+  AgentKernelSkillRegistrySnapshot,
+} from './kernel/agent-kernel-skill-registry.js';
+
+export { validateAgentKernelSkillUse } from './kernel/agent-kernel-skill-validator.js';
+export {
+  AGENT_KERNEL_SKILL_VALIDATION_FINDING_CODES,
+  AGENT_KERNEL_SKILL_VALIDATION_SEVERITIES,
+} from './kernel/agent-kernel-skill-validator.js';
+export type {
+  AgentKernelSkillUseRequest,
+  AgentKernelSkillValidationFinding,
+  AgentKernelSkillValidationFindingCode,
+  AgentKernelSkillValidationReport,
+  AgentKernelSkillValidationSeverity,
+} from './kernel/agent-kernel-skill-validator.js';
