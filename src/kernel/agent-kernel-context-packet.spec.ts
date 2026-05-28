@@ -77,7 +77,7 @@ describe('AGENT-KERNEL-04 context packet builder', () => {
     expect(packet.providerReady).toBe(false);
     expect(packet.providerInvoked).toBe(false);
     expect(packet.warnings).toContain(
-      'Planning decision is not accepted; packet is context-only and not provider-actionable.',
+      'Planning decision is not accepted; packet is context-only.',
     );
   });
 
@@ -100,7 +100,7 @@ describe('AGENT-KERNEL-04 context packet builder', () => {
 
     expect(packet.providerReady).toBe(false);
     expect(packet.warnings).toContain(
-      'Workflow validation is not valid; packet is context-only and not provider-actionable.',
+      'Workflow validation is not valid; packet is context-only.',
     );
   });
 
@@ -127,7 +127,7 @@ describe('AGENT-KERNEL-04 context packet builder', () => {
 
     expect(packet.providerReady).toBe(false);
     expect(packet.warnings).toContain(
-      'One or more skill validations are not valid; packet is context-only and not provider-actionable.',
+      'One or more skill validations are not valid; packet is context-only.',
     );
   });
 
