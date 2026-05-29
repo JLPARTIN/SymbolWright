@@ -138,15 +138,16 @@ export function runAjnaReviewPipeline(
   };
   const mergeDecision = buildAjnaMergeDecision(decisionInput);
 
-  const reviewReport = composeAjnaReviewReport({
+  const reportInput: Parameters<typeof composeAjnaReviewReport>[0] = {
     session,
     proofBundle,
     riskSynthesis,
     mergeDecision,
-    governanceReport,
+    ...(governanceReport !== undefined ? { governanceReport } : {}),
     format: input.reportFormat ?? 'plain',
     ...(input.renderedAt !== undefined ? { renderedAt: input.renderedAt } : {}),
-  });
+  };
+  const reviewReport = composeAjnaReviewReport(reportInput);
 
   return {
     blockId: AJNA_REVIEW_PIPELINE_BLOCK_ID,
