@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
-import { buildAjnaRiskTrend } from './ajna-risk-trend.js';
-import { createAjnaSavedReviewRecord } from './ajna-saved-reviews.js';
-import type { AjnaReviewPanelViewModel } from '../ui/ajna-ui.types.js';
+import { buildAjnaRiskTrend } from './ajna-risk-trend.js'
+import { createAjnaSavedReviewRecord } from './ajna-saved-reviews.js'
+import type { AjnaReviewPanelViewModel } from '../ui/ajna-ui.types.js'
 
 function makeReview(
   ruling: AjnaReviewPanelViewModel['readiness']['ruling'],
@@ -48,7 +48,7 @@ function makeReview(
       markdown: 'Preview',
       dryRun: true,
     },
-  };
+  }
 }
 
 describe('Ajna risk trend', () => {
@@ -64,12 +64,12 @@ describe('Ajna risk trend', () => {
         savedAt: '2026-05-28T00:01:00.000Z',
         review: makeReview('READY_TO_REVIEW', 1),
       }),
-    ];
+    ]
 
-    const trend = buildAjnaRiskTrend(records);
+    const trend = buildAjnaRiskTrend(records)
 
-    expect(trend.map((point) => point.id)).toEqual(['early', 'late']);
-    expect(trend[0]?.score).toBe(5);
-    expect(trend[1]?.score).toBe(13);
-  });
-});
+    expect(trend.map((point) => point.id)).toEqual(['early', 'late'])
+    expect(trend[0]?.score).toBe(5)
+    expect(trend[1]?.score).toBe(13)
+  })
+})

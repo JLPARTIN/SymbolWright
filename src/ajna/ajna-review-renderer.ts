@@ -1,17 +1,17 @@
-import type { AjnaReviewFinding, AjnaReviewResponse } from './ajna-review.types.js';
+import type { AjnaReviewFinding, AjnaReviewResponse } from './ajna-review.types.js'
 
 function renderList(items: readonly string[]): string {
   if (items.length === 0) {
-    return '- None reported.';
+    return '- None reported.'
   }
 
-  return items.map((item) => `- ${item}`).join('\n');
+  return items.map((item) => `- ${item}`).join('\n')
 }
 
 function renderFinding(finding: AjnaReviewFinding): string {
   const evidenceLines = finding.evidence.map(
     (evidence) => `  - **${evidence.evidenceClass}:** ${evidence.summary}`,
-  );
+  )
 
   return [
     `### ${finding.title}`,
@@ -28,14 +28,14 @@ function renderFinding(finding: AjnaReviewFinding): string {
     evidenceLines.length > 0 ? evidenceLines.join('\n') : '- None reported.',
     '',
     `**Recommendation:** ${finding.recommendation}`,
-  ].join('\n');
+  ].join('\n')
 }
 
 export function renderAjnaReviewReport(response: AjnaReviewResponse): string {
   const changedFiles = Array.from(
     new Set(response.findings.flatMap((finding) => finding.affectedFiles)),
-  ).sort();
-  const blockingFindings = response.findings.filter((finding) => finding.blocksMerge);
+  ).sort()
+  const blockingFindings = response.findings.filter((finding) => finding.blocksMerge)
 
   return [
     '# Ajna Review Cortex Report',
@@ -113,5 +113,5 @@ export function renderAjnaReviewReport(response: AjnaReviewResponse): string {
     '## Recommended Next Action',
     '',
     response.recommendedNextAction,
-  ].join('\n');
+  ].join('\n')
 }

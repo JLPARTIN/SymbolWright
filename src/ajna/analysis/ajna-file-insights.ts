@@ -1,27 +1,27 @@
-import type { CodemindChangedFileContext } from '../../repo-context/repo-context.types.js';
+import type { CodemindChangedFileContext } from '../../repo-context/repo-context.types.js'
 
 export interface AjnaFileInsightFlags {
-  readonly largeDelta: boolean;
-  readonly protectedPath: boolean;
-  readonly configurationRisk: boolean;
-  readonly testOnlySignal: boolean;
+  readonly largeDelta: boolean
+  readonly protectedPath: boolean
+  readonly configurationRisk: boolean
+  readonly testOnlySignal: boolean
 }
 
 export interface AjnaFileInsight {
-  readonly path: string;
-  readonly changeType: CodemindChangedFileContext['changeType'];
-  readonly impactLevel: CodemindChangedFileContext['impactLevel'];
-  readonly additions: number;
-  readonly deletions: number;
-  readonly totalDelta: number;
-  readonly score: number;
-  readonly severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'UNKNOWN';
-  readonly flags: AjnaFileInsightFlags;
-  readonly notes: readonly string[];
+  readonly path: string
+  readonly changeType: CodemindChangedFileContext['changeType']
+  readonly impactLevel: CodemindChangedFileContext['impactLevel']
+  readonly additions: number
+  readonly deletions: number
+  readonly totalDelta: number
+  readonly score: number
+  readonly severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'UNKNOWN'
+  readonly flags: AjnaFileInsightFlags
+  readonly notes: readonly string[]
 }
 
 function isConfigurationPath(path: string): boolean {
-  const normalized = path.toLowerCase();
+  const normalized = path.toLowerCase()
   return (
     normalized.endsWith('.json') ||
     normalized.endsWith('.yml') ||
@@ -30,78 +30,76 @@ function isConfigurationPath(path: string): boolean {
     normalized.includes('.github/workflows/') ||
     normalized.includes('package.json') ||
     normalized.includes('tsconfig')
-  );
+  )
 }
 
 function isTestPath(path: string): boolean {
-  const normalized = path.toLowerCase();
+  const normalized = path.toLowerCase()
   return (
     normalized.includes('/test/') ||
     normalized.includes('/tests/') ||
     normalized.includes('.spec.') ||
     normalized.includes('.test.')
-  );
+  )
 }
 
 function scoreToSeverity(score: number): AjnaFileInsight['severity'] {
   if (score >= 6) {
-    return 'CRITICAL';
+    return 'CRITICAL'
   }
 
   if (score >= 4) {
-    return 'HIGH';
+    return 'HIGH'
   }
 
   if (score >= 2) {
-    return 'MEDIUM';
+    return 'MEDIUM'
   }
 
-  return 'LOW';
+  return 'LOW'
 }
 
-export function computeAjnaFileRiskScore(
-  file: CodemindChangedFileContext,
-): number {
-  const totalDelta = file.additions + file.deletions;
-  let score = 0;
+export function computeAjnaFileRiskScore(file: CodemindChangedFileContext): number {
+  const totalDelta = file.additions + file.deletions
+  let score = 0
 
   if (totalDelta > 500) {
-    score += 3;
+    score += 3
   } else if (totalDelta > 200) {
-    score += 2;
+    score += 2
   } else if (totalDelta > 50) {
-    score += 1;
+    score += 1
   }
 
   if (file.impactLevel === 'CRITICAL') {
-    score += 4;
+    score += 4
   } else if (file.impactLevel === 'HIGH') {
-    score += 3;
+    score += 3
   } else if (file.impactLevel === 'MEDIUM') {
-    score += 1;
+    score += 1
   }
 
   if (file.protectedPath) {
-    score += 2;
+    score += 2
   }
 
   if (isConfigurationPath(file.path)) {
-    score += 1;
+    score += 1
   }
 
   if (isTestPath(file.path)) {
-    score -= 1;
+    score -= 1
   }
 
-  return Math.max(score, 0);
+  return Math.max(score, 0)
 }
 
 export function buildAjnaFileInsights(
   changedFiles: readonly CodemindChangedFileContext[],
 ): readonly AjnaFileInsight[] {
   return changedFiles.map((file) => {
-    const totalDelta = file.additions + file.deletions;
-    const score = computeAjnaFileRiskScore(file);
+    const totalDelta = file.additions + file.deletions
+    const score = computeAjnaFileRiskScore(file)
 
     return {
       path: file.path,
@@ -119,6 +117,6 @@ export function buildAjnaFileInsights(
         testOnlySignal: isTestPath(file.path),
       },
       notes: file.notes,
-    };
-  });
+    }
+  })
 }

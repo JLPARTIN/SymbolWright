@@ -1,47 +1,41 @@
-import type { AjnaReviewSession } from './ajna-review-session.js';
-import type { AjnaProofBundle } from './ajna-proof-bundle.js';
-import type { AjnaRiskSynthesis } from './ajna-risk-synthesis.js';
-import type { AjnaMergeDecision } from './ajna-merge-decision.js';
-import type { AjnaRenderedGovernanceReport } from './governance/ajna-governance-renderer.js';
+import type { AjnaReviewSession } from './ajna-review-session.js'
+import type { AjnaProofBundle } from './ajna-proof-bundle.js'
+import type { AjnaRiskSynthesis } from './ajna-risk-synthesis.js'
+import type { AjnaMergeDecision } from './ajna-merge-decision.js'
+import type { AjnaRenderedGovernanceReport } from './governance/ajna-governance-renderer.js'
 
-export const AJNA_REVIEW_REPORT_COMPOSER_BLOCK_ID =
-  'CODEMIND-AJNA-REVIEW-09' as const;
-export const AJNA_REVIEW_REPORT_COMPOSER_PR_ID = 'PR-CM-AJNA-09' as const;
-export const AJNA_REVIEW_REPORT_COMPOSER_PHASE_ID = 'CODEMIND-AJNA-09' as const;
+export const AJNA_REVIEW_REPORT_COMPOSER_BLOCK_ID = 'CODEMIND-AJNA-REVIEW-09' as const
+export const AJNA_REVIEW_REPORT_COMPOSER_PR_ID = 'PR-CM-AJNA-09' as const
+export const AJNA_REVIEW_REPORT_COMPOSER_PHASE_ID = 'CODEMIND-AJNA-09' as const
 
-export const AJNA_REVIEW_REPORT_FORMATS = [
-  'plain',
-  'markdown',
-  'compact',
-] as const;
-export type AjnaReviewReportFormat =
-  (typeof AJNA_REVIEW_REPORT_FORMATS)[number];
+export const AJNA_REVIEW_REPORT_FORMATS = ['plain', 'markdown', 'compact'] as const
+export type AjnaReviewReportFormat = (typeof AJNA_REVIEW_REPORT_FORMATS)[number]
 
 export interface AjnaReviewReportComposerInput {
-  readonly session: AjnaReviewSession;
-  readonly proofBundle: AjnaProofBundle;
-  readonly riskSynthesis: AjnaRiskSynthesis;
-  readonly mergeDecision: AjnaMergeDecision;
-  readonly governanceReport?: AjnaRenderedGovernanceReport;
-  readonly format: AjnaReviewReportFormat;
-  readonly renderedAt?: string;
+  readonly session: AjnaReviewSession
+  readonly proofBundle: AjnaProofBundle
+  readonly riskSynthesis: AjnaRiskSynthesis
+  readonly mergeDecision: AjnaMergeDecision
+  readonly governanceReport?: AjnaRenderedGovernanceReport
+  readonly format: AjnaReviewReportFormat
+  readonly renderedAt?: string
 }
 
 export interface AjnaReviewReport {
-  readonly blockId: typeof AJNA_REVIEW_REPORT_COMPOSER_BLOCK_ID;
-  readonly prId: typeof AJNA_REVIEW_REPORT_COMPOSER_PR_ID;
-  readonly phaseId: typeof AJNA_REVIEW_REPORT_COMPOSER_PHASE_ID;
-  readonly format: AjnaReviewReportFormat;
-  readonly text: string;
-  readonly lineCount: number;
-  readonly mutationAllowed: false;
-  readonly githubWriteAllowed: false;
-  readonly providerInvocationAllowed: false;
+  readonly blockId: typeof AJNA_REVIEW_REPORT_COMPOSER_BLOCK_ID
+  readonly prId: typeof AJNA_REVIEW_REPORT_COMPOSER_PR_ID
+  readonly phaseId: typeof AJNA_REVIEW_REPORT_COMPOSER_PHASE_ID
+  readonly format: AjnaReviewReportFormat
+  readonly text: string
+  readonly lineCount: number
+  readonly mutationAllowed: false
+  readonly githubWriteAllowed: false
+  readonly providerInvocationAllowed: false
 }
 
 function governanceLines(report: AjnaRenderedGovernanceReport | undefined): string[] {
   if (!report) {
-    return [];
+    return []
   }
 
   const lines = [
@@ -50,19 +44,19 @@ function governanceLines(report: AjnaRenderedGovernanceReport | undefined): stri
     `  All passed: ${String(report.allPassed)}`,
     `  Passed:     ${report.passedRules}/${report.totalRules}`,
     `  Failed:     ${report.failedRules}`,
-  ];
+  ]
 
   for (const result of report.results) {
-    const status = result.passed ? 'PASS' : result.overridden ? 'OVERRIDDEN' : 'FAIL';
-    lines.push(`  [${status}] ${result.id}: ${result.detail}`);
+    const status = result.passed ? 'PASS' : result.overridden ? 'OVERRIDDEN' : 'FAIL'
+    lines.push(`  [${status}] ${result.id}: ${result.detail}`)
   }
 
-  return lines;
+  return lines
 }
 
 function buildPlainLines(input: AjnaReviewReportComposerInput): readonly string[] {
-  const { session, proofBundle, riskSynthesis, mergeDecision } = input;
-  const id = session.identity;
+  const { session, proofBundle, riskSynthesis, mergeDecision } = input
+  const id = session.identity
 
   const lines: string[] = [
     '=== Ajna Review Report ===',
@@ -72,10 +66,10 @@ function buildPlainLines(input: AjnaReviewReportComposerInput): readonly string[
     `Head SHA:   ${id.headSha}`,
     `Base SHA:   ${id.baseSha}`,
     `Session:    ${session.sessionId}`,
-  ];
+  ]
 
   if (input.renderedAt !== undefined) {
-    lines.push(`Rendered:   ${input.renderedAt}`);
+    lines.push(`Rendered:   ${input.renderedAt}`)
   }
 
   lines.push(
@@ -83,25 +77,25 @@ function buildPlainLines(input: AjnaReviewReportComposerInput): readonly string[
     'Proof Bundle:',
     `  Gate:     ${proofBundle.proofGateStatus}`,
     `  Ready:    ${String(proofBundle.allProofReady)}`,
-  );
+  )
 
   if (proofBundle.missingProofDomains.length > 0) {
-    lines.push(`  Missing:  ${proofBundle.missingProofDomains.join(', ')}`);
+    lines.push(`  Missing:  ${proofBundle.missingProofDomains.join(', ')}`)
   }
   if (proofBundle.blockingProofDomains.length > 0) {
-    lines.push(`  Blocked:  ${proofBundle.blockingProofDomains.join(', ')}`);
+    lines.push(`  Blocked:  ${proofBundle.blockingProofDomains.join(', ')}`)
   }
   if (proofBundle.invalidProofDomains.length > 0) {
-    lines.push(`  Invalid:  ${proofBundle.invalidProofDomains.join(', ')}`);
+    lines.push(`  Invalid:  ${proofBundle.invalidProofDomains.join(', ')}`)
   }
 
-  lines.push(...governanceLines(input.governanceReport));
+  lines.push(...governanceLines(input.governanceReport))
 
-  lines.push('', 'Risk Synthesis:', `  Level:    ${riskSynthesis.riskLevel}`);
-  riskSynthesis.explanation.forEach((entry) => lines.push(`  ${entry}`));
+  lines.push('', 'Risk Synthesis:', `  Level:    ${riskSynthesis.riskLevel}`)
+  riskSynthesis.explanation.forEach((entry) => lines.push(`  ${entry}`))
 
-  lines.push('', 'Merge Decision:', `  State:    ${mergeDecision.state}`);
-  mergeDecision.reasons.forEach((reason) => lines.push(`  ${reason}`));
+  lines.push('', 'Merge Decision:', `  State:    ${mergeDecision.state}`)
+  mergeDecision.reasons.forEach((reason) => lines.push(`  ${reason}`))
 
   lines.push(
     '',
@@ -115,14 +109,14 @@ function buildPlainLines(input: AjnaReviewReportComposerInput): readonly string[
     '  npm run typecheck',
     '  npm test',
     '  npm run build',
-  );
+  )
 
-  return lines;
+  return lines
 }
 
 function buildMarkdownLines(input: AjnaReviewReportComposerInput): readonly string[] {
-  const { session, proofBundle, riskSynthesis, mergeDecision } = input;
-  const id = session.identity;
+  const { session, proofBundle, riskSynthesis, mergeDecision } = input
+  const id = session.identity
   const lines: string[] = [
     `## Ajna Review — ${id.repository} #${id.pullRequestNumber}`,
     '',
@@ -134,7 +128,7 @@ function buildMarkdownLines(input: AjnaReviewReportComposerInput): readonly stri
     '',
     `- Gate: \`${proofBundle.proofGateStatus}\``,
     `- All ready: \`${String(proofBundle.allProofReady)}\``,
-  ];
+  ]
 
   if (input.governanceReport) {
     lines.push(
@@ -144,51 +138,37 @@ function buildMarkdownLines(input: AjnaReviewReportComposerInput): readonly stri
       `- All passed: \`${String(input.governanceReport.allPassed)}\``,
       `- Passed: \`${input.governanceReport.passedRules}/${input.governanceReport.totalRules}\``,
       `- Failed: \`${input.governanceReport.failedRules}\``,
-    );
+    )
     input.governanceReport.results.forEach((result) => {
-      const status = result.passed ? 'PASS' : result.overridden ? 'OVERRIDDEN' : 'FAIL';
-      lines.push(`- \`${status}\` ${result.id}: ${result.detail}`);
-    });
+      const status = result.passed ? 'PASS' : result.overridden ? 'OVERRIDDEN' : 'FAIL'
+      lines.push(`- \`${status}\` ${result.id}: ${result.detail}`)
+    })
   }
 
-  lines.push(
-    '',
-    '### Risk Synthesis',
-    '',
-    `**Level:** \`${riskSynthesis.riskLevel}\``,
-    '',
-  );
-  riskSynthesis.explanation.forEach((entry) => lines.push(`- ${entry}`));
+  lines.push('', '### Risk Synthesis', '', `**Level:** \`${riskSynthesis.riskLevel}\``, '')
+  riskSynthesis.explanation.forEach((entry) => lines.push(`- ${entry}`))
 
-  lines.push(
-    '',
-    '### Merge Decision',
-    '',
-    `**State:** \`${mergeDecision.state}\``,
-    '',
-  );
-  mergeDecision.reasons.forEach((reason) => lines.push(`- ${reason}`));
+  lines.push('', '### Merge Decision', '', `**State:** \`${mergeDecision.state}\``, '')
+  mergeDecision.reasons.forEach((reason) => lines.push(`- ${reason}`))
 
-  return lines;
+  return lines
 }
 
 function buildCompactLine(input: AjnaReviewReportComposerInput): string {
-  const id = input.session.identity;
+  const id = input.session.identity
   const governance = input.governanceReport
     ? ` | governance:${input.governanceReport.passedRules}/${input.governanceReport.totalRules}`
-    : '';
-  return `[${input.mergeDecision.state}] ${id.repository}#${id.pullRequestNumber} | risk:${input.riskSynthesis.riskLevel} | gate:${input.proofBundle.proofGateStatus}${governance}`;
+    : ''
+  return `[${input.mergeDecision.state}] ${id.repository}#${id.pullRequestNumber} | risk:${input.riskSynthesis.riskLevel} | gate:${input.proofBundle.proofGateStatus}${governance}`
 }
 
-export function composeAjnaReviewReport(
-  input: AjnaReviewReportComposerInput,
-): AjnaReviewReport {
+export function composeAjnaReviewReport(input: AjnaReviewReportComposerInput): AjnaReviewReport {
   const lines =
     input.format === 'compact'
       ? [buildCompactLine(input)]
       : input.format === 'markdown'
         ? buildMarkdownLines(input)
-        : buildPlainLines(input);
+        : buildPlainLines(input)
 
   return {
     blockId: AJNA_REVIEW_REPORT_COMPOSER_BLOCK_ID,
@@ -200,5 +180,5 @@ export function composeAjnaReviewReport(
     mutationAllowed: false,
     githubWriteAllowed: false,
     providerInvocationAllowed: false,
-  };
+  }
 }

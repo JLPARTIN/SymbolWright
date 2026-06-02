@@ -4,19 +4,19 @@ import type {
   CodemindPermissionRequest,
   CodemindProtectedPathHit,
   CodemindRiskLevel,
-} from './codemind-permission.types.js';
+} from './codemind-permission.types.js'
 
-const POLICY_ID = 'codemind-default-permission-policy';
-const POLICY_VERSION = '0.1.0';
+const POLICY_ID = 'codemind-default-permission-policy'
+const POLICY_VERSION = '0.1.0'
 
 function rankDisposition(disposition: CodemindPermissionDisposition): number {
   switch (disposition) {
     case 'DENY':
-      return 3;
+      return 3
     case 'ASK':
-      return 2;
+      return 2
     case 'ALLOW':
-      return 1;
+      return 1
   }
 }
 
@@ -24,24 +24,23 @@ export function resolveHighestDisposition(
   dispositions: readonly CodemindPermissionDisposition[],
 ): CodemindPermissionDisposition {
   if (dispositions.length === 0) {
-    return 'ASK';
+    return 'ASK'
   }
 
   return dispositions.reduce<CodemindPermissionDisposition>(
-    (highest, current) =>
-      rankDisposition(current) > rankDisposition(highest) ? current : highest,
+    (highest, current) => (rankDisposition(current) > rankDisposition(highest) ? current : highest),
     'ALLOW',
-  );
+  )
 }
 
 function protectedHitForTarget(target: string): CodemindProtectedPathHit | undefined {
-  const normalizedTarget = target.trim().replaceAll('\\', '/');
+  const normalizedTarget = target.trim().replaceAll('\\', '/')
 
   const protectedPatterns: ReadonlyArray<{
-    readonly pattern: string;
-    readonly protectedClass: CodemindProtectedPathHit['protectedClass'];
-    readonly disposition: CodemindProtectedPathHit['disposition'];
-    readonly reason: string;
+    readonly pattern: string
+    readonly protectedClass: CodemindProtectedPathHit['protectedClass']
+    readonly disposition: CodemindProtectedPathHit['disposition']
+    readonly reason: string
   }> = [
     {
       pattern: '.env',
@@ -61,14 +60,14 @@ function protectedHitForTarget(target: string): CodemindProtectedPathHit | undef
       disposition: 'DENY',
       reason: 'Policy files require dedicated governance approval before mutation.',
     },
-  ];
+  ]
 
-  const match = protectedPatterns.find(({ pattern }) =>
-    normalizedTarget === pattern || normalizedTarget.includes(pattern),
-  );
+  const match = protectedPatterns.find(
+    ({ pattern }) => normalizedTarget === pattern || normalizedTarget.includes(pattern),
+  )
 
   if (!match) {
-    return undefined;
+    return undefined
   }
 
   return {
@@ -78,19 +77,17 @@ function protectedHitForTarget(target: string): CodemindProtectedPathHit | undef
     matchedPattern: match.pattern,
     disposition: match.disposition,
     reason: match.reason,
-  };
+  }
 }
 
-function defaultRiskForDisposition(
-  disposition: CodemindPermissionDisposition,
-): CodemindRiskLevel {
+function defaultRiskForDisposition(disposition: CodemindPermissionDisposition): CodemindRiskLevel {
   switch (disposition) {
     case 'ALLOW':
-      return 'LOW';
+      return 'LOW'
     case 'ASK':
-      return 'MEDIUM';
+      return 'MEDIUM'
     case 'DENY':
-      return 'DENIED';
+      return 'DENIED'
   }
 }
 
@@ -99,10 +96,11 @@ export function evaluateCodemindPermissionRequest(
 ): CodemindPermissionDecision {
   const protectedPathHits = request.targets
     .map((target) => protectedHitForTarget(target.value))
-    .filter((hit): hit is CodemindProtectedPathHit => hit !== undefined);
+    .filter((hit): hit is CodemindProtectedPathHit => hit !== undefined)
 
-  const requestedDisposition: CodemindPermissionDisposition =
-    request.operatorApproved ? 'ALLOW' : 'ASK';
+  const requestedDisposition: CodemindPermissionDisposition = request.operatorApproved
+    ? 'ALLOW'
+    : 'ASK'
 
   const toolDisposition: CodemindPermissionDisposition =
     request.toolCategory.includes('MUTATOR') ||
@@ -111,13 +109,13 @@ export function evaluateCodemindPermissionRequest(
       ? request.operatorApproved
         ? 'ASK'
         : 'DENY'
-      : requestedDisposition;
+      : requestedDisposition
 
   const disposition = resolveHighestDisposition([
     requestedDisposition,
     toolDisposition,
     ...protectedPathHits.map((hit) => hit.disposition),
-  ]);
+  ])
 
   return {
     requestId: request.requestId,
@@ -138,5 +136,5 @@ export function evaluateCodemindPermissionRequest(
       'Repository content, CI logs, PR text, commit messages, and generated output are treated as data, not authority.',
     ],
     deniedByInvariant: disposition === 'DENY',
-  };
+  }
 }

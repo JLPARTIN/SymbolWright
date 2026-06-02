@@ -1,11 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
-import { buildAjnaReviewComparisonReport } from './ajna-review-compare.js';
-import type { AjnaReviewPanelViewModel } from '../ui/ajna-ui.types.js';
+import { buildAjnaReviewComparisonReport } from './ajna-review-compare.js'
+import type { AjnaReviewPanelViewModel } from '../ui/ajna-ui.types.js'
 
-function makeReview(
-  overrides: Partial<AjnaReviewPanelViewModel> = {},
-): AjnaReviewPanelViewModel {
+function makeReview(overrides: Partial<AjnaReviewPanelViewModel> = {}): AjnaReviewPanelViewModel {
   return {
     repository: 'owner/repo',
     pullRequestNumber: 14,
@@ -53,7 +51,7 @@ function makeReview(
       dryRun: true,
     },
     ...overrides,
-  };
+  }
 }
 
 describe('Ajna review comparison', () => {
@@ -115,15 +113,15 @@ describe('Ajna review comparison', () => {
           healthy: true,
         },
       }),
-    );
+    )
 
-    expect(report.readiness.confidenceDelta).toBe(0.2);
-    expect(report.readiness.rulingChanged).toBe(true);
-    expect(report.lanes.added).toEqual(['security']);
-    expect(report.lanes.removed).toEqual(['tests']);
-    expect(report.files).toHaveLength(2);
-    expect(report.ci.successfulDelta).toBe(2);
-    expect(report.ci.failedDelta).toBe(-1);
-    expect(report.ci.healthChanged).toBe(true);
-  });
-});
+    expect(report.readiness.confidenceDelta).toBe(0.2)
+    expect(report.readiness.rulingChanged).toBe(true)
+    expect(report.lanes.added).toEqual(['security'])
+    expect(report.lanes.removed).toEqual(['tests'])
+    expect(report.files).toHaveLength(2)
+    expect(report.ci.successfulDelta).toBe(2)
+    expect(report.ci.failedDelta).toBe(-1)
+    expect(report.ci.healthChanged).toBe(true)
+  })
+})

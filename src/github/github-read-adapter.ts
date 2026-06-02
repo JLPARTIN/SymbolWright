@@ -5,49 +5,47 @@ import type {
   CodemindGithubReadClient,
   GithubPullRequestApiPayload,
   GithubPullRequestFileApiPayload,
-} from './github-read-adapter.types.js';
+} from './github-read-adapter.types.js'
 import type {
   CodemindChangedFileContext,
   CodemindRepoFileChangeType,
-} from '../repo-context/repo-context.types.js';
+} from '../repo-context/repo-context.types.js'
 
 function normalizePath(path: string): string {
-  return path.replaceAll('\\', '/').trim();
+  return path.replaceAll('\\', '/').trim()
 }
 
 function mapGithubFileStatus(status: string): CodemindRepoFileChangeType {
   switch (status) {
     case 'added':
-      return 'ADDED';
+      return 'ADDED'
     case 'modified':
-      return 'MODIFIED';
+      return 'MODIFIED'
     case 'renamed':
-      return 'RENAMED';
+      return 'RENAMED'
     case 'removed':
-      return 'DELETED';
+      return 'DELETED'
     case 'copied':
-      return 'COPIED';
+      return 'COPIED'
     default:
-      return 'UNKNOWN';
+      return 'UNKNOWN'
   }
 }
 
 function isProtectedPath(path: string): boolean {
-  const normalized = normalizePath(path);
+  const normalized = normalizePath(path)
   return (
     normalized.startsWith('.github/workflows/') ||
     normalized === '.env' ||
     normalized.endsWith('/.env') ||
     normalized.includes('codemind.policy')
-  );
+  )
 }
 
-function mapChangedFile(
-  file: GithubPullRequestFileApiPayload,
-): CodemindChangedFileContext {
-  const path = normalizePath(file.filename);
-  const totalDelta = file.additions + file.deletions;
-  const protectedPath = isProtectedPath(path);
+function mapChangedFile(file: GithubPullRequestFileApiPayload): CodemindChangedFileContext {
+  const path = normalizePath(file.filename)
+  const totalDelta = file.additions + file.deletions
+  const protectedPath = isProtectedPath(path)
   const changedFile: CodemindChangedFileContext = {
     path,
     changeType: mapGithubFileStatus(file.status),
@@ -62,16 +60,16 @@ function mapChangedFile(
           : 'LOW',
     protectedPath,
     notes: file.patch ? ['Patch summary available.'] : [],
-  };
+  }
 
   if (file.previous_filename) {
     return {
       ...changedFile,
       previousPath: normalizePath(file.previous_filename),
-    };
+    }
   }
 
-  return changedFile;
+  return changedFile
 }
 
 export function createGithubReadClient(
@@ -81,43 +79,43 @@ export function createGithubReadClient(
     async getJson<T>(path: string): Promise<T> {
       const headers: Record<string, string> = {
         Accept: 'application/vnd.github+json',
-      };
+      }
 
       if (options.token) {
-        headers['Authorization'] = `Bearer ${options.token}`;
+        headers['Authorization'] = `Bearer ${options.token}`
       }
 
       const response = await fetch(`${options.apiBaseUrl}${path}`, {
         headers,
-      });
+      })
 
       if (!response.ok) {
-        throw new Error(`GitHub read request failed with status ${response.status}`);
+        throw new Error(`GitHub read request failed with status ${response.status}`)
       }
 
-      return (await response.json()) as T;
+      return (await response.json()) as T
     },
-  };
+  }
 }
 
 export async function readGithubPullRequestContext(
   client: CodemindGithubReadClient,
   target: CodemindGithubReadAdapterTarget,
 ): Promise<CodemindGithubReadAdapterResult> {
-  const [owner, repo] = target.repositoryFullName.split('/');
+  const [owner, repo] = target.repositoryFullName.split('/')
 
   if (!owner || !repo) {
-    throw new Error('repositoryFullName must use owner/repo format.');
+    throw new Error('repositoryFullName must use owner/repo format.')
   }
 
   const pr = await client.getJson<GithubPullRequestApiPayload>(
     `/repos/${owner}/${repo}/pulls/${target.pullRequestNumber}`,
-  );
+  )
   const files = await client.getJson<readonly GithubPullRequestFileApiPayload[]>(
     `/repos/${owner}/${repo}/pulls/${target.pullRequestNumber}/files`,
-  );
+  )
 
-  const changedFiles = files.map((file) => mapChangedFile(file));
+  const changedFiles = files.map((file) => mapChangedFile(file))
 
   return {
     target,
@@ -147,5 +145,5 @@ export async function readGithubPullRequestContext(
     notes: [
       'GitHub pull request metadata and changed files were mapped into read-only CodeMind repo context.',
     ],
-  };
+  }
 }

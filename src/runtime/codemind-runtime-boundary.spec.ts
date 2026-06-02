@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
 import {
   createReadOnlyRuntimeCapabilityFlags,
   evaluateCodemindRuntimeBoundary,
-} from './codemind-runtime-boundary.js';
-import type { CodemindRuntimeAdapterDescriptor } from './codemind-runtime.types.js';
+} from './codemind-runtime-boundary.js'
+import type { CodemindRuntimeAdapterDescriptor } from './codemind-runtime.types.js'
 
 function makeDescriptor(
   overrides: Partial<CodemindRuntimeAdapterDescriptor> = {},
@@ -30,18 +30,18 @@ function makeDescriptor(
       operatorApproved: true,
     },
     ...overrides,
-  };
+  }
 }
 
 describe('CodeMind runtime boundary', () => {
   it('allows approved read-only adapter descriptors', () => {
-    const decision = evaluateCodemindRuntimeBoundary(makeDescriptor());
+    const decision = evaluateCodemindRuntimeBoundary(makeDescriptor())
 
-    expect(decision.allowedToRun).toBe(true);
-    expect(decision.permissionDecision.disposition).toBe('ALLOW');
-    expect(decision.blockedReasons).toEqual([]);
-    expect(decision.auditRequired).toBe(false);
-  });
+    expect(decision.allowedToRun).toBe(true)
+    expect(decision.permissionDecision.disposition).toBe('ALLOW')
+    expect(decision.blockedReasons).toEqual([])
+    expect(decision.auditRequired).toBe(false)
+  })
 
   it('does not allow unapproved adapter descriptors', () => {
     const decision = evaluateCodemindRuntimeBoundary(
@@ -51,12 +51,12 @@ describe('CodeMind runtime boundary', () => {
           operatorApproved: false,
         },
       }),
-    );
+    )
 
-    expect(decision.allowedToRun).toBe(false);
-    expect(decision.permissionDecision.disposition).toBe('ASK');
-    expect(decision.auditRequired).toBe(true);
-  });
+    expect(decision.allowedToRun).toBe(false)
+    expect(decision.permissionDecision.disposition).toBe('ASK')
+    expect(decision.auditRequired).toBe(true)
+  })
 
   it('does not allow descriptors with write-style capability flags enabled', () => {
     const decision = evaluateCodemindRuntimeBoundary(
@@ -66,14 +66,14 @@ describe('CodeMind runtime boundary', () => {
           githubWriteEnabled: true,
         },
       }),
-    );
+    )
 
-    expect(decision.allowedToRun).toBe(false);
+    expect(decision.allowedToRun).toBe(false)
     expect(decision.blockedReasons).toContain(
       'GitHub write capability is not enabled for this phase.',
-    );
-    expect(decision.auditRequired).toBe(true);
-  });
+    )
+    expect(decision.auditRequired).toBe(true)
+  })
 
   it('does not allow merge capability in the runtime boundary', () => {
     const decision = evaluateCodemindRuntimeBoundary(
@@ -83,13 +83,11 @@ describe('CodeMind runtime boundary', () => {
           mergeEnabled: true,
         },
       }),
-    );
+    )
 
-    expect(decision.allowedToRun).toBe(false);
-    expect(decision.blockedReasons).toContain(
-      'Merge capability is not enabled for this phase.',
-    );
-  });
+    expect(decision.allowedToRun).toBe(false)
+    expect(decision.blockedReasons).toContain('Merge capability is not enabled for this phase.')
+  })
 
   it('requires read-only execution mode when network runtime is enabled', () => {
     const decision = evaluateCodemindRuntimeBoundary(
@@ -100,11 +98,11 @@ describe('CodeMind runtime boundary', () => {
           networkRuntimeEnabled: true,
         },
       }),
-    );
+    )
 
-    expect(decision.allowedToRun).toBe(false);
+    expect(decision.allowedToRun).toBe(false)
     expect(decision.blockedReasons).toContain(
       'Network runtime requires READ_ONLY execution mode in this phase.',
-    );
-  });
-});
+    )
+  })
+})

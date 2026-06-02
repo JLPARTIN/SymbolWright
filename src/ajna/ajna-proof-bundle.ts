@@ -1,37 +1,34 @@
-export const AJNA_PROOF_BUNDLE_BLOCK_ID = 'CODEMIND-AJNA-REVIEW-09' as const;
-export const AJNA_PROOF_BUNDLE_PR_ID = 'PR-CM-AJNA-09' as const;
-export const AJNA_PROOF_BUNDLE_PHASE_ID = 'CODEMIND-AJNA-09' as const;
+export const AJNA_PROOF_BUNDLE_BLOCK_ID = 'CODEMIND-AJNA-REVIEW-09' as const
+export const AJNA_PROOF_BUNDLE_PR_ID = 'PR-CM-AJNA-09' as const
+export const AJNA_PROOF_BUNDLE_PHASE_ID = 'CODEMIND-AJNA-09' as const
 
-export const AJNA_PROOF_GATE_STATUSES = [
-  'PROOF_GATE_OPEN',
-  'PROOF_GATE_CLOSED',
-] as const;
-export type AjnaProofGateStatus = (typeof AJNA_PROOF_GATE_STATUSES)[number];
+export const AJNA_PROOF_GATE_STATUSES = ['PROOF_GATE_OPEN', 'PROOF_GATE_CLOSED'] as const
+export type AjnaProofGateStatus = (typeof AJNA_PROOF_GATE_STATUSES)[number]
 
 export interface AjnaProofBundleInput {
-  readonly kernelTraceStatus?: string;
-  readonly ajnaMatrixStatus?: string;
-  readonly repoContextStatus?: string;
-  readonly governanceStatus?: string;
-  readonly runtimeBoundaryStatus?: string;
-  readonly githubAdapterStatus?: string;
+  readonly kernelTraceStatus?: string
+  readonly ajnaMatrixStatus?: string
+  readonly repoContextStatus?: string
+  readonly governanceStatus?: string
+  readonly runtimeBoundaryStatus?: string
+  readonly githubAdapterStatus?: string
 }
 
 export interface AjnaProofBundle {
-  readonly blockId: typeof AJNA_PROOF_BUNDLE_BLOCK_ID;
-  readonly prId: typeof AJNA_PROOF_BUNDLE_PR_ID;
-  readonly phaseId: typeof AJNA_PROOF_BUNDLE_PHASE_ID;
-  readonly kernelTraceStatus: string;
-  readonly ajnaMatrixStatus: string;
-  readonly repoContextStatus: string;
-  readonly governanceStatus: string;
-  readonly runtimeBoundaryStatus: string;
-  readonly githubAdapterStatus: string;
-  readonly proofGateStatus: AjnaProofGateStatus;
-  readonly missingProofDomains: readonly string[];
-  readonly blockingProofDomains: readonly string[];
-  readonly invalidProofDomains: readonly string[];
-  readonly allProofReady: boolean;
+  readonly blockId: typeof AJNA_PROOF_BUNDLE_BLOCK_ID
+  readonly prId: typeof AJNA_PROOF_BUNDLE_PR_ID
+  readonly phaseId: typeof AJNA_PROOF_BUNDLE_PHASE_ID
+  readonly kernelTraceStatus: string
+  readonly ajnaMatrixStatus: string
+  readonly repoContextStatus: string
+  readonly governanceStatus: string
+  readonly runtimeBoundaryStatus: string
+  readonly githubAdapterStatus: string
+  readonly proofGateStatus: AjnaProofGateStatus
+  readonly missingProofDomains: readonly string[]
+  readonly blockingProofDomains: readonly string[]
+  readonly invalidProofDomains: readonly string[]
+  readonly allProofReady: boolean
 }
 
 const READY_VALUES = {
@@ -41,7 +38,7 @@ const READY_VALUES = {
   governance: 'GOVERNANCE_PROOF_READY',
   runtimeBoundary: 'RUNTIME_BOUNDARY_PROOF_READY',
   githubAdapter: 'GITHUB_ADAPTER_PROOF_READY',
-} as const;
+} as const
 
 const DOMAIN_LABELS = [
   'kernelTrace',
@@ -50,11 +47,11 @@ const DOMAIN_LABELS = [
   'governance',
   'runtimeBoundary',
   'githubAdapter',
-] as const;
+] as const
 
-type DomainLabel = (typeof DOMAIN_LABELS)[number];
+type DomainLabel = (typeof DOMAIN_LABELS)[number]
 
-const MISSING_SENTINEL = 'MISSING';
+const MISSING_SENTINEL = 'MISSING'
 
 export function buildAjnaProofBundle(input: AjnaProofBundleInput): AjnaProofBundle {
   const statuses: Record<DomainLabel, string> = {
@@ -64,20 +61,20 @@ export function buildAjnaProofBundle(input: AjnaProofBundleInput): AjnaProofBund
     governance: input.governanceStatus ?? MISSING_SENTINEL,
     runtimeBoundary: input.runtimeBoundaryStatus ?? MISSING_SENTINEL,
     githubAdapter: input.githubAdapterStatus ?? MISSING_SENTINEL,
-  };
+  }
 
-  const missingProofDomains: string[] = [];
-  const blockingProofDomains: string[] = [];
-  const invalidProofDomains: string[] = [];
+  const missingProofDomains: string[] = []
+  const blockingProofDomains: string[] = []
+  const invalidProofDomains: string[] = []
 
   for (const label of DOMAIN_LABELS) {
-    const status = statuses[label];
+    const status = statuses[label]
     if (status === MISSING_SENTINEL) {
-      missingProofDomains.push(label);
+      missingProofDomains.push(label)
     } else if (status.includes('BLOCKED')) {
-      blockingProofDomains.push(label);
+      blockingProofDomains.push(label)
     } else if (status.includes('INVALID')) {
-      invalidProofDomains.push(label);
+      invalidProofDomains.push(label)
     }
   }
 
@@ -85,7 +82,7 @@ export function buildAjnaProofBundle(input: AjnaProofBundleInput): AjnaProofBund
     missingProofDomains.length === 0 &&
     blockingProofDomains.length === 0 &&
     invalidProofDomains.length === 0 &&
-    DOMAIN_LABELS.every((label) => statuses[label] === READY_VALUES[label]);
+    DOMAIN_LABELS.every((label) => statuses[label] === READY_VALUES[label])
 
   return {
     blockId: AJNA_PROOF_BUNDLE_BLOCK_ID,
@@ -102,5 +99,5 @@ export function buildAjnaProofBundle(input: AjnaProofBundleInput): AjnaProofBund
     blockingProofDomains,
     invalidProofDomains,
     allProofReady: gateOpen,
-  };
+  }
 }

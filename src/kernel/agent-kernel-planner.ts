@@ -7,17 +7,17 @@ import {
   type AgentKernelPlanningRequest,
   type AgentKernelRole,
   type AgentKernelWorkflowStep,
-} from './agent-kernel.types.js';
+} from './agent-kernel.types.js'
 import {
   AGENT_KERNEL_DEFAULT_ROLE_PROFILES,
   AGENT_KERNEL_DEFAULT_SKILLS,
-} from './agent-kernel-defaults.js';
+} from './agent-kernel-defaults.js'
 
-const DEFAULT_AGENT_KERNEL_ROLES: readonly AgentKernelRole[] = ['orchestrator'];
+const DEFAULT_AGENT_KERNEL_ROLES: readonly AgentKernelRole[] = ['orchestrator']
 
 function uniqueRoles(roles: readonly AgentKernelRole[]): readonly AgentKernelRole[] {
-  const candidateRoles = roles.length > 0 ? roles : DEFAULT_AGENT_KERNEL_ROLES;
-  return [...new Set(candidateRoles)];
+  const candidateRoles = roles.length > 0 ? roles : DEFAULT_AGENT_KERNEL_ROLES
+  return [...new Set(candidateRoles)]
 }
 
 function buildWorkflowSteps(
@@ -33,7 +33,7 @@ function buildWorkflowSteps(
       approvalCheckpoint: true,
       allowedToMutate: false,
     },
-  ];
+  ]
 
   if (roles.includes('researcher')) {
     steps.push({
@@ -44,7 +44,7 @@ function buildWorkflowSteps(
       summary: 'Gather read-only repository and project context.',
       approvalCheckpoint: false,
       allowedToMutate: false,
-    });
+    })
   }
 
   if (request.allowPatchProposal || request.requestedMode === 'PATCH_PROPOSAL') {
@@ -56,7 +56,7 @@ function buildWorkflowSteps(
       summary: 'Prepare a PR-safe patch proposal plan for operator review.',
       approvalCheckpoint: true,
       allowedToMutate: false,
-    });
+    })
   }
 
   if (roles.includes('validator') || request.requestedMode === 'CI_REVIEW') {
@@ -68,7 +68,7 @@ function buildWorkflowSteps(
       summary: 'Plan typecheck, test, build, and CI evidence requirements.',
       approvalCheckpoint: true,
       allowedToMutate: false,
-    });
+    })
   }
 
   if (roles.includes('memory-auditor')) {
@@ -80,7 +80,7 @@ function buildWorkflowSteps(
       summary: 'Audit imported planning assumptions for provenance and quarantine posture.',
       approvalCheckpoint: true,
       allowedToMutate: false,
-    });
+    })
   }
 
   steps.push({
@@ -90,37 +90,36 @@ function buildWorkflowSteps(
     summary: 'Return a deterministic planning report for operator review.',
     approvalCheckpoint: true,
     allowedToMutate: false,
-  });
+  })
 
-  return steps;
+  return steps
 }
 
 export function planAgentKernel01(
   request: AgentKernelPlanningRequest,
 ): AgentKernelPlanningDecision {
-  const roles = uniqueRoles(request.requestedRoles);
+  const roles = uniqueRoles(request.requestedRoles)
   const roleProfiles = AGENT_KERNEL_DEFAULT_ROLE_PROFILES.filter((profile) =>
     roles.includes(profile.role),
-  );
+  )
 
   const selectedSkills = AGENT_KERNEL_DEFAULT_SKILLS.filter(
     (skill) =>
-      request.requestedSkills.length === 0 ||
-      request.requestedSkills.includes(skill.skillId),
-  );
+      request.requestedSkills.length === 0 || request.requestedSkills.includes(skill.skillId),
+  )
 
-  const blockedReasons: string[] = [];
+  const blockedReasons: string[] = []
   if (request.requestedMode === 'PATCH_PROPOSAL' && !request.allowPatchProposal) {
     blockedReasons.push(
       'PATCH_PROPOSAL mode requires allowPatchProposal=true because AGENT-KERNEL-01 is planning-only.',
-    );
+    )
   }
 
   if (request.operatorIntent.trim().length === 0) {
-    blockedReasons.push('Operator intent is required for deterministic kernel planning.');
+    blockedReasons.push('Operator intent is required for deterministic kernel planning.')
   }
 
-  const workflowSteps = buildWorkflowSteps(request, roles);
+  const workflowSteps = buildWorkflowSteps(request, roles)
 
   return {
     requestId: request.requestId,
@@ -148,5 +147,5 @@ export function planAgentKernel01(
       'X1YA0I-A-O-S workflow validation and memory capsule planning doctrine',
       'CodeMind Phase-16G-AK-01 runtime spine integration lineage',
     ],
-  };
+  }
 }

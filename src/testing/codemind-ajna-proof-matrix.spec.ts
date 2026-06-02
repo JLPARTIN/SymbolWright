@@ -1,26 +1,26 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
 import {
   buildCodemindAjnaProofMatrixReport,
   CODEMIND_AJNA_PROOF_MATRIX_BLOCK_ID,
   CODEMIND_AJNA_PROOF_MATRIX_PHASE_ID,
   CODEMIND_AJNA_PROOF_MATRIX_PR_ID,
-} from './codemind-ajna-proof-matrix.js';
+} from './codemind-ajna-proof-matrix.js'
 
 describe('CodeMind Ajna Proof Matrix', () => {
   it('emits canonical metadata and keeps mutation flags false', () => {
     const report = buildCodemindAjnaProofMatrixReport({
       ajnaSpecFiles: ['src/ajna/ajna-merge-readiness.spec.ts'],
       requiredSpecFiles: ['src/ajna/ajna-merge-readiness.spec.ts'],
-    });
+    })
 
-    expect(report.blockId).toBe(CODEMIND_AJNA_PROOF_MATRIX_BLOCK_ID);
-    expect(report.prId).toBe(CODEMIND_AJNA_PROOF_MATRIX_PR_ID);
-    expect(report.phaseId).toBe(CODEMIND_AJNA_PROOF_MATRIX_PHASE_ID);
-    expect(report.mutationAllowed).toBe(false);
-    expect(report.githubWriteAllowed).toBe(false);
-    expect(report.providerInvocationAllowed).toBe(false);
-  });
+    expect(report.blockId).toBe(CODEMIND_AJNA_PROOF_MATRIX_BLOCK_ID)
+    expect(report.prId).toBe(CODEMIND_AJNA_PROOF_MATRIX_PR_ID)
+    expect(report.phaseId).toBe(CODEMIND_AJNA_PROOF_MATRIX_PHASE_ID)
+    expect(report.mutationAllowed).toBe(false)
+    expect(report.githubWriteAllowed).toBe(false)
+    expect(report.providerInvocationAllowed).toBe(false)
+  })
 
   it('returns AJNA_PROOF_READY and allows merge when all required specs exist', () => {
     const report = buildCodemindAjnaProofMatrixReport({
@@ -32,13 +32,13 @@ describe('CodeMind Ajna Proof Matrix', () => {
         'src/ajna/ajna-merge-readiness.spec.ts',
         'src/ajna/ajna-review-renderer.spec.ts',
       ],
-    });
+    })
 
-    expect(report.status).toBe('AJNA_PROOF_READY');
-    expect(report.ajnaCanDeclareMergeReady).toBe(true);
-    expect(report.missingSpecs).toEqual([]);
-    expect(report.summary).toContain('2/2');
-  });
+    expect(report.status).toBe('AJNA_PROOF_READY')
+    expect(report.ajnaCanDeclareMergeReady).toBe(true)
+    expect(report.missingSpecs).toEqual([])
+    expect(report.summary).toContain('2/2')
+  })
 
   it('returns AJNA_PROOF_PARTIAL when some required specs are missing', () => {
     const report = buildCodemindAjnaProofMatrixReport({
@@ -47,13 +47,13 @@ describe('CodeMind Ajna Proof Matrix', () => {
         'src/ajna/ajna-merge-readiness.spec.ts',
         'src/ajna/ajna-review-renderer.spec.ts',
       ],
-    });
+    })
 
-    expect(report.status).toBe('AJNA_PROOF_PARTIAL');
-    expect(report.ajnaCanDeclareMergeReady).toBe(false);
-    expect(report.missingSpecs).toEqual(['src/ajna/ajna-review-renderer.spec.ts']);
-    expect(report.summary).toContain('1/2');
-  });
+    expect(report.status).toBe('AJNA_PROOF_PARTIAL')
+    expect(report.ajnaCanDeclareMergeReady).toBe(false)
+    expect(report.missingSpecs).toEqual(['src/ajna/ajna-review-renderer.spec.ts'])
+    expect(report.summary).toContain('1/2')
+  })
 
   it('returns AJNA_PROOF_BLOCKED when blocking findings are present', () => {
     const report = buildCodemindAjnaProofMatrixReport({
@@ -66,26 +66,24 @@ describe('CodeMind Ajna Proof Matrix', () => {
         'src/ajna/ajna-review-renderer.spec.ts',
       ],
       blockingFindings: ['Risk classification spec missing for HIGH severity.'],
-    });
+    })
 
-    expect(report.status).toBe('AJNA_PROOF_BLOCKED');
-    expect(report.ajnaCanDeclareMergeReady).toBe(false);
-    expect(report.blockingFindings).toEqual([
-      'Risk classification spec missing for HIGH severity.',
-    ]);
-    expect(report.summary).toContain('blocked');
-  });
+    expect(report.status).toBe('AJNA_PROOF_BLOCKED')
+    expect(report.ajnaCanDeclareMergeReady).toBe(false)
+    expect(report.blockingFindings).toEqual(['Risk classification spec missing for HIGH severity.'])
+    expect(report.summary).toContain('blocked')
+  })
 
   it('returns AJNA_PROOF_BLOCKED when kernel trace proof is TRACE_PROOF_BLOCKED', () => {
     const report = buildCodemindAjnaProofMatrixReport({
       ajnaSpecFiles: ['src/ajna/ajna-merge-readiness.spec.ts'],
       requiredSpecFiles: ['src/ajna/ajna-merge-readiness.spec.ts'],
       kernelTraceProofStatus: 'TRACE_PROOF_BLOCKED',
-    });
+    })
 
-    expect(report.status).toBe('AJNA_PROOF_BLOCKED');
-    expect(report.ajnaCanDeclareMergeReady).toBe(false);
-  });
+    expect(report.status).toBe('AJNA_PROOF_BLOCKED')
+    expect(report.ajnaCanDeclareMergeReady).toBe(false)
+  })
 
   it('returns AJNA_PROOF_INVALID when kernel trace proof is TRACE_PROOF_INVALID', () => {
     const report = buildCodemindAjnaProofMatrixReport({
@@ -98,12 +96,12 @@ describe('CodeMind Ajna Proof Matrix', () => {
         'src/ajna/ajna-review-renderer.spec.ts',
       ],
       kernelTraceProofStatus: 'TRACE_PROOF_INVALID',
-    });
+    })
 
-    expect(report.status).toBe('AJNA_PROOF_INVALID');
-    expect(report.ajnaCanDeclareMergeReady).toBe(false);
-    expect(report.summary).toContain('invalid');
-  });
+    expect(report.status).toBe('AJNA_PROOF_INVALID')
+    expect(report.ajnaCanDeclareMergeReady).toBe(false)
+    expect(report.summary).toContain('invalid')
+  })
 
   it('sorts and deduplicates required spec paths deterministically', () => {
     const report = buildCodemindAjnaProofMatrixReport({
@@ -117,15 +115,15 @@ describe('CodeMind Ajna Proof Matrix', () => {
         'src/ajna/ajna-merge-readiness.spec.ts',
         'src/ajna/ajna-merge-readiness.spec.ts',
       ],
-    });
+    })
 
     expect(report.coveredSpecs).toEqual([
       'src/ajna/ajna-merge-readiness.spec.ts',
       'src/ajna/ajna-review-renderer.spec.ts',
-    ]);
-    expect(report.missingSpecs).toEqual([]);
-    expect(report.status).toBe('AJNA_PROOF_READY');
-  });
+    ])
+    expect(report.missingSpecs).toEqual([])
+    expect(report.status).toBe('AJNA_PROOF_READY')
+  })
 
   it('produces stable output across identical calls', () => {
     const input = {
@@ -134,12 +132,12 @@ describe('CodeMind Ajna Proof Matrix', () => {
         'src/ajna/ajna-merge-readiness.spec.ts',
         'src/ajna/ajna-review-renderer.spec.ts',
       ],
-    };
-    const r1 = buildCodemindAjnaProofMatrixReport(input);
-    const r2 = buildCodemindAjnaProofMatrixReport(input);
+    }
+    const r1 = buildCodemindAjnaProofMatrixReport(input)
+    const r2 = buildCodemindAjnaProofMatrixReport(input)
 
-    expect(r1.summary).toBe(r2.summary);
-    expect(r1.status).toBe(r2.status);
-    expect(r1.missingSpecs).toEqual(r2.missingSpecs);
-  });
-});
+    expect(r1.summary).toBe(r2.summary)
+    expect(r1.status).toBe(r2.status)
+    expect(r1.missingSpecs).toEqual(r2.missingSpecs)
+  })
+})
