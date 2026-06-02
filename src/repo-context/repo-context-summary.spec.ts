@@ -1,15 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
 import {
   countProtectedChangedFiles,
   getHighestRepoImpactLevel,
   hasRequiredEvidenceState,
   summarizeReadOnlyRepoContext,
-} from './repo-context-summary.js';
+} from './repo-context-summary.js'
 import type {
   CodemindChangedFileContext,
   CodemindReadOnlyRepoContext,
-} from './repo-context.types.js';
+} from './repo-context.types.js'
 
 function makeChangedFile(
   overrides: Partial<CodemindChangedFileContext> = {},
@@ -23,7 +23,7 @@ function makeChangedFile(
     protectedPath: false,
     notes: [],
     ...overrides,
-  };
+  }
 }
 
 function makeContext(
@@ -45,7 +45,7 @@ function makeContext(
     contextGeneratedAt: '2026-05-28T00:00:00.000Z',
     readOnly: true,
     ...overrides,
-  };
+  }
 }
 
 describe('read-only repo context summary', () => {
@@ -56,8 +56,8 @@ describe('read-only repo context summary', () => {
         makeChangedFile({ protectedPath: false }),
         makeChangedFile({ protectedPath: true }),
       ]),
-    ).toBe(2);
-  });
+    ).toBe(2)
+  })
 
   it('finds the highest impact level', () => {
     expect(
@@ -66,18 +66,18 @@ describe('read-only repo context summary', () => {
         makeChangedFile({ impactLevel: 'HIGH' }),
         makeChangedFile({ impactLevel: 'MEDIUM' }),
       ]),
-    ).toBe('HIGH');
-  });
+    ).toBe('HIGH')
+  })
 
   it('returns UNKNOWN impact for empty changed files', () => {
-    expect(getHighestRepoImpactLevel([])).toBe('UNKNOWN');
-  });
+    expect(getHighestRepoImpactLevel([])).toBe('UNKNOWN')
+  })
 
   it('requires evidence states to be present or not required', () => {
-    expect(hasRequiredEvidenceState(['PRESENT', 'NOT_REQUIRED'])).toBe(true);
-    expect(hasRequiredEvidenceState(['PRESENT', 'MISSING'])).toBe(false);
-    expect(hasRequiredEvidenceState([])).toBe(false);
-  });
+    expect(hasRequiredEvidenceState(['PRESENT', 'NOT_REQUIRED'])).toBe(true)
+    expect(hasRequiredEvidenceState(['PRESENT', 'MISSING'])).toBe(false)
+    expect(hasRequiredEvidenceState([])).toBe(false)
+  })
 
   it('summarizes repository context without mutating it', () => {
     const context = makeContext({
@@ -105,9 +105,9 @@ describe('read-only repo context summary', () => {
           notes: ['Test evidence not available in this context.'],
         },
       ],
-    });
+    })
 
-    const summary = summarizeReadOnlyRepoContext(context);
+    const summary = summarizeReadOnlyRepoContext(context)
 
     expect(summary).toEqual({
       repository: 'JLPARTIN/JLPARTIN-CodeMind',
@@ -119,7 +119,7 @@ describe('read-only repo context summary', () => {
       ciEvidenceSatisfied: true,
       testEvidenceSatisfied: false,
       readOnly: true,
-    });
-    expect(context.readOnly).toBe(true);
-  });
-});
+    })
+    expect(context.readOnly).toBe(true)
+  })
+})

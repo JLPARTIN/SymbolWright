@@ -1,39 +1,39 @@
-import { readGithubPullRequestContext } from '../../github/github-read-adapter.js';
+import { readGithubPullRequestContext } from '../../github/github-read-adapter.js'
 import type {
   CodemindGithubReadAdapterResult,
   CodemindGithubReadAdapterTarget,
   CodemindGithubReadClient,
-} from '../../github/github-read-adapter.types.js';
+} from '../../github/github-read-adapter.types.js'
 import {
   createReadOnlyRuntimeCapabilityFlags,
   evaluateCodemindRuntimeBoundary,
-} from '../../runtime/codemind-runtime-boundary.js';
-import type { CodemindRuntimeBoundaryDecision } from '../../runtime/codemind-runtime.types.js';
-import type { AjnaReviewRequest, AjnaReviewSubject } from '../ajna-review.types.js';
+} from '../../runtime/codemind-runtime-boundary.js'
+import type { CodemindRuntimeBoundaryDecision } from '../../runtime/codemind-runtime.types.js'
+import type { AjnaReviewRequest, AjnaReviewSubject } from '../ajna-review.types.js'
 
 export interface AjnaGithubRuntimeBridgeInput {
-  readonly requestId: string;
-  readonly sessionId: string;
-  readonly target: CodemindGithubReadAdapterTarget;
-  readonly operatorApproved: boolean;
-  readonly operatorIntent?: string;
-  readonly requireCiEvidence: boolean;
-  readonly requireTestEvidence: boolean;
+  readonly requestId: string
+  readonly sessionId: string
+  readonly target: CodemindGithubReadAdapterTarget
+  readonly operatorApproved: boolean
+  readonly operatorIntent?: string
+  readonly requireCiEvidence: boolean
+  readonly requireTestEvidence: boolean
 }
 
 export interface AjnaGithubRuntimeBridgeResult {
-  readonly runtimeDecision: CodemindRuntimeBoundaryDecision;
-  readonly githubContext: CodemindGithubReadAdapterResult;
-  readonly ajnaReviewRequest: AjnaReviewRequest;
+  readonly runtimeDecision: CodemindRuntimeBoundaryDecision
+  readonly githubContext: CodemindGithubReadAdapterResult
+  readonly ajnaReviewRequest: AjnaReviewRequest
 }
 
 export function mapGithubContextToAjnaReviewRequest(
   requestId: string,
   githubContext: CodemindGithubReadAdapterResult,
   options: {
-    readonly operatorIntent?: string;
-    readonly requireCiEvidence: boolean;
-    readonly requireTestEvidence: boolean;
+    readonly operatorIntent?: string
+    readonly requireCiEvidence: boolean
+    readonly requireTestEvidence: boolean
   },
 ): AjnaReviewRequest {
   const subjectBase = {
@@ -41,14 +41,14 @@ export function mapGithubContextToAjnaReviewRequest(
     pullRequestNumber: githubContext.target.pullRequestNumber,
     baseRef: githubContext.context.baseRef.name,
     headRef: githubContext.context.headRef.name,
-  } satisfies Omit<AjnaReviewSubject, 'commitSha'>;
+  } satisfies Omit<AjnaReviewSubject, 'commitSha'>
 
   const subject: AjnaReviewSubject = githubContext.context.headRef.sha
     ? {
         ...subjectBase,
         commitSha: githubContext.context.headRef.sha,
       }
-    : subjectBase;
+    : subjectBase
 
   const reviewRequestBase = {
     requestId,
@@ -56,16 +56,16 @@ export function mapGithubContextToAjnaReviewRequest(
     changedFiles: githubContext.context.changedFiles.map((file) => file.path),
     requireCiEvidence: options.requireCiEvidence,
     requireTestEvidence: options.requireTestEvidence,
-  } satisfies Omit<AjnaReviewRequest, 'operatorIntent'>;
+  } satisfies Omit<AjnaReviewRequest, 'operatorIntent'>
 
   if (options.operatorIntent) {
     return {
       ...reviewRequestBase,
       operatorIntent: options.operatorIntent,
-    };
+    }
   }
 
-  return reviewRequestBase;
+  return reviewRequestBase
 }
 
 export async function buildAjnaReviewRequestFromGithubPr(
@@ -95,32 +95,32 @@ export async function buildAjnaReviewRequestFromGithubPr(
       sourceTrustZone: 'OPERATOR_SESSION',
       operatorApproved: input.operatorApproved,
     },
-  });
+  })
 
   if (!runtimeDecision.allowedToRun) {
-    throw new Error('GitHub PR read adapter did not pass the CodeMind runtime boundary.');
+    throw new Error('GitHub PR read adapter did not pass the CodeMind runtime boundary.')
   }
 
-  const githubContext = await readGithubPullRequestContext(client, input.target);
+  const githubContext = await readGithubPullRequestContext(client, input.target)
   const requestOptionsBase = {
     requireCiEvidence: input.requireCiEvidence,
     requireTestEvidence: input.requireTestEvidence,
-  };
+  }
   const requestOptions = input.operatorIntent
     ? {
         ...requestOptionsBase,
         operatorIntent: input.operatorIntent,
       }
-    : requestOptionsBase;
+    : requestOptionsBase
   const ajnaReviewRequest = mapGithubContextToAjnaReviewRequest(
     input.requestId,
     githubContext,
     requestOptions,
-  );
+  )
 
   return {
     runtimeDecision,
     githubContext,
     ajnaReviewRequest,
-  };
+  }
 }

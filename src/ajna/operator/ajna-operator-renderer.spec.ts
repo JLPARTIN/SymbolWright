@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
 import {
   renderAjnaComparisonSummary,
   renderAjnaRiskTrendSummary,
-} from './ajna-operator-renderer.js';
-import type { AjnaReviewComparisonReport } from './ajna-review-compare.js';
-import type { AjnaRiskTrendPoint } from './ajna-risk-trend.js';
+} from './ajna-operator-renderer.js'
+import type { AjnaReviewComparisonReport } from './ajna-review-compare.js'
+import type { AjnaRiskTrendPoint } from './ajna-risk-trend.js'
 
 describe('Ajna operator renderer', () => {
   it('renders a compact comparison summary', () => {
@@ -45,15 +45,15 @@ describe('Ajna operator renderer', () => {
         neutralDelta: 0,
         healthChanged: true,
       },
-    };
+    }
 
-    const summary = renderAjnaComparisonSummary(report);
+    const summary = renderAjnaComparisonSummary(report)
 
-    expect(summary.leftRuling).toBe('READY_TO_REVIEW');
-    expect(summary.rightRuling).toBe('BLOCKED_BY_CI');
-    expect(summary.addedLanes).toEqual(['ci']);
-    expect(summary.fileDriftCount).toBe(1);
-  });
+    expect(summary.leftRuling).toBe('READY_TO_REVIEW')
+    expect(summary.rightRuling).toBe('BLOCKED_BY_CI')
+    expect(summary.addedLanes).toEqual(['ci'])
+    expect(summary.fileDriftCount).toBe(1)
+  })
 
   it('renders risk trend summary deltas', () => {
     const trend: readonly AjnaRiskTrendPoint[] = [
@@ -69,13 +69,13 @@ describe('Ajna operator renderer', () => {
         score: 8,
         ruling: 'BLOCKED_BY_CI',
       },
-    ];
+    ]
 
-    const summary = renderAjnaRiskTrendSummary(trend);
+    const summary = renderAjnaRiskTrendSummary(trend)
 
-    expect(summary.firstScore).toBe(2);
-    expect(summary.latestScore).toBe(8);
-    expect(summary.scoreDelta).toBe(6);
-    expect(summary.points).toBe(trend);
-  });
-});
+    expect(summary.firstScore).toBe(2)
+    expect(summary.latestScore).toBe(8)
+    expect(summary.scoreDelta).toBe(6)
+    expect(summary.points).toBe(trend)
+  })
+})

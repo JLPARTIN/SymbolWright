@@ -1,76 +1,71 @@
 import {
   assertGithubPrContextIsReadOnly,
   createReadOnlyGithubPrContextResponse,
-} from '../github/github-pr-context-contract.js';
+} from '../github/github-pr-context-contract.js'
 import type {
   CodemindGithubPrAdapterMode,
   CodemindGithubPrContextAdapterRequest,
   CodemindGithubPullRequestIdentity,
-} from '../github/github-pr-context.types.js';
-import type { CodemindReadOnlyRepoContext } from '../repo-context/repo-context.types.js';
+} from '../github/github-pr-context.types.js'
+import type { CodemindReadOnlyRepoContext } from '../repo-context/repo-context.types.js'
 
-export const CODEMIND_GITHUB_ADAPTER_PROOF_BLOCK_ID =
-  'CODEMIND-PROOF-HARNESS-07' as const;
-export const CODEMIND_GITHUB_ADAPTER_PROOF_PR_ID = 'PR-CM-TEST-07' as const;
-export const CODEMIND_GITHUB_ADAPTER_PROOF_PHASE_ID = 'CODEMIND-TEST-07' as const;
+export const CODEMIND_GITHUB_ADAPTER_PROOF_BLOCK_ID = 'CODEMIND-PROOF-HARNESS-07' as const
+export const CODEMIND_GITHUB_ADAPTER_PROOF_PR_ID = 'PR-CM-TEST-07' as const
+export const CODEMIND_GITHUB_ADAPTER_PROOF_PHASE_ID = 'CODEMIND-TEST-07' as const
 
 export const CODEMIND_GITHUB_ADAPTER_PROOF_STATUSES = [
   'GITHUB_ADAPTER_PROOF_READY',
   'GITHUB_ADAPTER_PROOF_PARTIAL',
   'GITHUB_ADAPTER_PROOF_BLOCKED',
   'GITHUB_ADAPTER_PROOF_INVALID',
-] as const;
+] as const
 export type CodemindGithubAdapterProofStatus =
-  (typeof CODEMIND_GITHUB_ADAPTER_PROOF_STATUSES)[number];
+  (typeof CODEMIND_GITHUB_ADAPTER_PROOF_STATUSES)[number]
 
 export interface CodemindGithubAdapterProofInput {
-  readonly adapterMode: CodemindGithubPrAdapterMode;
-  readonly pullRequest: CodemindGithubPullRequestIdentity;
-  readonly repoContext: CodemindReadOnlyRepoContext;
-  readonly blockingNotes?: readonly string[];
+  readonly adapterMode: CodemindGithubPrAdapterMode
+  readonly pullRequest: CodemindGithubPullRequestIdentity
+  readonly repoContext: CodemindReadOnlyRepoContext
+  readonly blockingNotes?: readonly string[]
 }
 
 export interface CodemindGithubAdapterProofReport {
-  readonly blockId: typeof CODEMIND_GITHUB_ADAPTER_PROOF_BLOCK_ID;
-  readonly prId: typeof CODEMIND_GITHUB_ADAPTER_PROOF_PR_ID;
-  readonly phaseId: typeof CODEMIND_GITHUB_ADAPTER_PROOF_PHASE_ID;
-  readonly status: CodemindGithubAdapterProofStatus;
-  readonly adapterMode: CodemindGithubPrAdapterMode;
-  readonly isReadOnly: boolean;
-  readonly violations: readonly string[];
-  readonly blockingNotes: readonly string[];
-  readonly mutationAllowed: false;
-  readonly githubWriteAllowed: false;
-  readonly providerInvocationAllowed: false;
-  readonly summary: string;
+  readonly blockId: typeof CODEMIND_GITHUB_ADAPTER_PROOF_BLOCK_ID
+  readonly prId: typeof CODEMIND_GITHUB_ADAPTER_PROOF_PR_ID
+  readonly phaseId: typeof CODEMIND_GITHUB_ADAPTER_PROOF_PHASE_ID
+  readonly status: CodemindGithubAdapterProofStatus
+  readonly adapterMode: CodemindGithubPrAdapterMode
+  readonly isReadOnly: boolean
+  readonly violations: readonly string[]
+  readonly blockingNotes: readonly string[]
+  readonly mutationAllowed: false
+  readonly githubWriteAllowed: false
+  readonly providerInvocationAllowed: false
+  readonly summary: string
 }
 
-const ALLOWED_MODES: ReadonlySet<CodemindGithubPrAdapterMode> = new Set([
-  'READ_ONLY_CONTRACT',
-]);
+const ALLOWED_MODES: ReadonlySet<CodemindGithubPrAdapterMode> = new Set(['READ_ONLY_CONTRACT'])
 
 function collectViolations(
   adapterMode: CodemindGithubPrAdapterMode,
   pullRequest: CodemindGithubPullRequestIdentity,
   isReadOnly: boolean,
 ): readonly string[] {
-  const violations: string[] = [];
+  const violations: string[] = []
 
   if (!ALLOWED_MODES.has(adapterMode)) {
-    violations.push(
-      `Adapter mode '${adapterMode}' is not a safe read-only mode.`,
-    );
+    violations.push(`Adapter mode '${adapterMode}' is not a safe read-only mode.`)
   }
 
   if (!pullRequest.repositoryFullName || pullRequest.pullRequestNumber <= 0) {
-    violations.push('Pull request identity is incomplete or invalid.');
+    violations.push('Pull request identity is incomplete or invalid.')
   }
 
   if (!isReadOnly) {
-    violations.push('Adapter response failed read-only assertion.');
+    violations.push('Adapter response failed read-only assertion.')
   }
 
-  return violations;
+  return violations
 }
 
 function resolveStatus(
@@ -78,20 +73,18 @@ function resolveStatus(
   violations: readonly string[],
 ): CodemindGithubAdapterProofStatus {
   if (blockingNotes.length > 0) {
-    return 'GITHUB_ADAPTER_PROOF_BLOCKED';
+    return 'GITHUB_ADAPTER_PROOF_BLOCKED'
   }
   if (violations.length > 0) {
-    return 'GITHUB_ADAPTER_PROOF_INVALID';
+    return 'GITHUB_ADAPTER_PROOF_INVALID'
   }
-  return 'GITHUB_ADAPTER_PROOF_READY';
+  return 'GITHUB_ADAPTER_PROOF_READY'
 }
 
 export function buildCodemindGithubAdapterProofReport(
   input: CodemindGithubAdapterProofInput,
 ): CodemindGithubAdapterProofReport {
-  const blockingNotes = [...(input.blockingNotes ?? [])].sort((a, b) =>
-    a.localeCompare(b),
-  );
+  const blockingNotes = [...(input.blockingNotes ?? [])].sort((a, b) => a.localeCompare(b))
 
   const request: CodemindGithubPrContextAdapterRequest = {
     requestId: `proof-${input.pullRequest.pullRequestNumber}`,
@@ -101,20 +94,20 @@ export function buildCodemindGithubAdapterProofReport(
     includeReviewCommentContext: false,
     includeCiEvidence: true,
     includeTestEvidence: true,
-  };
+  }
 
-  const response = createReadOnlyGithubPrContextResponse(request, input.repoContext);
-  const isReadOnly = assertGithubPrContextIsReadOnly(response);
+  const response = createReadOnlyGithubPrContextResponse(request, input.repoContext)
+  const isReadOnly = assertGithubPrContextIsReadOnly(response)
 
-  const violations = collectViolations(input.adapterMode, input.pullRequest, isReadOnly);
-  const status = resolveStatus(blockingNotes, violations);
+  const violations = collectViolations(input.adapterMode, input.pullRequest, isReadOnly)
+  const status = resolveStatus(blockingNotes, violations)
 
   const summary =
     status === 'GITHUB_ADAPTER_PROOF_BLOCKED'
       ? `GitHub adapter proof blocked: ${blockingNotes.length} blocking note(s).`
       : status === 'GITHUB_ADAPTER_PROOF_INVALID'
         ? `GitHub adapter proof invalid: ${violations.length} violation(s).`
-        : 'GitHub adapter proof ready: read-only contract verified.';
+        : 'GitHub adapter proof ready: read-only contract verified.'
 
   return {
     blockId: CODEMIND_GITHUB_ADAPTER_PROOF_BLOCK_ID,
@@ -129,5 +122,5 @@ export function buildCodemindGithubAdapterProofReport(
     githubWriteAllowed: false,
     providerInvocationAllowed: false,
     summary,
-  };
+  }
 }

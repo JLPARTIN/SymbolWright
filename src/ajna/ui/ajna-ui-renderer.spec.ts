@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
-import { renderAjnaReviewPanelMarkdown } from './ajna-ui-renderer.js';
-import type { AjnaReviewPanelViewModel } from './ajna-ui.types.js';
+import { renderAjnaReviewPanelMarkdown } from './ajna-ui-renderer.js'
+import type { AjnaReviewPanelViewModel } from './ajna-ui.types.js'
 
 function makeViewModel(): AjnaReviewPanelViewModel {
   return {
@@ -67,41 +67,41 @@ function makeViewModel(): AjnaReviewPanelViewModel {
       markdown: '# Ajna Review\n\nPreview only.',
       dryRun: true,
     },
-  };
+  }
 }
 
 describe('Ajna UI renderer', () => {
   it('renders the review panel markdown', () => {
-    const markdown = renderAjnaReviewPanelMarkdown(makeViewModel());
+    const markdown = renderAjnaReviewPanelMarkdown(makeViewModel())
 
-    expect(markdown).toContain('# CodeMind — Ajna Review Panel');
-    expect(markdown).toContain('**Repository:** JLPARTIN/JLPARTIN-CodeMind');
-    expect(markdown).toContain('**Ruling:** NEEDS_OPERATOR_DECISION');
-    expect(markdown).toContain('**Confidence:** 86.0%');
-    expect(markdown).toContain('**Scope Loaded:** 2 changed file(s) loaded for review. (INFO)');
-    expect(markdown).toContain('**ci:** 1 file(s), severity HIGH');
-    expect(markdown).toContain('**tests:** 2 file(s), severity MEDIUM');
-    expect(markdown).toContain('**.github/workflows/ci.yml**');
-    expect(markdown).toContain('Severity: CRITICAL');
-    expect(markdown).toContain('**Healthy:** No');
-    expect(markdown).toContain('**Dry run:** Yes');
-    expect(markdown).toContain('Preview only.');
-  });
+    expect(markdown).toContain('# CodeMind — Ajna Review Panel')
+    expect(markdown).toContain('**Repository:** JLPARTIN/JLPARTIN-CodeMind')
+    expect(markdown).toContain('**Ruling:** NEEDS_OPERATOR_DECISION')
+    expect(markdown).toContain('**Confidence:** 86.0%')
+    expect(markdown).toContain('**Scope Loaded:** 2 changed file(s) loaded for review. (INFO)')
+    expect(markdown).toContain('**ci:** 1 file(s), severity HIGH')
+    expect(markdown).toContain('**tests:** 2 file(s), severity MEDIUM')
+    expect(markdown).toContain('**.github/workflows/ci.yml**')
+    expect(markdown).toContain('Severity: CRITICAL')
+    expect(markdown).toContain('**Healthy:** No')
+    expect(markdown).toContain('**Dry run:** Yes')
+    expect(markdown).toContain('Preview only.')
+  })
 
   it('renders empty optional sections safely', () => {
-    const base = makeViewModel();
+    const base = makeViewModel()
     const model: AjnaReviewPanelViewModel = {
       repository: base.repository,
       readiness: base.readiness,
       riskLanes: [],
       commentPreview: base.commentPreview,
-    };
-    const markdown = renderAjnaReviewPanelMarkdown(model);
+    }
+    const markdown = renderAjnaReviewPanelMarkdown(model)
 
-    expect(markdown).toContain('No timeline available.');
-    expect(markdown).toContain('No risk lanes detected.');
-    expect(markdown).toContain('No file insights available.');
-    expect(markdown).toContain('No CI data available.');
-    expect(markdown).toContain('**Pull request:** Not provided');
-  });
-});
+    expect(markdown).toContain('No timeline available.')
+    expect(markdown).toContain('No risk lanes detected.')
+    expect(markdown).toContain('No file insights available.')
+    expect(markdown).toContain('No CI data available.')
+    expect(markdown).toContain('**Pull request:** Not provided')
+  })
+})

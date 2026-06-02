@@ -1,19 +1,17 @@
 export interface AjnaTimelineStep {
-  readonly label: string;
-  readonly detail: string;
-  readonly status: 'INFO' | 'PASS' | 'WARN' | 'BLOCKED';
+  readonly label: string
+  readonly detail: string
+  readonly status: 'INFO' | 'PASS' | 'WARN' | 'BLOCKED'
 }
 
 export interface AjnaTimelineInput {
-  readonly changedFileCount: number;
-  readonly riskLanes: readonly string[];
-  readonly ciHealthy: boolean;
-  readonly readinessRuling: string;
+  readonly changedFileCount: number
+  readonly riskLanes: readonly string[]
+  readonly ciHealthy: boolean
+  readonly readinessRuling: string
 }
 
-export function buildAjnaTimeline(
-  input: AjnaTimelineInput,
-): readonly AjnaTimelineStep[] {
+export function buildAjnaTimeline(input: AjnaTimelineInput): readonly AjnaTimelineStep[] {
   return [
     {
       label: 'Scope Loaded',
@@ -35,5 +33,5 @@ export function buildAjnaTimeline(
       detail: input.readinessRuling,
       status: input.readinessRuling.startsWith('BLOCKED') ? 'BLOCKED' : 'INFO',
     },
-  ];
+  ]
 }

@@ -4,21 +4,21 @@ import type {
   AjnaUiFileInsightViewModel,
   AjnaUiRiskLaneViewModel,
   AjnaUiTimelineStepViewModel,
-} from './ajna-ui.types.js';
+} from './ajna-ui.types.js'
 
 function renderRiskLanes(lanes: readonly AjnaUiRiskLaneViewModel[]): string {
   if (lanes.length === 0) {
-    return '- No risk lanes detected.';
+    return '- No risk lanes detected.'
   }
 
   return lanes
     .map((lane) => `- **${lane.lane}:** ${lane.count} file(s), severity ${lane.severity}`)
-    .join('\n');
+    .join('\n')
 }
 
 function renderCiSummary(summary?: AjnaUiCiSummaryViewModel): string {
   if (!summary) {
-    return '- No CI data available.';
+    return '- No CI data available.'
   }
 
   return [
@@ -28,43 +28,37 @@ function renderCiSummary(summary?: AjnaUiCiSummaryViewModel): string {
     `- **Pending:** ${summary.pending}`,
     `- **Neutral:** ${summary.neutral}`,
     `- **Healthy:** ${summary.healthy ? 'Yes' : 'No'}`,
-  ].join('\n');
+  ].join('\n')
 }
 
-function renderTimeline(
-  timeline?: readonly AjnaUiTimelineStepViewModel[],
-): string {
+function renderTimeline(timeline?: readonly AjnaUiTimelineStepViewModel[]): string {
   if (!timeline || timeline.length === 0) {
-    return '- No timeline available.';
+    return '- No timeline available.'
   }
 
-  return timeline
-    .map((step) => `- **${step.label}:** ${step.detail} (${step.status})`)
-    .join('\n');
+  return timeline.map((step) => `- **${step.label}:** ${step.detail} (${step.status})`).join('\n')
 }
 
-function renderFileInsights(
-  insights?: readonly AjnaUiFileInsightViewModel[],
-): string {
+function renderFileInsights(insights?: readonly AjnaUiFileInsightViewModel[]): string {
   if (!insights || insights.length === 0) {
-    return '- No file insights available.';
+    return '- No file insights available.'
   }
 
   return insights
-    .map((file) => [
-      `- **${file.path}**`,
-      `  - Lane: ${file.lane}`,
-      `  - Delta: +${file.additions} / -${file.deletions} (${file.totalDelta})`,
-      `  - Score: ${file.score}`,
-      `  - Severity: ${file.severity}`,
-      `  - Flags: largeDelta=${file.flags.largeDelta}, protectedPath=${file.flags.protectedPath}, configurationRisk=${file.flags.configurationRisk}, testOnlySignal=${file.flags.testOnlySignal}`,
-    ].join('\n'))
-    .join('\n');
+    .map((file) =>
+      [
+        `- **${file.path}**`,
+        `  - Lane: ${file.lane}`,
+        `  - Delta: +${file.additions} / -${file.deletions} (${file.totalDelta})`,
+        `  - Score: ${file.score}`,
+        `  - Severity: ${file.severity}`,
+        `  - Flags: largeDelta=${file.flags.largeDelta}, protectedPath=${file.flags.protectedPath}, configurationRisk=${file.flags.configurationRisk}, testOnlySignal=${file.flags.testOnlySignal}`,
+      ].join('\n'),
+    )
+    .join('\n')
 }
 
-export function renderAjnaReviewPanelMarkdown(
-  model: AjnaReviewPanelViewModel,
-): string {
+export function renderAjnaReviewPanelMarkdown(model: AjnaReviewPanelViewModel): string {
   return [
     '# CodeMind — Ajna Review Panel',
     '',
@@ -104,5 +98,5 @@ export function renderAjnaReviewPanelMarkdown(
     '```markdown',
     model.commentPreview.markdown || 'No review content yet.',
     '```',
-  ].join('\n');
+  ].join('\n')
 }

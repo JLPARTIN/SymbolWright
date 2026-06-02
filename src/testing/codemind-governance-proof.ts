@@ -1,58 +1,57 @@
 import {
   evaluateCodemindPermissionRequest,
   resolveHighestDisposition,
-} from '../permissions/codemind-permission-policy.js';
+} from '../permissions/codemind-permission-policy.js'
 import type {
   CodemindPermissionDecision,
   CodemindPermissionDisposition,
   CodemindPermissionRequest,
-} from '../permissions/codemind-permission.types.js';
+} from '../permissions/codemind-permission.types.js'
 
-export const CODEMIND_GOVERNANCE_PROOF_BLOCK_ID = 'CODEMIND-PROOF-HARNESS-05' as const;
-export const CODEMIND_GOVERNANCE_PROOF_PR_ID = 'PR-CM-TEST-05' as const;
-export const CODEMIND_GOVERNANCE_PROOF_PHASE_ID = 'CODEMIND-TEST-05' as const;
+export const CODEMIND_GOVERNANCE_PROOF_BLOCK_ID = 'CODEMIND-PROOF-HARNESS-05' as const
+export const CODEMIND_GOVERNANCE_PROOF_PR_ID = 'PR-CM-TEST-05' as const
+export const CODEMIND_GOVERNANCE_PROOF_PHASE_ID = 'CODEMIND-TEST-05' as const
 
 export const CODEMIND_GOVERNANCE_PROOF_STATUSES = [
   'GOVERNANCE_PROOF_READY',
   'GOVERNANCE_PROOF_PARTIAL',
   'GOVERNANCE_PROOF_BLOCKED',
   'GOVERNANCE_PROOF_INVALID',
-] as const;
-export type CodemindGovernanceProofStatus =
-  (typeof CODEMIND_GOVERNANCE_PROOF_STATUSES)[number];
+] as const
+export type CodemindGovernanceProofStatus = (typeof CODEMIND_GOVERNANCE_PROOF_STATUSES)[number]
 
 export interface CodemindGovernanceProofCase {
-  readonly request: CodemindPermissionRequest;
-  readonly expectedDisposition: CodemindPermissionDisposition;
+  readonly request: CodemindPermissionRequest
+  readonly expectedDisposition: CodemindPermissionDisposition
 }
 
 export interface CodemindGovernanceProofInput {
-  readonly testCases: readonly CodemindGovernanceProofCase[];
-  readonly blockingNotes?: readonly string[];
+  readonly testCases: readonly CodemindGovernanceProofCase[]
+  readonly blockingNotes?: readonly string[]
 }
 
 export interface CodemindGovernanceProofCaseResult {
-  readonly requestId: string;
-  readonly expectedDisposition: CodemindPermissionDisposition;
-  readonly actualDisposition: CodemindPermissionDisposition;
-  readonly passed: boolean;
-  readonly decision: CodemindPermissionDecision;
+  readonly requestId: string
+  readonly expectedDisposition: CodemindPermissionDisposition
+  readonly actualDisposition: CodemindPermissionDisposition
+  readonly passed: boolean
+  readonly decision: CodemindPermissionDecision
 }
 
 export interface CodemindGovernanceProofReport {
-  readonly blockId: typeof CODEMIND_GOVERNANCE_PROOF_BLOCK_ID;
-  readonly prId: typeof CODEMIND_GOVERNANCE_PROOF_PR_ID;
-  readonly phaseId: typeof CODEMIND_GOVERNANCE_PROOF_PHASE_ID;
-  readonly status: CodemindGovernanceProofStatus;
-  readonly passedCount: number;
-  readonly failedCount: number;
-  readonly results: readonly CodemindGovernanceProofCaseResult[];
-  readonly blockingNotes: readonly string[];
-  readonly highestDisposition: CodemindPermissionDisposition;
-  readonly mutationAllowed: false;
-  readonly githubWriteAllowed: false;
-  readonly providerInvocationAllowed: false;
-  readonly summary: string;
+  readonly blockId: typeof CODEMIND_GOVERNANCE_PROOF_BLOCK_ID
+  readonly prId: typeof CODEMIND_GOVERNANCE_PROOF_PR_ID
+  readonly phaseId: typeof CODEMIND_GOVERNANCE_PROOF_PHASE_ID
+  readonly status: CodemindGovernanceProofStatus
+  readonly passedCount: number
+  readonly failedCount: number
+  readonly results: readonly CodemindGovernanceProofCaseResult[]
+  readonly blockingNotes: readonly string[]
+  readonly highestDisposition: CodemindPermissionDisposition
+  readonly mutationAllowed: false
+  readonly githubWriteAllowed: false
+  readonly providerInvocationAllowed: false
+  readonly summary: string
 }
 
 function resolveStatus(
@@ -62,47 +61,40 @@ function resolveStatus(
   totalCount: number,
 ): CodemindGovernanceProofStatus {
   if (blockingNotes.length > 0) {
-    return 'GOVERNANCE_PROOF_BLOCKED';
+    return 'GOVERNANCE_PROOF_BLOCKED'
   }
   if (failedCount > 0) {
-    return 'GOVERNANCE_PROOF_INVALID';
+    return 'GOVERNANCE_PROOF_INVALID'
   }
   if (totalCount === 0 || passedCount === 0) {
-    return 'GOVERNANCE_PROOF_PARTIAL';
+    return 'GOVERNANCE_PROOF_PARTIAL'
   }
-  return 'GOVERNANCE_PROOF_READY';
+  return 'GOVERNANCE_PROOF_READY'
 }
 
 export function buildCodemindGovernanceProofReport(
   input: CodemindGovernanceProofInput,
 ): CodemindGovernanceProofReport {
-  const blockingNotes = [...(input.blockingNotes ?? [])].sort((a, b) =>
-    a.localeCompare(b),
-  );
+  const blockingNotes = [...(input.blockingNotes ?? [])].sort((a, b) => a.localeCompare(b))
 
   const results: CodemindGovernanceProofCaseResult[] = input.testCases.map((testCase) => {
-    const decision = evaluateCodemindPermissionRequest(testCase.request);
+    const decision = evaluateCodemindPermissionRequest(testCase.request)
     return {
       requestId: testCase.request.requestId,
       expectedDisposition: testCase.expectedDisposition,
       actualDisposition: decision.disposition,
       passed: decision.disposition === testCase.expectedDisposition,
       decision,
-    };
-  });
+    }
+  })
 
-  const passedCount = results.filter((r) => r.passed).length;
-  const failedCount = results.filter((r) => !r.passed).length;
+  const passedCount = results.filter((r) => r.passed).length
+  const failedCount = results.filter((r) => !r.passed).length
 
-  const allDispositions = results.map((r) => r.actualDisposition);
-  const highestDisposition = resolveHighestDisposition(allDispositions);
+  const allDispositions = results.map((r) => r.actualDisposition)
+  const highestDisposition = resolveHighestDisposition(allDispositions)
 
-  const status = resolveStatus(
-    blockingNotes,
-    failedCount,
-    passedCount,
-    input.testCases.length,
-  );
+  const status = resolveStatus(blockingNotes, failedCount, passedCount, input.testCases.length)
 
   const summary =
     status === 'GOVERNANCE_PROOF_BLOCKED'
@@ -111,7 +103,7 @@ export function buildCodemindGovernanceProofReport(
         ? `Governance proof invalid: ${failedCount} test case(s) failed.`
         : status === 'GOVERNANCE_PROOF_READY'
           ? `Governance proof ready: ${passedCount}/${input.testCases.length} test case(s) passed.`
-          : `Governance proof partial: ${passedCount}/${input.testCases.length} test case(s) passed.`;
+          : `Governance proof partial: ${passedCount}/${input.testCases.length} test case(s) passed.`
 
   return {
     blockId: CODEMIND_GOVERNANCE_PROOF_BLOCK_ID,
@@ -127,5 +119,5 @@ export function buildCodemindGovernanceProofReport(
     githubWriteAllowed: false,
     providerInvocationAllowed: false,
     summary,
-  };
+  }
 }

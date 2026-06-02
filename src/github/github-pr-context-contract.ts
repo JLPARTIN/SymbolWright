@@ -1,8 +1,8 @@
 import type {
   CodemindGithubPrContextAdapterRequest,
   CodemindGithubPrContextAdapterResponse,
-} from './github-pr-context.types.js';
-import type { CodemindReadOnlyRepoContext } from '../repo-context/repo-context.types.js';
+} from './github-pr-context.types.js'
+import type { CodemindReadOnlyRepoContext } from '../repo-context/repo-context.types.js'
 
 export function createReadOnlyGithubPrContextResponse(
   request: CodemindGithubPrContextAdapterRequest,
@@ -22,7 +22,7 @@ export function createReadOnlyGithubPrContextResponse(
       'This contract response is read-only.',
       'GitHub write actions, PR comments, merge actions, and network runtime execution are disabled in this phase.',
     ],
-  };
+  }
 }
 
 export function assertGithubPrContextIsReadOnly(
@@ -35,5 +35,5 @@ export function assertGithubPrContextIsReadOnly(
     !response.mergeEnabled &&
     !response.networkRuntimeImplemented &&
     response.context.readOnly
-  );
+  )
 }

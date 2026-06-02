@@ -1,10 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest'
 
 import {
   GithubChecksAdapter,
   type GithubChecksClient,
   type GithubCheckRunsResponse,
-} from './github-checks-adapter.js';
+} from './github-checks-adapter.js'
 
 describe('GithubChecksAdapter', () => {
   it('summarizes check runs without network access', async () => {
@@ -36,18 +36,18 @@ describe('GithubChecksAdapter', () => {
           conclusion: 'skipped',
         },
       ],
-    };
+    }
     const client: GithubChecksClient = {
       getCheckRunsForCommit: vi.fn().mockResolvedValue(fakeResponse),
-    };
+    }
 
-    const adapter = new GithubChecksAdapter(client);
-    const summary = await adapter.summarizeChecks('owner/repo', 'abc123');
+    const adapter = new GithubChecksAdapter(client)
+    const summary = await adapter.summarizeChecks('owner/repo', 'abc123')
 
     expect(client.getCheckRunsForCommit).toHaveBeenCalledWith({
       repository: 'owner/repo',
       sha: 'abc123',
-    });
+    })
     expect(summary).toEqual({
       total: 4,
       completed: 3,
@@ -57,6 +57,6 @@ describe('GithubChecksAdapter', () => {
       pending: 1,
       runs: fakeResponse.checkRuns,
       readOnly: true,
-    });
-  });
-});
+    })
+  })
+})

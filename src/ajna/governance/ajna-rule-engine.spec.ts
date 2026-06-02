@@ -1,11 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
-import { evaluateAjnaGovernanceRules } from './ajna-rule-engine.js';
-import type { AjnaReviewPanelViewModel } from '../ui/ajna-ui.types.js';
+import { evaluateAjnaGovernanceRules } from './ajna-rule-engine.js'
+import type { AjnaReviewPanelViewModel } from '../ui/ajna-ui.types.js'
 
-function makeReview(
-  overrides: Partial<AjnaReviewPanelViewModel> = {},
-): AjnaReviewPanelViewModel {
+function makeReview(overrides: Partial<AjnaReviewPanelViewModel> = {}): AjnaReviewPanelViewModel {
   return {
     repository: 'owner/repo',
     pullRequestNumber: 15,
@@ -47,17 +45,17 @@ function makeReview(
       dryRun: true,
     },
     ...overrides,
-  };
+  }
 }
 
 describe('Ajna governance rule engine', () => {
   it('passes a healthy review through the default rule catalog', () => {
-    const report = evaluateAjnaGovernanceRules(makeReview());
+    const report = evaluateAjnaGovernanceRules(makeReview())
 
-    expect(report.allPassed).toBe(true);
-    expect(report.results).toHaveLength(3);
-    expect(report.results.every((result) => result.passed)).toBe(true);
-  });
+    expect(report.allPassed).toBe(true)
+    expect(report.results).toHaveLength(3)
+    expect(report.results.every((result) => result.passed)).toBe(true)
+  })
 
   it('reports failed rules deterministically', () => {
     const report = evaluateAjnaGovernanceRules(
@@ -94,14 +92,14 @@ describe('Ajna governance rule engine', () => {
           },
         ],
       }),
-    );
+    )
 
-    expect(report.allPassed).toBe(false);
-    expect(report.results.filter((result) => !result.passed)).toHaveLength(3);
+    expect(report.allPassed).toBe(false)
+    expect(report.results.filter((result) => !result.passed)).toHaveLength(3)
     expect(report.results.map((result) => result.id)).toEqual([
       'ci.zero-failed-checks',
       'risk.no-critical-file-insights',
       'readiness.minimum-confidence',
-    ]);
-  });
-});
+    ])
+  })
+})

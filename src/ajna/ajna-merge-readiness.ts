@@ -3,17 +3,17 @@ import type {
   AjnaMergeReadinessStatus,
   AjnaReviewFinding,
   AjnaReviewRequest,
-} from './ajna-review.types.js';
+} from './ajna-review.types.js'
 
 const BLOCKED_STATUSES = new Set<AjnaMergeReadinessStatus>([
   'BLOCKED_BY_RISK',
   'BLOCKED_BY_CI',
   'BLOCKED_BY_SECURITY',
   'BLOCKED_BY_ARCHITECTURE_DRIFT',
-]);
+])
 
 export function isAjnaBlockedStatus(status: AjnaMergeReadinessStatus): boolean {
-  return BLOCKED_STATUSES.has(status);
+  return BLOCKED_STATUSES.has(status)
 }
 
 export function canAjnaDeclareMergeReady(readiness: AjnaMergeReadiness): boolean {
@@ -22,7 +22,7 @@ export function canAjnaDeclareMergeReady(readiness: AjnaMergeReadiness): boolean
     readiness.requiredEvidencePresent &&
     readiness.blockingFindings.length === 0 &&
     !readiness.operatorDecisionRequired
-  );
+  )
 }
 
 export function deriveAjnaMergeReadiness(
@@ -31,19 +31,18 @@ export function deriveAjnaMergeReadiness(
 ): AjnaMergeReadiness {
   const blockingFindings = findings
     .filter((finding) => finding.blocksMerge)
-    .map((finding) => finding.id);
+    .map((finding) => finding.id)
 
   const hasSecurityBlocker = findings.some(
-    (finding) =>
-      finding.blocksMerge && finding.category === 'SECURITY_SENSITIVE_CHANGE',
-  );
+    (finding) => finding.blocksMerge && finding.category === 'SECURITY_SENSITIVE_CHANGE',
+  )
   const hasArchitectureBlocker = findings.some(
     (finding) => finding.blocksMerge && finding.category === 'ARCHITECTURE_DRIFT',
-  );
+  )
   const hasCiBlocker = findings.some(
     (finding) => finding.blocksMerge && finding.category === 'CI_SIGNAL',
-  );
-  const hasTestGap = findings.some((finding) => finding.category === 'TEST_GAP');
+  )
+  const hasTestGap = findings.some((finding) => finding.category === 'TEST_GAP')
 
   if (hasSecurityBlocker) {
     return {
@@ -52,7 +51,7 @@ export function deriveAjnaMergeReadiness(
       requiredEvidencePresent: false,
       blockingFindings,
       operatorDecisionRequired: true,
-    };
+    }
   }
 
   if (hasArchitectureBlocker) {
@@ -62,7 +61,7 @@ export function deriveAjnaMergeReadiness(
       requiredEvidencePresent: false,
       blockingFindings,
       operatorDecisionRequired: true,
-    };
+    }
   }
 
   if (hasCiBlocker) {
@@ -72,7 +71,7 @@ export function deriveAjnaMergeReadiness(
       requiredEvidencePresent: false,
       blockingFindings,
       operatorDecisionRequired: false,
-    };
+    }
   }
 
   if (blockingFindings.length > 0) {
@@ -82,7 +81,7 @@ export function deriveAjnaMergeReadiness(
       requiredEvidencePresent: false,
       blockingFindings,
       operatorDecisionRequired: true,
-    };
+    }
   }
 
   if (request.requireTestEvidence && hasTestGap) {
@@ -92,7 +91,7 @@ export function deriveAjnaMergeReadiness(
       requiredEvidencePresent: false,
       blockingFindings,
       operatorDecisionRequired: false,
-    };
+    }
   }
 
   if (request.requireCiEvidence || request.requireTestEvidence) {
@@ -102,7 +101,7 @@ export function deriveAjnaMergeReadiness(
       requiredEvidencePresent: false,
       blockingFindings,
       operatorDecisionRequired: true,
-    };
+    }
   }
 
   return {
@@ -111,5 +110,5 @@ export function deriveAjnaMergeReadiness(
     requiredEvidencePresent: false,
     blockingFindings,
     operatorDecisionRequired: false,
-  };
+  }
 }

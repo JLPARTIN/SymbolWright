@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
 import {
   evaluateCodemindPermissionRequest,
   resolveHighestDisposition,
-} from './codemind-permission-policy.js';
-import type { CodemindPermissionRequest } from './codemind-permission.types.js';
+} from './codemind-permission-policy.js'
+import type { CodemindPermissionRequest } from './codemind-permission.types.js'
 
 function makeRequest(
   overrides: Partial<CodemindPermissionRequest> = {},
@@ -19,27 +19,27 @@ function makeRequest(
     sourceTrustZone: 'OPERATOR_SESSION',
     operatorApproved: false,
     ...overrides,
-  };
+  }
 }
 
 describe('CodeMind permission policy', () => {
   it('resolves DENY over ASK over ALLOW', () => {
-    expect(resolveHighestDisposition(['ALLOW', 'ASK'])).toBe('ASK');
-    expect(resolveHighestDisposition(['ALLOW', 'DENY'])).toBe('DENY');
-    expect(resolveHighestDisposition(['ALLOW', 'ASK', 'DENY'])).toBe('DENY');
-  });
+    expect(resolveHighestDisposition(['ALLOW', 'ASK'])).toBe('ASK')
+    expect(resolveHighestDisposition(['ALLOW', 'DENY'])).toBe('DENY')
+    expect(resolveHighestDisposition(['ALLOW', 'ASK', 'DENY'])).toBe('DENY')
+  })
 
   it('defaults empty disposition sets to ASK', () => {
-    expect(resolveHighestDisposition([])).toBe('ASK');
-  });
+    expect(resolveHighestDisposition([])).toBe('ASK')
+  })
 
   it('keeps unapproved requests behind an ASK decision for non-mutating tools', () => {
-    const decision = evaluateCodemindPermissionRequest(makeRequest());
+    const decision = evaluateCodemindPermissionRequest(makeRequest())
 
-    expect(decision.disposition).toBe('ASK');
-    expect(decision.operatorApprovalRequired).toBe(true);
-    expect(decision.deniedByInvariant).toBe(false);
-  });
+    expect(decision.disposition).toBe('ASK')
+    expect(decision.operatorApprovalRequired).toBe(true)
+    expect(decision.deniedByInvariant).toBe(false)
+  })
 
   it('allows approved read-only requests without protected targets', () => {
     const decision = evaluateCodemindPermissionRequest(
@@ -48,12 +48,12 @@ describe('CodeMind permission policy', () => {
         operatorApproved: true,
         targets: [{ kind: 'file', value: 'src/index.ts' }],
       }),
-    );
+    )
 
-    expect(decision.disposition).toBe('ALLOW');
-    expect(decision.operatorApprovalRequired).toBe(false);
-    expect(decision.auditRequired).toBe(false);
-  });
+    expect(decision.disposition).toBe('ALLOW')
+    expect(decision.operatorApprovalRequired).toBe(false)
+    expect(decision.auditRequired).toBe(false)
+  })
 
   it('denies unapproved mutating tools', () => {
     const decision = evaluateCodemindPermissionRequest(
@@ -61,11 +61,11 @@ describe('CodeMind permission policy', () => {
         toolCategory: 'GITHUB_MUTATOR',
         action: 'open pull request',
       }),
-    );
+    )
 
-    expect(decision.disposition).toBe('DENY');
-    expect(decision.deniedByInvariant).toBe(true);
-  });
+    expect(decision.disposition).toBe('DENY')
+    expect(decision.deniedByInvariant).toBe(true)
+  })
 
   it('blocks protected environment config targets by default', () => {
     const decision = evaluateCodemindPermissionRequest(
@@ -74,12 +74,12 @@ describe('CodeMind permission policy', () => {
         operatorApproved: true,
         targets: [{ kind: 'file', value: '.env' }],
       }),
-    );
+    )
 
-    expect(decision.disposition).toBe('DENY');
-    expect(decision.protectedPathHits).toHaveLength(1);
-    expect(decision.protectedPathHits[0]?.protectedClass).toBe('SENSITIVE_CONFIG');
-  });
+    expect(decision.disposition).toBe('DENY')
+    expect(decision.protectedPathHits).toHaveLength(1)
+    expect(decision.protectedPathHits[0]?.protectedClass).toBe('SENSITIVE_CONFIG')
+  })
 
   it('requires explicit review for workflow targets', () => {
     const decision = evaluateCodemindPermissionRequest(
@@ -88,10 +88,10 @@ describe('CodeMind permission policy', () => {
         operatorApproved: true,
         targets: [{ kind: 'file', value: '.github/workflows/ci.yml' }],
       }),
-    );
+    )
 
-    expect(decision.disposition).toBe('ASK');
-    expect(decision.auditRequired).toBe(true);
-    expect(decision.protectedPathHits[0]?.protectedClass).toBe('CI_WORKFLOW');
-  });
-});
+    expect(decision.disposition).toBe('ASK')
+    expect(decision.auditRequired).toBe(true)
+    expect(decision.protectedPathHits[0]?.protectedClass).toBe('CI_WORKFLOW')
+  })
+})

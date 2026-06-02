@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest'
 
 import {
   assertGithubPrContextIsReadOnly,
   createReadOnlyGithubPrContextResponse,
-} from './github-pr-context-contract.js';
-import type { CodemindGithubPrContextAdapterRequest } from './github-pr-context.types.js';
-import type { CodemindReadOnlyRepoContext } from '../repo-context/repo-context.types.js';
+} from './github-pr-context-contract.js'
+import type { CodemindGithubPrContextAdapterRequest } from './github-pr-context.types.js'
+import type { CodemindReadOnlyRepoContext } from '../repo-context/repo-context.types.js'
 
 function makeRequest(
   overrides: Partial<CodemindGithubPrContextAdapterRequest> = {},
@@ -24,7 +24,7 @@ function makeRequest(
     includeCiEvidence: true,
     includeTestEvidence: true,
     ...overrides,
-  };
+  }
 }
 
 function makeContext(
@@ -46,36 +46,30 @@ function makeContext(
     contextGeneratedAt: '2026-05-28T00:00:00.000Z',
     readOnly: true,
     ...overrides,
-  };
+  }
 }
 
 describe('GitHub PR context adapter contracts', () => {
   it('creates read-only adapter responses with all write paths disabled', () => {
-    const response = createReadOnlyGithubPrContextResponse(
-      makeRequest(),
-      makeContext(),
-    );
+    const response = createReadOnlyGithubPrContextResponse(makeRequest(), makeContext())
 
-    expect(response.readOnly).toBe(true);
-    expect(response.githubWriteEnabled).toBe(false);
-    expect(response.commentsEnabled).toBe(false);
-    expect(response.mergeEnabled).toBe(false);
-    expect(response.networkRuntimeImplemented).toBe(false);
-    expect(assertGithubPrContextIsReadOnly(response)).toBe(true);
-  });
+    expect(response.readOnly).toBe(true)
+    expect(response.githubWriteEnabled).toBe(false)
+    expect(response.commentsEnabled).toBe(false)
+    expect(response.mergeEnabled).toBe(false)
+    expect(response.networkRuntimeImplemented).toBe(false)
+    expect(assertGithubPrContextIsReadOnly(response)).toBe(true)
+  })
 
   it('fails read-only assertion if an unsafe candidate enables a write path', () => {
-    const response = createReadOnlyGithubPrContextResponse(
-      makeRequest(),
-      makeContext(),
-    );
+    const response = createReadOnlyGithubPrContextResponse(makeRequest(), makeContext())
     const unsafeCandidate = {
       ...response,
       githubWriteEnabled: true,
-    } as unknown as Parameters<typeof assertGithubPrContextIsReadOnly>[0];
+    } as unknown as Parameters<typeof assertGithubPrContextIsReadOnly>[0]
 
-    expect(assertGithubPrContextIsReadOnly(unsafeCandidate)).toBe(false);
-  });
+    expect(assertGithubPrContextIsReadOnly(unsafeCandidate)).toBe(false)
+  })
 
   it('preserves pull request identity from the request', () => {
     const request = makeRequest({
@@ -86,10 +80,10 @@ describe('GitHub PR context adapter contracts', () => {
         headRef: 'phase-16f-conversation-eval',
         headSha: 'abc123',
       },
-    });
+    })
 
-    const response = createReadOnlyGithubPrContextResponse(request, makeContext());
+    const response = createReadOnlyGithubPrContextResponse(request, makeContext())
 
-    expect(response.pullRequest).toEqual(request.pullRequest);
-  });
-});
+    expect(response.pullRequest).toEqual(request.pullRequest)
+  })
+})

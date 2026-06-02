@@ -1,7 +1,4 @@
-import type {
-  AgentKernelRoleProfile,
-  AgentKernelSkillDeclaration,
-} from './agent-kernel.types.js';
+import type { AgentKernelRoleProfile, AgentKernelSkillDeclaration } from './agent-kernel.types.js'
 
 export const AGENT_KERNEL_DEFAULT_ROLE_PROFILES: readonly AgentKernelRoleProfile[] = [
   {
@@ -69,7 +66,7 @@ export const AGENT_KERNEL_DEFAULT_ROLE_PROFILES: readonly AgentKernelRoleProfile
     ],
     blockedActions: ['write memory automatically', 'erase memory records silently'],
   },
-];
+]
 
 export const AGENT_KERNEL_DEFAULT_SKILLS: readonly AgentKernelSkillDeclaration[] = [
   {
@@ -112,4 +109,4 @@ export const AGENT_KERNEL_DEFAULT_SKILLS: readonly AgentKernelSkillDeclaration[]
     approvalRequired: true,
     tags: ['memory', 'provenance', 'quarantine'],
   },
-];
+]
