@@ -2,7 +2,6 @@
   "name": "codemind",
   "version": "0.1.0",
   "description": "Standalone AI coding-agent platform for repo intelligence, code generation, bug fixing, planning, PR review, and merge-readiness.",
-  "private": true,
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,7 +13,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build:app": "npm run typecheck && npm run build",
+    "prepublishOnly": "npm run build:app"
   },
   "keywords": [
     "codemind",
@@ -25,6 +26,14 @@
     "ajna"
   ],
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jlpartin/codemind.git"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "devDependencies": {
     "typescript": "^5.8.3",
     "vitest": "^3.1.4"
