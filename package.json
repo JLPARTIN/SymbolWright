@@ -19,7 +19,8 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write src/",
-    "format:check": "prettier --check src/"
+    "format:check": "prettier --check src/",
+    "audit": "npm audit --omit=dev --audit-level=high"
   },
   "keywords": [
     "codemind",
