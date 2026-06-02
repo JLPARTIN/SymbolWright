@@ -4,7 +4,7 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'help', description: 'Show available command surface' },
   { name: 'status', description: 'Report CodeMind mode and policy status' },
   { name: 'plan <goal>', description: 'Produce a repository work plan [future]' },
-  { name: 'scan', description: 'Summarize repository structure [future]' },
+  { name: 'scan [dir]', description: 'Summarize repository structure (defaults to cwd)' },
   { name: 'read <path>', description: 'Read approved file content [future]' },
   { name: 'search <query>', description: 'Search repository text [future]' },
   { name: 'propose-patch <goal>', description: 'Draft a patch plan without applying it [future]' },

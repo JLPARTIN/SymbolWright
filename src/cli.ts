@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
+import { renderScan, scanRepo } from './cli-scan.js'
 
 const NOT_YET_ACTIVE = new Set([
   'plan',
-  'scan',
   'read',
   'search',
   'propose-patch',
@@ -26,6 +26,12 @@ switch (command) {
   case 'status':
     console.log(renderStatus())
     break
+
+  case 'scan': {
+    const dir = rest[0] ?? process.cwd()
+    console.log(renderScan(scanRepo(dir)))
+    break
+  }
 
   default:
     if (NOT_YET_ACTIVE.has(command)) {
