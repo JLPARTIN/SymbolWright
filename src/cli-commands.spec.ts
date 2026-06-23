@@ -20,6 +20,7 @@ describe('renderHelp', () => {
 
   it('includes ajna subcommands', () => {
     const output = renderHelp()
+    expect(output).toContain('ajna scan-profile')
     expect(output).toContain('ajna review-pr')
     expect(output).toContain('ajna merge-readiness')
   })
