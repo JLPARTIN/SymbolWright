@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { renderAjnaScanProfileForRepo } from './cli-ajna-scan-profile.js'
 import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
 import { renderScan, scanRepo } from './cli-scan.js'
 
@@ -10,7 +11,6 @@ const NOT_YET_ACTIVE = new Set([
   'validation-plan',
   'ci-review',
   'pr-notes',
-  'ajna',
 ])
 
 const [, , command, ...rest] = process.argv
@@ -30,6 +30,19 @@ switch (command) {
   case 'scan': {
     const dir = rest[0] ?? process.cwd()
     console.log(renderScan(scanRepo(dir)))
+    break
+  }
+
+  case 'ajna': {
+    const [subcommand, maybeDir] = rest
+    if (subcommand === 'scan-profile') {
+      const dir = maybeDir ?? process.cwd()
+      console.log(renderAjnaScanProfileForRepo(dir))
+      break
+    }
+
+    const full = rest.length > 0 ? `${command} ${rest.join(' ')}` : command
+    console.log(renderNotYetActive(full))
     break
   }
 
