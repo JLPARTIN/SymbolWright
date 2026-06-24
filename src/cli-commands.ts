@@ -11,6 +11,10 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'validation-plan', description: 'Propose validation commands [future]' },
   { name: 'ci-review', description: 'Diagnose CI failures from available logs/context [future]' },
   { name: 'pr-notes', description: 'Draft PR summary or review notes [future]' },
+  {
+    name: 'ajna scan-profile [dir]',
+    description: 'Render a read-only Ajna scan profile from repository scan facts',
+  },
   { name: 'ajna review-pr <pr>', description: 'Produce an Ajna PR review report [future]' },
   {
     name: 'ajna merge-readiness <pr>',
