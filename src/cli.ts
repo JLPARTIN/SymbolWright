@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { renderAjnaMergeReadinessForFile } from './cli-ajna-merge-readiness.js'
+import { renderAjnaReviewPrCollectorFixtureForFile } from './cli-ajna-review-pr-collector-fixture.js'
 import { renderAjnaReviewPrGithubFixtureForFile } from './cli-ajna-review-pr-github-fixture.js'
 import { renderAjnaReviewPrForFile } from './cli-ajna-review-pr.js'
 import { renderAjnaScanProfileForRepo } from './cli-ajna-scan-profile.js'
@@ -59,6 +60,15 @@ switch (command) {
         process.exit(1)
       }
       console.log(renderAjnaReviewPrGithubFixtureForFile(maybeInput))
+      break
+    }
+
+    if (subcommand === 'review-pr-collector-fixture') {
+      if (maybeInput === undefined) {
+        console.error('Missing input JSON file: codemind ajna review-pr-collector-fixture <json-file>')
+        process.exit(1)
+      }
+      console.log(renderAjnaReviewPrCollectorFixtureForFile(maybeInput))
       break
     }
 
