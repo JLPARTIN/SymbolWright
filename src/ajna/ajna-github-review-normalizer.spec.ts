@@ -72,10 +72,8 @@ describe('normalizeGithubPullRequestForAjnaReview', () => {
   })
 
   it('accepts absent CI evidence while preserving diff evidence', () => {
-    const input = normalizeGithubPullRequestForAjnaReview({
-      ...makePayload(),
-      ciEvidence: undefined,
-    })
+    const { ciEvidence: _ciEvidence, ...payloadWithoutCiEvidence } = makePayload()
+    const input = normalizeGithubPullRequestForAjnaReview(payloadWithoutCiEvidence)
 
     expect(input.findings).toHaveLength(1)
     expect(input.findings[0]?.id).toBe('github-diff-evidence')
