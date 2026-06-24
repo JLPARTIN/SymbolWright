@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { renderAjnaMergeReadinessForFile } from './cli-ajna-merge-readiness.js'
 import { renderAjnaScanProfileForRepo } from './cli-ajna-scan-profile.js'
 import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
 import { renderScan, scanRepo } from './cli-scan.js'
@@ -34,10 +35,19 @@ switch (command) {
   }
 
   case 'ajna': {
-    const [subcommand, maybeDir] = rest
+    const [subcommand, maybeInput] = rest
     if (subcommand === 'scan-profile') {
-      const dir = maybeDir ?? process.cwd()
+      const dir = maybeInput ?? process.cwd()
       console.log(renderAjnaScanProfileForRepo(dir))
+      break
+    }
+
+    if (subcommand === 'merge-readiness') {
+      if (maybeInput === undefined) {
+        console.error('Missing input JSON file: codemind ajna merge-readiness <json-file>')
+        process.exit(1)
+      }
+      console.log(renderAjnaMergeReadinessForFile(maybeInput))
       break
     }
 

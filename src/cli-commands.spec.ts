@@ -23,6 +23,7 @@ describe('renderHelp', () => {
     expect(output).toContain('ajna scan-profile')
     expect(output).toContain('ajna review-pr')
     expect(output).toContain('ajna merge-readiness')
+    expect(output).toContain('read-only Ajna evidence JSON')
   })
 })
 
