@@ -19,22 +19,22 @@ export interface AjnaGithubReviewNormalizerOptions {
   readonly recommendedNextAction?: string
 }
 
-function assertNonEmptyString(value: string, field: string): void {
-  if (value.length === 0) {
+function assertNonEmptyString(value: unknown, field: string): void {
+  if (typeof value !== 'string' || value.length === 0) {
     throw new Error(`Ajna GitHub review payload ${field} must be a non-empty string.`)
   }
 }
 
-function assertPositiveInteger(value: number, field: string): void {
-  if (!Number.isInteger(value) || value <= 0) {
+function assertPositiveInteger(value: unknown, field: string): void {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
     throw new Error(`Ajna GitHub review payload ${field} must be a positive integer.`)
   }
 }
 
-function assertStringArray(values: readonly string[], field: string): void {
+function assertStringArray(values: unknown, field: string, options: { readonly allowEmpty?: boolean } = {}): void {
   if (
     !Array.isArray(values) ||
-    values.length === 0 ||
+    (!options.allowEmpty && values.length === 0) ||
     !values.every((value) => typeof value === 'string' && value.length > 0)
   ) {
     throw new Error(`Ajna GitHub review payload ${field} must be an array of non-empty strings.`)
@@ -125,7 +125,7 @@ export function normalizeGithubPullRequestForAjnaReview(
     assertStringArray(payload.diffEvidence, 'diffEvidence')
   }
   if (payload.ciEvidence !== undefined) {
-    assertStringArray(payload.ciEvidence, 'ciEvidence')
+    assertStringArray(payload.ciEvidence, 'ciEvidence', { allowEmpty: true })
   }
 
   const baseInput: CodemindAjnaReviewPrInput = {
