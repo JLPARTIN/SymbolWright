@@ -113,6 +113,32 @@ describe('parseAjnaMergeReadinessInput', () => {
       'findings array',
     )
   })
+
+  it('rejects missing requireCiEvidence fields', () => {
+    const request: Record<string, unknown> = { ...makeRequest() }
+    delete request['requireCiEvidence']
+
+    expect(() => parseAjnaMergeReadinessInput(JSON.stringify({ request, findings: [] }))).toThrow(
+      'request.requireCiEvidence must be a boolean',
+    )
+  })
+
+  it('rejects missing requireTestEvidence fields', () => {
+    const request: Record<string, unknown> = { ...makeRequest() }
+    delete request['requireTestEvidence']
+
+    expect(() => parseAjnaMergeReadinessInput(JSON.stringify({ request, findings: [] }))).toThrow(
+      'request.requireTestEvidence must be a boolean',
+    )
+  })
+
+  it('rejects malformed request subjects', () => {
+    const request: Record<string, unknown> = { ...makeRequest(), subject: { repository: 'JLPARTIN/CodeMind' } }
+
+    expect(() => parseAjnaMergeReadinessInput(JSON.stringify({ request, findings: [] }))).toThrow(
+      'request.subject.baseRef must be a non-empty string',
+    )
+  })
 })
 
 describe('renderAjnaMergeReadinessForFile', () => {
@@ -121,6 +147,6 @@ describe('renderAjnaMergeReadinessForFile', () => {
 
     expect(output).toContain('Ajna merge-readiness')
     expect(output).toContain('Status: READY_TO_REVIEW')
-    expect(output).toContain('no providers, writes, commands, or GitHub mutations allowed')
+    expect(output).toContain('Mode: READ_ONLY')
   })
 })
