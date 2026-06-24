@@ -16,7 +16,7 @@ export function parseAjnaGithubCollectorFixture(jsonText: string): AjnaGithubCol
   if (!isObjectRecord(parsed)) {
     throw new Error('Ajna GitHub collector fixture must be an object.')
   }
-  return parsed as AjnaGithubCollectorSnapshot
+  return parsed as unknown as AjnaGithubCollectorSnapshot
 }
 
 export function renderAjnaReviewPrCollectorFixtureForFile(inputPath: string): string {
