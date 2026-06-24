@@ -2,17 +2,11 @@ import { readFileSync } from 'fs'
 
 import { canAjnaDeclareMergeReady, deriveAjnaMergeReadiness } from './ajna/ajna-merge-readiness.js'
 import { renderAjnaReviewReport } from './ajna/ajna-review-renderer.js'
-import {
-  AJNA_EVIDENCE_CLASSES,
-  AJNA_FINDING_CATEGORIES,
-  AJNA_RISK_LEVELS,
-  type AjnaEvidenceClass,
-  type AjnaFindingCategory,
-  type AjnaMergeReadiness,
-  type AjnaReviewFinding,
-  type AjnaReviewRequest,
-  type AjnaReviewResponse,
-  type AjnaRiskLevel,
+import type {
+  AjnaMergeReadiness,
+  AjnaReviewFinding,
+  AjnaReviewRequest,
+  AjnaReviewResponse,
 } from './ajna/ajna-review.types.js'
 import { parseAjnaMergeReadinessInput } from './cli-ajna-merge-readiness.js'
 
@@ -38,18 +32,6 @@ function assertString(value: Record<string, unknown>, field: string, path: strin
   }
 }
 
-function assertOptionalString(value: Record<string, unknown>, field: string, path: string): void {
-  if (value[field] !== undefined && typeof value[field] !== 'string') {
-    throw new Error(`Ajna review-pr input ${path}.${field} must be a string when provided.`)
-  }
-}
-
-function assertOptionalNumber(value: Record<string, unknown>, field: string, path: string): void {
-  if (value[field] !== undefined && typeof value[field] !== 'number') {
-    throw new Error(`Ajna review-pr input ${path}.${field} must be a number when provided.`)
-  }
-}
-
 function assertBoolean(value: Record<string, unknown>, field: string, path: string): void {
   if (typeof value[field] !== 'boolean') {
     throw new Error(`Ajna review-pr input ${path}.${field} must be a boolean.`)
@@ -62,28 +44,13 @@ function assertStringArray(value: Record<string, unknown>, field: string, path: 
   }
 }
 
-function assertKnownValue<T extends string>(
-  value: Record<string, unknown>,
-  field: string,
-  path: string,
-  allowed: readonly T[],
-): asserts value is Record<string, T> {
-  if (typeof value[field] !== 'string' || !allowed.includes(value[field] as T)) {
-    throw new Error(`Ajna review-pr input ${path}.${field} must be a known value.`)
-  }
-}
-
 function assertEvidenceRef(value: unknown, path: string): void {
   if (!isRecord(value)) {
     throw new Error(`Ajna review-pr input ${path} must be an object.`)
   }
 
-  assertKnownValue<AjnaEvidenceClass>(value, 'evidenceClass', path, AJNA_EVIDENCE_CLASSES)
+  assertString(value, 'evidenceClass', path)
   assertString(value, 'summary', path)
-  assertOptionalString(value, 'sourcePath', path)
-  assertOptionalString(value, 'sourceUrl', path)
-  assertOptionalNumber(value, 'lineStart', path)
-  assertOptionalNumber(value, 'lineEnd', path)
 }
 
 function assertFinding(value: unknown, index: number): void {
@@ -93,8 +60,8 @@ function assertFinding(value: unknown, index: number): void {
   }
 
   assertString(value, 'id', path)
-  assertKnownValue<AjnaFindingCategory>(value, 'category', path, AJNA_FINDING_CATEGORIES)
-  assertKnownValue<AjnaRiskLevel>(value, 'risk', path, AJNA_RISK_LEVELS)
+  assertString(value, 'category', path)
+  assertString(value, 'risk', path)
   assertString(value, 'title', path)
   assertString(value, 'summary', path)
   assertStringArray(value, 'affectedFiles', path)
