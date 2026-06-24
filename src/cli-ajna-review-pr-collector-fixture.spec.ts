@@ -76,7 +76,11 @@ describe('renderAjnaReviewPrCollectorFixtureForFile', () => {
   })
 
   it('renders a local collector snapshot without check runs', () => {
-    const { checkRuns: _checkRuns, ...snapshotWithoutChecks } = makeSnapshot()
+    const source = makeSnapshot()
+    const snapshotWithoutChecks: AjnaGithubCollectorSnapshot = {
+      pullRequest: source.pullRequest,
+      changedFiles: source.changedFiles,
+    }
     const output = renderAjnaReviewPrCollectorFixtureForFile(writeSnapshotFile(snapshotWithoutChecks))
 
     expect(output).toContain('# Ajna Review Cortex Report')
