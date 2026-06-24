@@ -33,7 +33,10 @@ function renderFinding(finding: AjnaReviewFinding): string {
 
 export function renderAjnaReviewReport(response: AjnaReviewResponse): string {
   const changedFiles = Array.from(
-    new Set(response.findings.flatMap((finding) => finding.affectedFiles)),
+    new Set([
+      ...(response.changedFiles ?? []),
+      ...response.findings.flatMap((finding) => finding.affectedFiles),
+    ]),
   ).sort()
   const blockingFindings = response.findings.filter((finding) => finding.blocksMerge)
 
