@@ -62,6 +62,22 @@ describe('normalizeGithubPullRequestForAjnaReview', () => {
     ).toThrow('pullRequestNumber must be a positive integer')
   })
 
+  it('rejects invalid scalar payload fields', () => {
+    expect(() =>
+      normalizeGithubPullRequestForAjnaReview({
+        ...makePayload(),
+        repository: 42 as unknown as string,
+      }),
+    ).toThrow('repository must be a non-empty string')
+
+    expect(() =>
+      normalizeGithubPullRequestForAjnaReview({
+        ...makePayload(),
+        baseRef: {} as unknown as string,
+      }),
+    ).toThrow('baseRef must be a non-empty string')
+  })
+
   it('rejects empty changed-file payloads', () => {
     expect(() =>
       normalizeGithubPullRequestForAjnaReview({
@@ -74,6 +90,16 @@ describe('normalizeGithubPullRequestForAjnaReview', () => {
   it('accepts absent CI evidence while preserving diff evidence', () => {
     const { ciEvidence: _ciEvidence, ...payloadWithoutCiEvidence } = makePayload()
     const input = normalizeGithubPullRequestForAjnaReview(payloadWithoutCiEvidence)
+
+    expect(input.findings).toHaveLength(1)
+    expect(input.findings[0]?.id).toBe('github-diff-evidence')
+  })
+
+  it('accepts empty optional CI evidence arrays', () => {
+    const input = normalizeGithubPullRequestForAjnaReview({
+      ...makePayload(),
+      ciEvidence: [],
+    })
 
     expect(input.findings).toHaveLength(1)
     expect(input.findings[0]?.id).toBe('github-diff-evidence')
