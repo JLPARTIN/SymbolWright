@@ -89,4 +89,23 @@ describe('Ajna review report renderer', () => {
     expect(report).toContain('- **Blocking findings:** 0')
     expect(report).toContain('- **Status:** READY_TO_REVIEW')
   })
+
+  it('preserves changed files even when findings are empty', () => {
+    const report = renderAjnaReviewReport(
+      makeResponse({
+        changedFiles: ['src/example.ts'],
+        findings: [],
+        mergeReadiness: {
+          status: 'READY_TO_REVIEW',
+          summary: 'No findings reported.',
+          requiredEvidencePresent: false,
+          blockingFindings: [],
+          operatorDecisionRequired: false,
+        },
+        recommendedNextAction: 'Continue review.',
+      }),
+    )
+
+    expect(report).toContain('- src/example.ts')
+  })
 })

@@ -88,6 +88,7 @@ export interface AjnaMergeReadiness {
 export interface AjnaReviewResponse {
   readonly requestId: string
   readonly subject: AjnaReviewSubject
+  readonly changedFiles?: readonly string[]
   readonly tagline: 'See beyond the code.'
   readonly subtitle: 'Expand your vision beyond the diff.'
   readonly findings: readonly AjnaReviewFinding[]

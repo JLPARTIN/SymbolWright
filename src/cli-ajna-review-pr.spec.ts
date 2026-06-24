@@ -82,6 +82,13 @@ describe('buildAjnaReviewPrForInput', () => {
     expect(result.output).toContain('- **Status:** READY_TO_REVIEW')
   })
 
+  it('preserves changed files even when there are no findings', () => {
+    const result = buildAjnaReviewPrForInput(makeInput())
+
+    expect(result.response.changedFiles).toEqual(['src/example.ts'])
+    expect(result.output).toContain('- src/example.ts')
+  })
+
   it('preserves blocking findings in the rendered report', () => {
     const result = buildAjnaReviewPrForInput(
       makeInput({
@@ -125,6 +132,22 @@ describe('parseAjnaReviewPrInput', () => {
 
     expect(() => parseAjnaReviewPrInput(JSON.stringify({ request, findings: [] }))).toThrow(
       'request.requireCiEvidence must be a boolean',
+    )
+  })
+
+  it('rejects malformed finding records before rendering', () => {
+    const finding = { ...makeFinding(), evidence: undefined }
+
+    expect(() => parseAjnaReviewPrInput(JSON.stringify({ request: makeRequest(), findings: [finding] }))).toThrow(
+      'findings[0].evidence must be an array',
+    )
+  })
+
+  it('rejects malformed evidence records before rendering', () => {
+    const finding = { ...makeFinding(), evidence: [{ evidenceClass: 'DIRECT_DIFF_EVIDENCE' }] }
+
+    expect(() => parseAjnaReviewPrInput(JSON.stringify({ request: makeRequest(), findings: [finding] }))).toThrow(
+      'findings[0].evidence[0].summary must be a non-empty string',
     )
   })
 
