@@ -1,0 +1,30 @@
+{
+  "pullRequest": {
+    "repository": "JLPARTIN/CodeMind",
+    "pullRequestNumber": 60,
+    "baseRef": "main",
+    "headRef": "ajna-github-review-input-bundle",
+    "headSha": "d20856ee90875e9c82bf254f0908dab2b0856a35"
+  },
+  "changedFiles": [
+    {
+      "path": "src/cli-ajna-review-pr-github-fixture.ts",
+      "status": "added",
+      "additions": 35,
+      "deletions": 0
+    },
+    {
+      "path": "src/cli.ts",
+      "status": "modified",
+      "additions": 9,
+      "deletions": 0
+    }
+  ],
+  "checkRuns": [
+    {
+      "name": "Validate CodeMind",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}
