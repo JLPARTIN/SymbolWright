@@ -1,0 +1,44 @@
+{
+  "request": {
+    "requestId": "example-ajna-review-pr-ready",
+    "subject": {
+      "repository": "JLPARTIN/CodeMind",
+      "pullRequestNumber": 56,
+      "baseRef": "main",
+      "headRef": "ajna-review-pr-fixture-adapter"
+    },
+    "changedFiles": [
+      "src/cli-ajna-review-pr.ts",
+      "src/cli-ajna-review-pr.spec.ts"
+    ],
+    "requireCiEvidence": false,
+    "requireTestEvidence": false
+  },
+  "findings": [
+    {
+      "id": "example-doc-only-1",
+      "category": "DOCUMENTATION_ONLY",
+      "risk": "LOW",
+      "title": "Example review evidence is ready",
+      "summary": "The fixture demonstrates a low-risk Ajna review-pr input with direct evidence and no merge blockers.",
+      "evidence": [
+        {
+          "evidenceClass": "DIRECT_TEST_EVIDENCE",
+          "summary": "The Ajna review-pr fixture adapter has regression coverage for deterministic rendering and JSON validation reuse.",
+          "sourcePath": "src/cli-ajna-review-pr.spec.ts"
+        },
+        {
+          "evidenceClass": "DIRECT_CI_EVIDENCE",
+          "summary": "GitHub Actions validated install, audit, typecheck, lint, test, and build for the adapter branch."
+        }
+      ],
+      "affectedFiles": [
+        "src/cli-ajna-review-pr.ts",
+        "src/cli-ajna-review-pr.spec.ts"
+      ],
+      "recommendation": "Use this file as a safe local example for rendering an Ajna PR review report.",
+      "blocksMerge": false
+    }
+  ],
+  "recommendedNextAction": "Review the rendered report, confirm the evidence matches the PR, and proceed only if the operator agrees."
+}
