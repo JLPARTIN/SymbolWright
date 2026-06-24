@@ -28,6 +28,10 @@ export const CODEMIND_CLI_COMMANDS = [
     description: 'Render Ajna review-pr from a local collector snapshot fixture',
   },
   {
+    name: 'ajna review-pr-readonly-collector-fixture <json-file>',
+    description: 'Render Ajna review-pr from a local read-only collector request fixture',
+  },
+  {
     name: 'ajna github-readonly-collector-fixture <json-file>',
     description: 'Render a local read-only collector snapshot fixture as JSON',
   },
@@ -44,7 +48,7 @@ export function renderHelp(): string {
     'Usage: codemind <command> [args]',
     '',
     'Commands:',
-    ...CODEMIND_CLI_COMMANDS.map(({ name, description }) => `  ${name.padEnd(48)} ${description}`),
+    ...CODEMIND_CLI_COMMANDS.map(({ name, description }) => `  ${name.padEnd(56)} ${description}`),
     '',
     'Run "codemind status" to see platform posture and active policy.',
   ]
