@@ -20,6 +20,10 @@ export const CODEMIND_CLI_COMMANDS = [
     description: 'Render a read-only Ajna PR review report from evidence JSON',
   },
   {
+    name: 'ajna review-pr-github-fixture <json-file>',
+    description: 'Render Ajna review-pr from a mocked local GitHub PR payload fixture',
+  },
+  {
     name: 'ajna merge-readiness <json-file>',
     description: 'Assess merge-readiness from read-only Ajna evidence JSON',
   },
@@ -32,7 +36,7 @@ export function renderHelp(): string {
     'Usage: codemind <command> [args]',
     '',
     'Commands:',
-    ...CODEMIND_CLI_COMMANDS.map(({ name, description }) => `  ${name.padEnd(32)} ${description}`),
+    ...CODEMIND_CLI_COMMANDS.map(({ name, description }) => `  ${name.padEnd(40)} ${description}`),
     '',
     'Run "codemind status" to see platform posture and active policy.',
   ]
