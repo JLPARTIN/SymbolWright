@@ -32,7 +32,11 @@ function assertPositiveInteger(value: number, field: string): void {
 }
 
 function assertStringArray(values: readonly string[], field: string): void {
-  if (!Array.isArray(values) || !values.every((value) => typeof value === 'string' && value.length > 0)) {
+  if (
+    !Array.isArray(values) ||
+    values.length === 0 ||
+    !values.every((value) => typeof value === 'string' && value.length > 0)
+  ) {
     throw new Error(`Ajna GitHub review payload ${field} must be an array of non-empty strings.`)
   }
 }
