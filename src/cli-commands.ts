@@ -17,8 +17,8 @@ export const CODEMIND_CLI_COMMANDS = [
   },
   { name: 'ajna review-pr <pr>', description: 'Produce an Ajna PR review report [future]' },
   {
-    name: 'ajna merge-readiness <pr>',
-    description: 'Assess merge-readiness from evidence [future]',
+    name: 'ajna merge-readiness <json-file>',
+    description: 'Assess merge-readiness from read-only Ajna evidence JSON',
   },
 ] as const
 
