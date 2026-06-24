@@ -1,0 +1,16 @@
+{
+  "repository": "JLPARTIN/CodeMind",
+  "pullRequestNumber": 58,
+  "baseRef": "main",
+  "headRef": "ajna-live-input-plan",
+  "headSha": "abc123",
+  "changedFiles": [
+    "docs/ajna-live-github-input-plan.md"
+  ],
+  "diffEvidence": [
+    "docs/ajna-live-github-input-plan.md was added."
+  ],
+  "ciEvidence": [
+    "CI completed successfully for the pull request head."
+  ]
+}
