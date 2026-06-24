@@ -2,7 +2,12 @@ import { readFileSync } from 'fs'
 
 import { canAjnaDeclareMergeReady, deriveAjnaMergeReadiness } from './ajna/ajna-merge-readiness.js'
 import { renderAjnaReviewReport } from './ajna/ajna-review-renderer.js'
-import type { AjnaReviewFinding, AjnaReviewRequest, AjnaReviewResponse } from './ajna/ajna-review.types.js'
+import type {
+  AjnaMergeReadiness,
+  AjnaReviewFinding,
+  AjnaReviewRequest,
+  AjnaReviewResponse,
+} from './ajna/ajna-review.types.js'
 import { parseAjnaMergeReadinessInput } from './cli-ajna-merge-readiness.js'
 
 export interface CodemindAjnaReviewPrInput {
@@ -17,16 +22,16 @@ export interface CodemindAjnaReviewPrCommandResult {
   readonly output: string
 }
 
-function defaultRecommendedNextAction(response: AjnaReviewResponse): string {
-  if (canAjnaDeclareMergeReady(response.mergeReadiness)) {
+function defaultRecommendedNextAction(mergeReadiness: AjnaMergeReadiness): string {
+  if (canAjnaDeclareMergeReady(mergeReadiness)) {
     return 'Ajna can declare this review merge-ready from the provided evidence.'
   }
 
-  if (response.mergeReadiness.blockingFindings.length > 0) {
+  if (mergeReadiness.blockingFindings.length > 0) {
     return 'Resolve the blocking Ajna findings before requesting merge readiness.'
   }
 
-  if (response.mergeReadiness.operatorDecisionRequired) {
+  if (mergeReadiness.operatorDecisionRequired) {
     return 'Operator decision is required before merge readiness can be declared.'
   }
 
@@ -41,10 +46,14 @@ export function parseAjnaReviewPrInput(jsonText: string): CodemindAjnaReviewPrIn
     throw new Error('Ajna review-pr input recommendedNextAction must be a string when provided.')
   }
 
-  return {
-    ...base,
-    recommendedNextAction: parsed.recommendedNextAction,
+  if (typeof parsed.recommendedNextAction === 'string') {
+    return {
+      ...base,
+      recommendedNextAction: parsed.recommendedNextAction,
+    }
   }
+
+  return base
 }
 
 export function readAjnaReviewPrInput(inputPath: string): CodemindAjnaReviewPrInput {
@@ -56,22 +65,14 @@ export function buildAjnaReviewPrForInput(
   inputPath: string | null = null,
 ): CodemindAjnaReviewPrCommandResult {
   const mergeReadiness = deriveAjnaMergeReadiness(input.request, input.findings)
-  const responseWithoutAction: Omit<AjnaReviewResponse, 'recommendedNextAction'> = {
+  const response: AjnaReviewResponse = {
     requestId: input.request.requestId,
     subject: input.request.subject,
     tagline: 'See beyond the code.',
     subtitle: 'Expand your vision beyond the diff.',
     findings: input.findings,
     mergeReadiness,
-  }
-  const response: AjnaReviewResponse = {
-    ...responseWithoutAction,
-    recommendedNextAction:
-      input.recommendedNextAction ??
-      defaultRecommendedNextAction({
-        ...responseWithoutAction,
-        recommendedNextAction: '',
-      }),
+    recommendedNextAction: input.recommendedNextAction ?? defaultRecommendedNextAction(mergeReadiness),
   }
 
   return {
