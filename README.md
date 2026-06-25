@@ -8,7 +8,7 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, a non-mutating plan command, and a read-only Ajna workflow surface.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, and a read-only Ajna workflow surface.
 
 The active CLI package is `codemind` and exposes:
 
@@ -16,6 +16,9 @@ The active CLI package is `codemind` and exposes:
 codemind help
 codemind status
 codemind plan <goal>
+codemind read <path>
+codemind search <query>
+codemind validation-plan [focus]
 codemind scan [dir]
 codemind ajna scan-profile [dir]
 codemind ajna docs
@@ -34,13 +37,16 @@ codemind ajna github-readonly-collector-fixture <json-file>
 codemind ajna merge-readiness <json-file>
 ```
 
-The first planning command is intentionally non-mutating:
+The Phase A read-only runtime commands are intentionally non-mutating:
 
 ```txt
 codemind plan "add guarded patch proposal"
+codemind read README.md
+codemind search runtime
+codemind validation-plan "runtime activation"
 ```
 
-It renders an operator-readable implementation plan, suggested validation commands, and safety boundaries. It does not edit files, run shell commands, call providers, post PR comments, or mutate GitHub state.
+They render plans, read allowed workspace files, search allowed workspace files, and print validation guidance. They do not edit files, run shell commands, call providers, post PR comments, or mutate GitHub state.
 
 Current Ajna work is intentionally local-first:
 
@@ -160,6 +166,7 @@ docs/governance/CODEMIND_THREAT_MODEL.md
 docs/cli/CODEMIND_CLI_TERMINAL_UX_PLAN.md
 docs/cli-plan-command.md
 docs/runtime/CODEMIND_RUNTIME_FOUNDATION.md
+docs/runtime/CODEMIND_RUNTIME_READONLY_COMMANDS.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md

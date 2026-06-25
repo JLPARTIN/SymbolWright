@@ -3,12 +3,12 @@ import { getCodemindFoundationSnapshot } from './codemind-foundation.js'
 export const CODEMIND_CLI_COMMANDS = [
   { name: 'help', description: 'Show available command surface' },
   { name: 'status', description: 'Report CodeMind mode and policy status' },
-  { name: 'plan <goal>', description: 'Produce a non-mutating repository work plan' },
+  { name: 'plan <goal>', description: 'Render a runtime-backed non-mutating work plan' },
   { name: 'scan [dir]', description: 'Summarize repository structure (defaults to cwd)' },
-  { name: 'read <path>', description: 'Read approved file content [future]' },
-  { name: 'search <query>', description: 'Search repository text [future]' },
+  { name: 'read <path>', description: 'Read an allowed workspace file without mutation' },
+  { name: 'search <query>', description: 'Search allowed workspace files without mutation' },
   { name: 'propose-patch <goal>', description: 'Draft a patch plan without applying it [future]' },
-  { name: 'validation-plan', description: 'Propose validation commands [future]' },
+  { name: 'validation-plan [focus]', description: 'Render validation guidance without executing commands' },
   { name: 'ci-review', description: 'Diagnose CI failures from available logs/context [future]' },
   { name: 'pr-notes', description: 'Draft PR summary or review notes [future]' },
   {
