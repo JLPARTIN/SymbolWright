@@ -21,6 +21,7 @@ describe('renderHelp', () => {
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
+    expect(output).toContain('ajna client-pipeline-manifest')
     expect(output).toContain('ajna review-pr')
     expect(output).toContain('ajna review-pr-github-fixture')
     expect(output).toContain('ajna review-pr-github-api-fixture')
@@ -33,6 +34,7 @@ describe('renderHelp', () => {
     expect(output).toContain('ajna github-readonly-collector-fixture')
     expect(output).toContain('ajna merge-readiness')
     expect(output).toContain('PR review report from evidence JSON')
+    expect(output).toContain('local Ajna client collector fixture pipeline manifest')
     expect(output).toContain('mocked local GitHub PR payload fixture')
     expect(output).toContain('local GitHub-shaped API payload fixture')
     expect(output).toContain('collector snapshot JSON from a local GitHub-shaped API payload fixture')
