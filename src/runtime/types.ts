@@ -13,6 +13,8 @@ export type CodemindToolName =
   | 'validation_plan'
   | 'ci_review'
   | 'pr_notes'
+  | 'apply_edit_gated'
+  | 'command_dry_run_gated'
 
 export type RuntimeToolCapability =
   | 'PLAN'
@@ -22,6 +24,8 @@ export type RuntimeToolCapability =
   | 'VALIDATE'
   | 'REVIEW'
   | 'DRAFT_NOTES'
+  | 'APPROVED_EDIT'
+  | 'APPROVED_COMMAND'
 
 export interface RuntimeApproval {
   readonly ticketId: string
