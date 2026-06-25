@@ -18,6 +18,14 @@ describe('renderHelp', () => {
     }
   })
 
+  it('marks plan as an active non-mutating command', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('plan <goal>')
+    expect(output).toContain('Produce a non-mutating repository work plan')
+    expect(output).not.toContain('Produce a repository work plan [future]')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
@@ -79,7 +87,7 @@ describe('renderNotYetActive', () => {
   })
 
   it('indicates not yet active', () => {
-    expect(renderNotYetActive('plan my-goal')).toContain('not yet active')
+    expect(renderNotYetActive('propose-patch my-goal')).toContain('not yet active')
   })
 
   it('directs the user to help', () => {

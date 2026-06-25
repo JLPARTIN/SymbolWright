@@ -8,13 +8,14 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage and a read-only Ajna workflow surface.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, a non-mutating plan command, and a read-only Ajna workflow surface.
 
 The active CLI package is `codemind` and exposes:
 
 ```txt
 codemind help
 codemind status
+codemind plan <goal>
 codemind scan [dir]
 codemind ajna scan-profile [dir]
 codemind ajna docs
@@ -32,6 +33,14 @@ codemind ajna review-pr-readonly-collector-fixture <json-file>
 codemind ajna github-readonly-collector-fixture <json-file>
 codemind ajna merge-readiness <json-file>
 ```
+
+The first planning command is intentionally non-mutating:
+
+```txt
+codemind plan "add guarded patch proposal"
+```
+
+It renders an operator-readable implementation plan, suggested validation commands, and safety boundaries. It does not edit files, run shell commands, call providers, post PR comments, or mutate GitHub state.
 
 Current Ajna work is intentionally local-first:
 
@@ -149,6 +158,7 @@ docs/roadmap/CODEMIND_PLATFORM_ROADMAP.md
 docs/governance/CODEMIND_PERMISSION_MODEL.md
 docs/governance/CODEMIND_THREAT_MODEL.md
 docs/cli/CODEMIND_CLI_TERMINAL_UX_PLAN.md
+docs/cli-plan-command.md
 docs/runtime/CODEMIND_RUNTIME_FOUNDATION.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
