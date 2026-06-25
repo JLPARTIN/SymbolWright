@@ -7,10 +7,10 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'scan [dir]', description: 'Summarize repository structure (defaults to cwd)' },
   { name: 'read <path>', description: 'Read an allowed workspace file without mutation' },
   { name: 'search <query>', description: 'Search allowed workspace files without mutation' },
-  { name: 'propose-patch <goal>', description: 'Draft a patch plan without applying it [future]' },
+  { name: 'propose-patch <goal>', description: 'Draft a patch proposal without applying it' },
   { name: 'validation-plan [focus]', description: 'Render validation guidance without executing commands' },
-  { name: 'ci-review', description: 'Diagnose CI failures from available logs/context [future]' },
-  { name: 'pr-notes', description: 'Draft PR summary or review notes [future]' },
+  { name: 'ci-review [source]', description: 'Draft a local CI review without querying services' },
+  { name: 'pr-notes [focus]', description: 'Draft PR notes without posting them' },
   {
     name: 'ajna scan-profile [dir]',
     description: 'Render a read-only Ajna scan profile from repository scan facts',
