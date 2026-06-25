@@ -21,6 +21,7 @@ import { renderRuntimePrNotes } from './cli-runtime-pr-notes.js'
 import { renderRuntimeProposePatch } from './cli-runtime-propose-patch.js'
 import { renderRuntimeRead } from './cli-runtime-read.js'
 import { renderRuntimeRun } from './cli-runtime-run.js'
+import { renderApprovedRuntimeRun } from './cli-runtime-approved-run.js'
 import { renderRuntimeSearch } from './cli-runtime-search.js'
 import { renderRuntimeValidationPlan } from './cli-runtime-validation-plan.js'
 import { renderScan, scanRepo } from './cli-scan.js'
@@ -73,6 +74,11 @@ async function main(): Promise<void> {
     case 'runtime': {
       const [subcommand, ...runtimeArgs] = rest
       if (subcommand === 'run') {
+        if (runtimeArgs.includes('--approval-ticket')) {
+          console.log(await renderApprovedRuntimeRun(runtimeArgs))
+          break
+        }
+
         console.log(await renderRuntimeRun(runtimeArgs))
         break
       }
