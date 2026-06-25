@@ -55,6 +55,13 @@ describe('renderHelp', () => {
     expect(output).toContain('Run a bounded read-only runtime loop')
   })
 
+  it('marks Phase D approved runtime command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('runtime run <goal> --approval-ticket <id>')
+    expect(output).toContain('Render approval-gated dry-run execution with audit output')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
