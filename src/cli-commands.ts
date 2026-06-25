@@ -16,6 +16,10 @@ export const CODEMIND_CLI_COMMANDS = [
     description: 'Render a read-only Ajna scan profile from repository scan facts',
   },
   {
+    name: 'ajna docs',
+    description: 'Render the local Ajna documentation reference',
+  },
+  {
     name: 'ajna client-pipeline-manifest',
     description: 'Render the local Ajna client collector fixture pipeline manifest',
   },
