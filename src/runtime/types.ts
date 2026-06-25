@@ -32,6 +32,7 @@ export type CodemindToolName =
   | 'github_write_proposal'
   | 'github_write_gate'
   | 'github_create_pr'
+  | 'pr_collaboration'
 
 export type RuntimeToolCapability =
   | 'PLAN'
@@ -55,6 +56,7 @@ export type RuntimeToolCapability =
   | 'GITHUB_WRITE_PROPOSAL'
   | 'GITHUB_WRITE_GATE'
   | 'GITHUB_PR_CREATION'
+  | 'GITHUB_PR_COLLABORATION'
 
 export interface RuntimeApproval {
   readonly ticketId: string
