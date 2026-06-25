@@ -17,6 +17,7 @@ codemind help
 codemind status
 codemind scan [dir]
 codemind ajna scan-profile [dir]
+codemind ajna docs
 codemind ajna client-pipeline-manifest
 codemind ajna client-pipeline-status
 codemind ajna review-pr <json-file>
@@ -41,6 +42,7 @@ local fixtures -> collector snapshot -> Ajna review input -> review report -> me
 The recent client-collector fixture pipeline is visible through:
 
 ```txt
+codemind ajna docs
 codemind ajna client-pipeline-manifest
 codemind ajna client-pipeline-status
 ```
@@ -151,8 +153,12 @@ docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
 docs/ajna-fixture-command-index.md
+docs/ajna-docs-command.md
 docs/ajna-client-pipeline-manifest-command.md
 docs/ajna-client-pipeline-status-command.md
+docs/ajna-client-collector-fixture-command.md
+docs/ajna-review-pr-client-collector-fixture-command.md
+docs/ajna-merge-readiness-client-collector-fixture-command.md
 ```
 
 ## Relationship to AELIB-X1YA0I
