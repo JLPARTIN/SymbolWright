@@ -18,6 +18,7 @@ export type CodemindToolName =
   | 'github_pr_fixture_review'
   | 'github_ci_fixture_review'
   | 'live_read_policy_handshake'
+  | 'live_read_client_fixture'
 
 export type RuntimeToolCapability =
   | 'PLAN'
@@ -31,6 +32,7 @@ export type RuntimeToolCapability =
   | 'APPROVED_COMMAND'
   | 'EVIDENCE_READ'
   | 'POLICY_CHECK'
+  | 'LIVE_READ_CLIENT'
 
 export interface RuntimeApproval {
   readonly ticketId: string

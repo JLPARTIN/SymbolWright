@@ -66,9 +66,16 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
   {
     id: 'G',
     title: 'Live read adapter client seam',
+    state: 'COMPLETE',
+    activeCommands: ['codemind live-read-client-fixture <json-file>'],
+    boundary: ['fake client only', 'no live service call', 'no writes', 'no comments', 'no merges'],
+  },
+  {
+    id: 'H',
+    title: 'Live GitHub read adapter behind policy',
     state: 'NEXT',
     activeCommands: [],
-    boundary: ['fake client only', 'no live service call', 'no writes', 'no comments', 'no merges'],
+    boundary: ['policy-gated live reads', 'read-only GitHub operations', 'no writes', 'no comments', 'no merges'],
   },
 ] as const
 
