@@ -36,16 +36,27 @@ function makeCanonicalManifest(): AjnaClientPipelineManifest {
 
 function makeChangedManifest(): AjnaClientPipelineManifest {
   return {
-    ...makeCanonicalManifest(),
+    title: 'Ajna client collector fixture pipeline',
+    mode: 'READ_ONLY',
     steps: [
-      makeCanonicalManifest().steps[0],
+      {
+        order: 1,
+        name: 'Snapshot fixture',
+        cli: 'codemind ajna client-collector-fixture <json-file>',
+        result: 'collector snapshot JSON',
+      },
       {
         order: 2,
         name: 'Review fixture',
         cli: 'codemind ajna review-pr <json-file>',
         result: 'Ajna review report',
       },
-      makeCanonicalManifest().steps[2],
+      {
+        order: 3,
+        name: 'Readiness fixture',
+        cli: 'codemind ajna merge-readiness-client-collector-fixture <json-file>',
+        result: 'Ajna merge-readiness report',
+      },
     ],
   }
 }
