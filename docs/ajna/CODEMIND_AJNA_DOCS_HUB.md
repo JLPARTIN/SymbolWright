@@ -30,6 +30,7 @@ docs/ajna-fixture-command-index.md
 ## Command docs
 
 ```text
+docs/ajna-docs-command.md
 docs/ajna-client-pipeline-manifest-command.md
 docs/ajna-client-pipeline-status-command.md
 docs/ajna-client-collector-fixture-command.md
