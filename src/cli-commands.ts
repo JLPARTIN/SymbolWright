@@ -28,6 +28,8 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'github-write-proposal <json-file>', description: 'Create a governed GitHub write proposal from a local JSON fixture without executing any GitHub API call' },
   { name: 'github-write-gate <json-file>', description: 'Evaluate an approved GitHub write through the policy-gated write gate from a local JSON fixture' },
   { name: 'workflow <json-file>', description: 'Run a governed runtime workflow composing registered tools from a local JSON fixture' },
+  { name: 'ajna-workflow <json-file>', description: 'Run a read-only Ajna review or merge-readiness workflow from a local JSON fixture' },
+  { name: 'runtime-status', description: 'Show the runtime status dashboard with tool inventory, policy, and phase summary' },
   {
     name: 'ajna scan-profile [dir]',
     description: 'Render a read-only Ajna scan profile from repository scan facts',
