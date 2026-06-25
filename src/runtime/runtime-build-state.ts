@@ -101,9 +101,16 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
   {
     id: 'L',
     title: 'Controlled local file write gate',
+    state: 'COMPLETE',
+    activeCommands: ['codemind local-write <json-file>'],
+    boundary: ['approval ticket required', 'protected paths blocked', 'workspace only', 'no GitHub writes'],
+  },
+  {
+    id: 'M',
+    title: 'Approved validation command gate',
     state: 'NEXT',
     activeCommands: [],
-    boundary: ['approval ticket required', 'protected paths blocked', 'workspace only', 'no GitHub writes'],
+    boundary: ['allowlisted commands only', 'approval ticket required', 'no arbitrary shell', 'no GitHub writes'],
   },
 ] as const
 

@@ -8,13 +8,13 @@ import {
 } from './runtime-build-state.js'
 
 describe('runtime build state', () => {
-  it('records Phases A through K as complete', () => {
-    expect(getCompletedRuntimeBuildPhaseCount()).toBe(11)
-    expect(RUNTIME_BUILD_PHASES.slice(0, 11).every((phase) => phase.state === 'COMPLETE')).toBe(true)
+  it('records Phases A through L as complete', () => {
+    expect(getCompletedRuntimeBuildPhaseCount()).toBe(12)
+    expect(RUNTIME_BUILD_PHASES.slice(0, 12).every((phase) => phase.state === 'COMPLETE')).toBe(true)
   })
 
-  it('points to Phase L as next', () => {
-    expect(getNextRuntimeBuildPhase()).toMatchObject({ id: 'L', state: 'NEXT' })
+  it('points to Phase M as next', () => {
+    expect(getNextRuntimeBuildPhase()).toMatchObject({ id: 'M', state: 'NEXT' })
   })
 
   it('records Phase F active command', () => {
@@ -53,11 +53,17 @@ describe('runtime build state', () => {
     expect(phaseK?.activeCommands).toContain('codemind write-intent <json-file>')
   })
 
+  it('records Phase L active command', () => {
+    const phaseL = RUNTIME_BUILD_PHASES.find((phase) => phase.id === 'L')
+    expect(phaseL).toBeDefined()
+    expect(phaseL?.activeCommands).toContain('codemind local-write <json-file>')
+  })
+
   it('renders active command and boundary details', () => {
     const output = renderRuntimeBuildState()
 
     expect(output).toContain('CodeMind runtime build state')
-    expect(output).toContain('Completed phases: 11')
+    expect(output).toContain('Completed phases: 12')
     expect(output).toContain('Phase A')
     expect(output).toContain('codemind runtime run <goal> --approval-ticket <id>')
     expect(output).toContain('codemind ci-review --fixture-file <json-file>')
@@ -67,6 +73,7 @@ describe('runtime build state', () => {
     expect(output).toContain('codemind ajna-live-read <json-file>')
     expect(output).toContain('codemind operator-review <json-file>')
     expect(output).toContain('codemind write-intent <json-file>')
-    expect(output).toContain('Next phase: Phase L')
+    expect(output).toContain('codemind local-write <json-file>')
+    expect(output).toContain('Next phase: Phase M')
   })
 })

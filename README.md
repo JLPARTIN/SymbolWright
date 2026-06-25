@@ -8,9 +8,9 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, and a read-only Ajna workflow surface.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, a controlled local file write gate, and a read-only Ajna workflow surface.
 
-`codemind status` now reports post-Phase K runtime build state, including completed phase count and the next runtime phase.
+`codemind status` now reports post-Phase L runtime build state, including completed phase count and the next runtime phase.
 
 The active CLI package is `codemind` and exposes:
 
@@ -34,6 +34,7 @@ codemind github-live-read <json-file>
 codemind ajna-live-read <json-file>
 codemind operator-review <json-file>
 codemind write-intent <json-file>
+codemind local-write <json-file>
 codemind scan [dir]
 codemind ajna scan-profile [dir]
 codemind ajna docs
@@ -123,6 +124,14 @@ codemind ajna-live-read fixtures/ajna-live-read-fixture.json
 ```
 
 This command supports two modes: `review` (Ajna review with deterministic verdict) and `merge-readiness` (blocker assessment). Evidence flows from the fake live-read client through evidence builders and into Ajna pipelines. Verdicts remain deterministic. No comments, review submissions, merges, or workflow reruns.
+
+The Phase L controlled local file write gate evaluates write requests against policy, approval, workspace, and protected path rules:
+
+```txt
+codemind local-write fixtures/local-write-fixture.json
+```
+
+This command evaluates a local file write request through the approval-gated write gate. It checks that writes are enabled by policy, an approval ticket with `file:write` scope is present, the target path is inside the workspace and not protected, and reason/rollback note are provided. The gate returns ALLOWED or BLOCKED with accumulated block reasons. Dry-run mode previews the decision without modifying any file. An audit event is emitted for every evaluation. No GitHub writes. No shell execution.
 
 The Phase K approved write preparation introduces write-intent plans and approval tickets:
 
@@ -273,6 +282,7 @@ docs/runtime/CODEMIND_GITHUB_LIVE_READ_ADAPTER.md
 docs/runtime/CODEMIND_AJNA_LIVE_READ_PIPELINE.md
 docs/runtime/CODEMIND_OPERATOR_REVIEW_GATE.md
 docs/runtime/CODEMIND_APPROVED_WRITE_PREPARATION.md
+docs/runtime/CODEMIND_CONTROLLED_LOCAL_FILE_WRITE_GATE.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md

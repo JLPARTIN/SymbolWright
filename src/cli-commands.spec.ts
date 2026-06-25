@@ -113,6 +113,13 @@ describe('renderHelp', () => {
     expect(output).toContain('Create a write intent plan with validation and approval ticket from a local JSON fixture')
   })
 
+  it('marks Phase L local file write gate command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('local-write <json-file>')
+    expect(output).toContain('Evaluate a controlled local file write through the approval-gated write gate from a local JSON fixture')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
@@ -160,11 +167,11 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('PLAN_FIRST')
   })
 
-  it('shows post-Phase K runtime build state', () => {
+  it('shows post-Phase L runtime build state', () => {
     const output = renderStatus()
 
-    expect(output).toContain('Runtime phases:     11 complete')
-    expect(output).toContain('Next runtime phase: Phase L')
+    expect(output).toContain('Runtime phases:     12 complete')
+    expect(output).toContain('Next runtime phase: Phase M')
   })
 
   it('shows all controlled capabilities as DISABLED', () => {
