@@ -65,6 +65,27 @@ function searchDirectory(
   }
 }
 
+function parseSearchFilesInput(input: unknown): SearchFilesInput {
+  if (typeof input !== 'object' || input === null || !('query' in input)) {
+    throw new Error('Missing query: codemind search <query>')
+  }
+
+  const value = input as Record<string, unknown>
+  if (typeof value.query !== 'string') {
+    throw new Error('Missing query: codemind search <query>')
+  }
+
+  const parsed: { query: string; dir?: string; limit?: number } = { query: value.query }
+  if (typeof value.dir === 'string') {
+    parsed.dir = value.dir
+  }
+  if (typeof value.limit === 'number') {
+    parsed.limit = value.limit
+  }
+
+  return parsed
+}
+
 export async function executeSearchFilesTool(
   input: SearchFilesInput,
   context: RuntimeToolContext,
@@ -98,9 +119,9 @@ export async function executeSearchFilesTool(
   ].join('\n')
 }
 
-export const searchFilesTool: RuntimeToolDefinition<SearchFilesInput> = {
+export const searchFilesTool: RuntimeToolDefinition = {
   name: 'search_files',
   description: 'Search allowed workspace files without mutating them.',
   capability: 'SEARCH',
-  execute: executeSearchFilesTool,
+  execute: async (input, context) => executeSearchFilesTool(parseSearchFilesInput(input), context),
 }
