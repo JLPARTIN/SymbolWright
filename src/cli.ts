@@ -15,10 +15,10 @@ import { renderAjnaReviewPrReadOnlyCollectorFixtureForFile } from './cli-ajna-re
 import { renderAjnaReviewPrForFile } from './cli-ajna-review-pr.js'
 import { renderAjnaScanProfileForRepo } from './cli-ajna-scan-profile.js'
 import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
+import { renderCodeMindPlan } from './cli-plan.js'
 import { renderScan, scanRepo } from './cli-scan.js'
 
 const NOT_YET_ACTIVE = new Set([
-  'plan',
   'read',
   'search',
   'propose-patch',
@@ -41,6 +41,12 @@ async function main(): Promise<void> {
     case 'status':
       console.log(renderStatus())
       break
+
+    case 'plan': {
+      const goal = rest.join(' ')
+      console.log(renderCodeMindPlan(goal))
+      break
+    }
 
     case 'scan': {
       const dir = rest[0] ?? process.cwd()
