@@ -11,6 +11,7 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'validation-plan [focus]', description: 'Render validation guidance without executing commands' },
   { name: 'ci-review [source]', description: 'Draft a local CI review without querying services' },
   { name: 'pr-notes [focus]', description: 'Draft PR notes without posting them' },
+  { name: 'runtime run <goal> --read-only', description: 'Run a bounded read-only runtime loop' },
   {
     name: 'ajna scan-profile [dir]',
     description: 'Render a read-only Ajna scan profile from repository scan facts',

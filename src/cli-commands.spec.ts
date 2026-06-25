@@ -48,6 +48,13 @@ describe('renderHelp', () => {
     expect(output).not.toContain('Draft PR summary or review notes [future]')
   })
 
+  it('marks Phase C read-only runtime loop command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('runtime run <goal> --read-only')
+    expect(output).toContain('Run a bounded read-only runtime loop')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
@@ -109,7 +116,7 @@ describe('renderNotYetActive', () => {
   })
 
   it('indicates not yet active', () => {
-    expect(renderNotYetActive('runtime run my-goal')).toContain('not yet active')
+    expect(renderNotYetActive('runtime apply my-goal')).toContain('not yet active')
   })
 
   it('directs the user to help', () => {
