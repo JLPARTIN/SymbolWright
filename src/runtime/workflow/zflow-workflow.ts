@@ -37,6 +37,16 @@ export interface ZflowResult {
   readonly collaborationOutput: string | null
 }
 
+const DEFAULT_ZFLOW_POLICY: RuntimePolicySnapshot = {
+  mode: 'READ_ONLY',
+  allowNetwork: false,
+  allowShell: false,
+  allowWrites: false,
+  allowGitHubWrites: false,
+  protectedPaths: ['.git', '.env', '.env.local', 'node_modules', 'dist', 'coverage'],
+  noisyDirs: [],
+}
+
 function toLocalMode(mode: ZflowMode): LocalSelfEditMode {
   if (mode === 'preview-only' || mode === 'prepare-pr') {
     return 'preview-only'
@@ -53,6 +63,7 @@ export async function runZflowWorkflow(
   request: ZflowRequest,
   cwd: string = process.cwd(),
 ): Promise<ZflowResult> {
+  const policy = request.policy ?? DEFAULT_ZFLOW_POLICY
   const local = await runLocalSelfEditWorkflow(
     {
       name: request.name,
@@ -64,7 +75,7 @@ export async function runZflowWorkflow(
         content: file.content,
       })),
       ...(request.validationCommand !== undefined ? { validationCommand: request.validationCommand } : {}),
-      ...(request.policy !== undefined ? { policy: request.policy } : {}),
+      policy,
       ...(request.approval !== undefined ? { approval: request.approval } : {}),
     },
     cwd,
@@ -91,7 +102,7 @@ export async function runZflowWorkflow(
       reason: request.reason,
       dryRun: true,
     },
-    request.policy ?? local.workflow.policy,
+    policy,
     request.approval,
     prClient,
   )
@@ -106,7 +117,7 @@ export async function runZflowWorkflow(
       reason: request.reason,
       dryRun: true,
     },
-    request.policy ?? local.workflow.policy,
+    policy,
     request.approval,
     collabClient,
   )
