@@ -17,6 +17,7 @@ export function getAjnaDocsReference(): AjnaDocsReference {
       'docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md',
     ],
     commandDocs: [
+      'docs/ajna-docs-command.md',
       'docs/ajna-client-pipeline-manifest-command.md',
       'docs/ajna-client-pipeline-status-command.md',
       'docs/ajna-client-collector-fixture-command.md',
