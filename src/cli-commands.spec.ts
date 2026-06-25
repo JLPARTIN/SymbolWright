@@ -127,6 +127,13 @@ describe('renderHelp', () => {
     expect(output).toContain('Evaluate an approved validation command through the allowlisted command gate from a local JSON fixture')
   })
 
+  it('marks Phase N PR preparation command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('pr-preparation <json-file>')
+    expect(output).toContain('Prepare a PR title, body, and validation checklist from a local JSON fixture without pushing or creating a PR')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
@@ -174,11 +181,11 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('PLAN_FIRST')
   })
 
-  it('shows post-Phase M runtime build state', () => {
+  it('shows post-Phase N runtime build state', () => {
     const output = renderStatus()
 
-    expect(output).toContain('Runtime phases:     13 complete')
-    expect(output).toContain('Next runtime phase: Phase N')
+    expect(output).toContain('Runtime phases:     14 complete')
+    expect(output).toContain('Next runtime phase: Phase O')
   })
 
   it('shows all controlled capabilities as DISABLED', () => {

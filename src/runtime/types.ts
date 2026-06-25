@@ -27,6 +27,7 @@ export type CodemindToolName =
   | 'write_intent_plan'
   | 'local_file_write'
   | 'validation_command_gate'
+  | 'pr_preparation'
 
 export type RuntimeToolCapability =
   | 'PLAN'
@@ -45,6 +46,7 @@ export type RuntimeToolCapability =
   | 'WRITE_INTENT'
   | 'LOCAL_FILE_WRITE'
   | 'VALIDATION_COMMAND'
+  | 'PR_PREPARATION'
 
 export interface RuntimeApproval {
   readonly ticketId: string
