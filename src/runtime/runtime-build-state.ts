@@ -80,9 +80,16 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
   {
     id: 'I',
     title: 'Ajna live-read review pipeline',
+    state: 'COMPLETE',
+    activeCommands: ['codemind ajna-live-read <json-file>'],
+    boundary: ['read-only evidence only', 'no comments', 'no review submissions', 'no merges'],
+  },
+  {
+    id: 'J',
+    title: 'Operator review gate for live outputs',
     state: 'NEXT',
     activeCommands: [],
-    boundary: ['read-only evidence only', 'no comments', 'no review submissions', 'no merges'],
+    boundary: ['no automatic approval', 'no writes', 'no PR comments', 'no merges'],
   },
 ] as const
 

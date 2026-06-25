@@ -21,6 +21,7 @@ import { renderRuntimePlan } from './cli-runtime-plan.js'
 import { renderRuntimePrNotes } from './cli-runtime-pr-notes.js'
 import { renderRuntimeProposePatch } from './cli-runtime-propose-patch.js'
 import { renderRuntimeRead } from './cli-runtime-read.js'
+import { renderRuntimeAjnaLiveRead } from './cli-runtime-ajna-live-read.js'
 import { renderRuntimeGitHubLiveRead } from './cli-runtime-github-live-read.js'
 import { renderRuntimeLiveReadClientFixture } from './cli-runtime-live-read-client-fixture.js'
 import { renderRuntimeLiveReadPolicy } from './cli-runtime-live-read-policy.js'
@@ -84,6 +85,16 @@ async function main(): Promise<void> {
         break
       }
       console.log(await renderRuntimeCiReview(rest.length > 0 ? rest.join(' ') : undefined))
+      break
+    }
+
+    case 'ajna-live-read': {
+      const fixturePath = rest[0]
+      if (fixturePath === undefined) {
+        console.error('Missing input JSON file: codemind ajna-live-read <json-file>')
+        process.exit(1)
+      }
+      console.log(await renderRuntimeAjnaLiveRead(fixturePath))
       break
     }
 

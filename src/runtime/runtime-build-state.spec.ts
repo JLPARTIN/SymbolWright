@@ -8,13 +8,13 @@ import {
 } from './runtime-build-state.js'
 
 describe('runtime build state', () => {
-  it('records Phases A through H as complete', () => {
-    expect(getCompletedRuntimeBuildPhaseCount()).toBe(8)
-    expect(RUNTIME_BUILD_PHASES.slice(0, 8).every((phase) => phase.state === 'COMPLETE')).toBe(true)
+  it('records Phases A through I as complete', () => {
+    expect(getCompletedRuntimeBuildPhaseCount()).toBe(9)
+    expect(RUNTIME_BUILD_PHASES.slice(0, 9).every((phase) => phase.state === 'COMPLETE')).toBe(true)
   })
 
-  it('points to Phase I as next', () => {
-    expect(getNextRuntimeBuildPhase()).toMatchObject({ id: 'I', state: 'NEXT' })
+  it('points to Phase J as next', () => {
+    expect(getNextRuntimeBuildPhase()).toMatchObject({ id: 'J', state: 'NEXT' })
   })
 
   it('records Phase F active command', () => {
@@ -35,17 +35,24 @@ describe('runtime build state', () => {
     expect(phaseH?.activeCommands).toContain('codemind github-live-read <json-file>')
   })
 
+  it('records Phase I active command', () => {
+    const phaseI = RUNTIME_BUILD_PHASES.find((phase) => phase.id === 'I')
+    expect(phaseI).toBeDefined()
+    expect(phaseI?.activeCommands).toContain('codemind ajna-live-read <json-file>')
+  })
+
   it('renders active command and boundary details', () => {
     const output = renderRuntimeBuildState()
 
     expect(output).toContain('CodeMind runtime build state')
-    expect(output).toContain('Completed phases: 8')
+    expect(output).toContain('Completed phases: 9')
     expect(output).toContain('Phase A')
     expect(output).toContain('codemind runtime run <goal> --approval-ticket <id>')
     expect(output).toContain('codemind ci-review --fixture-file <json-file>')
     expect(output).toContain('codemind live-read-policy <json-file>')
     expect(output).toContain('codemind live-read-client-fixture <json-file>')
     expect(output).toContain('codemind github-live-read <json-file>')
-    expect(output).toContain('Next phase: Phase I')
+    expect(output).toContain('codemind ajna-live-read <json-file>')
+    expect(output).toContain('Next phase: Phase J')
   })
 })
