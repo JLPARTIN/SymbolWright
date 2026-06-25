@@ -15,17 +15,13 @@ import { renderAjnaReviewPrReadOnlyCollectorFixtureForFile } from './cli-ajna-re
 import { renderAjnaReviewPrForFile } from './cli-ajna-review-pr.js'
 import { renderAjnaScanProfileForRepo } from './cli-ajna-scan-profile.js'
 import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
-import { renderCodeMindPlan } from './cli-plan.js'
+import { renderRuntimePlan } from './cli-runtime-plan.js'
+import { renderRuntimeRead } from './cli-runtime-read.js'
+import { renderRuntimeSearch } from './cli-runtime-search.js'
+import { renderRuntimeValidationPlan } from './cli-runtime-validation-plan.js'
 import { renderScan, scanRepo } from './cli-scan.js'
 
-const NOT_YET_ACTIVE = new Set([
-  'read',
-  'search',
-  'propose-patch',
-  'validation-plan',
-  'ci-review',
-  'pr-notes',
-])
+const NOT_YET_ACTIVE = new Set(['propose-patch', 'ci-review', 'pr-notes'])
 
 const [, , command, ...rest] = process.argv
 
@@ -42,11 +38,21 @@ async function main(): Promise<void> {
       console.log(renderStatus())
       break
 
-    case 'plan': {
-      const goal = rest.join(' ')
-      console.log(renderCodeMindPlan(goal))
+    case 'plan':
+      console.log(await renderRuntimePlan(rest.join(' ')))
       break
-    }
+
+    case 'read':
+      console.log(await renderRuntimeRead(rest[0] ?? ''))
+      break
+
+    case 'search':
+      console.log(await renderRuntimeSearch(rest.join(' ')))
+      break
+
+    case 'validation-plan':
+      console.log(await renderRuntimeValidationPlan(rest.length > 0 ? rest.join(' ') : undefined))
+      break
 
     case 'scan': {
       const dir = rest[0] ?? process.cwd()
