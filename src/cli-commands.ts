@@ -22,7 +22,7 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'ajna-live-read <json-file>', description: 'Run Ajna review or merge-readiness pipeline from live-read evidence' },
   { name: 'operator-review <json-file>', description: 'Create an operator review packet from a local JSON fixture' },
   { name: 'write-intent <json-file>', description: 'Create a write intent plan with validation and approval ticket from a local JSON fixture' },
-  { name: 'local-write <json-file>', description: 'Evaluate a controlled local file write through the approval-gated write gate from a local JSON fixture' },
+  { name: 'local-write <json-file>', description: 'Execute an approved local file write through the approval-gated write gate from a local JSON fixture' },
   { name: 'validation-command <json-file>', description: 'Evaluate an approved validation command through the allowlisted command gate from a local JSON fixture' },
   { name: 'pr-preparation <json-file>', description: 'Prepare a PR title, body, and validation checklist from a local JSON fixture without pushing or creating a PR' },
   { name: 'github-write-proposal <json-file>', description: 'Create a governed GitHub write proposal from a local JSON fixture without executing any GitHub API call' },

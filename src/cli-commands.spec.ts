@@ -117,7 +117,7 @@ describe('renderHelp', () => {
     const output = renderHelp()
 
     expect(output).toContain('local-write <json-file>')
-    expect(output).toContain('Evaluate a controlled local file write through the approval-gated write gate from a local JSON fixture')
+    expect(output).toContain('Execute an approved local file write through the approval-gated write gate from a local JSON fixture')
   })
 
   it('marks Phase M validation command gate command as active', () => {
@@ -216,10 +216,10 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('PLAN_FIRST')
   })
 
-  it('shows post-Phase S runtime build state', () => {
+  it('shows post-Phase T runtime build state', () => {
     const output = renderStatus()
 
-    expect(output).toContain('Runtime phases:     19 complete')
+    expect(output).toContain('Runtime phases:     20 complete')
     expect(output).toContain('Next runtime phase: none')
   })
 

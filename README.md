@@ -8,9 +8,9 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, a controlled local file write gate, an approved validation command gate, PR preparation from approved local changes, a governed GitHub write proposal gate, an approved GitHub write gate, a governed runtime workflow composition surface, a read-only Ajna workflow surface, and a runtime status dashboard.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, an approved local file write execution gate, an approved validation command gate, PR preparation from approved local changes, a governed GitHub write proposal gate, an approved GitHub write gate, a governed runtime workflow composition surface, a read-only Ajna workflow surface, and a runtime status dashboard.
 
-`codemind status` now reports post-Phase S runtime build state, including completed phase count. All runtime phases are complete.
+`codemind status` now reports post-Phase T runtime build state, including completed phase count. All runtime phases are complete.
 
 The active CLI package is `codemind` and exposes:
 
@@ -188,13 +188,13 @@ codemind validation-command fixtures/validation-command-fixture.json
 
 This command evaluates a validation command request through the allowlisted command gate. It checks that shell execution is enabled by policy, an approval ticket with `command:validate` scope is present, the command is in the allowlist (`npm run typecheck`, `npm test`, `npm run test:coverage`, `npm run lint`, `npm run audit`, `npm run build`, `npm run build:app`), and a reason is provided. The gate returns ALLOWED or BLOCKED with accumulated block reasons. Dry-run mode previews the decision without executing any command. An audit event is emitted for every evaluation. No arbitrary shell execution. No GitHub writes.
 
-The Phase L controlled local file write gate evaluates write requests against policy, approval, workspace, and protected path rules:
+The Phase T approved local file write execution converts the local file write gate into an actual file writer:
 
 ```txt
 codemind local-write fixtures/local-write-fixture.json
 ```
 
-This command evaluates a local file write request through the approval-gated write gate. It checks that writes are enabled by policy, an approval ticket with `file:write` scope is present, the target path is inside the workspace and not protected, and reason/rollback note are provided. The gate returns ALLOWED or BLOCKED with accumulated block reasons. Dry-run mode previews the decision without modifying any file. An audit event is emitted for every evaluation. No GitHub writes. No shell execution.
+This command executes an approved local file write through the approval-gated write gate. It checks that writes are enabled by policy (`allowWrites`), an approval ticket with `file:write` scope is present, the target path is inside the workspace and not protected, and reason/rollback note are provided. When `dryRun` is true (the default), the gate evaluates permission and renders a diff preview without modifying any file. When `dryRun` is false and all checks pass, the file is written to disk, parent directories are created if needed, and a before/after diff is captured. An audit event is emitted for every evaluation and execution. Protected paths (.git, .env, .env.local, node_modules, dist, coverage) are always blocked. No GitHub writes. No shell execution.
 
 The Phase K approved write preparation introduces write-intent plans and approval tickets:
 
@@ -353,6 +353,7 @@ docs/runtime/CODEMIND_APPROVED_GITHUB_WRITE_GATE.md
 docs/runtime/CODEMIND_RUNTIME_WORKFLOW_COMPOSITION.md
 docs/runtime/CODEMIND_AJNA_WORKFLOW_SURFACE.md
 docs/runtime/CODEMIND_RUNTIME_STATUS_DASHBOARD.md
+docs/runtime/CODEMIND_APPROVED_LOCAL_FILE_WRITES.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
