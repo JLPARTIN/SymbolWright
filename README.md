@@ -8,9 +8,9 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam with fake client, and a read-only Ajna workflow surface.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, and a read-only Ajna workflow surface.
 
-`codemind status` now reports post-Phase G runtime build state, including completed phase count and the next runtime phase.
+`codemind status` now reports post-Phase H runtime build state, including completed phase count and the next runtime phase.
 
 The active CLI package is `codemind` and exposes:
 
@@ -30,6 +30,7 @@ codemind runtime run <goal> --read-only
 codemind runtime run <goal> --approval-ticket <id>
 codemind live-read-policy <json-file>
 codemind live-read-client-fixture <json-file>
+codemind github-live-read <json-file>
 codemind scan [dir]
 codemind ajna scan-profile [dir]
 codemind ajna docs
@@ -103,6 +104,14 @@ codemind live-read-client-fixture fixtures/live-read-client-fixture.json
 ```
 
 This command uses a provider-neutral `RuntimeLiveReadClient` interface with a `FakeLiveReadClient` implementation. It exercises `getPullRequestEvidence`, `getWorkflowEvidence`, and `getRepositoryFile` methods and passes the results through the existing evidence builders and Ajna evidence bridge. No live service calls are made.
+
+The Phase H GitHub live read adapter adds policy-gated GitHub read operations:
+
+```txt
+codemind github-live-read fixtures/github-live-read-fixture.json
+```
+
+This command wraps a `RuntimeLiveReadClient` in a `GitHubLiveReadPolicyWrapper` that enforces policy checks before every read operation. The `GitHubLiveReadClient` class defines the real GitHub adapter seam but is not yet wired to live network calls. Unit tests use the fake client through the policy wrapper. Allowed operations: read PR metadata, read changed files list, read check/workflow summary, read file content. Forbidden: comments, approvals, merges, branch pushes, workflow reruns.
 
 Current Ajna work is intentionally local-first:
 
@@ -233,6 +242,7 @@ docs/runtime/CODEMIND_APPROVED_EXECUTION_GATES.md
 docs/runtime/CODEMIND_READ_ADAPTERS.md
 docs/runtime/CODEMIND_LIVE_READ_POLICY_HANDSHAKE.md
 docs/runtime/CODEMIND_LIVE_READ_CLIENT_SEAM.md
+docs/runtime/CODEMIND_GITHUB_LIVE_READ_ADAPTER.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
