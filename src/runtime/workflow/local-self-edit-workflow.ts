@@ -1,0 +1,89 @@
+import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import { runRuntimeWorkflow, renderWorkflowResult, type RuntimeWorkflowResult } from './runtime-workflow.js'
+import { createLocalSelfEditRuntimeContext, createLocalSelfEditRuntimeRegistry } from '../runtime-local-self-edit-registry.js'
+import type { PatchFileChange } from '../patch/patch-application.js'
+
+export type LocalSelfEditMode = 'preview-only' | 'apply-only' | 'apply-and-validate'
+
+export interface LocalSelfEditRequest {
+  readonly name: string
+  readonly mode: LocalSelfEditMode
+  readonly reason: string
+  readonly rollbackNote: string
+  readonly files: readonly PatchFileChange[]
+  readonly validationCommand?: string
+  readonly policy?: RuntimePolicySnapshot
+  readonly approval?: RuntimeApproval
+}
+
+export interface LocalSelfEditResult {
+  readonly mode: LocalSelfEditMode
+  readonly workflow: RuntimeWorkflowResult
+}
+
+export async function runLocalSelfEditWorkflow(
+  request: LocalSelfEditRequest,
+  cwd: string = process.cwd(),
+): Promise<LocalSelfEditResult> {
+  const registry = createLocalSelfEditRuntimeRegistry({})
+  const baseContext = createLocalSelfEditRuntimeContext(cwd)
+  const context = {
+    ...baseContext,
+    ...(request.policy !== undefined ? { policy: request.policy } : {}),
+    ...(request.approval !== undefined ? { approval: request.approval } : {}),
+  }
+
+  const applyDryRun = request.mode === 'preview-only'
+  const steps = [
+    {
+      toolName: 'apply_patch' as const,
+      input: {
+        reason: request.reason,
+        rollbackNote: request.rollbackNote,
+        dryRun: applyDryRun,
+        files: request.files,
+      },
+    },
+  ]
+
+  if (request.mode === 'apply-and-validate') {
+    steps.push({
+      toolName: 'validation_command_gate' as const,
+      input: {
+        command: request.validationCommand ?? 'npm run typecheck',
+        reason: `Validate local self-edit workflow: ${request.reason}`,
+        dryRun: false,
+      },
+    })
+  }
+
+  const workflow = await runRuntimeWorkflow(
+    {
+      name: request.name,
+      steps,
+      maxSteps: 3,
+    },
+    registry,
+    context,
+  )
+
+  return {
+    mode: request.mode,
+    workflow,
+  }
+}
+
+export function renderLocalSelfEditResult(result: LocalSelfEditResult): string {
+  return [
+    'CodeMind local self-edit workflow',
+    '',
+    `Mode: ${result.mode}`,
+    '',
+    renderWorkflowResult(result.workflow),
+    '',
+    'Boundary:',
+    '- uses existing apply_patch and validation command gates',
+    '- no GitHub writes',
+    '- no branch or PR creation',
+  ].join('\n')
+}
