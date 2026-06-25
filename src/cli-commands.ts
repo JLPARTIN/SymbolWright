@@ -24,6 +24,10 @@ export const CODEMIND_CLI_COMMANDS = [
     description: 'Render Ajna review-pr from a mocked local GitHub PR payload fixture',
   },
   {
+    name: 'ajna review-pr-github-api-fixture <json-file>',
+    description: 'Render Ajna review-pr from a local GitHub-shaped API payload fixture',
+  },
+  {
     name: 'ajna review-pr-collector-fixture <json-file>',
     description: 'Render Ajna review-pr from a local collector snapshot fixture',
   },
