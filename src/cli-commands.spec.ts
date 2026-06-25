@@ -106,6 +106,13 @@ describe('renderHelp', () => {
     expect(output).toContain('Create an operator review packet from a local JSON fixture')
   })
 
+  it('marks Phase K write intent plan command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('write-intent <json-file>')
+    expect(output).toContain('Create a write intent plan with validation and approval ticket from a local JSON fixture')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
@@ -153,11 +160,11 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('PLAN_FIRST')
   })
 
-  it('shows post-Phase J runtime build state', () => {
+  it('shows post-Phase K runtime build state', () => {
     const output = renderStatus()
 
-    expect(output).toContain('Runtime phases:     10 complete')
-    expect(output).toContain('Next runtime phase: Phase K')
+    expect(output).toContain('Runtime phases:     11 complete')
+    expect(output).toContain('Next runtime phase: Phase L')
   })
 
   it('shows all controlled capabilities as DISABLED', () => {

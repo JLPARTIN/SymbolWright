@@ -21,6 +21,7 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'github-live-read <json-file>', description: 'Read GitHub PR or CI evidence through policy-gated live read adapter' },
   { name: 'ajna-live-read <json-file>', description: 'Run Ajna review or merge-readiness pipeline from live-read evidence' },
   { name: 'operator-review <json-file>', description: 'Create an operator review packet from a local JSON fixture' },
+  { name: 'write-intent <json-file>', description: 'Create a write intent plan with validation and approval ticket from a local JSON fixture' },
   {
     name: 'ajna scan-profile [dir]',
     description: 'Render a read-only Ajna scan profile from repository scan facts',
