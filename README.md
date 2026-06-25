@@ -8,7 +8,7 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, and a read-only Ajna workflow surface.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, and a read-only Ajna workflow surface.
 
 The active CLI package is `codemind` and exposes:
 
@@ -23,6 +23,7 @@ codemind propose-patch <goal>
 codemind pr-notes [focus]
 codemind ci-review [source]
 codemind runtime run <goal> --read-only
+codemind runtime run <goal> --approval-ticket <id>
 codemind scan [dir]
 codemind ajna scan-profile [dir]
 codemind ajna docs
@@ -64,7 +65,13 @@ The Phase C read-only runtime loop runs a bounded tool sequence and captures a t
 codemind runtime run "prepare proposal follow-up" --read-only
 ```
 
-It uses only read-only/proposal runtime tools, enforces iteration caps, and records transcript entries for operator review. It does not edit files, run shell commands, call providers, post PR comments, or mutate GitHub state.
+The Phase D approval gate path represents approved actions with audit output:
+
+```txt
+codemind runtime run "dry-run approved follow-up" --approval-ticket APPROVE-123
+```
+
+No approval ticket means approved execution fails. The current Phase D path is still dry-run by design: it records approval-gated edit and command representations, emits audit events, blocks protected paths, and does not modify files, execute shell commands, use network access, call providers, post PR comments, or mutate GitHub state.
 
 Current Ajna work is intentionally local-first:
 
@@ -119,6 +126,7 @@ read-only first
 plan-first by default
 proposal-only before execution
 bounded loops before approved execution
+approval ticket required for gated execution
 local fixtures before live integrations
 no network by default
 no file writes without operator approval
@@ -189,6 +197,7 @@ docs/runtime/CODEMIND_RUNTIME_FOUNDATION.md
 docs/runtime/CODEMIND_RUNTIME_READONLY_COMMANDS.md
 docs/runtime/CODEMIND_PROPOSAL_MODE.md
 docs/runtime/CODEMIND_READONLY_LOOP.md
+docs/runtime/CODEMIND_APPROVED_EXECUTION_GATES.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
