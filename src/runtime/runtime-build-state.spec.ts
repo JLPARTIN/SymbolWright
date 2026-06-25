@@ -8,23 +8,30 @@ import {
 } from './runtime-build-state.js'
 
 describe('runtime build state', () => {
-  it('records Phases A through E as complete', () => {
-    expect(getCompletedRuntimeBuildPhaseCount()).toBe(5)
-    expect(RUNTIME_BUILD_PHASES.slice(0, 5).every((phase) => phase.state === 'COMPLETE')).toBe(true)
+  it('records Phases A through F as complete', () => {
+    expect(getCompletedRuntimeBuildPhaseCount()).toBe(6)
+    expect(RUNTIME_BUILD_PHASES.slice(0, 6).every((phase) => phase.state === 'COMPLETE')).toBe(true)
   })
 
-  it('points to Phase F as next', () => {
-    expect(getNextRuntimeBuildPhase()).toMatchObject({ id: 'F', state: 'NEXT' })
+  it('points to Phase G as next', () => {
+    expect(getNextRuntimeBuildPhase()).toMatchObject({ id: 'G', state: 'NEXT' })
+  })
+
+  it('records Phase F active command', () => {
+    const phaseF = RUNTIME_BUILD_PHASES.find((phase) => phase.id === 'F')
+    expect(phaseF).toBeDefined()
+    expect(phaseF?.activeCommands).toContain('codemind live-read-policy <json-file>')
   })
 
   it('renders active command and boundary details', () => {
     const output = renderRuntimeBuildState()
 
     expect(output).toContain('CodeMind runtime build state')
-    expect(output).toContain('Completed phases: 5')
+    expect(output).toContain('Completed phases: 6')
     expect(output).toContain('Phase A')
     expect(output).toContain('codemind runtime run <goal> --approval-ticket <id>')
     expect(output).toContain('codemind ci-review --fixture-file <json-file>')
-    expect(output).toContain('Next phase: Phase F')
+    expect(output).toContain('codemind live-read-policy <json-file>')
+    expect(output).toContain('Next phase: Phase G')
   })
 })

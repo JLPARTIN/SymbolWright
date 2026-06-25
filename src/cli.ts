@@ -21,6 +21,7 @@ import { renderRuntimePlan } from './cli-runtime-plan.js'
 import { renderRuntimePrNotes } from './cli-runtime-pr-notes.js'
 import { renderRuntimeProposePatch } from './cli-runtime-propose-patch.js'
 import { renderRuntimeRead } from './cli-runtime-read.js'
+import { renderRuntimeLiveReadPolicy } from './cli-runtime-live-read-policy.js'
 import { renderRuntimeRun } from './cli-runtime-run.js'
 import { renderApprovedRuntimeRun } from './cli-runtime-approved-run.js'
 import { renderRuntimeSearch } from './cli-runtime-search.js'
@@ -81,6 +82,16 @@ async function main(): Promise<void> {
         break
       }
       console.log(await renderRuntimeCiReview(rest.length > 0 ? rest.join(' ') : undefined))
+      break
+    }
+
+    case 'live-read-policy': {
+      const fixturePath = rest[0]
+      if (fixturePath === undefined) {
+        console.error('Missing input JSON file: codemind live-read-policy <json-file>')
+        process.exit(1)
+      }
+      console.log(await renderRuntimeLiveReadPolicy(fixturePath))
       break
     }
 

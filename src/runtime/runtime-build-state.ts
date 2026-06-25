@@ -59,9 +59,16 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
   {
     id: 'F',
     title: 'Live read adapter policy handshake',
+    state: 'COMPLETE',
+    activeCommands: ['codemind live-read-policy <json-file>'],
+    boundary: ['dry-run policy handshake only', 'no live service call', 'no writes', 'no comments', 'no merges'],
+  },
+  {
+    id: 'G',
+    title: 'Live read adapter client seam',
     state: 'NEXT',
     activeCommands: [],
-    boundary: ['live reads behind policy', 'no writes', 'no comments', 'no merges'],
+    boundary: ['fake client only', 'no live service call', 'no writes', 'no comments', 'no merges'],
   },
 ] as const
 

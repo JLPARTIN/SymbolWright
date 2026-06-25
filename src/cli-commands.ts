@@ -16,6 +16,7 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'pr-notes --fixture-file <json-file>', description: 'Draft PR notes from local PR fixture evidence' },
   { name: 'runtime run <goal> --read-only', description: 'Run a bounded read-only runtime loop' },
   { name: 'runtime run <goal> --approval-ticket <id>', description: 'Render approval-gated dry-run execution with audit output' },
+  { name: 'live-read-policy <json-file>', description: 'Evaluate live read policy handshake from a local JSON fixture' },
   {
     name: 'ajna scan-profile [dir]',
     description: 'Render a read-only Ajna scan profile from repository scan facts',
