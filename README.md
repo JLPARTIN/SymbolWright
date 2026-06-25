@@ -8,7 +8,7 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, and a read-only Ajna workflow surface.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, and a read-only Ajna workflow surface.
 
 The active CLI package is `codemind` and exposes:
 
@@ -19,6 +19,9 @@ codemind plan <goal>
 codemind read <path>
 codemind search <query>
 codemind validation-plan [focus]
+codemind propose-patch <goal>
+codemind pr-notes [focus]
+codemind ci-review [source]
 codemind scan [dir]
 codemind ajna scan-profile [dir]
 codemind ajna docs
@@ -46,7 +49,15 @@ codemind search runtime
 codemind validation-plan "runtime activation"
 ```
 
-They render plans, read allowed workspace files, search allowed workspace files, and print validation guidance. They do not edit files, run shell commands, call providers, post PR comments, or mutate GitHub state.
+The Phase B proposal-mode commands add useful coding-agent output without applying changes:
+
+```txt
+codemind propose-patch "add guarded patch proposal"
+codemind pr-notes "proposal mode"
+codemind ci-review "local fixture"
+```
+
+They render patch proposals, PR notes drafts, and local CI review drafts. They do not edit files, run shell commands, call providers, post PR comments, or mutate GitHub state.
 
 Current Ajna work is intentionally local-first:
 
@@ -99,6 +110,7 @@ CodeMind starts with a conservative operating model:
 ```txt
 read-only first
 plan-first by default
+proposal-only before execution
 local fixtures before live integrations
 no network by default
 no file writes without operator approval
@@ -167,6 +179,7 @@ docs/cli/CODEMIND_CLI_TERMINAL_UX_PLAN.md
 docs/cli-plan-command.md
 docs/runtime/CODEMIND_RUNTIME_FOUNDATION.md
 docs/runtime/CODEMIND_RUNTIME_READONLY_COMMANDS.md
+docs/runtime/CODEMIND_PROPOSAL_MODE.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
