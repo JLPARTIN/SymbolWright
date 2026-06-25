@@ -8,9 +8,9 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, and a read-only Ajna workflow surface.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, and a read-only Ajna workflow surface.
 
-`codemind status` now reports post-Phase J runtime build state, including completed phase count and the next runtime phase.
+`codemind status` now reports post-Phase K runtime build state, including completed phase count and the next runtime phase.
 
 The active CLI package is `codemind` and exposes:
 
@@ -33,6 +33,7 @@ codemind live-read-client-fixture <json-file>
 codemind github-live-read <json-file>
 codemind ajna-live-read <json-file>
 codemind operator-review <json-file>
+codemind write-intent <json-file>
 codemind scan [dir]
 codemind ajna scan-profile [dir]
 codemind ajna docs
@@ -122,6 +123,14 @@ codemind ajna-live-read fixtures/ajna-live-read-fixture.json
 ```
 
 This command supports two modes: `review` (Ajna review with deterministic verdict) and `merge-readiness` (blocker assessment). Evidence flows from the fake live-read client through evidence builders and into Ajna pipelines. Verdicts remain deterministic. No comments, review submissions, merges, or workflow reruns.
+
+The Phase K approved write preparation introduces write-intent plans and approval tickets:
+
+```txt
+codemind write-intent fixtures/write-intent-fixture.json
+```
+
+This command creates a write intent plan showing the exact target, reason, expected diff summary, validation plan, approval ticket requirement, and rollback note. The intent is validated against workspace boundaries and protected paths, then a write approval ticket is issued (PENDING or BLOCKED). No actual writes are performed. No GitHub mutation.
 
 The Phase J operator review gate creates review packets that require operator confirmation before any action:
 
@@ -263,6 +272,7 @@ docs/runtime/CODEMIND_LIVE_READ_CLIENT_SEAM.md
 docs/runtime/CODEMIND_GITHUB_LIVE_READ_ADAPTER.md
 docs/runtime/CODEMIND_AJNA_LIVE_READ_PIPELINE.md
 docs/runtime/CODEMIND_OPERATOR_REVIEW_GATE.md
+docs/runtime/CODEMIND_APPROVED_WRITE_PREPARATION.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
