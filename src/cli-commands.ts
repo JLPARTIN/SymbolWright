@@ -1,8 +1,9 @@
 import { getCodemindFoundationSnapshot } from './codemind-foundation.js'
+import { getCompletedRuntimeBuildPhaseCount, getNextRuntimeBuildPhase } from './runtime/runtime-build-state.js'
 
 export const CODEMIND_CLI_COMMANDS = [
   { name: 'help', description: 'Show available command surface' },
-  { name: 'status', description: 'Report CodeMind mode and policy status' },
+  { name: 'status', description: 'Report CodeMind mode, policy, and runtime build state' },
   { name: 'plan <goal>', description: 'Render a runtime-backed non-mutating work plan' },
   { name: 'scan [dir]', description: 'Summarize repository structure (defaults to cwd)' },
   { name: 'read <path>', description: 'Read an allowed workspace file without mutation' },
@@ -93,10 +94,13 @@ export function renderHelp(): string {
 
 export function renderStatus(): string {
   const snap = getCodemindFoundationSnapshot()
+  const nextPhase = getNextRuntimeBuildPhase()
   const lines = [
     `Platform:           ${snap.platform}`,
     `Capability:         ${snap.primaryCapability}`,
     `Posture:            ${snap.posture.join(', ')}`,
+    `Runtime phases:     ${getCompletedRuntimeBuildPhaseCount()} complete`,
+    `Next runtime phase: ${nextPhase === undefined ? 'none' : `Phase ${nextPhase.id} — ${nextPhase.title}`}`,
     `Mutation:           ${snap.mutationEnabled ? 'ENABLED' : 'DISABLED'}`,
     `GitHub write:       ${snap.githubWriteEnabled ? 'ENABLED' : 'DISABLED'}`,
     `Bash execution:     ${snap.bashExecutionEnabled ? 'ENABLED' : 'DISABLED'}`,
