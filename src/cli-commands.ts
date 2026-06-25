@@ -18,6 +18,7 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'runtime run <goal> --approval-ticket <id>', description: 'Render approval-gated dry-run execution with audit output' },
   { name: 'live-read-policy <json-file>', description: 'Evaluate live read policy handshake from a local JSON fixture' },
   { name: 'live-read-client-fixture <json-file>', description: 'Run live read client fixture through fake client and evidence pipeline' },
+  { name: 'github-live-read <json-file>', description: 'Read GitHub PR or CI evidence through policy-gated live read adapter' },
   {
     name: 'ajna scan-profile [dir]',
     description: 'Render a read-only Ajna scan profile from repository scan facts',

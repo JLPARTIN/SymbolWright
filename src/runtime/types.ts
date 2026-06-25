@@ -19,6 +19,8 @@ export type CodemindToolName =
   | 'github_ci_fixture_review'
   | 'live_read_policy_handshake'
   | 'live_read_client_fixture'
+  | 'github_live_read_pr'
+  | 'github_live_read_ci'
 
 export type RuntimeToolCapability =
   | 'PLAN'

@@ -73,9 +73,16 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
   {
     id: 'H',
     title: 'Live GitHub read adapter behind policy',
+    state: 'COMPLETE',
+    activeCommands: ['codemind github-live-read <json-file>'],
+    boundary: ['policy-gated live reads', 'read-only GitHub operations', 'no writes', 'no comments', 'no merges'],
+  },
+  {
+    id: 'I',
+    title: 'Ajna live-read review pipeline',
     state: 'NEXT',
     activeCommands: [],
-    boundary: ['policy-gated live reads', 'read-only GitHub operations', 'no writes', 'no comments', 'no merges'],
+    boundary: ['read-only evidence only', 'no comments', 'no review submissions', 'no merges'],
   },
 ] as const
 
