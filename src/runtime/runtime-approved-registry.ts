@@ -12,6 +12,7 @@ export function createApprovedRuntimePolicy(): RuntimePolicySnapshot {
     allowNetwork: false,
     allowShell: false,
     allowWrites: false,
+    allowGitHubWrites: false,
     protectedPaths: proposalContext.policy.protectedPaths,
     noisyDirs: proposalContext.policy.noisyDirs,
   }

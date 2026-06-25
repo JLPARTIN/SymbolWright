@@ -20,6 +20,7 @@ const testContext: RuntimeToolContext = {
     allowNetwork: false,
     allowShell: false,
     allowWrites: false,
+    allowGitHubWrites: false,
     protectedPaths: [],
     noisyDirs: [],
   },

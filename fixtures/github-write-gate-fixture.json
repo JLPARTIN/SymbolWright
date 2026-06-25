@@ -1,0 +1,8 @@
+{
+  "action": "create_draft_pr",
+  "repository": "owner/repo",
+  "targetRef": "main",
+  "content": "Phase P: Add approved GitHub write gate",
+  "reason": "Deliver Phase P — approved GitHub write gate",
+  "dryRun": true
+}

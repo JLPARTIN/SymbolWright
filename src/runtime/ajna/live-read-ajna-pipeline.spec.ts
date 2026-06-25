@@ -49,6 +49,7 @@ const testContext: RuntimeToolContext = {
     allowNetwork: false,
     allowShell: false,
     allowWrites: false,
+    allowGitHubWrites: false,
     protectedPaths: ['.git', '.env'],
     noisyDirs: ['node_modules', 'dist'],
   },

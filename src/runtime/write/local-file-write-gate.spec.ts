@@ -20,6 +20,7 @@ const writePolicy: RuntimePolicySnapshot = {
   allowNetwork: false,
   allowShell: false,
   allowWrites: true,
+  allowGitHubWrites: false,
   protectedPaths: ['.git', '.env', '.env.local', 'node_modules', 'dist', 'coverage'],
   noisyDirs: [],
 }
@@ -29,6 +30,7 @@ const readOnlyPolicy: RuntimePolicySnapshot = {
   allowNetwork: false,
   allowShell: false,
   allowWrites: false,
+  allowGitHubWrites: false,
   protectedPaths: [],
   noisyDirs: [],
 }

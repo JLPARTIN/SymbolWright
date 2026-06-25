@@ -141,6 +141,13 @@ describe('renderHelp', () => {
     expect(output).toContain('Create a governed GitHub write proposal from a local JSON fixture without executing any GitHub API call')
   })
 
+  it('marks Phase P GitHub write gate command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('github-write-gate <json-file>')
+    expect(output).toContain('Evaluate an approved GitHub write through the policy-gated write gate from a local JSON fixture')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
@@ -188,11 +195,11 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('PLAN_FIRST')
   })
 
-  it('shows post-Phase O runtime build state', () => {
+  it('shows post-Phase P runtime build state', () => {
     const output = renderStatus()
 
-    expect(output).toContain('Runtime phases:     15 complete')
-    expect(output).toContain('Next runtime phase: Phase P')
+    expect(output).toContain('Runtime phases:     16 complete')
+    expect(output).toContain('Next runtime phase: Phase Q')
   })
 
   it('shows all controlled capabilities as DISABLED', () => {
