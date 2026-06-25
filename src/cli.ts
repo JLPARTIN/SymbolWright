@@ -15,13 +15,16 @@ import { renderAjnaReviewPrReadOnlyCollectorFixtureForFile } from './cli-ajna-re
 import { renderAjnaReviewPrForFile } from './cli-ajna-review-pr.js'
 import { renderAjnaScanProfileForRepo } from './cli-ajna-scan-profile.js'
 import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
+import { renderRuntimeCiReview } from './cli-runtime-ci-review.js'
 import { renderRuntimePlan } from './cli-runtime-plan.js'
+import { renderRuntimePrNotes } from './cli-runtime-pr-notes.js'
+import { renderRuntimeProposePatch } from './cli-runtime-propose-patch.js'
 import { renderRuntimeRead } from './cli-runtime-read.js'
 import { renderRuntimeSearch } from './cli-runtime-search.js'
 import { renderRuntimeValidationPlan } from './cli-runtime-validation-plan.js'
 import { renderScan, scanRepo } from './cli-scan.js'
 
-const NOT_YET_ACTIVE = new Set(['propose-patch', 'ci-review', 'pr-notes'])
+const NOT_YET_ACTIVE = new Set<string>()
 
 const [, , command, ...rest] = process.argv
 
@@ -52,6 +55,18 @@ async function main(): Promise<void> {
 
     case 'validation-plan':
       console.log(await renderRuntimeValidationPlan(rest.length > 0 ? rest.join(' ') : undefined))
+      break
+
+    case 'propose-patch':
+      console.log(await renderRuntimeProposePatch(rest.join(' ')))
+      break
+
+    case 'pr-notes':
+      console.log(await renderRuntimePrNotes(rest.length > 0 ? rest.join(' ') : undefined))
+      break
+
+    case 'ci-review':
+      console.log(await renderRuntimeCiReview(rest.length > 0 ? rest.join(' ') : undefined))
       break
 
     case 'scan': {

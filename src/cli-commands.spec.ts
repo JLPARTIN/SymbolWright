@@ -34,6 +34,20 @@ describe('renderHelp', () => {
     expect(output).not.toContain('Propose validation commands [future]')
   })
 
+  it('marks Phase B proposal mode commands as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('propose-patch <goal>')
+    expect(output).toContain('Draft a patch proposal without applying it')
+    expect(output).toContain('ci-review [source]')
+    expect(output).toContain('Draft a local CI review without querying services')
+    expect(output).toContain('pr-notes [focus]')
+    expect(output).toContain('Draft PR notes without posting them')
+    expect(output).not.toContain('Draft a patch plan without applying it [future]')
+    expect(output).not.toContain('CI failures from available logs/context [future]')
+    expect(output).not.toContain('Draft PR summary or review notes [future]')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
@@ -95,7 +109,7 @@ describe('renderNotYetActive', () => {
   })
 
   it('indicates not yet active', () => {
-    expect(renderNotYetActive('propose-patch my-goal')).toContain('not yet active')
+    expect(renderNotYetActive('runtime run my-goal')).toContain('not yet active')
   })
 
   it('directs the user to help', () => {
