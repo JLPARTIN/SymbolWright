@@ -1,6 +1,6 @@
 import { assertApprovalGate, formatApprovalSummary, toWorkspaceRelativePath } from '../approval/approval-gate.js'
 import { createAuditEvent, RuntimeAuditLog, renderAuditEvents } from '../audit/runtime-audit-log.js'
-import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
+import type { RuntimeApproval, RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 
 export interface ApplyEditGatedInput {
   readonly path: string
@@ -20,14 +20,23 @@ function parseApplyEditInput(input: unknown): ApplyEditGatedInput {
   return { path: value['path'], proposedContent: value['proposedContent'] }
 }
 
+function requireApproval(context: RuntimeToolContext): RuntimeApproval {
+  if (context.approval === undefined) {
+    throw new Error('Approved execution requires an approval ticket.')
+  }
+
+  return context.approval
+}
+
 export async function executeApplyEditGatedTool(
   input: ApplyEditGatedInput,
   context: RuntimeToolContext,
 ): Promise<string> {
   const audit = new RuntimeAuditLog()
+  const approval = requireApproval(context)
 
   assertApprovalGate({
-    approval: context.approval,
+    approval,
     requiredScope: 'apply_edit',
     workspaceRoot: context.cwd,
     targetPath: input.path,
@@ -37,14 +46,14 @@ export async function executeApplyEditGatedTool(
   audit.record(createAuditEvent({
     action: 'apply_edit_gated',
     status: 'allowed',
-    approval: context.approval,
+    approval,
     detail: `dry-run edit approved for ${toWorkspaceRelativePath(context.cwd, input.path)}`,
   }))
 
   return [
     'CodeMind gated apply-edit',
     '',
-    context.approval === undefined ? 'Ticket: missing' : formatApprovalSummary(context.approval),
+    formatApprovalSummary(approval),
     '',
     `Target: ${toWorkspaceRelativePath(context.cwd, input.path)}`,
     `Proposed bytes: ${input.proposedContent.length}`,
