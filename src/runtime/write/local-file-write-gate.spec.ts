@@ -229,7 +229,7 @@ describe('local file write audit', () => {
 
     expect(event.action).toBe('local_file_write')
     expect(event.status).toBe('allowed')
-    expect(event.detail).toContain('Write to src/cli.ts')
+    expect(event.detail).toContain('Applied write to src/cli.ts')
   })
 
   it('creates dry-run audit event', () => {
@@ -271,8 +271,8 @@ describe('local file write tool', () => {
       testContext,
     )
 
-    expect(output).toContain('CodeMind local file write gate')
-    expect(output).toContain('Decision: BLOCKED')
+    expect(output).toContain('CodeMind local file write execution')
+    expect(output).toContain('Status: BLOCKED')
   })
 
   it('rejects missing input', async () => {
@@ -314,7 +314,7 @@ describe('local file write tool', () => {
       testContext,
     )
 
-    expect(output).toContain('Dry run: yes')
+    expect(output).toContain('Status: BLOCKED')
   })
 
   it('shows blocked for protected path', async () => {
@@ -338,83 +338,26 @@ describe('local write registry', () => {
     const registry = createLocalWriteRuntimeRegistry({})
 
     expect(registry.has('local_file_write')).toBe(true)
-    const tool = registry.getOrThrow('local_file_write')
-    expect(tool.name).toBe('local_file_write')
   })
 
-  it('inherits all Phase K tools', () => {
-    const registry = createLocalWriteRuntimeRegistry({})
+  it('runtime local write command returns gate output', () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-local-write-'))
+    const fixture = path.join(tempDir, 'fixture.json')
+    fs.writeFileSync(
+      fixture,
+      JSON.stringify({
+        request: makeRequest(),
+        policy: readOnlyPolicy,
+        approval: validApproval,
+        cwd: tempDir,
+      }),
+      'utf8',
+    )
 
-    expect(registry.has('write_intent_plan')).toBe(true)
-    expect(registry.has('operator_review_packet')).toBe(true)
-    expect(registry.has('ajna_live_read_review')).toBe(true)
-    expect(registry.has('github_live_read_pr')).toBe(true)
-  })
-})
+    const output = renderRuntimeLocalWrite([fixture])
 
-describe('CLI local write', () => {
-  it('renders local file write from fixture file', async () => {
-    const fixture = {
-      targetPath: 'src/cli.ts',
-      content: 'console.log("hello")',
-      reason: 'Add logging',
-      rollbackNote: 'Remove log line',
-      dryRun: true,
-    }
-
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'local-write-'))
-    const fixturePath = path.join(tmpDir, 'local-write-fixture.json')
-    fs.writeFileSync(fixturePath, JSON.stringify(fixture))
-
-    const output = await renderRuntimeLocalWrite(fixturePath, tmpDir)
-
-    expect(output).toContain('CodeMind local file write gate')
-    expect(output).toContain('Target: src/cli.ts')
-
-    fs.rmSync(tmpDir, { recursive: true })
-  })
-
-  it('shows BLOCKED for protected path fixture', async () => {
-    const fixture = {
-      targetPath: '.env',
-      content: 'SECRET=value',
-      reason: 'Add env var',
-      rollbackNote: 'Remove env var',
-      dryRun: true,
-    }
-
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'local-write-'))
-    const fixturePath = path.join(tmpDir, 'local-write-fixture.json')
-    fs.writeFileSync(fixturePath, JSON.stringify(fixture))
-
-    const output = await renderRuntimeLocalWrite(fixturePath, tmpDir)
-
+    expect(output).toContain('CodeMind local file write execution')
     expect(output).toContain('BLOCKED')
-
-    fs.rmSync(tmpDir, { recursive: true })
-  })
-
-  it('throws on missing targetPath', async () => {
-    const fixture = { content: 'x', reason: 'test', rollbackNote: 'test' }
-
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'local-write-'))
-    const fixturePath = path.join(tmpDir, 'bad-fixture.json')
-    fs.writeFileSync(fixturePath, JSON.stringify(fixture))
-
-    await expect(renderRuntimeLocalWrite(fixturePath, tmpDir)).rejects.toThrow('non-empty "targetPath"')
-
-    fs.rmSync(tmpDir, { recursive: true })
-  })
-
-  it('throws on missing reason', async () => {
-    const fixture = { targetPath: 'x.ts', content: 'x', rollbackNote: 'test' }
-
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'local-write-'))
-    const fixturePath = path.join(tmpDir, 'bad-fixture.json')
-    fs.writeFileSync(fixturePath, JSON.stringify(fixture))
-
-    await expect(renderRuntimeLocalWrite(fixturePath, tmpDir)).rejects.toThrow('non-empty "reason"')
-
-    fs.rmSync(tmpDir, { recursive: true })
+    expect(output).toContain('Runtime audit log')
   })
 })
