@@ -2,6 +2,7 @@
 import { renderAjnaClientCollectorFixtureForFile } from './cli-ajna-client-collector-fixture.js'
 import { renderAjnaClientPipelineCheck } from './cli-ajna-client-pipeline-check.js'
 import { renderAjnaClientPipelineManifest } from './cli-ajna-client-pipeline-manifest.js'
+import { renderAjnaDocsReference } from './cli-ajna-docs.js'
 import { renderAjnaGithubApiSnapshotFixtureForFile } from './cli-ajna-github-api-snapshot-fixture.js'
 import { renderAjnaGithubReadOnlyCollectorFixtureForFile } from './cli-ajna-github-readonly-collector-fixture.js'
 import { renderAjnaMergeReadinessClientCollectorFixtureForFile } from './cli-ajna-merge-readiness-client-collector-fixture.js'
@@ -52,6 +53,11 @@ async function main(): Promise<void> {
       if (subcommand === 'scan-profile') {
         const dir = maybeInput ?? process.cwd()
         console.log(renderAjnaScanProfileForRepo(dir))
+        break
+      }
+
+      if (subcommand === 'docs') {
+        console.log(renderAjnaDocsReference())
         break
       }
 
