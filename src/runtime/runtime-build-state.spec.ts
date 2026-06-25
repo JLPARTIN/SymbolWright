@@ -8,13 +8,13 @@ import {
 } from './runtime-build-state.js'
 
 describe('runtime build state', () => {
-  it('records Phases A through O as complete', () => {
-    expect(getCompletedRuntimeBuildPhaseCount()).toBe(15)
-    expect(RUNTIME_BUILD_PHASES.slice(0, 15).every((phase) => phase.state === 'COMPLETE')).toBe(true)
+  it('records Phases A through P as complete', () => {
+    expect(getCompletedRuntimeBuildPhaseCount()).toBe(16)
+    expect(RUNTIME_BUILD_PHASES.slice(0, 16).every((phase) => phase.state === 'COMPLETE')).toBe(true)
   })
 
-  it('points to Phase P as next', () => {
-    expect(getNextRuntimeBuildPhase()).toMatchObject({ id: 'P', state: 'NEXT' })
+  it('points to Phase Q as next', () => {
+    expect(getNextRuntimeBuildPhase()).toMatchObject({ id: 'Q', state: 'NEXT' })
   })
 
   it('records Phase F active command', () => {
@@ -77,11 +77,17 @@ describe('runtime build state', () => {
     expect(phaseO?.activeCommands).toContain('codemind github-write-proposal <json-file>')
   })
 
+  it('records Phase P active command', () => {
+    const phaseP = RUNTIME_BUILD_PHASES.find((phase) => phase.id === 'P')
+    expect(phaseP).toBeDefined()
+    expect(phaseP?.activeCommands).toContain('codemind github-write-gate <json-file>')
+  })
+
   it('renders active command and boundary details', () => {
     const output = renderRuntimeBuildState()
 
     expect(output).toContain('CodeMind runtime build state')
-    expect(output).toContain('Completed phases: 15')
+    expect(output).toContain('Completed phases: 16')
     expect(output).toContain('Phase A')
     expect(output).toContain('codemind runtime run <goal> --approval-ticket <id>')
     expect(output).toContain('codemind ci-review --fixture-file <json-file>')
@@ -95,6 +101,7 @@ describe('runtime build state', () => {
     expect(output).toContain('codemind validation-command <json-file>')
     expect(output).toContain('codemind pr-preparation <json-file>')
     expect(output).toContain('codemind github-write-proposal <json-file>')
-    expect(output).toContain('Next phase: Phase P')
+    expect(output).toContain('codemind github-write-gate <json-file>')
+    expect(output).toContain('Next phase: Phase Q')
   })
 })

@@ -29,6 +29,7 @@ export type CodemindToolName =
   | 'validation_command_gate'
   | 'pr_preparation'
   | 'github_write_proposal'
+  | 'github_write_gate'
 
 export type RuntimeToolCapability =
   | 'PLAN'
@@ -49,6 +50,7 @@ export type RuntimeToolCapability =
   | 'VALIDATION_COMMAND'
   | 'PR_PREPARATION'
   | 'GITHUB_WRITE_PROPOSAL'
+  | 'GITHUB_WRITE_GATE'
 
 export interface RuntimeApproval {
   readonly ticketId: string
@@ -61,6 +63,7 @@ export interface RuntimePolicySnapshot {
   readonly allowNetwork: boolean
   readonly allowShell: boolean
   readonly allowWrites: boolean
+  readonly allowGitHubWrites: boolean
   readonly protectedPaths: readonly string[]
   readonly noisyDirs: readonly string[]
 }

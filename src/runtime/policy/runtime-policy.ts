@@ -25,6 +25,7 @@ export function createDefaultRuntimePolicy(): RuntimePolicySnapshot {
     allowNetwork: false,
     allowShell: false,
     allowWrites: false,
+    allowGitHubWrites: false,
     protectedPaths: DEFAULT_RUNTIME_PROTECTED_PATHS,
     noisyDirs: DEFAULT_RUNTIME_NOISY_DIRS,
   }

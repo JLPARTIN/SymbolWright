@@ -21,6 +21,7 @@ const shellPolicy: RuntimePolicySnapshot = {
   allowNetwork: false,
   allowShell: true,
   allowWrites: false,
+  allowGitHubWrites: false,
   protectedPaths: [],
   noisyDirs: [],
 }
@@ -30,6 +31,7 @@ const readOnlyPolicy: RuntimePolicySnapshot = {
   allowNetwork: false,
   allowShell: false,
   allowWrites: false,
+  allowGitHubWrites: false,
   protectedPaths: [],
   noisyDirs: [],
 }
