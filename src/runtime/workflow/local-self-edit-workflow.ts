@@ -1,6 +1,13 @@
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
-import { runRuntimeWorkflow, renderWorkflowResult, type RuntimeWorkflowResult } from './runtime-workflow.js'
-import { createLocalSelfEditRuntimeContext, createLocalSelfEditRuntimeRegistry } from '../runtime-local-self-edit-registry.js'
+import {
+  runRuntimeWorkflow,
+  renderWorkflowResult,
+  type RuntimeWorkflowResult,
+} from './runtime-workflow.js'
+import {
+  createLocalSelfEditRuntimeContext,
+  createLocalSelfEditRuntimeRegistry,
+} from '../runtime-local-self-edit-registry.js'
 import type { PatchFileChange } from '../patch/patch-application.js'
 
 export type LocalSelfEditMode = 'preview-only' | 'apply-only' | 'apply-and-validate'
@@ -21,6 +28,25 @@ export interface LocalSelfEditResult {
   readonly workflow: RuntimeWorkflowResult
 }
 
+type LocalSelfEditWorkflowStep =
+  | {
+      readonly toolName: 'apply_patch'
+      readonly input: {
+        readonly reason: string
+        readonly rollbackNote: string
+        readonly dryRun: boolean
+        readonly files: readonly PatchFileChange[]
+      }
+    }
+  | {
+      readonly toolName: 'validation_command_gate'
+      readonly input: {
+        readonly command: string
+        readonly reason: string
+        readonly dryRun: boolean
+      }
+    }
+
 export async function runLocalSelfEditWorkflow(
   request: LocalSelfEditRequest,
   cwd: string = process.cwd(),
@@ -34,9 +60,9 @@ export async function runLocalSelfEditWorkflow(
   }
 
   const applyDryRun = request.mode === 'preview-only'
-  const steps = [
+  const steps: LocalSelfEditWorkflowStep[] = [
     {
-      toolName: 'apply_patch' as const,
+      toolName: 'apply_patch',
       input: {
         reason: request.reason,
         rollbackNote: request.rollbackNote,
@@ -48,7 +74,7 @@ export async function runLocalSelfEditWorkflow(
 
   if (request.mode === 'apply-and-validate') {
     steps.push({
-      toolName: 'validation_command_gate' as const,
+      toolName: 'validation_command_gate',
       input: {
         command: request.validationCommand ?? 'npm run typecheck',
         reason: `Validate local self-edit workflow: ${request.reason}`,
