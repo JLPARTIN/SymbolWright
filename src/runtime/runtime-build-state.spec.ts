@@ -8,12 +8,12 @@ import {
 } from './runtime-build-state.js'
 
 describe('runtime build state', () => {
-  it('records Phases A through S as complete', () => {
-    expect(getCompletedRuntimeBuildPhaseCount()).toBe(19)
-    expect(RUNTIME_BUILD_PHASES.slice(0, 19).every((phase) => phase.state === 'COMPLETE')).toBe(true)
+  it('records Phases A through T as complete', () => {
+    expect(getCompletedRuntimeBuildPhaseCount()).toBe(20)
+    expect(RUNTIME_BUILD_PHASES.slice(0, 20).every((phase) => phase.state === 'COMPLETE')).toBe(true)
   })
 
-  it('reports no next phase when all phases are complete', () => {
+  it('reports no next phase when all recorded phases are complete', () => {
     expect(getNextRuntimeBuildPhase()).toBeUndefined()
   })
 
@@ -101,11 +101,20 @@ describe('runtime build state', () => {
     expect(phaseS?.activeCommands).toContain('codemind runtime-status')
   })
 
+  it('records Phase T as approved local file write execution', () => {
+    const phaseT = RUNTIME_BUILD_PHASES.find((phase) => phase.id === 'T')
+    expect(phaseT).toBeDefined()
+    expect(phaseT?.title).toBe('Approved local file write execution')
+    expect(phaseT?.activeCommands).toContain('codemind local-write <json-file>')
+    expect(phaseT?.boundary).toContain('file:write required')
+    expect(phaseT?.boundary).toContain('dry-run safe')
+  })
+
   it('renders active command and boundary details', () => {
     const output = renderRuntimeBuildState()
 
     expect(output).toContain('CodeMind runtime build state')
-    expect(output).toContain('Completed phases: 19')
+    expect(output).toContain('Completed phases: 20')
     expect(output).toContain('Phase A')
     expect(output).toContain('codemind runtime run <goal> --approval-ticket <id>')
     expect(output).toContain('codemind ci-review --fixture-file <json-file>')
@@ -123,6 +132,7 @@ describe('runtime build state', () => {
     expect(output).toContain('codemind workflow <json-file>')
     expect(output).toContain('codemind ajna-workflow <json-file>')
     expect(output).toContain('codemind runtime-status')
+    expect(output).toContain('Phase T: Approved local file write execution')
     expect(output).toContain('Next phase: none')
   })
 })
