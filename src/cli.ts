@@ -20,6 +20,7 @@ import { renderRuntimePlan } from './cli-runtime-plan.js'
 import { renderRuntimePrNotes } from './cli-runtime-pr-notes.js'
 import { renderRuntimeProposePatch } from './cli-runtime-propose-patch.js'
 import { renderRuntimeRead } from './cli-runtime-read.js'
+import { renderRuntimeRun } from './cli-runtime-run.js'
 import { renderRuntimeSearch } from './cli-runtime-search.js'
 import { renderRuntimeValidationPlan } from './cli-runtime-validation-plan.js'
 import { renderScan, scanRepo } from './cli-scan.js'
@@ -68,6 +69,17 @@ async function main(): Promise<void> {
     case 'ci-review':
       console.log(await renderRuntimeCiReview(rest.length > 0 ? rest.join(' ') : undefined))
       break
+
+    case 'runtime': {
+      const [subcommand, ...runtimeArgs] = rest
+      if (subcommand === 'run') {
+        console.log(await renderRuntimeRun(runtimeArgs))
+        break
+      }
+
+      console.log(renderNotYetActive(rest.length > 0 ? `runtime ${rest.join(' ')}` : 'runtime'))
+      break
+    }
 
     case 'scan': {
       const dir = rest[0] ?? process.cwd()
