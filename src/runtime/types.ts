@@ -26,6 +26,7 @@ export type CodemindToolName =
   | 'operator_review_packet'
   | 'write_intent_plan'
   | 'local_file_write'
+  | 'validation_command_gate'
 
 export type RuntimeToolCapability =
   | 'PLAN'
@@ -43,6 +44,7 @@ export type RuntimeToolCapability =
   | 'OPERATOR_REVIEW'
   | 'WRITE_INTENT'
   | 'LOCAL_FILE_WRITE'
+  | 'VALIDATION_COMMAND'
 
 export interface RuntimeApproval {
   readonly ticketId: string

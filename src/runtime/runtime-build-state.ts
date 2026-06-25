@@ -108,9 +108,16 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
   {
     id: 'M',
     title: 'Approved validation command gate',
+    state: 'COMPLETE',
+    activeCommands: ['codemind validation-command <json-file>'],
+    boundary: ['allowlisted commands only', 'approval ticket required', 'no arbitrary shell', 'no GitHub writes'],
+  },
+  {
+    id: 'N',
+    title: 'PR preparation from approved local changes',
     state: 'NEXT',
     activeCommands: [],
-    boundary: ['allowlisted commands only', 'approval ticket required', 'no arbitrary shell', 'no GitHub writes'],
+    boundary: ['title/body/checklist only', 'no push', 'no GitHub writes'],
   },
 ] as const
 

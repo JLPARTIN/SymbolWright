@@ -8,9 +8,9 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, a controlled local file write gate, and a read-only Ajna workflow surface.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, a controlled local file write gate, an approved validation command gate, and a read-only Ajna workflow surface.
 
-`codemind status` now reports post-Phase L runtime build state, including completed phase count and the next runtime phase.
+`codemind status` now reports post-Phase M runtime build state, including completed phase count and the next runtime phase.
 
 The active CLI package is `codemind` and exposes:
 
@@ -35,6 +35,7 @@ codemind ajna-live-read <json-file>
 codemind operator-review <json-file>
 codemind write-intent <json-file>
 codemind local-write <json-file>
+codemind validation-command <json-file>
 codemind scan [dir]
 codemind ajna scan-profile [dir]
 codemind ajna docs
@@ -124,6 +125,14 @@ codemind ajna-live-read fixtures/ajna-live-read-fixture.json
 ```
 
 This command supports two modes: `review` (Ajna review with deterministic verdict) and `merge-readiness` (blocker assessment). Evidence flows from the fake live-read client through evidence builders and into Ajna pipelines. Verdicts remain deterministic. No comments, review submissions, merges, or workflow reruns.
+
+The Phase M approved validation command gate evaluates validation commands against an allowlist, policy, and approval:
+
+```txt
+codemind validation-command fixtures/validation-command-fixture.json
+```
+
+This command evaluates a validation command request through the allowlisted command gate. It checks that shell execution is enabled by policy, an approval ticket with `command:validate` scope is present, the command is in the allowlist (`npm run typecheck`, `npm test`, `npm run test:coverage`, `npm run lint`, `npm run audit`, `npm run build`, `npm run build:app`), and a reason is provided. The gate returns ALLOWED or BLOCKED with accumulated block reasons. Dry-run mode previews the decision without executing any command. An audit event is emitted for every evaluation. No arbitrary shell execution. No GitHub writes.
 
 The Phase L controlled local file write gate evaluates write requests against policy, approval, workspace, and protected path rules:
 
@@ -283,6 +292,7 @@ docs/runtime/CODEMIND_AJNA_LIVE_READ_PIPELINE.md
 docs/runtime/CODEMIND_OPERATOR_REVIEW_GATE.md
 docs/runtime/CODEMIND_APPROVED_WRITE_PREPARATION.md
 docs/runtime/CODEMIND_CONTROLLED_LOCAL_FILE_WRITE_GATE.md
+docs/runtime/CODEMIND_APPROVED_VALIDATION_COMMAND_GATE.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
