@@ -110,20 +110,23 @@ export function buildAjnaGithubCollectorSnapshotFromApiPayload(
 
   const changedFiles = payload.files.map((file, index): AjnaGithubCollectorChangedFile => {
     assertNonEmptyString(file.filename, `files[${index}].filename`)
+    const additions = optionalNonNegativeInteger(file.additions, `files[${index}].additions`)
+    const deletions = optionalNonNegativeInteger(file.deletions, `files[${index}].deletions`)
     return {
       path: file.filename,
       status: mapFileStatus(file.status),
-      additions: optionalNonNegativeInteger(file.additions, `files[${index}].additions`),
-      deletions: optionalNonNegativeInteger(file.deletions, `files[${index}].deletions`),
+      ...(additions === undefined ? {} : { additions }),
+      ...(deletions === undefined ? {} : { deletions }),
     }
   })
 
   const checkRuns = (payload.checkRuns ?? []).map((checkRun, index): AjnaGithubCollectorCheckRun => {
     assertNonEmptyString(checkRun.name, `checkRuns[${index}].name`)
+    const conclusion = mapCheckConclusion(checkRun.conclusion)
     return {
       name: checkRun.name,
       status: mapCheckStatus(checkRun.status),
-      conclusion: mapCheckConclusion(checkRun.conclusion),
+      ...(conclusion === undefined ? {} : { conclusion }),
     }
   })
 
@@ -133,7 +136,7 @@ export function buildAjnaGithubCollectorSnapshotFromApiPayload(
       pullRequestNumber: payload.pullRequest.number,
       baseRef: payload.pullRequest.base.ref,
       headRef: payload.pullRequest.head.ref,
-      headSha: payload.pullRequest.head.sha,
+      ...(payload.pullRequest.head.sha === undefined ? {} : { headSha: payload.pullRequest.head.sha }),
     },
     changedFiles,
     checkRuns,
