@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { renderAjnaGithubApiSnapshotFixtureForFile } from './cli-ajna-github-api-snapshot-fixture.js'
 import { renderAjnaGithubReadOnlyCollectorFixtureForFile } from './cli-ajna-github-readonly-collector-fixture.js'
 import { renderAjnaMergeReadinessForFile } from './cli-ajna-merge-readiness.js'
 import { renderAjnaReviewPrCollectorFixtureForFile } from './cli-ajna-review-pr-collector-fixture.js'
@@ -73,6 +74,15 @@ async function main(): Promise<void> {
           process.exit(1)
         }
         console.log(renderAjnaReviewPrGithubApiFixtureForFile(maybeInput))
+        break
+      }
+
+      if (subcommand === 'github-api-snapshot-fixture') {
+        if (maybeInput === undefined) {
+          console.error('Missing input JSON file: codemind ajna github-api-snapshot-fixture <json-file>')
+          process.exit(1)
+        }
+        console.log(renderAjnaGithubApiSnapshotFixtureForFile(maybeInput))
         break
       }
 
