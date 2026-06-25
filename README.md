@@ -10,6 +10,8 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, and a read-only Ajna workflow surface.
 
+`codemind status` now reports post-Phase E runtime build state, including completed phase count and the next runtime phase.
+
 The active CLI package is `codemind` and exposes:
 
 ```txt
@@ -205,6 +207,7 @@ docs/governance/CODEMIND_THREAT_MODEL.md
 docs/cli/CODEMIND_CLI_TERMINAL_UX_PLAN.md
 docs/cli-plan-command.md
 docs/runtime/CODEMIND_RUNTIME_FOUNDATION.md
+docs/runtime/CODEMIND_RUNTIME_BUILD_STATE.md
 docs/runtime/CODEMIND_RUNTIME_READONLY_COMMANDS.md
 docs/runtime/CODEMIND_PROPOSAL_MODE.md
 docs/runtime/CODEMIND_READONLY_LOOP.md
