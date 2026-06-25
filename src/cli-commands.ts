@@ -3,7 +3,7 @@ import { getCodemindFoundationSnapshot } from './codemind-foundation.js'
 export const CODEMIND_CLI_COMMANDS = [
   { name: 'help', description: 'Show available command surface' },
   { name: 'status', description: 'Report CodeMind mode and policy status' },
-  { name: 'plan <goal>', description: 'Produce a repository work plan [future]' },
+  { name: 'plan <goal>', description: 'Produce a non-mutating repository work plan' },
   { name: 'scan [dir]', description: 'Summarize repository structure (defaults to cwd)' },
   { name: 'read <path>', description: 'Read approved file content [future]' },
   { name: 'search <query>', description: 'Search repository text [future]' },
