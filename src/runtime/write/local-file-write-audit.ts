@@ -19,7 +19,7 @@ export function createLocalFileWriteAuditEvent(
 
   const detail = result.dryRun
     ? `Dry-run write to ${result.targetPath}: ${result.reason}`
-    : `Write to ${result.targetPath}: ${result.reason}`
+    : `Applied write to ${result.targetPath}: ${result.reason}`
 
   const base = {
     action: 'local_file_write',
