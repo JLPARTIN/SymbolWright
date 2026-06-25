@@ -46,6 +46,21 @@ function collectWorkspaceFiles(
   }
 }
 
+function parseListFilesInput(input: unknown): ListFilesInput {
+  const value = typeof input === 'object' && input !== null ? input as Record<string, unknown> : {}
+  const parsed: { dir?: string; limit?: number } = {}
+
+  if (typeof value.dir === 'string') {
+    parsed.dir = value.dir
+  }
+
+  if (typeof value.limit === 'number') {
+    parsed.limit = value.limit
+  }
+
+  return parsed
+}
+
 export async function executeListFilesTool(
   input: ListFilesInput,
   context: RuntimeToolContext,
@@ -76,9 +91,9 @@ export async function executeListFilesTool(
   ].join('\n')
 }
 
-export const listFilesTool: RuntimeToolDefinition<ListFilesInput> = {
+export const listFilesTool: RuntimeToolDefinition = {
   name: 'list_files',
   description: 'List allowed workspace files without mutating them.',
   capability: 'READ',
-  execute: executeListFilesTool,
+  execute: async (input, context) => executeListFilesTool(parseListFilesInput(input), context),
 }
