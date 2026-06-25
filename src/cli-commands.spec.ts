@@ -18,12 +18,20 @@ describe('renderHelp', () => {
     }
   })
 
-  it('marks plan as an active non-mutating command', () => {
+  it('marks Phase A read-only runtime commands as active', () => {
     const output = renderHelp()
 
     expect(output).toContain('plan <goal>')
-    expect(output).toContain('Produce a non-mutating repository work plan')
-    expect(output).not.toContain('Produce a repository work plan [future]')
+    expect(output).toContain('Render a runtime-backed non-mutating work plan')
+    expect(output).toContain('read <path>')
+    expect(output).toContain('Read an allowed workspace file without mutation')
+    expect(output).toContain('search <query>')
+    expect(output).toContain('Search allowed workspace files without mutation')
+    expect(output).toContain('validation-plan [focus]')
+    expect(output).toContain('Render validation guidance without executing commands')
+    expect(output).not.toContain('Read approved file content [future]')
+    expect(output).not.toContain('Search repository text [future]')
+    expect(output).not.toContain('Propose validation commands [future]')
   })
 
   it('includes ajna subcommands', () => {
