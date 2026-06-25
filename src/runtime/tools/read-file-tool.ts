@@ -9,6 +9,19 @@ export interface ReadFileInput {
   readonly path: string
 }
 
+function parseReadFileInput(input: unknown): ReadFileInput {
+  if (typeof input !== 'object' || input === null || !('path' in input)) {
+    throw new Error('Missing path: codemind read <path>')
+  }
+
+  const pathValue = (input as { readonly path: unknown }).path
+  if (typeof pathValue !== 'string') {
+    throw new Error('Missing path: codemind read <path>')
+  }
+
+  return { path: pathValue }
+}
+
 export async function executeReadFileTool(
   input: ReadFileInput,
   context: RuntimeToolContext,
@@ -42,9 +55,9 @@ export async function executeReadFileTool(
   ].join('\n')
 }
 
-export const readFileTool: RuntimeToolDefinition<ReadFileInput> = {
+export const readFileTool: RuntimeToolDefinition = {
   name: 'read_file',
   description: 'Read an allowed workspace file without mutating it.',
   capability: 'READ',
-  execute: executeReadFileTool,
+  execute: async (input, context) => executeReadFileTool(parseReadFileInput(input), context),
 }
