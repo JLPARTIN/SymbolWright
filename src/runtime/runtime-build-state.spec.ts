@@ -8,13 +8,13 @@ import {
 } from './runtime-build-state.js'
 
 describe('runtime build state', () => {
-  it('records Phases A through P as complete', () => {
-    expect(getCompletedRuntimeBuildPhaseCount()).toBe(16)
-    expect(RUNTIME_BUILD_PHASES.slice(0, 16).every((phase) => phase.state === 'COMPLETE')).toBe(true)
+  it('records Phases A through Q as complete', () => {
+    expect(getCompletedRuntimeBuildPhaseCount()).toBe(17)
+    expect(RUNTIME_BUILD_PHASES.slice(0, 17).every((phase) => phase.state === 'COMPLETE')).toBe(true)
   })
 
-  it('points to Phase Q as next', () => {
-    expect(getNextRuntimeBuildPhase()).toMatchObject({ id: 'Q', state: 'NEXT' })
+  it('points to Phase R as next', () => {
+    expect(getNextRuntimeBuildPhase()).toMatchObject({ id: 'R', state: 'NEXT' })
   })
 
   it('records Phase F active command', () => {
@@ -83,11 +83,17 @@ describe('runtime build state', () => {
     expect(phaseP?.activeCommands).toContain('codemind github-write-gate <json-file>')
   })
 
+  it('records Phase Q active command', () => {
+    const phaseQ = RUNTIME_BUILD_PHASES.find((phase) => phase.id === 'Q')
+    expect(phaseQ).toBeDefined()
+    expect(phaseQ?.activeCommands).toContain('codemind workflow <json-file>')
+  })
+
   it('renders active command and boundary details', () => {
     const output = renderRuntimeBuildState()
 
     expect(output).toContain('CodeMind runtime build state')
-    expect(output).toContain('Completed phases: 16')
+    expect(output).toContain('Completed phases: 17')
     expect(output).toContain('Phase A')
     expect(output).toContain('codemind runtime run <goal> --approval-ticket <id>')
     expect(output).toContain('codemind ci-review --fixture-file <json-file>')
@@ -102,6 +108,7 @@ describe('runtime build state', () => {
     expect(output).toContain('codemind pr-preparation <json-file>')
     expect(output).toContain('codemind github-write-proposal <json-file>')
     expect(output).toContain('codemind github-write-gate <json-file>')
-    expect(output).toContain('Next phase: Phase Q')
+    expect(output).toContain('codemind workflow <json-file>')
+    expect(output).toContain('Next phase: Phase R')
   })
 })

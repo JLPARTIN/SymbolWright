@@ -136,9 +136,16 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
   {
     id: 'Q',
     title: 'Runtime integration and workflow composition',
+    state: 'COMPLETE',
+    activeCommands: ['codemind workflow <json-file>'],
+    boundary: ['governed composition only', 'no new mutation surface', 'existing tool gates enforced'],
+  },
+  {
+    id: 'R',
+    title: 'Read-only Ajna workflow surface',
     state: 'NEXT',
     activeCommands: [],
-    boundary: ['governed composition only', 'no new mutation surface'],
+    boundary: ['read-only Ajna pipelines only', 'no new mutation surface'],
   },
 ] as const
 

@@ -148,6 +148,13 @@ describe('renderHelp', () => {
     expect(output).toContain('Evaluate an approved GitHub write through the policy-gated write gate from a local JSON fixture')
   })
 
+  it('marks Phase Q workflow composition command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('workflow <json-file>')
+    expect(output).toContain('Run a governed runtime workflow composing registered tools from a local JSON fixture')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
@@ -195,11 +202,11 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('PLAN_FIRST')
   })
 
-  it('shows post-Phase P runtime build state', () => {
+  it('shows post-Phase Q runtime build state', () => {
     const output = renderStatus()
 
-    expect(output).toContain('Runtime phases:     16 complete')
-    expect(output).toContain('Next runtime phase: Phase Q')
+    expect(output).toContain('Runtime phases:     17 complete')
+    expect(output).toContain('Next runtime phase: Phase R')
   })
 
   it('shows all controlled capabilities as DISABLED', () => {

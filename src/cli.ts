@@ -30,6 +30,7 @@ import { renderRuntimeWriteIntent } from './cli-runtime-write-intent.js'
 import { renderRuntimeGitHubLiveRead } from './cli-runtime-github-live-read.js'
 import { renderRuntimeGitHubWriteProposal } from './cli-runtime-github-write-proposal.js'
 import { renderRuntimeGitHubWriteGate } from './cli-runtime-github-write-gate.js'
+import { renderRuntimeWorkflow } from './cli-runtime-workflow.js'
 import { renderRuntimeLiveReadClientFixture } from './cli-runtime-live-read-client-fixture.js'
 import { renderRuntimeLiveReadPolicy } from './cli-runtime-live-read-policy.js'
 import { renderRuntimeRun } from './cli-runtime-run.js'
@@ -202,6 +203,16 @@ async function main(): Promise<void> {
         process.exit(1)
       }
       console.log(await renderRuntimeGitHubWriteGate(fixturePath))
+      break
+    }
+
+    case 'workflow': {
+      const fixturePath = rest[0]
+      if (fixturePath === undefined) {
+        console.error('Missing input JSON file: codemind workflow <json-file>')
+        process.exit(1)
+      }
+      console.log(await renderRuntimeWorkflow(fixturePath))
       break
     }
 
