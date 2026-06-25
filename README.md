@@ -8,9 +8,9 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, a controlled local file write gate, an approved validation command gate, PR preparation from approved local changes, a governed GitHub write proposal gate, an approved GitHub write gate, and a read-only Ajna workflow surface.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, a controlled local file write gate, an approved validation command gate, PR preparation from approved local changes, a governed GitHub write proposal gate, an approved GitHub write gate, a governed runtime workflow composition surface, and a read-only Ajna workflow surface.
 
-`codemind status` now reports post-Phase P runtime build state, including completed phase count and the next runtime phase.
+`codemind status` now reports post-Phase Q runtime build state, including completed phase count and the next runtime phase.
 
 The active CLI package is `codemind` and exposes:
 
@@ -39,6 +39,7 @@ codemind validation-command <json-file>
 codemind pr-preparation <json-file>
 codemind github-write-proposal <json-file>
 codemind github-write-gate <json-file>
+codemind workflow <json-file>
 codemind scan [dir]
 codemind ajna scan-profile [dir]
 codemind ajna docs
@@ -152,6 +153,14 @@ codemind github-write-gate fixtures/github-write-gate-fixture.json
 ```
 
 This command evaluates a GitHub write request through the approval-gated write gate. It checks that GitHub writes are enabled by policy (`allowGitHubWrites`), an approval ticket with `github:write` scope is present, the action is in the allowed set (create draft PR, post comment, apply label), and repository/target/content/reason are provided. The gate returns ALLOWED or BLOCKED with accumulated block reasons. Dry-run mode (default) previews the decision without executing. An audit event is emitted for every evaluation. No GitHub API call is made by this tool. No merge.
+
+The Phase Q runtime workflow composition runs a governed workflow that composes registered tools into a bounded, sequenced execution:
+
+```txt
+codemind workflow fixtures/workflow-fixture.json
+```
+
+This command reads a workflow definition from a local JSON fixture. The workflow specifies a name, a sequence of tool steps (each with a tool name and input), and an optional step limit. The workflow runner validates the request, then executes each step against the full Phase P registry, capturing transcript entries and audit events at each step. If a tool is not found or a step fails, the workflow stops and reports the block reason. No new mutation surface is added — the workflow runner enforces existing tool gates. Audit events are emitted for workflow start, each step, and workflow completion.
 
 The Phase M approved validation command gate evaluates validation commands against an allowlist, policy, and approval:
 
@@ -323,6 +332,7 @@ docs/runtime/CODEMIND_APPROVED_VALIDATION_COMMAND_GATE.md
 docs/runtime/CODEMIND_PR_PREPARATION.md
 docs/runtime/CODEMIND_GITHUB_WRITE_PROPOSAL.md
 docs/runtime/CODEMIND_APPROVED_GITHUB_WRITE_GATE.md
+docs/runtime/CODEMIND_RUNTIME_WORKFLOW_COMPOSITION.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md

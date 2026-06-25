@@ -1,0 +1,14 @@
+{
+  "name": "plan-and-validate",
+  "steps": [
+    {
+      "toolName": "plan_goal",
+      "input": { "goal": "add workflow composition support" }
+    },
+    {
+      "toolName": "validation_plan",
+      "input": { "focus": "workflow composition" }
+    }
+  ],
+  "maxSteps": 10
+}
