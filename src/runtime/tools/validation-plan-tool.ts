@@ -6,9 +6,9 @@ export interface ValidationPlanInput {
 }
 
 function parseValidationPlanInput(input: unknown): ValidationPlanInput {
-  const value = typeof input === 'object' && input !== null ? input as Record<string, unknown> : {}
-  if (typeof value.focus === 'string') {
-    return { focus: value.focus }
+  const value = typeof input === 'object' && input !== null ? (input as Record<string, unknown>) : {}
+  if (typeof value['focus'] === 'string') {
+    return { focus: value['focus'] }
   }
 
   return {}
