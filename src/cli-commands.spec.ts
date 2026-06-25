@@ -118,7 +118,14 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('PLAN_FIRST')
   })
 
-  it('shows all capabilities as DISABLED', () => {
+  it('shows post-Phase E runtime build state', () => {
+    const output = renderStatus()
+
+    expect(output).toContain('Runtime phases:     5 complete')
+    expect(output).toContain('Next runtime phase: Phase F')
+  })
+
+  it('shows all controlled capabilities as DISABLED', () => {
     const output = renderStatus()
     expect(output).not.toContain('ENABLED')
     const disabledCount = (output.match(/DISABLED/g) ?? []).length
