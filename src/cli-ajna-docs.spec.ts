@@ -17,6 +17,7 @@ describe('getAjnaDocsReference', () => {
       'docs/ajna/CODEMIND_AJNA_ROADMAP.md',
       'docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md',
     ])
+    expect(reference.commandDocs).toContain('docs/ajna-docs-command.md')
     expect(reference.commandDocs).toContain('docs/ajna-client-collector-fixture-command.md')
   })
 
@@ -40,6 +41,7 @@ describe('renderAjnaDocsReference', () => {
     expect(output).toContain('Quick start: docs/ajna-fixture-command-index.md')
     expect(output).toContain('Planning docs:')
     expect(output).toContain('Command docs:')
+    expect(output).toContain('docs/ajna-docs-command.md')
     expect(output).toContain('Boundary:')
   })
 })
