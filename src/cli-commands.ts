@@ -36,6 +36,10 @@ export const CODEMIND_CLI_COMMANDS = [
     description: 'Render collector snapshot JSON from a local fake client bridge fixture',
   },
   {
+    name: 'ajna review-pr-client-collector-fixture <json-file>',
+    description: 'Render Ajna review-pr from a local fake client bridge fixture',
+  },
+  {
     name: 'ajna review-pr-collector-fixture <json-file>',
     description: 'Render Ajna review-pr from a local collector snapshot fixture',
   },
