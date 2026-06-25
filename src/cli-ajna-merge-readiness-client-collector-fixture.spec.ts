@@ -30,8 +30,9 @@ describe('renderAjnaMergeReadinessClientCollectorFixtureForFile', () => {
 
     expect(output).toContain('Ajna merge-readiness')
     expect(output).toContain('Status: READY')
-    expect(output).toContain('Required evidence present: yes')
+    expect(output).toContain('Required evidence present: no')
     expect(output).toContain('Operator decision required: no')
+    expect(output).toContain('Blocking finding IDs: None')
     expect(output).toContain('Mode: READ_ONLY')
   })
 
