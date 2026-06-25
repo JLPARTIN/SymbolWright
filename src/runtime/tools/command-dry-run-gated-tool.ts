@@ -1,6 +1,6 @@
 import { assertApprovalGate, formatApprovalSummary } from '../approval/approval-gate.js'
 import { createAuditEvent, RuntimeAuditLog, renderAuditEvents } from '../audit/runtime-audit-log.js'
-import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
+import type { RuntimeApproval, RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 
 export interface CommandDryRunGatedInput {
   readonly command: string
@@ -28,15 +28,24 @@ function parseCommandInput(input: unknown): CommandDryRunGatedInput {
   return { command }
 }
 
+function requireApproval(context: RuntimeToolContext): RuntimeApproval {
+  if (context.approval === undefined) {
+    throw new Error('Approved execution requires an approval ticket.')
+  }
+
+  return context.approval
+}
+
 export async function executeCommandDryRunGatedTool(
   input: CommandDryRunGatedInput,
   context: RuntimeToolContext,
 ): Promise<string> {
   const audit = new RuntimeAuditLog()
   const command = input.command.trim()
+  const approval = requireApproval(context)
 
   assertApprovalGate({
-    approval: context.approval,
+    approval,
     requiredScope: 'command_dry_run',
     workspaceRoot: context.cwd,
     policy: context.policy,
@@ -46,7 +55,7 @@ export async function executeCommandDryRunGatedTool(
     audit.record(createAuditEvent({
       action: 'command_dry_run_gated',
       status: 'blocked',
-      approval: context.approval,
+      approval,
       detail: `command is not allowlisted: ${command}`,
     }))
     throw new Error(`Command is not allowlisted: ${command}`)
@@ -55,14 +64,14 @@ export async function executeCommandDryRunGatedTool(
   audit.record(createAuditEvent({
     action: 'command_dry_run_gated',
     status: 'allowed',
-    approval: context.approval,
+    approval,
     detail: `dry-run command approved: ${command}`,
   }))
 
   return [
     'CodeMind gated command dry-run',
     '',
-    context.approval === undefined ? 'Ticket: missing' : formatApprovalSummary(context.approval),
+    formatApprovalSummary(approval),
     '',
     `Command: ${command}`,
     '',
