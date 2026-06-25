@@ -155,6 +155,20 @@ describe('renderHelp', () => {
     expect(output).toContain('Run a governed runtime workflow composing registered tools from a local JSON fixture')
   })
 
+  it('marks Phase R Ajna workflow command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('ajna-workflow <json-file>')
+    expect(output).toContain('Run a read-only Ajna review or merge-readiness workflow from a local JSON fixture')
+  })
+
+  it('marks Phase S runtime status dashboard command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('runtime-status')
+    expect(output).toContain('Show the runtime status dashboard with tool inventory, policy, and phase summary')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
@@ -202,11 +216,11 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('PLAN_FIRST')
   })
 
-  it('shows post-Phase Q runtime build state', () => {
+  it('shows post-Phase S runtime build state', () => {
     const output = renderStatus()
 
-    expect(output).toContain('Runtime phases:     17 complete')
-    expect(output).toContain('Next runtime phase: Phase R')
+    expect(output).toContain('Runtime phases:     19 complete')
+    expect(output).toContain('Next runtime phase: none')
   })
 
   it('shows all controlled capabilities as DISABLED', () => {
