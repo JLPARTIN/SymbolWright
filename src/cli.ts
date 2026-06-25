@@ -28,6 +28,7 @@ import { renderRuntimePrPreparation } from './cli-runtime-pr-preparation.js'
 import { renderRuntimeValidationCommand } from './cli-runtime-validation-command.js'
 import { renderRuntimeWriteIntent } from './cli-runtime-write-intent.js'
 import { renderRuntimeGitHubLiveRead } from './cli-runtime-github-live-read.js'
+import { renderRuntimeGitHubWriteProposal } from './cli-runtime-github-write-proposal.js'
 import { renderRuntimeLiveReadClientFixture } from './cli-runtime-live-read-client-fixture.js'
 import { renderRuntimeLiveReadPolicy } from './cli-runtime-live-read-policy.js'
 import { renderRuntimeRun } from './cli-runtime-run.js'
@@ -180,6 +181,16 @@ async function main(): Promise<void> {
         process.exit(1)
       }
       console.log(await renderRuntimePrPreparation(fixturePath))
+      break
+    }
+
+    case 'github-write-proposal': {
+      const fixturePath = rest[0]
+      if (fixturePath === undefined) {
+        console.error('Missing input JSON file: codemind github-write-proposal <json-file>')
+        process.exit(1)
+      }
+      console.log(await renderRuntimeGitHubWriteProposal(fixturePath))
       break
     }
 

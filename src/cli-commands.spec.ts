@@ -134,6 +134,13 @@ describe('renderHelp', () => {
     expect(output).toContain('Prepare a PR title, body, and validation checklist from a local JSON fixture without pushing or creating a PR')
   })
 
+  it('marks Phase O GitHub write proposal command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('github-write-proposal <json-file>')
+    expect(output).toContain('Create a governed GitHub write proposal from a local JSON fixture without executing any GitHub API call')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
@@ -181,11 +188,11 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('PLAN_FIRST')
   })
 
-  it('shows post-Phase N runtime build state', () => {
+  it('shows post-Phase O runtime build state', () => {
     const output = renderStatus()
 
-    expect(output).toContain('Runtime phases:     14 complete')
-    expect(output).toContain('Next runtime phase: Phase O')
+    expect(output).toContain('Runtime phases:     15 complete')
+    expect(output).toContain('Next runtime phase: Phase P')
   })
 
   it('shows all controlled capabilities as DISABLED', () => {

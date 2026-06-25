@@ -1,0 +1,7 @@
+{
+  "action": "create_draft_pr",
+  "repository": "owner/repo",
+  "targetRef": "main",
+  "content": "Phase O: Add governed GitHub write proposal gate",
+  "reason": "Deliver Phase O — governed GitHub write proposal"
+}
