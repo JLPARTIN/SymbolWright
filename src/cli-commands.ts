@@ -20,6 +20,7 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'live-read-client-fixture <json-file>', description: 'Run live read client fixture through fake client and evidence pipeline' },
   { name: 'github-live-read <json-file>', description: 'Read GitHub PR or CI evidence through policy-gated live read adapter' },
   { name: 'ajna-live-read <json-file>', description: 'Run Ajna review or merge-readiness pipeline from live-read evidence' },
+  { name: 'operator-review <json-file>', description: 'Create an operator review packet from a local JSON fixture' },
   {
     name: 'ajna scan-profile [dir]',
     description: 'Render a read-only Ajna scan profile from repository scan facts',

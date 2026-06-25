@@ -22,6 +22,7 @@ import { renderRuntimePrNotes } from './cli-runtime-pr-notes.js'
 import { renderRuntimeProposePatch } from './cli-runtime-propose-patch.js'
 import { renderRuntimeRead } from './cli-runtime-read.js'
 import { renderRuntimeAjnaLiveRead } from './cli-runtime-ajna-live-read.js'
+import { renderRuntimeOperatorReview } from './cli-runtime-operator-review.js'
 import { renderRuntimeGitHubLiveRead } from './cli-runtime-github-live-read.js'
 import { renderRuntimeLiveReadClientFixture } from './cli-runtime-live-read-client-fixture.js'
 import { renderRuntimeLiveReadPolicy } from './cli-runtime-live-read-policy.js'
@@ -125,6 +126,16 @@ async function main(): Promise<void> {
         process.exit(1)
       }
       console.log(await renderRuntimeLiveReadPolicy(fixturePath))
+      break
+    }
+
+    case 'operator-review': {
+      const fixturePath = rest[0]
+      if (fixturePath === undefined) {
+        console.error('Missing input JSON file: codemind operator-review <json-file>')
+        process.exit(1)
+      }
+      console.log(await renderRuntimeOperatorReview(fixturePath))
       break
     }
 
