@@ -8,9 +8,9 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, a controlled local file write gate, an approved validation command gate, PR preparation from approved local changes, and a read-only Ajna workflow surface.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, a controlled local file write gate, an approved validation command gate, PR preparation from approved local changes, a governed GitHub write proposal gate, and a read-only Ajna workflow surface.
 
-`codemind status` now reports post-Phase N runtime build state, including completed phase count and the next runtime phase.
+`codemind status` now reports post-Phase O runtime build state, including completed phase count and the next runtime phase.
 
 The active CLI package is `codemind` and exposes:
 
@@ -37,6 +37,7 @@ codemind write-intent <json-file>
 codemind local-write <json-file>
 codemind validation-command <json-file>
 codemind pr-preparation <json-file>
+codemind github-write-proposal <json-file>
 codemind scan [dir]
 codemind ajna scan-profile [dir]
 codemind ajna docs
@@ -134,6 +135,14 @@ codemind pr-preparation fixtures/pr-preparation-fixture.json
 ```
 
 This command evaluates a PR preparation request. It checks that title, body, base/head branches, changed files, validation checklist, and reason are all provided and valid. The evaluator returns READY or INCOMPLETE with accumulated issues. The output includes validation checklist with unchecked checkboxes. No branch is pushed. No PR is created. No GitHub writes.
+
+The Phase O governed GitHub write proposal creates structured proposals for GitHub write actions:
+
+```txt
+codemind github-write-proposal fixtures/github-write-proposal-fixture.json
+```
+
+This command evaluates a proposed GitHub write action (create draft PR, post comment, or apply label) against the allowed action set. It returns PROPOSED when all fields are valid, or BLOCKED with accumulated block reasons. Disallowed actions (e.g. merge_pr, force_push, delete_branch) are always blocked. The output includes clear PROPOSAL_ONLY status. No GitHub API call is made. No PR is created, no comment posted, no label applied.
 
 The Phase M approved validation command gate evaluates validation commands against an allowlist, policy, and approval:
 
@@ -303,6 +312,7 @@ docs/runtime/CODEMIND_APPROVED_WRITE_PREPARATION.md
 docs/runtime/CODEMIND_CONTROLLED_LOCAL_FILE_WRITE_GATE.md
 docs/runtime/CODEMIND_APPROVED_VALIDATION_COMMAND_GATE.md
 docs/runtime/CODEMIND_PR_PREPARATION.md
+docs/runtime/CODEMIND_GITHUB_WRITE_PROPOSAL.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md

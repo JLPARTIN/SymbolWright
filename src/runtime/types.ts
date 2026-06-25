@@ -28,6 +28,7 @@ export type CodemindToolName =
   | 'local_file_write'
   | 'validation_command_gate'
   | 'pr_preparation'
+  | 'github_write_proposal'
 
 export type RuntimeToolCapability =
   | 'PLAN'
@@ -47,6 +48,7 @@ export type RuntimeToolCapability =
   | 'LOCAL_FILE_WRITE'
   | 'VALIDATION_COMMAND'
   | 'PR_PREPARATION'
+  | 'GITHUB_WRITE_PROPOSAL'
 
 export interface RuntimeApproval {
   readonly ticketId: string

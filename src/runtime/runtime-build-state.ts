@@ -122,9 +122,16 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
   {
     id: 'O',
     title: 'Governed GitHub write proposal',
+    state: 'COMPLETE',
+    activeCommands: ['codemind github-write-proposal <json-file>'],
+    boundary: ['proposal only', 'no execution', 'no push', 'no merge'],
+  },
+  {
+    id: 'P',
+    title: 'Approved GitHub write gate',
     state: 'NEXT',
     activeCommands: [],
-    boundary: ['proposal only', 'no execution', 'no push', 'no merge'],
+    boundary: ['approval required', 'create draft PR only', 'post comment only', 'apply label only', 'no merge'],
   },
 ] as const
 
