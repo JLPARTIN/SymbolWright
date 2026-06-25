@@ -147,6 +147,7 @@ docs/roadmap/CODEMIND_PLATFORM_ROADMAP.md
 docs/governance/CODEMIND_PERMISSION_MODEL.md
 docs/governance/CODEMIND_THREAT_MODEL.md
 docs/cli/CODEMIND_CLI_TERMINAL_UX_PLAN.md
+docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
 docs/ajna-fixture-command-index.md
