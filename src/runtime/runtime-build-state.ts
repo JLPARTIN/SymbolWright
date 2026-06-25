@@ -115,9 +115,16 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
   {
     id: 'N',
     title: 'PR preparation from approved local changes',
+    state: 'COMPLETE',
+    activeCommands: ['codemind pr-preparation <json-file>'],
+    boundary: ['title/body/checklist only', 'no push', 'no GitHub writes'],
+  },
+  {
+    id: 'O',
+    title: 'Governed GitHub write proposal',
     state: 'NEXT',
     activeCommands: [],
-    boundary: ['title/body/checklist only', 'no push', 'no GitHub writes'],
+    boundary: ['proposal only', 'no execution', 'no push', 'no merge'],
   },
 ] as const
 
