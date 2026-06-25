@@ -1,11 +1,13 @@
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 import {
-  evaluateLocalFileWriteGate,
-  renderLocalFileWriteGateResult,
   type LocalFileWriteRequest,
 } from '../write/local-file-write-gate.js'
 import { createLocalFileWriteAuditEvent } from '../write/local-file-write-audit.js'
 import { renderAuditEvents } from '../audit/runtime-audit-log.js'
+import {
+  executeApprovedLocalFileWrite,
+  renderLocalFileWriteExecutionResult,
+} from '../write/local-file-writer.js'
 
 export interface LocalFileWriteToolInput {
   readonly targetPath: string
@@ -51,7 +53,7 @@ function parseLocalFileWriteToolInput(input: unknown): LocalFileWriteToolInput {
 
 export const localFileWriteTool: RuntimeToolDefinition = {
   name: 'local_file_write',
-  description: 'Evaluate a controlled local file write through the approval-gated write gate.',
+  description: 'Execute an approval-gated local file write or dry-run preview.',
   capability: 'LOCAL_FILE_WRITE',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const parsed = parseLocalFileWriteToolInput(input)
@@ -64,11 +66,11 @@ export const localFileWriteTool: RuntimeToolDefinition = {
       dryRun: parsed.dryRun,
     }
 
-    const result = evaluateLocalFileWriteGate(request, context.cwd, context.policy, context.approval)
-    const gateOutput = renderLocalFileWriteGateResult(result)
-    const auditEvent = createLocalFileWriteAuditEvent(result, context.approval)
+    const execution = executeApprovedLocalFileWrite(request, context.cwd, context.policy, context.approval)
+    const executionOutput = renderLocalFileWriteExecutionResult(execution)
+    const auditEvent = createLocalFileWriteAuditEvent(execution.gate, context.approval)
     const auditOutput = renderAuditEvents([auditEvent])
 
-    return [gateOutput, '', '---', '', auditOutput].join('\n')
+    return [executionOutput, '', '---', '', auditOutput].join('\n')
   },
 }
