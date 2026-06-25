@@ -10,7 +10,9 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'propose-patch <goal>', description: 'Draft a patch proposal without applying it' },
   { name: 'validation-plan [focus]', description: 'Render validation guidance without executing commands' },
   { name: 'ci-review [source]', description: 'Draft a local CI review without querying services' },
+  { name: 'ci-review --fixture-file <json-file>', description: 'Draft CI review from local workflow fixture evidence' },
   { name: 'pr-notes [focus]', description: 'Draft PR notes without posting them' },
+  { name: 'pr-notes --fixture-file <json-file>', description: 'Draft PR notes from local PR fixture evidence' },
   { name: 'runtime run <goal> --read-only', description: 'Run a bounded read-only runtime loop' },
   { name: 'runtime run <goal> --approval-ticket <id>', description: 'Render approval-gated dry-run execution with audit output' },
   {

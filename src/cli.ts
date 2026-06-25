@@ -14,6 +14,7 @@ import { renderAjnaReviewPrGithubFixtureForFile } from './cli-ajna-review-pr-git
 import { renderAjnaReviewPrReadOnlyCollectorFixtureForFile } from './cli-ajna-review-pr-readonly-collector-fixture.js'
 import { renderAjnaReviewPrForFile } from './cli-ajna-review-pr.js'
 import { renderAjnaScanProfileForRepo } from './cli-ajna-scan-profile.js'
+import { findFixtureArg, renderFixtureCommand } from './cli-fixture-commands.js'
 import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
 import { renderRuntimeCiReview } from './cli-runtime-ci-review.js'
 import { renderRuntimePlan } from './cli-runtime-plan.js'
@@ -63,13 +64,25 @@ async function main(): Promise<void> {
       console.log(await renderRuntimeProposePatch(rest.join(' ')))
       break
 
-    case 'pr-notes':
+    case 'pr-notes': {
+      const fixture = findFixtureArg(rest)
+      if (fixture !== undefined) {
+        console.log(await renderFixtureCommand('pr-notes', fixture))
+        break
+      }
       console.log(await renderRuntimePrNotes(rest.length > 0 ? rest.join(' ') : undefined))
       break
+    }
 
-    case 'ci-review':
+    case 'ci-review': {
+      const fixture = findFixtureArg(rest)
+      if (fixture !== undefined) {
+        console.log(await renderFixtureCommand('ci-review', fixture))
+        break
+      }
       console.log(await renderRuntimeCiReview(rest.length > 0 ? rest.join(' ') : undefined))
       break
+    }
 
     case 'runtime': {
       const [subcommand, ...runtimeArgs] = rest
@@ -78,11 +91,9 @@ async function main(): Promise<void> {
           console.log(await renderApprovedRuntimeRun(runtimeArgs))
           break
         }
-
         console.log(await renderRuntimeRun(runtimeArgs))
         break
       }
-
       console.log(renderNotYetActive(rest.length > 0 ? `runtime ${rest.join(' ')}` : 'runtime'))
       break
     }
