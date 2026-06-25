@@ -154,6 +154,13 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
     activeCommands: ['codemind runtime-status'],
     boundary: ['read-only status only', 'no new mutation surface'],
   },
+  {
+    id: 'T',
+    title: 'Approved local file write execution',
+    state: 'COMPLETE',
+    activeCommands: ['codemind local-write <json-file>'],
+    boundary: ['approval ticket required', 'file:write required', 'dry-run safe', 'workspace only', 'protected paths blocked'],
+  },
 ] as const
 
 export function getCompletedRuntimeBuildPhaseCount(): number {
