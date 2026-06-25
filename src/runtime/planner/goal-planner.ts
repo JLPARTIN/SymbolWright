@@ -5,6 +5,19 @@ export interface PlanGoalInput {
   readonly goal: string
 }
 
+function parsePlanGoalInput(input: unknown): PlanGoalInput {
+  if (typeof input !== 'object' || input === null || !('goal' in input)) {
+    throw new Error('Missing goal: codemind plan <goal>')
+  }
+
+  const goal = (input as { readonly goal: unknown }).goal
+  if (typeof goal !== 'string') {
+    throw new Error('Missing goal: codemind plan <goal>')
+  }
+
+  return { goal }
+}
+
 export function buildGoalPlan(goal: string): GoalPlan {
   const trimmedGoal = goal.trim()
   if (trimmedGoal.length === 0) {
@@ -63,9 +76,9 @@ export async function executePlanGoalTool(
   return renderGoalPlan(buildGoalPlan(input.goal))
 }
 
-export const planGoalTool: RuntimeToolDefinition<PlanGoalInput> = {
+export const planGoalTool: RuntimeToolDefinition = {
   name: 'plan_goal',
   description: 'Render a non-mutating runtime plan for an operator goal.',
   capability: 'PLAN',
-  execute: executePlanGoalTool,
+  execute: async (input, context) => executePlanGoalTool(parsePlanGoalInput(input), context),
 }
