@@ -7,7 +7,7 @@ import {
   renderAjnaClientPipelineCheck,
 } from './cli-ajna-client-pipeline-check.js'
 
-function makeChangedManifest(): AjnaClientPipelineManifest {
+function makeCanonicalManifest(): AjnaClientPipelineManifest {
   return {
     title: 'Ajna client collector fixture pipeline',
     mode: 'READ_ONLY',
@@ -21,7 +21,7 @@ function makeChangedManifest(): AjnaClientPipelineManifest {
       {
         order: 2,
         name: 'Review fixture',
-        cli: 'codemind ajna review-pr <json-file>',
+        cli: 'codemind ajna review-pr-client-collector-fixture <json-file>',
         result: 'Ajna review report',
       },
       {
@@ -30,6 +30,22 @@ function makeChangedManifest(): AjnaClientPipelineManifest {
         cli: 'codemind ajna merge-readiness-client-collector-fixture <json-file>',
         result: 'Ajna merge-readiness report',
       },
+    ],
+  }
+}
+
+function makeChangedManifest(): AjnaClientPipelineManifest {
+  return {
+    ...makeCanonicalManifest(),
+    steps: [
+      makeCanonicalManifest().steps[0],
+      {
+        order: 2,
+        name: 'Review fixture',
+        cli: 'codemind ajna review-pr <json-file>',
+        result: 'Ajna review report',
+      },
+      makeCanonicalManifest().steps[2],
     ],
   }
 }
@@ -47,9 +63,8 @@ describe('findAjnaClientPipelineManifestIssues', () => {
 
   it('detects a missing pipeline step', () => {
     const manifest: AjnaClientPipelineManifest = {
-      title: 'Ajna client collector fixture pipeline',
-      mode: 'READ_ONLY',
-      steps: makeChangedManifest().steps.slice(0, 2),
+      ...makeCanonicalManifest(),
+      steps: makeCanonicalManifest().steps.slice(0, 2),
     }
 
     expect(findAjnaClientPipelineManifestIssues(manifest)).toEqual([
