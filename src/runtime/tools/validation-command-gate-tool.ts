@@ -1,11 +1,13 @@
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 import {
-  evaluateValidationCommandGate,
-  renderValidationCommandGateResult,
   type ValidationCommandRequest,
 } from '../validation/validation-command-gate.js'
 import { createValidationCommandAuditEvent } from '../validation/validation-command-audit.js'
 import { renderAuditEvents } from '../audit/runtime-audit-log.js'
+import {
+  executeValidationCommand,
+  renderValidationCommandExecutionResult,
+} from '../validation/validation-command-runner.js'
 
 export interface ValidationCommandGateToolInput {
   readonly command: string
@@ -39,7 +41,7 @@ function parseValidationCommandGateToolInput(input: unknown): ValidationCommandG
 
 export const validationCommandGateTool: RuntimeToolDefinition = {
   name: 'validation_command_gate',
-  description: 'Evaluate an approved validation command through the allowlisted command gate.',
+  description: 'Execute an approved validation command through the allowlisted command gate.',
   capability: 'VALIDATION_COMMAND',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const parsed = parseValidationCommandGateToolInput(input)
@@ -50,11 +52,11 @@ export const validationCommandGateTool: RuntimeToolDefinition = {
       dryRun: parsed.dryRun,
     }
 
-    const result = evaluateValidationCommandGate(request, context.policy, context.approval)
-    const gateOutput = renderValidationCommandGateResult(result)
-    const auditEvent = createValidationCommandAuditEvent(result, context.approval)
+    const result = executeValidationCommand(request, context.cwd, context.policy, context.approval)
+    const executionOutput = renderValidationCommandExecutionResult(result)
+    const auditEvent = createValidationCommandAuditEvent(result.gateResult, context.approval)
     const auditOutput = renderAuditEvents([auditEvent])
 
-    return [gateOutput, '', '---', '', auditOutput].join('\n')
+    return [executionOutput, '', '---', '', auditOutput].join('\n')
   },
 }
