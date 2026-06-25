@@ -71,6 +71,13 @@ describe('renderHelp', () => {
     expect(output).toContain('Draft PR notes from local PR fixture evidence')
   })
 
+  it('marks Phase F live read policy handshake command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('live-read-policy <json-file>')
+    expect(output).toContain('Evaluate live read policy handshake from a local JSON fixture')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
@@ -118,11 +125,11 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('PLAN_FIRST')
   })
 
-  it('shows post-Phase E runtime build state', () => {
+  it('shows post-Phase F runtime build state', () => {
     const output = renderStatus()
 
-    expect(output).toContain('Runtime phases:     5 complete')
-    expect(output).toContain('Next runtime phase: Phase F')
+    expect(output).toContain('Runtime phases:     6 complete')
+    expect(output).toContain('Next runtime phase: Phase G')
   })
 
   it('shows all controlled capabilities as DISABLED', () => {

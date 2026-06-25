@@ -8,9 +8,9 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, and a read-only Ajna workflow surface.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, and a read-only Ajna workflow surface.
 
-`codemind status` now reports post-Phase E runtime build state, including completed phase count and the next runtime phase.
+`codemind status` now reports post-Phase F runtime build state, including completed phase count and the next runtime phase.
 
 The active CLI package is `codemind` and exposes:
 
@@ -28,6 +28,7 @@ codemind ci-review [source]
 codemind ci-review --fixture-file <json-file>
 codemind runtime run <goal> --read-only
 codemind runtime run <goal> --approval-ticket <id>
+codemind live-read-policy <json-file>
 codemind scan [dir]
 codemind ajna scan-profile [dir]
 codemind ajna docs
@@ -85,6 +86,14 @@ codemind ci-review --fixture-file fixtures/github-read-fixture.json
 ```
 
 These commands read local fixture evidence only. They do not call live GitHub APIs, post comments, request approvals, merge pull requests, push branches, or rerun workflows.
+
+The Phase F live read policy handshake evaluates whether a future live read request would be allowed by CodeMind policy:
+
+```txt
+codemind live-read-policy fixtures/live-read-request.json
+```
+
+This command reads a local JSON fixture describing a proposed live read request and returns a policy decision (ALLOW or BLOCK) without performing the live read. It validates provider, purpose, scopes, and dry-run status against the policy allowlist.
 
 Current Ajna work is intentionally local-first:
 
@@ -213,6 +222,7 @@ docs/runtime/CODEMIND_PROPOSAL_MODE.md
 docs/runtime/CODEMIND_READONLY_LOOP.md
 docs/runtime/CODEMIND_APPROVED_EXECUTION_GATES.md
 docs/runtime/CODEMIND_READ_ADAPTERS.md
+docs/runtime/CODEMIND_LIVE_READ_POLICY_HANDSHAKE.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md

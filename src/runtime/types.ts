@@ -17,6 +17,7 @@ export type CodemindToolName =
   | 'command_dry_run_gated'
   | 'github_pr_fixture_review'
   | 'github_ci_fixture_review'
+  | 'live_read_policy_handshake'
 
 export type RuntimeToolCapability =
   | 'PLAN'
@@ -29,6 +30,7 @@ export type RuntimeToolCapability =
   | 'APPROVED_EDIT'
   | 'APPROVED_COMMAND'
   | 'EVIDENCE_READ'
+  | 'POLICY_CHECK'
 
 export interface RuntimeApproval {
   readonly ticketId: string
