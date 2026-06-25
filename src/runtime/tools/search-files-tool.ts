@@ -22,14 +22,7 @@ function isSkipped(relativePath: string, skippedDirs: readonly string[]): boolea
   return segments.some((segment) => skippedDirs.includes(segment))
 }
 
-function searchDirectory(
-  root: string,
-  currentDir: string,
-  query: string,
-  skippedDirs: readonly string[],
-  limit: number,
-  matches: SearchMatch[],
-): void {
+function searchDirectory(root: string, currentDir: string, query: string, skippedDirs: readonly string[], limit: number, matches: SearchMatch[]): void {
   if (matches.length >= limit) {
     return
   }
@@ -71,25 +64,22 @@ function parseSearchFilesInput(input: unknown): SearchFilesInput {
   }
 
   const value = input as Record<string, unknown>
-  if (typeof value.query !== 'string') {
+  if (typeof value['query'] !== 'string') {
     throw new Error('Missing query: codemind search <query>')
   }
 
-  const parsed: { query: string; dir?: string; limit?: number } = { query: value.query }
-  if (typeof value.dir === 'string') {
-    parsed.dir = value.dir
+  const parsed: { query: string; dir?: string; limit?: number } = { query: value['query'] }
+  if (typeof value['dir'] === 'string') {
+    parsed.dir = value['dir']
   }
-  if (typeof value.limit === 'number') {
-    parsed.limit = value.limit
+  if (typeof value['limit'] === 'number') {
+    parsed.limit = value['limit']
   }
 
   return parsed
 }
 
-export async function executeSearchFilesTool(
-  input: SearchFilesInput,
-  context: RuntimeToolContext,
-): Promise<string> {
+export async function executeSearchFilesTool(input: SearchFilesInput, context: RuntimeToolContext): Promise<string> {
   const query = input.query.trim()
   if (query.length === 0) {
     throw new Error('Missing query: codemind search <query>')
@@ -121,7 +111,7 @@ export async function executeSearchFilesTool(
 
 export const searchFilesTool: RuntimeToolDefinition = {
   name: 'search_files',
-  description: 'Search allowed workspace files without mutating them.',
+  description: 'Search allowed workspace files.',
   capability: 'SEARCH',
   execute: async (input, context) => executeSearchFilesTool(parseSearchFilesInput(input), context),
 }
