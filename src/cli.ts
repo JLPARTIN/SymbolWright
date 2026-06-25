@@ -2,6 +2,7 @@
 import { renderAjnaClientCollectorFixtureForFile } from './cli-ajna-client-collector-fixture.js'
 import { renderAjnaGithubApiSnapshotFixtureForFile } from './cli-ajna-github-api-snapshot-fixture.js'
 import { renderAjnaGithubReadOnlyCollectorFixtureForFile } from './cli-ajna-github-readonly-collector-fixture.js'
+import { renderAjnaMergeReadinessClientCollectorFixtureForFile } from './cli-ajna-merge-readiness-client-collector-fixture.js'
 import { renderAjnaMergeReadinessForFile } from './cli-ajna-merge-readiness.js'
 import { renderAjnaReviewPrClientCollectorFixtureForFile } from './cli-ajna-review-pr-client-collector-fixture.js'
 import { renderAjnaReviewPrCollectorFixtureForFile } from './cli-ajna-review-pr-collector-fixture.js'
@@ -103,6 +104,15 @@ async function main(): Promise<void> {
           process.exit(1)
         }
         console.log(await renderAjnaReviewPrClientCollectorFixtureForFile(maybeInput))
+        break
+      }
+
+      if (subcommand === 'merge-readiness-client-collector-fixture') {
+        if (maybeInput === undefined) {
+          console.error('Missing input JSON file: codemind ajna merge-readiness-client-collector-fixture <json-file>')
+          process.exit(1)
+        }
+        console.log(await renderAjnaMergeReadinessClientCollectorFixtureForFile(maybeInput))
         break
       }
 
