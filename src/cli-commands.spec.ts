@@ -62,6 +62,15 @@ describe('renderHelp', () => {
     expect(output).toContain('Render approval-gated dry-run execution with audit output')
   })
 
+  it('marks Phase E local fixture read adapter commands as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('ci-review --fixture-file <json-file>')
+    expect(output).toContain('Draft CI review from local workflow fixture evidence')
+    expect(output).toContain('pr-notes --fixture-file <json-file>')
+    expect(output).toContain('Draft PR notes from local PR fixture evidence')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
