@@ -87,9 +87,16 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
   {
     id: 'J',
     title: 'Operator review gate for live outputs',
+    state: 'COMPLETE',
+    activeCommands: ['codemind operator-review <json-file>'],
+    boundary: ['no automatic approval', 'no writes', 'no PR comments', 'no merges'],
+  },
+  {
+    id: 'K',
+    title: 'Approved write preparation',
     state: 'NEXT',
     activeCommands: [],
-    boundary: ['no automatic approval', 'no writes', 'no PR comments', 'no merges'],
+    boundary: ['no actual writes', 'no GitHub mutation', 'protected paths blocked'],
   },
 ] as const
 

@@ -99,6 +99,13 @@ describe('renderHelp', () => {
     expect(output).toContain('Run Ajna review or merge-readiness pipeline from live-read evidence')
   })
 
+  it('marks Phase J operator review gate command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('operator-review <json-file>')
+    expect(output).toContain('Create an operator review packet from a local JSON fixture')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
@@ -146,11 +153,11 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('PLAN_FIRST')
   })
 
-  it('shows post-Phase I runtime build state', () => {
+  it('shows post-Phase J runtime build state', () => {
     const output = renderStatus()
 
-    expect(output).toContain('Runtime phases:     9 complete')
-    expect(output).toContain('Next runtime phase: Phase J')
+    expect(output).toContain('Runtime phases:     10 complete')
+    expect(output).toContain('Next runtime phase: Phase K')
   })
 
   it('shows all controlled capabilities as DISABLED', () => {

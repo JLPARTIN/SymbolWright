@@ -8,9 +8,9 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, and a read-only Ajna workflow surface.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, and a read-only Ajna workflow surface.
 
-`codemind status` now reports post-Phase I runtime build state, including completed phase count and the next runtime phase.
+`codemind status` now reports post-Phase J runtime build state, including completed phase count and the next runtime phase.
 
 The active CLI package is `codemind` and exposes:
 
@@ -32,6 +32,7 @@ codemind live-read-policy <json-file>
 codemind live-read-client-fixture <json-file>
 codemind github-live-read <json-file>
 codemind ajna-live-read <json-file>
+codemind operator-review <json-file>
 codemind scan [dir]
 codemind ajna scan-profile [dir]
 codemind ajna docs
@@ -121,6 +122,14 @@ codemind ajna-live-read fixtures/ajna-live-read-fixture.json
 ```
 
 This command supports two modes: `review` (Ajna review with deterministic verdict) and `merge-readiness` (blocker assessment). Evidence flows from the fake live-read client through evidence builders and into Ajna pipelines. Verdicts remain deterministic. No comments, review submissions, merges, or workflow reruns.
+
+The Phase J operator review gate creates review packets that require operator confirmation before any action:
+
+```txt
+codemind operator-review fixtures/operator-review-fixture.json
+```
+
+This command creates an operator review packet showing source evidence, proposed action, risks, validation, boundary, and next manual step. The review gate evaluates the packet and returns a decision (PENDING or REJECTED). No automatic approval is granted. Blocked actions (e.g. merge_pr) are rejected by policy. No writes, no PR comments, no merges.
 
 Current Ajna work is intentionally local-first:
 
@@ -253,6 +262,7 @@ docs/runtime/CODEMIND_LIVE_READ_POLICY_HANDSHAKE.md
 docs/runtime/CODEMIND_LIVE_READ_CLIENT_SEAM.md
 docs/runtime/CODEMIND_GITHUB_LIVE_READ_ADAPTER.md
 docs/runtime/CODEMIND_AJNA_LIVE_READ_PIPELINE.md
+docs/runtime/CODEMIND_OPERATOR_REVIEW_GATE.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md

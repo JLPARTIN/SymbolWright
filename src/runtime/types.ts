@@ -23,6 +23,7 @@ export type CodemindToolName =
   | 'github_live_read_ci'
   | 'ajna_live_read_review'
   | 'ajna_live_read_merge_readiness'
+  | 'operator_review_packet'
 
 export type RuntimeToolCapability =
   | 'PLAN'
@@ -37,6 +38,7 @@ export type RuntimeToolCapability =
   | 'EVIDENCE_READ'
   | 'POLICY_CHECK'
   | 'LIVE_READ_CLIENT'
+  | 'OPERATOR_REVIEW'
 
 export interface RuntimeApproval {
   readonly ticketId: string
