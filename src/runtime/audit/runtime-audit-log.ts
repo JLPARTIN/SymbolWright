@@ -25,12 +25,20 @@ export function createAuditEvent(input: {
   readonly approval?: RuntimeApproval
   readonly detail: string
 }): RuntimeAuditEvent {
-  return {
+  const event: RuntimeAuditEvent = {
     action: input.action,
     status: input.status,
-    ticketId: input.approval?.ticketId,
     detail: input.detail,
   }
+
+  if (input.approval !== undefined) {
+    return {
+      ...event,
+      ticketId: input.approval.ticketId,
+    }
+  }
+
+  return event
 }
 
 export function renderAuditEvents(events: readonly RuntimeAuditEvent[]): string {
