@@ -8,9 +8,9 @@ import {
 } from './runtime-build-state.js'
 
 describe('runtime build state', () => {
-  it('records Phases A through S as complete', () => {
-    expect(getCompletedRuntimeBuildPhaseCount()).toBe(19)
-    expect(RUNTIME_BUILD_PHASES.slice(0, 19).every((phase) => phase.state === 'COMPLETE')).toBe(true)
+  it('records Phases A through T as complete', () => {
+    expect(getCompletedRuntimeBuildPhaseCount()).toBe(20)
+    expect(RUNTIME_BUILD_PHASES.slice(0, 20).every((phase) => phase.state === 'COMPLETE')).toBe(true)
   })
 
   it('reports no next phase when all phases are complete', () => {
@@ -101,11 +101,17 @@ describe('runtime build state', () => {
     expect(phaseS?.activeCommands).toContain('codemind runtime-status')
   })
 
+  it('records Phase T active command', () => {
+    const phaseT = RUNTIME_BUILD_PHASES.find((phase) => phase.id === 'T')
+    expect(phaseT).toBeDefined()
+    expect(phaseT?.activeCommands).toContain('codemind local-write <json-file>')
+  })
+
   it('renders active command and boundary details', () => {
     const output = renderRuntimeBuildState()
 
     expect(output).toContain('CodeMind runtime build state')
-    expect(output).toContain('Completed phases: 19')
+    expect(output).toContain('Completed phases: 20')
     expect(output).toContain('Phase A')
     expect(output).toContain('codemind runtime run <goal> --approval-ticket <id>')
     expect(output).toContain('codemind ci-review --fixture-file <json-file>')
