@@ -21,6 +21,8 @@ export type CodemindToolName =
   | 'live_read_client_fixture'
   | 'github_live_read_pr'
   | 'github_live_read_ci'
+  | 'ajna_live_read_review'
+  | 'ajna_live_read_merge_readiness'
 
 export type RuntimeToolCapability =
   | 'PLAN'

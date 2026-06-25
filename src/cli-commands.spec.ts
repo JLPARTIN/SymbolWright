@@ -92,6 +92,13 @@ describe('renderHelp', () => {
     expect(output).toContain('Read GitHub PR or CI evidence through policy-gated live read adapter')
   })
 
+  it('marks Phase I Ajna live-read pipeline command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('ajna-live-read <json-file>')
+    expect(output).toContain('Run Ajna review or merge-readiness pipeline from live-read evidence')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
@@ -139,11 +146,11 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('PLAN_FIRST')
   })
 
-  it('shows post-Phase H runtime build state', () => {
+  it('shows post-Phase I runtime build state', () => {
     const output = renderStatus()
 
-    expect(output).toContain('Runtime phases:     8 complete')
-    expect(output).toContain('Next runtime phase: Phase I')
+    expect(output).toContain('Runtime phases:     9 complete')
+    expect(output).toContain('Next runtime phase: Phase J')
   })
 
   it('shows all controlled capabilities as DISABLED', () => {
