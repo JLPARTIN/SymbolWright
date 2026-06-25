@@ -25,6 +25,7 @@ export type CodemindToolName =
   | 'ajna_live_read_merge_readiness'
   | 'operator_review_packet'
   | 'write_intent_plan'
+  | 'local_file_write'
 
 export type RuntimeToolCapability =
   | 'PLAN'
@@ -41,6 +42,7 @@ export type RuntimeToolCapability =
   | 'LIVE_READ_CLIENT'
   | 'OPERATOR_REVIEW'
   | 'WRITE_INTENT'
+  | 'LOCAL_FILE_WRITE'
 
 export interface RuntimeApproval {
   readonly ticketId: string
