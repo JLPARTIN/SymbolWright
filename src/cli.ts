@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { renderAjnaClientCollectorFixtureForFile } from './cli-ajna-client-collector-fixture.js'
+import { renderAjnaClientPipelineCheck } from './cli-ajna-client-pipeline-check.js'
 import { renderAjnaClientPipelineManifest } from './cli-ajna-client-pipeline-manifest.js'
 import { renderAjnaGithubApiSnapshotFixtureForFile } from './cli-ajna-github-api-snapshot-fixture.js'
 import { renderAjnaGithubReadOnlyCollectorFixtureForFile } from './cli-ajna-github-readonly-collector-fixture.js'
@@ -56,6 +57,11 @@ async function main(): Promise<void> {
 
       if (subcommand === 'client-pipeline-manifest') {
         console.log(renderAjnaClientPipelineManifest())
+        break
+      }
+
+      if (subcommand === 'client-pipeline-status') {
+        console.log(renderAjnaClientPipelineCheck())
         break
       }
 
