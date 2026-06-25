@@ -5,13 +5,15 @@ import { commandDryRunGatedTool } from './tools/command-dry-run-gated-tool.js'
 import type { RuntimeApproval, RuntimePolicySnapshot, RuntimeToolContext } from './types.js'
 
 export function createApprovedRuntimePolicy(): RuntimePolicySnapshot {
+  const proposalContext = createProposalRuntimeContext()
+
   return {
     mode: 'APPROVED_EXECUTION',
     allowNetwork: false,
     allowShell: false,
     allowWrites: false,
-    protectedPaths: createProposalRuntimeContext().policy.protectedPaths,
-    noisyDirs: createProposalRuntimeContext().policy.noisyDirs,
+    protectedPaths: proposalContext.policy.protectedPaths,
+    noisyDirs: proposalContext.policy.noisyDirs,
   }
 }
 
@@ -19,11 +21,19 @@ export function createApprovedRuntimeContext(
   approval: RuntimeApproval | undefined,
   cwd: string = process.cwd(),
 ): RuntimeToolContext {
-  return {
+  const context: RuntimeToolContext = {
     cwd,
     policy: createApprovedRuntimePolicy(),
-    approval,
   }
+
+  if (approval !== undefined) {
+    return {
+      ...context,
+      approval,
+    }
+  }
+
+  return context
 }
 
 export function createApprovedRuntimeRegistry() {
