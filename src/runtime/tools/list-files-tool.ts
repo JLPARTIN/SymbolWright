@@ -15,13 +15,7 @@ function shouldSkip(relativePath: string, skippedDirs: readonly string[]): boole
   return segments.some((segment) => skippedDirs.includes(segment))
 }
 
-function collectWorkspaceFiles(
-  root: string,
-  currentDir: string,
-  skippedDirs: readonly string[],
-  limit: number,
-  collected: string[],
-): void {
+function collectWorkspaceFiles(root: string, currentDir: string, skippedDirs: readonly string[], limit: number, collected: string[]): void {
   if (collected.length >= limit) {
     return
   }
@@ -47,24 +41,21 @@ function collectWorkspaceFiles(
 }
 
 function parseListFilesInput(input: unknown): ListFilesInput {
-  const value = typeof input === 'object' && input !== null ? input as Record<string, unknown> : {}
+  const value = typeof input === 'object' && input !== null ? (input as Record<string, unknown>) : {}
   const parsed: { dir?: string; limit?: number } = {}
 
-  if (typeof value.dir === 'string') {
-    parsed.dir = value.dir
+  if (typeof value['dir'] === 'string') {
+    parsed.dir = value['dir']
   }
 
-  if (typeof value.limit === 'number') {
-    parsed.limit = value.limit
+  if (typeof value['limit'] === 'number') {
+    parsed.limit = value['limit']
   }
 
   return parsed
 }
 
-export async function executeListFilesTool(
-  input: ListFilesInput,
-  context: RuntimeToolContext,
-): Promise<string> {
+export async function executeListFilesTool(input: ListFilesInput, context: RuntimeToolContext): Promise<string> {
   const requestedDir = input.dir?.trim() || '.'
   const limit = input.limit ?? 100
   const resolvedDir = resolveWorkspacePath(context.cwd, requestedDir)
@@ -93,7 +84,7 @@ export async function executeListFilesTool(
 
 export const listFilesTool: RuntimeToolDefinition = {
   name: 'list_files',
-  description: 'List allowed workspace files without mutating them.',
+  description: 'List allowed workspace files.',
   capability: 'READ',
   execute: async (input, context) => executeListFilesTool(parseListFilesInput(input), context),
 }
