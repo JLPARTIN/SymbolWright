@@ -326,6 +326,29 @@ export type {
 } from './context/project-context-kernel.js'
 
 export {
+  buildAgentKernelMissionPacket,
+  renderAgentKernelMissionPacket,
+  AGENT_KERNEL_MISSION_FINDING_CODES,
+  AGENT_KERNEL_MISSION_FINDING_SEVERITIES,
+  AGENT_KERNEL_MISSION_PACKET_BLOCK_ID,
+  AGENT_KERNEL_MISSION_PACKET_PHASE_ID,
+  AGENT_KERNEL_MISSION_PACKET_PR_ID,
+  AGENT_KERNEL_MISSION_STATUSES,
+} from './kernel/agent-kernel-mission-packet.js'
+export type {
+  AgentKernelMissionConstraint,
+  AgentKernelMissionExecutionBoundary,
+  AgentKernelMissionFinding,
+  AgentKernelMissionFindingCode,
+  AgentKernelMissionFindingSeverity,
+  AgentKernelMissionObjective,
+  AgentKernelMissionPacket,
+  AgentKernelMissionPacketInput,
+  AgentKernelMissionStatus,
+  AgentKernelMissionSuccessCriterion,
+} from './kernel/agent-kernel-mission-packet.js'
+
+export {
   executeGitHubWrite,
   GITHUB_WRITE_EXECUTOR_ACTIONS,
   renderGitHubWriteExecutorResult,
