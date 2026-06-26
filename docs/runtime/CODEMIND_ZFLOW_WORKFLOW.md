@@ -2,7 +2,7 @@
 
 Phase Z composes the local self-edit workflow with the fake-client GitHub PR creation and PR collaboration seams.
 
-Phase AB wires recovery ledger and rollback-plan output into Zflow so every requested change can include operator-facing recovery instructions.
+PR Bundle AB-AD extends Zflow with recovery ledger output, rollback-plan output, readiness summarization, and an operator handoff packet.
 
 This is a workflow composition layer. It does not enable live GitHub mutation by default.
 
@@ -27,6 +27,8 @@ GitHub PR creation fake client
 PR collaboration fake client
 recovery change ledger
 rollback plan renderer
+operator review packet
+operator review gate
 ```
 
 ## Recovery output
@@ -39,6 +41,17 @@ Rollback plan
 ```
 
 The recovery output is reporting-only. It does not execute rollback steps.
+
+## Operator handoff
+
+The handoff layer renders:
+
+```txt
+CodeMind zflow handoff
+Readiness summary
+CodeMind operator review packet
+Operator review gate result
+```
 
 ## Out of scope
 
