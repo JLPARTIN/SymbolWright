@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/codemind-logo.svg" alt="CodeMind" width="900"/>
+  <img src="assets/codemind-logo.png" alt="CodeMind" width="900"/>
 </p>
 
 <p align="center">
