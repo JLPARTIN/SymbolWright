@@ -286,6 +286,36 @@ export { DefaultGitHubHttpClient } from './runtime/live-read/github-http-client.
 export { redactGitHubContent, redactUnknownBody } from './runtime/live-read/github-live-read-redaction.js'
 
 export {
+  runValidationCommand,
+  renderValidationExecutorResult,
+} from './runtime/validation/validation-command-executor.js'
+export type {
+  ValidationExecutorOutcome,
+  ValidationExecutorResult,
+} from './runtime/validation/validation-command-executor.js'
+
+export {
+  createValidationTranscript,
+  renderValidationTranscript,
+} from './runtime/validation/validation-command-transcript.js'
+export type {
+  ValidationCommandTranscript,
+  ValidationCommandTranscriptInput,
+} from './runtime/validation/validation-command-transcript.js'
+
+export { redactValidationOutput } from './runtime/validation/validation-output-redactor.js'
+
+export {
+  analyzeCiOutput,
+  renderCiDiagnosticReport,
+} from './runtime/ci/ci-diagnostics.js'
+export type {
+  CiDiagnosticFinding,
+  CiDiagnosticReport,
+  CiDiagnosticSeverity,
+} from './runtime/ci/ci-diagnostics.js'
+
+export {
   buildProjectContextPacket,
   renderProjectContextPacket,
 } from './context/project-context-kernel.js'
