@@ -70,19 +70,18 @@ function parseFixture(raw: unknown): RuntimeReportIndexFixtureRequest {
     throw new Error('Fixture "generatedAt" field must be a string when supplied.')
   }
 
+  const reports = parseReports(raw['reports'])
+  const catalog = parseOptionalRecord<ZflowReportCatalog>(raw['catalog'], 'catalog')
+  const manifest = parseOptionalRecord<ZflowReportArtifactManifest>(raw['manifest'], 'manifest')
+  const suite = parseOptionalRecord<ZflowReportSuite>(raw['suite'], 'suite')
+
   return {
     title,
     format: parseFormat(raw['format']),
-    ...(parseReports(raw['reports']) !== undefined ? { reports: parseReports(raw['reports']) } : {}),
-    ...(parseOptionalRecord<ZflowReportCatalog>(raw['catalog'], 'catalog') !== undefined
-      ? { catalog: parseOptionalRecord<ZflowReportCatalog>(raw['catalog'], 'catalog') }
-      : {}),
-    ...(parseOptionalRecord<ZflowReportArtifactManifest>(raw['manifest'], 'manifest') !== undefined
-      ? { manifest: parseOptionalRecord<ZflowReportArtifactManifest>(raw['manifest'], 'manifest') }
-      : {}),
-    ...(parseOptionalRecord<ZflowReportSuite>(raw['suite'], 'suite') !== undefined
-      ? { suite: parseOptionalRecord<ZflowReportSuite>(raw['suite'], 'suite') }
-      : {}),
+    ...(reports !== undefined ? { reports } : {}),
+    ...(catalog !== undefined ? { catalog } : {}),
+    ...(manifest !== undefined ? { manifest } : {}),
+    ...(suite !== undefined ? { suite } : {}),
     ...(generatedAt !== undefined ? { generatedAt } : {}),
   }
 }
