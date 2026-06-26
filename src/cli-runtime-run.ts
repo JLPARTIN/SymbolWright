@@ -1,20 +1,33 @@
-import { runReadOnlyRuntimeLoop } from './runtime/loop/codemind-agent-loop.js'
+import { parseRuntimeRunArgs } from './cli-runtime-run-options.js'
+import { runReadOnlyRuntimeLoop, type ReadOnlyRuntimeRunResult } from './runtime/loop/codemind-agent-loop.js'
 
 export async function renderRuntimeRun(args: readonly string[], cwd: string = process.cwd()): Promise<string> {
-  const readOnly = args.includes('--read-only')
-  const goal = args.filter((arg) => arg !== '--read-only').join(' ')
+  const options = parseRuntimeRunArgs(args)
 
-  if (!readOnly) {
+  if (!options.readOnly) {
     throw new Error('Missing required flag: codemind runtime run <goal> --read-only')
   }
 
-  const result = await runReadOnlyRuntimeLoop({ goal }, cwd)
+  const result = await runReadOnlyRuntimeLoop(
+    {
+      goal: options.goal,
+      ...(options.maxIterations !== undefined ? { maxIterations: options.maxIterations } : {}),
+    },
+    cwd,
+  )
+
+  if (options.json) {
+    return renderRuntimeRunJson(result)
+  }
 
   return [
     'CodeMind runtime run',
     '',
     `Status: ${result.status}`,
+    `Goal: ${result.session.goal}`,
+    `Mode: ${result.session.mode}`,
     `Iterations: ${result.iterations}`,
+    `Max iterations: ${result.session.maxIterations}`,
     `Final: ${result.finalMessage}`,
     '',
     result.transcriptText,
@@ -26,4 +39,21 @@ export async function renderRuntimeRun(args: readonly string[], cwd: string = pr
     '- no network',
     '- no GitHub writes',
   ].join('\n')
+}
+
+function renderRuntimeRunJson(result: ReadOnlyRuntimeRunResult): string {
+  return JSON.stringify(
+    {
+      command: 'codemind runtime run',
+      status: result.status,
+      goal: result.session.goal,
+      mode: result.session.mode,
+      iterations: result.iterations,
+      maxIterations: result.session.maxIterations,
+      finalMessage: result.finalMessage,
+      transcript: result.session.transcript,
+    },
+    null,
+    2,
+  )
 }
