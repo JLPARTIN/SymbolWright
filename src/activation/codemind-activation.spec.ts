@@ -197,6 +197,49 @@ describe('runActivatedAgent', () => {
     expect(result.swarmDispatches).toHaveLength(0)
     expect(result.ajnaReviews).toHaveLength(0)
   })
+
+  it('wires swarm_dispatch tool to use actual dispatcher', async () => {
+    const swarmTool: RuntimeToolDefinition = {
+      name: 'swarm_dispatch',
+      description: 'Dispatch a task to a swarm agent',
+      capability: 'APPROVED_COMMAND',
+      execute: vi.fn().mockResolvedValue('placeholder'),
+    }
+
+    const provider = createMockProvider([
+      [
+        { type: 'tool_use_start', id: 'tu-sw', name: 'swarm_dispatch' },
+        { type: 'tool_use_end', id: 'tu-sw', name: 'swarm_dispatch', input: { agentType: 'investigator', goal: 'analyze code' } },
+        { type: 'message_stop', stopReason: 'tool_use', usage: { inputTokens: 50, outputTokens: 30 } },
+      ],
+      [
+        { type: 'text_delta', text: 'Done.' },
+        { type: 'message_stop', stopReason: 'end_turn', usage: { inputTokens: 80, outputTokens: 20 } },
+      ],
+    ])
+
+    const config = createTestConfig({
+      provider,
+      tools: [...createTestTools(), swarmTool],
+      toolContext: {
+        cwd: process.cwd(),
+        policy: {
+          mode: 'APPROVED_EXECUTION',
+          allowNetwork: false,
+          allowShell: false,
+          allowWrites: false,
+          allowGitHubWrites: false,
+          protectedPaths: [],
+          noisyDirs: [],
+        },
+      },
+    })
+
+    const result = await runActivatedAgent(config, 'Dispatch an investigator')
+
+    expect(result.agentResult.status).toBe('completed')
+    expect((swarmTool.execute as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled()
+  })
 })
 
 describe('verifySubsystemHealth', () => {

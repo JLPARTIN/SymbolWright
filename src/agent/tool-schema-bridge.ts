@@ -257,6 +257,132 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       type: 'object',
       properties: {},
     },
+    apply_edit_gated: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'File path to edit' },
+        proposedContent: { type: 'string', description: 'Proposed new content for the file' },
+      },
+      required: ['path', 'proposedContent'],
+    },
+    pr_collaboration: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', description: 'Collaboration action: post_comment, apply_label' },
+        repository: { type: 'string', description: 'Repository (owner/repo)' },
+        prNumber: { type: 'number', description: 'Pull request number' },
+        content: { type: 'string', description: 'Comment or label content' },
+        reason: { type: 'string', description: 'Reason for the action' },
+        dryRun: { type: 'boolean', description: 'If true, only validate without executing (default true)' },
+      },
+      required: ['action', 'repository', 'prNumber', 'content', 'reason'],
+    },
+    github_create_pr: {
+      type: 'object',
+      properties: {
+        repository: { type: 'string', description: 'Repository (owner/repo)' },
+        baseBranch: { type: 'string', description: 'Base branch for the PR' },
+        headBranch: { type: 'string', description: 'Head branch for the PR' },
+        title: { type: 'string', description: 'PR title' },
+        body: { type: 'string', description: 'PR body/description' },
+        reason: { type: 'string', description: 'Reason for creating the PR' },
+        dryRun: { type: 'boolean', description: 'If true, only validate without creating (default true)' },
+        files: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              path: { type: 'string' },
+              content: { type: 'string' },
+            },
+            required: ['path', 'content'],
+          },
+          description: 'Files to include in the PR',
+        },
+      },
+      required: ['repository', 'baseBranch', 'headBranch', 'title', 'body', 'reason', 'files'],
+    },
+    github_write_gate: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', description: 'GitHub write action to evaluate' },
+        repository: { type: 'string', description: 'Repository (owner/repo)' },
+        targetRef: { type: 'string', description: 'Target branch or ref' },
+        content: { type: 'string', description: 'Content for the action' },
+        reason: { type: 'string', description: 'Reason for the write' },
+        dryRun: { type: 'boolean', description: 'If true, only evaluate without executing (default true)' },
+      },
+      required: ['action', 'repository', 'reason'],
+    },
+    github_write_proposal: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', description: 'Proposed GitHub write action' },
+        repository: { type: 'string', description: 'Repository (owner/repo)' },
+        targetRef: { type: 'string', description: 'Target branch or ref' },
+        content: { type: 'string', description: 'Content for the action' },
+        reason: { type: 'string', description: 'Reason for the proposal' },
+      },
+      required: ['action', 'repository', 'reason'],
+    },
+    github_pr_fixture_review: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Path to the PR fixture JSON file' },
+      },
+      required: ['path'],
+    },
+    github_ci_fixture_review: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Path to the CI fixture JSON file' },
+      },
+      required: ['path'],
+    },
+    live_read_policy_handshake: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Path to the policy handshake JSON fixture' },
+      },
+      required: ['path'],
+    },
+    live_read_client_fixture: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Path to the live read client fixture JSON file' },
+      },
+      required: ['path'],
+    },
+    zflow_report: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'Report identifier' },
+        format: { type: 'string', description: 'Output format: markdown or json' },
+        result: { type: 'object', description: 'Zflow execution result' },
+        readiness: { type: 'object', description: 'Zflow readiness summary' },
+      },
+      required: ['id', 'format', 'result', 'readiness'],
+    },
+    zflow_report_rollup: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Rollup title' },
+        format: { type: 'string', description: 'Output format: markdown or json' },
+        catalog: { type: 'object', description: 'Zflow report catalog' },
+        generatedAt: { type: 'string', description: 'Timestamp for the rollup' },
+      },
+      required: ['title', 'format', 'catalog'],
+    },
+    zflow_report_catalog: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Catalog title' },
+        format: { type: 'string', description: 'Output format: markdown or json' },
+        reports: { type: 'array', description: 'Array of Zflow execution reports' },
+        generatedAt: { type: 'string', description: 'Timestamp for the catalog' },
+      },
+      required: ['title', 'format', 'reports'],
+    },
   }
 
   return schemaMap[tool.name] ?? {

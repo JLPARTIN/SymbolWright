@@ -1,6 +1,7 @@
 import type { RuntimeToolDefinition, RuntimeToolContext } from '../types.js'
-import { renderRuntimeBoundary } from '../renderers/runtime-renderers.js'
 import { SWARM_AGENT_TYPES, type SwarmAgentType } from '../../hivemind/hivemind.types.js'
+import type { SwarmDispatchResult } from '../../hivemind/hivemind.types.js'
+import type { HiveMindDispatcher, SwarmDispatchRequest } from '../../hivemind/hivemind-dispatcher.js'
 
 export interface SwarmDispatchToolInput {
   readonly agentType: SwarmAgentType
@@ -8,7 +9,7 @@ export interface SwarmDispatchToolInput {
   readonly context?: string
 }
 
-function parseSwarmDispatchInput(input: unknown): SwarmDispatchToolInput {
+export function parseSwarmDispatchInput(input: unknown): SwarmDispatchToolInput {
   if (typeof input !== 'object' || input === null) {
     throw new Error('Missing input: swarm_dispatch requires agentType and goal')
   }
@@ -34,6 +35,40 @@ function parseSwarmDispatchInput(input: unknown): SwarmDispatchToolInput {
   }
 }
 
+export function createWiredSwarmDispatchTool(
+  dispatcher: HiveMindDispatcher,
+  onResult?: (result: SwarmDispatchResult) => void,
+): RuntimeToolDefinition {
+  return {
+    name: 'swarm_dispatch',
+    description: `Dispatch a task to a specialized swarm agent. Types: ${SWARM_AGENT_TYPES.join(', ')}. Returns the agent's output.`,
+    capability: 'APPROVED_COMMAND',
+    execute: async (input: unknown, _context: RuntimeToolContext): Promise<string> => {
+      const parsed = parseSwarmDispatchInput(input)
+
+      const request: SwarmDispatchRequest = {
+        taskId: `swarm-${Date.now()}`,
+        goal: parsed.goal,
+        agentType: parsed.agentType,
+        input: parsed.context !== undefined ? { context: parsed.context } : {},
+      }
+
+      const result = await dispatcher.dispatch(request)
+      onResult?.(result)
+
+      return [
+        'CodeMind swarm dispatch',
+        '',
+        `Agent: ${result.agentId} (${parsed.agentType})`,
+        `Status: ${result.status.toUpperCase()}`,
+        `Duration: ${result.durationMs}ms`,
+        '',
+        result.output,
+      ].join('\n')
+    },
+  }
+}
+
 export const swarmDispatchTool: RuntimeToolDefinition = {
   name: 'swarm_dispatch',
   description: `Dispatch a task to a specialized swarm agent. Types: ${SWARM_AGENT_TYPES.join(', ')}. Returns the agent's output.`,
@@ -50,9 +85,7 @@ export const swarmDispatchTool: RuntimeToolDefinition = {
       '',
       'Status: QUEUED',
       'Note: Swarm dispatch requires an active HiveMind dispatcher instance.',
-      'The orchestrator will route this through activateSubsystems().',
-      '',
-      renderRuntimeBoundary(),
+      'Use createWiredSwarmDispatchTool() to enable live dispatch.',
     ].join('\n')
   },
 }
