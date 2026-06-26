@@ -31,6 +31,7 @@ import { renderRuntimeValidationCommand } from './cli-runtime-validation-command
 import { renderRuntimeWriteIntent } from './cli-runtime-write-intent.js'
 import { renderRuntimeGitHubLiveRead } from './cli-runtime-github-live-read.js'
 import { renderRuntimeGitHubWriteProposal } from './cli-runtime-github-write-proposal.js'
+import { renderGitHubWriteExecutorCommand } from './cli-github-write-executor.js'
 import { renderRuntimeGitHubWriteGate } from './cli-runtime-github-write-gate.js'
 import { renderRuntimeWorkflow } from './cli-runtime-workflow.js'
 import { renderRuntimeAjnaWorkflow } from './cli-runtime-ajna-workflow.js'
@@ -218,6 +219,16 @@ async function main(): Promise<void> {
         process.exit(1)
       }
       console.log(await renderRuntimeGitHubWriteProposal(fixturePath))
+      break
+    }
+
+    case 'github-write-executor': {
+      const fixturePath = rest[0]
+      if (fixturePath === undefined) {
+        console.error('Missing input JSON file: codemind github-write-executor <json-file>')
+        process.exit(1)
+      }
+      console.log(await renderGitHubWriteExecutorCommand(fixturePath))
       break
     }
 

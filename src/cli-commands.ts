@@ -28,6 +28,7 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'validation-command <json-file>', description: 'Evaluate an approved validation command through the allowlisted command gate from a local JSON fixture' },
   { name: 'pr-preparation <json-file>', description: 'Prepare a PR title, body, and validation checklist from a local JSON fixture without pushing or creating a PR' },
   { name: 'github-write-proposal <json-file>', description: 'Create a governed GitHub write proposal from a local JSON fixture without executing any GitHub API call' },
+  { name: 'github-write-executor <json-file>', description: 'Execute an approved GitHub write action through the policy-gated executor from a local JSON fixture' },
   { name: 'github-write-gate <json-file>', description: 'Evaluate an approved GitHub write through the policy-gated write gate from a local JSON fixture' },
   { name: 'workflow <json-file>', description: 'Run a governed runtime workflow composing registered tools from a local JSON fixture' },
   { name: 'ajna-workflow <json-file>', description: 'Run a read-only Ajna review or merge-readiness workflow from a local JSON fixture' },

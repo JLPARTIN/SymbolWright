@@ -1,0 +1,13 @@
+{
+  "action": "post_comment",
+  "repository": "JLPARTIN/CodeMind",
+  "targetRef": "42",
+  "content": "CI passed — all 1072 tests green, lint clean, build clean.",
+  "reason": "Notify reviewer of CI results after validation executor run",
+  "dryRun": true,
+  "approval": {
+    "ticketId": "GH-WRITE-001",
+    "approvedBy": "operator",
+    "scopes": ["github:write"]
+  }
+}

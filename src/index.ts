@@ -326,6 +326,20 @@ export type {
 } from './context/project-context-kernel.js'
 
 export {
+  executeGitHubWrite,
+  GITHUB_WRITE_EXECUTOR_ACTIONS,
+  renderGitHubWriteExecutorResult,
+} from './runtime/github-write/github-write-executor.js'
+export type {
+  GitHubWriteExecutorAction,
+  GitHubWriteExecutorClient,
+  GitHubWriteExecutorClientResult,
+  GitHubWriteExecutorOutcome,
+  GitHubWriteExecutorRequest,
+  GitHubWriteExecutorResult,
+} from './runtime/github-write/github-write-executor.js'
+
+export {
   executeRepairLoop,
   renderRepairLoopResult,
 } from './runtime/repair/repair-loop.js'
