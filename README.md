@@ -6,15 +6,15 @@
   <strong>Standalone AI coding-agent platform for repository intelligence, safe code work, PR review, and merge-readiness.</strong>
 </p>
 
-CodeMind is being built as a governed coding-agent platform. It starts read-only and plan-first, then grows toward approved code edits, validation, CI diagnosis, PR preparation, and merge-readiness workflows.
+CodeMind is a governed coding-agent platform. It operates read-only and plan-first by default, with approved code edits, validation, CI diagnosis, PR preparation, and merge-readiness workflows behind explicit policy gates and operator approval.
 
 Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind a deterministic review layer for pull-request evidence, local fixture pipelines, and merge-readiness reporting before live provider or live GitHub mutation work is introduced.
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, an approved local file write execution gate, an approved validation command gate, PR preparation from approved local changes, a governed GitHub write proposal gate, an approved GitHub write gate, a governed runtime workflow composition surface, a read-only Ajna workflow surface, a runtime status dashboard, a build state ledger with consistency checks, and a project context kernel for repo-aware instruction loading.
+All 20 runtime phases (A–T) are complete. The platform provides a full governed loop: scan, load instructions, build context, plan, propose, approve, apply, validate, diagnose, prepare PR, create draft PR, review, assess merge-readiness, generate handoff, and record/replay audit trails.
 
-`codemind status` now reports post-Phase T runtime build state, including completed phase count. All runtime phases are complete.
+`codemind status` reports 20/20 runtime build phases complete. `codemind doctor` validates workspace health. `codemind release-readiness` checks all release gates.
 
 The active CLI package is `codemind` and exposes:
 
@@ -63,6 +63,15 @@ codemind ajna review-pr-collector-fixture <json-file>
 codemind ajna review-pr-readonly-collector-fixture <json-file>
 codemind ajna github-readonly-collector-fixture <json-file>
 codemind ajna merge-readiness <json-file>
+codemind apply-patch <json-file>
+codemind repair-loop <json-file>
+codemind github-write-executor <json-file>
+codemind mission-packet <json-file>
+codemind audit-ledger <json-file>
+codemind trace-store <json-file>
+codemind doctor
+codemind version
+codemind release-readiness
 ```
 
 The Phase A read-only runtime commands are intentionally non-mutating:
@@ -280,9 +289,9 @@ no uncontrolled PR mutation
 
 Write actions, live GitHub operations, command execution, PR comments, approvals, merges, and provider-backed reasoning should stay behind explicit policy gates and operator approval.
 
-## Planned Full Build State
+## Platform Capabilities
 
-The full CodeMind build is intended to become a governed repo-aware coding-agent platform that can:
+CodeMind is a governed repo-aware coding-agent platform that can:
 
 ```txt
 understand repository structure
@@ -298,21 +307,9 @@ review pull requests
 assess merge-readiness
 coordinate specialized capabilities such as Ajna Review Cortex
 support Codespaces/operator runbooks
-```
-
-The planned full platform should add these layers in order:
-
-```txt
-1. Foundation doctrine, permission model, and safety gates
-2. CLI and terminal UX contract
-3. Read-only repo scanner and project context loading
-4. Plan and patch proposal renderers
-5. Approved file edit and command gates
-6. Git / PR / CI read adapters
-7. Ajna PR review and merge-readiness engine
-8. Operator review gate for write actions
-9. Live GitHub integrations behind policy controls
-10. Broader CodeMind runtime integration
+record and replay audit trails with secret redaction
+generate agent kernel mission handoff packets
+validate workspace health and release readiness
 ```
 
 Ajna's build path remains evidence-first:

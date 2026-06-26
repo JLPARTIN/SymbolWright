@@ -2,7 +2,7 @@
 
 This document records the build plan from 84% to 100%. Each bundle targets a specific capability gap.
 
-## Current state: 84% (pre-bundle)
+## Current state: 100% (all bundles complete)
 
 All 20 runtime phases (A–T) are complete. The runtime has a full CLI surface, governed read/write gates, Ajna review cortex, operator review, workflow composition, and deployment configuration.
 

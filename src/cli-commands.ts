@@ -35,6 +35,9 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'mission-packet <json-file>', description: 'Build a governed agent kernel mission packet from pipeline outputs in a local JSON fixture' },
   { name: 'audit-ledger <json-file>', description: 'Persist or replay audit ledger entries from a local JSON fixture with automatic secret redaction' },
   { name: 'trace-store <json-file>', description: 'Persist or replay agent kernel trace frames from a local JSON fixture with lineage and invariant validation' },
+  { name: 'doctor', description: 'Run health checks on the CodeMind workspace and report diagnostics' },
+  { name: 'version', description: 'Show CodeMind version, platform identity, and runtime phase count' },
+  { name: 'release-readiness', description: 'Assess release readiness by validating all gates (phases, health, exports, config)' },
   { name: 'runtime-status', description: 'Show the runtime status dashboard with tool inventory, policy, and phase summary' },
   { name: 'project-context [dir]', description: 'Build a deterministic project context packet from repository instructions, build state, and configuration' },
   {
