@@ -23,6 +23,8 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'operator-review <json-file>', description: 'Create an operator review packet from a local JSON fixture' },
   { name: 'write-intent <json-file>', description: 'Create a write intent plan with validation and approval ticket from a local JSON fixture' },
   { name: 'local-write <json-file>', description: 'Execute an approved local file write through the approval-gated write gate from a local JSON fixture' },
+  { name: 'apply-patch <json-file>', description: 'Apply a structured patch through the approval-gated patch application pipeline from a local JSON fixture' },
+  { name: 'repair-loop <json-file>', description: 'Run a full repair loop from Ajna finding through merge readiness from a local JSON fixture' },
   { name: 'validation-command <json-file>', description: 'Evaluate an approved validation command through the allowlisted command gate from a local JSON fixture' },
   { name: 'pr-preparation <json-file>', description: 'Prepare a PR title, body, and validation checklist from a local JSON fixture without pushing or creating a PR' },
   { name: 'github-write-proposal <json-file>', description: 'Create a governed GitHub write proposal from a local JSON fixture without executing any GitHub API call' },
