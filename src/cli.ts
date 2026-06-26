@@ -33,6 +33,7 @@ import { renderRuntimeGitHubWriteGate } from './cli-runtime-github-write-gate.js
 import { renderRuntimeWorkflow } from './cli-runtime-workflow.js'
 import { renderRuntimeAjnaWorkflow } from './cli-runtime-ajna-workflow.js'
 import { renderRuntimeStatusDashboardCommand } from './cli-runtime-status-dashboard.js'
+import { renderProjectContextCommand } from './cli-project-context.js'
 import { renderRuntimeLiveReadClientFixture } from './cli-runtime-live-read-client-fixture.js'
 import { renderRuntimeLiveReadPolicy } from './cli-runtime-live-read-policy.js'
 import { renderRuntimeRun } from './cli-runtime-run.js'
@@ -210,6 +211,12 @@ async function main(): Promise<void> {
 
     case 'runtime-status': {
       console.log(renderRuntimeStatusDashboardCommand())
+      break
+    }
+
+    case 'project-context': {
+      const dir = rest[0] ?? process.cwd()
+      console.log(renderProjectContextCommand(dir))
       break
     }
 
