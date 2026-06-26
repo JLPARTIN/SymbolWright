@@ -75,4 +75,49 @@ describe('renderRuntimeZflowReportCatalog', () => {
       'Fixture must include a non-empty "title" field.',
     )
   })
+
+  it('rejects non-object fixture root', async () => {
+    const workspace = makeWorkspace()
+    const fixturePath = writeFixture(workspace, 'not-an-object')
+
+    await expect(renderRuntimeZflowReportCatalog(fixturePath, workspace)).rejects.toThrow(
+      'Fixture must be a JSON object.',
+    )
+  })
+
+  it('rejects invalid format', async () => {
+    const workspace = makeWorkspace()
+    const fixturePath = writeFixture(workspace, {
+      ...baseFixture,
+      format: 'xml',
+    })
+
+    await expect(renderRuntimeZflowReportCatalog(fixturePath, workspace)).rejects.toThrow(
+      'Fixture format must be "markdown" or "json".',
+    )
+  })
+
+  it('rejects missing reports array', async () => {
+    const workspace = makeWorkspace()
+    const fixturePath = writeFixture(workspace, {
+      title: 'Zflow Reports',
+      format: 'markdown',
+    })
+
+    await expect(renderRuntimeZflowReportCatalog(fixturePath, workspace)).rejects.toThrow(
+      'Fixture must include a "reports" array.',
+    )
+  })
+
+  it('rejects non-string generatedAt', async () => {
+    const workspace = makeWorkspace()
+    const fixturePath = writeFixture(workspace, {
+      ...baseFixture,
+      generatedAt: 42,
+    })
+
+    await expect(renderRuntimeZflowReportCatalog(fixturePath, workspace)).rejects.toThrow(
+      'Fixture "generatedAt" field must be a string when supplied.',
+    )
+  })
 })

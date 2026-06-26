@@ -85,4 +85,49 @@ describe('renderRuntimeReportNote', () => {
       'Fixture must include a non-empty "title" field.',
     )
   })
+
+  it('rejects non-object fixture root', async () => {
+    const workspace = makeWorkspace()
+    const fixturePath = writeFixture(workspace, 'not-an-object')
+
+    await expect(renderRuntimeReportNote(fixturePath)).rejects.toThrow(
+      'Fixture must be a JSON object.',
+    )
+  })
+
+  it('rejects invalid format', async () => {
+    const workspace = makeWorkspace()
+    const fixturePath = writeFixture(workspace, {
+      ...baseFixture,
+      format: 'xml',
+    })
+
+    await expect(renderRuntimeReportNote(fixturePath)).rejects.toThrow(
+      'Fixture format must be "markdown" or "json".',
+    )
+  })
+
+  it('rejects missing index object', async () => {
+    const workspace = makeWorkspace()
+    const fixturePath = writeFixture(workspace, {
+      title: 'Note',
+      format: 'markdown',
+    })
+
+    await expect(renderRuntimeReportNote(fixturePath)).rejects.toThrow(
+      'Fixture must include an "index" object.',
+    )
+  })
+
+  it('rejects non-string generatedAt', async () => {
+    const workspace = makeWorkspace()
+    const fixturePath = writeFixture(workspace, {
+      ...baseFixture,
+      generatedAt: true,
+    })
+
+    await expect(renderRuntimeReportNote(fixturePath)).rejects.toThrow(
+      'Fixture "generatedAt" field must be a string when supplied.',
+    )
+  })
 })

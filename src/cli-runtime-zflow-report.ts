@@ -1,9 +1,12 @@
-import fs from 'node:fs'
-
 import {
   createZflowReportRuntimeContext,
   createZflowReportRuntimeRegistry,
 } from './runtime/runtime-zflow-report-registry.js'
+import {
+  assertRecord,
+  loadFixtureFile,
+  parseFixtureFormat,
+} from './runtime/workflow/runtime-report-fixture-guards.js'
 import type { ZflowReadinessSummary } from './runtime/workflow/zflow-handoff.js'
 import type { ZflowResult } from './runtime/workflow/zflow-workflow.js'
 
@@ -12,20 +15,6 @@ export interface ZflowReportFixtureRequest {
   readonly format: 'markdown' | 'json'
   readonly result: ZflowResult
   readonly readiness: ZflowReadinessSummary
-}
-
-function assertRecord(value: unknown, message: string): asserts value is Record<string, unknown> {
-  if (typeof value !== 'object' || value === null) {
-    throw new Error(message)
-  }
-}
-
-function parseFormat(value: unknown): 'markdown' | 'json' {
-  if (value === 'markdown' || value === 'json') {
-    return value
-  }
-
-  throw new Error('Fixture format must be "markdown" or "json".')
 }
 
 function parseFixture(raw: unknown): ZflowReportFixtureRequest {
@@ -43,7 +32,7 @@ function parseFixture(raw: unknown): ZflowReportFixtureRequest {
 
   return {
     id,
-    format: parseFormat(raw['format']),
+    format: parseFixtureFormat(raw['format']),
     result: result as unknown as ZflowResult,
     readiness: readiness as unknown as ZflowReadinessSummary,
   }
@@ -53,7 +42,7 @@ export async function renderRuntimeZflowReport(
   fixturePath: string,
   cwd: string = process.cwd(),
 ): Promise<string> {
-  const raw = JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as unknown
+  const raw = loadFixtureFile(fixturePath)
   const fixture = parseFixture(raw)
   const registry = createZflowReportRuntimeRegistry()
   const context = createZflowReportRuntimeContext(cwd)
