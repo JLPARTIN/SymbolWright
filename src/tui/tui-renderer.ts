@@ -1,4 +1,10 @@
-import type { TuiState } from './tui.types.js'
+import type { TuiState, TuiToolStatus } from './tui.types.js'
+
+export interface TuiWorkspaceRenderOptions {
+  readonly mission?: string
+  readonly commandHistory?: readonly string[]
+  readonly width?: number
+}
 
 export function renderTuiStatusBar(state: TuiState): string {
   const parts: string[] = []
@@ -86,6 +92,48 @@ export function renderTuiAjnaPanel(state: TuiState): string {
   return lines.join('\n')
 }
 
+export function renderTuiToolPanel(state: TuiState): string {
+  if (state.activeTools.length === 0) {
+    return 'Tools: No active tools.'
+  }
+
+  const lines = ['Tool Console:', '']
+  for (const tool of state.activeTools) {
+    lines.push(renderToolStatus(tool))
+  }
+  return lines.join('\n')
+}
+
+export function renderTuiWorkspace(state: TuiState, options: TuiWorkspaceRenderOptions = {}): string {
+  const divider = makeDivider(options.width ?? 72)
+  const mission = normalizeMission(options.mission)
+  const commandHistory = options.commandHistory ?? []
+  const lines = [
+    'CodeMind Workspace',
+    divider,
+    renderTuiStatusBar(state),
+    divider,
+    'Mission Console:',
+    mission === undefined ? '  > Awaiting mission input...' : `  > ${mission}`,
+    '',
+    'Command History:',
+    ...renderCommandHistory(commandHistory),
+    divider,
+    'Agent Stream:',
+    state.streamBuffer.length > 0 ? state.streamBuffer : '  Ready. Start a mission to stream reasoning, tools, and results here.',
+    divider,
+    renderTuiToolPanel(state),
+    divider,
+    renderTuiSwarmPanel(state),
+    divider,
+    renderTuiAjnaPanel(state),
+    divider,
+    state.approvalPending ? `Approval: ${state.approvalPrompt ?? 'Operator approval required.'}` : 'Approval: none pending',
+  ]
+
+  return lines.join('\n')
+}
+
 export function renderTuiBatchOutput(state: TuiState): string {
   const lines: string[] = []
 
@@ -106,4 +154,27 @@ export function renderTuiBatchOutput(state: TuiState): string {
   }
 
   return lines.join('\n')
+}
+
+function renderToolStatus(tool: TuiToolStatus): string {
+  const output = tool.output === undefined ? '' : ` — ${tool.output}`
+  return `  [${tool.status}] ${tool.toolName} (${tool.elapsedMs}ms)${output}`
+}
+
+function renderCommandHistory(commandHistory: readonly string[]): string[] {
+  if (commandHistory.length === 0) {
+    return ['  No commands yet.']
+  }
+
+  return commandHistory.map((command, index) => `  ${index + 1}. ${command}`)
+}
+
+function normalizeMission(mission: string | undefined): string | undefined {
+  const trimmed = mission?.trim()
+  return trimmed === undefined || trimmed.length === 0 ? undefined : trimmed
+}
+
+function makeDivider(width: number): string {
+  const safeWidth = Math.max(24, Math.min(width, 120))
+  return '-'.repeat(safeWidth)
 }
