@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+.git/
+.github/
+.vscode/
+*.log
+*.tgz
+.env
+.env.*
+.eslintcache
+.nyc_output
+docs/
+assets/
