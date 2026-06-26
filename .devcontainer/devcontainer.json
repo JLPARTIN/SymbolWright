@@ -1,20 +1,29 @@
 {
   "name": "CodeMind",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
-  "postCreateCommand": "npm install",
   "customizations": {
-    "vscode": {
-      "extensions": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode"
-      ],
-      "settings": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.formatOnSave": true,
-        "typescript.tsdk": "node_modules/typescript/lib"
+    "codespaces": {
+      "repositories": {
+        "JLPARTIN/AELIB--X1YA0I": {
+          "permissions": {
+            "contents": "read"
+          }
+        },
+        "JLPARTIN/HiveMind": {
+          "permissions": {
+            "contents": "read"
+          }
+        },
+        "JLPARTIN/CodeLoop": {
+          "permissions": {
+            "contents": "read"
+          }
+        },
+        "JLPARTIN/PromptOps-Sentinel": {
+          "permissions": {
+            "contents": "read"
+          }
+        }
       }
     }
-  },
-  "forwardPorts": [],
-  "remoteUser": "node"
+  }
 }
