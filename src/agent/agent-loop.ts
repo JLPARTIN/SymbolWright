@@ -43,8 +43,6 @@ async function collectStreamEvents(
   let stopReason = 'end_turn'
   let usage = emptyUsage()
 
-  let currentToolId: string | undefined
-  let currentToolName: string | undefined
 
   for await (const event of stream) {
     switch (event.type) {
@@ -54,8 +52,6 @@ async function collectStreamEvents(
         break
 
       case 'tool_use_start':
-        currentToolId = event.id
-        currentToolName = event.name
         onEvent?.({ type: 'tool_call_start', id: event.id, name: event.name })
         break
 
@@ -65,8 +61,6 @@ async function collectStreamEvents(
           name: event.name,
           input: event.input,
         })
-        currentToolId = undefined
-        currentToolName = undefined
         break
 
       case 'message_stop':

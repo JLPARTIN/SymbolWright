@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { runAgentLoop } from './agent-loop.js'
 import type { LLMProvider, ProviderStreamEvent } from '../provider/provider.types.js'
@@ -194,6 +194,7 @@ describe('agent-loop', () => {
         providerId: 'error-provider',
         displayName: 'Error Provider',
         async *complete() {
+          yield* []
           throw new Error('API rate limit exceeded')
         },
       }

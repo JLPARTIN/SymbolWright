@@ -1,5 +1,3 @@
-import type { CodemindChangedFileContext } from '../../repo-context/repo-context.types.js'
-import { runAjnaPostEditHook } from '../hooks/ajna-post-edit-hook.js'
 import type { AjnaPostEditContext, AjnaPostEditResult } from '../hooks/ajna-post-edit-hook.js'
 
 export type TestFixOutcome = 'TESTS_PASSED' | 'TESTS_FIXED' | 'FIX_FAILED' | 'MAX_RETRIES'

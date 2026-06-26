@@ -4,7 +4,6 @@ import type { LLMProvider, ProviderStreamEvent, ProviderTokenUsage } from '../pr
 import type { RuntimeToolDefinition, RuntimeToolContext, RuntimePolicySnapshot } from '../runtime/types.js'
 import { HiveMindRegistry } from './hivemind-registry.js'
 import { HiveMindDispatcher } from './hivemind-dispatcher.js'
-import type { SwarmDispatchResult } from './hivemind.types.js'
 
 function makePolicy(overrides: Partial<RuntimePolicySnapshot> = {}): RuntimePolicySnapshot {
   return {

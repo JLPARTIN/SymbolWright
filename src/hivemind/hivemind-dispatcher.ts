@@ -2,11 +2,9 @@ import type { LLMProvider } from '../provider/provider.types.js'
 import type { RuntimeToolDefinition, RuntimeToolContext, RuntimePolicySnapshot } from '../runtime/types.js'
 import { runAgentLoop } from '../agent/agent-loop.js'
 import type { AgentLoopConfig } from '../agent/agent-loop.types.js'
-import { buildSystemPrompt } from '../conversation/system-prompt-builder.js'
 import type { HiveMindRegistry } from './hivemind-registry.js'
 import type {
   SwarmAgentType,
-  SwarmTask,
   SwarmDispatchResult,
   SwarmAuditReceipt,
 } from './hivemind.types.js'
