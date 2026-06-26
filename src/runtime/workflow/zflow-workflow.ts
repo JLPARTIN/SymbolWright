@@ -11,6 +11,12 @@ import {
   renderPrCollaborationResult,
 } from '../github-write/pr-collaboration.js'
 import { FakePrCollaborationClient } from '../github-write/fake-pr-collaboration-client.js'
+import {
+  createRecoveryChangeLedger,
+  renderRecoveryChangeLedger,
+  type RecoveryChangeRecord,
+} from '../recovery/change-ledger.js'
+import { createRollbackPlan, renderRollbackPlan } from '../recovery/rollback-plan.js'
 
 export type ZflowMode = 'preview-only' | 'local-apply' | 'local-apply-and-validate' | 'prepare-pr'
 
@@ -35,6 +41,8 @@ export interface ZflowResult {
   readonly localOutput: string
   readonly prOutput: string | null
   readonly collaborationOutput: string | null
+  readonly recoveryOutput: string
+  readonly rollbackOutput: string
 }
 
 const DEFAULT_ZFLOW_POLICY: RuntimePolicySnapshot = {
@@ -59,11 +67,28 @@ function toLocalMode(mode: ZflowMode): LocalSelfEditMode {
   return 'apply-only'
 }
 
+function createRecoveryRecords(request: ZflowRequest): readonly RecoveryChangeRecord[] {
+  return request.files.map((file, index) => ({
+    id: `zflow-change-${index + 1}`,
+    kind: 'created',
+    targetPath: file.path,
+    reason: request.reason,
+    rollbackNote: request.rollbackNote,
+    nextContent: file.content,
+  }))
+}
+
 export async function runZflowWorkflow(
   request: ZflowRequest,
   cwd: string = process.cwd(),
 ): Promise<ZflowResult> {
   const policy = request.policy ?? DEFAULT_ZFLOW_POLICY
+  const recoveryRecords = createRecoveryRecords(request)
+  const recoveryLedger = createRecoveryChangeLedger(recoveryRecords)
+  const rollbackPlan = createRollbackPlan(`Recover ${request.name}`, recoveryRecords)
+  const recoveryOutput = renderRecoveryChangeLedger(recoveryLedger)
+  const rollbackOutput = renderRollbackPlan(rollbackPlan)
+
   const local = await runLocalSelfEditWorkflow(
     {
       name: request.name,
@@ -87,6 +112,8 @@ export async function runZflowWorkflow(
       localOutput: local.workflow.status,
       prOutput: null,
       collaborationOutput: null,
+      recoveryOutput,
+      rollbackOutput,
     }
   }
 
@@ -127,6 +154,8 @@ export async function runZflowWorkflow(
     localOutput: local.workflow.status,
     prOutput: renderGitHubPrCreationResult(prResult),
     collaborationOutput: renderPrCollaborationResult(collabResult),
+    recoveryOutput,
+    rollbackOutput,
   }
 }
 
@@ -141,8 +170,14 @@ export function renderZflowResult(result: ZflowResult): string {
     '',
     result.collaborationOutput ?? 'Collaboration output: not requested',
     '',
+    result.recoveryOutput,
+    '',
+    result.rollbackOutput,
+    '',
     'Boundary:',
     '- composes existing approved seams',
+    '- records recovery metadata for operator review',
+    '- no rollback execution',
     '- no live GitHub mutation by default',
     '- no merge actions',
   ].join('\n')
