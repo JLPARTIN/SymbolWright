@@ -1,10 +1,16 @@
-import fs from 'node:fs'
-
 import {
   createRuntimeReportIndex,
   renderRuntimeReportIndexJson,
   renderRuntimeReportIndexMarkdown,
 } from './runtime/workflow/runtime-report-index.js'
+import {
+  assertRecord,
+  loadFixtureFile,
+  parseFixtureFormat,
+  parseFixtureGeneratedAt,
+  parseFixtureTitle,
+  parseOptionalRecord,
+} from './runtime/workflow/runtime-report-fixture-guards.js'
 import type { ZflowExecutionReport } from './runtime/workflow/zflow-report.js'
 import type { ZflowReportCatalog, ZflowReportArtifactManifest } from './runtime/workflow/zflow-report-catalog.js'
 import type { ZflowReportSuite } from './runtime/workflow/zflow-report-suite.js'
@@ -17,20 +23,6 @@ export interface RuntimeReportIndexFixtureRequest {
   readonly manifest?: ZflowReportArtifactManifest
   readonly suite?: ZflowReportSuite
   readonly generatedAt?: string
-}
-
-function assertRecord(value: unknown, message: string): asserts value is Record<string, unknown> {
-  if (typeof value !== 'object' || value === null) {
-    throw new Error(message)
-  }
-}
-
-function parseFormat(value: unknown): 'markdown' | 'json' {
-  if (value === 'markdown' || value === 'json') {
-    return value
-  }
-
-  throw new Error('Fixture format must be "markdown" or "json".')
 }
 
 function parseReports(value: unknown): readonly ZflowExecutionReport[] | undefined {
@@ -48,28 +40,11 @@ function parseReports(value: unknown): readonly ZflowExecutionReport[] | undefin
   })
 }
 
-function parseOptionalRecord<T>(value: unknown, name: string): T | undefined {
-  if (value === undefined) {
-    return undefined
-  }
-
-  assertRecord(value, `Fixture "${name}" field must be an object when supplied.`)
-  return value as unknown as T
-}
-
 function parseFixture(raw: unknown): RuntimeReportIndexFixtureRequest {
   assertRecord(raw, 'Fixture must be a JSON object.')
 
-  const title = raw['title']
-  if (typeof title !== 'string' || title.trim().length === 0) {
-    throw new Error('Fixture must include a non-empty "title" field.')
-  }
-
-  const generatedAt = raw['generatedAt']
-  if (generatedAt !== undefined && typeof generatedAt !== 'string') {
-    throw new Error('Fixture "generatedAt" field must be a string when supplied.')
-  }
-
+  const title = parseFixtureTitle(raw)
+  const generatedAt = parseFixtureGeneratedAt(raw)
   const reports = parseReports(raw['reports'])
   const catalog = parseOptionalRecord<ZflowReportCatalog>(raw['catalog'], 'catalog')
   const manifest = parseOptionalRecord<ZflowReportArtifactManifest>(raw['manifest'], 'manifest')
@@ -77,7 +52,7 @@ function parseFixture(raw: unknown): RuntimeReportIndexFixtureRequest {
 
   return {
     title,
-    format: parseFormat(raw['format']),
+    format: parseFixtureFormat(raw['format']),
     ...(reports !== undefined ? { reports } : {}),
     ...(catalog !== undefined ? { catalog } : {}),
     ...(manifest !== undefined ? { manifest } : {}),
@@ -89,7 +64,7 @@ function parseFixture(raw: unknown): RuntimeReportIndexFixtureRequest {
 export async function renderRuntimeReportIndex(
   fixturePath: string,
 ): Promise<string> {
-  const raw = JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as unknown
+  const raw = loadFixtureFile(fixturePath)
   const fixture = parseFixture(raw)
   const index = createRuntimeReportIndex({
     title: fixture.title,
