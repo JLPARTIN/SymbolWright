@@ -2,8 +2,9 @@ import type { RuntimeReportBundleManifest } from './runtime-report-bundle-manife
 import type { RuntimeReportCollection } from './runtime-report-collection.js'
 import type { RuntimeReportIndex } from './runtime-report-index.js'
 import type { RuntimeReportReleaseNote } from './runtime-report-release-note.js'
+import { type RuntimeReportStatus, reduceStatuses } from './runtime-report-status.js'
 
-export type RuntimeReportHubStatus = 'READY' | 'NEEDS_REVIEW' | 'BLOCKED'
+export type RuntimeReportHubStatus = RuntimeReportStatus
 
 export interface RuntimeReportHubSummary {
   readonly status: RuntimeReportHubStatus
@@ -25,18 +26,6 @@ export interface RuntimeReportHub {
   readonly manifests: readonly RuntimeReportBundleManifest[]
   readonly collections: readonly RuntimeReportCollection[]
   readonly summary: RuntimeReportHubSummary
-}
-
-function reduceStatus(statuses: readonly string[]): RuntimeReportHubStatus {
-  if (statuses.includes('BLOCKED')) {
-    return 'BLOCKED'
-  }
-
-  if (statuses.includes('NEEDS_REVIEW')) {
-    return 'NEEDS_REVIEW'
-  }
-
-  return 'READY'
 }
 
 function collectStatuses(
@@ -86,7 +75,7 @@ export function createRuntimeReportHub(input: {
     manifests,
     collections,
     summary: {
-      status: reduceStatus(allStatuses),
+      status: reduceStatuses(allStatuses),
       indexCount: indexes.length,
       noteCount: notes.length,
       manifestCount: manifests.length,

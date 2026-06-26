@@ -1,6 +1,7 @@
 import type { RuntimeReportBundleManifest } from './runtime-report-bundle-manifest.js'
 import type { RuntimeReportIndex } from './runtime-report-index.js'
 import type { RuntimeReportReleaseNote } from './runtime-report-release-note.js'
+import { reduceStatuses } from './runtime-report-status.js'
 
 export interface RuntimeReportCollectionSnapshot {
   readonly title: string
@@ -19,18 +20,6 @@ export interface RuntimeReportCollection {
   readonly notes: readonly RuntimeReportReleaseNote[]
   readonly manifests: readonly RuntimeReportBundleManifest[]
   readonly snapshot: RuntimeReportCollectionSnapshot
-}
-
-function reduceStatus(statuses: readonly string[]): string {
-  if (statuses.includes('BLOCKED')) {
-    return 'BLOCKED'
-  }
-
-  if (statuses.includes('NEEDS_REVIEW')) {
-    return 'NEEDS_REVIEW'
-  }
-
-  return 'READY'
 }
 
 function countIndexTargets(index: RuntimeReportIndex): number {
@@ -52,7 +41,7 @@ export function createRuntimeReportCollection(input: {
   const notes = input.notes ?? []
   const manifests = input.manifests ?? []
   const generatedAt = input.generatedAt ?? new Date().toISOString()
-  const status = reduceStatus([
+  const status = reduceStatuses([
     ...indexes.map((index) => index.summary.status),
     ...notes.map((note) => note.snapshot.status),
     ...manifests.map((manifest) => manifest.snapshot.status),

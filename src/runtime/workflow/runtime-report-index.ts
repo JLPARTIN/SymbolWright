@@ -1,8 +1,9 @@
+import { type RuntimeReportStatus, reduceStatuses, statusFromReadiness } from './runtime-report-status.js'
 import type { ZflowExecutionReport } from './zflow-report.js'
 import type { ZflowReportCatalog, ZflowReportArtifactManifest } from './zflow-report-catalog.js'
 import type { ZflowReportSuite } from './zflow-report-suite.js'
 
-export type RuntimeReportIndexStatus = 'READY' | 'NEEDS_REVIEW' | 'BLOCKED'
+export type RuntimeReportIndexStatus = RuntimeReportStatus
 
 export interface RuntimeReportIndexLink {
   readonly id: string
@@ -33,30 +34,13 @@ export interface RuntimeReportIndex {
   readonly entries: readonly RuntimeReportIndexEntry[]
 }
 
-function statusFromReadiness(readiness: string): RuntimeReportIndexStatus {
-  if (readiness === 'READY' || readiness === 'READY_FOR_OPERATOR_REVIEW') {
-    return 'READY'
-  }
-
-  if (readiness === 'BLOCKED') {
-    return 'BLOCKED'
-  }
-
-  return 'NEEDS_REVIEW'
-}
-
 function summarize(entries: readonly RuntimeReportIndexEntry[]): RuntimeReportIndexSummary {
   const readyCount = entries.filter((entry) => entry.status === 'READY').length
   const blockedCount = entries.filter((entry) => entry.status === 'BLOCKED').length
   const needsReviewCount = entries.length - readyCount - blockedCount
-  const status: RuntimeReportIndexStatus = blockedCount > 0
-    ? 'BLOCKED'
-    : needsReviewCount > 0
-      ? 'NEEDS_REVIEW'
-      : 'READY'
 
   return {
-    status,
+    status: reduceStatuses(entries.map((entry) => entry.status)),
     entryCount: entries.length,
     readyCount,
     needsReviewCount,

@@ -1,5 +1,6 @@
 import type { RuntimeReportIndex } from './runtime-report-index.js'
 import type { RuntimeReportReleaseNote } from './runtime-report-release-note.js'
+import { reduceStatuses } from './runtime-report-status.js'
 
 export interface RuntimeReportBundleManifestItem {
   readonly id: string
@@ -32,18 +33,6 @@ function collectNoteTargets(note: RuntimeReportReleaseNote): readonly string[] {
   return note.snapshot.items.flatMap((item) => item.links)
 }
 
-function reduceStatus(statuses: readonly string[]): string {
-  if (statuses.includes('BLOCKED')) {
-    return 'BLOCKED'
-  }
-
-  if (statuses.includes('NEEDS_REVIEW')) {
-    return 'NEEDS_REVIEW'
-  }
-
-  return 'READY'
-}
-
 export function createRuntimeReportBundleManifest(input: {
   readonly title: string
   readonly indexes?: readonly RuntimeReportIndex[]
@@ -73,7 +62,7 @@ export function createRuntimeReportBundleManifest(input: {
     snapshot: {
       title: input.title,
       generatedAt: input.generatedAt ?? new Date().toISOString(),
-      status: reduceStatus(items.map((item) => item.status)),
+      status: reduceStatuses(items.map((item) => item.status)),
       itemCount: items.length,
       targetCount,
       items,
