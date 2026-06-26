@@ -1,4 +1,3 @@
-import type { AgentLoopEvent } from '../agent/agent-loop.types.js'
 import type { AjnaRiskLevel } from '../ajna/ajna-risk-synthesis.js'
 import type { AjnaMergeDecisionState } from '../ajna/ajna-merge-decision.js'
 import type { SwarmAgentType } from '../hivemind/hivemind.types.js'

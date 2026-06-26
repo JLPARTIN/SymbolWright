@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import type { AgentLoopEvent } from '../agent/agent-loop.types.js'
 import type { AjnaLiveReviewResult } from '../ajna/ajna-live-review.js'
 import type { TuiState } from './tui.types.js'
 import { createInitialTuiState } from './tui.types.js'
