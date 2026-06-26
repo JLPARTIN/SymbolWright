@@ -13,6 +13,7 @@ import { applyTuiEvent } from '../tui/tui-event-handler.js'
 import type { TuiEvent } from '../tui/tui-event-handler.js'
 import { runAjnaLiveReview, type AjnaLiveReviewInput, type AjnaLiveReviewResult } from '../ajna/ajna-live-review.js'
 import { evaluateAjnaMergeGate, type AjnaMergeGateResult } from '../ajna/ajna-merge-gate.js'
+import { createWiredSwarmDispatchTool } from '../runtime/tools/swarm-dispatch-tool.js'
 
 export interface CodemindActivationConfig {
   readonly provider: LLMProvider
@@ -95,7 +96,29 @@ export async function runActivatedAgent(
   const onEvent = (event: AgentLoopEvent): void => {
     updateTui({ type: 'agent_loop_event', event })
     config.onEvent?.(event)
+
+    if (event.type === 'tool_call_end' && event.name === 'swarm_dispatch' && !event.isError) {
+      updateTui({
+        type: 'swarm_dispatch',
+        agentId: `swarm-${swarmDispatches.length}`,
+        agentType: 'investigator',
+        task: event.output.substring(0, 200),
+      })
+    }
   }
+
+  const wiredTools = wireSwarmDispatchTool(
+    config.tools,
+    subsystems.dispatcher,
+    (result) => {
+      swarmDispatches.push(result)
+      updateTui({
+        type: 'swarm_complete',
+        agentId: result.agentId,
+        status: result.status === 'completed' ? 'completed' : 'failed',
+      })
+    },
+  )
 
   const loopConfig: AgentLoopConfig = {
     maxIterations: config.maxIterations ?? 50,
@@ -105,7 +128,7 @@ export async function runActivatedAgent(
   const agentResult = await runAgentLoop(
     subsystems.provider,
     userMessage,
-    subsystems.tools,
+    wiredTools,
     subsystems.toolContext,
     loopConfig,
     onEvent,
@@ -166,6 +189,15 @@ export async function checkMergeReadiness(
   input: AjnaLiveReviewInput,
 ): Promise<AjnaMergeGateResult> {
   return evaluateAjnaMergeGate(input)
+}
+
+function wireSwarmDispatchTool(
+  tools: readonly RuntimeToolDefinition[],
+  dispatcher: HiveMindDispatcher,
+  onResult: (result: SwarmDispatchResult) => void,
+): readonly RuntimeToolDefinition[] {
+  const wired = createWiredSwarmDispatchTool(dispatcher, onResult)
+  return tools.map((tool) => (tool.name === 'swarm_dispatch' ? wired : tool))
 }
 
 function estimateCost(inputTokens: number, outputTokens: number): number {

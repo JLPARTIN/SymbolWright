@@ -143,17 +143,15 @@ export function createAnthropicProvider(config: AnthropicProviderConfig): LLMPro
           }
         } else if (event.type === 'message_stop') {
           const finalMessage = await stream.finalMessage()
-          const usage = finalMessage.usage as unknown as Record<string, number | undefined>
-          const cacheRead = usage['cache_read_input_tokens']
-          const cacheCreation = usage['cache_creation_input_tokens']
+          const { input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens } = finalMessage.usage
           yield {
             type: 'message_stop',
             stopReason: finalMessage.stop_reason === 'tool_use' ? 'tool_use' : 'end_turn',
             usage: {
-              inputTokens: finalMessage.usage.input_tokens,
-              outputTokens: finalMessage.usage.output_tokens,
-              ...(cacheRead !== undefined ? { cacheReadInputTokens: cacheRead } : {}),
-              ...(cacheCreation !== undefined ? { cacheCreationInputTokens: cacheCreation } : {}),
+              inputTokens: input_tokens,
+              outputTokens: output_tokens,
+              ...(cache_read_input_tokens !== null ? { cacheReadInputTokens: cache_read_input_tokens } : {}),
+              ...(cache_creation_input_tokens !== null ? { cacheCreationInputTokens: cache_creation_input_tokens } : {}),
             },
           }
         }
