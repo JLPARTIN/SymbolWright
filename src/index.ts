@@ -378,6 +378,48 @@ export type {
   RepairLoopValidationResult,
 } from './runtime/repair/repair-loop.js'
 
+export {
+  persistAuditLedger,
+  replayAuditLedger,
+  renderAuditLedgerPersistResult,
+  renderAuditLedgerReplayResult,
+  serializeAuditLedger,
+  AUDIT_LEDGER_STORE_BLOCK_ID,
+  AUDIT_LEDGER_STORE_OUTCOMES,
+  AUDIT_LEDGER_FINDING_CODES,
+  AUDIT_LEDGER_FINDING_SEVERITIES,
+} from './runtime/audit/audit-ledger-store.js'
+export type {
+  AuditLedgerEntry,
+  AuditLedgerFinding,
+  AuditLedgerFindingCode,
+  AuditLedgerFindingSeverity,
+  AuditLedgerPersistResult,
+  AuditLedgerReplayResult,
+  AuditLedgerStoreOutcome,
+} from './runtime/audit/audit-ledger-store.js'
+
+export {
+  persistTraceFrames,
+  replayTraceFrames,
+  renderTraceStorePersistResult,
+  renderTraceStoreReplayResult,
+  serializeTraceFrames,
+  TRACE_STORE_BLOCK_ID,
+  TRACE_STORE_OUTCOMES,
+  TRACE_STORE_FINDING_CODES,
+  TRACE_STORE_FINDING_SEVERITIES,
+} from './runtime/audit/trace-store.js'
+export type {
+  TraceStoreEntry,
+  TraceStoreFinding,
+  TraceStoreFindingCode,
+  TraceStoreFindingSeverity,
+  TraceStoreOutcome,
+  TraceStorePersistResult,
+  TraceStoreReplayResult,
+} from './runtime/audit/trace-store.js'
+
 export { buildCodemindProofHarnessReport } from './testing/codemind-proof-harness.js'
 export {
   CODEMIND_PROOF_HARNESS_BLOCK_ID,
