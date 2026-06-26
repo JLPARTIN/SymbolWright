@@ -1,9 +1,14 @@
-import fs from 'node:fs'
-
 import {
   createZflowReportCatalogRuntimeContext,
   createZflowReportCatalogRuntimeRegistry,
 } from './runtime/runtime-zflow-report-catalog-registry.js'
+import {
+  assertRecord,
+  loadFixtureFile,
+  parseFixtureFormat,
+  parseFixtureGeneratedAt,
+  parseFixtureTitle,
+} from './runtime/workflow/runtime-report-fixture-guards.js'
 import type { ZflowExecutionReport } from './runtime/workflow/zflow-report.js'
 
 export interface ZflowReportCatalogFixtureRequest {
@@ -11,20 +16,6 @@ export interface ZflowReportCatalogFixtureRequest {
   readonly format: 'markdown' | 'json'
   readonly reports: readonly ZflowExecutionReport[]
   readonly generatedAt?: string
-}
-
-function assertRecord(value: unknown, message: string): asserts value is Record<string, unknown> {
-  if (typeof value !== 'object' || value === null) {
-    throw new Error(message)
-  }
-}
-
-function parseFormat(value: unknown): 'markdown' | 'json' {
-  if (value === 'markdown' || value === 'json') {
-    return value
-  }
-
-  throw new Error('Fixture format must be "markdown" or "json".')
 }
 
 function parseReports(value: unknown): readonly ZflowExecutionReport[] {
@@ -41,19 +32,12 @@ function parseReports(value: unknown): readonly ZflowExecutionReport[] {
 function parseFixture(raw: unknown): ZflowReportCatalogFixtureRequest {
   assertRecord(raw, 'Fixture must be a JSON object.')
 
-  const title = raw['title']
-  if (typeof title !== 'string' || title.trim().length === 0) {
-    throw new Error('Fixture must include a non-empty "title" field.')
-  }
-
-  const generatedAt = raw['generatedAt']
-  if (generatedAt !== undefined && typeof generatedAt !== 'string') {
-    throw new Error('Fixture "generatedAt" field must be a string when supplied.')
-  }
+  const title = parseFixtureTitle(raw)
+  const generatedAt = parseFixtureGeneratedAt(raw)
 
   return {
     title,
-    format: parseFormat(raw['format']),
+    format: parseFixtureFormat(raw['format']),
     reports: parseReports(raw['reports']),
     ...(generatedAt !== undefined ? { generatedAt } : {}),
   }
@@ -63,7 +47,7 @@ export async function renderRuntimeZflowReportCatalog(
   fixturePath: string,
   cwd: string = process.cwd(),
 ): Promise<string> {
-  const raw = JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as unknown
+  const raw = loadFixtureFile(fixturePath)
   const fixture = parseFixture(raw)
   const registry = createZflowReportCatalogRuntimeRegistry()
   const context = createZflowReportCatalogRuntimeContext(cwd)

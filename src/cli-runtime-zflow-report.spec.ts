@@ -67,4 +67,51 @@ describe('renderRuntimeZflowReport', () => {
       'Fixture must include a non-empty "id" field.',
     )
   })
+
+  it('rejects non-object fixture root', async () => {
+    const workspace = makeWorkspace()
+    const fixturePath = writeFixture(workspace, 'not-an-object')
+
+    await expect(renderRuntimeZflowReport(fixturePath, workspace)).rejects.toThrow(
+      'Fixture must be a JSON object.',
+    )
+  })
+
+  it('rejects invalid format', async () => {
+    const workspace = makeWorkspace()
+    const fixturePath = writeFixture(workspace, {
+      ...baseFixture,
+      format: 'xml',
+    })
+
+    await expect(renderRuntimeZflowReport(fixturePath, workspace)).rejects.toThrow(
+      'Fixture format must be "markdown" or "json".',
+    )
+  })
+
+  it('rejects missing result object', async () => {
+    const workspace = makeWorkspace()
+    const fixturePath = writeFixture(workspace, {
+      id: 'report-1',
+      format: 'markdown',
+      readiness: baseFixture.readiness,
+    })
+
+    await expect(renderRuntimeZflowReport(fixturePath, workspace)).rejects.toThrow(
+      'Fixture must include a "result" object.',
+    )
+  })
+
+  it('rejects missing readiness object', async () => {
+    const workspace = makeWorkspace()
+    const fixturePath = writeFixture(workspace, {
+      id: 'report-1',
+      format: 'markdown',
+      result: baseFixture.result,
+    })
+
+    await expect(renderRuntimeZflowReport(fixturePath, workspace)).rejects.toThrow(
+      'Fixture must include a "readiness" object.',
+    )
+  })
 })
