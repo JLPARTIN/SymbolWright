@@ -420,6 +420,37 @@ export type {
   TraceStoreReplayResult,
 } from './runtime/audit/trace-store.js'
 
+export {
+  runDoctor,
+  renderDoctorReport,
+  DOCTOR_BLOCK_ID,
+} from './cli-doctor.js'
+export type {
+  DoctorCheck,
+  DoctorCheckStatus,
+  DoctorReport,
+} from './cli-doctor.js'
+
+export {
+  getVersionInfo,
+  renderVersionInfo,
+  VERSION_BLOCK_ID,
+} from './cli-version.js'
+export type { VersionInfo } from './cli-version.js'
+
+export {
+  assessReleaseReadiness,
+  renderReleaseReadinessReport,
+  RELEASE_READINESS_BLOCK_ID,
+} from './cli-release-readiness.js'
+export type {
+  ReleaseGate,
+  ReleaseGateCode,
+  ReleaseGateStatus,
+  ReleaseReadinessOutcome,
+  ReleaseReadinessReport,
+} from './cli-release-readiness.js'
+
 export { buildCodemindProofHarnessReport } from './testing/codemind-proof-harness.js'
 export {
   CODEMIND_PROOF_HARNESS_BLOCK_ID,
