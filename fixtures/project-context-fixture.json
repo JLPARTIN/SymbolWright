@@ -1,0 +1,40 @@
+{
+  "description": "Project context kernel fixture for testing codemind project-context command",
+  "rootDir": ".",
+  "expectedInstructionFiles": [
+    "README.md",
+    "CODEMIND.md",
+    "CLAUDE.md",
+    "AGENTS.md",
+    ".github/copilot-instructions.md"
+  ],
+  "expectedBuildState": {
+    "totalPhases": 20,
+    "completedPhases": 20,
+    "nextPhase": null
+  },
+  "expectedWorkflows": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/ci.yaml",
+    ".github/workflows/deploy.yml",
+    ".github/workflows/deploy.yaml"
+  ],
+  "expectedDocsScanDirs": [
+    "docs/roadmap",
+    "docs/pr-plans"
+  ],
+  "expectedOperatorDirectives": [
+    "plan-first by default",
+    "read-only before writes",
+    "approval ticket required for mutations",
+    "protected paths always blocked"
+  ],
+  "expectedRiskBoundaries": [
+    "no auto-merge",
+    "no auto-approve",
+    "no force push",
+    "no unbounded shell",
+    "no secret access",
+    "no silent background execution"
+  ]
+}

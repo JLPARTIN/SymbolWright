@@ -244,6 +244,48 @@ export type {
   AgentKernelTraceReplaySummary,
 } from './kernel/agent-kernel-trace.types.js'
 
+export {
+  checkBuildLedgerConsistency,
+  createBuildLedgerEntry,
+  createBuildLedgerSummary,
+  renderBuildLedgerConsistencyReport,
+  renderBuildLedgerSummary,
+} from './build-state/codemind-build-ledger.js'
+export type {
+  BuildLedgerConsistencyFinding,
+  BuildLedgerConsistencyReport,
+  BuildLedgerConsistencyStatus,
+  BuildLedgerEntry,
+  BuildLedgerSummary,
+} from './build-state/codemind-build-ledger.js'
+
+export {
+  PROJECT_INSTRUCTION_FILES,
+  createProjectInstruction,
+  createProjectInstructionSet,
+  renderProjectInstructionSet,
+} from './context/project-instructions.js'
+export type {
+  ProjectInstruction,
+  ProjectInstructionFileName,
+  ProjectInstructionSet,
+} from './context/project-instructions.js'
+
+export {
+  loadProjectInstruction,
+  loadProjectInstructionSet,
+} from './context/project-instructions-loader.js'
+
+export {
+  buildProjectContextPacket,
+  renderProjectContextPacket,
+} from './context/project-context-kernel.js'
+export type {
+  PackageScriptEntry,
+  ProjectContextPacket,
+  WorkflowEntry,
+} from './context/project-context-kernel.js'
+
 export { buildCodemindProofHarnessReport } from './testing/codemind-proof-harness.js'
 export {
   CODEMIND_PROOF_HARNESS_BLOCK_ID,

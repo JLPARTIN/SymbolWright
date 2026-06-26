@@ -12,7 +12,7 @@ Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind 
 
 ## Current State
 
-CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, an approved local file write execution gate, an approved validation command gate, PR preparation from approved local changes, a governed GitHub write proposal gate, an approved GitHub write gate, a governed runtime workflow composition surface, a read-only Ajna workflow surface, and a runtime status dashboard.
+CodeMind currently has a TypeScript CLI foundation with Vitest coverage, active read-only runtime commands, proposal-mode output, a bounded read-only runtime loop, approval-gated dry-run execution, local PR/CI fixture read adapters, a live read policy handshake, a live read client seam, a GitHub live read adapter behind policy, an Ajna live-read review pipeline, an operator review gate for live outputs, approved write preparation, an approved local file write execution gate, an approved validation command gate, PR preparation from approved local changes, a governed GitHub write proposal gate, an approved GitHub write gate, a governed runtime workflow composition surface, a read-only Ajna workflow surface, a runtime status dashboard, a build state ledger with consistency checks, and a project context kernel for repo-aware instruction loading.
 
 `codemind status` now reports post-Phase T runtime build state, including completed phase count. All runtime phases are complete.
 
@@ -46,6 +46,7 @@ codemind github-write-gate <json-file>
 codemind workflow <json-file>
 codemind ajna-workflow <json-file>
 codemind runtime-status
+codemind project-context [dir]
 codemind scan [dir]
 codemind ajna scan-profile [dir]
 codemind ajna docs
@@ -368,6 +369,9 @@ docs/ajna-client-pipeline-status-command.md
 docs/ajna-client-collector-fixture-command.md
 docs/ajna-review-pr-client-collector-fixture-command.md
 docs/ajna-merge-readiness-client-collector-fixture-command.md
+docs/build-state/CODEMIND_BUILD_LEDGER.md
+docs/context/CODEMIND_PROJECT_CONTEXT_KERNEL.md
+docs/roadmap/CODEMIND_100_PERCENT_BUILD_PLAN.md
 ```
 
 ## Relationship to AELIB-X1YA0I

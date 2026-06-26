@@ -169,6 +169,13 @@ describe('renderHelp', () => {
     expect(output).toContain('Show the runtime status dashboard with tool inventory, policy, and phase summary')
   })
 
+  it('marks project-context command as active', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('project-context [dir]')
+    expect(output).toContain('Build a deterministic project context packet')
+  })
+
   it('includes ajna subcommands', () => {
     const output = renderHelp()
     expect(output).toContain('ajna scan-profile')
