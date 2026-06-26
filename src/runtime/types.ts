@@ -33,6 +33,7 @@ export type CodemindToolName =
   | 'github_write_gate'
   | 'github_create_pr'
   | 'pr_collaboration'
+  | 'zflow_report'
 
 export type RuntimeToolCapability =
   | 'PLAN'
@@ -57,6 +58,7 @@ export type RuntimeToolCapability =
   | 'GITHUB_WRITE_GATE'
   | 'GITHUB_PR_CREATION'
   | 'GITHUB_PR_COLLABORATION'
+  | 'ZFLOW_REPORT'
 
 export interface RuntimeApproval {
   readonly ticketId: string
