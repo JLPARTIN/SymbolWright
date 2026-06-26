@@ -101,7 +101,7 @@ export async function executeEditFileTool(
 }
 
 export const editFileTool: RuntimeToolDefinition = {
-  name: 'propose_edit' as RuntimeToolDefinition['name'],
+  name: 'edit_file',
   description: 'Make a surgical search-and-replace edit to a file. Fails if oldText is not found.',
   capability: 'PROPOSE',
   execute: async (input, context) => {

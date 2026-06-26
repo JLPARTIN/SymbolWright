@@ -55,7 +55,7 @@ function readInput(input: unknown): ZflowReportRollupToolInput {
 }
 
 export const zflowReportRollupTool: RuntimeToolDefinition = {
-  name: 'zflow_report_catalog',
+  name: 'zflow_report_rollup',
   description: 'Render a Zflow report rollup as markdown or JSON.',
   capability: 'ZFLOW_REPORT_CATALOG',
   execute: async (input: unknown, _context: RuntimeToolContext): Promise<string> => {

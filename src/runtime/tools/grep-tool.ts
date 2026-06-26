@@ -176,7 +176,7 @@ export async function executeGrepTool(
 }
 
 export const grepTool: RuntimeToolDefinition = {
-  name: 'search_files' as RuntimeToolDefinition['name'],
+  name: 'grep',
   description: 'Search for a regex pattern across workspace files with context.',
   capability: 'SEARCH',
   execute: async (input, context) => executeGrepTool(parseGrepInput(input), context.cwd),

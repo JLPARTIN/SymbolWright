@@ -13,7 +13,7 @@ const COMMAND_ALLOWLIST = [
   /^npm run (test|typecheck|build|lint)/,
   /^npx vitest/,
   /^npx tsc/,
-  /^git (status|diff|log|branch|show)/,
+  /^git (status|diff|log|branch|show|add|commit|push|checkout|stash|merge|rebase|fetch|pull|tag|remote|rev-parse)/,
   /^ls\b/,
   /^find\b/,
   /^grep\b/,
@@ -21,6 +21,8 @@ const COMMAND_ALLOWLIST = [
   /^head\b/,
   /^tail\b/,
   /^wc\b/,
+  /^mkdir\b/,
+  /^pwd$/,
 ]
 
 const COMMAND_BLOCKLIST = [
@@ -144,7 +146,7 @@ export async function executeBashTool(
 }
 
 export const bashTool: RuntimeToolDefinition = {
-  name: 'command_dry_run_gated' as RuntimeToolDefinition['name'],
+  name: 'bash',
   description: 'Execute an allowed shell command with output redaction.',
   capability: 'APPROVED_COMMAND',
   execute: async (input, context) =>

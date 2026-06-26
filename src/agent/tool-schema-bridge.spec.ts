@@ -54,8 +54,8 @@ describe('tool-schema-bridge', () => {
       const tool = makeTool('search_files', 'SEARCH')
       const schema = buildToolInputSchema(tool)
 
-      expect(schema.properties).toHaveProperty('pattern')
-      expect(schema.required).toContain('pattern')
+      expect(schema.properties).toHaveProperty('query')
+      expect(schema.required).toContain('query')
     })
 
     it('returns generic schema for unknown tools', () => {

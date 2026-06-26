@@ -45,7 +45,7 @@ const context = {
 
 describe('zflowReportRollupTool', () => {
   it('uses the existing catalog tool boundary', () => {
-    expect(zflowReportRollupTool.name).toBe('zflow_report_catalog')
+    expect(zflowReportRollupTool.name).toBe('zflow_report_rollup')
     expect(zflowReportRollupTool.capability).toBe('ZFLOW_REPORT_CATALOG')
   })
 
