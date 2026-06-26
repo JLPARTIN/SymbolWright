@@ -1,191 +1,143 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300" viewBox="0 0 900 300" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="280" viewBox="0 0 900 280" role="img" aria-labelledby="title desc">
   <title id="title">CodeMind Brand Logo</title>
   <desc id="desc">CodeMind AI coding-agent platform brand banner with senary-structured brain and text.</desc>
   <defs>
-    <linearGradient id="magentaGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ff2d95"/>
-      <stop offset="1" stop-color="#c471ed"/>
+    <linearGradient id="brainGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e91e8f"/>
+      <stop offset="0.45" stop-color="#c471ed"/>
+      <stop offset="1" stop-color="#39f6ff"/>
     </linearGradient>
-    <linearGradient id="magentaHoriz" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#ff2d95"/>
-      <stop offset="0.5" stop-color="#e91e8f"/>
-      <stop offset="1" stop-color="#c471ed"/>
-    </linearGradient>
-    <linearGradient id="textGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#f6fbff"/>
-      <stop offset="1" stop-color="#c9d1d9"/>
-    </linearGradient>
-    <linearGradient id="cyanMagenta" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="mindGrad" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#39f6ff"/>
+      <stop offset="0.5" stop-color="#c471ed"/>
       <stop offset="1" stop-color="#e91e8f"/>
     </linearGradient>
+    <linearGradient id="brainFillGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e91e8f"/>
+      <stop offset="0.5" stop-color="#c471ed"/>
+      <stop offset="1" stop-color="#39f6ff"/>
+    </linearGradient>
     <clipPath id="brainClip">
-      <path d="M160,192 C152,187 137,175 127,160 C117,145 112,128 112,112 C112,96 118,84 126,77 C132,72 139,69 146,70 C150,71 154,74 157,78 C159,74 160,72 162,71 C164,72 165,74 167,78 C170,74 174,71 178,70 C185,69 192,72 198,77 C206,84 212,96 212,112 C212,128 207,145 197,160 C187,175 172,187 164,192 C163,192 161,192 160,192 Z"/>
+      <path d="M148,195 C140,190 125,178 115,163 C105,148 98,130 97,114 C96,98 100,84 108,75 C114,68 122,64 130,64 C136,64 140,67 143,71 C145,67 147,64 148,63 C149,64 151,67 153,71 C156,67 160,64 166,64 C174,64 182,68 188,75 C196,84 200,98 199,114 C198,130 191,148 181,163 C171,178 156,190 148,195 Z"/>
     </clipPath>
     <clipPath id="mindClip">
-      <text x="530" y="163" font-family="Arial,Helvetica,sans-serif" font-size="78" font-weight="900" letter-spacing="-2">Mind</text>
+      <text x="528" y="155" font-family="Arial,Helvetica,sans-serif" font-size="72" font-weight="800" letter-spacing="-1">Mind</text>
     </clipPath>
   </defs>
 
   <!-- Background -->
-  <rect width="900" height="300" rx="16" fill="#080b16"/>
+  <rect width="900" height="280" fill="#000000"/>
 
-  <!-- Subtle background grid -->
-  <g opacity="0.025" stroke="#e91e8f" stroke-width="0.5" fill="none">
-    <line x1="0" y1="75" x2="900" y2="75"/>
-    <line x1="0" y1="150" x2="900" y2="150"/>
-    <line x1="0" y1="225" x2="900" y2="225"/>
-    <line x1="150" y1="0" x2="150" y2="300"/>
-    <line x1="450" y1="0" x2="450" y2="300"/>
-    <line x1="750" y1="0" x2="750" y2="300"/>
-  </g>
+  <!-- ============ BRAIN ICON ============ -->
 
-  <!-- Subtle corner senary accents -->
-  <text x="16" y="22" font-family="Courier New,Courier,monospace" font-size="7" fill="#e91e8f" opacity="0.08">503142503142503142503142503142503142503142503142503142503142503142503142503142503142503142503142</text>
-  <text x="16" y="292" font-family="Courier New,Courier,monospace" font-size="7" fill="#c471ed" opacity="0.08">142503142503142503142503142503142503142503142503142503142503142503142503142503142503142503142503</text>
-
-  <!-- ============ BRAIN ICON SECTION ============ -->
-
-  <!-- Outer orbital ring -->
-  <circle cx="162" cy="135" r="102" fill="none" stroke="#e91e8f" stroke-width="0.4" opacity="0.15" stroke-dasharray="3,8"/>
-
-  <!-- Second orbital ellipse (tilted) -->
-  <ellipse cx="162" cy="135" rx="92" ry="60" fill="none" stroke="#c471ed" stroke-width="0.3" opacity="0.1" stroke-dasharray="2,9" transform="rotate(-25,162,135)"/>
-
-  <!-- Hexagonal frame -->
-  <polygon points="240,135 201,202 123,202 84,135 123,68 201,68" fill="none" stroke="url(#magentaGrad)" stroke-width="2" opacity="0.5"/>
-
-  <!-- Inner hexagonal frame -->
-  <polygon points="222,135 193,178 131,178 102,135 131,92 193,92" fill="none" stroke="#e91e8f" stroke-width="0.5" opacity="0.15"/>
-
-  <!-- Orbital nodes -->
-  <circle cx="268" cy="135" r="5" fill="#e91e8f" opacity="0.85"/>
-  <circle cx="56" cy="135" r="5" fill="#c471ed" opacity="0.85"/>
-  <circle cx="162" cy="28" r="4.5" fill="#39f6ff" opacity="0.7"/>
-  <circle cx="162" cy="242" r="4.5" fill="#39f6ff" opacity="0.7"/>
-  <circle cx="238" cy="72" r="3.5" fill="#ff2d95" opacity="0.6"/>
-  <circle cx="86" cy="198" r="3.5" fill="#ff2d95" opacity="0.6"/>
-  <circle cx="238" cy="198" r="3.5" fill="#c471ed" opacity="0.6"/>
-  <circle cx="86" cy="72" r="3.5" fill="#c471ed" opacity="0.6"/>
-
-  <!-- Node connection lines to hex frame -->
-  <g stroke="#e91e8f" stroke-width="0.4" opacity="0.2">
-    <line x1="240" y1="135" x2="268" y2="135"/>
-    <line x1="84" y1="135" x2="56" y2="135"/>
-    <line x1="162" y1="68" x2="162" y2="28"/>
-    <line x1="162" y1="202" x2="162" y2="242"/>
-    <line x1="201" y1="68" x2="238" y2="72"/>
-    <line x1="123" y1="202" x2="86" y2="198"/>
-    <line x1="201" y1="202" x2="238" y2="198"/>
-    <line x1="123" y1="68" x2="86" y2="72"/>
-  </g>
-
-  <!-- Brain filled with senary digits (clipped to brain outline) -->
+  <!-- Brain filled with senary digits -->
   <g clip-path="url(#brainClip)">
-    <rect x="108" y="65" width="112" height="132" fill="#e91e8f" opacity="0.04"/>
-    <text font-family="Courier New,Courier,monospace" font-size="5.5" fill="#ff2d95" opacity="0.55">
-      <tspan x="120" y="76">5 0 3 1 4 2 5</tspan>
-      <tspan x="117" y="82">0 3 1 4 2 5 0 3</tspan>
-      <tspan x="114" y="88">1 4 2 5 0 3 1 4 2</tspan>
-      <tspan x="112" y="94">5 0 3 1 4 2 5 0 3 1</tspan>
-      <tspan x="112" y="100">2 5 0 3 1 4 2 5 0 3</tspan>
-      <tspan x="112" y="106">0 3 1 4 2 5 0 3 1 4</tspan>
-      <tspan x="112" y="112">4 2 5 0 3 1 4 2 5 0</tspan>
-      <tspan x="112" y="118">1 4 2 5 0 3 1 4 2 5</tspan>
-      <tspan x="112" y="124">5 0 3 1 4 2 5 0 3 1</tspan>
-      <tspan x="112" y="130">3 1 4 2 5 0 3 1 4 2</tspan>
-      <tspan x="112" y="136">0 3 1 4 2 5 0 3 1 4</tspan>
-      <tspan x="112" y="142">4 2 5 0 3 1 4 2 5 0</tspan>
-      <tspan x="112" y="148">2 5 0 3 1 4 2 5 0 3</tspan>
-      <tspan x="112" y="154">5 0 3 1 4 2 5 0 3 1</tspan>
-      <tspan x="112" y="160">1 4 2 5 0 3 1 4 2 5</tspan>
-      <tspan x="114" y="166">3 1 4 2 5 0 3 1 4</tspan>
-      <tspan x="116" y="172">0 3 1 4 2 5 0 3</tspan>
-      <tspan x="120" y="178">4 2 5 0 3 1 4</tspan>
-      <tspan x="126" y="184">2 5 0 3 1 4</tspan>
-      <tspan x="134" y="190">5 0 3 1</tspan>
+    <rect x="92" y="58" width="112" height="142" fill="#e91e8f" opacity="0.03"/>
+    <text font-family="Courier New,Courier,monospace" font-size="6" fill="url(#brainFillGrad)" opacity="0.7">
+      <tspan x="108" y="68">5 0 3 1 4 2</tspan>
+      <tspan x="105" y="74">0 3 1 4 2 5 0</tspan>
+      <tspan x="102" y="80">1 4 2 5 0 3 1 4</tspan>
+      <tspan x="99" y="86">5 0 3 1 4 2 5 0 3</tspan>
+      <tspan x="97" y="92">2 5 0 3 1 4 2 5 0 3</tspan>
+      <tspan x="96" y="98">0 3 1 4 2 5 0 3 1 4 2</tspan>
+      <tspan x="96" y="104">4 2 5 0 3 1 4 2 5 0 3</tspan>
+      <tspan x="96" y="110">1 4 2 5 0 3 1 4 2 5 0</tspan>
+      <tspan x="96" y="116">5 0 3 1 4 2 5 0 3 1 4</tspan>
+      <tspan x="96" y="122">3 1 4 2 5 0 3 1 4 2 5</tspan>
+      <tspan x="96" y="128">0 3 1 4 2 5 0 3 1 4 2</tspan>
+      <tspan x="96" y="134">4 2 5 0 3 1 4 2 5 0 3</tspan>
+      <tspan x="96" y="140">2 5 0 3 1 4 2 5 0 3 1</tspan>
+      <tspan x="96" y="146">5 0 3 1 4 2 5 0 3 1 4</tspan>
+      <tspan x="96" y="152">1 4 2 5 0 3 1 4 2 5 0</tspan>
+      <tspan x="97" y="158">3 1 4 2 5 0 3 1 4 2</tspan>
+      <tspan x="99" y="164">0 3 1 4 2 5 0 3 1</tspan>
+      <tspan x="102" y="170">4 2 5 0 3 1 4 2</tspan>
+      <tspan x="106" y="176">2 5 0 3 1 4 2</tspan>
+      <tspan x="112" y="182">5 0 3 1 4 2</tspan>
+      <tspan x="118" y="188">0 3 1 4 2</tspan>
+      <tspan x="126" y="194">3 1 4</tspan>
     </text>
   </g>
 
   <!-- Brain outline -->
-  <path d="M160,192 C152,187 137,175 127,160 C117,145 112,128 112,112 C112,96 118,84 126,77 C132,72 139,69 146,70 C150,71 154,74 157,78 C159,74 160,72 162,71 C164,72 165,74 167,78 C170,74 174,71 178,70 C185,69 192,72 198,77 C206,84 212,96 212,112 C212,128 207,145 197,160 C187,175 172,187 164,192 C163,192 161,192 160,192 Z" fill="none" stroke="url(#magentaGrad)" stroke-width="1.5"/>
+  <path d="M148,195 C140,190 125,178 115,163 C105,148 98,130 97,114 C96,98 100,84 108,75 C114,68 122,64 130,64 C136,64 140,67 143,71 C145,67 147,64 148,63 C149,64 151,67 153,71 C156,67 160,64 166,64 C174,64 182,68 188,75 C196,84 200,98 199,114 C198,130 191,148 181,163 C171,178 156,190 148,195 Z" fill="none" stroke="url(#brainGrad)" stroke-width="2"/>
 
   <!-- Center fissure -->
-  <line x1="162" y1="74" x2="162" y2="188" stroke="#e91e8f" stroke-width="0.4" opacity="0.35"/>
+  <line x1="148" y1="66" x2="148" y2="192" stroke="url(#brainGrad)" stroke-width="0.6" opacity="0.4"/>
 
   <!-- Brain fold lines (sulci) -->
-  <g stroke="#e91e8f" stroke-width="0.4" opacity="0.2" fill="none">
-    <path d="M118,100 C128,105 140,102 155,95"/>
-    <path d="M114,120 C126,126 140,122 155,115"/>
-    <path d="M118,140 C130,146 142,141 155,135"/>
-    <path d="M125,160 C136,163 146,157 155,150"/>
-    <path d="M169,95 C180,102 192,105 206,100"/>
-    <path d="M169,115 C184,122 196,126 210,120"/>
-    <path d="M169,135 C182,141 194,146 206,140"/>
-    <path d="M169,150 C178,157 188,163 199,160"/>
+  <g stroke="url(#brainGrad)" stroke-width="0.5" opacity="0.25" fill="none">
+    <path d="M104,95 C114,100 128,97 143,90"/>
+    <path d="M100,115 C112,121 128,118 143,110"/>
+    <path d="M102,135 C114,141 128,138 143,130"/>
+    <path d="M108,155 C118,160 130,157 143,150"/>
+    <path d="M153,90 C168,97 182,100 192,95"/>
+    <path d="M153,110 C168,118 182,121 196,115"/>
+    <path d="M153,130 C168,138 182,141 194,135"/>
+    <path d="M153,150 C166,157 178,160 188,155"/>
   </g>
 
-  <!-- Circuit traces on brain -->
-  <g stroke="#ff2d95" stroke-width="1.2" opacity="0.85">
-    <line x1="138" y1="90" x2="138" y2="122"/>
-    <line x1="138" y1="122" x2="120" y2="138"/>
-    <line x1="148" y1="105" x2="148" y2="148"/>
-    <line x1="148" y1="148" x2="133" y2="168"/>
-    <line x1="186" y1="90" x2="186" y2="122"/>
-    <line x1="186" y1="122" x2="204" y2="138"/>
-    <line x1="176" y1="105" x2="176" y2="148"/>
-    <line x1="176" y1="148" x2="191" y2="168"/>
-    <line x1="138" y1="122" x2="148" y2="128"/>
-    <line x1="186" y1="122" x2="176" y2="128"/>
+  <!-- "CM" text inside brain -->
+  <text x="118" y="138" font-family="Arial,Helvetica,sans-serif" font-size="36" font-weight="900" fill="url(#brainGrad)" opacity="0.35">C</text>
+  <text x="145" y="138" font-family="Arial,Helvetica,sans-serif" font-size="36" font-weight="900" fill="url(#brainGrad)" opacity="0.35">M</text>
+
+  <!-- Circuit traces extending downward from brain -->
+  <g stroke="url(#brainGrad)" stroke-width="1.5" fill="none" opacity="0.8">
+    <!-- Left trace: down from brain, bends left -->
+    <path d="M120,170 L120,225 L90,225"/>
+    <!-- Center trace: straight down -->
+    <path d="M148,195 L148,250"/>
+    <!-- Right trace: down from brain, bends right -->
+    <path d="M176,170 L176,225 L206,225"/>
   </g>
 
-  <!-- Circuit nodes -->
-  <g fill="#ff2d95">
-    <circle cx="138" cy="90" r="3"/>
-    <circle cx="120" cy="138" r="3"/>
-    <circle cx="133" cy="168" r="2.5"/>
-    <circle cx="148" cy="105" r="2.5"/>
-    <circle cx="186" cy="90" r="3"/>
-    <circle cx="204" cy="138" r="3"/>
-    <circle cx="191" cy="168" r="2.5"/>
-    <circle cx="176" cy="105" r="2.5"/>
+  <!-- Circuit trace nodes -->
+  <g fill="url(#brainGrad)" opacity="0.9">
+    <circle cx="120" cy="170" r="3"/>
+    <circle cx="90" cy="225" r="3.5"/>
+    <circle cx="148" cy="250" r="3.5"/>
+    <circle cx="176" cy="170" r="3"/>
+    <circle cx="206" cy="225" r="3.5"/>
   </g>
 
-  <!-- Central node (eye) -->
-  <circle cx="162" cy="128" r="5" fill="#c471ed" opacity="0.9"/>
-  <circle cx="162" cy="128" r="2" fill="#39f6ff"/>
+  <!-- Small accent nodes on brain surface -->
+  <g fill="url(#brainGrad)" opacity="0.7">
+    <circle cx="108" cy="95" r="2"/>
+    <circle cx="188" cy="95" r="2"/>
+    <circle cx="100" cy="130" r="2"/>
+    <circle cx="196" cy="130" r="2"/>
+    <circle cx="130" cy="75" r="2"/>
+    <circle cx="166" cy="75" r="2"/>
+  </g>
+
+  <!-- Internal circuit traces on brain -->
+  <g stroke="url(#brainGrad)" stroke-width="1" opacity="0.6">
+    <line x1="130" y1="75" x2="130" y2="110"/>
+    <line x1="130" y1="110" x2="108" y2="130"/>
+    <line x1="166" y1="75" x2="166" y2="110"/>
+    <line x1="166" y1="110" x2="188" y2="130"/>
+  </g>
 
   <!-- ============ TEXT SECTION ============ -->
 
-  <!-- "Code" clean text -->
-  <text x="315" y="163" font-family="Arial,Helvetica,sans-serif" font-size="78" font-weight="700" fill="url(#textGrad)" letter-spacing="-2">Code</text>
+  <!-- "Code" in white -->
+  <text x="300" y="155" font-family="Arial,Helvetica,sans-serif" font-size="72" font-weight="700" fill="#ffffff" letter-spacing="-1">Code</text>
 
-  <!-- "Mind" in senary pattern (clipped) -->
+  <!-- "Mind" in senary pattern (clipped to letter shapes) -->
   <g clip-path="url(#mindClip)">
-    <text font-family="Courier New,Courier,monospace" font-size="7.5" fill="url(#magentaHoriz)">
-      <tspan x="525" y="100">503142503142503142503142503142503142</tspan>
-      <tspan x="525" y="107">142503142503142503142503142503142503</tspan>
-      <tspan x="525" y="114">250314250314250314250314250314250314</tspan>
-      <tspan x="525" y="121">031425031425031425031425031425031425</tspan>
-      <tspan x="525" y="128">503142503142503142503142503142503142</tspan>
-      <tspan x="525" y="135">142503142503142503142503142503142503</tspan>
-      <tspan x="525" y="142">250314250314250314250314250314250314</tspan>
-      <tspan x="525" y="149">031425031425031425031425031425031425</tspan>
-      <tspan x="525" y="156">503142503142503142503142503142503142</tspan>
-      <tspan x="525" y="163">142503142503142503142503142503142503</tspan>
-      <tspan x="525" y="170">250314250314250314250314250314250314</tspan>
+    <text font-family="Courier New,Courier,monospace" font-size="7" fill="url(#mindGrad)">
+      <tspan x="523" y="95">503142503142503142503142503142503142</tspan>
+      <tspan x="523" y="101">142503142503142503142503142503142503</tspan>
+      <tspan x="523" y="107">250314250314250314250314250314250314</tspan>
+      <tspan x="523" y="113">031425031425031425031425031425031425</tspan>
+      <tspan x="523" y="119">503142503142503142503142503142503142</tspan>
+      <tspan x="523" y="125">142503142503142503142503142503142503</tspan>
+      <tspan x="523" y="131">250314250314250314250314250314250314</tspan>
+      <tspan x="523" y="137">031425031425031425031425031425031425</tspan>
+      <tspan x="523" y="143">503142503142503142503142503142503142</tspan>
+      <tspan x="523" y="149">142503142503142503142503142503142503</tspan>
+      <tspan x="523" y="155">250314250314250314250314250314250314</tspan>
+      <tspan x="523" y="161">031425031425031425031425031425031425</tspan>
     </text>
   </g>
-
-  <!-- Tagline -->
-  <text x="315" y="205" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#e91e8f" opacity="0.65" letter-spacing="5">BUILD . FIX . UNDERSTAND</text>
-
-  <!-- Decorative gradient line -->
-  <line x1="315" y1="218" x2="750" y2="218" stroke="url(#magentaHoriz)" stroke-width="0.5" opacity="0.2"/>
-
-  <!-- Subtitle -->
-  <text x="315" y="240" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#c9d1d9" opacity="0.4">Governed AI coding-agent platform</text>
-
-  <!-- Bottom senary accent line -->
-  <text x="315" y="265" font-family="Courier New,Courier,monospace" font-size="7" fill="#e91e8f" opacity="0.1">5 0 3 1 4 2 5 0 3 1 4 2 5 0 3 1 4 2 5 0 3 1 4 2 5 0 3 1 4 2 5 0 3 1 4 2 5 0 3 1 4 2 5 0 3 1 4 2 5 0 3 1 4 2 5 0 3 1 4 2</text>
 </svg>
