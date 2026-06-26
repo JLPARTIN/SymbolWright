@@ -16,6 +16,7 @@ import { renderAjnaReviewPrForFile } from './cli-ajna-review-pr.js'
 import { renderAjnaScanProfileForRepo } from './cli-ajna-scan-profile.js'
 import { findFixtureArg, renderFixtureCommand } from './cli-fixture-commands.js'
 import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
+import { renderMissionPacketCommand } from './cli-mission-packet.js'
 import { renderRuntimeCiReview } from './cli-runtime-ci-review.js'
 import { renderRuntimePlan } from './cli-runtime-plan.js'
 import { renderRuntimePrNotes } from './cli-runtime-pr-notes.js'
@@ -239,6 +240,16 @@ async function main(): Promise<void> {
         process.exit(1)
       }
       console.log(await renderRuntimeGitHubWriteGate(fixturePath))
+      break
+    }
+
+    case 'mission-packet': {
+      const fixturePath = rest[0]
+      if (fixturePath === undefined) {
+        console.error('Missing input JSON file: codemind mission-packet <json-file>')
+        process.exit(1)
+      }
+      console.log(renderMissionPacketCommand(fixturePath))
       break
     }
 

@@ -1,0 +1,57 @@
+{
+  "missionId": "mission-demo-1",
+  "contextPacket": {
+    "packetId": "packet-demo-1",
+    "blockId": "AGENT-KERNEL-04",
+    "prId": "PR-AK-04",
+    "phaseId": "Phase-16G-AK-04",
+    "sourcePlanningRequestId": "req-demo-1",
+    "providerReady": true,
+    "providerInvoked": false,
+    "items": [
+      { "section": "operator-intent", "priority": "CRITICAL", "title": "Operator Intent", "content": "Analyze repository structure." }
+    ],
+    "boundary": { "maxSections": 8, "maxSourceLineageItems": 3, "emittedSections": 1, "truncated": false, "omittedSections": [] },
+    "warnings": []
+  },
+  "routePlan": {
+    "blockId": "AGENT-KERNEL-05",
+    "prId": "PR-AK-05",
+    "phaseId": "Phase-16G-AK-05",
+    "packetId": "packet-demo-1",
+    "routeType": "LOCAL_ONLY",
+    "providerRouteReady": true,
+    "providerInvoked": false,
+    "findings": [{ "code": "ROUTE_SELECTED", "severity": "INFO", "message": "Selected LOCAL_ONLY." }],
+    "rationale": ["Local-only route selected."]
+  },
+  "preflightDecision": {
+    "blockId": "AGENT-KERNEL-06",
+    "prId": "PR-AK-06",
+    "phaseId": "Phase-16G-AK-06",
+    "packetId": "packet-demo-1",
+    "routeType": "LOCAL_ONLY",
+    "accepted": true,
+    "executionReady": true,
+    "providerInvoked": false,
+    "repoMutationAllowed": false,
+    "commandExecutionAllowed": false,
+    "findings": [{ "code": "PREFLIGHT_ACCEPTED", "severity": "INFO", "message": "Preflight accepted." }],
+    "rationale": ["Route execution preflight passed."]
+  },
+  "objectives": [
+    { "id": "OBJ-1", "summary": "Analyze repository structure and produce context report", "priority": "PRIMARY" }
+  ],
+  "constraints": [
+    { "id": "CON-1", "rule": "No mutation allowed", "enforcedBy": "kernel-policy" }
+  ],
+  "successCriteria": [
+    { "id": "SC-1", "description": "Context packet assembled without blocking findings", "measurable": true }
+  ],
+  "executionBoundary": {
+    "maxSteps": 10,
+    "allowMutation": false,
+    "allowExternalProvider": false,
+    "timeoutMs": 60000
+  }
+}

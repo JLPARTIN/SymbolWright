@@ -32,6 +32,7 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'github-write-gate <json-file>', description: 'Evaluate an approved GitHub write through the policy-gated write gate from a local JSON fixture' },
   { name: 'workflow <json-file>', description: 'Run a governed runtime workflow composing registered tools from a local JSON fixture' },
   { name: 'ajna-workflow <json-file>', description: 'Run a read-only Ajna review or merge-readiness workflow from a local JSON fixture' },
+  { name: 'mission-packet <json-file>', description: 'Build a governed agent kernel mission packet from pipeline outputs in a local JSON fixture' },
   { name: 'runtime-status', description: 'Show the runtime status dashboard with tool inventory, policy, and phase summary' },
   { name: 'project-context [dir]', description: 'Build a deterministic project context packet from repository instructions, build state, and configuration' },
   {
