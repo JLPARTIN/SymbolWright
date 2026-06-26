@@ -14,7 +14,10 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'ci-review --fixture-file <json-file>', description: 'Draft CI review from local workflow fixture evidence' },
   { name: 'pr-notes [focus]', description: 'Draft PR notes without posting them' },
   { name: 'pr-notes --fixture-file <json-file>', description: 'Draft PR notes from local PR fixture evidence' },
-  { name: 'runtime run <goal> --read-only', description: 'Run a bounded read-only runtime loop' },
+  {
+    name: 'runtime run <goal> --read-only [--max-iterations <n>] [--json]',
+    description: 'Run a bounded read-only runtime loop with operator controls and JSON output',
+  },
   { name: 'runtime run <goal> --approval-ticket <id>', description: 'Render approval-gated dry-run execution with audit output' },
   { name: 'live-read-policy <json-file>', description: 'Evaluate live read policy handshake from a local JSON fixture' },
   { name: 'live-read-client-fixture <json-file>', description: 'Run live read client fixture through fake client and evidence pipeline' },
