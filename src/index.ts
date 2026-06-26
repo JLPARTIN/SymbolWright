@@ -276,6 +276,15 @@ export {
   loadProjectInstructionSet,
 } from './context/project-instructions-loader.js'
 
+export type {
+  GitHubHttpClient,
+  GitHubHttpClientOptions,
+  GitHubHttpResponse,
+} from './runtime/live-read/github-http-client.js'
+export { DefaultGitHubHttpClient } from './runtime/live-read/github-http-client.js'
+
+export { redactGitHubContent, redactUnknownBody } from './runtime/live-read/github-live-read-redaction.js'
+
 export {
   buildProjectContextPacket,
   renderProjectContextPacket,

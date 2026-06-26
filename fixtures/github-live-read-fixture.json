@@ -1,0 +1,30 @@
+{
+  "mode": "pr",
+  "owner": "jlpartin",
+  "repo": "codemind",
+  "prNumber": 140,
+  "clientData": {
+    "pr": {
+      "number": 140,
+      "title": "feat: build state ledger + project context kernel (CM-100-A + CM-100-B)",
+      "state": "closed",
+      "merged": true,
+      "base": "main",
+      "head": "claude/codemind-100-percent-plan-q0fyt7",
+      "changedFiles": [
+        "src/build-state/codemind-build-ledger.ts",
+        "src/build-state/codemind-build-ledger.spec.ts",
+        "src/context/project-instructions.ts",
+        "src/context/project-instructions-loader.ts",
+        "src/context/project-context-kernel.ts",
+        "src/context/project-context-kernel.spec.ts",
+        "src/cli-project-context.ts",
+        "docs/build-state/CODEMIND_BUILD_LEDGER.md",
+        "docs/context/CODEMIND_PROJECT_CONTEXT_KERNEL.md",
+        "docs/roadmap/CODEMIND_100_PERCENT_BUILD_PLAN.md"
+      ],
+      "additions": 1173,
+      "deletions": 9
+    }
+  }
+}
