@@ -372,6 +372,7 @@ docs/ajna-merge-readiness-client-collector-fixture-command.md
 docs/build-state/CODEMIND_BUILD_LEDGER.md
 docs/context/CODEMIND_PROJECT_CONTEXT_KERNEL.md
 docs/roadmap/CODEMIND_100_PERCENT_BUILD_PLAN.md
+docs/runtime/CODEMIND_GITHUB_LIVE_READ_V1.md
 ```
 
 ## Relationship to AELIB-X1YA0I
