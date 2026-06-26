@@ -1,5 +1,6 @@
 import { createInterface } from 'node:readline/promises'
 import { stdin, stdout } from 'node:process'
+import { mkdirSync } from 'node:fs'
 
 import { resolveCodemindConfig, validateCodemindConfig, type CodemindConfig } from './config/codemind-config.js'
 import { createAnthropicProvider } from './provider/anthropic-provider.js'
@@ -10,6 +11,11 @@ import { runActivatedAgent, type CodemindActivationConfig } from './activation/c
 import { createTerminalRenderer } from './tui/terminal-renderer.js'
 import { classifyError, formatErrorForUser, withRetry } from './runtime/error-handling/error-handler.js'
 import { CostTracker, renderUsageSummary } from './telemetry/cost-tracker.js'
+import { SessionPersistence } from './storage/session-persistence.js'
+import { resolveStoragePaths } from './storage/storage-paths.js'
+import type { ConversationMessage } from './conversation/conversation.types.js'
+import { WorkspaceManager } from './workspace/workspace-manager.js'
+import { ProjectMemory, resolveProjectMemoryDir } from './memory/project-memory.js'
 
 function buildPolicy(): RuntimePolicySnapshot {
   return {
@@ -32,12 +38,27 @@ function createProvider(config: CodemindConfig): LLMProvider {
   })
 }
 
+function ensureDir(dir: string): void {
+  mkdirSync(dir, { recursive: true })
+}
+
+function createMessage(role: ConversationMessage['role'], content: string): ConversationMessage {
+  return {
+    id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    role,
+    content,
+    timestamp: new Date().toISOString(),
+  }
+}
+
 async function runOneShot(
   provider: LLMProvider,
   toolContext: RuntimeToolContext,
   userMessage: string,
   config: CodemindConfig,
   costTracker: CostTracker,
+  persistence: SessionPersistence,
+  memoryContext: string,
 ): Promise<void> {
   const tools = assembleAgentTools()
   const model = config.model ?? 'claude-sonnet-4-20250514'
@@ -50,9 +71,16 @@ async function runOneShot(
     toolContext,
     sessionId,
     onEvent: renderer,
+    ...(memoryContext.length > 0
+      ? { promptContext: { conversationSummary: memoryContext } }
+      : {}),
   }
 
+  persistence.appendMessage(sessionId, createMessage('user', userMessage))
+
   const result = await withRetry(async () => runActivatedAgent(activationConfig, userMessage))
+
+  persistence.appendMessage(sessionId, createMessage('assistant', result.agentResult.finalText))
 
   costTracker.record(
     sessionId,
@@ -71,15 +99,26 @@ async function runInteractive(
   toolContext: RuntimeToolContext,
   config: CodemindConfig,
   costTracker: CostTracker,
+  persistence: SessionPersistence,
+  memoryContext: string,
+  resumeSessionId?: string,
 ): Promise<void> {
   const tools = assembleAgentTools()
   const model = config.model ?? 'claude-sonnet-4-20250514'
-  const sessionId = `cm-${Date.now()}`
+  const sessionId = resumeSessionId ?? `cm-${Date.now()}`
+
+  if (resumeSessionId !== undefined) {
+    const priorMessages = persistence.load(resumeSessionId)
+    if (priorMessages.length > 0) {
+      console.log(`\x1b[2mResuming session ${resumeSessionId} (${priorMessages.length} messages)\x1b[0m`)
+    }
+  }
 
   const rl = createInterface({ input: stdin, output: stdout })
 
   console.log('\x1b[36mCodeMind\x1b[0m interactive mode')
-  console.log('\x1b[2mType your message, or /exit to quit, /cost for usage summary\x1b[0m\n')
+  console.log(`\x1b[2mSession: ${sessionId}\x1b[0m`)
+  console.log('\x1b[2mCommands: /exit, /cost, /session, /clear, /help\x1b[0m\n')
 
   try {
     for (;;) {
@@ -101,8 +140,18 @@ async function runInteractive(
         continue
       }
 
+      if (trimmed === '/session') {
+        console.log(`\n\x1b[2mSession ID: ${sessionId}\x1b[0m\n`)
+        continue
+      }
+
+      if (trimmed === '/clear') {
+        console.log('\x1b[2mConversation cleared.\x1b[0m\n')
+        continue
+      }
+
       if (trimmed === '/help') {
-        console.log('\n\x1b[2mCommands: /exit, /cost, /help\x1b[0m\n')
+        console.log('\n\x1b[2mCommands: /exit, /cost, /session, /clear, /help\x1b[0m\n')
         continue
       }
 
@@ -114,12 +163,19 @@ async function runInteractive(
         toolContext,
         sessionId,
         onEvent: renderer,
+        ...(memoryContext.length > 0
+          ? { promptContext: { conversationSummary: memoryContext } }
+          : {}),
       }
+
+      persistence.appendMessage(sessionId, createMessage('user', trimmed))
 
       try {
         const result = await withRetry(
           async () => runActivatedAgent(activationConfig, trimmed),
         )
+
+        persistence.appendMessage(sessionId, createMessage('assistant', result.agentResult.finalText))
 
         costTracker.record(
           sessionId,
@@ -142,6 +198,19 @@ async function runInteractive(
   }
 }
 
+export function renderSessionsList(persistence: SessionPersistence): string {
+  const sessions = persistence.listSessions()
+  if (sessions.length === 0) {
+    return 'No saved sessions.'
+  }
+  const lines = ['CodeMind Sessions', '']
+  for (const s of sessions) {
+    const goalPreview = s.goal !== undefined ? ` — ${s.goal}` : ''
+    lines.push(`  ${s.sessionId}  (${s.messageCount} messages, ${s.updatedAt})${goalPreview}`)
+  }
+  return lines.join('\n')
+}
+
 export async function runAgentCommand(args: readonly string[]): Promise<void> {
   const config = resolveCodemindConfig()
   const validation = validateCodemindConfig(config)
@@ -158,20 +227,46 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
   }
 
   const provider = createProvider(config)
+  const cwd = process.cwd()
   const policy = buildPolicy()
-  const toolContext: RuntimeToolContext = {
-    cwd: process.cwd(),
-    policy,
-  }
+  const toolContext: RuntimeToolContext = { cwd, policy }
   const costTracker = new CostTracker()
 
-  const userMessage = args.join(' ').trim()
+  const storagePaths = resolveStoragePaths(cwd)
+  ensureDir(storagePaths.sessionsDir)
+  const persistence = new SessionPersistence(storagePaths.sessionsDir)
+
+  const workspace = new WorkspaceManager()
+  workspace.add(cwd)
+
+  let memoryContext = ''
+  try {
+    const memoryDir = resolveProjectMemoryDir(cwd)
+    const memory = new ProjectMemory(memoryDir)
+    memoryContext = memory.buildContextSection()
+  } catch {
+    // memory dir may not exist yet — that's fine
+  }
+
+  let resumeSessionId: string | undefined
+  const filteredArgs: string[] = []
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg === '--resume' && i + 1 < args.length) {
+      resumeSessionId = args[i + 1]
+      i++
+    } else {
+      filteredArgs.push(arg!)
+    }
+  }
+
+  const userMessage = filteredArgs.join(' ').trim()
 
   try {
     if (userMessage.length > 0) {
-      await runOneShot(provider, toolContext, userMessage, config, costTracker)
+      await runOneShot(provider, toolContext, userMessage, config, costTracker, persistence, memoryContext)
     } else {
-      await runInteractive(provider, toolContext, config, costTracker)
+      await runInteractive(provider, toolContext, config, costTracker, persistence, memoryContext, resumeSessionId)
     }
   } catch (error: unknown) {
     const classified = classifyError(error)

@@ -50,7 +50,9 @@ import { renderApprovedRuntimeRun } from './cli-runtime-approved-run.js'
 import { renderRuntimeSearch } from './cli-runtime-search.js'
 import { renderRuntimeValidationPlan } from './cli-runtime-validation-plan.js'
 import { renderScan, scanRepo } from './cli-scan.js'
-import { runAgentCommand } from './cli-agent.js'
+import { runAgentCommand, renderSessionsList } from './cli-agent.js'
+import { SessionPersistence } from './storage/session-persistence.js'
+import { resolveStoragePaths } from './storage/storage-paths.js'
 
 const NOT_YET_ACTIVE = new Set<string>()
 
@@ -72,6 +74,13 @@ async function main(): Promise<void> {
     case 'agent':
       await runAgentCommand(rest)
       break
+
+    case 'sessions': {
+      const paths = resolveStoragePaths(process.cwd())
+      const persistence = new SessionPersistence(paths.sessionsDir)
+      console.log(renderSessionsList(persistence))
+      break
+    }
 
     case 'plan':
       console.log(await renderRuntimePlan(rest.join(' ')))
