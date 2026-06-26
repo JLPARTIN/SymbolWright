@@ -1,0 +1,11 @@
+{
+  "reason": "Fix missing return type annotation on exported function",
+  "rollbackNote": "Revert src/utils/parser.ts to version before type fix",
+  "dryRun": true,
+  "files": [
+    {
+      "targetPath": "src/utils/parser.ts",
+      "content": "export function parse(input: string): ParseResult {\n  return { ok: true, value: input }\n}\n"
+    }
+  ]
+}

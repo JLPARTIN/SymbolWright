@@ -25,6 +25,8 @@ import { renderRuntimeAjnaLiveRead } from './cli-runtime-ajna-live-read.js'
 import { renderRuntimeOperatorReview } from './cli-runtime-operator-review.js'
 import { renderRuntimeLocalWrite } from './cli-runtime-local-write.js'
 import { renderRuntimePrPreparation } from './cli-runtime-pr-preparation.js'
+import { renderRepairLoopCommand } from './cli-repair-loop.js'
+import { renderRuntimeApplyPatch } from './cli-runtime-apply-patch.js'
 import { renderRuntimeValidationCommand } from './cli-runtime-validation-command.js'
 import { renderRuntimeWriteIntent } from './cli-runtime-write-intent.js'
 import { renderRuntimeGitHubLiveRead } from './cli-runtime-github-live-read.js'
@@ -166,6 +168,26 @@ async function main(): Promise<void> {
         process.exit(1)
       }
       console.log(await renderRuntimeLocalWrite(fixturePath))
+      break
+    }
+
+    case 'apply-patch': {
+      const fixturePath = rest[0]
+      if (fixturePath === undefined) {
+        console.error('Missing input JSON file: codemind apply-patch <json-file>')
+        process.exit(1)
+      }
+      console.log(await renderRuntimeApplyPatch(fixturePath))
+      break
+    }
+
+    case 'repair-loop': {
+      const fixturePath = rest[0]
+      if (fixturePath === undefined) {
+        console.error('Missing input JSON file: codemind repair-loop <json-file>')
+        process.exit(1)
+      }
+      console.log(renderRepairLoopCommand(fixturePath))
       break
     }
 

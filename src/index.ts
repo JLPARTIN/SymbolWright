@@ -325,6 +325,22 @@ export type {
   WorkflowEntry,
 } from './context/project-context-kernel.js'
 
+export {
+  executeRepairLoop,
+  renderRepairLoopResult,
+} from './runtime/repair/repair-loop.js'
+export type {
+  RepairLoopAjnaReassessment,
+  RepairLoopCheckpoint,
+  RepairLoopFinding,
+  RepairLoopOperatorReview,
+  RepairLoopOutcome,
+  RepairLoopPatchProposal,
+  RepairLoopRequest,
+  RepairLoopResult,
+  RepairLoopValidationResult,
+} from './runtime/repair/repair-loop.js'
+
 export { buildCodemindProofHarnessReport } from './testing/codemind-proof-harness.js'
 export {
   CODEMIND_PROOF_HARNESS_BLOCK_ID,

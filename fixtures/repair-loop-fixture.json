@@ -1,0 +1,43 @@
+{
+  "finding": {
+    "id": "F-001",
+    "category": "type-error",
+    "message": "Missing return type on exported function parse()",
+    "severity": "error",
+    "filePath": "src/utils/parser.ts"
+  },
+  "patchProposal": {
+    "reason": "Add explicit return type annotation to satisfy strict TypeScript checks",
+    "rollbackNote": "Revert src/utils/parser.ts to version before type fix",
+    "files": [
+      {
+        "targetPath": "src/utils/parser.ts",
+        "content": "export function parse(input: string): ParseResult {\n  return { ok: true, value: input }\n}\n"
+      }
+    ]
+  },
+  "operatorReview": {
+    "decision": "APPROVED",
+    "reviewedBy": "operator",
+    "notes": "Type fix looks correct"
+  },
+  "validationResults": [
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0,
+      "passed": true,
+      "summary": "Typecheck passed"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "passed": true,
+      "summary": "All tests passed"
+    }
+  ],
+  "ajnaReassessment": {
+    "verdict": "READY",
+    "blockers": [],
+    "readiness": "MERGE_READY"
+  }
+}
