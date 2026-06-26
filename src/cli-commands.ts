@@ -33,6 +33,8 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'workflow <json-file>', description: 'Run a governed runtime workflow composing registered tools from a local JSON fixture' },
   { name: 'ajna-workflow <json-file>', description: 'Run a read-only Ajna review or merge-readiness workflow from a local JSON fixture' },
   { name: 'mission-packet <json-file>', description: 'Build a governed agent kernel mission packet from pipeline outputs in a local JSON fixture' },
+  { name: 'audit-ledger <json-file>', description: 'Persist or replay audit ledger entries from a local JSON fixture with automatic secret redaction' },
+  { name: 'trace-store <json-file>', description: 'Persist or replay agent kernel trace frames from a local JSON fixture with lineage and invariant validation' },
   { name: 'runtime-status', description: 'Show the runtime status dashboard with tool inventory, policy, and phase summary' },
   { name: 'project-context [dir]', description: 'Build a deterministic project context packet from repository instructions, build state, and configuration' },
   {

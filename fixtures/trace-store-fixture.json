@@ -1,0 +1,48 @@
+{
+  "mode": "persist",
+  "storedAt": "2026-06-26T00:00:00Z",
+  "frames": [
+    {
+      "blockId": "AGENT-KERNEL-01",
+      "prId": "PR-AK-01",
+      "phaseId": "Phase-16G-AK-01",
+      "executionId": "exec-fixture-1",
+      "timestamp": "2026-06-26T00:00:00Z",
+      "payloadSummary": { "kind": "PLANNING", "providerReady": true },
+      "invariants": {
+        "providerInvoked": false,
+        "repoMutationAllowed": false,
+        "commandExecutionAllowed": false
+      },
+      "warnings": []
+    },
+    {
+      "blockId": "AGENT-KERNEL-02",
+      "prId": "PR-AK-02",
+      "phaseId": "Phase-16G-AK-02",
+      "executionId": "exec-fixture-1",
+      "timestamp": "2026-06-26T00:00:01Z",
+      "payloadSummary": { "kind": "WORKFLOW_VALIDATION", "providerReady": true },
+      "invariants": {
+        "providerInvoked": false,
+        "repoMutationAllowed": false,
+        "commandExecutionAllowed": false
+      },
+      "warnings": []
+    },
+    {
+      "blockId": "AGENT-KERNEL-03",
+      "prId": "PR-AK-03",
+      "phaseId": "Phase-16G-AK-03",
+      "executionId": "exec-fixture-1",
+      "timestamp": "2026-06-26T00:00:02Z",
+      "payloadSummary": { "kind": "SKILL_REGISTRY", "providerReady": true },
+      "invariants": {
+        "providerInvoked": false,
+        "repoMutationAllowed": false,
+        "commandExecutionAllowed": false
+      },
+      "warnings": []
+    }
+  ]
+}

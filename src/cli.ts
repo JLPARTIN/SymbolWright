@@ -16,7 +16,9 @@ import { renderAjnaReviewPrForFile } from './cli-ajna-review-pr.js'
 import { renderAjnaScanProfileForRepo } from './cli-ajna-scan-profile.js'
 import { findFixtureArg, renderFixtureCommand } from './cli-fixture-commands.js'
 import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
+import { renderAuditLedgerCommand } from './cli-audit-ledger.js'
 import { renderMissionPacketCommand } from './cli-mission-packet.js'
+import { renderTraceStoreCommand } from './cli-trace-store.js'
 import { renderRuntimeCiReview } from './cli-runtime-ci-review.js'
 import { renderRuntimePlan } from './cli-runtime-plan.js'
 import { renderRuntimePrNotes } from './cli-runtime-pr-notes.js'
@@ -250,6 +252,26 @@ async function main(): Promise<void> {
         process.exit(1)
       }
       console.log(renderMissionPacketCommand(fixturePath))
+      break
+    }
+
+    case 'audit-ledger': {
+      const fixturePath = rest[0]
+      if (fixturePath === undefined) {
+        console.error('Missing input JSON file: codemind audit-ledger <json-file>')
+        process.exit(1)
+      }
+      console.log(renderAuditLedgerCommand(fixturePath))
+      break
+    }
+
+    case 'trace-store': {
+      const fixturePath = rest[0]
+      if (fixturePath === undefined) {
+        console.error('Missing input JSON file: codemind trace-store <json-file>')
+        process.exit(1)
+      }
+      console.log(renderTraceStoreCommand(fixturePath))
       break
     }
 
