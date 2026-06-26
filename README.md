@@ -1,6 +1,10 @@
-# CodeMind
+<p align="center">
+  <img src="assets/codemind-logo.svg" alt="CodeMind" width="900"/>
+</p>
 
-**Standalone AI coding-agent platform for repository intelligence, safe code work, PR review, and merge-readiness.**
+<p align="center">
+  <strong>Standalone AI coding-agent platform for repository intelligence, safe code work, PR review, and merge-readiness.</strong>
+</p>
 
 CodeMind is being built as a governed coding-agent platform. It starts read-only and plan-first, then grows toward approved code edits, validation, CI diagnosis, PR preparation, and merge-readiness workflows.
 
