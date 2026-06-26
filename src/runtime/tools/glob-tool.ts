@@ -93,7 +93,7 @@ export async function executeGlobTool(
 }
 
 export const globTool: RuntimeToolDefinition = {
-  name: 'search_files' as RuntimeToolDefinition['name'],
+  name: 'glob',
   description: 'Find files matching a glob pattern in the workspace.',
   capability: 'SEARCH',
   execute: async (input, context) => executeGlobTool(parseGlobInput(input), context.cwd),

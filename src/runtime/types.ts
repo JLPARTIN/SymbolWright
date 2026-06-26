@@ -34,7 +34,13 @@ export type CodemindToolName =
   | 'github_create_pr'
   | 'pr_collaboration'
   | 'zflow_report'
+  | 'zflow_report_rollup'
   | 'zflow_report_catalog'
+  | 'glob'
+  | 'grep'
+  | 'bash'
+  | 'edit_file'
+  | 'git'
 
 export type RuntimeToolCapability =
   | 'PLAN'

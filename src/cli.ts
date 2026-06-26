@@ -50,6 +50,7 @@ import { renderApprovedRuntimeRun } from './cli-runtime-approved-run.js'
 import { renderRuntimeSearch } from './cli-runtime-search.js'
 import { renderRuntimeValidationPlan } from './cli-runtime-validation-plan.js'
 import { renderScan, scanRepo } from './cli-scan.js'
+import { runAgentCommand } from './cli-agent.js'
 
 const NOT_YET_ACTIVE = new Set<string>()
 
@@ -66,6 +67,10 @@ async function main(): Promise<void> {
 
     case 'status':
       console.log(renderStatus())
+      break
+
+    case 'agent':
+      await runAgentCommand(rest)
       break
 
     case 'plan':
