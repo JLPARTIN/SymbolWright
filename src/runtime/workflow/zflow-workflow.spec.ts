@@ -56,6 +56,8 @@ describe('runZflowWorkflow', () => {
     expect(result.mode).toBe('preview-only')
     expect(result.localOutput).toBe('completed')
     expect(result.prOutput).toBeNull()
+    expect(result.recoveryOutput).toContain('CodeMind recovery change ledger')
+    expect(result.rollbackOutput).toContain('Rollback plan: Recover Zflow preview')
     expect(fs.existsSync(path.join(workspace, 'src/generated.ts'))).toBe(false)
   })
 
@@ -69,15 +71,20 @@ describe('runZflowWorkflow', () => {
     expect(result.prOutput).toContain('Outcome: DRY_RUN')
     expect(result.collaborationOutput).toContain('CodeMind PR collaboration')
     expect(result.collaborationOutput).toContain('Outcome: DRY_RUN')
+    expect(result.recoveryOutput).toContain('Changes: 1')
+    expect(result.recoveryOutput).toContain('src/generated.ts')
+    expect(result.rollbackOutput).toContain('Delete generated file')
     expect(fs.existsSync(path.join(workspace, 'src/generated.ts'))).toBe(false)
   })
 
-  it('renders zflow result', async () => {
+  it('renders zflow result with recovery sections', async () => {
     const result = await runZflowWorkflow(request, makeWorkspace())
     const output = renderZflowResult(result)
 
     expect(output).toContain('CodeMind zflow workflow')
     expect(output).toContain('Mode: prepare-pr')
+    expect(output).toContain('CodeMind recovery change ledger')
+    expect(output).toContain('Rollback plan: Recover Zflow preview')
     expect(output).toContain('no live GitHub mutation by default')
   })
 })
