@@ -3,6 +3,9 @@ import path from 'node:path'
 
 import { getCodemindFoundationSnapshot } from './codemind-foundation.js'
 import { getCompletedRuntimeBuildPhaseCount, RUNTIME_BUILD_PHASES } from './runtime/runtime-build-state.js'
+import { resolveCodemindConfig, validateCodemindConfig } from './config/codemind-config.js'
+import { assembleAgentTools } from './runtime/tools/tool-assembly.js'
+import { resolveStoragePaths } from './storage/storage-paths.js'
 
 export const DOCTOR_BLOCK_ID = 'CODEMIND-DOCTOR-01' as const
 
@@ -95,6 +98,39 @@ function checkSourceDirectory(workspaceRoot: string): DoctorCheck {
   return { name: 'Source directory', status: 'FAIL', detail: 'src/ missing' }
 }
 
+function checkApiKey(): DoctorCheck {
+  const config = resolveCodemindConfig()
+  const validation = validateCodemindConfig(config)
+  if (validation.redactedSummary.hasApiKey) {
+    return { name: 'API key', status: 'PASS', detail: `Present (${validation.redactedSummary.apiKeyPreview ?? 'set'})` }
+  }
+  return { name: 'API key', status: 'WARN', detail: 'Missing — set ANTHROPIC_API_KEY or add to config' }
+}
+
+function checkToolRegistry(): DoctorCheck {
+  const tools = assembleAgentTools()
+  if (tools.length >= 30) {
+    return { name: 'Tool registry', status: 'PASS', detail: `${tools.length} tools registered` }
+  }
+  return { name: 'Tool registry', status: 'WARN', detail: `Only ${tools.length} tools (expected 30+)` }
+}
+
+function checkSessionsDir(workspaceRoot: string): DoctorCheck {
+  const paths = resolveStoragePaths(workspaceRoot)
+  if (fs.existsSync(paths.sessionsDir)) {
+    return { name: 'Sessions directory', status: 'PASS', detail: paths.sessionsDir }
+  }
+  return { name: 'Sessions directory', status: 'WARN', detail: 'Not yet created (will be on first run)' }
+}
+
+function checkMemoryDir(workspaceRoot: string): DoctorCheck {
+  const memDir = path.join(workspaceRoot, '.codemind', 'memory')
+  if (fs.existsSync(memDir)) {
+    return { name: 'Project memory', status: 'PASS', detail: memDir }
+  }
+  return { name: 'Project memory', status: 'WARN', detail: 'Not yet created (will be on first run)' }
+}
+
 export function runDoctor(workspaceRoot: string): DoctorReport {
   const checks: DoctorCheck[] = [
     checkNodeVersion(),
@@ -104,6 +140,10 @@ export function runDoctor(workspaceRoot: string): DoctorReport {
     checkSourceDirectory(workspaceRoot),
     checkRuntimePhases(),
     checkSafetyPosture(),
+    checkApiKey(),
+    checkToolRegistry(),
+    checkSessionsDir(workspaceRoot),
+    checkMemoryDir(workspaceRoot),
   ]
 
   const passCount = checks.filter((c) => c.status === 'PASS').length

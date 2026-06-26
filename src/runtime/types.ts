@@ -41,6 +41,10 @@ export type CodemindToolName =
   | 'bash'
   | 'edit_file'
   | 'git'
+  | 'swarm_dispatch'
+  | 'run_tests'
+  | 'run_typecheck'
+  | 'run_lint'
 
 export type RuntimeToolCapability =
   | 'PLAN'

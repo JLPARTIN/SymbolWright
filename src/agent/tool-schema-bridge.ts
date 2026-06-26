@@ -236,6 +236,27 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       },
       required: ['context'],
     },
+    swarm_dispatch: {
+      type: 'object',
+      properties: {
+        agentType: { type: 'string', description: 'Swarm agent type: investigator, reporter, analyzer, coder, reviewer' },
+        goal: { type: 'string', description: 'Goal for the swarm agent to accomplish' },
+        context: { type: 'string', description: 'Additional context for the agent' },
+      },
+      required: ['agentType', 'goal'],
+    },
+    run_tests: {
+      type: 'object',
+      properties: {},
+    },
+    run_typecheck: {
+      type: 'object',
+      properties: {},
+    },
+    run_lint: {
+      type: 'object',
+      properties: {},
+    },
   }
 
   return schemaMap[tool.name] ?? {
