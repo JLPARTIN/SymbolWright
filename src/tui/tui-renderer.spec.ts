@@ -6,6 +6,8 @@ import {
   renderTuiStatusBar,
   renderTuiSwarmPanel,
   renderTuiAjnaPanel,
+  renderTuiToolPanel,
+  renderTuiWorkspace,
   renderTuiBatchOutput,
 } from './tui-renderer.js'
 
@@ -226,6 +228,83 @@ describe('renderTuiAjnaPanel', () => {
     }
     const output = renderTuiAjnaPanel(state)
     expect(output).toContain('Ajna Review Intelligence:')
+  })
+})
+
+describe('renderTuiToolPanel', () => {
+  it('shows empty tool console state', () => {
+    expect(renderTuiToolPanel(baseState())).toBe('Tools: No active tools.')
+  })
+
+  it('renders active tool status output', () => {
+    const state: TuiState = {
+      ...baseState(),
+      activeTools: [
+        { toolName: 'grep', startedAt: 1, elapsedMs: 24, status: 'completed', output: '2 matches' },
+      ],
+    }
+
+    expect(renderTuiToolPanel(state)).toContain('[completed] grep (24ms) — 2 matches')
+  })
+})
+
+describe('renderTuiWorkspace', () => {
+  it('renders a full CodeMind workspace shell', () => {
+    const output = renderTuiWorkspace(baseState(), {
+      mission: 'modernize ProofLine',
+      commandHistory: ['codemind scan', 'codemind runtime run modernize --read-only'],
+      width: 32,
+    })
+
+    expect(output).toContain('CodeMind Workspace')
+    expect(output).toContain('Mission Console:')
+    expect(output).toContain('> modernize ProofLine')
+    expect(output).toContain('Command History:')
+    expect(output).toContain('1. codemind scan')
+    expect(output).toContain('Agent Stream:')
+    expect(output).toContain('Tools: No active tools.')
+    expect(output).toContain('HiveMind: No swarm agents active.')
+    expect(output).toContain('Ajna: Inactive')
+    expect(output).toContain('Approval: none pending')
+  })
+
+  it('renders live workspace state for stream, tools, swarm, Ajna, and approval', () => {
+    const state: TuiState = {
+      ...baseState(),
+      streaming: true,
+      streamBuffer: 'Analyzing repository...',
+      activeTools: [
+        { toolName: 'read_file', startedAt: 1, elapsedMs: 10, status: 'running' },
+      ],
+      swarmAgents: [
+        { agentId: 'swarm-1', agentType: 'investigator', status: 'active', task: 'map src/' },
+      ],
+      ajna: {
+        active: true,
+        riskLevel: 'MODERATE',
+        mergeDecision: 'NEEDS_OPERATOR_REVIEW',
+        findings: ['Protected path touched'],
+        lastReviewedAt: '2026-06-26T00:00:00.000Z',
+      },
+      approvalPending: true,
+      approvalPrompt: 'Approve write intent?',
+    }
+
+    const output = renderTuiWorkspace(state, { mission: 'ship workspace' })
+
+    expect(output).toContain('streaming...')
+    expect(output).toContain('Analyzing repository...')
+    expect(output).toContain('[running] read_file')
+    expect(output).toContain('investigator (swarm-1): active')
+    expect(output).toContain('Risk Level: MODERATE')
+    expect(output).toContain('Approval: Approve write intent?')
+  })
+
+  it('renders mission placeholder and empty history when no mission is supplied', () => {
+    const output = renderTuiWorkspace(baseState())
+
+    expect(output).toContain('Awaiting mission input')
+    expect(output).toContain('No commands yet')
   })
 })
 
