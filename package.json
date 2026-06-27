@@ -6,7 +6,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "codemind": "dist/cli.js"
+    "codemind": "dist/cli.js",
+    "codemind-workspace": "dist/cli-workspace-bin.js"
   },
   "files": [
     "dist"
