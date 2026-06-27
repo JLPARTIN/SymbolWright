@@ -44,7 +44,7 @@ const validApproval: RuntimeApproval = {
 const wrongScopeApproval: RuntimeApproval = {
   ticketId: 'WRITE-TICKET-002',
   approvedBy: 'operator',
-  scopes: ['file:read'],
+  scopes: ['github:write'],
 }
 
 function makeRequest(overrides: Partial<LocalFileWriteRequest> = {}): LocalFileWriteRequest {

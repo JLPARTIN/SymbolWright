@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { assembleAgentTools, assembleAgentToolsByCapability, getToolByName } from './tool-assembly.js'
+import { assembleAgentTools, assembleAgentToolsByCapability, getToolByName, assertToolAssemblyIntegrity, DYNAMICALLY_WIRED_TOOLS } from './tool-assembly.js'
+import { ALL_CODEMIND_TOOL_NAMES } from '../types.js'
 
 describe('tool-assembly', () => {
   describe('assembleAgentTools', () => {
@@ -50,7 +51,7 @@ describe('tool-assembly', () => {
     })
 
     it('returns empty for non-existent capability', () => {
-      const tools = assembleAgentToolsByCapability(['NONEXISTENT'])
+      const tools = assembleAgentToolsByCapability(['NONEXISTENT' as never])
       expect(tools).toHaveLength(0)
     })
   })
@@ -65,6 +66,31 @@ describe('tool-assembly', () => {
     it('returns undefined for unknown tool', () => {
       const tool = getToolByName('totally_fake_tool')
       expect(tool).toBeUndefined()
+    })
+  })
+
+  describe('assertToolAssemblyIntegrity', () => {
+    it('passes for the current assembly', () => {
+      expect(() => assertToolAssemblyIntegrity()).not.toThrow()
+    })
+
+    it('ALL_TOOLS covers every non-dynamic CodemindToolName', () => {
+      const tools = assembleAgentTools()
+      const assembledNames = new Set(tools.map((t) => t.name))
+      const dynamicSet = new Set<string>(DYNAMICALLY_WIRED_TOOLS)
+
+      for (const name of ALL_CODEMIND_TOOL_NAMES) {
+        if (!dynamicSet.has(name)) {
+          expect(assembledNames.has(name), `Missing tool: ${name}`).toBe(true)
+        }
+      }
+    })
+
+    it('DYNAMICALLY_WIRED_TOOLS are valid CodemindToolNames', () => {
+      const allNamesSet = new Set<string>(ALL_CODEMIND_TOOL_NAMES)
+      for (const name of DYNAMICALLY_WIRED_TOOLS) {
+        expect(allNamesSet.has(name), `Invalid dynamic tool: ${name}`).toBe(true)
+      }
     })
   })
 })

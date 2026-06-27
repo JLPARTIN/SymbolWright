@@ -5,6 +5,7 @@ import { createApprovalTicket } from './approval-ticket.js'
 import { createAuditEvent, renderAuditEvents, RuntimeAuditLog } from '../audit/runtime-audit-log.js'
 import { createApprovedRuntimeContext, createApprovedRuntimeRegistry } from '../runtime-approved-registry.js'
 import { createDefaultRuntimePolicy } from '../policy/runtime-policy.js'
+import { isValidApprovalScope, ALL_APPROVAL_SCOPES } from '../types.js'
 
 describe('approval gates', () => {
   it('requires approval before gated execution', () => {
@@ -106,6 +107,25 @@ describe('approval-gated tools', () => {
       { command: 'rm -rf .' },
       createApprovedRuntimeContext(approval),
     )).rejects.toThrow('not allowlisted')
+  })
+})
+
+describe('isValidApprovalScope', () => {
+  it('returns true for all known scopes', () => {
+    for (const scope of ALL_APPROVAL_SCOPES) {
+      expect(isValidApprovalScope(scope)).toBe(true)
+    }
+  })
+
+  it('returns false for unknown strings', () => {
+    expect(isValidApprovalScope('runtime:test')).toBe(false)
+    expect(isValidApprovalScope('file:read')).toBe(false)
+    expect(isValidApprovalScope('')).toBe(false)
+    expect(isValidApprovalScope('APPLY_EDIT')).toBe(false)
+  })
+
+  it('ALL_APPROVAL_SCOPES contains exactly 5 scopes', () => {
+    expect(ALL_APPROVAL_SCOPES).toHaveLength(5)
   })
 })
 

@@ -72,10 +72,29 @@ export type RuntimeToolCapability =
   | 'ZFLOW_REPORT'
   | 'ZFLOW_REPORT_CATALOG'
 
+export type RuntimeApprovalScope =
+  | 'file:write'
+  | 'github:write'
+  | 'command:validate'
+  | 'apply_edit'
+  | 'command_dry_run'
+
+export const ALL_APPROVAL_SCOPES: readonly RuntimeApprovalScope[] = [
+  'file:write',
+  'github:write',
+  'command:validate',
+  'apply_edit',
+  'command_dry_run',
+] as const
+
+export function isValidApprovalScope(scope: string): scope is RuntimeApprovalScope {
+  return (ALL_APPROVAL_SCOPES as readonly string[]).includes(scope)
+}
+
 export interface RuntimeApproval {
   readonly ticketId: string
   readonly approvedBy: string
-  readonly scopes: readonly string[]
+  readonly scopes: readonly RuntimeApprovalScope[]
 }
 
 export interface RuntimePolicySnapshot {
@@ -118,3 +137,50 @@ export interface RuntimeLoopResult {
   readonly finalMessage: string
   readonly iterations: number
 }
+
+export const ALL_CODEMIND_TOOL_NAMES = [
+  'plan_goal',
+  'list_files',
+  'read_file',
+  'search_files',
+  'propose_edit',
+  'validation_plan',
+  'ci_review',
+  'pr_notes',
+  'apply_edit_gated',
+  'command_dry_run_gated',
+  'github_pr_fixture_review',
+  'github_ci_fixture_review',
+  'live_read_policy_handshake',
+  'live_read_client_fixture',
+  'github_live_read_pr',
+  'github_live_read_ci',
+  'ajna_live_read_review',
+  'ajna_live_read_merge_readiness',
+  'operator_review_packet',
+  'write_intent_plan',
+  'local_file_write',
+  'apply_patch',
+  'validation_command_gate',
+  'pr_preparation',
+  'github_write_proposal',
+  'github_write_gate',
+  'github_create_pr',
+  'pr_collaboration',
+  'zflow_report',
+  'zflow_report_rollup',
+  'zflow_report_catalog',
+  'glob',
+  'grep',
+  'bash',
+  'edit_file',
+  'git',
+  'swarm_dispatch',
+  'run_tests',
+  'run_typecheck',
+  'run_lint',
+] as const satisfies readonly CodemindToolName[]
+
+type _AssertAllToolNames = CodemindToolName extends (typeof ALL_CODEMIND_TOOL_NAMES)[number] ? true : never
+const _allToolNamesCheck: _AssertAllToolNames = true
+void _allToolNamesCheck

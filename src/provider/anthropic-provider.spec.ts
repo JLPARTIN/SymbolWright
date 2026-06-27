@@ -170,7 +170,7 @@ describe('anthropic-provider', () => {
           name: 'read_file',
           description: 'Read a file',
           inputSchema: {
-            type: 'object',
+            type: 'object' as const,
             properties: { path: { type: 'string' } },
             required: ['path'],
           },

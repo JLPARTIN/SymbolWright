@@ -10,6 +10,7 @@ import { createGitHubLiveReadRuntimeRegistry } from '../runtime-github-live-read
 import type { RuntimeToolContext } from '../types.js'
 
 import { FakeLiveReadClient } from './fake-live-read-client.js'
+import type { GitHubHttpClient } from './github-http-client.js'
 import { GitHubLiveReadClient } from './github-live-read-client.js'
 import { GitHubLiveReadPolicyWrapper } from './github-live-read-policy-wrapper.js'
 
@@ -65,6 +66,90 @@ describe('GitHubLiveReadClient', () => {
   it('throws not-yet-wired error for file read', async () => {
     const client = new GitHubLiveReadClient()
     await expect(client.getRepositoryFile('owner', 'repo', 'README.md', 'main')).rejects.toThrow('not yet wired')
+  })
+})
+
+describe('GitHubLiveReadClient with mock HTTP', () => {
+  it('rejects malformed PR response body (string)', async () => {
+    const mockHttp: GitHubHttpClient = {
+      get: async () => ({ status: 200, body: 'not an object' }),
+    }
+    const client = new GitHubLiveReadClient(mockHttp)
+    await expect(client.getPullRequestEvidence('o', 'r', 1))
+      .rejects.toThrow('not an object')
+  })
+
+  it('rejects null PR response body', async () => {
+    const mockHttp: GitHubHttpClient = {
+      get: async () => ({ status: 200, body: null }),
+    }
+    const client = new GitHubLiveReadClient(mockHttp)
+    await expect(client.getPullRequestEvidence('o', 'r', 1))
+      .rejects.toThrow('not an object')
+  })
+
+  it('extracts PR evidence from valid response', async () => {
+    const mockHttp: GitHubHttpClient = {
+      get: async (urlPath: string) => {
+        if (urlPath.includes('/files')) {
+          return { status: 200, body: [{ filename: 'src/index.ts' }] }
+        }
+        return {
+          status: 200,
+          body: {
+            number: 42,
+            title: 'Test PR',
+            state: 'open',
+            merged: false,
+            base: { ref: 'main' },
+            head: { ref: 'feature' },
+            additions: 10,
+            deletions: 5,
+          },
+        }
+      },
+    }
+    const client = new GitHubLiveReadClient(mockHttp)
+    const evidence = await client.getPullRequestEvidence('owner', 'repo', 42)
+    expect(evidence.number).toBe(42)
+    expect(evidence.title).toBe('Test PR')
+    expect(evidence.changedFiles).toEqual(['src/index.ts'])
+  })
+
+  it('handles missing base/head gracefully', async () => {
+    const mockHttp: GitHubHttpClient = {
+      get: async (urlPath: string) => {
+        if (urlPath.includes('/files')) {
+          return { status: 200, body: [] }
+        }
+        return {
+          status: 200,
+          body: { number: 1, title: 'No refs', state: 'open', merged: false },
+        }
+      },
+    }
+    const client = new GitHubLiveReadClient(mockHttp)
+    const evidence = await client.getPullRequestEvidence('o', 'r', 1)
+    expect(evidence.base).toBe('main')
+    expect(evidence.head).toBe('unknown')
+  })
+
+  it('rejects malformed workflow response body', async () => {
+    const mockHttp: GitHubHttpClient = {
+      get: async () => ({ status: 200, body: 'bad' }),
+    }
+    const client = new GitHubLiveReadClient(mockHttp)
+    await expect(client.getWorkflowEvidence('o', 'r', 1))
+      .rejects.toThrow('not an object')
+  })
+
+  it('rejects null file contents response body', async () => {
+    const mockHttp: GitHubHttpClient = {
+      get: async () => ({ status: 200, body: null }),
+    }
+    const client = new GitHubLiveReadClient(mockHttp)
+    await expect(client.getRepositoryFile('o', 'r', 'f.txt', 'main'))
+      .rejects.toThrow('not an object')
   })
 })
 

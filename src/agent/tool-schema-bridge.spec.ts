@@ -6,6 +6,7 @@ import {
   extractProviderTools,
 } from './tool-schema-bridge.js'
 import type { RuntimeToolDefinition, RuntimePolicySnapshot } from '../runtime/types.js'
+import { ALL_CODEMIND_TOOL_NAMES } from '../runtime/types.js'
 
 function makeTool(
   name: string,
@@ -153,12 +154,47 @@ describe('tool-schema-bridge', () => {
       expect(schema.required).toContain('reports')
     })
 
-    it('returns generic schema for unknown tools', () => {
+    it('throws for tools without registered schema', () => {
       const tool = makeTool('unknown_tool' as string, 'READ')
-      const schema = buildToolInputSchema(tool)
 
-      expect(schema.type).toBe('object')
-      expect(schema.properties).toHaveProperty('input')
+      expect(() => buildToolInputSchema(tool)).toThrow('no registered input schema')
+    })
+
+    it('every CodemindToolName has a registered schema', () => {
+      for (const name of ALL_CODEMIND_TOOL_NAMES) {
+        const tool = makeTool(name, 'READ')
+        const schema = buildToolInputSchema(tool)
+
+        expect(schema.type).toBe('object')
+        expect(schema.properties).toBeDefined()
+      }
+    })
+
+    it('every schema with required fields has matching properties', () => {
+      const NO_INPUT_TOOLS = new Set(['run_tests', 'run_typecheck', 'run_lint'])
+
+      for (const name of ALL_CODEMIND_TOOL_NAMES) {
+        const tool = makeTool(name, 'READ')
+        const schema = buildToolInputSchema(tool)
+
+        if (NO_INPUT_TOOLS.has(name)) {
+          expect(Object.keys(schema.properties)).toHaveLength(0)
+        } else {
+          expect(
+            Object.keys(schema.properties).length,
+            `${name} schema should have at least one property`,
+          ).toBeGreaterThan(0)
+        }
+
+        if (schema.required !== undefined) {
+          for (const field of schema.required) {
+            expect(
+              schema.properties,
+              `${name}: required field "${field}" missing from properties`,
+            ).toHaveProperty(field)
+          }
+        }
+      }
     })
   })
 

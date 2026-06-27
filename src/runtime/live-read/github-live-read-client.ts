@@ -5,6 +5,13 @@ import type { GitHubHttpClient } from './github-http-client.js'
 import { redactGitHubContent } from './github-live-read-redaction.js'
 import type { RepositoryFileResult, RuntimeLiveReadClient } from './runtime-live-read-client.js'
 
+function assertGitHubApiObject(body: unknown, context: string): Record<string, unknown> {
+  if (typeof body !== 'object' || body === null) {
+    throw new Error(`GitHub API response is not an object (${context})`)
+  }
+  return body as Record<string, unknown>
+}
+
 export class GitHubLiveReadClient implements RuntimeLiveReadClient {
   readonly provider = 'github'
   private readonly httpClient: GitHubHttpClient | undefined
@@ -27,9 +34,13 @@ export class GitHubLiveReadClient implements RuntimeLiveReadClient {
       throw new Error(`GitHub API returned ${response.status} for PR ${owner}/${repo}#${prNumber}`)
     }
 
-    const pr = response.body as Record<string, unknown>
-    const base = pr['base'] as Record<string, unknown> | undefined
-    const head = pr['head'] as Record<string, unknown> | undefined
+    const pr = assertGitHubApiObject(response.body, `PR ${owner}/${repo}#${prNumber}`)
+    const base = typeof pr['base'] === 'object' && pr['base'] !== null
+      ? pr['base'] as Record<string, unknown>
+      : undefined
+    const head = typeof pr['head'] === 'object' && pr['head'] !== null
+      ? pr['head'] as Record<string, unknown>
+      : undefined
 
     const filesResponse = await this.httpClient.get(`/repos/${owner}/${repo}/pulls/${prNumber}/files`)
     const files = filesResponse.status === 200 && Array.isArray(filesResponse.body)
@@ -63,10 +74,12 @@ export class GitHubLiveReadClient implements RuntimeLiveReadClient {
       throw new Error(`GitHub API returned ${runResponse.status} for workflow run ${owner}/${repo}#${runId}`)
     }
 
-    const run = runResponse.body as Record<string, unknown>
+    const run = assertGitHubApiObject(runResponse.body, `workflow run ${owner}/${repo}#${runId}`)
 
     const jobsResponse = await this.httpClient.get(`/repos/${owner}/${repo}/actions/runs/${runId}/jobs`)
-    const jobsBody = jobsResponse.status === 200 ? jobsResponse.body as Record<string, unknown> : {}
+    const jobsBody = jobsResponse.status === 200
+      ? assertGitHubApiObject(jobsResponse.body, `workflow jobs ${owner}/${repo}#${runId}`)
+      : {}
     const rawJobs = Array.isArray(jobsBody['jobs']) ? jobsBody['jobs'] as Array<Record<string, unknown>> : []
 
     return {
@@ -97,7 +110,7 @@ export class GitHubLiveReadClient implements RuntimeLiveReadClient {
       throw new Error(`GitHub API returned ${response.status} for file ${owner}/${repo}/${filePath}@${ref}`)
     }
 
-    const body = response.body as Record<string, unknown>
+    const body = assertGitHubApiObject(response.body, `file ${owner}/${repo}/${filePath}@${ref}`)
     const encoding = String(body['encoding'] ?? '')
     const rawContent = String(body['content'] ?? '')
 
