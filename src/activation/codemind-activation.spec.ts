@@ -6,6 +6,7 @@ import {
   activateSubsystems,
   runActivatedAgent,
   verifySubsystemHealth,
+  renderSubsystemHealthReport,
   type CodemindActivationConfig,
 } from './codemind-activation.js'
 
@@ -303,6 +304,71 @@ describe('verifySubsystemHealth', () => {
     const policyCheck = report.checks.find((c) => c.name === 'Policy')
     expect(policyCheck).toBeDefined()
     expect(policyCheck!.detail).toContain('READ_ONLY')
+  })
+})
+
+describe('renderSubsystemHealthReport', () => {
+  it('renders healthy report with PASS indicators', () => {
+    const config = createTestConfig()
+    const subsystems = activateSubsystems(config)
+    const report = verifySubsystemHealth(subsystems)
+    const output = renderSubsystemHealthReport(report)
+
+    expect(output).toContain('Subsystem Health Report')
+    expect(output).toContain('[PASS]')
+    expect(output).toContain('HEALTHY')
+  })
+
+  it('includes pass/total summary', () => {
+    const config = createTestConfig()
+    const subsystems = activateSubsystems(config)
+    const report = verifySubsystemHealth(subsystems)
+    const output = renderSubsystemHealthReport(report)
+
+    expect(output).toContain(`Passed: ${report.checks.length}/${report.checks.length}`)
+  })
+
+  it('renders FAIL for unhealthy checks', () => {
+    const report = {
+      checks: [
+        { name: 'Provider', healthy: true, detail: 'ok' },
+        { name: 'Tools', healthy: false, detail: 'missing' },
+      ],
+      healthy: false,
+    }
+    const output = renderSubsystemHealthReport(report)
+
+    expect(output).toContain('[FAIL] Tools')
+    expect(output).toContain('UNHEALTHY')
+    expect(output).toContain('Passed: 1/2')
+  })
+})
+
+describe('activateSubsystems eventBus', () => {
+  it('creates an event bus', () => {
+    const config = createTestConfig()
+    const subsystems = activateSubsystems(config)
+
+    expect(subsystems.eventBus).toBeDefined()
+  })
+
+  it('emits session_lifecycle event on activation', () => {
+    const config = createTestConfig()
+    const subsystems = activateSubsystems(config)
+    const events = subsystems.eventBus.getEvents('session_lifecycle')
+
+    expect(events).toHaveLength(1)
+    expect(events[0]!.action).toBe('activate_subsystems')
+  })
+
+  it('emits health_check event on verifySubsystemHealth', () => {
+    const config = createTestConfig()
+    const subsystems = activateSubsystems(config)
+    verifySubsystemHealth(subsystems)
+
+    const events = subsystems.eventBus.getEvents('health_check')
+    expect(events).toHaveLength(1)
+    expect(events[0]!.action).toBe('verify_subsystem_health')
   })
 })
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { assertApprovalGate } from './approval-gate.js'
+import { assertApprovalGate, formatApprovalSummary, toWorkspaceRelativePath } from './approval-gate.js'
 import { createApprovalTicket } from './approval-ticket.js'
 import { createAuditEvent, renderAuditEvents, RuntimeAuditLog } from '../audit/runtime-audit-log.js'
 import { createApprovedRuntimeContext, createApprovedRuntimeRegistry } from '../runtime-approved-registry.js'
@@ -136,5 +136,66 @@ describe('RuntimeAuditLog', () => {
 
     expect(log.list()).toHaveLength(1)
     expect(renderAuditEvents(log.list())).toContain('ALLOWED test')
+  })
+})
+
+describe('createApprovalTicket edge cases', () => {
+  it('throws on whitespace-only ticketId', () => {
+    expect(() => createApprovalTicket({
+      ticketId: '   ',
+      approvedBy: 'operator',
+      scopes: ['file:write'],
+      reason: 'test',
+    })).toThrow('ticket id is required')
+  })
+
+  it('throws on whitespace-only approvedBy', () => {
+    expect(() => createApprovalTicket({
+      ticketId: 'T-1',
+      approvedBy: '   ',
+      scopes: ['file:write'],
+      reason: 'test',
+    })).toThrow('approver is required')
+  })
+
+  it('trims and defaults empty reason', () => {
+    const ticket = createApprovalTicket({
+      ticketId: 'T-1',
+      approvedBy: 'operator',
+      scopes: ['file:write'],
+      reason: '   ',
+    })
+    expect(ticket.reason).toBe('operator-approved execution gate')
+  })
+
+  it('defaults createdAt to epoch ISO string', () => {
+    const ticket = createApprovalTicket({
+      ticketId: 'T-1',
+      approvedBy: 'operator',
+      scopes: ['file:write'],
+      reason: 'test',
+    })
+    expect(ticket.createdAt).toBe(new Date(0).toISOString())
+  })
+})
+
+describe('formatApprovalSummary', () => {
+  it('renders all approval fields', () => {
+    const output = formatApprovalSummary({
+      ticketId: 'TKT-42',
+      approvedBy: 'admin',
+      scopes: ['file:write', 'github:write'],
+    })
+
+    expect(output).toContain('Ticket: TKT-42')
+    expect(output).toContain('Approved by: admin')
+    expect(output).toContain('file:write, github:write')
+  })
+})
+
+describe('toWorkspaceRelativePath', () => {
+  it('resolves relative path', () => {
+    const result = toWorkspaceRelativePath(process.cwd(), 'src/index.ts')
+    expect(result).toBe('src/index.ts')
   })
 })

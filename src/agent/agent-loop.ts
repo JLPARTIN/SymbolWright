@@ -149,6 +149,7 @@ function toolCallsToAssistantMessage(
   return { role: 'assistant', content }
 }
 
+/** Runs the agent loop: streams provider responses, executes tools, and accumulates results. */
 export async function runAgentLoop(
   provider: LLMProvider,
   userMessage: string,

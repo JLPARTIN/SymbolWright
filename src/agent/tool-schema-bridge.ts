@@ -2,8 +2,10 @@ import type { RuntimeToolDefinition, RuntimePolicySnapshot, CodemindRuntimeMode 
 import type { ProviderToolDefinition, ProviderToolInputSchema } from '../provider/provider.types.js'
 import { assertValidPolicy } from '../runtime/policy/runtime-policy.js'
 
+/** Alias for the provider's tool input schema type. */
 export type ToolInputSchema = ProviderToolInputSchema
 
+/** Pairs a provider-facing tool definition with its runtime implementation. */
 export interface BridgedToolDefinition {
   readonly providerTool: ProviderToolDefinition
   readonly runtimeTool: RuntimeToolDefinition
@@ -38,6 +40,7 @@ function isToolAllowedByMode(
   }
 }
 
+/** Returns the JSON Schema for a tool's input parameters. */
 export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSchema {
   const schemaMap: Partial<Record<string, ToolInputSchema>> = {
     plan_goal: {
@@ -430,6 +433,7 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
   return schema
 }
 
+/** Filters tools by policy mode and bridges them to provider format. */
 export function bridgeToolsForProvider(
   tools: readonly RuntimeToolDefinition[],
   policy: RuntimePolicySnapshot,
@@ -447,6 +451,7 @@ export function bridgeToolsForProvider(
     }))
 }
 
+/** Extracts the provider-facing tool definitions from bridged tools. */
 export function extractProviderTools(
   bridgedTools: readonly BridgedToolDefinition[],
 ): readonly ProviderToolDefinition[] {

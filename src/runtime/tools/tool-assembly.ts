@@ -82,10 +82,12 @@ export const DYNAMICALLY_WIRED_TOOLS: readonly CodemindToolName[] = [
   'ajna_live_read_merge_readiness',
 ] as const
 
+/** Returns all statically-wired runtime tools. */
 export function assembleAgentTools(): readonly RuntimeToolDefinition[] {
   return ALL_TOOLS
 }
 
+/** Returns tools filtered to the given capability set. */
 export function assembleAgentToolsByCapability(
   capabilities: readonly RuntimeToolCapability[],
 ): readonly RuntimeToolDefinition[] {
@@ -93,10 +95,12 @@ export function assembleAgentToolsByCapability(
   return ALL_TOOLS.filter((tool) => allowed.has(tool.capability))
 }
 
+/** Looks up a tool by name, returning undefined if not found. */
 export function getToolByName(name: string): RuntimeToolDefinition | undefined {
   return ALL_TOOLS.find((tool) => tool.name === name)
 }
 
+/** Throws if any tool name is duplicated or missing from the type union. */
 export function assertToolAssemblyIntegrity(): void {
   const names = ALL_TOOLS.map((t) => t.name)
   const nameSet = new Set(names)

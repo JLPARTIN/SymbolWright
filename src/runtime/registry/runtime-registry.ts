@@ -1,5 +1,6 @@
 import type { CodemindToolName, RuntimeToolDefinition } from '../types.js'
 
+/** Map-based registry of runtime tools with fail-fast getOrThrow. */
 export class RuntimeRegistry {
   private readonly entries = new Map<CodemindToolName, RuntimeToolDefinition>()
 
@@ -34,6 +35,7 @@ export class RuntimeRegistry {
   }
 }
 
+/** Creates a RuntimeRegistry populated with the given tool definitions. */
 export function createRuntimeRegistry(
   entries: readonly RuntimeToolDefinition[] = [],
 ): RuntimeRegistry {

@@ -15,7 +15,9 @@ import { runAjnaLiveReview, type AjnaLiveReviewInput, type AjnaLiveReviewResult 
 import { evaluateAjnaMergeGate, type AjnaMergeGateResult } from '../ajna/ajna-merge-gate.js'
 import { createWiredSwarmDispatchTool } from '../runtime/tools/swarm-dispatch-tool.js'
 import { assertValidPolicy } from '../runtime/policy/runtime-policy.js'
+import { createRuntimeEventBus, type RuntimeEventBus } from '../runtime/observability/runtime-event-bus.js'
 
+/** Configuration for activating all CodeMind subsystems. */
 export interface CodemindActivationConfig {
   readonly provider: LLMProvider
   readonly tools: readonly RuntimeToolDefinition[]
@@ -27,6 +29,7 @@ export interface CodemindActivationConfig {
   readonly onTuiUpdate?: (state: TuiState) => void
 }
 
+/** Result of running the activated agent — includes agent result, dispatches, and TUI state. */
 export interface CodemindActivationResult {
   readonly agentResult: AgentLoopResult
   readonly swarmDispatches: readonly SwarmDispatchResult[]
@@ -34,6 +37,7 @@ export interface CodemindActivationResult {
   readonly tuiState: TuiState
 }
 
+/** All wired subsystems produced by activation. */
 export interface CodemindSubsystems {
   readonly provider: LLMProvider
   readonly registry: HiveMindRegistry
@@ -42,8 +46,10 @@ export interface CodemindSubsystems {
   readonly tuiState: TuiState
   readonly tools: readonly RuntimeToolDefinition[]
   readonly toolContext: RuntimeToolContext
+  readonly eventBus: RuntimeEventBus
 }
 
+/** Validates policy, wires registry/dispatcher/TUI/event-bus, and returns subsystems. */
 export function activateSubsystems(config: CodemindActivationConfig): CodemindSubsystems {
   assertValidPolicy(config.toolContext.policy)
   const sessionId = config.sessionId ?? `cm-${Date.now()}`
@@ -70,6 +76,14 @@ export function activateSubsystems(config: CodemindActivationConfig): CodemindSu
     'interactive',
   )
 
+  const eventBus = createRuntimeEventBus()
+  eventBus.emit({
+    category: 'session_lifecycle',
+    action: 'activate_subsystems',
+    timestamp: new Date().toISOString(),
+    detail: `Session ${sessionId} activated with ${config.tools.length} tools`,
+  })
+
   return {
     provider: config.provider,
     registry,
@@ -78,9 +92,11 @@ export function activateSubsystems(config: CodemindActivationConfig): CodemindSu
     tuiState,
     tools: config.tools,
     toolContext: config.toolContext,
+    eventBus,
   }
 }
 
+/** Activates subsystems and runs the full agent loop with TUI tracking. */
 export async function runActivatedAgent(
   config: CodemindActivationConfig,
   userMessage: string,
@@ -150,6 +166,7 @@ export async function runActivatedAgent(
   }
 }
 
+/** Dispatches a swarm task through the HiveMind dispatcher with TUI events. */
 export async function dispatchSwarmTask(
   subsystems: CodemindSubsystems,
   request: SwarmDispatchRequest,
@@ -173,6 +190,7 @@ export async function dispatchSwarmTask(
   return result
 }
 
+/** Runs an Ajna code review and emits a TUI event with the result. */
 export async function runAjnaReview(
   input: AjnaLiveReviewInput,
   onTuiEvent?: (event: TuiEvent) => void,
@@ -187,6 +205,7 @@ export async function runAjnaReview(
   return result
 }
 
+/** Evaluates whether a PR is ready to merge via the Ajna merge gate. */
 export async function checkMergeReadiness(
   input: AjnaLiveReviewInput,
 ): Promise<AjnaMergeGateResult> {
@@ -208,6 +227,7 @@ function estimateCost(inputTokens: number, outputTokens: number): number {
   return (inputTokens * inputCostPer1M + outputTokens * outputCostPer1M) / 1_000_000
 }
 
+/** Runs health checks on all subsystems and returns a report. */
 export function verifySubsystemHealth(subsystems: CodemindSubsystems): SubsystemHealthReport {
   const checks: SubsystemHealthCheck[] = []
 
@@ -250,15 +270,38 @@ export function verifySubsystemHealth(subsystems: CodemindSubsystems): Subsystem
 
   const healthy = checks.every((c) => c.healthy)
 
+  subsystems.eventBus.emit({
+    category: 'health_check',
+    action: 'verify_subsystem_health',
+    timestamp: new Date().toISOString(),
+    detail: healthy ? 'All subsystems healthy' : 'One or more subsystems unhealthy',
+    metadata: { checkCount: checks.length, healthy },
+  })
+
   return { checks, healthy }
 }
 
+/** Renders a health report with [PASS]/[FAIL] indicators and summary counts. */
+export function renderSubsystemHealthReport(report: SubsystemHealthReport): string {
+  const lines = [
+    'Subsystem Health Report',
+    '',
+    ...report.checks.map((c) => `  ${c.healthy ? '[PASS]' : '[FAIL]'} ${c.name}: ${c.detail}`),
+    '',
+    `Status: ${report.healthy ? 'HEALTHY' : 'UNHEALTHY'}`,
+    `Passed: ${report.checks.filter((c) => c.healthy).length}/${report.checks.length}`,
+  ]
+  return lines.join('\n')
+}
+
+/** A single subsystem health check result. */
 export interface SubsystemHealthCheck {
   readonly name: string
   readonly healthy: boolean
   readonly detail: string
 }
 
+/** Aggregate health report across all subsystem checks. */
 export interface SubsystemHealthReport {
   readonly checks: readonly SubsystemHealthCheck[]
   readonly healthy: boolean
