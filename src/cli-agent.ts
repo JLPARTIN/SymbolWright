@@ -3,10 +3,11 @@ import { stdin, stdout } from 'node:process'
 import { mkdirSync } from 'node:fs'
 
 import { resolveCodemindConfig, validateCodemindConfig, type CodemindConfig } from './config/codemind-config.js'
+import { createDefaultRuntimePolicy } from './runtime/policy/runtime-policy.js'
 import { createAnthropicProvider } from './provider/anthropic-provider.js'
 import type { LLMProvider } from './provider/provider.types.js'
 import { assembleAgentTools } from './runtime/tools/tool-assembly.js'
-import type { RuntimeToolContext, RuntimePolicySnapshot } from './runtime/types.js'
+import type { RuntimeToolContext, RuntimePolicySnapshot, RuntimeApproval } from './runtime/types.js'
 import { runActivatedAgent, type CodemindActivationConfig } from './activation/codemind-activation.js'
 import { createTerminalRenderer } from './tui/terminal-renderer.js'
 import { classifyError, formatErrorForUser, withRetry } from './runtime/error-handling/error-handler.js'
@@ -21,16 +22,16 @@ import { ProjectMemory, resolveProjectMemoryDir } from './memory/project-memory.
 import { createHashEmbeddingProvider, createVoyageEmbeddingProvider } from './memory/embedding-provider.js'
 import type { EmbeddingProvider } from './memory/embedding-provider.js'
 
-function buildPolicy(): RuntimePolicySnapshot {
-  return {
-    mode: 'APPROVED_EXECUTION',
-    allowNetwork: false,
-    allowShell: true,
-    allowWrites: true,
-    allowGitHubWrites: false,
-    protectedPaths: [],
-    noisyDirs: ['node_modules', '.git', 'dist'],
+function buildPolicy(approved: boolean): RuntimePolicySnapshot {
+  if (approved) {
+    return {
+      ...createDefaultRuntimePolicy(),
+      mode: 'APPROVED_EXECUTION',
+      allowShell: true,
+      allowWrites: true,
+    }
   }
+  return createDefaultRuntimePolicy()
 }
 
 function createProvider(config: CodemindConfig): LLMProvider {
@@ -253,13 +254,7 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
 
   const provider = createProvider(config)
   const cwd = process.cwd()
-  const policy = buildPolicy()
   const embeddingProvider = resolveEmbeddingProvider(config)
-  const toolContext: RuntimeToolContext = {
-    cwd,
-    policy,
-    embeddingProvider,
-  }
   const costTracker = new CostTracker()
 
   const storagePaths = resolveStoragePaths(cwd)
@@ -279,15 +274,33 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
   }
 
   let resumeSessionId: string | undefined
+  let approvedMode = false
   const filteredArgs: string[] = []
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
     if (arg === '--resume' && i + 1 < args.length) {
       resumeSessionId = args[i + 1]
       i++
+    } else if (arg === '--approved') {
+      approvedMode = true
     } else {
       filteredArgs.push(arg!)
     }
+  }
+
+  const policy = buildPolicy(approvedMode)
+  const approval: RuntimeApproval | undefined = approvedMode
+    ? {
+        ticketId: `cli-${Date.now()}`,
+        approvedBy: 'operator',
+        scopes: ['file:write', 'apply_edit', 'command:validate', 'shell:execute', 'git:write'],
+      }
+    : undefined
+  const toolContext: RuntimeToolContext = {
+    cwd,
+    policy,
+    embeddingProvider,
+    ...(approval !== undefined ? { approval } : {}),
   }
 
   const userMessage = filteredArgs.join(' ').trim()

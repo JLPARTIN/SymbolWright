@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process'
 
-import type { RuntimeToolDefinition } from '../types.js'
+import type { RuntimeToolDefinition, RuntimeApproval } from '../types.js'
 import { renderRuntimeBoundary } from '../renderers/runtime-renderers.js'
 import { redactValidationOutput } from '../validation/validation-output-redactor.js'
 
@@ -70,6 +70,7 @@ export async function executeBashTool(
   input: BashToolInput,
   cwd: string,
   shellAllowed: boolean,
+  approval?: RuntimeApproval,
 ): Promise<string> {
   if (!shellAllowed) {
     return [
@@ -78,6 +79,18 @@ export async function executeBashTool(
       `Command: ${input.command}`,
       'Status: BLOCKED',
       'Reason: Shell execution is not allowed by current policy.',
+      '',
+      renderRuntimeBoundary(),
+    ].join('\n')
+  }
+
+  if (approval === undefined) {
+    return [
+      'CodeMind bash',
+      '',
+      `Command: ${input.command}`,
+      'Status: BLOCKED',
+      'Reason: Shell execution requires explicit approval.',
       '',
       renderRuntimeBoundary(),
     ].join('\n')
@@ -147,8 +160,8 @@ export async function executeBashTool(
 
 export const bashTool: RuntimeToolDefinition = {
   name: 'bash',
-  description: 'Execute an allowed shell command with output redaction.',
+  description: 'Execute an allowed shell command with output redaction. Requires shell approval.',
   capability: 'APPROVED_COMMAND',
   execute: async (input, context) =>
-    executeBashTool(parseBashInput(input), context.cwd, context.policy.allowShell),
+    executeBashTool(parseBashInput(input), context.cwd, context.policy.allowShell, context.approval),
 }

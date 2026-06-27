@@ -7,9 +7,10 @@ export const runTestsTool: RuntimeToolDefinition = {
   capability: 'APPROVED_COMMAND',
   execute: async (_input: unknown, context: RuntimeToolContext): Promise<string> => {
     return executeBashTool(
-      { command: 'npm run test -- --reporter=verbose 2>&1 || true', timeoutMs: 300000 },
+      { command: 'npm run test -- --reporter=verbose 2>&1', timeoutMs: 300000 },
       context.cwd,
       context.policy.allowShell,
+      context.approval,
     )
   },
 }

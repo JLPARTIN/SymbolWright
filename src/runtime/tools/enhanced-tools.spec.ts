@@ -7,6 +7,13 @@ import { executeGlobTool } from './glob-tool.js'
 import { executeGrepTool } from './grep-tool.js'
 import { executeEditFileTool } from './edit-file-tool.js'
 import { executeBashTool } from './bash-tool.js'
+import type { RuntimeApproval } from '../types.js'
+
+const TEST_APPROVAL: RuntimeApproval = {
+  ticketId: 'test-approval',
+  approvedBy: 'test',
+  scopes: ['shell:execute', 'command:validate'],
+}
 
 let tempDir: string
 
@@ -146,37 +153,42 @@ describe('edit-file-tool', () => {
 })
 
 describe('bash-tool', () => {
-  it('executes allowed command', async () => {
-    const result = await executeBashTool({ command: 'ls' }, tempDir, true)
+  it('executes allowed command with approval', async () => {
+    const result = await executeBashTool({ command: 'ls' }, tempDir, true, TEST_APPROVAL)
     expect(result).toContain('hello.ts')
     expect(result).toContain('Exit code: 0')
   })
 
   it('blocks when shell not allowed', async () => {
-    const result = await executeBashTool({ command: 'ls' }, tempDir, false)
+    const result = await executeBashTool({ command: 'ls' }, tempDir, false, TEST_APPROVAL)
     expect(result).toContain('BLOCKED')
     expect(result).toContain('not allowed')
   })
 
-  it('blocks dangerous commands', async () => {
-    const result = await executeBashTool({ command: 'rm -rf /' }, tempDir, true)
+  it('blocks when approval is missing', async () => {
+    const result = await executeBashTool({ command: 'ls' }, tempDir, true)
+    expect(result).toContain('BLOCKED')
+    expect(result).toContain('requires explicit approval')
+  })
+
+  it('blocks dangerous commands even with approval', async () => {
+    const result = await executeBashTool({ command: 'rm -rf /' }, tempDir, true, TEST_APPROVAL)
     expect(result).toContain('BLOCKED')
     expect(result).toContain('not in the allowlist')
   })
 
   it('blocks sudo commands', async () => {
-    const result = await executeBashTool({ command: 'sudo rm file' }, tempDir, true)
+    const result = await executeBashTool({ command: 'sudo rm file' }, tempDir, true, TEST_APPROVAL)
     expect(result).toContain('BLOCKED')
   })
 
   it('captures stderr', async () => {
-    const result = await executeBashTool({ command: 'ls /nonexistent_dir_xyz 2>&1' }, tempDir, true)
-    // ls is allowed and will show error output
+    const result = await executeBashTool({ command: 'ls /nonexistent_dir_xyz 2>&1' }, tempDir, true, TEST_APPROVAL)
     expect(result).toContain('Exit code:')
   })
 
   it('allows git status', async () => {
-    const result = await executeBashTool({ command: 'git status' }, tempDir, true)
+    const result = await executeBashTool({ command: 'git status' }, tempDir, true, TEST_APPROVAL)
     expect(result).toContain('Exit code:')
   })
 })
