@@ -163,6 +163,7 @@ export async function runAgentLoop(
   const providerTools = extractProviderTools(bridgedTools)
 
   const messages: ProviderMessage[] = [
+    ...(config.priorMessages ?? []),
     { role: 'user', content: userMessage },
   ]
 
