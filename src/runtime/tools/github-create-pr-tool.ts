@@ -3,6 +3,7 @@ import { createGitHubWriteGateAuditEvent } from '../github-write/github-write-ga
 import {
   executeGitHubPrCreation,
   renderGitHubPrCreationResult,
+  type GitHubPrCreationClient,
   type GitHubPrCreationFile,
   type GitHubPrCreationRequest,
 } from '../github-write/github-pr-creation.js'
@@ -88,9 +89,13 @@ function parseGitHubCreatePrToolInput(input: unknown): GitHubCreatePrToolInput {
   }
 }
 
+function resolveClient(context: RuntimeToolContext): GitHubPrCreationClient {
+  return context.githubClients?.prCreationClient ?? new FakeGitHubPrCreationClient()
+}
+
 export const githubCreatePrTool: RuntimeToolDefinition = {
   name: 'github_create_pr',
-  description: 'Create an approved draft PR through a fake GitHub writer client seam.',
+  description: 'Create an approved draft PR through the GitHub API (or fake client when no token).',
   capability: 'GITHUB_PR_CREATION',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const parsed = parseGitHubCreatePrToolInput(input)
@@ -105,7 +110,7 @@ export const githubCreatePrTool: RuntimeToolDefinition = {
       files: parsed.files,
     }
 
-    const client = new FakeGitHubPrCreationClient()
+    const client = resolveClient(context)
     const result = await executeGitHubPrCreation(request, context.policy, context.approval, client)
     const output = renderGitHubPrCreationResult(result)
     const auditEvent = createGitHubWriteGateAuditEvent(result.gateResult, context.approval)

@@ -18,6 +18,10 @@ class MockGitHubHttpClient implements GitHubHttpClient {
     }
     return response
   }
+
+  async post(_path: string, _body: unknown): Promise<GitHubHttpResponse> {
+    return { status: 404, body: { message: 'Not Found' } }
+  }
 }
 
 describe('GitHubLiveReadClient with mocked HTTP', () => {

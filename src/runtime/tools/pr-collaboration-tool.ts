@@ -5,6 +5,7 @@ import {
   executePrCollaboration,
   renderPrCollaborationResult,
   type PrCollaborationAction,
+  type PrCollaborationClient,
   type PrCollaborationRequest,
 } from '../github-write/pr-collaboration.js'
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
@@ -62,9 +63,13 @@ function parsePrCollaborationToolInput(input: unknown): PrCollaborationToolInput
   }
 }
 
+function resolveClient(context: RuntimeToolContext): PrCollaborationClient {
+  return context.githubClients?.collaborationClient ?? new FakePrCollaborationClient()
+}
+
 export const prCollaborationTool: RuntimeToolDefinition = {
   name: 'pr_collaboration',
-  description: 'Apply approved PR collaboration actions through a fake client seam.',
+  description: 'Apply approved PR collaboration actions through the GitHub API (or fake client when no token).',
   capability: 'GITHUB_PR_COLLABORATION',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const parsed = parsePrCollaborationToolInput(input)
@@ -77,7 +82,7 @@ export const prCollaborationTool: RuntimeToolDefinition = {
       dryRun: parsed.dryRun,
     }
 
-    const client = new FakePrCollaborationClient()
+    const client = resolveClient(context)
     const result = await executePrCollaboration(request, context.policy, context.approval, client)
     const output = renderPrCollaborationResult(result)
     const auditEvent = createGitHubWriteGateAuditEvent(result.gateResult, context.approval)
