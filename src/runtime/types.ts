@@ -88,6 +88,8 @@ export type RuntimeApprovalScope =
   | 'command:validate'
   | 'apply_edit'
   | 'command_dry_run'
+  | 'shell:execute'
+  | 'git:write'
 
 /** Exhaustive list of all approval scopes for runtime validation. */
 export const ALL_APPROVAL_SCOPES: readonly RuntimeApprovalScope[] = [
@@ -96,6 +98,8 @@ export const ALL_APPROVAL_SCOPES: readonly RuntimeApprovalScope[] = [
   'command:validate',
   'apply_edit',
   'command_dry_run',
+  'shell:execute',
+  'git:write',
 ] as const
 
 /** Type guard: returns true if scope is a known RuntimeApprovalScope. */

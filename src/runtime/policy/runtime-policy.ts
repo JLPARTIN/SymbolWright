@@ -97,6 +97,42 @@ export function assertShellAllowed(policy: RuntimePolicySnapshot): void {
   }
 }
 
+/** Throws if shell execution is disabled or approval is missing the shell:execute scope. */
+export function assertShellApproved(
+  policy: RuntimePolicySnapshot,
+  approval: RuntimeApproval | undefined,
+): void {
+  if (!policy.allowShell) {
+    throw new Error('Shell execution is disabled by runtime policy.')
+  }
+
+  if (approval === undefined) {
+    throw new Error('Shell execution requires explicit approval.')
+  }
+
+  if (!approval.scopes.includes('shell:execute') && !approval.scopes.includes('command:validate')) {
+    throw new Error('Approval does not include shell:execute or command:validate scope.')
+  }
+}
+
+/** Throws if git write operations are disabled or approval is missing the git:write scope. */
+export function assertGitWriteApproved(
+  policy: RuntimePolicySnapshot,
+  approval: RuntimeApproval | undefined,
+): void {
+  if (!policy.allowWrites) {
+    throw new Error('Write actions are disabled by runtime policy.')
+  }
+
+  if (approval === undefined) {
+    throw new Error('Git write operations require explicit approval.')
+  }
+
+  if (!approval.scopes.includes('git:write') && !approval.scopes.includes('apply_edit')) {
+    throw new Error('Approval does not include git:write scope.')
+  }
+}
+
 /** Throws if network ingestion is disabled by the active policy. */
 export function assertNetworkAllowed(policy: RuntimePolicySnapshot): void {
   if (!policy.allowNetwork) {

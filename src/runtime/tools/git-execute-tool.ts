@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process'
 import type { RuntimeToolDefinition, RuntimeToolContext } from '../types.js'
 import { evaluateGitToolRequest, renderGitToolResult, READ_OPERATIONS, type GitToolInput, type GitOperation } from './git-tool.js'
 import { renderRuntimeBoundary } from '../renderers/runtime-renderers.js'
+import { assertGitWriteApproved } from '../policy/runtime-policy.js'
 
 const VALID_OPERATIONS = new Set<string>([
   'status', 'diff', 'log', 'branch', 'show',
@@ -88,14 +89,8 @@ export async function executeGitTool(input: unknown, context: RuntimeToolContext
   }
 
   const isReadOp = READ_OPERATIONS.has(parsed.operation)
-  if (!isReadOp && !context.policy.allowWrites) {
-    return [
-      `Git operation: ${parsed.operation}`,
-      'Status: BLOCKED',
-      'Reason: Write operations require write permission in the current policy.',
-      '',
-      renderRuntimeBoundary(),
-    ].join('\n')
+  if (!isReadOp) {
+    assertGitWriteApproved(context.policy, context.approval)
   }
 
   const args = buildGitArgs(parsed)

@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { resolveWorkspacePath } from '../policy/runtime-policy.js'
+import { resolveWorkspacePath, assertWriteApproved } from '../policy/runtime-policy.js'
 import type { RuntimeToolDefinition } from '../types.js'
 import { renderRuntimeBoundary } from '../renderers/runtime-renderers.js'
 
@@ -102,19 +102,15 @@ export async function executeEditFileTool(
 
 export const editFileTool: RuntimeToolDefinition = {
   name: 'edit_file',
-  description: 'Make a surgical search-and-replace edit to a file. Fails if oldText is not found.',
-  capability: 'PROPOSE',
+  description: 'Make a surgical search-and-replace edit to a file. Requires write approval.',
+  capability: 'APPROVED_EDIT',
   execute: async (input, context) => {
-    if (!context.policy.allowWrites) {
-      throw new Error('Write operations are not allowed by current policy.')
-    }
+    assertWriteApproved(context.policy, context.approval)
     return executeEditFileTool(
       parseEditFileInput(input),
       context.cwd,
       () => {
-        if (!context.policy.allowWrites) {
-          throw new Error('Write operations are not allowed by current policy.')
-        }
+        assertWriteApproved(context.policy, context.approval)
       },
     )
   },

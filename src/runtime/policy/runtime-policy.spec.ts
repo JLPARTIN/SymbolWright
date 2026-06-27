@@ -2,11 +2,13 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import type { RuntimePolicySnapshot } from '../types.js'
+import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
 import {
+  assertGitWriteApproved,
   assertNetworkAllowed,
   assertReadablePath,
   assertShellAllowed,
+  assertShellApproved,
   assertValidPolicy,
   assertWriteApproved,
   createDefaultRuntimePolicy,
@@ -83,6 +85,118 @@ describe('runtime policy', () => {
     expect(() => assertNetworkAllowed(policy)).toThrow(
       'Network ingestion is disabled by runtime policy.',
     )
+  })
+})
+
+describe('assertShellApproved', () => {
+  const approvedPolicy: RuntimePolicySnapshot = {
+    ...createDefaultRuntimePolicy(),
+    mode: 'APPROVED_EXECUTION',
+    allowShell: true,
+    allowWrites: true,
+  }
+
+  it('blocks when policy disables shell', () => {
+    const policy = createDefaultRuntimePolicy()
+    const approval: RuntimeApproval = {
+      ticketId: 'T-1',
+      approvedBy: 'operator',
+      scopes: ['shell:execute'],
+    }
+    expect(() => assertShellApproved(policy, approval)).toThrow(
+      'Shell execution is disabled by runtime policy.',
+    )
+  })
+
+  it('blocks when approval is undefined', () => {
+    expect(() => assertShellApproved(approvedPolicy, undefined)).toThrow(
+      'Shell execution requires explicit approval.',
+    )
+  })
+
+  it('blocks when approval lacks shell:execute and command:validate scopes', () => {
+    const approval: RuntimeApproval = {
+      ticketId: 'T-2',
+      approvedBy: 'operator',
+      scopes: ['file:write'],
+    }
+    expect(() => assertShellApproved(approvedPolicy, approval)).toThrow(
+      'Approval does not include shell:execute or command:validate scope.',
+    )
+  })
+
+  it('allows with shell:execute scope', () => {
+    const approval: RuntimeApproval = {
+      ticketId: 'T-3',
+      approvedBy: 'operator',
+      scopes: ['shell:execute'],
+    }
+    expect(() => assertShellApproved(approvedPolicy, approval)).not.toThrow()
+  })
+
+  it('allows with command:validate scope as fallback', () => {
+    const approval: RuntimeApproval = {
+      ticketId: 'T-4',
+      approvedBy: 'operator',
+      scopes: ['command:validate'],
+    }
+    expect(() => assertShellApproved(approvedPolicy, approval)).not.toThrow()
+  })
+})
+
+describe('assertGitWriteApproved', () => {
+  const approvedPolicy: RuntimePolicySnapshot = {
+    ...createDefaultRuntimePolicy(),
+    mode: 'APPROVED_EXECUTION',
+    allowShell: true,
+    allowWrites: true,
+  }
+
+  it('blocks when policy disables writes', () => {
+    const policy = createDefaultRuntimePolicy()
+    const approval: RuntimeApproval = {
+      ticketId: 'T-1',
+      approvedBy: 'operator',
+      scopes: ['git:write'],
+    }
+    expect(() => assertGitWriteApproved(policy, approval)).toThrow(
+      'Write actions are disabled by runtime policy.',
+    )
+  })
+
+  it('blocks when approval is undefined', () => {
+    expect(() => assertGitWriteApproved(approvedPolicy, undefined)).toThrow(
+      'Git write operations require explicit approval.',
+    )
+  })
+
+  it('blocks when approval lacks git:write and apply_edit scopes', () => {
+    const approval: RuntimeApproval = {
+      ticketId: 'T-2',
+      approvedBy: 'operator',
+      scopes: ['file:write'],
+    }
+    expect(() => assertGitWriteApproved(approvedPolicy, approval)).toThrow(
+      'Approval does not include git:write scope.',
+    )
+  })
+
+  it('allows with git:write scope', () => {
+    const approval: RuntimeApproval = {
+      ticketId: 'T-3',
+      approvedBy: 'operator',
+      scopes: ['git:write'],
+    }
+    expect(() => assertGitWriteApproved(approvedPolicy, approval)).not.toThrow()
+  })
+
+  it('allows with apply_edit scope as fallback', () => {
+    const approval: RuntimeApproval = {
+      ticketId: 'T-4',
+      approvedBy: 'operator',
+      scopes: ['apply_edit'],
+    }
+    expect(() => assertGitWriteApproved(approvedPolicy, approval)).not.toThrow()
   })
 })
 

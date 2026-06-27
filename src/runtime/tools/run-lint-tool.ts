@@ -7,9 +7,10 @@ export const runLintTool: RuntimeToolDefinition = {
   capability: 'APPROVED_COMMAND',
   execute: async (_input: unknown, context: RuntimeToolContext): Promise<string> => {
     return executeBashTool(
-      { command: 'npm run lint 2>&1 || true', timeoutMs: 120000 },
+      { command: 'npm run lint 2>&1', timeoutMs: 120000 },
       context.cwd,
       context.policy.allowShell,
+      context.approval,
     )
   },
 }
