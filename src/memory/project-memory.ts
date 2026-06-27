@@ -1,5 +1,12 @@
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { join, relative } from 'node:path'
+
 import { JsonlStore } from '../storage/jsonl-store.js'
-import { join } from 'node:path'
+import { isIndexableFile, chunkFileContentSemantic, generateChunkId, detectLanguage } from './chunk-indexer.js'
+import type { EmbeddingProvider } from './embedding-provider.js'
+import { buildRagContext } from './rag-context-builder.js'
+import type { RagContextResult } from './rag-context-builder.js'
+import type { VectorStore } from './vector-store.js'
 
 export interface ProjectMemoryEntry {
   readonly id: string
@@ -155,6 +162,62 @@ export class ProjectMemory {
     return this.loadAll().length
   }
 
+  async indexRepository(
+    rootDir: string,
+    embeddingProvider: EmbeddingProvider,
+    vectorStore: VectorStore,
+    options: IndexRepositoryOptions = {},
+  ): Promise<IndexRepositoryResult> {
+    const excludeDirs = new Set(options.excludeDirs ?? DEFAULT_EXCLUDE_DIRS)
+    const maxFiles = options.maxFiles ?? 500
+
+    const filePaths = collectFiles(rootDir, rootDir, excludeDirs, maxFiles)
+    let chunksIndexed = 0
+
+    for (const filePath of filePaths) {
+      try {
+        const content = readFileSync(join(rootDir, filePath), 'utf-8')
+        const chunks = chunkFileContentSemantic(filePath, content)
+
+        if (chunks.length === 0) continue
+
+        const texts = chunks.map((c) => c.content)
+        const embeddings = await embeddingProvider.embedBatch(texts)
+
+        const language = detectLanguage(filePath)
+
+        for (let i = 0; i < chunks.length; i++) {
+          const chunk = chunks[i]!
+          const embeddingResult = embeddings[i]!
+          vectorStore.add({
+            id: generateChunkId(chunk.filePath, chunk.chunkIndex),
+            filePath: chunk.filePath,
+            chunk: chunk.content,
+            embedding: embeddingResult.embedding,
+            metadata: {
+              lineStart: chunk.lineStart,
+              lineEnd: chunk.lineEnd,
+              ...(language !== undefined ? { language } : {}),
+            },
+          })
+          chunksIndexed++
+        }
+      } catch {
+        // skip unreadable files
+      }
+    }
+
+    return { filesScanned: filePaths.length, chunksIndexed }
+  }
+
+  async queryRelevant(
+    query: string,
+    embeddingProvider: EmbeddingProvider,
+    vectorStore: VectorStore,
+  ): Promise<RagContextResult> {
+    return buildRagContext(query, vectorStore, embeddingProvider)
+  }
+
   private loadAll(): ProjectMemoryEntry[] {
     if (this.cache === undefined) {
       this.cache = this.store.readAll()
@@ -186,6 +249,61 @@ export interface ProjectMemorySummary {
 
 function formatCategory(category: ProjectMemoryCategory): string {
   return category.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+export interface IndexRepositoryOptions {
+  readonly excludeDirs?: readonly string[]
+  readonly maxFiles?: number
+}
+
+export interface IndexRepositoryResult {
+  readonly filesScanned: number
+  readonly chunksIndexed: number
+}
+
+const DEFAULT_EXCLUDE_DIRS = [
+  'node_modules', '.git', 'dist', 'build', 'coverage',
+  '.next', '.nuxt', '.output', '__pycache__', '.venv',
+  'vendor', 'target', '.codemind',
+]
+
+function collectFiles(
+  rootDir: string,
+  currentDir: string,
+  excludeDirs: Set<string>,
+  maxFiles: number,
+  collected: string[] = [],
+): string[] {
+  if (collected.length >= maxFiles) return collected
+
+  let entries: string[]
+  try {
+    entries = readdirSync(currentDir)
+  } catch {
+    return collected
+  }
+
+  for (const entry of entries) {
+    if (collected.length >= maxFiles) break
+
+    const fullPath = join(currentDir, entry)
+    const relPath = relative(rootDir, fullPath)
+
+    try {
+      const stat = statSync(fullPath)
+      if (stat.isDirectory()) {
+        if (!excludeDirs.has(entry)) {
+          collectFiles(rootDir, fullPath, excludeDirs, maxFiles, collected)
+        }
+      } else if (stat.isFile() && isIndexableFile(entry)) {
+        collected.push(relPath)
+      }
+    } catch {
+      // skip inaccessible entries
+    }
+  }
+
+  return collected
 }
 
 export function resolveProjectMemoryDir(workspaceCwd: string): string {

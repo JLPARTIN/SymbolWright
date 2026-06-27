@@ -84,14 +84,42 @@ export async function buildRagContext(
   }
 }
 
+function deduplicateResults(results: readonly VectorSearchResult[]): readonly VectorSearchResult[] {
+  const seen = new Set<string>()
+  const deduped: VectorSearchResult[] = []
+
+  for (const result of results) {
+    if (seen.has(result.entry.id)) continue
+    seen.add(result.entry.id)
+
+    const isDuplicate = deduped.some(
+      (existing) =>
+        existing.entry.filePath === result.entry.filePath &&
+        existing.entry.metadata.lineStart !== undefined &&
+        result.entry.metadata.lineStart !== undefined &&
+        existing.entry.metadata.lineEnd !== undefined &&
+        result.entry.metadata.lineEnd !== undefined &&
+        existing.entry.metadata.lineStart <= result.entry.metadata.lineStart &&
+        existing.entry.metadata.lineEnd >= result.entry.metadata.lineEnd,
+    )
+
+    if (!isDuplicate) {
+      deduped.push(result)
+    }
+  }
+
+  return deduped
+}
+
 function selectWithinBudget(
   results: readonly VectorSearchResult[],
   config: RagContextConfig,
 ): readonly VectorSearchResult[] {
+  const deduped = deduplicateResults(results)
   const selected: VectorSearchResult[] = []
   let tokenBudget = config.maxTokenBudget
 
-  for (const result of results) {
+  for (const result of deduped) {
     if (selected.length >= config.maxChunks) break
 
     const chunkTokens = Math.ceil(result.entry.chunk.length / config.charsPerToken)

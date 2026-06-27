@@ -4,6 +4,7 @@ import {
   isIndexableFile,
   detectLanguage,
   chunkFileContent,
+  chunkFileContentSemantic,
   generateChunkId,
 } from './chunk-indexer.js'
 
@@ -124,6 +125,82 @@ describe('chunkFileContent', () => {
     for (const chunk of chunks) {
       expect(chunk.content.trim().length).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('chunkFileContentSemantic', () => {
+  it('returns empty for empty content', () => {
+    expect(chunkFileContentSemantic('test.ts', '')).toHaveLength(0)
+  })
+
+  it('returns empty for oversized files', () => {
+    const large = 'x'.repeat(200000)
+    expect(chunkFileContentSemantic('test.ts', large)).toHaveLength(0)
+  })
+
+  it('creates a single chunk for small files', () => {
+    const content = 'const x = 1\nconst y = 2'
+    const chunks = chunkFileContentSemantic('test.ts', content)
+    expect(chunks).toHaveLength(1)
+    expect(chunks[0]!.content).toBe(content)
+  })
+
+  it('splits at function boundaries when chunk is large enough', () => {
+    const func1Lines = Array.from({ length: 20 }, (_, i) => `  const line${i} = ${i};`)
+    const func1 = `export function first() {\n${func1Lines.join('\n')}\n}`
+    const func2Lines = Array.from({ length: 20 }, (_, i) => `  const val${i} = ${i};`)
+    const func2 = `export function second() {\n${func2Lines.join('\n')}\n}`
+    const content = func1 + '\n\n' + func2
+
+    const chunks = chunkFileContentSemantic('test.ts', content, {
+      chunkSize: 400,
+      chunkOverlap: 50,
+      maxFileSize: 100000,
+    })
+
+    expect(chunks.length).toBeGreaterThanOrEqual(2)
+    expect(chunks[0]!.content).toContain('export function first')
+  })
+
+  it('splits at class boundaries', () => {
+    const class1 = 'export class Foo {\n' + '  x = 1;\n'.repeat(30) + '}'
+    const class2 = 'export class Bar {\n' + '  y = 2;\n'.repeat(30) + '}'
+    const content = class1 + '\n\n' + class2
+
+    const chunks = chunkFileContentSemantic('test.ts', content, {
+      chunkSize: 300,
+      chunkOverlap: 50,
+      maxFileSize: 100000,
+    })
+
+    expect(chunks.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('splits at describe/it boundaries for test files', () => {
+    const block1 = 'describe("suite1", () => {\n' + '  const x = 1;\n'.repeat(25) + '})'
+    const block2 = 'describe("suite2", () => {\n' + '  const y = 2;\n'.repeat(25) + '})'
+    const content = block1 + '\n\n' + block2
+
+    const chunks = chunkFileContentSemantic('test.spec.ts', content, {
+      chunkSize: 300,
+      chunkOverlap: 50,
+      maxFileSize: 100000,
+    })
+
+    expect(chunks.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it('falls back to size-based splitting when no boundaries found', () => {
+    const lines = Array.from({ length: 100 }, (_, i) => `const x${i} = ${i};`)
+    const content = lines.join('\n')
+
+    const chunks = chunkFileContentSemantic('data.ts', content, {
+      chunkSize: 500,
+      chunkOverlap: 50,
+      maxFileSize: 100000,
+    })
+
+    expect(chunks.length).toBeGreaterThan(1)
   })
 })
 

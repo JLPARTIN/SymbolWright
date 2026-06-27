@@ -128,3 +128,97 @@ function computeOverlapLines(lines: readonly string[], overlapChars: number): st
 export function generateChunkId(filePath: string, chunkIndex: number): string {
   return `${filePath}#${chunkIndex}`
 }
+
+const BOUNDARY_PATTERNS = [
+  /^export\s+(function|class|interface|type|const|enum|abstract)\s/,
+  /^(function|class|interface|type|const|enum|abstract)\s/,
+  /^(describe|it|test)\s*\(/,
+  /^(def|class)\s+\w/,
+  /^(func|type)\s+\w/,
+  /^(pub\s+)?(fn|struct|enum|impl|trait)\s/,
+]
+
+function isSemanticBoundary(line: string): boolean {
+  const trimmed = line.trimStart()
+  return BOUNDARY_PATTERNS.some((pattern) => pattern.test(trimmed))
+}
+
+export function chunkFileContentSemantic(
+  filePath: string,
+  content: string,
+  config: ChunkIndexerConfig = {
+    chunkSize: DEFAULT_CHUNK_SIZE,
+    chunkOverlap: DEFAULT_CHUNK_OVERLAP,
+    maxFileSize: DEFAULT_MAX_FILE_SIZE,
+  },
+): readonly FileChunk[] {
+  if (content.length > config.maxFileSize || content.length === 0) {
+    return []
+  }
+
+  const lines = content.split('\n')
+  const chunks: FileChunk[] = []
+  let currentChunk: string[] = []
+  let currentSize = 0
+  let chunkStartLine = 1
+  let chunkIndex = 0
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] as string
+
+    if (
+      currentSize >= config.chunkSize * 0.6 &&
+      isSemanticBoundary(line) &&
+      currentChunk.length > 0
+    ) {
+      const chunkContent = currentChunk.join('\n')
+      if (chunkContent.trim().length > 0) {
+        chunks.push({
+          filePath,
+          content: chunkContent,
+          lineStart: chunkStartLine,
+          lineEnd: i,
+          chunkIndex,
+        })
+        chunkIndex++
+      }
+      currentChunk = []
+      currentSize = 0
+      chunkStartLine = i + 1
+    }
+
+    currentChunk.push(line)
+    currentSize += line.length + 1
+
+    if (currentSize >= config.chunkSize) {
+      chunks.push({
+        filePath,
+        content: currentChunk.join('\n'),
+        lineStart: chunkStartLine,
+        lineEnd: i + 1,
+        chunkIndex,
+      })
+      chunkIndex++
+
+      const overlapLines = computeOverlapLines(currentChunk, config.chunkOverlap)
+      currentChunk = overlapLines
+      currentSize = overlapLines.join('\n').length
+      chunkStartLine = i + 1 - overlapLines.length + 1
+    }
+  }
+
+  if (currentChunk.length > 0) {
+    const chunkContent = currentChunk.join('\n')
+    if (chunkContent.trim().length > 0) {
+      chunks.push({
+        filePath,
+        content: chunkContent,
+        lineStart: chunkStartLine,
+        lineEnd: lines.length,
+        chunkIndex,
+      })
+    }
+  }
+
+  return chunks
+}

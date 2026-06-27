@@ -155,4 +155,68 @@ describe('buildRagContext', () => {
 
     expect(result.chunksUsed).toBeLessThanOrEqual(1)
   })
+
+  it('deduplicates overlapping chunks from same file', async () => {
+    const store = new VectorStore({ dimensions })
+
+    const outerEmbedding = hashEmbedSync('function login user authentication', dimensions)
+    store.add({
+      id: 'auth.ts#0',
+      filePath: 'auth.ts',
+      chunk: 'function login(user: string) {\n  validate(user);\n  return session.create(user);\n}',
+      embedding: outerEmbedding,
+      metadata: { lineStart: 1, lineEnd: 10 },
+    })
+
+    const innerEmbedding = hashEmbedSync('function login user authentication validate', dimensions)
+    store.add({
+      id: 'auth.ts#1',
+      filePath: 'auth.ts',
+      chunk: '  validate(user);\n  return session.create(user);',
+      embedding: innerEmbedding,
+      metadata: { lineStart: 2, lineEnd: 8 },
+    })
+
+    const config: RagContextConfig = {
+      maxChunks: 10,
+      maxTokenBudget: 4000,
+      minScore: 0,
+      charsPerToken: 4,
+    }
+    const result = await buildRagContext('login authentication', store, embeddingProvider, config)
+
+    expect(result.chunksUsed).toBeLessThanOrEqual(1)
+  })
+
+  it('keeps non-overlapping chunks from same file', async () => {
+    const store = new VectorStore({ dimensions })
+
+    const emb1 = hashEmbedSync('function login user', dimensions)
+    store.add({
+      id: 'auth.ts#0',
+      filePath: 'auth.ts',
+      chunk: 'function login() {}',
+      embedding: emb1,
+      metadata: { lineStart: 1, lineEnd: 5 },
+    })
+
+    const emb2 = hashEmbedSync('function logout session', dimensions)
+    store.add({
+      id: 'auth.ts#1',
+      filePath: 'auth.ts',
+      chunk: 'function logout() {}',
+      embedding: emb2,
+      metadata: { lineStart: 10, lineEnd: 15 },
+    })
+
+    const config: RagContextConfig = {
+      maxChunks: 10,
+      maxTokenBudget: 4000,
+      minScore: 0,
+      charsPerToken: 4,
+    }
+    const result = await buildRagContext('login logout', store, embeddingProvider, config)
+
+    expect(result.chunksUsed).toBe(2)
+  })
 })

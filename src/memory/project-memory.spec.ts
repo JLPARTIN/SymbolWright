@@ -1,9 +1,11 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest'
-import { existsSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { ProjectMemory, resolveProjectMemoryDir } from './project-memory.js'
 import type { ProjectMemoryCategory } from './project-memory.js'
+import { createHashEmbeddingProvider } from './embedding-provider.js'
+import { VectorStore } from './vector-store.js'
 
 const TEST_DIR = join(process.cwd(), '.test-project-memory')
 
@@ -193,6 +195,86 @@ describe('resolveProjectMemoryDir', () => {
   it('resolves to .codemind/memory under workspace', () => {
     const dir = resolveProjectMemoryDir('/home/user/project')
     expect(dir).toBe(join('/home/user/project', '.codemind', 'memory'))
+  })
+})
+
+describe('ProjectMemory indexRepository and queryRelevant', () => {
+  const TEST_REPO_DIR = join(process.cwd(), '.test-repo-index')
+  const TEST_MEM_DIR = join(process.cwd(), '.test-repo-memory')
+  const dimensions = 64
+  let memory: ProjectMemory
+  let embeddingProvider: ReturnType<typeof createHashEmbeddingProvider>
+  let vectorStore: VectorStore
+
+  beforeEach(() => {
+    for (const d of [TEST_REPO_DIR, TEST_MEM_DIR]) {
+      if (existsSync(d)) rmSync(d, { recursive: true })
+    }
+
+    mkdirSync(join(TEST_REPO_DIR, 'src'), { recursive: true })
+    writeFileSync(join(TEST_REPO_DIR, 'src', 'auth.ts'), 'export function login(user: string) {\n  return true;\n}\n')
+    writeFileSync(join(TEST_REPO_DIR, 'src', 'db.ts'), 'export const pool = createPool({ host: "localhost" });\n')
+    writeFileSync(join(TEST_REPO_DIR, 'README.md'), '# Test Project\n\nA test project for indexing.\n')
+    writeFileSync(join(TEST_REPO_DIR, 'image.png'), 'binary data')
+
+    memory = new ProjectMemory(TEST_MEM_DIR)
+    embeddingProvider = createHashEmbeddingProvider(dimensions)
+    vectorStore = new VectorStore({ dimensions })
+  })
+
+  afterEach(() => {
+    for (const d of [TEST_REPO_DIR, TEST_MEM_DIR]) {
+      if (existsSync(d)) rmSync(d, { recursive: true })
+    }
+  })
+
+  it('indexes repository files into vector store', async () => {
+    const result = await memory.indexRepository(TEST_REPO_DIR, embeddingProvider, vectorStore)
+
+    expect(result.filesScanned).toBeGreaterThanOrEqual(3)
+    expect(result.chunksIndexed).toBeGreaterThan(0)
+    expect(vectorStore.size()).toBeGreaterThan(0)
+  })
+
+  it('skips non-indexable files like images', async () => {
+    await memory.indexRepository(TEST_REPO_DIR, embeddingProvider, vectorStore)
+
+    const paths = vectorStore.listFilePaths()
+    expect(paths).not.toContain('image.png')
+  })
+
+  it('skips excluded directories', async () => {
+    mkdirSync(join(TEST_REPO_DIR, 'node_modules', 'dep'), { recursive: true })
+    writeFileSync(join(TEST_REPO_DIR, 'node_modules', 'dep', 'index.js'), 'module.exports = {}')
+
+    await memory.indexRepository(TEST_REPO_DIR, embeddingProvider, vectorStore)
+
+    const paths = vectorStore.listFilePaths()
+    const hasNodeModules = paths.some((p) => p.includes('node_modules'))
+    expect(hasNodeModules).toBe(false)
+  })
+
+  it('queryRelevant returns results from indexed store', async () => {
+    await memory.indexRepository(TEST_REPO_DIR, embeddingProvider, vectorStore)
+
+    expect(vectorStore.size()).toBeGreaterThan(0)
+
+    const queryResult = await embeddingProvider.embed('login authentication')
+    const searchResults = vectorStore.search(queryResult.embedding, 5)
+    expect(searchResults.length).toBeGreaterThan(0)
+  })
+
+  it('queryRelevant returns empty for unindexed store', async () => {
+    const result = await memory.queryRelevant('login', embeddingProvider, vectorStore)
+
+    expect(result.chunksUsed).toBe(0)
+    expect(result.contextText).toBe('')
+  })
+
+  it('respects maxFiles limit', async () => {
+    const result = await memory.indexRepository(TEST_REPO_DIR, embeddingProvider, vectorStore, { maxFiles: 1 })
+
+    expect(result.filesScanned).toBe(1)
   })
 })
 
