@@ -14,43 +14,44 @@ import { renderAjnaReviewPrGithubFixtureForFile } from './cli-ajna-review-pr-git
 import { renderAjnaReviewPrReadOnlyCollectorFixtureForFile } from './cli-ajna-review-pr-readonly-collector-fixture.js'
 import { renderAjnaReviewPrForFile } from './cli-ajna-review-pr.js'
 import { renderAjnaScanProfileForRepo } from './cli-ajna-scan-profile.js'
-import { findFixtureArg, renderFixtureCommand } from './cli-fixture-commands.js'
-import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
 import { renderAuditLedgerCommand } from './cli-audit-ledger.js'
+import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
 import { renderDoctorCommand } from './cli-doctor.js'
-import { renderMissionPacketCommand } from './cli-mission-packet.js'
-import { renderReleaseReadinessCommand } from './cli-release-readiness.js'
-import { renderTraceStoreCommand } from './cli-trace-store.js'
-import { renderVersionCommand } from './cli-version.js'
-import { renderRuntimeCiReview } from './cli-runtime-ci-review.js'
-import { renderRuntimePlan } from './cli-runtime-plan.js'
-import { renderRuntimePrNotes } from './cli-runtime-pr-notes.js'
-import { renderRuntimeProposePatch } from './cli-runtime-propose-patch.js'
-import { renderRuntimeRead } from './cli-runtime-read.js'
-import { renderRuntimeAjnaLiveRead } from './cli-runtime-ajna-live-read.js'
-import { renderRuntimeOperatorReview } from './cli-runtime-operator-review.js'
-import { renderRuntimeLocalWrite } from './cli-runtime-local-write.js'
-import { renderRuntimePrPreparation } from './cli-runtime-pr-preparation.js'
-import { renderRepairLoopCommand } from './cli-repair-loop.js'
-import { renderRuntimeApplyPatch } from './cli-runtime-apply-patch.js'
-import { renderRuntimeValidationCommand } from './cli-runtime-validation-command.js'
-import { renderRuntimeWriteIntent } from './cli-runtime-write-intent.js'
-import { renderRuntimeGitHubLiveRead } from './cli-runtime-github-live-read.js'
-import { renderRuntimeGitHubWriteProposal } from './cli-runtime-github-write-proposal.js'
+import { findFixtureArg, renderFixtureCommand } from './cli-fixture-commands.js'
 import { renderGitHubWriteExecutorCommand } from './cli-github-write-executor.js'
-import { renderRuntimeGitHubWriteGate } from './cli-runtime-github-write-gate.js'
-import { renderRuntimeWorkflow } from './cli-runtime-workflow.js'
-import { renderRuntimeAjnaWorkflow } from './cli-runtime-ajna-workflow.js'
-import { renderRuntimeStatusDashboardCommand } from './cli-runtime-status-dashboard.js'
+import { renderMissionPacketCommand } from './cli-mission-packet.js'
 import { renderProjectContextCommand } from './cli-project-context.js'
+import { renderReleaseReadinessCommand } from './cli-release-readiness.js'
+import { renderRepairLoopCommand } from './cli-repair-loop.js'
+import { renderRuntimeAjnaLiveRead } from './cli-runtime-ajna-live-read.js'
+import { renderApprovedRuntimeRun } from './cli-runtime-approved-run.js'
+import { renderRuntimeApplyPatch } from './cli-runtime-apply-patch.js'
+import { renderRuntimeCiReview } from './cli-runtime-ci-review.js'
+import { renderRuntimeGitHubLiveRead } from './cli-runtime-github-live-read.js'
+import { renderRuntimeGitHubWriteGate } from './cli-runtime-github-write-gate.js'
+import { renderRuntimeGitHubWriteProposal } from './cli-runtime-github-write-proposal.js'
 import { renderRuntimeLiveReadClientFixture } from './cli-runtime-live-read-client-fixture.js'
 import { renderRuntimeLiveReadPolicy } from './cli-runtime-live-read-policy.js'
+import { renderRuntimeLocalWrite } from './cli-runtime-local-write.js'
+import { renderRuntimeOperatorReview } from './cli-runtime-operator-review.js'
+import { renderRuntimePlan } from './cli-runtime-plan.js'
+import { renderRuntimePrNotes } from './cli-runtime-pr-notes.js'
+import { renderRuntimePrPreparation } from './cli-runtime-pr-preparation.js'
+import { renderRuntimeProposePatch } from './cli-runtime-propose-patch.js'
+import { renderRuntimeRead } from './cli-runtime-read.js'
 import { renderRuntimeRun } from './cli-runtime-run.js'
-import { renderApprovedRuntimeRun } from './cli-runtime-approved-run.js'
 import { renderRuntimeSearch } from './cli-runtime-search.js'
+import { renderRuntimeStatusDashboardCommand } from './cli-runtime-status-dashboard.js'
+import { renderRuntimeValidationCommand } from './cli-runtime-validation-command.js'
 import { renderRuntimeValidationPlan } from './cli-runtime-validation-plan.js'
+import { renderRuntimeWorkflow } from './cli-runtime-workflow.js'
+import { renderRuntimeWriteIntent } from './cli-runtime-write-intent.js'
+import { renderRuntimeAjnaWorkflow } from './cli-runtime-ajna-workflow.js'
 import { renderScan, scanRepo } from './cli-scan.js'
+import { renderTraceStoreCommand } from './cli-trace-store.js'
+import { renderVersionCommand } from './cli-version.js'
 import { runAgentCommand, renderSessionsList } from './cli-agent.js'
+import { runOperatorCommand } from './operator/operator-console.js'
 import { SessionPersistence } from './storage/session-persistence.js'
 import { resolveStoragePaths } from './storage/storage-paths.js'
 
@@ -69,6 +70,10 @@ async function main(): Promise<void> {
 
     case 'status':
       console.log(renderStatus())
+      break
+
+    case 'operator':
+      await runOperatorCommand(rest)
       break
 
     case 'agent':
@@ -122,195 +127,89 @@ async function main(): Promise<void> {
       break
     }
 
-    case 'ajna-live-read': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind ajna-live-read <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimeAjnaLiveRead(fixturePath))
+    case 'ajna-live-read':
+      console.log(await renderRuntimeAjnaLiveRead(requireInput('codemind ajna-live-read <json-file>')))
       break
-    }
 
-    case 'github-live-read': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind github-live-read <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimeGitHubLiveRead(fixturePath))
+    case 'github-live-read':
+      console.log(await renderRuntimeGitHubLiveRead(requireInput('codemind github-live-read <json-file>')))
       break
-    }
 
-    case 'live-read-client-fixture': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind live-read-client-fixture <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimeLiveReadClientFixture(fixturePath))
+    case 'live-read-client-fixture':
+      console.log(await renderRuntimeLiveReadClientFixture(requireInput('codemind live-read-client-fixture <json-file>')))
       break
-    }
 
-    case 'live-read-policy': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind live-read-policy <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimeLiveReadPolicy(fixturePath))
+    case 'live-read-policy':
+      console.log(await renderRuntimeLiveReadPolicy(requireInput('codemind live-read-policy <json-file>')))
       break
-    }
 
-    case 'operator-review': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind operator-review <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimeOperatorReview(fixturePath))
+    case 'operator-review':
+      console.log(await renderRuntimeOperatorReview(requireInput('codemind operator-review <json-file>')))
       break
-    }
 
-    case 'write-intent': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind write-intent <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimeWriteIntent(fixturePath))
+    case 'write-intent':
+      console.log(await renderRuntimeWriteIntent(requireInput('codemind write-intent <json-file>')))
       break
-    }
 
-    case 'local-write': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind local-write <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimeLocalWrite(fixturePath))
+    case 'local-write':
+      console.log(await renderRuntimeLocalWrite(requireInput('codemind local-write <json-file>')))
       break
-    }
 
-    case 'apply-patch': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind apply-patch <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimeApplyPatch(fixturePath))
+    case 'apply-patch':
+      console.log(await renderRuntimeApplyPatch(requireInput('codemind apply-patch <json-file>')))
       break
-    }
 
-    case 'repair-loop': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind repair-loop <json-file>')
-        process.exit(1)
-      }
-      console.log(renderRepairLoopCommand(fixturePath))
+    case 'repair-loop':
+      console.log(renderRepairLoopCommand(requireInput('codemind repair-loop <json-file>')))
       break
-    }
 
-    case 'validation-command': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind validation-command <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimeValidationCommand(fixturePath))
+    case 'validation-command':
+      console.log(await renderRuntimeValidationCommand(requireInput('codemind validation-command <json-file>')))
       break
-    }
 
-    case 'pr-preparation': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind pr-preparation <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimePrPreparation(fixturePath))
+    case 'pr-preparation':
+      console.log(await renderRuntimePrPreparation(requireInput('codemind pr-preparation <json-file>')))
       break
-    }
 
-    case 'github-write-proposal': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind github-write-proposal <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimeGitHubWriteProposal(fixturePath))
+    case 'github-write-proposal':
+      console.log(await renderRuntimeGitHubWriteProposal(requireInput('codemind github-write-proposal <json-file>')))
       break
-    }
 
-    case 'github-write-executor': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind github-write-executor <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderGitHubWriteExecutorCommand(fixturePath))
+    case 'github-write-executor':
+      console.log(await renderGitHubWriteExecutorCommand(requireInput('codemind github-write-executor <json-file>')))
       break
-    }
 
-    case 'github-write-gate': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind github-write-gate <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimeGitHubWriteGate(fixturePath))
+    case 'github-write-gate':
+      console.log(await renderRuntimeGitHubWriteGate(requireInput('codemind github-write-gate <json-file>')))
       break
-    }
 
-    case 'mission-packet': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind mission-packet <json-file>')
-        process.exit(1)
-      }
-      console.log(renderMissionPacketCommand(fixturePath))
+    case 'mission-packet':
+      console.log(renderMissionPacketCommand(requireInput('codemind mission-packet <json-file>')))
       break
-    }
 
-    case 'audit-ledger': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind audit-ledger <json-file>')
-        process.exit(1)
-      }
-      console.log(renderAuditLedgerCommand(fixturePath))
+    case 'audit-ledger':
+      console.log(renderAuditLedgerCommand(requireInput('codemind audit-ledger <json-file>')))
       break
-    }
 
-    case 'trace-store': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind trace-store <json-file>')
-        process.exit(1)
-      }
-      console.log(renderTraceStoreCommand(fixturePath))
+    case 'trace-store':
+      console.log(renderTraceStoreCommand(requireInput('codemind trace-store <json-file>')))
       break
-    }
 
-    case 'doctor': {
+    case 'doctor':
       console.log(renderDoctorCommand(process.cwd()))
       break
-    }
 
-    case 'version': {
+    case 'version':
       console.log(renderVersionCommand(process.cwd()))
       break
-    }
 
-    case 'release-readiness': {
+    case 'release-readiness':
       console.log(renderReleaseReadinessCommand(process.cwd()))
       break
-    }
 
-    case 'runtime-status': {
+    case 'runtime-status':
       console.log(renderRuntimeStatusDashboardCommand())
       break
-    }
 
     case 'project-context': {
       const dir = rest[0] ?? process.cwd()
@@ -318,25 +217,13 @@ async function main(): Promise<void> {
       break
     }
 
-    case 'ajna-workflow': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind ajna-workflow <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimeAjnaWorkflow(fixturePath))
+    case 'ajna-workflow':
+      console.log(await renderRuntimeAjnaWorkflow(requireInput('codemind ajna-workflow <json-file>')))
       break
-    }
 
-    case 'workflow': {
-      const fixturePath = rest[0]
-      if (fixturePath === undefined) {
-        console.error('Missing input JSON file: codemind workflow <json-file>')
-        process.exit(1)
-      }
-      console.log(await renderRuntimeWorkflow(fixturePath))
+    case 'workflow':
+      console.log(await renderRuntimeWorkflow(requireInput('codemind workflow <json-file>')))
       break
-    }
 
     case 'runtime': {
       const [subcommand, ...runtimeArgs] = rest
@@ -358,132 +245,9 @@ async function main(): Promise<void> {
       break
     }
 
-    case 'ajna': {
-      const [subcommand, maybeInput] = rest
-      if (subcommand === 'scan-profile') {
-        const dir = maybeInput ?? process.cwd()
-        console.log(renderAjnaScanProfileForRepo(dir))
-        break
-      }
-
-      if (subcommand === 'docs') {
-        console.log(renderAjnaDocsReference())
-        break
-      }
-
-      if (subcommand === 'client-pipeline-manifest') {
-        console.log(renderAjnaClientPipelineManifest())
-        break
-      }
-
-      if (subcommand === 'client-pipeline-status') {
-        console.log(renderAjnaClientPipelineCheck())
-        break
-      }
-
-      if (subcommand === 'review-pr') {
-        if (maybeInput === undefined) {
-          console.error('Missing input JSON file: codemind ajna review-pr <json-file>')
-          process.exit(1)
-        }
-        console.log(renderAjnaReviewPrForFile(maybeInput))
-        break
-      }
-
-      if (subcommand === 'review-pr-github-fixture') {
-        if (maybeInput === undefined) {
-          console.error('Missing input JSON file: codemind ajna review-pr-github-fixture <json-file>')
-          process.exit(1)
-        }
-        console.log(renderAjnaReviewPrGithubFixtureForFile(maybeInput))
-        break
-      }
-
-      if (subcommand === 'review-pr-github-api-fixture') {
-        if (maybeInput === undefined) {
-          console.error('Missing input JSON file: codemind ajna review-pr-github-api-fixture <json-file>')
-          process.exit(1)
-        }
-        console.log(renderAjnaReviewPrGithubApiFixtureForFile(maybeInput))
-        break
-      }
-
-      if (subcommand === 'github-api-snapshot-fixture') {
-        if (maybeInput === undefined) {
-          console.error('Missing input JSON file: codemind ajna github-api-snapshot-fixture <json-file>')
-          process.exit(1)
-        }
-        console.log(renderAjnaGithubApiSnapshotFixtureForFile(maybeInput))
-        break
-      }
-
-      if (subcommand === 'client-collector-fixture') {
-        if (maybeInput === undefined) {
-          console.error('Missing input JSON file: codemind ajna client-collector-fixture <json-file>')
-          process.exit(1)
-        }
-        console.log(await renderAjnaClientCollectorFixtureForFile(maybeInput))
-        break
-      }
-
-      if (subcommand === 'review-pr-client-collector-fixture') {
-        if (maybeInput === undefined) {
-          console.error('Missing input JSON file: codemind ajna review-pr-client-collector-fixture <json-file>')
-          process.exit(1)
-        }
-        console.log(await renderAjnaReviewPrClientCollectorFixtureForFile(maybeInput))
-        break
-      }
-
-      if (subcommand === 'merge-readiness-client-collector-fixture') {
-        if (maybeInput === undefined) {
-          console.error('Missing input JSON file: codemind ajna merge-readiness-client-collector-fixture <json-file>')
-          process.exit(1)
-        }
-        console.log(await renderAjnaMergeReadinessClientCollectorFixtureForFile(maybeInput))
-        break
-      }
-
-      if (subcommand === 'review-pr-collector-fixture') {
-        if (maybeInput === undefined) {
-          console.error('Missing input JSON file: codemind ajna review-pr-collector-fixture <json-file>')
-          process.exit(1)
-        }
-        console.log(renderAjnaReviewPrCollectorFixtureForFile(maybeInput))
-        break
-      }
-
-      if (subcommand === 'review-pr-readonly-collector-fixture') {
-        if (maybeInput === undefined) {
-          console.error('Missing input JSON file: codemind ajna review-pr-readonly-collector-fixture <json-file>')
-          process.exit(1)
-        }
-        console.log(await renderAjnaReviewPrReadOnlyCollectorFixtureForFile(maybeInput))
-        break
-      }
-
-      if (subcommand === 'github-readonly-collector-fixture') {
-        if (maybeInput === undefined) {
-          console.error('Missing input JSON file: codemind ajna github-readonly-collector-fixture <json-file>')
-          process.exit(1)
-        }
-        console.log(await renderAjnaGithubReadOnlyCollectorFixtureForFile(maybeInput))
-        break
-      }
-
-      if (subcommand === 'merge-readiness') {
-        if (maybeInput === undefined) {
-          console.error('Missing input JSON file: codemind ajna merge-readiness <json-file>')
-          process.exit(1)
-        }
-        console.log(renderAjnaMergeReadinessForFile(maybeInput))
-        break
-      }
-
-      const full = rest.length > 0 ? `${command} ${rest.join(' ')}` : command
-      console.log(renderNotYetActive(full))
+    case 'ajna':
+      await handleAjnaCommand(rest)
       break
-    }
 
     default:
       if (NOT_YET_ACTIVE.has(command)) {
@@ -495,6 +259,101 @@ async function main(): Promise<void> {
         process.exit(1)
       }
   }
+}
+
+async function handleAjnaCommand(args: readonly string[]): Promise<void> {
+  const [subcommand, maybeInput] = args
+
+  if (subcommand === 'scan-profile') {
+    const dir = maybeInput ?? process.cwd()
+    console.log(renderAjnaScanProfileForRepo(dir))
+    return
+  }
+
+  if (subcommand === 'docs') {
+    console.log(renderAjnaDocsReference())
+    return
+  }
+
+  if (subcommand === 'client-pipeline-manifest') {
+    console.log(renderAjnaClientPipelineManifest())
+    return
+  }
+
+  if (subcommand === 'client-pipeline-status') {
+    console.log(renderAjnaClientPipelineCheck())
+    return
+  }
+
+  if (subcommand === 'review-pr') {
+    console.log(renderAjnaReviewPrForFile(requireAjnaInput(maybeInput, 'codemind ajna review-pr <json-file>')))
+    return
+  }
+
+  if (subcommand === 'review-pr-github-fixture') {
+    console.log(renderAjnaReviewPrGithubFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna review-pr-github-fixture <json-file>')))
+    return
+  }
+
+  if (subcommand === 'review-pr-github-api-fixture') {
+    console.log(renderAjnaReviewPrGithubApiFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna review-pr-github-api-fixture <json-file>')))
+    return
+  }
+
+  if (subcommand === 'github-api-snapshot-fixture') {
+    console.log(renderAjnaGithubApiSnapshotFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna github-api-snapshot-fixture <json-file>')))
+    return
+  }
+
+  if (subcommand === 'client-collector-fixture') {
+    console.log(await renderAjnaClientCollectorFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna client-collector-fixture <json-file>')))
+    return
+  }
+
+  if (subcommand === 'review-pr-client-collector-fixture') {
+    console.log(await renderAjnaReviewPrClientCollectorFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna review-pr-client-collector-fixture <json-file>')))
+    return
+  }
+
+  if (subcommand === 'merge-readiness-client-collector-fixture') {
+    console.log(await renderAjnaMergeReadinessClientCollectorFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna merge-readiness-client-collector-fixture <json-file>')))
+    return
+  }
+
+  if (subcommand === 'review-pr-collector-fixture') {
+    console.log(renderAjnaReviewPrCollectorFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna review-pr-collector-fixture <json-file>')))
+    return
+  }
+
+  if (subcommand === 'review-pr-readonly-collector-fixture') {
+    console.log(await renderAjnaReviewPrReadOnlyCollectorFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna review-pr-readonly-collector-fixture <json-file>')))
+    return
+  }
+
+  if (subcommand === 'github-readonly-collector-fixture') {
+    console.log(await renderAjnaGithubReadOnlyCollectorFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna github-readonly-collector-fixture <json-file>')))
+    return
+  }
+
+  if (subcommand === 'merge-readiness') {
+    console.log(renderAjnaMergeReadinessForFile(requireAjnaInput(maybeInput, 'codemind ajna merge-readiness <json-file>')))
+    return
+  }
+
+  const full = args.length > 0 ? `ajna ${args.join(' ')}` : 'ajna'
+  console.log(renderNotYetActive(full))
+}
+
+function requireInput(usage: string): string {
+  return requireAjnaInput(rest[0], usage)
+}
+
+function requireAjnaInput(input: string | undefined, usage: string): string {
+  if (input === undefined) {
+    console.error(`Missing input JSON file: ${usage}`)
+    process.exit(1)
+  }
+  return input
 }
 
 main().catch((error: unknown) => {

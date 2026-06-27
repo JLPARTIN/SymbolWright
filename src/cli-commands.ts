@@ -4,6 +4,7 @@ import { getCompletedRuntimeBuildPhaseCount, getNextRuntimeBuildPhase } from './
 export const CODEMIND_CLI_COMMANDS = [
   { name: 'help', description: 'Show available command surface' },
   { name: 'status', description: 'Report CodeMind mode, policy, and runtime build state' },
+  { name: 'operator [mission]', description: 'Open the read-only CodeMind Operator Workspace console' },
   { name: 'plan <goal>', description: 'Render a runtime-backed non-mutating work plan' },
   { name: 'scan [dir]', description: 'Summarize repository structure (defaults to cwd)' },
   { name: 'read <path>', description: 'Read an allowed workspace file without mutation' },
