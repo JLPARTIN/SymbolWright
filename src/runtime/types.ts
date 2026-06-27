@@ -1,3 +1,8 @@
+import type { RuntimeLiveReadClient } from './live-read/runtime-live-read-client.js'
+import type { GitHubPrCreationClient } from './github-write/github-pr-creation.js'
+import type { GitHubWriteExecutorClient } from './github-write/github-write-executor.js'
+import type { PrCollaborationClient } from './github-write/pr-collaboration.js'
+
 /** Supported execution modes from plan-only to approved execution. */
 export type CodemindRuntimeMode =
   | 'PLAN_ONLY'
@@ -117,10 +122,10 @@ export interface RuntimePolicySnapshot {
 
 /** Registry of injected GitHub clients for live operations. */
 export interface GitHubClientRegistry {
-  readonly liveReadClient?: import('./live-read/runtime-live-read-client.js').RuntimeLiveReadClient
-  readonly prCreationClient?: import('./github-write/github-pr-creation.js').GitHubPrCreationClient
-  readonly writeExecutorClient?: import('./github-write/github-write-executor.js').GitHubWriteExecutorClient
-  readonly collaborationClient?: import('./github-write/pr-collaboration.js').PrCollaborationClient
+  readonly liveReadClient?: RuntimeLiveReadClient
+  readonly prCreationClient?: GitHubPrCreationClient
+  readonly writeExecutorClient?: GitHubWriteExecutorClient
+  readonly collaborationClient?: PrCollaborationClient
 }
 
 /** Context passed to every tool execution — cwd, policy, and optional approval. */
