@@ -250,6 +250,70 @@ describe('agent-loop', () => {
       expect(result.totalUsage.outputTokens).toBe(175)
     })
 
+    it('prepends priorMessages before user message', async () => {
+      let capturedMessages: unknown[] = []
+      const provider: LLMProvider = {
+        providerId: 'capture',
+        displayName: 'Capture Provider',
+        async *complete(messages) {
+          capturedMessages = [...messages]
+          yield { type: 'text_delta' as const, text: 'Got it.' }
+          yield {
+            type: 'message_stop' as const,
+            stopReason: 'end_turn' as const,
+            usage: { inputTokens: 50, outputTokens: 10 },
+          }
+        },
+      }
+
+      const priorMessages = [
+        { role: 'user' as const, content: 'What is CodeMind?' },
+        { role: 'assistant' as const, content: 'CodeMind is a governed AI coding agent.' },
+      ]
+
+      const result = await runAgentLoop(
+        provider,
+        'Tell me more.',
+        [],
+        makeToolContext(),
+        makeConfig({ priorMessages }),
+      )
+
+      expect(result.status).toBe('completed')
+      expect(capturedMessages).toHaveLength(3)
+      expect(capturedMessages[0]).toEqual({ role: 'user', content: 'What is CodeMind?' })
+      expect(capturedMessages[1]).toEqual({ role: 'assistant', content: 'CodeMind is a governed AI coding agent.' })
+      expect(capturedMessages[2]).toEqual({ role: 'user', content: 'Tell me more.' })
+    })
+
+    it('works without priorMessages (default behavior)', async () => {
+      let capturedMessages: unknown[] = []
+      const provider: LLMProvider = {
+        providerId: 'capture',
+        displayName: 'Capture Provider',
+        async *complete(messages) {
+          capturedMessages = [...messages]
+          yield { type: 'text_delta' as const, text: 'Hello.' }
+          yield {
+            type: 'message_stop' as const,
+            stopReason: 'end_turn' as const,
+            usage: { inputTokens: 50, outputTokens: 10 },
+          }
+        },
+      }
+
+      await runAgentLoop(
+        provider,
+        'Hi',
+        [],
+        makeToolContext(),
+        makeConfig(),
+      )
+
+      expect(capturedMessages).toHaveLength(1)
+      expect(capturedMessages[0]).toEqual({ role: 'user', content: 'Hi' })
+    })
+
     it('multi-tool call in single iteration', async () => {
       const provider = makeMockProvider([
         [

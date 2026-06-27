@@ -14,6 +14,8 @@ import { CostTracker, renderUsageSummary } from './telemetry/cost-tracker.js'
 import { SessionPersistence } from './storage/session-persistence.js'
 import { resolveStoragePaths } from './storage/storage-paths.js'
 import type { ConversationMessage } from './conversation/conversation.types.js'
+import { conversationMessagesToProviderMessages } from './conversation/transcript-bridge.js'
+import { trimConversationToFit } from './conversation/context-window.js'
 import { WorkspaceManager } from './workspace/workspace-manager.js'
 import { ProjectMemory, resolveProjectMemoryDir } from './memory/project-memory.js'
 
@@ -108,10 +110,13 @@ async function runInteractive(
   const model = config.model ?? 'claude-sonnet-4-20250514'
   const sessionId = resumeSessionId ?? `cm-${Date.now()}`
 
+  const conversationHistory: ConversationMessage[] = []
+
   if (resumeSessionId !== undefined) {
-    const priorMessages = persistence.load(resumeSessionId)
-    if (priorMessages.length > 0) {
-      console.log(`\x1b[2mResuming session ${resumeSessionId} (${priorMessages.length} messages)\x1b[0m`)
+    const restored = persistence.load(resumeSessionId)
+    if (restored.length > 0) {
+      conversationHistory.push(...restored)
+      console.log(`\x1b[2mResuming session ${resumeSessionId} (${restored.length} messages)\x1b[0m`)
     }
   }
 
@@ -147,6 +152,7 @@ async function runInteractive(
       }
 
       if (trimmed === '/clear') {
+        conversationHistory.length = 0
         console.log('\x1b[2mConversation cleared.\x1b[0m\n')
         continue
       }
@@ -158,26 +164,34 @@ async function runInteractive(
 
       const renderer = createTerminalRenderer({ model })
 
+      const trimmedHistory = trimConversationToFit(conversationHistory)
+      const priorMessages = conversationMessagesToProviderMessages(trimmedHistory)
+
       const activationConfig: CodemindActivationConfig = {
         provider,
         tools,
         toolContext,
         sessionId,
         ...(config.githubToken !== undefined ? { githubToken: config.githubToken } : {}),
+        ...(priorMessages.length > 0 ? { priorMessages } : {}),
         onEvent: renderer,
         ...(memoryContext.length > 0
           ? { promptContext: { conversationSummary: memoryContext } }
           : {}),
       }
 
-      persistence.appendMessage(sessionId, createMessage('user', trimmed))
+      const userMsg = createMessage('user', trimmed)
+      conversationHistory.push(userMsg)
+      persistence.appendMessage(sessionId, userMsg)
 
       try {
         const result = await withRetry(
           async () => runActivatedAgent(activationConfig, trimmed),
         )
 
-        persistence.appendMessage(sessionId, createMessage('assistant', result.agentResult.finalText))
+        const assistantMsg = createMessage('assistant', result.agentResult.finalText)
+        conversationHistory.push(assistantMsg)
+        persistence.appendMessage(sessionId, assistantMsg)
 
         costTracker.record(
           sessionId,

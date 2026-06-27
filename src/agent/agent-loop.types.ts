@@ -1,4 +1,4 @@
-import type { ProviderTokenUsage } from '../provider/provider.types.js'
+import type { ProviderMessage, ProviderTokenUsage } from '../provider/provider.types.js'
 
 export const AGENT_LOOP_STATUSES = ['completed', 'tool_use_limit', 'error'] as const
 export type AgentLoopStatus = (typeof AGENT_LOOP_STATUSES)[number]
@@ -20,6 +20,7 @@ export interface AgentLoopConfig {
   readonly model?: string
   readonly maxTokens?: number
   readonly temperature?: number
+  readonly priorMessages?: readonly ProviderMessage[]
 }
 
 export interface AgentLoopToolCall {

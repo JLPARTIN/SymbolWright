@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   transcriptEntryToConversationMessage,
   transcriptToConversationMessages,
+  conversationMessagesToProviderMessages,
   renderConversation,
 } from './transcript-bridge.js'
 import type { RuntimeTranscript, RuntimeTranscriptEntry } from '../runtime/transcript/runtime-transcript.js'
@@ -67,6 +68,57 @@ describe('transcript-bridge', () => {
       const transcript: RuntimeTranscript = { goal: 'Empty', entries: [] }
       const messages = transcriptToConversationMessages(transcript, 'session-1')
       expect(messages).toHaveLength(0)
+    })
+  })
+
+  describe('conversationMessagesToProviderMessages', () => {
+    it('converts user and assistant messages', () => {
+      const messages: ConversationMessage[] = [
+        { id: '1', role: 'user', content: 'Hello', timestamp: '' },
+        { id: '2', role: 'assistant', content: 'Hi there', timestamp: '' },
+        { id: '3', role: 'user', content: 'What can you do?', timestamp: '' },
+      ]
+
+      const result = conversationMessagesToProviderMessages(messages)
+
+      expect(result).toHaveLength(3)
+      expect(result[0]).toEqual({ role: 'user', content: 'Hello' })
+      expect(result[1]).toEqual({ role: 'assistant', content: 'Hi there' })
+      expect(result[2]).toEqual({ role: 'user', content: 'What can you do?' })
+    })
+
+    it('filters out system messages', () => {
+      const messages: ConversationMessage[] = [
+        { id: '1', role: 'system', content: 'System init', timestamp: '' },
+        { id: '2', role: 'user', content: 'Hello', timestamp: '' },
+        { id: '3', role: 'assistant', content: 'Hi', timestamp: '' },
+      ]
+
+      const result = conversationMessagesToProviderMessages(messages)
+
+      expect(result).toHaveLength(2)
+      expect(result[0]?.role).toBe('user')
+      expect(result[1]?.role).toBe('assistant')
+    })
+
+    it('filters out tool_use and tool_result messages', () => {
+      const messages: ConversationMessage[] = [
+        { id: '1', role: 'user', content: 'Read file', timestamp: '' },
+        { id: '2', role: 'tool_use', content: 'read_file', timestamp: '', toolName: 'read_file' },
+        { id: '3', role: 'tool_result', content: 'file content', timestamp: '' },
+        { id: '4', role: 'assistant', content: 'Here is the file.', timestamp: '' },
+      ]
+
+      const result = conversationMessagesToProviderMessages(messages)
+
+      expect(result).toHaveLength(2)
+      expect(result[0]?.content).toBe('Read file')
+      expect(result[1]?.content).toBe('Here is the file.')
+    })
+
+    it('handles empty messages', () => {
+      const result = conversationMessagesToProviderMessages([])
+      expect(result).toHaveLength(0)
     })
   })
 

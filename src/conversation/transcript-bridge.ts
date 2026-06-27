@@ -1,3 +1,4 @@
+import type { ProviderMessage, ProviderMessageRole } from '../provider/provider.types.js'
 import type {
   RuntimeTranscript,
   RuntimeTranscriptEntry,
@@ -40,6 +41,32 @@ export function transcriptToConversationMessages(
   return transcript.entries.map((entry) =>
     transcriptEntryToConversationMessage(entry, sessionId),
   )
+}
+
+function conversationRoleToProviderRole(role: ConversationMessageRole): ProviderMessageRole {
+  switch (role) {
+    case 'user':
+      return 'user'
+    case 'assistant':
+      return 'assistant'
+    case 'tool_use':
+      return 'tool_use'
+    case 'tool_result':
+      return 'tool_result'
+    case 'system':
+      return 'user'
+  }
+}
+
+export function conversationMessagesToProviderMessages(
+  messages: readonly ConversationMessage[],
+): ProviderMessage[] {
+  return messages
+    .filter((m) => m.role === 'user' || m.role === 'assistant')
+    .map((m) => ({
+      role: conversationRoleToProviderRole(m.role),
+      content: m.content,
+    }))
 }
 
 export function renderConversation(messages: readonly ConversationMessage[]): string {

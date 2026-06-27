@@ -1,4 +1,4 @@
-import type { LLMProvider } from '../provider/provider.types.js'
+import type { LLMProvider, ProviderMessage } from '../provider/provider.types.js'
 import type { RuntimeToolDefinition, RuntimeToolContext, GitHubClientRegistry } from '../runtime/types.js'
 import type { AgentLoopConfig, AgentLoopEvent, AgentLoopResult } from '../agent/agent-loop.types.js'
 import { runAgentLoop } from '../agent/agent-loop.js'
@@ -34,6 +34,7 @@ export interface CodemindActivationConfig {
   readonly sessionId?: string
   readonly maxIterations?: number
   readonly githubToken?: string
+  readonly priorMessages?: readonly ProviderMessage[]
   readonly onEvent?: (event: AgentLoopEvent) => void
   readonly onTuiUpdate?: (state: TuiState) => void
 }
@@ -159,6 +160,7 @@ export async function runActivatedAgent(
   const loopConfig: AgentLoopConfig = {
     maxIterations: config.maxIterations ?? 50,
     systemPrompt: subsystems.systemPrompt,
+    ...(config.priorMessages !== undefined ? { priorMessages: config.priorMessages } : {}),
   }
 
   const agentResult = await runAgentLoop(

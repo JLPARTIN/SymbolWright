@@ -120,3 +120,11 @@ export function compactMessages(
 
   return messages.slice(fit.messagesDropped)
 }
+
+export function trimConversationToFit(
+  messages: readonly ConversationMessage[],
+  config: ContextWindowConfig = {},
+): readonly ConversationMessage[] {
+  const budget = computeContextBudget(config)
+  return compactMessages(messages, budget, config.charsPerToken ?? DEFAULT_CHARS_PER_TOKEN)
+}

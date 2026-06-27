@@ -6,6 +6,7 @@ import {
   computeContextBudget,
   fitMessagesToWindow,
   compactMessages,
+  trimConversationToFit,
 } from './context-window.js'
 import type { ConversationMessage } from './conversation.types.js'
 
@@ -154,6 +155,49 @@ describe('context-window', () => {
     it('handles empty messages', () => {
       const result = compactMessages([], budget)
       expect(result).toHaveLength(0)
+    })
+  })
+
+  describe('trimConversationToFit', () => {
+    it('keeps all messages when they fit within defaults', () => {
+      const messages = [makeMessage('Hello', 100), makeMessage('World', 100)]
+      const result = trimConversationToFit(messages)
+      expect(result).toHaveLength(2)
+    })
+
+    it('trims oldest messages when they exceed budget', () => {
+      const messages = [
+        makeMessage('Old message', 300),
+        makeMessage('Recent message', 300),
+      ]
+      const result = trimConversationToFit(messages, {
+        modelContextLimit: 500,
+        systemPromptReserve: 0,
+        toolSchemaReserve: 0,
+        responseReserve: 0,
+      })
+      expect(result).toHaveLength(1)
+      expect(result[0]?.content).toBe('Recent message')
+    })
+
+    it('returns empty array for empty input', () => {
+      const result = trimConversationToFit([])
+      expect(result).toHaveLength(0)
+    })
+
+    it('respects custom charsPerToken', () => {
+      const messages = [
+        makeMessage('A'.repeat(100), undefined),
+        makeMessage('B'.repeat(100), undefined),
+      ]
+      const result = trimConversationToFit(messages, {
+        modelContextLimit: 50,
+        systemPromptReserve: 0,
+        toolSchemaReserve: 0,
+        responseReserve: 0,
+        charsPerToken: 2,
+      })
+      expect(result.length).toBeLessThan(2)
     })
   })
 })
