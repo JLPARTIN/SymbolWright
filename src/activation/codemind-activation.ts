@@ -21,6 +21,9 @@ import { GitHubLiveReadClient } from '../runtime/live-read/github-live-read-clie
 import { GitHubLiveReadPolicyWrapper } from '../runtime/live-read/github-live-read-policy-wrapper.js'
 import { createGitHubLiveReadPrTool } from '../runtime/tools/github-live-read-pr-tool.js'
 import { createGitHubLiveReadCiTool } from '../runtime/tools/github-live-read-ci-tool.js'
+import { DefaultGitHubPrCreationClient } from '../runtime/github-write/default-github-pr-creation-client.js'
+import { DefaultGitHubWriteExecutorClient } from '../runtime/github-write/default-github-write-executor-client.js'
+import { DefaultPrCollaborationClient } from '../runtime/github-write/default-pr-collaboration-client.js'
 
 /** Configuration for activating all CodeMind subsystems. */
 export interface CodemindActivationConfig {
@@ -82,7 +85,7 @@ export function activateSubsystems(config: CodemindActivationConfig): CodemindSu
     'interactive',
   )
 
-  const { liveReadTools, githubClients } = wireGitHubLiveRead(config.githubToken)
+  const { liveReadTools, githubClients } = wireGitHubClients(config.githubToken)
 
   const toolContext: RuntimeToolContext = githubClients !== undefined
     ? { ...config.toolContext, githubClients }
@@ -227,12 +230,12 @@ export async function checkMergeReadiness(
   return evaluateAjnaMergeGate(input)
 }
 
-interface GitHubLiveReadWiring {
+interface GitHubWiring {
   readonly liveReadTools: readonly RuntimeToolDefinition[]
   readonly githubClients: GitHubClientRegistry | undefined
 }
 
-function wireGitHubLiveRead(githubToken: string | undefined): GitHubLiveReadWiring {
+function wireGitHubClients(githubToken: string | undefined): GitHubWiring {
   if (githubToken === undefined || githubToken.length === 0) {
     return { liveReadTools: [], githubClients: undefined }
   }
@@ -246,7 +249,12 @@ function wireGitHubLiveRead(githubToken: string | undefined): GitHubLiveReadWiri
       createGitHubLiveReadPrTool(policyClient),
       createGitHubLiveReadCiTool(policyClient),
     ],
-    githubClients: { liveReadClient: policyClient },
+    githubClients: {
+      liveReadClient: policyClient,
+      prCreationClient: new DefaultGitHubPrCreationClient(httpClient),
+      writeExecutorClient: new DefaultGitHubWriteExecutorClient(httpClient),
+      collaborationClient: new DefaultPrCollaborationClient(httpClient),
+    },
   }
 }
 

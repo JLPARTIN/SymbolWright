@@ -380,6 +380,15 @@ describe('activateSubsystems GitHub wiring', () => {
     expect(subsystems.toolContext.githubClients!.liveReadClient).toBeDefined()
   })
 
+  it('injects write clients when githubToken is provided', () => {
+    const config = createTestConfig({ githubToken: 'ghp_testtoken123456' })
+    const subsystems = activateSubsystems(config)
+
+    expect(subsystems.toolContext.githubClients!.prCreationClient).toBeDefined()
+    expect(subsystems.toolContext.githubClients!.writeExecutorClient).toBeDefined()
+    expect(subsystems.toolContext.githubClients!.collaborationClient).toBeDefined()
+  })
+
   it('does not set githubClients on tool context when token is absent', () => {
     const config = createTestConfig()
     const subsystems = activateSubsystems(config)

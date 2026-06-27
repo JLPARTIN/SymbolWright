@@ -84,4 +84,54 @@ describe('DefaultGitHubHttpClient', () => {
     const fetchCall = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0]!
     expect(fetchCall[0]).toBe('https://api.github.com/user')
   })
+
+  it('sends POST requests with correct headers and body', async () => {
+    mockFetch(201, { id: 42, html_url: 'https://github.com/owner/repo/pull/42' })
+
+    const client = new DefaultGitHubHttpClient({ token: 'ghp_posttoken' })
+    const result = await client.post('/repos/owner/repo/pulls', {
+      title: 'My PR',
+      head: 'feature',
+      base: 'main',
+    })
+
+    expect(result.status).toBe(201)
+    expect(result.body).toEqual({ id: 42, html_url: 'https://github.com/owner/repo/pull/42' })
+
+    const fetchCall = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0]!
+    expect(fetchCall[0]).toBe('https://api.github.com/repos/owner/repo/pulls')
+    expect(fetchCall[1]).toEqual({
+      method: 'POST',
+      headers: {
+        Accept: 'application/vnd.github.v3+json',
+        Authorization: 'Bearer ghp_posttoken',
+        'User-Agent': 'CodeMind/0.1.0',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: 'My PR', head: 'feature', base: 'main' }),
+    })
+  })
+
+  it('post uses custom baseUrl', async () => {
+    mockFetch(201, {})
+
+    const client = new DefaultGitHubHttpClient({
+      token: 'ghp_test',
+      baseUrl: 'https://ghe.example.com/api/v3',
+    })
+    await client.post('/repos/owner/repo/issues/1/comments', { body: 'hello' })
+
+    const fetchCall = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0]!
+    expect(fetchCall[0]).toBe('https://ghe.example.com/api/v3/repos/owner/repo/issues/1/comments')
+  })
+
+  it('post returns error status codes without throwing', async () => {
+    mockFetch(422, { message: 'Validation Failed' })
+
+    const client = new DefaultGitHubHttpClient({ token: 'ghp_test' })
+    const result = await client.post('/repos/owner/repo/pulls', { title: '' })
+
+    expect(result.status).toBe(422)
+    expect(result.body).toEqual({ message: 'Validation Failed' })
+  })
 })

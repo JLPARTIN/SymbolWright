@@ -73,6 +73,7 @@ describe('GitHubLiveReadClient with mock HTTP', () => {
   it('rejects malformed PR response body (string)', async () => {
     const mockHttp: GitHubHttpClient = {
       get: async () => ({ status: 200, body: 'not an object' }),
+      post: async () => ({ status: 404, body: null }),
     }
     const client = new GitHubLiveReadClient(mockHttp)
     await expect(client.getPullRequestEvidence('o', 'r', 1))
@@ -82,6 +83,7 @@ describe('GitHubLiveReadClient with mock HTTP', () => {
   it('rejects null PR response body', async () => {
     const mockHttp: GitHubHttpClient = {
       get: async () => ({ status: 200, body: null }),
+      post: async () => ({ status: 404, body: null }),
     }
     const client = new GitHubLiveReadClient(mockHttp)
     await expect(client.getPullRequestEvidence('o', 'r', 1))
@@ -108,6 +110,7 @@ describe('GitHubLiveReadClient with mock HTTP', () => {
           },
         }
       },
+      post: async () => ({ status: 404, body: null }),
     }
     const client = new GitHubLiveReadClient(mockHttp)
     const evidence = await client.getPullRequestEvidence('owner', 'repo', 42)
@@ -127,6 +130,7 @@ describe('GitHubLiveReadClient with mock HTTP', () => {
           body: { number: 1, title: 'No refs', state: 'open', merged: false },
         }
       },
+      post: async () => ({ status: 404, body: null }),
     }
     const client = new GitHubLiveReadClient(mockHttp)
     const evidence = await client.getPullRequestEvidence('o', 'r', 1)
@@ -137,6 +141,7 @@ describe('GitHubLiveReadClient with mock HTTP', () => {
   it('rejects malformed workflow response body', async () => {
     const mockHttp: GitHubHttpClient = {
       get: async () => ({ status: 200, body: 'bad' }),
+      post: async () => ({ status: 404, body: null }),
     }
     const client = new GitHubLiveReadClient(mockHttp)
     await expect(client.getWorkflowEvidence('o', 'r', 1))
@@ -146,6 +151,7 @@ describe('GitHubLiveReadClient with mock HTTP', () => {
   it('rejects null file contents response body', async () => {
     const mockHttp: GitHubHttpClient = {
       get: async () => ({ status: 200, body: null }),
+      post: async () => ({ status: 404, body: null }),
     }
     const client = new GitHubLiveReadClient(mockHttp)
     await expect(client.getRepositoryFile('o', 'r', 'f.txt', 'main'))
