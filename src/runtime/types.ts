@@ -115,11 +115,20 @@ export interface RuntimePolicySnapshot {
   readonly noisyDirs: readonly string[]
 }
 
+/** Registry of injected GitHub clients for live operations. */
+export interface GitHubClientRegistry {
+  readonly liveReadClient?: import('./live-read/runtime-live-read-client.js').RuntimeLiveReadClient
+  readonly prCreationClient?: import('./github-write/github-pr-creation.js').GitHubPrCreationClient
+  readonly writeExecutorClient?: import('./github-write/github-write-executor.js').GitHubWriteExecutorClient
+  readonly collaborationClient?: import('./github-write/pr-collaboration.js').PrCollaborationClient
+}
+
 /** Context passed to every tool execution — cwd, policy, and optional approval. */
 export interface RuntimeToolContext {
   readonly cwd: string
   readonly policy: RuntimePolicySnapshot
   readonly approval?: RuntimeApproval
+  readonly githubClients?: GitHubClientRegistry
 }
 
 /** Defines a runtime tool with name, capability, and typed execute function. */

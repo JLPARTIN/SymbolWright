@@ -70,6 +70,7 @@ async function runOneShot(
     tools,
     toolContext,
     sessionId,
+    ...(config.githubToken !== undefined ? { githubToken: config.githubToken } : {}),
     onEvent: renderer,
     ...(memoryContext.length > 0
       ? { promptContext: { conversationSummary: memoryContext } }
@@ -162,6 +163,7 @@ async function runInteractive(
         tools,
         toolContext,
         sessionId,
+        ...(config.githubToken !== undefined ? { githubToken: config.githubToken } : {}),
         onEvent: renderer,
         ...(memoryContext.length > 0
           ? { promptContext: { conversationSummary: memoryContext } }

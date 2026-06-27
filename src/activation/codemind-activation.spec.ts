@@ -344,6 +344,68 @@ describe('renderSubsystemHealthReport', () => {
   })
 })
 
+describe('activateSubsystems GitHub wiring', () => {
+  it('injects live-read tools when githubToken is provided', () => {
+    const config = createTestConfig({ githubToken: 'ghp_testtoken123456' })
+    const subsystems = activateSubsystems(config)
+
+    const toolNames = subsystems.tools.map((t) => t.name)
+    expect(toolNames).toContain('github_live_read_pr')
+    expect(toolNames).toContain('github_live_read_ci')
+  })
+
+  it('does not inject live-read tools when githubToken is absent', () => {
+    const config = createTestConfig()
+    const subsystems = activateSubsystems(config)
+
+    const toolNames = subsystems.tools.map((t) => t.name)
+    expect(toolNames).not.toContain('github_live_read_pr')
+    expect(toolNames).not.toContain('github_live_read_ci')
+  })
+
+  it('does not inject live-read tools when githubToken is empty', () => {
+    const config = createTestConfig({ githubToken: '' })
+    const subsystems = activateSubsystems(config)
+
+    const toolNames = subsystems.tools.map((t) => t.name)
+    expect(toolNames).not.toContain('github_live_read_pr')
+    expect(toolNames).not.toContain('github_live_read_ci')
+  })
+
+  it('sets githubClients on tool context when token is provided', () => {
+    const config = createTestConfig({ githubToken: 'ghp_testtoken123456' })
+    const subsystems = activateSubsystems(config)
+
+    expect(subsystems.toolContext.githubClients).toBeDefined()
+    expect(subsystems.toolContext.githubClients!.liveReadClient).toBeDefined()
+  })
+
+  it('does not set githubClients on tool context when token is absent', () => {
+    const config = createTestConfig()
+    const subsystems = activateSubsystems(config)
+
+    expect(subsystems.toolContext.githubClients).toBeUndefined()
+  })
+
+  it('includes GitHub status in event bus activation event', () => {
+    const config = createTestConfig({ githubToken: 'ghp_testtoken123456' })
+    const subsystems = activateSubsystems(config)
+    const events = subsystems.eventBus.getEvents('session_lifecycle')
+
+    expect(events[0]!.detail).toContain('GitHub live read enabled')
+  })
+
+  it('original tools are preserved when GitHub token is provided', () => {
+    const config = createTestConfig({ githubToken: 'ghp_testtoken123456' })
+    const subsystems = activateSubsystems(config)
+
+    const toolNames = subsystems.tools.map((t) => t.name)
+    expect(toolNames).toContain('read_file')
+    expect(toolNames).toContain('search_files')
+    expect(subsystems.tools.length).toBe(4)
+  })
+})
+
 describe('activateSubsystems eventBus', () => {
   it('creates an event bus', () => {
     const config = createTestConfig()

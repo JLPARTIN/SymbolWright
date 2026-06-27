@@ -52,6 +52,37 @@ describe('codemind-config', () => {
       expect(config.maxTokens).toBe(4096)
     })
 
+    it('reads GitHub token from env', () => {
+      const config = resolveCodemindConfig({
+        env: { GITHUB_TOKEN: 'ghp_test1234567890abcdef' },
+        homeConfigPath: '/nonexistent/config.json',
+        projectConfigPath: '/nonexistent/config.json',
+      })
+
+      expect(config.githubToken).toBe('ghp_test1234567890abcdef')
+    })
+
+    it('CLI flags override env for GitHub token', () => {
+      const config = resolveCodemindConfig({
+        cliFlags: { githubToken: 'cli-token-abcdef1234' },
+        env: { GITHUB_TOKEN: 'env-token-xyz' },
+        homeConfigPath: '/nonexistent/config.json',
+        projectConfigPath: '/nonexistent/config.json',
+      })
+
+      expect(config.githubToken).toBe('cli-token-abcdef1234')
+    })
+
+    it('ignores empty GitHub token', () => {
+      const config = resolveCodemindConfig({
+        env: { GITHUB_TOKEN: '' },
+        homeConfigPath: '/nonexistent/config.json',
+        projectConfigPath: '/nonexistent/config.json',
+      })
+
+      expect(config.githubToken).toBeUndefined()
+    })
+
     it('reads baseURL from env', () => {
       const config = resolveCodemindConfig({
         env: { CODEMIND_BASE_URL: 'https://custom.api.example.com' },
@@ -204,6 +235,28 @@ describe('codemind-config', () => {
       expect(result.redactedSummary.model).toBe('claude-sonnet-4-20250514')
       expect(result.redactedSummary.maxTokens).toBe(4096)
       expect(result.redactedSummary.baseURL).toBe('https://api.anthropic.com')
+    })
+
+    it('includes GitHub token status in redacted summary', () => {
+      const config: CodemindConfig = {
+        anthropicApiKey: 'sk-test-key-12345678',
+        githubToken: 'ghp_test1234567890abcdef',
+      }
+
+      const result = validateCodemindConfig(config)
+      expect(result.redactedSummary.hasGitHubToken).toBe(true)
+      expect(result.redactedSummary.githubTokenPreview).toBeDefined()
+      expect(result.redactedSummary.githubTokenPreview).not.toContain('ghp_test')
+    })
+
+    it('reports no GitHub token when absent', () => {
+      const config: CodemindConfig = {
+        anthropicApiKey: 'sk-test-key-12345678',
+      }
+
+      const result = validateCodemindConfig(config)
+      expect(result.redactedSummary.hasGitHubToken).toBe(false)
+      expect(result.redactedSummary.githubTokenPreview).toBeUndefined()
     })
 
     it('valid with only API key (everything else optional)', () => {
