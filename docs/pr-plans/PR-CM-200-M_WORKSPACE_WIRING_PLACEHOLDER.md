@@ -1,17 +1,7 @@
-# PR-CM-200-M — Workspace Wiring Placeholder
+# PR-CM-200-M — Workspace Executable Wiring
 
-This placeholder records the intended next bundle after CM-200-L is green and merged.
+CM-200-M begins wiring the validated workspace console into an operator-callable surface.
 
-## Candidate scope
+This bundle adds a standalone workspace executable source entrypoint backed by the deterministic `renderWorkspaceCommand` adapter.
 
-Wire the deterministic workspace console adapter into a real top-level operator surface.
-
-Possible targets:
-
-- `codemind workspace [mission]`
-- web CodeMode section
-- Codespaces-friendly operator console
-
-## Precondition
-
-Only begin this bundle after CM-200-L passes CI and merges.
+The `codemind workspace [mission]` router alias remains a follow-up because the large CLI router should be edited in a focused bundle after this executable path is validated.
