@@ -4,6 +4,7 @@ import { homedir } from 'node:os'
 
 export interface CodemindConfig {
   readonly anthropicApiKey?: string
+  readonly githubToken?: string
   readonly model?: string
   readonly maxTokens?: number
   readonly baseURL?: string
@@ -11,6 +12,7 @@ export interface CodemindConfig {
 
 interface RawConfigFile {
   readonly anthropicApiKey?: unknown
+  readonly githubToken?: unknown
   readonly model?: unknown
   readonly maxTokens?: unknown
   readonly baseURL?: unknown
@@ -67,6 +69,12 @@ export function resolveCodemindConfig(sources: CodemindConfigSources = {}): Code
     stringOrUndefined(homeConfig?.anthropicApiKey) ??
     stringOrUndefined(projectConfig?.anthropicApiKey)
 
+  const githubToken =
+    stringOrUndefined(cli.githubToken) ??
+    stringOrUndefined(env['GITHUB_TOKEN']) ??
+    stringOrUndefined(homeConfig?.githubToken) ??
+    stringOrUndefined(projectConfig?.githubToken)
+
   const model =
     stringOrUndefined(cli.model) ??
     stringOrUndefined(env['CODEMIND_MODEL']) ??
@@ -87,6 +95,7 @@ export function resolveCodemindConfig(sources: CodemindConfigSources = {}): Code
 
   return {
     ...(anthropicApiKey !== undefined ? { anthropicApiKey } : {}),
+    ...(githubToken !== undefined ? { githubToken } : {}),
     ...(model !== undefined ? { model } : {}),
     ...(maxTokens !== undefined ? { maxTokens } : {}),
     ...(baseURL !== undefined ? { baseURL } : {}),
@@ -107,6 +116,8 @@ export interface CodemindConfigValidationResult {
   readonly redactedSummary: {
     readonly hasApiKey: boolean
     readonly apiKeyPreview?: string
+    readonly hasGitHubToken: boolean
+    readonly githubTokenPreview?: string
     readonly model?: string
     readonly maxTokens?: number
     readonly baseURL?: string
@@ -136,6 +147,7 @@ export function validateCodemindConfig(config: CodemindConfig): CodemindConfigVa
   }
 
   const hasApiKey = config.anthropicApiKey !== undefined
+  const hasGitHubToken = config.githubToken !== undefined
 
   return {
     valid: errors.length === 0,
@@ -144,6 +156,8 @@ export function validateCodemindConfig(config: CodemindConfig): CodemindConfigVa
     redactedSummary: {
       hasApiKey,
       ...(hasApiKey ? { apiKeyPreview: redactApiKey(config.anthropicApiKey!) } : {}),
+      hasGitHubToken,
+      ...(hasGitHubToken ? { githubTokenPreview: redactApiKey(config.githubToken!) } : {}),
       ...(config.model !== undefined ? { model: config.model } : {}),
       ...(config.maxTokens !== undefined ? { maxTokens: config.maxTokens } : {}),
       ...(config.baseURL !== undefined ? { baseURL: config.baseURL } : {}),

@@ -4,14 +4,19 @@ import { GitHubLiveReadPolicyWrapper } from './live-read/github-live-read-policy
 import { FakeLiveReadClient, type FakeLiveReadClientData } from './live-read/fake-live-read-client.js'
 import { createGitHubLiveReadPrTool } from './tools/github-live-read-pr-tool.js'
 import { createGitHubLiveReadCiTool } from './tools/github-live-read-ci-tool.js'
+import type { RuntimeLiveReadClient } from './live-read/runtime-live-read-client.js'
 import type { RuntimeToolContext } from './types.js'
 
 export function createGitHubLiveReadRuntimeContext(cwd: string = process.cwd()): RuntimeToolContext {
   return createLiveReadClientRuntimeContext(cwd)
 }
 
-export function createGitHubLiveReadRuntimeRegistry(clientData: FakeLiveReadClientData) {
-  const client = new GitHubLiveReadPolicyWrapper(new FakeLiveReadClient(clientData))
+export function createGitHubLiveReadRuntimeRegistry(
+  clientData: FakeLiveReadClientData,
+  realClient?: RuntimeLiveReadClient,
+) {
+  const inner = realClient ?? new FakeLiveReadClient(clientData)
+  const client = new GitHubLiveReadPolicyWrapper(inner)
 
   return createRuntimeRegistry([
     ...createLiveReadClientRuntimeRegistry().list(),

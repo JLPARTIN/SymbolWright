@@ -1,5 +1,5 @@
 import type { LLMProvider } from '../provider/provider.types.js'
-import type { RuntimeToolDefinition, RuntimeToolContext } from '../runtime/types.js'
+import type { RuntimeToolDefinition, RuntimeToolContext, GitHubClientRegistry } from '../runtime/types.js'
 import type { AgentLoopConfig, AgentLoopEvent, AgentLoopResult } from '../agent/agent-loop.types.js'
 import { runAgentLoop } from '../agent/agent-loop.js'
 import { HiveMindRegistry } from '../hivemind/hivemind-registry.js'
@@ -16,6 +16,11 @@ import { evaluateAjnaMergeGate, type AjnaMergeGateResult } from '../ajna/ajna-me
 import { createWiredSwarmDispatchTool } from '../runtime/tools/swarm-dispatch-tool.js'
 import { assertValidPolicy } from '../runtime/policy/runtime-policy.js'
 import { createRuntimeEventBus, type RuntimeEventBus } from '../runtime/observability/runtime-event-bus.js'
+import { DefaultGitHubHttpClient } from '../runtime/live-read/github-http-client.js'
+import { GitHubLiveReadClient } from '../runtime/live-read/github-live-read-client.js'
+import { GitHubLiveReadPolicyWrapper } from '../runtime/live-read/github-live-read-policy-wrapper.js'
+import { createGitHubLiveReadPrTool } from '../runtime/tools/github-live-read-pr-tool.js'
+import { createGitHubLiveReadCiTool } from '../runtime/tools/github-live-read-ci-tool.js'
 
 /** Configuration for activating all CodeMind subsystems. */
 export interface CodemindActivationConfig {
@@ -25,6 +30,7 @@ export interface CodemindActivationConfig {
   readonly promptContext?: UnifiedPromptContext
   readonly sessionId?: string
   readonly maxIterations?: number
+  readonly githubToken?: string
   readonly onEvent?: (event: AgentLoopEvent) => void
   readonly onTuiUpdate?: (state: TuiState) => void
 }
@@ -76,12 +82,21 @@ export function activateSubsystems(config: CodemindActivationConfig): CodemindSu
     'interactive',
   )
 
+  const { liveReadTools, githubClients } = wireGitHubLiveRead(config.githubToken)
+
+  const toolContext: RuntimeToolContext = githubClients !== undefined
+    ? { ...config.toolContext, githubClients }
+    : config.toolContext
+
+  const tools: readonly RuntimeToolDefinition[] = [...config.tools, ...liveReadTools]
+
   const eventBus = createRuntimeEventBus()
   eventBus.emit({
     category: 'session_lifecycle',
     action: 'activate_subsystems',
     timestamp: new Date().toISOString(),
-    detail: `Session ${sessionId} activated with ${config.tools.length} tools`,
+    detail: `Session ${sessionId} activated with ${tools.length} tools` +
+      (githubClients !== undefined ? ' (GitHub live read enabled)' : ''),
   })
 
   return {
@@ -90,8 +105,8 @@ export function activateSubsystems(config: CodemindActivationConfig): CodemindSu
     dispatcher,
     systemPrompt,
     tuiState,
-    tools: config.tools,
-    toolContext: config.toolContext,
+    tools,
+    toolContext,
     eventBus,
   }
 }
@@ -210,6 +225,29 @@ export async function checkMergeReadiness(
   input: AjnaLiveReviewInput,
 ): Promise<AjnaMergeGateResult> {
   return evaluateAjnaMergeGate(input)
+}
+
+interface GitHubLiveReadWiring {
+  readonly liveReadTools: readonly RuntimeToolDefinition[]
+  readonly githubClients: GitHubClientRegistry | undefined
+}
+
+function wireGitHubLiveRead(githubToken: string | undefined): GitHubLiveReadWiring {
+  if (githubToken === undefined || githubToken.length === 0) {
+    return { liveReadTools: [], githubClients: undefined }
+  }
+
+  const httpClient = new DefaultGitHubHttpClient({ token: githubToken })
+  const rawClient = new GitHubLiveReadClient(httpClient)
+  const policyClient = new GitHubLiveReadPolicyWrapper(rawClient)
+
+  return {
+    liveReadTools: [
+      createGitHubLiveReadPrTool(policyClient),
+      createGitHubLiveReadCiTool(policyClient),
+    ],
+    githubClients: { liveReadClient: policyClient },
+  }
 }
 
 function wireSwarmDispatchTool(
