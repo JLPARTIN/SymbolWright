@@ -1,4 +1,4 @@
-import type { RuntimeApproval } from '../types.js'
+import type { RuntimeApproval, RuntimeApprovalScope } from '../types.js'
 
 export interface ApprovalTicket extends RuntimeApproval {
   readonly reason: string
@@ -8,7 +8,7 @@ export interface ApprovalTicket extends RuntimeApproval {
 export function createApprovalTicket(input: {
   readonly ticketId: string
   readonly approvedBy: string
-  readonly scopes: readonly string[]
+  readonly scopes: readonly RuntimeApprovalScope[]
   readonly reason: string
   readonly createdAt?: string
 }): ApprovalTicket {

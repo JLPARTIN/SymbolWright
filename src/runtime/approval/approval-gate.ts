@@ -1,11 +1,11 @@
 import path from 'node:path'
 
 import { assertReadablePath, isPathInsideWorkspace, resolveWorkspacePath } from '../policy/runtime-policy.js'
-import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import type { RuntimeApproval, RuntimeApprovalScope, RuntimePolicySnapshot } from '../types.js'
 
 export interface ApprovalGateInput {
   readonly approval?: RuntimeApproval
-  readonly requiredScope: string
+  readonly requiredScope: RuntimeApprovalScope
   readonly workspaceRoot: string
   readonly targetPath?: string
   readonly policy: RuntimePolicySnapshot

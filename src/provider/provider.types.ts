@@ -40,10 +40,16 @@ export interface ProviderMessage {
   readonly content: readonly ProviderContentBlock[] | string
 }
 
+export interface ProviderToolInputSchema {
+  readonly type: 'object'
+  readonly properties: Record<string, unknown>
+  readonly required?: readonly string[]
+}
+
 export interface ProviderToolDefinition {
   readonly name: string
   readonly description: string
-  readonly inputSchema: Record<string, unknown>
+  readonly inputSchema: ProviderToolInputSchema
 }
 
 export interface ProviderTokenUsage {

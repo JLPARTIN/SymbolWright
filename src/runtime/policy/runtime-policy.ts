@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import type { CodemindRuntimeMode, RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
 
 export const DEFAULT_RUNTIME_PROTECTED_PATHS = [
   '.git',
@@ -92,5 +92,34 @@ export function assertShellAllowed(policy: RuntimePolicySnapshot): void {
 export function assertNetworkAllowed(policy: RuntimePolicySnapshot): void {
   if (!policy.allowNetwork) {
     throw new Error('Network ingestion is disabled by runtime policy.')
+  }
+}
+
+const VALID_MODES: readonly CodemindRuntimeMode[] = [
+  'PLAN_ONLY', 'READ_ONLY', 'PROPOSAL_ONLY', 'APPROVED_EXECUTION',
+]
+
+export function assertValidPolicy(policy: unknown): asserts policy is RuntimePolicySnapshot {
+  if (typeof policy !== 'object' || policy === null) {
+    throw new Error('RuntimePolicySnapshot must be a non-null object')
+  }
+  const p = policy as Record<string, unknown>
+
+  if (!(VALID_MODES as readonly string[]).includes(p['mode'] as string)) {
+    throw new Error(`Invalid policy mode: ${String(p['mode'])}`)
+  }
+
+  for (const field of ['allowNetwork', 'allowShell', 'allowWrites', 'allowGitHubWrites'] as const) {
+    if (typeof p[field] !== 'boolean') {
+      throw new Error(`Policy field "${field}" must be a boolean, got ${typeof p[field]}`)
+    }
+  }
+
+  if (!Array.isArray(p['protectedPaths'])) {
+    throw new Error('Policy field "protectedPaths" must be an array')
+  }
+
+  if (!Array.isArray(p['noisyDirs'])) {
+    throw new Error('Policy field "noisyDirs" must be an array')
   }
 }

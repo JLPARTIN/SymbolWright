@@ -14,6 +14,7 @@ import type { TuiEvent } from '../tui/tui-event-handler.js'
 import { runAjnaLiveReview, type AjnaLiveReviewInput, type AjnaLiveReviewResult } from '../ajna/ajna-live-review.js'
 import { evaluateAjnaMergeGate, type AjnaMergeGateResult } from '../ajna/ajna-merge-gate.js'
 import { createWiredSwarmDispatchTool } from '../runtime/tools/swarm-dispatch-tool.js'
+import { assertValidPolicy } from '../runtime/policy/runtime-policy.js'
 
 export interface CodemindActivationConfig {
   readonly provider: LLMProvider
@@ -44,6 +45,7 @@ export interface CodemindSubsystems {
 }
 
 export function activateSubsystems(config: CodemindActivationConfig): CodemindSubsystems {
+  assertValidPolicy(config.toolContext.policy)
   const sessionId = config.sessionId ?? `cm-${Date.now()}`
   const registry = new HiveMindRegistry()
 

@@ -1,4 +1,5 @@
-import type { RuntimeToolDefinition } from '../types.js'
+import type { CodemindToolName, RuntimeToolCapability, RuntimeToolDefinition } from '../types.js'
+import { ALL_CODEMIND_TOOL_NAMES } from '../types.js'
 
 import { readFileTool } from './read-file-tool.js'
 import { listFilesTool } from './list-files-tool.js'
@@ -73,17 +74,50 @@ const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   runLintTool,
 ]
 
+export const DYNAMICALLY_WIRED_TOOLS: readonly CodemindToolName[] = [
+  'plan_goal',
+  'github_live_read_pr',
+  'github_live_read_ci',
+  'ajna_live_read_review',
+  'ajna_live_read_merge_readiness',
+] as const
+
 export function assembleAgentTools(): readonly RuntimeToolDefinition[] {
   return ALL_TOOLS
 }
 
 export function assembleAgentToolsByCapability(
-  capabilities: readonly string[],
+  capabilities: readonly RuntimeToolCapability[],
 ): readonly RuntimeToolDefinition[] {
-  const allowed = new Set(capabilities)
+  const allowed = new Set<string>(capabilities)
   return ALL_TOOLS.filter((tool) => allowed.has(tool.capability))
 }
 
 export function getToolByName(name: string): RuntimeToolDefinition | undefined {
   return ALL_TOOLS.find((tool) => tool.name === name)
+}
+
+export function assertToolAssemblyIntegrity(): void {
+  const names = ALL_TOOLS.map((t) => t.name)
+  const nameSet = new Set(names)
+
+  if (nameSet.size !== names.length) {
+    const duplicates = names.filter((n, i) => names.indexOf(n) !== i)
+    throw new Error(`Duplicate tool names in assembly: ${duplicates.join(', ')}`)
+  }
+
+  const dynamicSet = new Set<string>(DYNAMICALLY_WIRED_TOOLS)
+  const allNamesSet = new Set<string>(ALL_CODEMIND_TOOL_NAMES)
+
+  for (const name of ALL_CODEMIND_TOOL_NAMES) {
+    if (!dynamicSet.has(name) && !nameSet.has(name)) {
+      throw new Error(`CodemindToolName "${name}" is missing from tool assembly (and is not dynamically wired)`)
+    }
+  }
+
+  for (const name of names) {
+    if (!allNamesSet.has(name)) {
+      throw new Error(`Tool "${name}" in assembly is not a valid CodemindToolName`)
+    }
+  }
 }

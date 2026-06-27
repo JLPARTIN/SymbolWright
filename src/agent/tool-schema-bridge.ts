@@ -1,11 +1,8 @@
 import type { RuntimeToolDefinition, RuntimePolicySnapshot, CodemindRuntimeMode } from '../runtime/types.js'
-import type { ProviderToolDefinition } from '../provider/provider.types.js'
+import type { ProviderToolDefinition, ProviderToolInputSchema } from '../provider/provider.types.js'
+import { assertValidPolicy } from '../runtime/policy/runtime-policy.js'
 
-export interface ToolInputSchema {
-  readonly type: 'object'
-  readonly properties: Record<string, unknown>
-  readonly required?: readonly string[]
-}
+export type ToolInputSchema = ProviderToolInputSchema
 
 export interface BridgedToolDefinition {
   readonly providerTool: ProviderToolDefinition
@@ -383,27 +380,68 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       },
       required: ['title', 'format', 'reports'],
     },
-  }
-
-  return schemaMap[tool.name] ?? {
-    type: 'object',
-    properties: {
-      input: { type: 'string', description: 'Input for the tool' },
+    github_live_read_pr: {
+      type: 'object',
+      properties: {
+        owner: { type: 'string', description: 'Repository owner' },
+        repo: { type: 'string', description: 'Repository name' },
+        prNumber: { type: 'number', description: 'Pull request number' },
+      },
+      required: ['owner', 'repo', 'prNumber'],
+    },
+    github_live_read_ci: {
+      type: 'object',
+      properties: {
+        owner: { type: 'string', description: 'Repository owner' },
+        repo: { type: 'string', description: 'Repository name' },
+        runId: { type: 'number', description: 'GitHub Actions workflow run ID' },
+      },
+      required: ['owner', 'repo', 'runId'],
+    },
+    ajna_live_read_review: {
+      type: 'object',
+      properties: {
+        owner: { type: 'string', description: 'Repository owner' },
+        repo: { type: 'string', description: 'Repository name' },
+        prNumber: { type: 'number', description: 'Pull request number' },
+        focus: { type: 'string', description: 'Review focus area' },
+      },
+      required: ['owner', 'repo', 'prNumber'],
+    },
+    ajna_live_read_merge_readiness: {
+      type: 'object',
+      properties: {
+        owner: { type: 'string', description: 'Repository owner' },
+        repo: { type: 'string', description: 'Repository name' },
+        prNumber: { type: 'number', description: 'Pull request number' },
+        requireCi: { type: 'boolean', description: 'Whether passing CI is required' },
+      },
+      required: ['owner', 'repo', 'prNumber'],
     },
   }
+
+  const schema = schemaMap[tool.name]
+  if (schema === undefined) {
+    throw new Error(
+      `Tool "${tool.name}" has no registered input schema in buildToolInputSchema. ` +
+      'Every CodemindToolName must have an explicit schema.',
+    )
+  }
+  return schema
 }
 
 export function bridgeToolsForProvider(
   tools: readonly RuntimeToolDefinition[],
   policy: RuntimePolicySnapshot,
 ): readonly BridgedToolDefinition[] {
+  assertValidPolicy(policy)
   return tools
     .filter((tool) => isToolAllowedByMode(policy.mode, tool))
     .map((tool) => ({
       providerTool: {
         name: tool.name,
         description: tool.description,
-        inputSchema: buildToolInputSchema(tool) as unknown as Record<string, unknown>,
+        inputSchema: buildToolInputSchema(tool),
       },
       runtimeTool: tool,
     }))

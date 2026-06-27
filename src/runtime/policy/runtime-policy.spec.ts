@@ -7,6 +7,7 @@ import {
   assertNetworkAllowed,
   assertReadablePath,
   assertShellAllowed,
+  assertValidPolicy,
   assertWriteApproved,
   createDefaultRuntimePolicy,
   isPathInsideWorkspace,
@@ -56,7 +57,7 @@ describe('runtime policy', () => {
       assertWriteApproved(policy, {
         ticketId: 'approval-1',
         approvedBy: 'operator',
-        scopes: ['runtime:test'],
+        scopes: ['apply_edit'],
       }),
     ).toThrow('Write actions are disabled by runtime policy.')
   })
@@ -82,5 +83,59 @@ describe('runtime policy', () => {
     expect(() => assertNetworkAllowed(policy)).toThrow(
       'Network ingestion is disabled by runtime policy.',
     )
+  })
+})
+
+describe('assertValidPolicy', () => {
+  it('accepts a valid policy from createDefaultRuntimePolicy', () => {
+    expect(() => assertValidPolicy(createDefaultRuntimePolicy())).not.toThrow()
+  })
+
+  it('accepts a valid APPROVED_EXECUTION policy', () => {
+    const policy = {
+      ...createDefaultRuntimePolicy(),
+      mode: 'APPROVED_EXECUTION',
+      allowWrites: true,
+      allowShell: true,
+    }
+    expect(() => assertValidPolicy(policy)).not.toThrow()
+  })
+
+  it('rejects null', () => {
+    expect(() => assertValidPolicy(null)).toThrow('non-null object')
+  })
+
+  it('rejects undefined', () => {
+    expect(() => assertValidPolicy(undefined)).toThrow('non-null object')
+  })
+
+  it('rejects missing mode', () => {
+    const { mode: _, ...noMode } = createDefaultRuntimePolicy()
+    expect(() => assertValidPolicy(noMode)).toThrow('Invalid policy mode')
+  })
+
+  it('rejects invalid mode string', () => {
+    const policy = { ...createDefaultRuntimePolicy(), mode: 'INVALID_MODE' }
+    expect(() => assertValidPolicy(policy)).toThrow('Invalid policy mode')
+  })
+
+  it('rejects undefined allowWrites', () => {
+    const policy = { ...createDefaultRuntimePolicy(), allowWrites: undefined }
+    expect(() => assertValidPolicy(policy)).toThrow('"allowWrites" must be a boolean')
+  })
+
+  it('rejects non-boolean allowShell', () => {
+    const policy = { ...createDefaultRuntimePolicy(), allowShell: 'yes' }
+    expect(() => assertValidPolicy(policy)).toThrow('"allowShell" must be a boolean')
+  })
+
+  it('rejects non-array protectedPaths', () => {
+    const policy = { ...createDefaultRuntimePolicy(), protectedPaths: 'not-an-array' }
+    expect(() => assertValidPolicy(policy)).toThrow('"protectedPaths" must be an array')
+  })
+
+  it('rejects non-array noisyDirs', () => {
+    const policy = { ...createDefaultRuntimePolicy(), noisyDirs: null }
+    expect(() => assertValidPolicy(policy)).toThrow('"noisyDirs" must be an array')
   })
 })
