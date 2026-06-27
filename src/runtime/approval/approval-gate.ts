@@ -3,6 +3,7 @@ import path from 'node:path'
 import { assertReadablePath, isPathInsideWorkspace, resolveWorkspacePath } from '../policy/runtime-policy.js'
 import type { RuntimeApproval, RuntimeApprovalScope, RuntimePolicySnapshot } from '../types.js'
 
+/** Input for an approval gate check — scope, workspace, target path, and policy. */
 export interface ApprovalGateInput {
   readonly approval?: RuntimeApproval
   readonly requiredScope: RuntimeApprovalScope
@@ -11,6 +12,7 @@ export interface ApprovalGateInput {
   readonly policy: RuntimePolicySnapshot
 }
 
+/** Throws if approval is missing, scope is insufficient, or path is protected. */
 export function assertApprovalGate(input: ApprovalGateInput): void {
   if (input.approval === undefined) {
     throw new Error('Approved execution requires an approval ticket.')
@@ -30,6 +32,7 @@ export function assertApprovalGate(input: ApprovalGateInput): void {
   }
 }
 
+/** Renders a human-readable summary of an approval ticket. */
 export function formatApprovalSummary(approval: RuntimeApproval): string {
   return [
     `Ticket: ${approval.ticketId}`,
@@ -38,6 +41,7 @@ export function formatApprovalSummary(approval: RuntimeApproval): string {
   ].join('\n')
 }
 
+/** Converts a target path to a workspace-relative path string. */
 export function toWorkspaceRelativePath(workspaceRoot: string, targetPath: string): string {
   return path.relative(path.resolve(workspaceRoot), resolveWorkspacePath(workspaceRoot, targetPath))
 }

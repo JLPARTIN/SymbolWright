@@ -13,18 +13,21 @@ const baseEvent: RuntimeAuditEvent = {
   action: 'local_file_write',
   status: 'allowed',
   detail: 'Wrote src/foo.ts per operator approval.',
+  timestamp: '2026-06-26T00:00:00.000Z',
 }
 
 const blockedEvent: RuntimeAuditEvent = {
   action: 'github_write_gate',
   status: 'blocked',
   detail: 'GitHub writes disabled by policy.',
+  timestamp: '2026-06-26T00:00:01.000Z',
 }
 
 const sensitiveEvent: RuntimeAuditEvent = {
   action: 'github_live_read',
   status: 'allowed',
   detail: 'Read PR with token ghp_abc123secret and Bearer eyJhbGci.token.sig',
+  timestamp: '2026-06-26T00:00:02.000Z',
 }
 
 describe('persistAuditLedger', () => {
@@ -54,7 +57,7 @@ describe('persistAuditLedger', () => {
   })
 
   it('warns on invalid events', () => {
-    const invalid: RuntimeAuditEvent = { action: '', status: 'allowed', detail: 'bad' }
+    const invalid: RuntimeAuditEvent = { action: '', status: 'allowed', detail: 'bad', timestamp: '2026-06-26T00:00:00.000Z' }
     const result = persistAuditLedger([baseEvent, invalid], '2026-06-26T00:00:00Z')
 
     expect(result.entriesWritten).toBe(1)
@@ -84,7 +87,7 @@ describe('serializeAuditLedger', () => {
   })
 
   it('skips invalid events', () => {
-    const invalid: RuntimeAuditEvent = { action: '', status: 'allowed', detail: 'bad' }
+    const invalid: RuntimeAuditEvent = { action: '', status: 'allowed', detail: 'bad', timestamp: '2026-06-26T00:00:00.000Z' }
     const lines = serializeAuditLedger([baseEvent, invalid], '2026-06-26T00:00:00Z')
 
     expect(lines).toHaveLength(1)

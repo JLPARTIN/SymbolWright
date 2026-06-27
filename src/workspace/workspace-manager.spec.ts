@@ -157,4 +157,32 @@ describe('WorkspaceManager', () => {
     expect(restored.size()).toBe(0)
     expect(restored.getPrimary()).toBeUndefined()
   })
+
+  it('fromConfig falls back to first repo when primaryRepo is invalid', () => {
+    const r1 = manager.add(REPO_A)
+    manager.add(REPO_B)
+    const config = manager.toConfig()
+    const restored = WorkspaceManager.fromConfig({
+      ...config,
+      primaryRepo: 'nonexistent-id',
+    })
+
+    expect(restored.getPrimary()).toBeDefined()
+    expect(restored.getPrimary()!.id).toBe(r1.id)
+  })
+
+  it('isFileInWorkspace returns true for exact repo root', () => {
+    manager.add(REPO_A)
+    expect(manager.isFileInWorkspace(REPO_A)).toBe(true)
+  })
+
+  it('getRepoForFile returns deepest match for nested repos', () => {
+    const nested = join(REPO_A, 'sub-project')
+    mkdirSync(nested, { recursive: true })
+    manager.add(REPO_A)
+    manager.add(nested)
+
+    const repo = manager.getRepoForFile(join(nested, 'index.ts'))
+    expect(repo!.rootPath).toBe(resolve(nested))
+  })
 })

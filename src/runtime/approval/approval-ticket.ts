@@ -1,10 +1,12 @@
 import type { RuntimeApproval, RuntimeApprovalScope } from '../types.js'
 
+/** An approval ticket with reason and creation timestamp. */
 export interface ApprovalTicket extends RuntimeApproval {
   readonly reason: string
   readonly createdAt: string
 }
 
+/** Creates a validated approval ticket, trimming inputs and defaulting createdAt. */
 export function createApprovalTicket(input: {
   readonly ticketId: string
   readonly approvedBy: string
@@ -33,6 +35,7 @@ export function createApprovalTicket(input: {
   }
 }
 
+/** Extracts --approval-ticket value from CLI args, if present. */
 export function parseApprovalTicketId(args: readonly string[]): string | undefined {
   const index = args.indexOf('--approval-ticket')
   if (index === -1) {

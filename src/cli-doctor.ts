@@ -123,6 +123,19 @@ function checkSessionsDir(workspaceRoot: string): DoctorCheck {
   return { name: 'Sessions directory', status: 'WARN', detail: 'Not yet created (will be on first run)' }
 }
 
+function checkWorkspaceConfig(workspaceRoot: string): DoctorCheck {
+  const configPath = path.join(workspaceRoot, '.codemind', 'workspace.json')
+  if (!fs.existsSync(configPath)) {
+    return { name: 'Workspace config', status: 'WARN', detail: 'No .codemind/workspace.json found' }
+  }
+  try {
+    JSON.parse(fs.readFileSync(configPath, 'utf8'))
+    return { name: 'Workspace config', status: 'PASS', detail: configPath }
+  } catch {
+    return { name: 'Workspace config', status: 'FAIL', detail: 'Invalid JSON in .codemind/workspace.json' }
+  }
+}
+
 function checkMemoryDir(workspaceRoot: string): DoctorCheck {
   const memDir = path.join(workspaceRoot, '.codemind', 'memory')
   if (fs.existsSync(memDir)) {
@@ -144,6 +157,7 @@ export function runDoctor(workspaceRoot: string): DoctorReport {
     checkToolRegistry(),
     checkSessionsDir(workspaceRoot),
     checkMemoryDir(workspaceRoot),
+    checkWorkspaceConfig(workspaceRoot),
   ]
 
   const passCount = checks.filter((c) => c.status === 'PASS').length

@@ -1,9 +1,11 @@
+/** Supported execution modes from plan-only to approved execution. */
 export type CodemindRuntimeMode =
   | 'PLAN_ONLY'
   | 'READ_ONLY'
   | 'PROPOSAL_ONLY'
   | 'APPROVED_EXECUTION'
 
+/** Union of all registered tool names in the runtime. */
 export type CodemindToolName =
   | 'plan_goal'
   | 'list_files'
@@ -46,6 +48,7 @@ export type CodemindToolName =
   | 'run_typecheck'
   | 'run_lint'
 
+/** Capability categories that determine tool availability per mode. */
 export type RuntimeToolCapability =
   | 'PLAN'
   | 'READ'
@@ -72,6 +75,7 @@ export type RuntimeToolCapability =
   | 'ZFLOW_REPORT'
   | 'ZFLOW_REPORT_CATALOG'
 
+/** Typed scopes for approval tickets — each covers a distinct write surface. */
 export type RuntimeApprovalScope =
   | 'file:write'
   | 'github:write'
@@ -79,6 +83,7 @@ export type RuntimeApprovalScope =
   | 'apply_edit'
   | 'command_dry_run'
 
+/** Exhaustive list of all approval scopes for runtime validation. */
 export const ALL_APPROVAL_SCOPES: readonly RuntimeApprovalScope[] = [
   'file:write',
   'github:write',
@@ -87,16 +92,19 @@ export const ALL_APPROVAL_SCOPES: readonly RuntimeApprovalScope[] = [
   'command_dry_run',
 ] as const
 
+/** Type guard: returns true if scope is a known RuntimeApprovalScope. */
 export function isValidApprovalScope(scope: string): scope is RuntimeApprovalScope {
   return (ALL_APPROVAL_SCOPES as readonly string[]).includes(scope)
 }
 
+/** An operator-issued approval ticket authorizing gated actions. */
 export interface RuntimeApproval {
   readonly ticketId: string
   readonly approvedBy: string
   readonly scopes: readonly RuntimeApprovalScope[]
 }
 
+/** Immutable snapshot of the active runtime policy governing tool access. */
 export interface RuntimePolicySnapshot {
   readonly mode: CodemindRuntimeMode
   readonly allowNetwork: boolean
@@ -107,12 +115,14 @@ export interface RuntimePolicySnapshot {
   readonly noisyDirs: readonly string[]
 }
 
+/** Context passed to every tool execution — cwd, policy, and optional approval. */
 export interface RuntimeToolContext {
   readonly cwd: string
   readonly policy: RuntimePolicySnapshot
   readonly approval?: RuntimeApproval
 }
 
+/** Defines a runtime tool with name, capability, and typed execute function. */
 export interface RuntimeToolDefinition<TInput = unknown> {
   readonly name: CodemindToolName
   readonly description: string
@@ -120,6 +130,7 @@ export interface RuntimeToolDefinition<TInput = unknown> {
   readonly execute: (input: TInput, context: RuntimeToolContext) => Promise<string>
 }
 
+/** A single step in a goal plan with optional dependency references. */
 export interface GoalPlanStep {
   readonly id: string
   readonly title: string
@@ -127,17 +138,20 @@ export interface GoalPlanStep {
   readonly dependsOn?: readonly string[]
 }
 
+/** A structured plan with a goal and ordered steps. */
 export interface GoalPlan {
   readonly goal: string
   readonly steps: readonly GoalPlanStep[]
 }
 
+/** Result of a runtime loop iteration — completed, blocked, or iteration limit reached. */
 export interface RuntimeLoopResult {
   readonly status: 'completed' | 'blocked' | 'iteration_limit'
   readonly finalMessage: string
   readonly iterations: number
 }
 
+/** Compile-time-verified array of every CodemindToolName. */
 export const ALL_CODEMIND_TOOL_NAMES = [
   'plan_goal',
   'list_files',

@@ -1,5 +1,6 @@
 import type { ProviderTokenUsage } from '../provider/provider.types.js'
 
+/** Per-million-token cost rates for a model. */
 export interface CostRate {
   readonly inputPerMillion: number
   readonly outputPerMillion: number
@@ -27,6 +28,7 @@ const FALLBACK_RATE: CostRate = {
   outputPerMillion: 15,
 }
 
+/** A single usage record with model, tokens, cost, and source. */
 export interface UsageRecord {
   readonly sessionId: string
   readonly model: string
@@ -37,6 +39,7 @@ export interface UsageRecord {
   readonly agentId?: string
 }
 
+/** Aggregated usage summary with breakdowns by model and source. */
 export interface UsageSummary {
   readonly totalInputTokens: number
   readonly totalOutputTokens: number
@@ -62,6 +65,7 @@ export interface SourceUsageSummary {
   readonly count: number
 }
 
+/** Computes USD cost from token usage and model-specific rates. */
 export function computeCost(usage: ProviderTokenUsage, model: string, rates?: Record<string, CostRate>): number {
   const rateTable = rates ?? DEFAULT_COST_RATES
   const rate = rateTable[model] ?? FALLBACK_RATE
@@ -81,6 +85,7 @@ export function computeCost(usage: ProviderTokenUsage, model: string, rates?: Re
   return cost
 }
 
+/** Tracks per-request usage records and produces aggregated summaries. */
 export class CostTracker {
   private readonly records: UsageRecord[] = []
   private readonly rates: Record<string, CostRate>
@@ -186,6 +191,7 @@ export class CostTracker {
   }
 }
 
+/** Renders a usage summary as a human-readable multi-line string. */
 export function renderUsageSummary(summary: UsageSummary): string {
   const lines: string[] = [
     'CodeMind Usage Summary',

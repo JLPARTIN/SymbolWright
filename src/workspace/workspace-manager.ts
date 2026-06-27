@@ -1,6 +1,7 @@
 import { existsSync, statSync } from 'node:fs'
 import { resolve, basename } from 'node:path'
 
+/** A registered workspace repository with identity and path. */
 export interface WorkspaceRepo {
   readonly id: string
   readonly rootPath: string
@@ -8,11 +9,13 @@ export interface WorkspaceRepo {
   readonly addedAt: string
 }
 
+/** Serializable workspace configuration with primary repo and repo list. */
 export interface WorkspaceConfig {
   readonly primaryRepo: string
   readonly repos: readonly WorkspaceRepo[]
 }
 
+/** Manages multi-repo workspaces with primary selection and file lookups. */
 export class WorkspaceManager {
   private readonly repos = new Map<string, WorkspaceRepo>()
   private primaryRepoId: string | undefined

@@ -1,5 +1,6 @@
 import type { ProviderStreamEvent } from '../../provider/provider.types.js'
 
+/** Categorization of errors for routing recovery and user messaging. */
 export type CodemindErrorCategory =
   | 'provider_error'
   | 'tool_error'
@@ -9,6 +10,7 @@ export type CodemindErrorCategory =
   | 'network_error'
   | 'unknown_error'
 
+/** Structured error with category, retryability, and original context. */
 export interface CodemindError {
   readonly category: CodemindErrorCategory
   readonly message: string
@@ -29,6 +31,7 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
   maxDelayMs: 16000,
 }
 
+/** Classifies a raw error into a CodemindError with category and retryability. */
 export function classifyError(error: unknown): CodemindError {
   if (error instanceof Error) {
     const msg = error.message.toLowerCase()
@@ -106,11 +109,13 @@ export function classifyError(error: unknown): CodemindError {
   }
 }
 
+/** Computes exponential backoff delay for the given retry attempt. */
 export function computeRetryDelay(attempt: number, config: RetryConfig = DEFAULT_RETRY_CONFIG): number {
   const delay = config.baseDelayMs * Math.pow(2, attempt)
   return Math.min(delay, config.maxDelayMs)
 }
 
+/** Returns true if the error is retryable and attempts remain. */
 export function shouldRetry(
   error: CodemindError,
   attempt: number,
@@ -119,6 +124,7 @@ export function shouldRetry(
   return error.retryable && attempt < config.maxRetries
 }
 
+/** Retries an async function with exponential backoff on retryable errors. */
 export async function withRetry<T>(
   fn: () => Promise<T>,
   config: RetryConfig = DEFAULT_RETRY_CONFIG,
@@ -143,6 +149,7 @@ export async function withRetry<T>(
   throw lastError?.originalError ?? new Error(lastError?.message ?? 'Retry exhausted')
 }
 
+/** Formats a CodemindError into a user-facing message. */
 export function formatErrorForUser(error: CodemindError): string {
   switch (error.category) {
     case 'provider_error':
@@ -170,6 +177,7 @@ export function formatErrorForUser(error: CodemindError): string {
   }
 }
 
+/** Formats a CodemindError into a message suitable for the LLM context. */
 export function formatErrorForLLM(error: CodemindError, toolName?: string): string {
   const prefix = toolName !== undefined ? `Tool "${toolName}" failed: ` : ''
   return `${prefix}${error.message}. ${suggestRecovery(error)}`
@@ -192,6 +200,7 @@ function suggestRecovery(error: CodemindError): string {
   }
 }
 
+/** Returns true if the provider stream event is an error event. */
 export function isProviderStreamError(event: ProviderStreamEvent): boolean {
   return event.type === 'error'
 }
