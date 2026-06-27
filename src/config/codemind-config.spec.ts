@@ -269,5 +269,82 @@ describe('codemind-config', () => {
       expect(result.errors).toHaveLength(0)
       expect(result.warnings).toHaveLength(0)
     })
+
+    it('warns when voyage provider set without API key', () => {
+      const config: CodemindConfig = {
+        anthropicApiKey: 'sk-test-key-12345678',
+        embeddingProvider: 'voyage',
+      }
+
+      const result = validateCodemindConfig(config)
+      expect(result.warnings.some((w) => w.includes('VOYAGE_API_KEY'))).toBe(true)
+      expect(result.redactedSummary.embeddingProvider).toBe('voyage')
+      expect(result.redactedSummary.hasVoyageApiKey).toBe(false)
+    })
+
+    it('no warning when voyage provider set with API key', () => {
+      const config: CodemindConfig = {
+        anthropicApiKey: 'sk-test-key-12345678',
+        embeddingProvider: 'voyage',
+        voyageApiKey: 'pa-test-voyage-key-1234',
+      }
+
+      const result = validateCodemindConfig(config)
+      expect(result.warnings.every((w) => !w.includes('VOYAGE_API_KEY'))).toBe(true)
+      expect(result.redactedSummary.hasVoyageApiKey).toBe(true)
+    })
+
+    it('includes hash embedding provider in summary', () => {
+      const config: CodemindConfig = {
+        anthropicApiKey: 'sk-test-key-12345678',
+        embeddingProvider: 'hash',
+      }
+
+      const result = validateCodemindConfig(config)
+      expect(result.redactedSummary.embeddingProvider).toBe('hash')
+    })
+  })
+
+  describe('resolveCodemindConfig embedding fields', () => {
+    it('reads embeddingProvider from env', () => {
+      const config = resolveCodemindConfig({
+        env: { CODEMIND_EMBEDDING_PROVIDER: 'voyage' },
+        homeConfigPath: '/nonexistent/config.json',
+        projectConfigPath: '/nonexistent/config.json',
+      })
+
+      expect(config.embeddingProvider).toBe('voyage')
+    })
+
+    it('reads voyageApiKey from env', () => {
+      const config = resolveCodemindConfig({
+        env: { VOYAGE_API_KEY: 'pa-test-key-abcdef' },
+        homeConfigPath: '/nonexistent/config.json',
+        projectConfigPath: '/nonexistent/config.json',
+      })
+
+      expect(config.voyageApiKey).toBe('pa-test-key-abcdef')
+    })
+
+    it('ignores invalid embedding provider values', () => {
+      const config = resolveCodemindConfig({
+        env: { CODEMIND_EMBEDDING_PROVIDER: 'invalid' },
+        homeConfigPath: '/nonexistent/config.json',
+        projectConfigPath: '/nonexistent/config.json',
+      })
+
+      expect(config.embeddingProvider).toBeUndefined()
+    })
+
+    it('CLI flags override env for embeddingProvider', () => {
+      const config = resolveCodemindConfig({
+        cliFlags: { embeddingProvider: 'hash' },
+        env: { CODEMIND_EMBEDDING_PROVIDER: 'voyage' },
+        homeConfigPath: '/nonexistent/config.json',
+        projectConfigPath: '/nonexistent/config.json',
+      })
+
+      expect(config.embeddingProvider).toBe('hash')
+    })
   })
 })

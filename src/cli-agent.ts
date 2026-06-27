@@ -18,6 +18,8 @@ import { conversationMessagesToProviderMessages } from './conversation/transcrip
 import { trimConversationToFit } from './conversation/context-window.js'
 import { WorkspaceManager } from './workspace/workspace-manager.js'
 import { ProjectMemory, resolveProjectMemoryDir } from './memory/project-memory.js'
+import { createHashEmbeddingProvider, createVoyageEmbeddingProvider } from './memory/embedding-provider.js'
+import type { EmbeddingProvider } from './memory/embedding-provider.js'
 
 function buildPolicy(): RuntimePolicySnapshot {
   return {
@@ -42,6 +44,13 @@ function createProvider(config: CodemindConfig): LLMProvider {
 
 function ensureDir(dir: string): void {
   mkdirSync(dir, { recursive: true })
+}
+
+function resolveEmbeddingProvider(config: CodemindConfig): EmbeddingProvider {
+  if (config.embeddingProvider === 'voyage' && config.voyageApiKey !== undefined) {
+    return createVoyageEmbeddingProvider({ apiKey: config.voyageApiKey })
+  }
+  return createHashEmbeddingProvider()
 }
 
 function createMessage(role: ConversationMessage['role'], content: string): ConversationMessage {
@@ -245,7 +254,12 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
   const provider = createProvider(config)
   const cwd = process.cwd()
   const policy = buildPolicy()
-  const toolContext: RuntimeToolContext = { cwd, policy }
+  const embeddingProvider = resolveEmbeddingProvider(config)
+  const toolContext: RuntimeToolContext = {
+    cwd,
+    policy,
+    embeddingProvider,
+  }
   const costTracker = new CostTracker()
 
   const storagePaths = resolveStoragePaths(cwd)

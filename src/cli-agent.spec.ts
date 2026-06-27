@@ -42,7 +42,7 @@ describe('cli-agent', () => {
         valid: false,
         errors: ['Missing API key.'],
         warnings: [],
-        redactedSummary: { hasApiKey: false, hasGitHubToken: false },
+        redactedSummary: { hasApiKey: false, hasGitHubToken: false, hasVoyageApiKey: false },
       })
 
       await expect(runAgentCommand(['test'])).rejects.toThrow('process.exit')
@@ -55,7 +55,7 @@ describe('cli-agent', () => {
         valid: true,
         errors: [],
         warnings: [],
-        redactedSummary: { hasApiKey: true, apiKeyPreview: 'sk-t...tkey', hasGitHubToken: false },
+        redactedSummary: { hasApiKey: true, apiKeyPreview: 'sk-t...tkey', hasGitHubToken: false, hasVoyageApiKey: false },
       })
       mockCreateProvider.mockReturnValue({
         providerId: 'anthropic',

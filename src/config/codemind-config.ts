@@ -2,12 +2,16 @@ import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 
+export type EmbeddingProviderType = 'voyage' | 'hash'
+
 export interface CodemindConfig {
   readonly anthropicApiKey?: string
   readonly githubToken?: string
   readonly model?: string
   readonly maxTokens?: number
   readonly baseURL?: string
+  readonly embeddingProvider?: EmbeddingProviderType
+  readonly voyageApiKey?: string
 }
 
 interface RawConfigFile {
@@ -16,6 +20,8 @@ interface RawConfigFile {
   readonly model?: unknown
   readonly maxTokens?: unknown
   readonly baseURL?: unknown
+  readonly embeddingProvider?: unknown
+  readonly voyageApiKey?: unknown
 }
 
 function loadJsonConfig(filePath: string): RawConfigFile | undefined {
@@ -93,12 +99,31 @@ export function resolveCodemindConfig(sources: CodemindConfigSources = {}): Code
     stringOrUndefined(homeConfig?.baseURL) ??
     stringOrUndefined(projectConfig?.baseURL)
 
+  const embeddingProviderRaw =
+    stringOrUndefined(cli.embeddingProvider) ??
+    stringOrUndefined(env['CODEMIND_EMBEDDING_PROVIDER']) ??
+    stringOrUndefined(homeConfig?.embeddingProvider) ??
+    stringOrUndefined(projectConfig?.embeddingProvider)
+
+  const embeddingProvider: EmbeddingProviderType | undefined =
+    embeddingProviderRaw === 'voyage' || embeddingProviderRaw === 'hash'
+      ? embeddingProviderRaw
+      : undefined
+
+  const voyageApiKey =
+    stringOrUndefined(cli.voyageApiKey) ??
+    stringOrUndefined(env['VOYAGE_API_KEY']) ??
+    stringOrUndefined(homeConfig?.voyageApiKey) ??
+    stringOrUndefined(projectConfig?.voyageApiKey)
+
   return {
     ...(anthropicApiKey !== undefined ? { anthropicApiKey } : {}),
     ...(githubToken !== undefined ? { githubToken } : {}),
     ...(model !== undefined ? { model } : {}),
     ...(maxTokens !== undefined ? { maxTokens } : {}),
     ...(baseURL !== undefined ? { baseURL } : {}),
+    ...(embeddingProvider !== undefined ? { embeddingProvider } : {}),
+    ...(voyageApiKey !== undefined ? { voyageApiKey } : {}),
   }
 }
 
@@ -121,6 +146,8 @@ export interface CodemindConfigValidationResult {
     readonly model?: string
     readonly maxTokens?: number
     readonly baseURL?: string
+    readonly embeddingProvider?: EmbeddingProviderType
+    readonly hasVoyageApiKey: boolean
   }
 }
 
@@ -148,6 +175,11 @@ export function validateCodemindConfig(config: CodemindConfig): CodemindConfigVa
 
   const hasApiKey = config.anthropicApiKey !== undefined
   const hasGitHubToken = config.githubToken !== undefined
+  const hasVoyageApiKey = config.voyageApiKey !== undefined
+
+  if (config.embeddingProvider === 'voyage' && !hasVoyageApiKey) {
+    warnings.push('embeddingProvider is "voyage" but no VOYAGE_API_KEY is set; falling back to hash embeddings.')
+  }
 
   return {
     valid: errors.length === 0,
@@ -161,6 +193,8 @@ export function validateCodemindConfig(config: CodemindConfig): CodemindConfigVa
       ...(config.model !== undefined ? { model: config.model } : {}),
       ...(config.maxTokens !== undefined ? { maxTokens: config.maxTokens } : {}),
       ...(config.baseURL !== undefined ? { baseURL: config.baseURL } : {}),
+      ...(config.embeddingProvider !== undefined ? { embeddingProvider: config.embeddingProvider } : {}),
+      hasVoyageApiKey,
     },
   }
 }
