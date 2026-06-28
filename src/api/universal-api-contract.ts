@@ -20,10 +20,8 @@ export const CODEMIND_EXTERNAL_CLIENT_KINDS = [
 
 export const CODEMIND_PUBLIC_API_ROUTE_METHODS = ['GET', 'POST'] as const
 
-export type CodemindExternalClientKind =
-  (typeof CODEMIND_EXTERNAL_CLIENT_KINDS)[number]
-export type CodemindPublicApiRouteMethod =
-  (typeof CODEMIND_PUBLIC_API_ROUTE_METHODS)[number]
+export type CodemindExternalClientKind = (typeof CODEMIND_EXTERNAL_CLIENT_KINDS)[number]
+export type CodemindPublicApiRouteMethod = (typeof CODEMIND_PUBLIC_API_ROUTE_METHODS)[number]
 
 export interface CodemindPublicApiRoute {
   readonly method: CodemindPublicApiRouteMethod
@@ -134,14 +132,10 @@ export function buildUniversalApiContractReport(
 
   for (const route of routes) {
     if (!route.requiresCodemindApiKey) {
-      findings.push(
-        `${route.method} ${route.path} does not require a CodeMind access credential`,
-      )
+      findings.push(`${route.method} ${route.path} does not require a CodeMind access credential`)
     }
     if (route.browserMaySendRawProviderKey) {
-      findings.push(
-        `${route.method} ${route.path} allows provider material from browser clients`,
-      )
+      findings.push(`${route.method} ${route.path} allows provider material from browser clients`)
     }
     if (route.allowedClients.length === 0) {
       findings.push(`${route.method} ${route.path} has no allowed external clients`)
@@ -217,11 +211,7 @@ export function renderUniversalApiContractReport(
   ]
 
   if (report.findings.length > 0) {
-    lines.push(
-      '',
-      'Findings:',
-      ...report.findings.map((finding) => `  - ${finding}`),
-    )
+    lines.push('', 'Findings:', ...report.findings.map((finding) => `  - ${finding}`))
   } else {
     lines.push('', 'Findings: none')
   }
