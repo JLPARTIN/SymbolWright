@@ -43,3 +43,6 @@ All notable changes to CodeMind are documented in this file.
 - **Runtime Registry**: Replaced 22 wrapper registries with canonical `createFixtureRegistry()` factory supporting 22 named presets.
 - **Operator Console**: Wired dormant `WorkspaceManager` into operator workspace via `/workspace` command; added `/zflow` for ZFlow report rendering.
 - **Release Gates**: Added CHANGELOG consistency gate to release readiness assessment.
+- **License**: Changed from UNLICENSED to MIT license.
+- **Package Contract**: Added `exports` field for ESM resolution, npm script aliases for diagnostic commands (`doctor`, `release-readiness`, `build-ledger`).
+- **Deploy Pipeline**: Hardened deploy workflow to match CI strength (added audit, lint, format:check, coverage enforcement, build step).
