@@ -2,9 +2,9 @@ import fs from 'node:fs'
 
 import type { FakeLiveReadClientData } from './runtime/live-read/fake-live-read-client.js'
 import {
-  createGitHubLiveReadRuntimeContext,
-  createGitHubLiveReadRuntimeRegistry,
-} from './runtime/runtime-github-live-read-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 
 export type GitHubLiveReadMode = 'fixture' | 'live'
 
@@ -28,8 +28,8 @@ export async function renderRuntimeGitHubLiveRead(
   }
 
   const readMode: GitHubLiveReadMode = raw.clientData !== undefined ? 'fixture' : 'live'
-  const registry = createGitHubLiveReadRuntimeRegistry(raw.clientData)
-  const context = createGitHubLiveReadRuntimeContext(cwd)
+  const registry = createFixtureRegistry('github_live_read', raw.clientData)
+  const context = createFixtureContext(cwd)
 
   let output: string
   if (raw.mode === 'pr') {

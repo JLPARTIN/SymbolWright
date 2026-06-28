@@ -1,9 +1,9 @@
 import fs from 'node:fs'
 
 import {
-  createPatchApplicationRuntimeContext,
-  createPatchApplicationRuntimeRegistry,
-} from './runtime/runtime-patch-application-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 import type { RuntimeApproval, RuntimePolicySnapshot } from './runtime/types.js'
 
 export interface ApplyPatchFixtureRequest {
@@ -38,8 +38,8 @@ export async function renderRuntimeApplyPatch(
     throw new Error('Fixture must include a non-empty "files" array.')
   }
 
-  const registry = createPatchApplicationRuntimeRegistry({})
-  const defaultContext = createPatchApplicationRuntimeContext(cwd)
+  const registry = createFixtureRegistry('patch_application')
+  const defaultContext = createFixtureContext(cwd)
   const context = {
     ...defaultContext,
     ...(raw.policy !== undefined ? { policy: raw.policy } : {}),

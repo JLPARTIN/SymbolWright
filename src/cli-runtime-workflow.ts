@@ -2,9 +2,9 @@ import { readFile } from 'node:fs/promises'
 import type { CodemindToolName } from './runtime/types.js'
 import type { FakeLiveReadClientData } from './runtime/live-read/fake-live-read-client.js'
 import {
-  createWorkflowRuntimeContext,
-  createWorkflowRuntimeRegistry,
-} from './runtime/runtime-workflow-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 import {
   runRuntimeWorkflow,
   renderWorkflowResult,
@@ -59,8 +59,8 @@ export async function renderRuntimeWorkflow(
       ? (rawClientData as FakeLiveReadClientData)
       : {}
 
-  const registry = createWorkflowRuntimeRegistry(clientData)
-  const context = createWorkflowRuntimeContext(cwd)
+  const registry = createFixtureRegistry('workflow', clientData)
+  const context = createFixtureContext(cwd)
   const result = await runRuntimeWorkflow(request, registry, context)
 
   return renderWorkflowResult(result)

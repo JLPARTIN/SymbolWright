@@ -12,7 +12,7 @@ import {
 } from './validation-command-gate.js'
 import { createValidationCommandAuditEvent } from './validation-command-audit.js'
 import { validationCommandGateTool } from '../tools/validation-command-gate-tool.js'
-import { createValidationCommandRuntimeRegistry } from '../runtime-validation-command-registry.js'
+import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 import type { RuntimeApproval, RuntimePolicySnapshot, RuntimeToolContext } from '../types.js'
 import { renderRuntimeValidationCommand } from '../../cli-runtime-validation-command.js'
 
@@ -295,7 +295,7 @@ describe('validation command gate tool', () => {
 
 describe('validation command registry', () => {
   it('includes validation_command_gate tool', () => {
-    const registry = createValidationCommandRuntimeRegistry({})
+    const registry = createFixtureRegistry('validation_command')
 
     expect(registry.has('validation_command_gate')).toBe(true)
     const tool = registry.getOrThrow('validation_command_gate')
@@ -303,7 +303,7 @@ describe('validation command registry', () => {
   })
 
   it('inherits all Phase L tools', () => {
-    const registry = createValidationCommandRuntimeRegistry({})
+    const registry = createFixtureRegistry('validation_command')
 
     expect(registry.has('local_file_write')).toBe(true)
     expect(registry.has('write_intent_plan')).toBe(true)

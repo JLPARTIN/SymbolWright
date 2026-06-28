@@ -4,10 +4,8 @@ import {
   createAuditEvent,
   RuntimeAuditLog,
 } from './runtime/audit/runtime-audit-log.js'
-import {
-  createApprovedRuntimeContext,
-  createApprovedRuntimeRegistry,
-} from './runtime/runtime-approved-registry.js'
+import { createApprovedRuntimeContext } from './runtime/runtime-approved-registry.js'
+import { createFixtureRegistry } from './runtime/registry/fixture-registry-factory.js'
 
 export async function renderApprovedRuntimeRun(
   args: readonly string[],
@@ -33,7 +31,7 @@ export async function renderApprovedRuntimeRun(
     scopes: ['apply_edit', 'command_dry_run'],
     reason: `approved dry-run representation for ${goal}`,
   })
-  const registry = createApprovedRuntimeRegistry()
+  const registry = createFixtureRegistry('approved')
   const context = createApprovedRuntimeContext(approval, cwd)
   const audit = new RuntimeAuditLog()
 

@@ -3,9 +3,9 @@ import fs from 'node:fs'
 import type { FakeLiveReadClientData } from './runtime/live-read/fake-live-read-client.js'
 import type { OperatorReviewAction } from './runtime/operator/operator-review-packet.js'
 import {
-  createOperatorReviewRuntimeContext,
-  createOperatorReviewRuntimeRegistry,
-} from './runtime/runtime-operator-review-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 
 export interface OperatorReviewFixtureRequest {
   readonly id: string
@@ -34,8 +34,8 @@ export async function renderRuntimeOperatorReview(
   }
 
   const clientData: FakeLiveReadClientData = raw.clientData ?? {}
-  const registry = createOperatorReviewRuntimeRegistry(clientData)
-  const context = createOperatorReviewRuntimeContext(cwd)
+  const registry = createFixtureRegistry('operator_review', clientData)
+  const context = createFixtureContext(cwd)
 
   const tool = registry.getOrThrow('operator_review_packet')
   return tool.execute(

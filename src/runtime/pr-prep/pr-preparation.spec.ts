@@ -11,7 +11,7 @@ import {
 } from './pr-preparation.js'
 import { createPrPreparationAuditEvent } from './pr-preparation-audit.js'
 import { prPreparationTool } from '../tools/pr-preparation-tool.js'
-import { createPrPreparationRuntimeRegistry } from '../runtime-pr-preparation-registry.js'
+import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 import type { RuntimeToolContext } from '../types.js'
 import { renderRuntimePrPreparation } from '../../cli-runtime-pr-preparation.js'
 
@@ -277,7 +277,7 @@ describe('PR preparation tool', () => {
 
 describe('PR preparation registry', () => {
   it('includes pr_preparation tool', () => {
-    const registry = createPrPreparationRuntimeRegistry({})
+    const registry = createFixtureRegistry('pr_preparation')
 
     expect(registry.has('pr_preparation')).toBe(true)
     const tool = registry.getOrThrow('pr_preparation')
@@ -285,7 +285,7 @@ describe('PR preparation registry', () => {
   })
 
   it('inherits all Phase M tools', () => {
-    const registry = createPrPreparationRuntimeRegistry({})
+    const registry = createFixtureRegistry('pr_preparation')
 
     expect(registry.has('validation_command_gate')).toBe(true)
     expect(registry.has('local_file_write')).toBe(true)

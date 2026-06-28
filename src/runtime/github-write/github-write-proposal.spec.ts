@@ -8,7 +8,7 @@ import {
 } from './github-write-proposal.js'
 import { createGitHubWriteProposalAuditEvent } from './github-write-proposal-audit.js'
 import { githubWriteProposalTool } from '../tools/github-write-proposal-tool.js'
-import { createGitHubWriteProposalRuntimeRegistry } from '../runtime-github-write-proposal-registry.js'
+import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 import { renderRuntimeGitHubWriteProposal } from '../../cli-runtime-github-write-proposal.js'
 import type { RuntimeToolContext } from '../types.js'
 
@@ -340,13 +340,13 @@ describe('githubWriteProposalTool', () => {
 
 describe('createGitHubWriteProposalRuntimeRegistry', () => {
   it('includes the github_write_proposal tool', () => {
-    const registry = createGitHubWriteProposalRuntimeRegistry({})
+    const registry = createFixtureRegistry('github_write_proposal')
     const tool = registry.getOrThrow('github_write_proposal')
     expect(tool.name).toBe('github_write_proposal')
   })
 
   it('preserves all previous registry tools', () => {
-    const registry = createGitHubWriteProposalRuntimeRegistry({})
+    const registry = createFixtureRegistry('github_write_proposal')
     const tools = registry.list()
     const names = tools.map((t) => t.name)
 

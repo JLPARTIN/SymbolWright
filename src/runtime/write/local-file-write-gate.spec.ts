@@ -11,7 +11,7 @@ import {
 } from './local-file-write-gate.js'
 import { createLocalFileWriteAuditEvent } from './local-file-write-audit.js'
 import { localFileWriteTool } from '../tools/local-file-write-tool.js'
-import { createLocalWriteRuntimeRegistry } from '../runtime-local-write-registry.js'
+import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 import type { RuntimeApproval, RuntimePolicySnapshot, RuntimeToolContext } from '../types.js'
 import { renderRuntimeLocalWrite } from '../../cli-runtime-local-write.js'
 
@@ -434,7 +434,7 @@ describe('local file write tool', () => {
 
 describe('local write registry', () => {
   it('includes local_file_write tool', () => {
-    const registry = createLocalWriteRuntimeRegistry({})
+    const registry = createFixtureRegistry('local_write')
 
     expect(registry.has('local_file_write')).toBe(true)
     const tool = registry.getOrThrow('local_file_write')
@@ -442,7 +442,7 @@ describe('local write registry', () => {
   })
 
   it('inherits all Phase K tools', () => {
-    const registry = createLocalWriteRuntimeRegistry({})
+    const registry = createFixtureRegistry('local_write')
 
     expect(registry.has('write_intent_plan')).toBe(true)
     expect(registry.has('operator_review_packet')).toBe(true)

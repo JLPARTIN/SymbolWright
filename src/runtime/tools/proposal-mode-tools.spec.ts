@@ -3,13 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { critiquePlanText } from '../ajna/plan-critique-bridge.js'
 import { critiqueProposalText } from '../ajna/proposal-critique-bridge.js'
 import {
-  createProposalRuntimeContext,
-  createProposalRuntimeRegistry,
-} from '../runtime-proposal-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from '../registry/fixture-registry-factory.js'
 
 describe('proposal mode runtime tools', () => {
   it('registers proposal mode tools after read-only tools', () => {
-    const names = createProposalRuntimeRegistry()
+    const names = createFixtureRegistry('proposal')
       .list()
       .map((entry) => entry.name)
 
@@ -19,10 +19,10 @@ describe('proposal mode runtime tools', () => {
   })
 
   it('renders a patch proposal without applying changes', async () => {
-    const tool = createProposalRuntimeRegistry().getOrThrow('propose_edit')
+    const tool = createFixtureRegistry('proposal').getOrThrow('propose_edit')
     const output = await tool.execute(
       { goal: 'add proposal renderer' },
-      createProposalRuntimeContext('/workspace/codemind'),
+      createFixtureContext('/workspace/codemind'),
     )
 
     expect(output).toContain('CodeMind patch proposal')
@@ -32,10 +32,10 @@ describe('proposal mode runtime tools', () => {
   })
 
   it('renders PR notes without posting them', async () => {
-    const tool = createProposalRuntimeRegistry().getOrThrow('pr_notes')
+    const tool = createFixtureRegistry('proposal').getOrThrow('pr_notes')
     const output = await tool.execute(
       { focus: 'proposal mode' },
-      createProposalRuntimeContext('/workspace/codemind'),
+      createFixtureContext('/workspace/codemind'),
     )
 
     expect(output).toContain('CodeMind PR notes draft')
@@ -44,10 +44,10 @@ describe('proposal mode runtime tools', () => {
   })
 
   it('renders local CI review without querying services', async () => {
-    const tool = createProposalRuntimeRegistry().getOrThrow('ci_review')
+    const tool = createFixtureRegistry('proposal').getOrThrow('ci_review')
     const output = await tool.execute(
       { status: 'failed', source: 'local fixture', findings: ['typecheck failed'] },
-      createProposalRuntimeContext('/workspace/codemind'),
+      createFixtureContext('/workspace/codemind'),
     )
 
     expect(output).toContain('CodeMind CI review draft')

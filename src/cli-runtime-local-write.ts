@@ -1,9 +1,9 @@
 import fs from 'node:fs'
 
 import {
-  createLocalWriteRuntimeContext,
-  createLocalWriteRuntimeRegistry,
-} from './runtime/runtime-local-write-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 
 export interface LocalFileWriteFixtureRequest {
   readonly targetPath: string
@@ -27,8 +27,8 @@ export async function renderRuntimeLocalWrite(
     throw new Error('Fixture must include a non-empty "reason" field.')
   }
 
-  const registry = createLocalWriteRuntimeRegistry({})
-  const context = createLocalWriteRuntimeContext(cwd)
+  const registry = createFixtureRegistry('local_write')
+  const context = createFixtureContext(cwd)
 
   const tool = registry.getOrThrow('local_file_write')
   return tool.execute(

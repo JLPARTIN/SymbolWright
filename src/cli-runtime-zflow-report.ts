@@ -1,7 +1,7 @@
 import {
-  createZflowReportRuntimeContext,
-  createZflowReportRuntimeRegistry,
-} from './runtime/runtime-zflow-report-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 import {
   assertRecord,
   loadFixtureFile,
@@ -44,8 +44,8 @@ export async function renderRuntimeZflowReport(
 ): Promise<string> {
   const raw = loadFixtureFile(fixturePath)
   const fixture = parseFixture(raw)
-  const registry = createZflowReportRuntimeRegistry()
-  const context = createZflowReportRuntimeContext(cwd)
+  const registry = createFixtureRegistry('zflow_report')
+  const context = createFixtureContext(cwd)
 
   const tool = registry.getOrThrow('zflow_report')
   return tool.execute(

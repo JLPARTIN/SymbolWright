@@ -1,9 +1,9 @@
 import fs from 'node:fs'
 
 import {
-  createGitHubWriteProposalRuntimeContext,
-  createGitHubWriteProposalRuntimeRegistry,
-} from './runtime/runtime-github-write-proposal-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 
 export interface GitHubWriteProposalFixtureRequest {
   readonly action: string
@@ -31,8 +31,8 @@ export async function renderRuntimeGitHubWriteProposal(
     throw new Error('Fixture must include a non-empty "reason" field.')
   }
 
-  const registry = createGitHubWriteProposalRuntimeRegistry({})
-  const context = createGitHubWriteProposalRuntimeContext(cwd)
+  const registry = createFixtureRegistry('github_write_proposal')
+  const context = createFixtureContext(cwd)
 
   const tool = registry.getOrThrow('github_write_proposal')
   return tool.execute(

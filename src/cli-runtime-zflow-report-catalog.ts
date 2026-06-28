@@ -1,7 +1,7 @@
 import {
-  createZflowReportCatalogRuntimeContext,
-  createZflowReportCatalogRuntimeRegistry,
-} from './runtime/runtime-zflow-report-catalog-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 import {
   assertRecord,
   loadFixtureFile,
@@ -49,8 +49,8 @@ export async function renderRuntimeZflowReportCatalog(
 ): Promise<string> {
   const raw = loadFixtureFile(fixturePath)
   const fixture = parseFixture(raw)
-  const registry = createZflowReportCatalogRuntimeRegistry()
-  const context = createZflowReportCatalogRuntimeContext(cwd)
+  const registry = createFixtureRegistry('zflow_report_catalog')
+  const context = createFixtureContext(cwd)
 
   const tool = registry.getOrThrow('zflow_report_catalog')
   return tool.execute(

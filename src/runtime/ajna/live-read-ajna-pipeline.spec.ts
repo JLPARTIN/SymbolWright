@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { GitHubCiEvidence } from '../adapters/github-ci-read-adapter.js'
 import type { GitHubPrEvidence } from '../adapters/github-pr-read-adapter.js'
-import { createAjnaLiveReadRuntimeRegistry } from '../runtime-ajna-live-read-registry.js'
+import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 import type { RuntimeToolContext } from '../types.js'
 
 import {
@@ -191,7 +191,7 @@ describe('renderLiveReadAjnaMergeReadiness', () => {
 
 describe('Ajna live-read review tool via registry', () => {
   it('renders review from fake client evidence', async () => {
-    const registry = createAjnaLiveReadRuntimeRegistry({ pr: fakePr, ci: fakeCi })
+    const registry = createFixtureRegistry('ajna_live_read',{ pr: fakePr, ci: fakeCi })
     const tool = registry.getOrThrow('ajna_live_read_review')
 
     const output = await tool.execute(
@@ -204,7 +204,7 @@ describe('Ajna live-read review tool via registry', () => {
   })
 
   it('handles PR-only review', async () => {
-    const registry = createAjnaLiveReadRuntimeRegistry({ pr: fakePr })
+    const registry = createFixtureRegistry('ajna_live_read',{ pr: fakePr })
     const tool = registry.getOrThrow('ajna_live_read_review')
 
     const output = await tool.execute(
@@ -219,7 +219,7 @@ describe('Ajna live-read review tool via registry', () => {
 
 describe('Ajna live-read merge readiness tool via registry', () => {
   it('renders merge readiness from fake client evidence', async () => {
-    const registry = createAjnaLiveReadRuntimeRegistry({ pr: fakePr, ci: fakeCi })
+    const registry = createFixtureRegistry('ajna_live_read',{ pr: fakePr, ci: fakeCi })
     const tool = registry.getOrThrow('ajna_live_read_merge_readiness')
 
     const output = await tool.execute(
@@ -232,7 +232,7 @@ describe('Ajna live-read merge readiness tool via registry', () => {
   })
 
   it('blocks when CI fails', async () => {
-    const registry = createAjnaLiveReadRuntimeRegistry({ pr: fakePr, ci: failingCi })
+    const registry = createFixtureRegistry('ajna_live_read',{ pr: fakePr, ci: failingCi })
     const tool = registry.getOrThrow('ajna_live_read_merge_readiness')
 
     const output = await tool.execute(

@@ -1,9 +1,9 @@
 import fs from 'node:fs'
 
 import {
-  createValidationCommandRuntimeContext,
-  createValidationCommandRuntimeRegistry,
-} from './runtime/runtime-validation-command-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 
 export interface ValidationCommandFixtureRequest {
   readonly command: string
@@ -25,8 +25,8 @@ export async function renderRuntimeValidationCommand(
     throw new Error('Fixture must include a non-empty "reason" field.')
   }
 
-  const registry = createValidationCommandRuntimeRegistry({})
-  const context = createValidationCommandRuntimeContext(cwd)
+  const registry = createFixtureRegistry('validation_command')
+  const context = createFixtureContext(cwd)
 
   const tool = registry.getOrThrow('validation_command_gate')
   return tool.execute(

@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises'
 import {
-  createWorkflowRuntimeContext,
-  createWorkflowRuntimeRegistry,
-} from './runtime/runtime-workflow-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 import { runRuntimeWorkflow, renderWorkflowResult } from './runtime/workflow/runtime-workflow.js'
 import {
   buildAjnaWorkflowRequest,
@@ -53,8 +53,8 @@ export async function renderRuntimeAjnaWorkflow(
       : {}
 
   const request = buildAjnaWorkflowRequest(input)
-  const registry = createWorkflowRuntimeRegistry(clientData)
-  const context = createWorkflowRuntimeContext(cwd)
+  const registry = createFixtureRegistry('workflow', clientData)
+  const context = createFixtureContext(cwd)
   const result = await runRuntimeWorkflow(request, registry, context)
 
   const summary = renderAjnaWorkflowSummary(input)
