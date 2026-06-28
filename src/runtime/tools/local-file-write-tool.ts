@@ -51,13 +51,13 @@ function parseLocalFileWriteToolInput(input: unknown): LocalFileWriteToolInput {
     content,
     reason,
     rollbackNote,
-    dryRun: typeof dryRun === 'boolean' ? dryRun : true,
+    dryRun: typeof dryRun === 'boolean' ? dryRun : false,
   }
 }
 
 export const localFileWriteTool: RuntimeToolDefinition = {
   name: 'local_file_write',
-  description: 'Execute a controlled local file write through the approval-gated write gate.',
+  description: 'Write a file in the active workspace, with dryRun available as an explicit preview mode.',
   capability: 'LOCAL_FILE_WRITE',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const parsed = parseLocalFileWriteToolInput(input)
@@ -71,19 +71,14 @@ export const localFileWriteTool: RuntimeToolDefinition = {
     }
 
     if (!context.policy.allowWrites || parsed.dryRun) {
-      const gateResult = evaluateLocalFileWriteGate(
-        request,
-        context.cwd,
-        context.policy,
-        context.approval,
-      )
+      const gateResult = evaluateLocalFileWriteGate(request, context.cwd, context.policy)
       const gateOutput = renderLocalFileWriteGateResult(gateResult)
       const auditEvent = createLocalFileWriteAuditEvent(gateResult, context.approval)
       const auditOutput = renderAuditEvents([auditEvent])
       return [gateOutput, '', '---', '', auditOutput].join('\n')
     }
 
-    const execResult = executeLocalFileWrite(request, context.cwd, context.policy, context.approval)
+    const execResult = executeLocalFileWrite(request, context.cwd, context.policy)
     const execOutput = renderLocalFileWriteExecutionResult(execResult)
     const auditEvent = createLocalFileWriteExecutionAuditEvent(execResult, context.approval)
     const sections: string[] = [execOutput]
