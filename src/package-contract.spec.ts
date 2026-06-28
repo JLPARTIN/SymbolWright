@@ -18,10 +18,17 @@ interface PackageJson {
   readonly files?: readonly string[]
 }
 
+interface InstallPlanRoot {
+  readonly name?: string
+  readonly version?: string
+  readonly license?: string
+  readonly bin?: Record<string, string>
+}
+
 interface InstallPlanJson {
   readonly name?: string
   readonly version?: string
-  readonly packages?: Record<string, { name?: string; version?: string; license?: string; bin?: Record<string, string> }>
+  readonly packages?: Record<string, InstallPlanRoot>
 }
 
 const WORKSPACE = path.resolve(import.meta.dirname, '..')
