@@ -206,6 +206,8 @@ export function renderProviderAdapterContractReport(
     `Providers: ${report.providerCount}`,
     '',
     'Credential boundary checks:',
-    ...report.checks.map((check) => `  [${check.status}] ${check.providerId}: ${check.detail}`),
+    ...report.checks.map(
+      (check) => `  [${check.status}] ${check.providerId}: ${check.detail}`,
+    ),
   ].join('\n')
 }
