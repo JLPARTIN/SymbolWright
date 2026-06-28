@@ -10,6 +10,7 @@ All notable changes to CodeMind are documented in this file.
 - **Ajna Review Cortex**: Deterministic code review layer with PR evidence schema, collector fixtures, review normalization, and merge-readiness reporting.
 - **Agent Loop**: Multi-turn interactive coding agent with tool schema bridge, streaming provider support, session persistence, and cost tracking.
 - **Operator Console**: Interactive workspace console with 18 commands (`/zflow`, `/workspace`, and 16 core commands), aliases, history tracking, and persistent history store.
+- **Universal API Gateway Contract**: Provider-neutral public API route, external client, provider adapter, and browser workspace contracts for using CodeMind from any browser or LLM.
 - **Runtime Tool Assembly**: 44 registered tools across 22 capability categories with typed tool definitions and policy-gated execution.
 - **Approval Gates**: Typed approval scopes (`file:write`, `github:write`, `command:validate`, `shell:execute`, `git:write`) with ticket validation at every boundary.
 - **GitHub Live Read**: Policy-gated GitHub PR, CI, and file read operations behind explicit `allowNetwork` policy gates.
@@ -24,10 +25,10 @@ All notable changes to CodeMind are documented in this file.
 - **HiveMind**: Swarm agent registry and dispatch for specialized capability coordination.
 - **Build Ledger**: Machine-readable build state with 20/20 phase completion tracking and docs consistency checking.
 - **Doctor**: 12-point workspace health check covering Node.js version, dependencies, TypeScript config, runtime phases, safety posture, API keys, and project memory.
-- **Release Readiness**: 13-gate release assessment (phases, health, version, changelog consistency, entry point, exports, CLI, Dockerfile, public API contract, bin contract, validate script, workflow proof, and build-ledger consistency).
+- **Release Readiness**: 14-gate release assessment (phases, health, version, changelog consistency, entry point, exports, CLI, Dockerfile, public API contract, bin contract, package-lock contract, universal API gateway contract, validate script, workflow proof, and build-ledger consistency).
 - **CI Pipeline**: Node 20+22 matrix testing, coverage enforcement (85/80/85/85 thresholds), format checking, and publish dry-run validation.
 - **75 CLI commands** covering all 20 runtime phases plus diagnostics, fixtures, and agent workflows.
-- **Release Proof Contract Tests**: Public API, package bin, workflow release proof, and source-of-truth build ledger regression coverage.
+- **Release Proof Contract Tests**: Public API, package bin, package-lock, workflow release proof, universal API gateway, and source-of-truth build ledger regression coverage.
 
 ### Safety Posture
 
@@ -37,6 +38,7 @@ All notable changes to CodeMind are documented in this file.
 - Workspace containment prevents directory traversal.
 - Output redaction strips secrets before audit log persistence.
 - GitHub writes limited to draft PRs, comments, and labels (no merge, no force push, no branch deletion).
+- Provider credentials stay behind the CodeMind server gateway; browser clients send only CodeMind API credentials and provider ids.
 
 ### Fixed
 
@@ -49,7 +51,7 @@ All notable changes to CodeMind are documented in this file.
 - **GitHub Write Authorization**: Centralized write authorization with execution mode tracking and approval scope closure.
 - **Runtime Registry**: Replaced 22 wrapper registries with canonical `createFixtureRegistry()` factory supporting 22 named presets.
 - **Operator Console**: Wired dormant `WorkspaceManager` into operator workspace via `/workspace` command; added `/zflow` for ZFlow report rendering.
-- **Release Gates**: Expanded release readiness beyond CHANGELOG consistency to enforce public API, package bin, validate-script, workflow release-proof, and build-ledger source-of-truth gates.
+- **Release Gates**: Expanded release readiness beyond CHANGELOG consistency to enforce public API, package bin, package-lock, universal API gateway, validate-script, workflow release-proof, and build-ledger source-of-truth gates.
 - **License**: Changed from UNLICENSED to MIT license.
 - **Package Contract**: Added `exports` field for ESM resolution, npm script aliases for diagnostic commands (`doctor`, `release-readiness`, `build-ledger`), and a shared `validate` release proof script.
 - **Deploy Pipeline**: Hardened deploy workflow to run the shared validate release proof gate before container publishing.
@@ -58,5 +60,5 @@ All notable changes to CodeMind are documented in this file.
 ### Removed
 
 - **docs/pr-plans/**: 30 completed PR plan files superseded by merged PRs (PR-2 through PR-CM-TEST-10).
-- **docs/next-arc/**: 5 superseded analysis files (ANALYSIS_REPORT, NEURAL_WIRING_PLAN, PR_BUILD_PLAN, PR_IDEATION_MATRIX, VITEST_TEST_INTELLIGENCE_PLAN).
+- **docs/next-arc/**: 5 superseded analysis files (ANALYSIS_REPORT, NEURAL_WIRING_PLAN, PR_BUILD_PLAN, IDEATION_MATRIX, VITEST_TEST_INTELLIGENCE_PLAN).
 - **docs/roadmap/**: 2 stale roadmap files (CODEMIND_PLATFORM_ROADMAP, CODEMIND_100_PERCENT_BUILD_PLAN) superseded by build ledger and release readiness gates.
