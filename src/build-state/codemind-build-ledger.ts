@@ -55,6 +55,24 @@ export function createBuildLedgerSummary(): BuildLedgerSummary {
   }
 }
 
+function extractReadmeCompletedPhaseCount(readmeContent: string): number | undefined {
+  const patterns = [
+    /(\d+)\s+complete/i,
+    /(\d+)\/\d+\s+runtime build phases complete/i,
+    /all\s+(\d+)\s+runtime phases[\s\S]{0,120}?complete/i,
+  ]
+
+  for (const pattern of patterns) {
+    const match = pattern.exec(readmeContent)
+    const value = match?.[1]
+    if (value !== undefined) {
+      return parseInt(value, 10)
+    }
+  }
+
+  return undefined
+}
+
 export function checkBuildLedgerConsistency(
   readmeContent: string,
   runtimeDocsContent: string,
@@ -63,17 +81,15 @@ export function checkBuildLedgerConsistency(
   const completedCount = getCompletedRuntimeBuildPhaseCount()
   const nextPhase = getNextRuntimeBuildPhase()
 
-  const readmePhasePattern = /(\d+)\s+complete/
-  const readmeMatch = readmePhasePattern.exec(readmeContent)
-  if (readmeMatch !== null) {
-    const readmeCount = parseInt(readmeMatch[1] ?? '0', 10)
+  const readmeCount = extractReadmeCompletedPhaseCount(readmeContent)
+  if (readmeCount !== undefined) {
     if (readmeCount !== completedCount) {
       findings.push({
         source: 'README.md',
         issue: `README claims ${readmeCount} completed phases but runtime has ${completedCount}`,
       })
     }
-  } else if (!readmeContent.includes(`${completedCount} complete`)) {
+  } else {
     findings.push({
       source: 'README.md',
       issue: `README does not mention ${completedCount} completed phases`,
