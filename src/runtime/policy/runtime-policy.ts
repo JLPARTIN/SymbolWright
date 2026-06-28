@@ -77,10 +77,7 @@ export function assertReadablePath(
 }
 
 /** Throws only when local writes are disabled by policy. Approval tickets are not required. */
-export function assertWriteApproved(
-  policy: RuntimePolicySnapshot,
-  _approval?: unknown,
-): void {
+export function assertWriteApproved(policy: RuntimePolicySnapshot, _approval?: unknown): void {
   if (!policy.allowWrites) {
     throw new Error('Write actions are disabled by runtime policy.')
   }
@@ -94,20 +91,14 @@ export function assertShellAllowed(policy: RuntimePolicySnapshot): void {
 }
 
 /** Throws only when shell execution is disabled by policy. Approval tickets are not required. */
-export function assertShellApproved(
-  policy: RuntimePolicySnapshot,
-  _approval?: unknown,
-): void {
+export function assertShellApproved(policy: RuntimePolicySnapshot, _approval?: unknown): void {
   if (!policy.allowShell) {
     throw new Error('Shell execution is disabled by runtime policy.')
   }
 }
 
 /** Throws only when git write operations are disabled by policy. Approval tickets are not required. */
-export function assertGitWriteApproved(
-  policy: RuntimePolicySnapshot,
-  _approval?: unknown,
-): void {
+export function assertGitWriteApproved(policy: RuntimePolicySnapshot, _approval?: unknown): void {
   if (!policy.allowWrites) {
     throw new Error('Write actions are disabled by runtime policy.')
   }
