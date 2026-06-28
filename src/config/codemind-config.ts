@@ -178,6 +178,12 @@ export function validateCodemindConfig(config: CodemindConfig): CodemindConfigVa
   const hasGitHubToken = config.githubToken !== undefined
   const hasVoyageApiKey = config.voyageApiKey !== undefined
 
+  if (!hasGitHubToken) {
+    warnings.push(
+      'No GITHUB_TOKEN configured. GitHub live reads and writes will use fixture/fake clients.',
+    )
+  }
+
   if (config.embeddingProvider === 'voyage' && !hasVoyageApiKey) {
     warnings.push(
       'embeddingProvider is "voyage" but no VOYAGE_API_KEY is set; falling back to hash embeddings.',

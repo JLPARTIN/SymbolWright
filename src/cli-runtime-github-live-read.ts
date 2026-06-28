@@ -6,6 +6,8 @@ import {
   createGitHubLiveReadRuntimeRegistry,
 } from './runtime/runtime-github-live-read-registry.js'
 
+export type GitHubLiveReadMode = 'fixture' | 'live'
+
 export interface GitHubLiveReadFixtureRequest {
   readonly mode: 'pr' | 'ci'
   readonly owner: string
@@ -25,14 +27,21 @@ export async function renderRuntimeGitHubLiveRead(
     throw new Error('Fixture must specify mode: "pr" or "ci".')
   }
 
+  const readMode: GitHubLiveReadMode = raw.clientData !== undefined ? 'fixture' : 'live'
   const registry = createGitHubLiveReadRuntimeRegistry(raw.clientData)
   const context = createGitHubLiveReadRuntimeContext(cwd)
 
+  let output: string
   if (raw.mode === 'pr') {
     const tool = registry.getOrThrow('github_live_read_pr')
-    return tool.execute({ owner: raw.owner, repo: raw.repo, prNumber: raw.prNumber }, context)
+    output = await tool.execute(
+      { owner: raw.owner, repo: raw.repo, prNumber: raw.prNumber },
+      context,
+    )
+  } else {
+    const tool = registry.getOrThrow('github_live_read_ci')
+    output = await tool.execute({ owner: raw.owner, repo: raw.repo, runId: raw.runId }, context)
   }
 
-  const tool = registry.getOrThrow('github_live_read_ci')
-  return tool.execute({ owner: raw.owner, repo: raw.repo, runId: raw.runId }, context)
+  return `[GitHub Live Read — ${readMode} mode]\n\n${output}`
 }

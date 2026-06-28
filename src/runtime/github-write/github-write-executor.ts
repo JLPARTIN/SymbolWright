@@ -3,6 +3,8 @@ import { evaluateGitHubWriteGate, type GitHubWriteGateResult } from './github-wr
 
 export type GitHubWriteExecutorOutcome = 'BLOCKED' | 'DRY_RUN' | 'EXECUTED'
 
+export type GitHubWriteExecutionMode = 'fixture' | 'live'
+
 export type GitHubWriteExecutorAction = 'create_draft_pr' | 'post_comment' | 'apply_label'
 
 export const GITHUB_WRITE_EXECUTOR_ACTIONS: readonly GitHubWriteExecutorAction[] = [
@@ -36,6 +38,7 @@ export interface GitHubWriteExecutorClientResult {
 
 export interface GitHubWriteExecutorResult {
   readonly outcome: GitHubWriteExecutorOutcome
+  readonly executionMode: GitHubWriteExecutionMode
   readonly gateResult: GitHubWriteGateResult
   readonly action: GitHubWriteExecutorAction
   readonly repository: string
@@ -89,6 +92,7 @@ export async function executeGitHubWrite(
   policy: RuntimePolicySnapshot,
   approval: RuntimeApproval | undefined,
   client: GitHubWriteExecutorClient,
+  executionMode: GitHubWriteExecutionMode = 'fixture',
 ): Promise<GitHubWriteExecutorResult> {
   const start = Date.now()
 
@@ -108,9 +112,16 @@ export async function executeGitHubWrite(
   const validationReasons = validateRequest(request)
   const allBlockReasons = [...gateResult.blockReasons, ...validationReasons]
 
+  if (!request.dryRun && executionMode === 'fixture') {
+    allBlockReasons.push(
+      'Non-dry-run execution is blocked in fixture mode. Provide a GITHUB_TOKEN for live execution.',
+    )
+  }
+
   if (gateResult.decision === 'BLOCKED' || allBlockReasons.length > 0) {
     return {
       outcome: 'BLOCKED',
+      executionMode,
       gateResult,
       action: request.action,
       repository: request.repository,
@@ -126,6 +137,7 @@ export async function executeGitHubWrite(
   if (request.dryRun) {
     return {
       outcome: 'DRY_RUN',
+      executionMode,
       gateResult,
       action: request.action,
       repository: request.repository,
@@ -147,6 +159,7 @@ export async function executeGitHubWrite(
 
   return {
     outcome: 'EXECUTED',
+    executionMode,
     gateResult,
     action: request.action,
     repository: request.repository,
@@ -175,6 +188,7 @@ export function renderGitHubWriteExecutorResult(result: GitHubWriteExecutorResul
     'CodeMind GitHub Write Executor',
     '',
     `Outcome: ${result.outcome}`,
+    `Execution mode: ${result.executionMode}`,
     `Action: ${result.action}`,
     `Repository: ${result.repository}`,
     `Target ref: ${result.targetRef}`,

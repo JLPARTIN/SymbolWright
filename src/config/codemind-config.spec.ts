@@ -267,7 +267,25 @@ describe('codemind-config', () => {
       const result = validateCodemindConfig(config)
       expect(result.valid).toBe(true)
       expect(result.errors).toHaveLength(0)
-      expect(result.warnings).toHaveLength(0)
+    })
+
+    it('warns when GitHub token is missing', () => {
+      const config: CodemindConfig = {
+        anthropicApiKey: 'sk-test-key-12345678',
+      }
+
+      const result = validateCodemindConfig(config)
+      expect(result.warnings.some((w) => w.includes('GITHUB_TOKEN'))).toBe(true)
+    })
+
+    it('no GitHub token warning when token is present', () => {
+      const config: CodemindConfig = {
+        anthropicApiKey: 'sk-test-key-12345678',
+        githubToken: 'ghp_test1234567890abcdef',
+      }
+
+      const result = validateCodemindConfig(config)
+      expect(result.warnings.every((w) => !w.includes('GITHUB_TOKEN'))).toBe(true)
     })
 
     it('warns when voyage provider set without API key', () => {

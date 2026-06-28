@@ -428,7 +428,7 @@ describe('activateSubsystems GitHub wiring', () => {
     const subsystems = activateSubsystems(config)
     const events = subsystems.eventBus.getEvents('session_lifecycle')
 
-    expect(events[0]!.detail).toContain('GitHub live read enabled')
+    expect(events[0]!.detail).toContain('GitHub live read + write enabled')
   })
 
   it('original tools are preserved when GitHub token is provided', () => {

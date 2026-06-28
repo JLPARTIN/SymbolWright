@@ -133,6 +133,24 @@ export function assertGitWriteApproved(
   }
 }
 
+/** Throws if GitHub writes are disabled or approval is missing the github:write scope. */
+export function assertGitHubWriteApproved(
+  policy: RuntimePolicySnapshot,
+  approval: RuntimeApproval | undefined,
+): void {
+  if (!policy.allowGitHubWrites) {
+    throw new Error('GitHub writes are disabled by runtime policy.')
+  }
+
+  if (approval === undefined) {
+    throw new Error('GitHub writes require explicit approval.')
+  }
+
+  if (!approval.scopes.includes('github:write')) {
+    throw new Error('Approval does not include github:write scope.')
+  }
+}
+
 /** Throws if network ingestion is disabled by the active policy. */
 export function assertNetworkAllowed(policy: RuntimePolicySnapshot): void {
   if (!policy.allowNetwork) {

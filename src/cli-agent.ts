@@ -37,13 +37,14 @@ import {
 import type { EmbeddingProvider } from './memory/embedding-provider.js'
 import { loadVectorStore } from './cli-index.js'
 
-function buildPolicy(approved: boolean): RuntimePolicySnapshot {
+function buildPolicy(approved: boolean, hasGitHubToken: boolean = false): RuntimePolicySnapshot {
   if (approved) {
     return {
       ...createDefaultRuntimePolicy(),
       mode: 'APPROVED_EXECUTION',
       allowShell: true,
       allowWrites: true,
+      ...(hasGitHubToken ? { allowNetwork: true, allowGitHubWrites: true } : {}),
     }
   }
   return createDefaultRuntimePolicy()
@@ -291,12 +292,23 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
     }
   }
 
-  const policy = buildPolicy(approvedMode)
+  const hasGitHubToken = config.githubToken !== undefined
+  const policy = buildPolicy(approvedMode, hasGitHubToken)
+  const scopes: RuntimeApproval['scopes'][number][] = [
+    'file:write',
+    'apply_edit',
+    'command:validate',
+    'shell:execute',
+    'git:write',
+  ]
+  if (approvedMode && hasGitHubToken) {
+    scopes.push('github:write')
+  }
   const approval: RuntimeApproval | undefined = approvedMode
     ? {
         ticketId: `cli-${Date.now()}`,
         approvedBy: 'operator',
-        scopes: ['file:write', 'apply_edit', 'command:validate', 'shell:execute', 'git:write'],
+        scopes,
       }
     : undefined
   const toolContext: RuntimeToolContext = {
