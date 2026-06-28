@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { createOperatorSession, runOperatorInput } from './operator-console.js'
+import {
+  createOperatorSession,
+  createDefaultOperatorConsoleHandlers,
+  runOperatorInput,
+} from './operator-console.js'
 import type { OperatorConsoleHandlers } from './operator-types.js'
 import { OperatorHistoryStore } from './operator-history-store.js'
 import { mkdtempSync } from 'node:fs'
@@ -369,6 +373,22 @@ describe('runOperatorInput — history tracking', () => {
 
     await runOperatorInput('/clear', r1.session, handlers, store)
     expect(store.list()).toHaveLength(0)
+  })
+})
+
+describe('runOperatorInput — workspace parity', () => {
+  it('/workspace renders same workspace model as codemind-workspace', async () => {
+    const cwd = process.cwd()
+    const session = createOperatorSession(cwd)
+    const realHandlers = createDefaultOperatorConsoleHandlers()
+    const result = await runOperatorInput('/workspace', session, realHandlers)
+
+    expect(result.output).toContain('CodeMind Workspace')
+    expect(result.output).toContain('Primary:')
+    expect(result.output).toContain(cwd)
+    expect(result.output).toContain('Repos: 1')
+    expect(result.output).toContain('Boundary:')
+    expect(result.output).not.toContain('preview')
   })
 })
 

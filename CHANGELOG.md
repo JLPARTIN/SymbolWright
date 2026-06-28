@@ -40,6 +40,7 @@ All notable changes to CodeMind are documented in this file.
 ### Fixed
 
 - **Runtime Activation Tool Inventory**: `runActivatedAgent()` now passes `subsystems.tools` (including dynamic GitHub live-read tools) to the agent loop instead of `config.tools`, which omitted dynamically injected tools.
+- **Workspace Package Bin**: `codemind-workspace` now renders real workspace state from `WorkspaceManager` instead of a static preview surface. Operator `/workspace` and package bin share the same workspace model.
 
 ### Changed
 
