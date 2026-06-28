@@ -7,6 +7,9 @@ import {
 } from './runtime/runtime-build-state.js'
 import { checkBuildLedgerConsistency } from './build-state/codemind-build-ledger.js'
 import { runDoctor, type DoctorReport } from './cli-doctor.js'
+import { buildUniversalApiContractReport } from './api/universal-api-contract.js'
+import { buildProviderAdapterContractReport } from './providers/provider-adapter-contract.js'
+import { assessBrowserWorkspaceReadiness } from './workspace/browser-workspace-contract.js'
 
 export const RELEASE_READINESS_BLOCK_ID = 'CODEMIND-RELEASE-01' as const
 
@@ -24,6 +27,7 @@ export type ReleaseGateCode =
   | 'PUBLIC_API_CONTRACT'
   | 'PACKAGE_BIN_CONTRACT'
   | 'PACKAGE_LOCK_CONTRACT'
+  | 'UNIVERSAL_API_GATEWAY_CONTRACT'
   | 'VALIDATE_SCRIPT'
   | 'WORKFLOW_RELEASE_PROOF'
   | 'BUILD_LEDGER_CONSISTENT'
@@ -53,6 +57,10 @@ interface PackageJson {
   readonly types?: string
   readonly exports?: {
     readonly '.': {
+      readonly import?: string
+      readonly types?: string
+    }
+    readonly './universal-api'?: {
       readonly import?: string
       readonly types?: string
     }
@@ -225,6 +233,7 @@ function checkPublicApiContract(workspaceRoot: string): ReleaseGate {
   try {
     const pkg = readPackageJson(workspaceRoot)
     const rootExport = pkg.exports?.['.']
+    const universalApiExport = pkg.exports?.['./universal-api']
     const issues: string[] = []
 
     if (pkg.name !== 'codemind') {
@@ -242,13 +251,19 @@ function checkPublicApiContract(workspaceRoot: string): ReleaseGate {
     if (rootExport?.types !== './dist/index.d.ts') {
       issues.push('root export types must resolve to ./dist/index.d.ts')
     }
+    if (universalApiExport?.import !== './dist/universal-api.js') {
+      issues.push('universal API export import must resolve to ./dist/universal-api.js')
+    }
+    if (universalApiExport?.types !== './dist/universal-api.d.ts') {
+      issues.push('universal API export types must resolve to ./dist/universal-api.d.ts')
+    }
 
     return {
       code: 'PUBLIC_API_CONTRACT',
       status: issues.length === 0 ? 'PASS' : 'FAIL',
       detail:
         issues.length === 0
-          ? 'Package root export, main, and types resolve to dist/index'
+          ? 'Package root and universal API exports resolve to dist entry points'
           : issues.join('; '),
     }
   } catch {
@@ -346,6 +361,49 @@ function checkPackageLockContract(workspaceRoot: string): ReleaseGate {
       status: 'FAIL',
       detail: 'Cannot verify package install plan metadata contract',
     }
+  }
+}
+
+function checkUniversalApiGatewayContract(workspaceRoot: string): ReleaseGate {
+  const issues: string[] = []
+  const requiredPaths = [
+    path.join('src', 'api', 'universal-api-contract.ts'),
+    path.join('src', 'providers', 'provider-adapter-contract.ts'),
+    path.join('src', 'workspace', 'browser-workspace-contract.ts'),
+    path.join('src', 'universal-api.ts'),
+    path.join('docs', 'API_REFERENCE.md'),
+    path.join('docs', 'PROVIDER_KEYS.md'),
+    path.join('docs', 'BROWSER_WORKSPACE.md'),
+    path.join('docs', 'USING_CODEMIND_FROM_ANY_LLM.md'),
+  ]
+
+  for (const requiredPath of requiredPaths) {
+    if (!fs.existsSync(path.join(workspaceRoot, requiredPath))) {
+      issues.push(`${requiredPath} missing`)
+    }
+  }
+
+  const apiReport = buildUniversalApiContractReport()
+  const providerReport = buildProviderAdapterContractReport()
+  const workspaceReport = assessBrowserWorkspaceReadiness()
+
+  if (apiReport.status !== 'READY') {
+    issues.push(`universal API contract blocked: ${apiReport.findings.join('; ')}`)
+  }
+  if (providerReport.status !== 'READY') {
+    issues.push('provider adapter contract blocked')
+  }
+  if (workspaceReport.status !== 'READY') {
+    issues.push(`browser workspace contract blocked: ${workspaceReport.findings.join('; ')}`)
+  }
+
+  return {
+    code: 'UNIVERSAL_API_GATEWAY_CONTRACT',
+    status: issues.length === 0 ? 'PASS' : 'FAIL',
+    detail:
+      issues.length === 0
+        ? 'Universal API, provider adapter, browser workspace, and docs contracts are present and ready'
+        : issues.join('; '),
   }
 }
 
@@ -474,6 +532,7 @@ export function assessReleaseReadiness(workspaceRoot: string): ReleaseReadinessR
     checkPublicApiContract(workspaceRoot),
     checkPackageBinContract(workspaceRoot),
     checkPackageLockContract(workspaceRoot),
+    checkUniversalApiGatewayContract(workspaceRoot),
     checkValidateScript(workspaceRoot),
     checkWorkflowReleaseProof(workspaceRoot),
     checkBuildLedgerConsistent(workspaceRoot),

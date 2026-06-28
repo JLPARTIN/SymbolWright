@@ -38,6 +38,7 @@ describe('assessReleaseReadiness', () => {
     expect(codes).toContain('PUBLIC_API_CONTRACT')
     expect(codes).toContain('PACKAGE_BIN_CONTRACT')
     expect(codes).toContain('PACKAGE_LOCK_CONTRACT')
+    expect(codes).toContain('UNIVERSAL_API_GATEWAY_CONTRACT')
     expect(codes).toContain('VALIDATE_SCRIPT')
     expect(codes).toContain('WORKFLOW_RELEASE_PROOF')
     expect(codes).toContain('BUILD_LEDGER_CONSISTENT')
@@ -64,6 +65,7 @@ describe('assessReleaseReadiness', () => {
     expect(gates.get('PUBLIC_API_CONTRACT')).toBe('PASS')
     expect(gates.get('PACKAGE_BIN_CONTRACT')).toBe('PASS')
     expect(gates.get('PACKAGE_LOCK_CONTRACT')).toBe('PASS')
+    expect(gates.get('UNIVERSAL_API_GATEWAY_CONTRACT')).toBe('PASS')
     expect(gates.get('VALIDATE_SCRIPT')).toBe('PASS')
     expect(gates.get('WORKFLOW_RELEASE_PROOF')).toBe('PASS')
     expect(gates.get('BUILD_LEDGER_CONSISTENT')).toBe('PASS')
@@ -80,6 +82,7 @@ describe('renderReleaseReadinessReport', () => {
     expect(output).toContain('[PASS]')
     expect(output).toContain('PUBLIC_API_CONTRACT')
     expect(output).toContain('PACKAGE_LOCK_CONTRACT')
+    expect(output).toContain('UNIVERSAL_API_GATEWAY_CONTRACT')
     expect(output).toContain('BUILD_LEDGER_CONSISTENT')
   })
 

@@ -9,6 +9,10 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./universal-api": {
+      "import": "./dist/universal-api.js",
+      "types": "./dist/universal-api.d.ts"
     }
   },
   "bin": {
