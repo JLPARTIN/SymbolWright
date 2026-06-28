@@ -259,6 +259,8 @@ export type {
   BuildLedgerSummary,
 } from './build-state/codemind-build-ledger.js'
 
+export { renderBuildLedgerCommand } from './cli-build-ledger.js'
+
 export {
   PROJECT_INSTRUCTION_FILES,
   createProjectInstruction,

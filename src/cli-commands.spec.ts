@@ -18,6 +18,24 @@ describe('renderHelp', () => {
     }
   })
 
+  it('lists agent, sessions, and index commands', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('agent [message]')
+    expect(output).toContain('interactive coding agent')
+    expect(output).toContain('sessions')
+    expect(output).toContain('List saved agent sessions')
+    expect(output).toContain('index [dir]')
+    expect(output).toContain('vector store for semantic search')
+  })
+
+  it('lists build-ledger command', () => {
+    const output = renderHelp()
+
+    expect(output).toContain('build-ledger')
+    expect(output).toContain('build ledger summary')
+  })
+
   it('marks Phase A read-only runtime commands as active', () => {
     const output = renderHelp()
 

@@ -15,6 +15,7 @@ import { renderAjnaReviewPrReadOnlyCollectorFixtureForFile } from './cli-ajna-re
 import { renderAjnaReviewPrForFile } from './cli-ajna-review-pr.js'
 import { renderAjnaScanProfileForRepo } from './cli-ajna-scan-profile.js'
 import { renderAuditLedgerCommand } from './cli-audit-ledger.js'
+import { renderBuildLedgerCommand } from './cli-build-ledger.js'
 import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
 import { renderDoctorCommand } from './cli-doctor.js'
 import { findFixtureArg, renderFixtureCommand } from './cli-fixture-commands.js'
@@ -67,6 +68,11 @@ async function main(): Promise<void> {
     case '--help':
     case '-h':
       console.log(renderHelp())
+      break
+
+    case '--version':
+    case '-v':
+      console.log(renderVersionCommand(process.cwd()))
       break
 
     case 'status':
@@ -226,6 +232,10 @@ async function main(): Promise<void> {
 
     case 'trace-store':
       console.log(renderTraceStoreCommand(requireInput('codemind trace-store <json-file>')))
+      break
+
+    case 'build-ledger':
+      console.log(renderBuildLedgerCommand(process.cwd()))
       break
 
     case 'doctor':
