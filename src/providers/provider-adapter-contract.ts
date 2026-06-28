@@ -25,15 +25,23 @@ export const CODEMIND_PROVIDER_KEY_HANDLING_MODES = [
   'local_runtime',
 ] as const
 
+export const CODEMIND_PROVIDER_ENDPOINT_OWNERSHIP_MODES = [
+  'codemind_server',
+  'browser_client',
+  'external_client',
+] as const
+
 export type CodemindProviderId = (typeof CODEMIND_SUPPORTED_PROVIDER_IDS)[number]
 export type CodemindProviderCapability = (typeof CODEMIND_PROVIDER_CAPABILITIES)[number]
 export type CodemindProviderKeyHandling = (typeof CODEMIND_PROVIDER_KEY_HANDLING_MODES)[number]
+export type CodemindProviderEndpointOwnership =
+  (typeof CODEMIND_PROVIDER_ENDPOINT_OWNERSHIP_MODES)[number]
 
 export interface CodemindProviderAdapterContract {
   readonly id: CodemindProviderId
   readonly displayName: string
   readonly credentialMode: CodemindProviderKeyHandling
-  readonly endpointOwnership: 'codemind_server'
+  readonly endpointOwnership: CodemindProviderEndpointOwnership
   readonly browserSafe: boolean
   readonly capabilities: readonly CodemindProviderCapability[]
   readonly defaultBaseUrl?: string
