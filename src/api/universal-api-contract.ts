@@ -1,7 +1,6 @@
 import {
   CODEMIND_PROVIDER_ADAPTERS,
   buildProviderAdapterContractReport,
-  type CODEMIND_PROVIDER_ADAPTER_BLOCK_ID,
   type CodemindProviderAdapterContract,
   type CodemindProviderId,
 } from '../providers/provider-adapter-contract.js'
@@ -29,7 +28,7 @@ export interface CodemindPublicApiRoute {
   readonly path: string
   readonly purpose: string
   readonly requiresCodemindApiKey: boolean
-  readonly browserMaySendRawProviderKey: false
+  readonly browserMaySendRawProviderKey: boolean
   readonly allowedClients: readonly CodemindExternalClientKind[]
   readonly allowedProviders: readonly CodemindProviderId[]
 }
@@ -51,7 +50,7 @@ export interface CodemindUniversalApiContractReport {
   readonly blockId: typeof CODEMIND_UNIVERSAL_API_BLOCK_ID
   readonly status: 'READY' | 'BLOCKED'
   readonly routeCount: number
-  readonly providerBoundaryBlockId: typeof CODEMIND_PROVIDER_ADAPTER_BLOCK_ID
+  readonly providerBoundaryBlockId: string
   readonly supportedClients: readonly CodemindExternalClientKind[]
   readonly findings: readonly string[]
 }
