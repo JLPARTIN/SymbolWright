@@ -14,18 +14,18 @@ describe('CodeMind foundation snapshot', () => {
     expect(snapshot.primaryCapability).toBe(CODEMIND_AJNA_CAPABILITY_NAME)
   })
 
-  it('keeps the initial runtime posture plan-first and read-only-first', () => {
+  it('uses an execution-first runtime posture', () => {
     const snapshot = getCodemindFoundationSnapshot()
 
-    expect(snapshot.posture).toEqual(['PLAN_FIRST', 'READ_ONLY_FIRST'])
+    expect(snapshot.posture).toEqual(['EXECUTION_FIRST'])
   })
 
-  it('does not enable mutation, GitHub writes, bash execution, or network ingestion', () => {
+  it('keeps the core runtime surfaces active', () => {
     const snapshot = getCodemindFoundationSnapshot()
 
-    expect(snapshot.mutationEnabled).toBe(false)
-    expect(snapshot.githubWriteEnabled).toBe(false)
-    expect(snapshot.bashExecutionEnabled).toBe(false)
-    expect(snapshot.networkIngestionEnabled).toBe(false)
+    expect(snapshot.mutationEnabled).toBe(true)
+    expect(snapshot.githubWriteEnabled).toBe(true)
+    expect(snapshot.bashExecutionEnabled).toBe(true)
+    expect(snapshot.networkIngestionEnabled).toBe(true)
   })
 })
