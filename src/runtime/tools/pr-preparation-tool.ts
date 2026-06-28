@@ -50,7 +50,9 @@ function parsePrPreparationToolInput(input: unknown): PrPreparationToolInput {
     : []
 
   const validationChecklist = Array.isArray(obj['validationChecklist'])
-    ? (obj['validationChecklist'] as unknown[]).filter((item): item is string => typeof item === 'string')
+    ? (obj['validationChecklist'] as unknown[]).filter(
+        (item): item is string => typeof item === 'string',
+      )
     : []
 
   return {

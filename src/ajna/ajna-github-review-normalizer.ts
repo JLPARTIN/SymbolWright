@@ -31,7 +31,11 @@ function assertPositiveInteger(value: unknown, field: string): void {
   }
 }
 
-function assertStringArray(values: unknown, field: string, options: { readonly allowEmpty?: boolean } = {}): void {
+function assertStringArray(
+  values: unknown,
+  field: string,
+  options: { readonly allowEmpty?: boolean } = {},
+): void {
   if (
     !Array.isArray(values) ||
     (!options.allowEmpty && values.length === 0) ||
@@ -84,7 +88,8 @@ function createEvidenceFindings(payload: AjnaGithubPullRequestPayload): AjnaRevi
         summary,
       })),
       affectedFiles: payload.changedFiles,
-      recommendation: 'Review the normalized diff evidence before relying on merge-readiness output.',
+      recommendation:
+        'Review the normalized diff evidence before relying on merge-readiness output.',
       blocksMerge: false,
     })
   }
@@ -101,7 +106,8 @@ function createEvidenceFindings(payload: AjnaGithubPullRequestPayload): AjnaRevi
         summary,
       })),
       affectedFiles: [],
-      recommendation: 'Confirm CI summaries match the current pull request head before merge decisions.',
+      recommendation:
+        'Confirm CI summaries match the current pull request head before merge decisions.',
       blocksMerge: false,
     })
   }

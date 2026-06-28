@@ -12,7 +12,9 @@ export interface LiveReadAjnaMergeReadinessResult {
   readonly summary: readonly string[]
 }
 
-export function assessLiveReadMergeReadiness(input: LiveReadAjnaMergeReadinessInput): LiveReadAjnaMergeReadinessResult {
+export function assessLiveReadMergeReadiness(
+  input: LiveReadAjnaMergeReadinessInput,
+): LiveReadAjnaMergeReadinessResult {
   const blockers: string[] = []
   const summary: string[] = []
 

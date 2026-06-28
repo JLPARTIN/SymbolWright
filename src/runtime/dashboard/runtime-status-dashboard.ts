@@ -1,5 +1,9 @@
 import type { RuntimePolicySnapshot, RuntimeToolDefinition } from '../types.js'
-import { getCompletedRuntimeBuildPhaseCount, getNextRuntimeBuildPhase, RUNTIME_BUILD_PHASES } from '../runtime-build-state.js'
+import {
+  getCompletedRuntimeBuildPhaseCount,
+  getNextRuntimeBuildPhase,
+  RUNTIME_BUILD_PHASES,
+} from '../runtime-build-state.js'
 
 export interface RuntimeStatusSnapshot {
   readonly completedPhases: number

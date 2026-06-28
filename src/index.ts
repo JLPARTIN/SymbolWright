@@ -283,7 +283,10 @@ export type {
 } from './runtime/live-read/github-http-client.js'
 export { DefaultGitHubHttpClient } from './runtime/live-read/github-http-client.js'
 
-export { redactGitHubContent, redactUnknownBody } from './runtime/live-read/github-live-read-redaction.js'
+export {
+  redactGitHubContent,
+  redactUnknownBody,
+} from './runtime/live-read/github-live-read-redaction.js'
 
 export {
   runValidationCommand,
@@ -305,10 +308,7 @@ export type {
 
 export { redactValidationOutput } from './runtime/validation/validation-output-redactor.js'
 
-export {
-  analyzeCiOutput,
-  renderCiDiagnosticReport,
-} from './runtime/ci/ci-diagnostics.js'
+export { analyzeCiOutput, renderCiDiagnosticReport } from './runtime/ci/ci-diagnostics.js'
 export type {
   CiDiagnosticFinding,
   CiDiagnosticReport,
@@ -362,10 +362,7 @@ export type {
   GitHubWriteExecutorResult,
 } from './runtime/github-write/github-write-executor.js'
 
-export {
-  executeRepairLoop,
-  renderRepairLoopResult,
-} from './runtime/repair/repair-loop.js'
+export { executeRepairLoop, renderRepairLoopResult } from './runtime/repair/repair-loop.js'
 export type {
   RepairLoopAjnaReassessment,
   RepairLoopCheckpoint,
@@ -420,22 +417,10 @@ export type {
   TraceStoreReplayResult,
 } from './runtime/audit/trace-store.js'
 
-export {
-  runDoctor,
-  renderDoctorReport,
-  DOCTOR_BLOCK_ID,
-} from './cli-doctor.js'
-export type {
-  DoctorCheck,
-  DoctorCheckStatus,
-  DoctorReport,
-} from './cli-doctor.js'
+export { runDoctor, renderDoctorReport, DOCTOR_BLOCK_ID } from './cli-doctor.js'
+export type { DoctorCheck, DoctorCheckStatus, DoctorReport } from './cli-doctor.js'
 
-export {
-  getVersionInfo,
-  renderVersionInfo,
-  VERSION_BLOCK_ID,
-} from './cli-version.js'
+export { getVersionInfo, renderVersionInfo, VERSION_BLOCK_ID } from './cli-version.js'
 export type { VersionInfo } from './cli-version.js'
 
 export {

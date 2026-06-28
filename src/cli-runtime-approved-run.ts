@@ -1,8 +1,18 @@
 import { createApprovalTicket, parseApprovalTicketId } from './runtime/approval/approval-ticket.js'
-import { renderAuditEvents, createAuditEvent, RuntimeAuditLog } from './runtime/audit/runtime-audit-log.js'
-import { createApprovedRuntimeContext, createApprovedRuntimeRegistry } from './runtime/runtime-approved-registry.js'
+import {
+  renderAuditEvents,
+  createAuditEvent,
+  RuntimeAuditLog,
+} from './runtime/audit/runtime-audit-log.js'
+import {
+  createApprovedRuntimeContext,
+  createApprovedRuntimeRegistry,
+} from './runtime/runtime-approved-registry.js'
 
-export async function renderApprovedRuntimeRun(args: readonly string[], cwd: string = process.cwd()): Promise<string> {
+export async function renderApprovedRuntimeRun(
+  args: readonly string[],
+  cwd: string = process.cwd(),
+): Promise<string> {
   const ticketId = parseApprovalTicketId(args)
   const goal = args
     .filter((arg, index) => arg !== '--approval-ticket' && args[index - 1] !== '--approval-ticket')
@@ -27,21 +37,21 @@ export async function renderApprovedRuntimeRun(args: readonly string[], cwd: str
   const context = createApprovedRuntimeContext(approval, cwd)
   const audit = new RuntimeAuditLog()
 
-  const editResult = await registry.getOrThrow('apply_edit_gated').execute(
-    { path: 'README.md', proposedContent: `# Proposed change for ${goal}\n` },
-    context,
-  )
-  const commandResult = await registry.getOrThrow('command_dry_run_gated').execute(
-    { command: 'npm run typecheck' },
-    context,
-  )
+  const editResult = await registry
+    .getOrThrow('apply_edit_gated')
+    .execute({ path: 'README.md', proposedContent: `# Proposed change for ${goal}\n` }, context)
+  const commandResult = await registry
+    .getOrThrow('command_dry_run_gated')
+    .execute({ command: 'npm run typecheck' }, context)
 
-  audit.record(createAuditEvent({
-    action: 'runtime_run_approved',
-    status: 'allowed',
-    approval,
-    detail: `approved runtime dry-run completed for ${goal}`,
-  }))
+  audit.record(
+    createAuditEvent({
+      action: 'runtime_run_approved',
+      status: 'allowed',
+      approval,
+      detail: `approved runtime dry-run completed for ${goal}`,
+    }),
+  )
 
   return [
     'CodeMind approved runtime run',

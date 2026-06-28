@@ -6,11 +6,7 @@ import type { EmbeddingProvider } from '../memory/embedding-provider.js'
 import type { WorkspaceManager } from '../workspace/workspace-manager.js'
 
 /** Supported execution modes from plan-only to approved execution. */
-export type CodemindRuntimeMode =
-  | 'PLAN_ONLY'
-  | 'READ_ONLY'
-  | 'PROPOSAL_ONLY'
-  | 'APPROVED_EXECUTION'
+export type CodemindRuntimeMode = 'PLAN_ONLY' | 'READ_ONLY' | 'PROPOSAL_ONLY' | 'APPROVED_EXECUTION'
 
 /** Union of all registered tool names in the runtime. */
 export type CodemindToolName =
@@ -217,6 +213,8 @@ export const ALL_CODEMIND_TOOL_NAMES = [
   'run_lint',
 ] as const satisfies readonly CodemindToolName[]
 
-type _AssertAllToolNames = CodemindToolName extends (typeof ALL_CODEMIND_TOOL_NAMES)[number] ? true : never
+type _AssertAllToolNames = CodemindToolName extends (typeof ALL_CODEMIND_TOOL_NAMES)[number]
+  ? true
+  : never
 const _allToolNamesCheck: _AssertAllToolNames = true
 void _allToolNamesCheck

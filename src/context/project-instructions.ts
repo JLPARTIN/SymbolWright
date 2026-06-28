@@ -32,7 +32,7 @@ export function createProjectInstruction(
 
   const lines = content.split('\n')
   const firstHeading = lines.find((l) => l.startsWith('#'))
-  const summary = firstHeading !== undefined ? firstHeading.replace(/^#+\s*/, '') : lines[0] ?? ''
+  const summary = firstHeading !== undefined ? firstHeading.replace(/^#+\s*/, '') : (lines[0] ?? '')
 
   return {
     fileName,

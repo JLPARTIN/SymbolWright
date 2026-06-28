@@ -33,7 +33,9 @@ describe('normalizeGithubPullRequestForAjnaReview', () => {
       'github-diff-evidence',
       'github-ci-evidence',
     ])
-    expect(input.recommendedNextAction).toBe('Render the report locally and review evidence before merge.')
+    expect(input.recommendedNextAction).toBe(
+      'Render the report locally and review evidence before merge.',
+    )
   })
 
   it('renders through the existing deterministic Ajna review-pr path', () => {

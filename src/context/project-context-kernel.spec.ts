@@ -4,10 +4,7 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import {
-  buildProjectContextPacket,
-  renderProjectContextPacket,
-} from './project-context-kernel.js'
+import { buildProjectContextPacket, renderProjectContextPacket } from './project-context-kernel.js'
 
 function makeTempDir(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-ctx-'))
@@ -131,7 +128,11 @@ describe('buildProjectContextPacket', () => {
 
   it('redacts secrets in instruction content', () => {
     const dir = makeTempDir()
-    writeFile(dir, 'README.md', '# Project\napi_key: sk-abcdef1234567890abcdef1234567890abcdef1234567890')
+    writeFile(
+      dir,
+      'README.md',
+      '# Project\napi_key: sk-abcdef1234567890abcdef1234567890abcdef1234567890',
+    )
     writeFile(dir, 'package.json', JSON.stringify({}))
 
     const packet = buildProjectContextPacket(dir)
@@ -166,7 +167,11 @@ describe('renderProjectContextPacket', () => {
   it('renders a complete context packet', () => {
     const dir = makeTempDir()
     writeFile(dir, 'README.md', '# Test\n\nHello')
-    writeFile(dir, 'package.json', JSON.stringify({ scripts: { test: 'vitest run', build: 'tsc' } }))
+    writeFile(
+      dir,
+      'package.json',
+      JSON.stringify({ scripts: { test: 'vitest run', build: 'tsc' } }),
+    )
     writeFile(dir, '.github/workflows/ci.yml', 'name: CI')
 
     const packet = buildProjectContextPacket(dir)

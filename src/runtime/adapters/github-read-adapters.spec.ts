@@ -9,29 +9,35 @@ import { adaptGitHubPrFixture } from './github-pr-read-adapter.js'
 import { bridgeRuntimeEvidenceToAjna } from '../ajna/runtime-ajna-evidence-bridge.js'
 import { buildCiEvidenceSummary } from '../evidence/ci-evidence-summary.js'
 import { buildPrEvidenceSummary } from '../evidence/pr-evidence-builder.js'
-import { createGitHubReadRuntimeContext, createGitHubReadRuntimeRegistry } from '../runtime-github-read-registry.js'
+import {
+  createGitHubReadRuntimeContext,
+  createGitHubReadRuntimeRegistry,
+} from '../runtime-github-read-registry.js'
 
 function createFixtureFile(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-gh-fixture-'))
   const file = path.join(dir, 'fixture.json')
-  fs.writeFileSync(file, JSON.stringify({
-    pr: {
-      number: 89,
-      title: 'Phase D approval gates',
-      state: 'closed',
-      merged: true,
-      base: 'main',
-      head: 'phase-d-approval-gates-audit',
-      changedFiles: ['src/runtime/audit/runtime-audit-log.ts'],
-      additions: 606,
-      deletions: 2,
-    },
-    ci: {
-      workflow: 'Validate CodeMind',
-      conclusion: 'success',
-      jobs: [{ name: 'Typecheck', status: 'completed', conclusion: 'success' }],
-    },
-  }))
+  fs.writeFileSync(
+    file,
+    JSON.stringify({
+      pr: {
+        number: 89,
+        title: 'Phase D approval gates',
+        state: 'closed',
+        merged: true,
+        base: 'main',
+        head: 'phase-d-approval-gates-audit',
+        changedFiles: ['src/runtime/audit/runtime-audit-log.ts'],
+        additions: 606,
+        deletions: 2,
+      },
+      ci: {
+        workflow: 'Validate CodeMind',
+        conclusion: 'success',
+        jobs: [{ name: 'Typecheck', status: 'completed', conclusion: 'success' }],
+      },
+    }),
+  )
   return file
 }
 
@@ -51,8 +57,12 @@ describe('GitHub read fixture adapters', () => {
   })
 
   it('builds Ajna-ready evidence summaries', () => {
-    const pr = buildPrEvidenceSummary(adaptGitHubPrFixture({ number: 2, title: 'Bundle', state: 'closed', merged: true }))
-    const ci = buildCiEvidenceSummary(adaptGitHubCiFixture({ workflow: 'Validate', conclusion: 'success' }))
+    const pr = buildPrEvidenceSummary(
+      adaptGitHubPrFixture({ number: 2, title: 'Bundle', state: 'closed', merged: true }),
+    )
+    const ci = buildCiEvidenceSummary(
+      adaptGitHubCiFixture({ workflow: 'Validate', conclusion: 'success' }),
+    )
     const bridge = bridgeRuntimeEvidenceToAjna({ pr, ci })
 
     expect(bridge.verdict).toBe('READY')
@@ -61,7 +71,9 @@ describe('GitHub read fixture adapters', () => {
   })
 
   it('registers local fixture review tools', () => {
-    const names = createGitHubReadRuntimeRegistry().list().map((tool) => tool.name)
+    const names = createGitHubReadRuntimeRegistry()
+      .list()
+      .map((tool) => tool.name)
 
     expect(names).toContain('github_pr_fixture_review')
     expect(names).toContain('github_ci_fixture_review')
@@ -72,8 +84,12 @@ describe('GitHub read fixture adapters', () => {
     const registry = createGitHubReadRuntimeRegistry()
     const context = createGitHubReadRuntimeContext(process.cwd())
 
-    const prOutput = await registry.getOrThrow('github_pr_fixture_review').execute({ path: fixture }, context)
-    const ciOutput = await registry.getOrThrow('github_ci_fixture_review').execute({ path: fixture }, context)
+    const prOutput = await registry
+      .getOrThrow('github_pr_fixture_review')
+      .execute({ path: fixture }, context)
+    const ciOutput = await registry
+      .getOrThrow('github_ci_fixture_review')
+      .execute({ path: fixture }, context)
 
     expect(prOutput).toContain('CodeMind GitHub PR fixture review')
     expect(prOutput).toContain('no comments')

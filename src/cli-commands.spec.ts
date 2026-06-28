@@ -82,7 +82,9 @@ describe('renderHelp', () => {
     const output = renderHelp()
 
     expect(output).toContain('live-read-client-fixture <json-file>')
-    expect(output).toContain('Run live read client fixture through fake client and evidence pipeline')
+    expect(output).toContain(
+      'Run live read client fixture through fake client and evidence pipeline',
+    )
   })
 
   it('marks Phase H GitHub live read adapter command as active', () => {
@@ -110,63 +112,81 @@ describe('renderHelp', () => {
     const output = renderHelp()
 
     expect(output).toContain('write-intent <json-file>')
-    expect(output).toContain('Create a write intent plan with validation and approval ticket from a local JSON fixture')
+    expect(output).toContain(
+      'Create a write intent plan with validation and approval ticket from a local JSON fixture',
+    )
   })
 
   it('marks Phase L local file write gate command as active', () => {
     const output = renderHelp()
 
     expect(output).toContain('local-write <json-file>')
-    expect(output).toContain('Execute an approved local file write through the approval-gated write gate from a local JSON fixture')
+    expect(output).toContain(
+      'Execute an approved local file write through the approval-gated write gate from a local JSON fixture',
+    )
   })
 
   it('marks Phase M validation command gate command as active', () => {
     const output = renderHelp()
 
     expect(output).toContain('validation-command <json-file>')
-    expect(output).toContain('Evaluate an approved validation command through the allowlisted command gate from a local JSON fixture')
+    expect(output).toContain(
+      'Evaluate an approved validation command through the allowlisted command gate from a local JSON fixture',
+    )
   })
 
   it('marks Phase N PR preparation command as active', () => {
     const output = renderHelp()
 
     expect(output).toContain('pr-preparation <json-file>')
-    expect(output).toContain('Prepare a PR title, body, and validation checklist from a local JSON fixture without pushing or creating a PR')
+    expect(output).toContain(
+      'Prepare a PR title, body, and validation checklist from a local JSON fixture without pushing or creating a PR',
+    )
   })
 
   it('marks Phase O GitHub write proposal command as active', () => {
     const output = renderHelp()
 
     expect(output).toContain('github-write-proposal <json-file>')
-    expect(output).toContain('Create a governed GitHub write proposal from a local JSON fixture without executing any GitHub API call')
+    expect(output).toContain(
+      'Create a governed GitHub write proposal from a local JSON fixture without executing any GitHub API call',
+    )
   })
 
   it('marks Phase P GitHub write gate command as active', () => {
     const output = renderHelp()
 
     expect(output).toContain('github-write-gate <json-file>')
-    expect(output).toContain('Evaluate an approved GitHub write through the policy-gated write gate from a local JSON fixture')
+    expect(output).toContain(
+      'Evaluate an approved GitHub write through the policy-gated write gate from a local JSON fixture',
+    )
   })
 
   it('marks Phase Q workflow composition command as active', () => {
     const output = renderHelp()
 
     expect(output).toContain('workflow <json-file>')
-    expect(output).toContain('Run a governed runtime workflow composing registered tools from a local JSON fixture')
+    expect(output).toContain(
+      'Run a governed runtime workflow composing registered tools from a local JSON fixture',
+    )
   })
 
   it('marks Phase R Ajna workflow command as active', () => {
     const output = renderHelp()
 
     expect(output).toContain('ajna-workflow <json-file>')
-    expect(output).toContain('Run a read-only Ajna review or merge-readiness workflow from a local JSON fixture')
+    expect(output).toContain(
+      'Run a read-only Ajna review or merge-readiness workflow from a local JSON fixture',
+    )
   })
 
   it('marks Phase S runtime status dashboard command as active', () => {
     const output = renderHelp()
 
     expect(output).toContain('runtime-status')
-    expect(output).toContain('Show the runtime status dashboard with tool inventory, policy, and phase summary')
+    expect(output).toContain(
+      'Show the runtime status dashboard with tool inventory, policy, and phase summary',
+    )
   })
 
   it('marks project-context command as active', () => {
@@ -199,7 +219,9 @@ describe('renderHelp', () => {
     expect(output).toContain('local Ajna client collector fixture pipeline status')
     expect(output).toContain('mocked local GitHub PR payload fixture')
     expect(output).toContain('local GitHub-shaped API payload fixture')
-    expect(output).toContain('collector snapshot JSON from a local GitHub-shaped API payload fixture')
+    expect(output).toContain(
+      'collector snapshot JSON from a local GitHub-shaped API payload fixture',
+    )
     expect(output).toContain('collector snapshot JSON from a local fake client bridge fixture')
     expect(output).toContain('Ajna review-pr from a local fake client bridge fixture')
     expect(output).toContain('merge-readiness from a local fake client bridge fixture')

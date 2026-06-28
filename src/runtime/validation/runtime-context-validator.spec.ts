@@ -14,14 +14,16 @@ describe('assertValidToolContext', () => {
   })
 
   it('accepts a valid context with approval', () => {
-    expect(() => assertValidToolContext({
-      ...validContext,
-      approval: {
-        ticketId: 'T-1',
-        approvedBy: 'operator',
-        scopes: ['file:write'],
-      },
-    })).not.toThrow()
+    expect(() =>
+      assertValidToolContext({
+        ...validContext,
+        approval: {
+          ticketId: 'T-1',
+          approvedBy: 'operator',
+          scopes: ['file:write'],
+        },
+      }),
+    ).not.toThrow()
   })
 
   it('rejects null', () => {
@@ -33,15 +35,21 @@ describe('assertValidToolContext', () => {
   })
 
   it('rejects empty cwd', () => {
-    expect(() => assertValidToolContext({ ...validContext, cwd: '' })).toThrow('cwd must be a non-empty string')
+    expect(() => assertValidToolContext({ ...validContext, cwd: '' })).toThrow(
+      'cwd must be a non-empty string',
+    )
   })
 
   it('rejects whitespace-only cwd', () => {
-    expect(() => assertValidToolContext({ ...validContext, cwd: '   ' })).toThrow('cwd must be a non-empty string')
+    expect(() => assertValidToolContext({ ...validContext, cwd: '   ' })).toThrow(
+      'cwd must be a non-empty string',
+    )
   })
 
   it('rejects missing cwd', () => {
-    expect(() => assertValidToolContext({ policy: validContext.policy })).toThrow('cwd must be a non-empty string')
+    expect(() => assertValidToolContext({ policy: validContext.policy })).toThrow(
+      'cwd must be a non-empty string',
+    )
   })
 
   it('rejects invalid policy', () => {
@@ -49,30 +57,38 @@ describe('assertValidToolContext', () => {
   })
 
   it('rejects approval with empty ticketId', () => {
-    expect(() => assertValidToolContext({
-      ...validContext,
-      approval: { ticketId: '', approvedBy: 'op', scopes: ['file:write'] },
-    })).toThrow('ticketId must be a non-empty string')
+    expect(() =>
+      assertValidToolContext({
+        ...validContext,
+        approval: { ticketId: '', approvedBy: 'op', scopes: ['file:write'] },
+      }),
+    ).toThrow('ticketId must be a non-empty string')
   })
 
   it('rejects approval with empty approvedBy', () => {
-    expect(() => assertValidToolContext({
-      ...validContext,
-      approval: { ticketId: 'T-1', approvedBy: '  ', scopes: ['file:write'] },
-    })).toThrow('approvedBy must be a non-empty string')
+    expect(() =>
+      assertValidToolContext({
+        ...validContext,
+        approval: { ticketId: 'T-1', approvedBy: '  ', scopes: ['file:write'] },
+      }),
+    ).toThrow('approvedBy must be a non-empty string')
   })
 
   it('rejects approval with non-array scopes', () => {
-    expect(() => assertValidToolContext({
-      ...validContext,
-      approval: { ticketId: 'T-1', approvedBy: 'op', scopes: 'file:write' },
-    })).toThrow('scopes must be an array')
+    expect(() =>
+      assertValidToolContext({
+        ...validContext,
+        approval: { ticketId: 'T-1', approvedBy: 'op', scopes: 'file:write' },
+      }),
+    ).toThrow('scopes must be an array')
   })
 
   it('rejects approval with invalid scope', () => {
-    expect(() => assertValidToolContext({
-      ...validContext,
-      approval: { ticketId: 'T-1', approvedBy: 'op', scopes: ['invalid:scope'] },
-    })).toThrow('Invalid approval scope')
+    expect(() =>
+      assertValidToolContext({
+        ...validContext,
+        approval: { ticketId: 'T-1', approvedBy: 'op', scopes: ['invalid:scope'] },
+      }),
+    ).toThrow('Invalid approval scope')
   })
 })

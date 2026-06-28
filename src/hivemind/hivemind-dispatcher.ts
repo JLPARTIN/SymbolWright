@@ -1,13 +1,13 @@
 import type { LLMProvider } from '../provider/provider.types.js'
-import type { RuntimeToolDefinition, RuntimeToolContext, RuntimePolicySnapshot } from '../runtime/types.js'
+import type {
+  RuntimeToolDefinition,
+  RuntimeToolContext,
+  RuntimePolicySnapshot,
+} from '../runtime/types.js'
 import { runAgentLoop } from '../agent/agent-loop.js'
 import type { AgentLoopConfig } from '../agent/agent-loop.types.js'
 import type { HiveMindRegistry } from './hivemind-registry.js'
-import type {
-  SwarmAgentType,
-  SwarmDispatchResult,
-  SwarmAuditReceipt,
-} from './hivemind.types.js'
+import type { SwarmAgentType, SwarmDispatchResult, SwarmAuditReceipt } from './hivemind.types.js'
 
 export interface SwarmDispatchRequest {
   readonly taskId: string
@@ -101,9 +101,7 @@ export class HiveMindDispatcher {
       agentId: agent.agentId,
       agentType: request.agentType,
       role: agent.role,
-      toolsUsed: result.iterations.flatMap((iter) =>
-        iter.toolCalls.map((call) => call.name),
-      ),
+      toolsUsed: result.iterations.flatMap((iter) => iter.toolCalls.map((call) => call.name)),
       iterationCount: result.totalIterations,
       tokenUsage: {
         inputTokens: result.totalUsage.inputTokens,

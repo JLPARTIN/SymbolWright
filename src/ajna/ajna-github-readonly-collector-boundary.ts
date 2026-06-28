@@ -6,7 +6,9 @@ export interface AjnaGithubReadOnlyCollectorRequest {
 }
 
 export interface AjnaGithubReadOnlyCollectorPort {
-  readonly collect: (request: AjnaGithubReadOnlyCollectorRequest) => Promise<AjnaGithubCollectorSnapshot>
+  readonly collect: (
+    request: AjnaGithubReadOnlyCollectorRequest,
+  ) => Promise<AjnaGithubCollectorSnapshot>
 }
 
 function assertNonEmptyString(value: unknown, field: string): void {

@@ -16,7 +16,10 @@ describe('collectAjnaGithubApiPayloadFromReadOnlyClient', () => {
           repository: request.repository,
           number: request.pullRequestNumber,
           base: { ref: 'main' },
-          head: { ref: 'ajna-offline-snapshot-cli-bundle', sha: 'a00217e91f8404384335d39ade7f54ff58317844' },
+          head: {
+            ref: 'ajna-offline-snapshot-cli-bundle',
+            sha: 'a00217e91f8404384335d39ade7f54ff58317844',
+          },
         }
       },
       listPullRequestFiles: async (request) => {
@@ -35,7 +38,9 @@ describe('collectAjnaGithubApiPayloadFromReadOnlyClient', () => {
     })
 
     expect(payload.pullRequest.repository).toBe('JLPARTIN/CodeMind')
-    expect(payload.files).toEqual([{ filename: 'src/cli-ajna-github-api-snapshot-fixture.ts', status: 'added' }])
+    expect(payload.files).toEqual([
+      { filename: 'src/cli-ajna-github-api-snapshot-fixture.ts', status: 'added' },
+    ])
     expect(payload.checkRuns?.[0]?.conclusion).toBe('success')
     expect(calls).toEqual([
       'pull:JLPARTIN/CodeMind#68',

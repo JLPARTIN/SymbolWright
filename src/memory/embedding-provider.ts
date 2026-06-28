@@ -23,7 +23,9 @@ const DEFAULT_VOYAGE_MODEL = 'voyage-code-3'
 const DEFAULT_VOYAGE_DIMENSIONS = 1024
 const DEFAULT_BATCH_SIZE = 8
 
-export function createVoyageEmbeddingProvider(config: ApiEmbeddingProviderConfig): EmbeddingProvider {
+export function createVoyageEmbeddingProvider(
+  config: ApiEmbeddingProviderConfig,
+): EmbeddingProvider {
   const baseUrl = config.baseUrl ?? VOYAGE_API_BASE
   const model = config.model ?? DEFAULT_VOYAGE_MODEL
   const dimensions = config.dimensions ?? DEFAULT_VOYAGE_DIMENSIONS

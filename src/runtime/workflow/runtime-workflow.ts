@@ -1,7 +1,11 @@
 import type { CodemindToolName, RuntimeToolContext } from '../types.js'
 import type { RuntimeRegistry } from '../registry/runtime-registry.js'
 import { appendTranscriptEntry, type RuntimeTranscript } from '../transcript/runtime-transcript.js'
-import { createAuditEvent, RuntimeAuditLog, type RuntimeAuditEvent } from '../audit/runtime-audit-log.js'
+import {
+  createAuditEvent,
+  RuntimeAuditLog,
+  type RuntimeAuditEvent,
+} from '../audit/runtime-audit-log.js'
 
 export interface RuntimeWorkflowStep {
   readonly toolName: CodemindToolName
@@ -84,19 +88,23 @@ export async function runRuntimeWorkflow(
   const stepResults: RuntimeWorkflowStepResult[] = []
   let stepsExecuted = 0
 
-  audit.record(createAuditEvent({
-    action: 'workflow_start',
-    status: 'allowed',
-    detail: `Starting workflow "${request.name}" with ${request.steps.length} steps`,
-  }))
+  audit.record(
+    createAuditEvent({
+      action: 'workflow_start',
+      status: 'allowed',
+      detail: `Starting workflow "${request.name}" with ${request.steps.length} steps`,
+    }),
+  )
 
   for (const step of request.steps) {
     if (stepsExecuted >= maxSteps) {
-      audit.record(createAuditEvent({
-        action: 'workflow_step_limit',
-        status: 'blocked',
-        detail: `Workflow "${request.name}" stopped at step limit ${maxSteps}`,
-      }))
+      audit.record(
+        createAuditEvent({
+          action: 'workflow_step_limit',
+          status: 'blocked',
+          detail: `Workflow "${request.name}" stopped at step limit ${maxSteps}`,
+        }),
+      )
 
       return {
         name: request.name,
@@ -112,11 +120,13 @@ export async function runRuntimeWorkflow(
     if (!registry.has(step.toolName)) {
       const reason = `Tool not found in registry: ${step.toolName}`
 
-      audit.record(createAuditEvent({
-        action: 'workflow_step_blocked',
-        status: 'blocked',
-        detail: reason,
-      }))
+      audit.record(
+        createAuditEvent({
+          action: 'workflow_step_blocked',
+          status: 'blocked',
+          detail: reason,
+        }),
+      )
 
       transcript = appendTranscriptEntry(transcript, {
         iteration: stepsExecuted + 1,
@@ -163,11 +173,13 @@ export async function runRuntimeWorkflow(
       message: firstLine,
     })
 
-    audit.record(createAuditEvent({
-      action: 'workflow_step',
-      status: status === 'ok' ? 'allowed' : 'blocked',
-      detail: `Step ${stepsExecuted}: ${step.toolName} — ${status}`,
-    }))
+    audit.record(
+      createAuditEvent({
+        action: 'workflow_step',
+        status: status === 'ok' ? 'allowed' : 'blocked',
+        detail: `Step ${stepsExecuted}: ${step.toolName} — ${status}`,
+      }),
+    )
 
     stepResults.push({ toolName: step.toolName, output, status })
 
@@ -184,11 +196,13 @@ export async function runRuntimeWorkflow(
     }
   }
 
-  audit.record(createAuditEvent({
-    action: 'workflow_complete',
-    status: 'allowed',
-    detail: `Workflow "${request.name}" completed ${stepsExecuted} steps`,
-  }))
+  audit.record(
+    createAuditEvent({
+      action: 'workflow_complete',
+      status: 'allowed',
+      detail: `Workflow "${request.name}" completed ${stepsExecuted} steps`,
+    }),
+  )
 
   return {
     name: request.name,

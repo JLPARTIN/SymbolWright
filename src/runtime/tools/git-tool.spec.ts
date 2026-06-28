@@ -79,10 +79,7 @@ describe('evaluateGitToolRequest', () => {
     })
 
     it('blocks force push', () => {
-      const result = evaluateGitToolRequest(
-        { operation: 'push', args: ['--force'] },
-        makePolicy(),
-      )
+      const result = evaluateGitToolRequest({ operation: 'push', args: ['--force'] }, makePolicy())
       expect(result.allowed).toBe(false)
       expect(result.blockReasons).toContain('Force push is not allowed.')
     })
@@ -141,19 +138,13 @@ describe('evaluateGitToolRequest', () => {
 
 describe('renderGitToolResult', () => {
   it('renders allowed result', () => {
-    const result = evaluateGitToolRequest(
-      { operation: 'status' },
-      makePolicy(),
-    )
+    const result = evaluateGitToolRequest({ operation: 'status' }, makePolicy())
     const rendered = renderGitToolResult(result)
     expect(rendered).toContain('Allowed: yes')
   })
 
   it('renders blocked result with reasons', () => {
-    const result = evaluateGitToolRequest(
-      { operation: 'push', args: ['--force'] },
-      makePolicy(),
-    )
+    const result = evaluateGitToolRequest({ operation: 'push', args: ['--force'] }, makePolicy())
     const rendered = renderGitToolResult(result)
     expect(rendered).toContain('Allowed: no')
     expect(rendered).toContain('Force push')

@@ -10,7 +10,7 @@ export const ALLOWLISTED_VALIDATION_COMMANDS = [
   'npm run build:app',
 ] as const
 
-export type AllowlistedValidationCommand = typeof ALLOWLISTED_VALIDATION_COMMANDS[number]
+export type AllowlistedValidationCommand = (typeof ALLOWLISTED_VALIDATION_COMMANDS)[number]
 
 export interface ValidationCommandRequest {
   readonly command: string
@@ -81,11 +81,7 @@ export function renderValidationCommandGateResult(result: ValidationCommandGateR
   }
 
   if (result.decision === 'ALLOWED' && result.dryRun) {
-    sections.push(
-      '',
-      'Dry-run preview: command would be allowed.',
-      'No command has been executed.',
-    )
+    sections.push('', 'Dry-run preview: command would be allowed.', 'No command has been executed.')
   }
 
   if (result.decision === 'ALLOWED' && !result.dryRun) {

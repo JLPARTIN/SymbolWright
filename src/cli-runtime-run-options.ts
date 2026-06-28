@@ -67,7 +67,9 @@ function parseMaxIterations(value: string): number {
 
   const parsed = Number(trimmed)
   if (parsed < 1 || parsed > MAX_RUNTIME_RUN_ITERATIONS) {
-    throw new Error(`--max-iterations must be an integer between 1 and ${MAX_RUNTIME_RUN_ITERATIONS}`)
+    throw new Error(
+      `--max-iterations must be an integer between 1 and ${MAX_RUNTIME_RUN_ITERATIONS}`,
+    )
   }
 
   return parsed

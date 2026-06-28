@@ -19,7 +19,14 @@ export function parseTypecheckOutput(output: string): TypecheckResult {
 
   for (const line of lines) {
     const match = line.match(/^(.+)\((\d+),(\d+)\):\s+error\s+(TS\d+):\s+(.+)$/)
-    if (match !== null && match[1] !== undefined && match[2] !== undefined && match[3] !== undefined && match[4] !== undefined && match[5] !== undefined) {
+    if (
+      match !== null &&
+      match[1] !== undefined &&
+      match[2] !== undefined &&
+      match[3] !== undefined &&
+      match[4] !== undefined &&
+      match[5] !== undefined
+    ) {
       errors.push({
         filePath: match[1],
         line: parseInt(match[2], 10),

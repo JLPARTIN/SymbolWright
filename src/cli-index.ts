@@ -2,7 +2,10 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { resolveCodemindConfig } from './config/codemind-config.js'
-import { createHashEmbeddingProvider, createVoyageEmbeddingProvider } from './memory/embedding-provider.js'
+import {
+  createHashEmbeddingProvider,
+  createVoyageEmbeddingProvider,
+} from './memory/embedding-provider.js'
 import type { EmbeddingProvider } from './memory/embedding-provider.js'
 import { ProjectMemory, resolveProjectMemoryDir } from './memory/project-memory.js'
 import { VectorStore } from './memory/vector-store.js'

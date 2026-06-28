@@ -6,7 +6,15 @@ import { renderRuntimeRun } from './cli-runtime-run.js'
 describe('parseRuntimeRunArgs', () => {
   it('parses read-only runtime run controls without leaking flags into the goal', () => {
     expect(
-      parseRuntimeRunArgs(['prepare', 'operator', 'ux', '--read-only', '--max-iterations', '2', '--json']),
+      parseRuntimeRunArgs([
+        'prepare',
+        'operator',
+        'ux',
+        '--read-only',
+        '--max-iterations',
+        '2',
+        '--json',
+      ]),
     ).toEqual({
       goal: 'prepare operator ux',
       readOnly: true,
@@ -25,23 +33,40 @@ describe('parseRuntimeRunArgs', () => {
   })
 
   it('rejects missing max iteration values', () => {
-    expect(() => parseRuntimeRunArgs(['ship', '--read-only', '--max-iterations'])).toThrow('Missing value')
+    expect(() => parseRuntimeRunArgs(['ship', '--read-only', '--max-iterations'])).toThrow(
+      'Missing value',
+    )
   })
 
   it('rejects unsafe max iteration values', () => {
-    expect(() => parseRuntimeRunArgs(['ship', '--read-only', '--max-iterations', '0'])).toThrow('between 1 and 25')
-    expect(() => parseRuntimeRunArgs(['ship', '--read-only', '--max-iterations', '26'])).toThrow('between 1 and 25')
-    expect(() => parseRuntimeRunArgs(['ship', '--read-only', '--max-iterations', 'two'])).toThrow('Invalid')
+    expect(() => parseRuntimeRunArgs(['ship', '--read-only', '--max-iterations', '0'])).toThrow(
+      'between 1 and 25',
+    )
+    expect(() => parseRuntimeRunArgs(['ship', '--read-only', '--max-iterations', '26'])).toThrow(
+      'between 1 and 25',
+    )
+    expect(() => parseRuntimeRunArgs(['ship', '--read-only', '--max-iterations', 'two'])).toThrow(
+      'Invalid',
+    )
   })
 
   it('rejects unknown runtime run flags', () => {
-    expect(() => parseRuntimeRunArgs(['ship', '--read-only', '--write'])).toThrow('Unknown runtime run flag')
+    expect(() => parseRuntimeRunArgs(['ship', '--read-only', '--write'])).toThrow(
+      'Unknown runtime run flag',
+    )
   })
 })
 
 describe('renderRuntimeRun', () => {
   it('honors the operator max iteration control in text output', async () => {
-    const output = await renderRuntimeRun(['prepare', 'operator', 'ux', '--read-only', '--max-iterations', '1'])
+    const output = await renderRuntimeRun([
+      'prepare',
+      'operator',
+      'ux',
+      '--read-only',
+      '--max-iterations',
+      '1',
+    ])
 
     expect(output).toContain('Status: iteration_limit')
     expect(output).toContain('Goal: prepare operator ux')
@@ -51,7 +76,13 @@ describe('renderRuntimeRun', () => {
   })
 
   it('renders machine-readable JSON output for operator consoles', async () => {
-    const output = await renderRuntimeRun(['prepare', 'json', '--read-only', '--max-iterations=1', '--json'])
+    const output = await renderRuntimeRun([
+      'prepare',
+      'json',
+      '--read-only',
+      '--max-iterations=1',
+      '--json',
+    ])
     const parsed = JSON.parse(output) as {
       readonly command: string
       readonly status: string

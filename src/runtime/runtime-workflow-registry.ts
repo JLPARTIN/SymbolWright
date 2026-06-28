@@ -1,4 +1,7 @@
-import { createGitHubWriteGateRuntimeContext, createGitHubWriteGateRuntimeRegistry } from './runtime-github-write-gate-registry.js'
+import {
+  createGitHubWriteGateRuntimeContext,
+  createGitHubWriteGateRuntimeRegistry,
+} from './runtime-github-write-gate-registry.js'
 import type { FakeLiveReadClientData } from './live-read/fake-live-read-client.js'
 import type { RuntimeToolContext } from './types.js'
 

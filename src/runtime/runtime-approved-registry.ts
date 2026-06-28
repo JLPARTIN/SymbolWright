@@ -1,4 +1,7 @@
-import { createProposalRuntimeContext, createProposalRuntimeRegistry } from './runtime-proposal-registry.js'
+import {
+  createProposalRuntimeContext,
+  createProposalRuntimeRegistry,
+} from './runtime-proposal-registry.js'
 import { createRuntimeRegistry } from './registry/runtime-registry.js'
 import { applyEditGatedTool } from './tools/apply-edit-gated-tool.js'
 import { commandDryRunGatedTool } from './tools/command-dry-run-gated-tool.js'

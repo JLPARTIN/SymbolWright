@@ -2,15 +2,26 @@ import { createInterface } from 'node:readline/promises'
 import { stdin, stdout } from 'node:process'
 import { mkdirSync } from 'node:fs'
 
-import { resolveCodemindConfig, validateCodemindConfig, type CodemindConfig } from './config/codemind-config.js'
+import {
+  resolveCodemindConfig,
+  validateCodemindConfig,
+  type CodemindConfig,
+} from './config/codemind-config.js'
 import { createDefaultRuntimePolicy } from './runtime/policy/runtime-policy.js'
 import { createAnthropicProvider } from './provider/anthropic-provider.js'
 import type { LLMProvider } from './provider/provider.types.js'
 import { assembleAgentTools } from './runtime/tools/tool-assembly.js'
 import type { RuntimeToolContext, RuntimePolicySnapshot, RuntimeApproval } from './runtime/types.js'
-import { runActivatedAgent, type CodemindActivationConfig } from './activation/codemind-activation.js'
+import {
+  runActivatedAgent,
+  type CodemindActivationConfig,
+} from './activation/codemind-activation.js'
 import { createTerminalRenderer } from './tui/terminal-renderer.js'
-import { classifyError, formatErrorForUser, withRetry } from './runtime/error-handling/error-handler.js'
+import {
+  classifyError,
+  formatErrorForUser,
+  withRetry,
+} from './runtime/error-handling/error-handler.js'
 import { CostTracker, renderUsageSummary } from './telemetry/cost-tracker.js'
 import { SessionPersistence } from './storage/session-persistence.js'
 import { resolveStoragePaths } from './storage/storage-paths.js'
@@ -19,7 +30,10 @@ import { conversationMessagesToProviderMessages } from './conversation/transcrip
 import { trimConversationToFit } from './conversation/context-window.js'
 import { WorkspaceManager } from './workspace/workspace-manager.js'
 import { ProjectMemory, resolveProjectMemoryDir } from './memory/project-memory.js'
-import { createHashEmbeddingProvider, createVoyageEmbeddingProvider } from './memory/embedding-provider.js'
+import {
+  createHashEmbeddingProvider,
+  createVoyageEmbeddingProvider,
+} from './memory/embedding-provider.js'
 import type { EmbeddingProvider } from './memory/embedding-provider.js'
 import { loadVectorStore } from './cli-index.js'
 
@@ -85,9 +99,7 @@ async function runOneShot(
     sessionId,
     ...(config.githubToken !== undefined ? { githubToken: config.githubToken } : {}),
     onEvent: renderer,
-    ...(memoryContext.length > 0
-      ? { promptContext: { conversationSummary: memoryContext } }
-      : {}),
+    ...(memoryContext.length > 0 ? { promptContext: { conversationSummary: memoryContext } } : {}),
   }
 
   persistence.appendMessage(sessionId, createMessage('user', userMessage))
@@ -96,12 +108,7 @@ async function runOneShot(
 
   persistence.appendMessage(sessionId, createMessage('assistant', result.agentResult.finalText))
 
-  costTracker.record(
-    sessionId,
-    model,
-    result.agentResult.totalUsage,
-    'orchestrator',
-  )
+  costTracker.record(sessionId, model, result.agentResult.totalUsage, 'orchestrator')
 
   if (result.agentResult.status === 'error') {
     process.exitCode = 1
@@ -196,20 +203,13 @@ async function runInteractive(
       persistence.appendMessage(sessionId, userMsg)
 
       try {
-        const result = await withRetry(
-          async () => runActivatedAgent(activationConfig, trimmed),
-        )
+        const result = await withRetry(async () => runActivatedAgent(activationConfig, trimmed))
 
         const assistantMsg = createMessage('assistant', result.agentResult.finalText)
         conversationHistory.push(assistantMsg)
         persistence.appendMessage(sessionId, assistantMsg)
 
-        costTracker.record(
-          sessionId,
-          model,
-          result.agentResult.totalUsage,
-          'orchestrator',
-        )
+        costTracker.record(sessionId, model, result.agentResult.totalUsage, 'orchestrator')
       } catch (error: unknown) {
         const classified = classifyError(error)
         console.error('\n\x1b[31m' + formatErrorForUser(classified) + '\x1b[0m\n')
@@ -324,9 +324,25 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
         }
       }
       const fullContext = [memoryContext, ragContext].filter((s) => s.length > 0).join('\n\n')
-      await runOneShot(provider, toolContext, userMessage, config, costTracker, persistence, fullContext)
+      await runOneShot(
+        provider,
+        toolContext,
+        userMessage,
+        config,
+        costTracker,
+        persistence,
+        fullContext,
+      )
     } else {
-      await runInteractive(provider, toolContext, config, costTracker, persistence, memoryContext, resumeSessionId)
+      await runInteractive(
+        provider,
+        toolContext,
+        config,
+        costTracker,
+        persistence,
+        memoryContext,
+        resumeSessionId,
+      )
     }
   } catch (error: unknown) {
     const classified = classifyError(error)

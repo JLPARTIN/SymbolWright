@@ -1,11 +1,11 @@
 import { describe, expect, it, beforeEach } from 'vitest'
 
 import { HiveMindRemoteBridge } from './hivemind-remote-bridge.js'
-import type {
-  HiveMindRemoteDispatchRequest,
-} from './hivemind-remote-bridge.js'
+import type { HiveMindRemoteDispatchRequest } from './hivemind-remote-bridge.js'
 
-function makeRequest(overrides?: Partial<HiveMindRemoteDispatchRequest>): HiveMindRemoteDispatchRequest {
+function makeRequest(
+  overrides?: Partial<HiveMindRemoteDispatchRequest>,
+): HiveMindRemoteDispatchRequest {
   return {
     taskId: 'task-1',
     agentType: 'investigator',
@@ -127,22 +127,25 @@ describe('HiveMindRemoteBridge', () => {
     })
 
     it('maps failed status correctly', () => {
-      const result = bridge.toDispatchResult({
-        taskId: 'task-1',
-        status: 'failed',
-        output: '',
-        error: 'boom',
-        auditReceipt: {
+      const result = bridge.toDispatchResult(
+        {
           taskId: 'task-1',
-          agentId: 'remote-investigator-task-1',
-          agentType: 'investigator',
-          role: 'researcher',
-          toolsUsed: [],
-          iterationCount: 0,
-          tokenUsage: { inputTokens: 0, outputTokens: 0 },
-          timestamp: new Date().toISOString(),
+          status: 'failed',
+          output: '',
+          error: 'boom',
+          auditReceipt: {
+            taskId: 'task-1',
+            agentId: 'remote-investigator-task-1',
+            agentType: 'investigator',
+            role: 'researcher',
+            toolsUsed: [],
+            iterationCount: 0,
+            tokenUsage: { inputTokens: 0, outputTokens: 0 },
+            timestamp: new Date().toISOString(),
+          },
         },
-      }, 10)
+        10,
+      )
       expect(result.status).toBe('failed')
     })
   })

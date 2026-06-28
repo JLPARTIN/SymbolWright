@@ -29,7 +29,9 @@ export function evaluateLiveReadPolicy(request: LiveReadPolicyRequest): LiveRead
     return block(request.scopes, 'purpose is required')
   }
 
-  const disallowed = request.scopes.filter((scope) => !ALLOWED_SCOPES.includes(scope as typeof ALLOWED_SCOPES[number]))
+  const disallowed = request.scopes.filter(
+    (scope) => !ALLOWED_SCOPES.includes(scope as (typeof ALLOWED_SCOPES)[number]),
+  )
   if (disallowed.length > 0) {
     return block(request.scopes, `disallowed scopes: ${disallowed.join(', ')}`)
   }

@@ -38,9 +38,7 @@ export function transcriptToConversationMessages(
   transcript: RuntimeTranscript,
   sessionId: string,
 ): readonly ConversationMessage[] {
-  return transcript.entries.map((entry) =>
-    transcriptEntryToConversationMessage(entry, sessionId),
-  )
+  return transcript.entries.map((entry) => transcriptEntryToConversationMessage(entry, sessionId))
 }
 
 function conversationRoleToProviderRole(role: ConversationMessageRole): ProviderMessageRole {

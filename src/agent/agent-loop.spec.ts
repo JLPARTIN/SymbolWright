@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import { runAgentLoop } from './agent-loop.js'
 import type { LLMProvider, ProviderStreamEvent } from '../provider/provider.types.js'
-import type { RuntimeToolDefinition, RuntimePolicySnapshot, RuntimeToolContext } from '../runtime/types.js'
+import type {
+  RuntimeToolDefinition,
+  RuntimePolicySnapshot,
+  RuntimeToolContext,
+} from '../runtime/types.js'
 import type { AgentLoopConfig, AgentLoopEvent } from './agent-loop.types.js'
 
 function makeMockProvider(responses: ProviderStreamEvent[][]): LLMProvider {
@@ -20,7 +24,11 @@ function makeMockProvider(responses: ProviderStreamEvent[][]): LLMProvider {
   }
 }
 
-function makeTextResponse(text: string, inputTokens = 100, outputTokens = 50): ProviderStreamEvent[] {
+function makeTextResponse(
+  text: string,
+  inputTokens = 100,
+  outputTokens = 50,
+): ProviderStreamEvent[] {
   return [
     { type: 'text_delta', text },
     {
@@ -55,9 +63,7 @@ function makeTool(name: string, output: string | (() => Promise<string>)): Runti
     name: name as RuntimeToolDefinition['name'],
     description: `Mock tool: ${name}`,
     capability: 'READ' as RuntimeToolDefinition['capability'],
-    execute: typeof output === 'function'
-      ? output
-      : async () => output,
+    execute: typeof output === 'function' ? output : async () => output,
   }
 }
 
@@ -215,13 +221,8 @@ describe('agent-loop', () => {
       const provider = makeMockProvider([makeTextResponse('Done.')])
       const events: AgentLoopEvent[] = []
 
-      await runAgentLoop(
-        provider,
-        'Hi',
-        [],
-        makeToolContext(),
-        makeConfig(),
-        (event) => events.push(event),
+      await runAgentLoop(provider, 'Hi', [], makeToolContext(), makeConfig(), (event) =>
+        events.push(event),
       )
 
       const types = events.map((e) => e.type)
@@ -282,7 +283,10 @@ describe('agent-loop', () => {
       expect(result.status).toBe('completed')
       expect(capturedMessages).toHaveLength(3)
       expect(capturedMessages[0]).toEqual({ role: 'user', content: 'What is CodeMind?' })
-      expect(capturedMessages[1]).toEqual({ role: 'assistant', content: 'CodeMind is a governed AI coding agent.' })
+      expect(capturedMessages[1]).toEqual({
+        role: 'assistant',
+        content: 'CodeMind is a governed AI coding agent.',
+      })
       expect(capturedMessages[2]).toEqual({ role: 'user', content: 'Tell me more.' })
     })
 
@@ -302,13 +306,7 @@ describe('agent-loop', () => {
         },
       }
 
-      await runAgentLoop(
-        provider,
-        'Hi',
-        [],
-        makeToolContext(),
-        makeConfig(),
-      )
+      await runAgentLoop(provider, 'Hi', [], makeToolContext(), makeConfig())
 
       expect(capturedMessages).toHaveLength(1)
       expect(capturedMessages[0]).toEqual({ role: 'user', content: 'Hi' })

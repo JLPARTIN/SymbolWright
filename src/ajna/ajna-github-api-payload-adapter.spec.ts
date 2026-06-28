@@ -7,13 +7,18 @@ import {
   type AjnaGithubApiCollectorPayload,
 } from './ajna-github-api-payload-adapter.js'
 
-function makePayload(overrides: Partial<AjnaGithubApiCollectorPayload> = {}): AjnaGithubApiCollectorPayload {
+function makePayload(
+  overrides: Partial<AjnaGithubApiCollectorPayload> = {},
+): AjnaGithubApiCollectorPayload {
   return {
     pullRequest: {
       repository: 'JLPARTIN/CodeMind',
       number: 65,
       base: { ref: 'main' },
-      head: { ref: 'ajna-readonly-collector-review-bundle', sha: '8f1d90b835e4570f9ace432575dee5b01512790f' },
+      head: {
+        ref: 'ajna-readonly-collector-review-bundle',
+        sha: '8f1d90b835e4570f9ace432575dee5b01512790f',
+      },
     },
     files: [
       {
@@ -41,7 +46,9 @@ describe('buildAjnaGithubCollectorSnapshotFromApiPayload', () => {
     expect(snapshot.pullRequest.repository).toBe('JLPARTIN/CodeMind')
     expect(snapshot.pullRequest.pullRequestNumber).toBe(65)
     expect(snapshot.pullRequest.baseRef).toBe('main')
-    expect(snapshot.changedFiles[0]?.path).toBe('src/cli-ajna-review-pr-readonly-collector-fixture.ts')
+    expect(snapshot.changedFiles[0]?.path).toBe(
+      'src/cli-ajna-review-pr-readonly-collector-fixture.ts',
+    )
     expect(snapshot.changedFiles[0]?.status).toBe('added')
     expect(snapshot.checkRuns?.[0]?.conclusion).toBe('success')
   })
@@ -53,7 +60,10 @@ describe('buildAjnaGithubCollectorSnapshotFromApiPayload', () => {
 
     expect(input.request.subject.repository).toBe('JLPARTIN/CodeMind')
     expect(input.request.changedFiles).toEqual(snapshot.changedFiles.map((file) => file.path))
-    expect(input.findings.map((finding) => finding.id)).toEqual(['github-diff-evidence', 'github-ci-evidence'])
+    expect(input.findings.map((finding) => finding.id)).toEqual([
+      'github-diff-evidence',
+      'github-ci-evidence',
+    ])
   })
 
   it('maps unsupported statuses to unknown instead of failing', () => {
@@ -76,8 +86,8 @@ describe('buildAjnaGithubCollectorSnapshotFromApiPayload', () => {
       ),
     ).toThrow('pullRequest.repository must be a non-empty string')
 
-    expect(() => buildAjnaGithubCollectorSnapshotFromApiPayload(makePayload({ files: [] }))).toThrow(
-      'files must include at least one file',
-    )
+    expect(() =>
+      buildAjnaGithubCollectorSnapshotFromApiPayload(makePayload({ files: [] })),
+    ).toThrow('files must include at least one file')
   })
 })

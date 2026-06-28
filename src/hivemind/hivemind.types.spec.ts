@@ -26,7 +26,13 @@ describe('hivemind.types', () => {
     })
 
     it('SWARM_TASK_STATUSES includes all statuses', () => {
-      expect(SWARM_TASK_STATUSES).toEqual(['pending', 'dispatched', 'running', 'completed', 'failed'])
+      expect(SWARM_TASK_STATUSES).toEqual([
+        'pending',
+        'dispatched',
+        'running',
+        'completed',
+        'failed',
+      ])
     })
   })
 

@@ -18,13 +18,20 @@ describe('DefaultGitHubPrCreationClient', () => {
   describe('createBranch', () => {
     it('resolves base branch SHA and creates a new ref', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['GET /repos/owner/repo/git/ref/heads/main', { status: 200, body: { object: { sha: 'abc123' } } }],
+        [
+          'GET /repos/owner/repo/git/ref/heads/main',
+          { status: 200, body: { object: { sha: 'abc123' } } },
+        ],
         ['POST /repos/owner/repo/git/refs', { status: 201, body: { ref: 'refs/heads/feature' } }],
       ])
       const http = createMockHttpClient(responses)
       const client = new DefaultGitHubPrCreationClient(http)
 
-      await client.createBranch({ repository: 'owner/repo', baseBranch: 'main', headBranch: 'feature' })
+      await client.createBranch({
+        repository: 'owner/repo',
+        baseBranch: 'main',
+        headBranch: 'feature',
+      })
 
       expect(http.get).toHaveBeenCalledWith('/repos/owner/repo/git/ref/heads/main')
       expect(http.post).toHaveBeenCalledWith('/repos/owner/repo/git/refs', {
@@ -35,26 +42,43 @@ describe('DefaultGitHubPrCreationClient', () => {
 
     it('throws when base branch resolution fails', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['GET /repos/owner/repo/git/ref/heads/main', { status: 404, body: { message: 'Not Found' } }],
+        [
+          'GET /repos/owner/repo/git/ref/heads/main',
+          { status: 404, body: { message: 'Not Found' } },
+        ],
       ])
       const http = createMockHttpClient(responses)
       const client = new DefaultGitHubPrCreationClient(http)
 
       await expect(
-        client.createBranch({ repository: 'owner/repo', baseBranch: 'main', headBranch: 'feature' }),
+        client.createBranch({
+          repository: 'owner/repo',
+          baseBranch: 'main',
+          headBranch: 'feature',
+        }),
       ).rejects.toThrow('Failed to resolve base branch')
     })
 
     it('throws when branch creation fails', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['GET /repos/owner/repo/git/ref/heads/main', { status: 200, body: { object: { sha: 'abc123' } } }],
-        ['POST /repos/owner/repo/git/refs', { status: 422, body: { message: 'Reference already exists' } }],
+        [
+          'GET /repos/owner/repo/git/ref/heads/main',
+          { status: 200, body: { object: { sha: 'abc123' } } },
+        ],
+        [
+          'POST /repos/owner/repo/git/refs',
+          { status: 422, body: { message: 'Reference already exists' } },
+        ],
       ])
       const http = createMockHttpClient(responses)
       const client = new DefaultGitHubPrCreationClient(http)
 
       await expect(
-        client.createBranch({ repository: 'owner/repo', baseBranch: 'main', headBranch: 'feature' }),
+        client.createBranch({
+          repository: 'owner/repo',
+          baseBranch: 'main',
+          headBranch: 'feature',
+        }),
       ).rejects.toThrow('Failed to create branch')
     })
   })
@@ -62,7 +86,10 @@ describe('DefaultGitHubPrCreationClient', () => {
   describe('commitFiles', () => {
     it('creates tree, commit, and updates ref', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['GET /repos/owner/repo/git/ref/heads/feature', { status: 200, body: { object: { sha: 'parent123' } } }],
+        [
+          'GET /repos/owner/repo/git/ref/heads/feature',
+          { status: 200, body: { object: { sha: 'parent123' } } },
+        ],
         ['POST /repos/owner/repo/git/trees', { status: 201, body: { sha: 'tree456' } }],
         ['POST /repos/owner/repo/git/commits', { status: 201, body: { sha: 'commit789' } }],
         ['POST /repos/owner/repo/git/refs/heads/feature', { status: 200, body: {} }],
@@ -107,7 +134,10 @@ describe('DefaultGitHubPrCreationClient', () => {
 
     it('throws when tree creation fails', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['GET /repos/owner/repo/git/ref/heads/feature', { status: 200, body: { object: { sha: 'abc' } } }],
+        [
+          'GET /repos/owner/repo/git/ref/heads/feature',
+          { status: 200, body: { object: { sha: 'abc' } } },
+        ],
         ['POST /repos/owner/repo/git/trees', { status: 500, body: {} }],
       ])
       const http = createMockHttpClient(responses)
@@ -127,10 +157,13 @@ describe('DefaultGitHubPrCreationClient', () => {
   describe('createPullRequest', () => {
     it('creates a draft PR and returns the URL', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['POST /repos/owner/repo/pulls', {
-          status: 201,
-          body: { html_url: 'https://github.com/owner/repo/pull/42' },
-        }],
+        [
+          'POST /repos/owner/repo/pulls',
+          {
+            status: 201,
+            body: { html_url: 'https://github.com/owner/repo/pull/42' },
+          },
+        ],
       ])
       const http = createMockHttpClient(responses)
       const client = new DefaultGitHubPrCreationClient(http)

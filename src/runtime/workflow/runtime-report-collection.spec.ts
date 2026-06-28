@@ -32,7 +32,10 @@ function makeReport(id: string): ZflowExecutionReport {
 
 describe('runtime report collection', () => {
   it('creates a collection from related report surfaces', () => {
-    const index = createRuntimeReportIndex({ title: 'Runtime Report Index', reports: [makeReport('report-1')] })
+    const index = createRuntimeReportIndex({
+      title: 'Runtime Report Index',
+      reports: [makeReport('report-1')],
+    })
     const note = createRuntimeReportReleaseNote({ title: 'Runtime Report Operator Note', index })
     const manifest = createRuntimeReportBundleManifest({
       title: 'Runtime Report Bundle',
@@ -55,8 +58,14 @@ describe('runtime report collection', () => {
   })
 
   it('renders markdown output', () => {
-    const index = createRuntimeReportIndex({ title: 'Runtime Report Index', reports: [makeReport('report-1')] })
-    const collection = createRuntimeReportCollection({ title: 'Runtime Report Collection', indexes: [index] })
+    const index = createRuntimeReportIndex({
+      title: 'Runtime Report Index',
+      reports: [makeReport('report-1')],
+    })
+    const collection = createRuntimeReportCollection({
+      title: 'Runtime Report Collection',
+      indexes: [index],
+    })
     const output = renderRuntimeReportCollectionMarkdown(collection)
 
     expect(output).toContain('# Runtime Report Collection')

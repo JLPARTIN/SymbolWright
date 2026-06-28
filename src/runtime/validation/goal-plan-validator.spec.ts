@@ -28,68 +28,86 @@ describe('assertValidGoalPlan', () => {
   })
 
   it('rejects empty goal', () => {
-    expect(() => assertValidGoalPlan({ goal: '', steps: [] })).toThrow('goal must be a non-empty string')
+    expect(() => assertValidGoalPlan({ goal: '', steps: [] })).toThrow(
+      'goal must be a non-empty string',
+    )
   })
 
   it('rejects whitespace-only goal', () => {
-    expect(() => assertValidGoalPlan({ goal: '   ', steps: [] })).toThrow('goal must be a non-empty string')
+    expect(() => assertValidGoalPlan({ goal: '   ', steps: [] })).toThrow(
+      'goal must be a non-empty string',
+    )
   })
 
   it('rejects non-array steps', () => {
-    expect(() => assertValidGoalPlan({ goal: 'Test', steps: 'not-array' })).toThrow('steps must be an array')
+    expect(() => assertValidGoalPlan({ goal: 'Test', steps: 'not-array' })).toThrow(
+      'steps must be an array',
+    )
   })
 
   it('rejects step with empty id', () => {
-    expect(() => assertValidGoalPlan({
-      goal: 'Test',
-      steps: [{ id: '', title: 'Step', detail: '' }],
-    })).toThrow('id must be a non-empty string')
+    expect(() =>
+      assertValidGoalPlan({
+        goal: 'Test',
+        steps: [{ id: '', title: 'Step', detail: '' }],
+      }),
+    ).toThrow('id must be a non-empty string')
   })
 
   it('rejects step with empty title', () => {
-    expect(() => assertValidGoalPlan({
-      goal: 'Test',
-      steps: [{ id: 's1', title: '', detail: '' }],
-    })).toThrow('title must be a non-empty string')
+    expect(() =>
+      assertValidGoalPlan({
+        goal: 'Test',
+        steps: [{ id: 's1', title: '', detail: '' }],
+      }),
+    ).toThrow('title must be a non-empty string')
   })
 
   it('rejects step with non-string detail', () => {
-    expect(() => assertValidGoalPlan({
-      goal: 'Test',
-      steps: [{ id: 's1', title: 'Step', detail: 123 }],
-    })).toThrow('detail must be a string')
+    expect(() =>
+      assertValidGoalPlan({
+        goal: 'Test',
+        steps: [{ id: 's1', title: 'Step', detail: 123 }],
+      }),
+    ).toThrow('detail must be a string')
   })
 
   it('rejects duplicate step ids', () => {
-    expect(() => assertValidGoalPlan({
-      goal: 'Test',
-      steps: [
-        { id: 'dup', title: 'A', detail: '' },
-        { id: 'dup', title: 'B', detail: '' },
-      ],
-    })).toThrow('Duplicate step id: dup')
+    expect(() =>
+      assertValidGoalPlan({
+        goal: 'Test',
+        steps: [
+          { id: 'dup', title: 'A', detail: '' },
+          { id: 'dup', title: 'B', detail: '' },
+        ],
+      }),
+    ).toThrow('Duplicate step id: dup')
   })
 
   it('rejects dependsOn referencing unknown step', () => {
-    expect(() => assertValidGoalPlan({
-      goal: 'Test',
-      steps: [
-        { id: 's1', title: 'A', detail: '', dependsOn: ['missing'] },
-      ],
-    })).toThrow('depends on unknown step: missing')
+    expect(() =>
+      assertValidGoalPlan({
+        goal: 'Test',
+        steps: [{ id: 's1', title: 'A', detail: '', dependsOn: ['missing'] }],
+      }),
+    ).toThrow('depends on unknown step: missing')
   })
 
   it('rejects non-array dependsOn', () => {
-    expect(() => assertValidGoalPlan({
-      goal: 'Test',
-      steps: [{ id: 's1', title: 'A', detail: '', dependsOn: 'not-array' }],
-    })).toThrow('dependsOn must be an array')
+    expect(() =>
+      assertValidGoalPlan({
+        goal: 'Test',
+        steps: [{ id: 's1', title: 'A', detail: '', dependsOn: 'not-array' }],
+      }),
+    ).toThrow('dependsOn must be an array')
   })
 
   it('accepts steps without dependsOn', () => {
-    expect(() => assertValidGoalPlan({
-      goal: 'Test',
-      steps: [{ id: 's1', title: 'A', detail: 'detail text' }],
-    })).not.toThrow()
+    expect(() =>
+      assertValidGoalPlan({
+        goal: 'Test',
+        steps: [{ id: 's1', title: 'A', detail: 'detail text' }],
+      }),
+    ).not.toThrow()
   })
 })

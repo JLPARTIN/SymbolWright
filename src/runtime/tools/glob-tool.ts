@@ -26,11 +26,7 @@ function parseGlobInput(input: unknown): GlobToolInput {
   }
 }
 
-function matchGlobSimple(
-  basePath: string,
-  pattern: string,
-  maxResults: number,
-): string[] {
+function matchGlobSimple(basePath: string, pattern: string, maxResults: number): string[] {
   const results: string[] = []
   const ext = path.extname(pattern)
   const isRecursive = pattern.includes('**')
@@ -69,13 +65,8 @@ function matchGlobSimple(
   return results.sort()
 }
 
-export async function executeGlobTool(
-  input: GlobToolInput,
-  cwd: string,
-): Promise<string> {
-  const basePath = input.cwd
-    ? resolveWorkspacePath(cwd, input.cwd)
-    : cwd
+export async function executeGlobTool(input: GlobToolInput, cwd: string): Promise<string> {
+  const basePath = input.cwd ? resolveWorkspacePath(cwd, input.cwd) : cwd
   const maxResults = input.maxResults ?? 200
 
   const matches = matchGlobSimple(basePath, input.pattern, maxResults)

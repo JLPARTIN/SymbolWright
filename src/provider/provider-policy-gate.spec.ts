@@ -132,12 +132,7 @@ describe('provider-policy-gate', () => {
     })
 
     it('works with all trust zones', () => {
-      const zones = [
-        'OPERATOR_SESSION',
-        'GOVERNANCE_CONTRACT',
-        'LLM_OUTPUT',
-        'UNKNOWN',
-      ] as const
+      const zones = ['OPERATOR_SESSION', 'GOVERNANCE_CONTRACT', 'LLM_OUTPUT', 'UNKNOWN'] as const
 
       for (const zone of zones) {
         const request = makeGateRequest({ sourceTrustZone: zone })

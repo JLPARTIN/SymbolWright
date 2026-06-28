@@ -15,7 +15,9 @@ export function renderCiReviewDraft(draft: CiReviewDraft): string {
     `Status: ${draft.status}`,
     '',
     'Findings:',
-    ...(draft.findings.length > 0 ? draft.findings.map((item) => `- ${item}`) : ['- No findings provided.']),
+    ...(draft.findings.length > 0
+      ? draft.findings.map((item) => `- ${item}`)
+      : ['- No findings provided.']),
     '',
     'Next steps:',
     ...draft.nextSteps.map((item, index) => `${index + 1}. ${item}`),

@@ -33,16 +33,18 @@ const testContext: RuntimeToolContext = {
   },
 }
 
-function makePacketInput(overrides: Partial<{
-  id: string
-  sourceEvidence: readonly string[]
-  proposedAction: OperatorReviewAction
-  actionDetail: string
-  risks: readonly string[]
-  validation: readonly string[]
-  boundary: readonly string[]
-  nextManualStep: string
-}> = {}) {
+function makePacketInput(
+  overrides: Partial<{
+    id: string
+    sourceEvidence: readonly string[]
+    proposedAction: OperatorReviewAction
+    actionDetail: string
+    risks: readonly string[]
+    validation: readonly string[]
+    boundary: readonly string[]
+    nextManualStep: string
+  }> = {},
+) {
   return {
     id: overrides.id ?? 'PKT-001',
     sourceEvidence: overrides.sourceEvidence ?? ['PR #42 review evidence', 'CI workflow passed'],
@@ -51,7 +53,8 @@ function makePacketInput(overrides: Partial<{
     risks: overrides.risks ?? ['Comment will be visible to all repo collaborators'],
     validation: overrides.validation ?? ['Review evidence is complete', 'CI is green'],
     boundary: overrides.boundary ?? ['no merge', 'no approval', 'no label change'],
-    nextManualStep: overrides.nextManualStep ?? 'Operator confirms comment text and approves posting',
+    nextManualStep:
+      overrides.nextManualStep ?? 'Operator confirms comment text and approves posting',
   }
 }
 
@@ -90,12 +93,14 @@ describe('operator review packet', () => {
   })
 
   it('renders a packet with empty optional arrays', () => {
-    const packet = createOperatorReviewPacket(makePacketInput({
-      sourceEvidence: [],
-      risks: [],
-      validation: [],
-      boundary: [],
-    }))
+    const packet = createOperatorReviewPacket(
+      makePacketInput({
+        sourceEvidence: [],
+        risks: [],
+        validation: [],
+        boundary: [],
+      }),
+    )
     const output = renderOperatorReviewPacket(packet)
 
     expect(output).toContain('CodeMind operator review packet')
@@ -173,23 +178,36 @@ describe('operator review packet tool', () => {
   })
 
   it('rejects missing input', async () => {
-    await expect(operatorReviewPacketTool.execute(null, testContext)).rejects.toThrow('Missing operator review packet input')
+    await expect(operatorReviewPacketTool.execute(null, testContext)).rejects.toThrow(
+      'Missing operator review packet input',
+    )
   })
 
   it('rejects missing id', async () => {
-    await expect(operatorReviewPacketTool.execute({ ...makePacketInput(), id: '' }, testContext)).rejects.toThrow('Missing packet id')
+    await expect(
+      operatorReviewPacketTool.execute({ ...makePacketInput(), id: '' }, testContext),
+    ).rejects.toThrow('Missing packet id')
   })
 
   it('rejects invalid proposedAction', async () => {
-    await expect(operatorReviewPacketTool.execute({ ...makePacketInput(), proposedAction: 'invalid' }, testContext)).rejects.toThrow('Invalid proposedAction')
+    await expect(
+      operatorReviewPacketTool.execute(
+        { ...makePacketInput(), proposedAction: 'invalid' },
+        testContext,
+      ),
+    ).rejects.toThrow('Invalid proposedAction')
   })
 
   it('rejects missing actionDetail', async () => {
-    await expect(operatorReviewPacketTool.execute({ ...makePacketInput(), actionDetail: '' }, testContext)).rejects.toThrow('Missing actionDetail')
+    await expect(
+      operatorReviewPacketTool.execute({ ...makePacketInput(), actionDetail: '' }, testContext),
+    ).rejects.toThrow('Missing actionDetail')
   })
 
   it('rejects missing nextManualStep', async () => {
-    await expect(operatorReviewPacketTool.execute({ ...makePacketInput(), nextManualStep: '' }, testContext)).rejects.toThrow('Missing nextManualStep')
+    await expect(
+      operatorReviewPacketTool.execute({ ...makePacketInput(), nextManualStep: '' }, testContext),
+    ).rejects.toThrow('Missing nextManualStep')
   })
 
   it('shows REJECTED for merge_pr', async () => {

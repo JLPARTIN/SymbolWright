@@ -33,9 +33,7 @@ export async function promptForApproval(
   }
 }
 
-export function evaluateAndCheck(
-  request: CodemindPermissionRequest,
-): CodemindPermissionDecision {
+export function evaluateAndCheck(request: CodemindPermissionRequest): CodemindPermissionDecision {
   return evaluateCodemindPermissionRequest(request)
 }
 

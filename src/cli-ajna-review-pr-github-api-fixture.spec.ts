@@ -16,7 +16,10 @@ function makeFixture(): unknown {
       repository: 'JLPARTIN/CodeMind',
       number: 66,
       base: { ref: 'main' },
-      head: { ref: 'ajna-github-api-payload-adapter-bundle', sha: 'a9cc72a0fe1a92b04f8e3607fdb2f2a32b38cd6b' },
+      head: {
+        ref: 'ajna-github-api-payload-adapter-bundle',
+        sha: 'a9cc72a0fe1a92b04f8e3607fdb2f2a32b38cd6b',
+      },
     },
     files: [{ filename: 'src/ajna/ajna-github-api-payload-adapter.ts', status: 'added' }],
     checkRuns: [{ name: 'Validate CodeMind', status: 'completed', conclusion: 'success' }],
@@ -46,7 +49,9 @@ describe('parseAjnaGithubApiReviewFixture', () => {
   })
 
   it('rejects non-object JSON', () => {
-    expect(() => parseAjnaGithubApiReviewFixture('[]')).toThrow('API review fixture must be an object')
+    expect(() => parseAjnaGithubApiReviewFixture('[]')).toThrow(
+      'API review fixture must be an object',
+    )
   })
 })
 

@@ -107,11 +107,13 @@ describe('chunkFileContent', () => {
 
   it('respects custom maxFileSize', () => {
     const content = 'x'.repeat(100)
-    expect(chunkFileContent('test.ts', content, {
-      chunkSize: 50,
-      chunkOverlap: 10,
-      maxFileSize: 50,
-    })).toHaveLength(0)
+    expect(
+      chunkFileContent('test.ts', content, {
+        chunkSize: 50,
+        chunkOverlap: 10,
+        maxFileSize: 50,
+      }),
+    ).toHaveLength(0)
   })
 
   it('chunks have correct file path', () => {

@@ -31,7 +31,9 @@ describe('RecoveryChangeLedger', () => {
   })
 
   it('rejects duplicate record ids', () => {
-    expect(() => createRecoveryChangeLedger([first, first])).toThrow('Recovery change record already exists')
+    expect(() => createRecoveryChangeLedger([first, first])).toThrow(
+      'Recovery change record already exists',
+    )
   })
 
   it('renders ledger output', () => {

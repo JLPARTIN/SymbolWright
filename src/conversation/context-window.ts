@@ -30,7 +30,10 @@ export interface ContextWindowFitResult {
   readonly messagesDropped: number
 }
 
-export function estimateTokens(text: string, charsPerToken: number = DEFAULT_CHARS_PER_TOKEN): number {
+export function estimateTokens(
+  text: string,
+  charsPerToken: number = DEFAULT_CHARS_PER_TOKEN,
+): number {
   return Math.ceil(text.length / charsPerToken)
 }
 

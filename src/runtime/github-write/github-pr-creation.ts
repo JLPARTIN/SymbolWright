@@ -1,8 +1,5 @@
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
-import {
-  evaluateGitHubWriteGate,
-  type GitHubWriteGateResult,
-} from './github-write-gate.js'
+import { evaluateGitHubWriteGate, type GitHubWriteGateResult } from './github-write-gate.js'
 
 export type GitHubPrCreationOutcome = 'BLOCKED' | 'DRY_RUN' | 'CREATED'
 

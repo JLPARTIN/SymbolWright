@@ -54,9 +54,18 @@ export function renderTuiSwarmPanel(state: TuiState): string {
   const lines = ['HiveMind Swarm Status:', '']
 
   for (const agent of state.swarmAgents) {
-    const statusIcon = agent.status === 'active' ? '>' : agent.status === 'completed' ? '+' : agent.status === 'failed' ? 'x' : '-'
+    const statusIcon =
+      agent.status === 'active'
+        ? '>'
+        : agent.status === 'completed'
+          ? '+'
+          : agent.status === 'failed'
+            ? 'x'
+            : '-'
     const taskInfo = agent.task !== undefined ? ` — ${agent.task}` : ''
-    lines.push(`  [${statusIcon}] ${agent.agentType} (${agent.agentId}): ${agent.status}${taskInfo}`)
+    lines.push(
+      `  [${statusIcon}] ${agent.agentType} (${agent.agentId}): ${agent.status}${taskInfo}`,
+    )
   }
 
   return lines.join('\n')
@@ -104,7 +113,10 @@ export function renderTuiToolPanel(state: TuiState): string {
   return lines.join('\n')
 }
 
-export function renderTuiWorkspace(state: TuiState, options: TuiWorkspaceRenderOptions = {}): string {
+export function renderTuiWorkspace(
+  state: TuiState,
+  options: TuiWorkspaceRenderOptions = {},
+): string {
   const divider = makeDivider(options.width ?? 72)
   const mission = normalizeMission(options.mission)
   const commandHistory = options.commandHistory ?? []
@@ -120,7 +132,9 @@ export function renderTuiWorkspace(state: TuiState, options: TuiWorkspaceRenderO
     ...renderCommandHistory(commandHistory),
     divider,
     'Agent Stream:',
-    state.streamBuffer.length > 0 ? state.streamBuffer : '  Ready. Start a mission to stream reasoning, tools, and results here.',
+    state.streamBuffer.length > 0
+      ? state.streamBuffer
+      : '  Ready. Start a mission to stream reasoning, tools, and results here.',
     divider,
     renderTuiToolPanel(state),
     divider,
@@ -128,7 +142,9 @@ export function renderTuiWorkspace(state: TuiState, options: TuiWorkspaceRenderO
     divider,
     renderTuiAjnaPanel(state),
     divider,
-    state.approvalPending ? `Approval: ${state.approvalPrompt ?? 'Operator approval required.'}` : 'Approval: none pending',
+    state.approvalPending
+      ? `Approval: ${state.approvalPrompt ?? 'Operator approval required.'}`
+      : 'Approval: none pending',
   ]
 
   return lines.join('\n')

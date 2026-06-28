@@ -54,7 +54,9 @@ function parseOperatorReviewPacketInput(input: unknown): OperatorReviewPacketInp
   }
 
   const sourceEvidence = Array.isArray(obj['sourceEvidence'])
-    ? (obj['sourceEvidence'] as unknown[]).filter((item): item is string => typeof item === 'string')
+    ? (obj['sourceEvidence'] as unknown[]).filter(
+        (item): item is string => typeof item === 'string',
+      )
     : []
 
   const risks = Array.isArray(obj['risks'])

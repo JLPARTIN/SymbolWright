@@ -1,4 +1,7 @@
-import { createProposalRuntimeContext, createProposalRuntimeRegistry } from '../runtime-proposal-registry.js'
+import {
+  createProposalRuntimeContext,
+  createProposalRuntimeRegistry,
+} from '../runtime-proposal-registry.js'
 import { createRuntimeSession, type RuntimeSession } from '../session/runtime-session.js'
 import { appendTranscriptEntry, renderRuntimeTranscript } from '../transcript/runtime-transcript.js'
 import type { RuntimeLoopResult } from '../types.js'
@@ -15,7 +18,7 @@ export interface ReadOnlyRuntimeRunResult extends RuntimeLoopResult {
 
 const ALLOWED_TOOL_SEQUENCE = ['plan_goal', 'validation_plan', 'propose_edit'] as const
 
-type AllowedToolName = typeof ALLOWED_TOOL_SEQUENCE[number]
+type AllowedToolName = (typeof ALLOWED_TOOL_SEQUENCE)[number]
 
 export async function runReadOnlyRuntimeLoop(
   input: ReadOnlyRuntimeRunInput,

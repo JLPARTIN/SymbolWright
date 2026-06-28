@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  resolveStoragePaths,
-  sessionFilePath,
-  auditFilePath,
-} from './storage-paths.js'
+import { resolveStoragePaths, sessionFilePath, auditFilePath } from './storage-paths.js'
 
 describe('resolveStoragePaths', () => {
   it('resolves global and workspace paths', () => {

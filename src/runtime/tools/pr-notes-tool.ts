@@ -7,7 +7,8 @@ export interface PrNotesInput {
 }
 
 function parsePrNotesInput(input: unknown): PrNotesInput {
-  const value = typeof input === 'object' && input !== null ? (input as Record<string, unknown>) : {}
+  const value =
+    typeof input === 'object' && input !== null ? (input as Record<string, unknown>) : {}
   const parsed: { title?: string; focus?: string } = {}
 
   if (typeof value['title'] === 'string') {
@@ -31,11 +32,7 @@ export function buildPrNotesDraft(input: PrNotesInput): PrNotesDraft {
       'Kept output proposal-only and reviewable before any execution gate.',
       'Documented validation commands for follow-up review.',
     ],
-    validation: [
-      'npm run typecheck',
-      'npm test',
-      'npm run lint',
-    ],
+    validation: ['npm run typecheck', 'npm test', 'npm run lint'],
     limits: [
       'No PR comment is posted.',
       'No approval is requested.',

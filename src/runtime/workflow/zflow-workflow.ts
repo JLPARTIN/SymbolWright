@@ -110,7 +110,9 @@ export async function runZflowWorkflow(
         targetPath: file.path,
         content: file.content,
       })),
-      ...(request.validationCommand !== undefined ? { validationCommand: request.validationCommand } : {}),
+      ...(request.validationCommand !== undefined
+        ? { validationCommand: request.validationCommand }
+        : {}),
       policy,
       ...(request.approval !== undefined ? { approval: request.approval } : {}),
     },

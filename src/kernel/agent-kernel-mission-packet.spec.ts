@@ -13,7 +13,9 @@ import { validateAgentKernelSkillUse } from './agent-kernel-skill-validator.js'
 import type { AgentKernelPlanningRequest } from './agent-kernel.types.js'
 import { validateAgentKernelWorkflow } from './agent-kernel-workflow-validator.js'
 
-function makeReadyInput(overrides: Partial<AgentKernelMissionPacketInput> = {}): AgentKernelMissionPacketInput {
+function makeReadyInput(
+  overrides: Partial<AgentKernelMissionPacketInput> = {},
+): AgentKernelMissionPacketInput {
   const planningRequest: AgentKernelPlanningRequest = {
     requestId: 'ak-08-req-1',
     sessionId: 'session-1',
@@ -143,16 +145,22 @@ describe('AGENT-KERNEL-08 mission packet generator', () => {
     const packet = buildAgentKernelMissionPacket(makeReadyInput({ objectives: [] }))
 
     expect(packet.status).toBe('BLOCKED')
-    expect(packet.findings.some((f) => f.code === 'MISSING_OBJECTIVE' && f.severity === 'BLOCK')).toBe(true)
+    expect(
+      packet.findings.some((f) => f.code === 'MISSING_OBJECTIVE' && f.severity === 'BLOCK'),
+    ).toBe(true)
   })
 
   it('degrades when no PRIMARY objective', () => {
-    const packet = buildAgentKernelMissionPacket(makeReadyInput({
-      objectives: [{ id: 'OBJ-1', summary: 'Secondary task', priority: 'SECONDARY' }],
-    }))
+    const packet = buildAgentKernelMissionPacket(
+      makeReadyInput({
+        objectives: [{ id: 'OBJ-1', summary: 'Secondary task', priority: 'SECONDARY' }],
+      }),
+    )
 
     expect(packet.status).toBe('DEGRADED')
-    expect(packet.findings.some((f) => f.code === 'MISSING_OBJECTIVE' && f.severity === 'WARN')).toBe(true)
+    expect(
+      packet.findings.some((f) => f.code === 'MISSING_OBJECTIVE' && f.severity === 'WARN'),
+    ).toBe(true)
   })
 
   it('degrades when no constraints', () => {
@@ -170,18 +178,32 @@ describe('AGENT-KERNEL-08 mission packet generator', () => {
   })
 
   it('blocks when maxSteps is zero or negative', () => {
-    const packet = buildAgentKernelMissionPacket(makeReadyInput({
-      executionBoundary: { maxSteps: 0, allowMutation: false, allowExternalProvider: false, timeoutMs: 60_000 },
-    }))
+    const packet = buildAgentKernelMissionPacket(
+      makeReadyInput({
+        executionBoundary: {
+          maxSteps: 0,
+          allowMutation: false,
+          allowExternalProvider: false,
+          timeoutMs: 60_000,
+        },
+      }),
+    )
 
     expect(packet.status).toBe('BLOCKED')
     expect(packet.findings.some((f) => f.code === 'EXECUTION_BOUNDARY_EXCEEDED')).toBe(true)
   })
 
   it('blocks when timeoutMs is zero or negative', () => {
-    const packet = buildAgentKernelMissionPacket(makeReadyInput({
-      executionBoundary: { maxSteps: 10, allowMutation: false, allowExternalProvider: false, timeoutMs: 0 },
-    }))
+    const packet = buildAgentKernelMissionPacket(
+      makeReadyInput({
+        executionBoundary: {
+          maxSteps: 10,
+          allowMutation: false,
+          allowExternalProvider: false,
+          timeoutMs: 0,
+        },
+      }),
+    )
 
     expect(packet.status).toBe('BLOCKED')
     expect(packet.findings.some((f) => f.code === 'EXECUTION_BOUNDARY_EXCEEDED')).toBe(true)

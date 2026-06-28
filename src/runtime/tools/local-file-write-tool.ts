@@ -71,7 +71,12 @@ export const localFileWriteTool: RuntimeToolDefinition = {
     }
 
     if (!context.policy.allowWrites || parsed.dryRun) {
-      const gateResult = evaluateLocalFileWriteGate(request, context.cwd, context.policy, context.approval)
+      const gateResult = evaluateLocalFileWriteGate(
+        request,
+        context.cwd,
+        context.policy,
+        context.approval,
+      )
       const gateOutput = renderLocalFileWriteGateResult(gateResult)
       const auditEvent = createLocalFileWriteAuditEvent(gateResult, context.approval)
       const auditOutput = renderAuditEvents([auditEvent])

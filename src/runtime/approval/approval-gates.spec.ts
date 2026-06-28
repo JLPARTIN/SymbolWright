@@ -1,19 +1,28 @@
 import { describe, expect, it } from 'vitest'
 
-import { assertApprovalGate, formatApprovalSummary, toWorkspaceRelativePath } from './approval-gate.js'
+import {
+  assertApprovalGate,
+  formatApprovalSummary,
+  toWorkspaceRelativePath,
+} from './approval-gate.js'
 import { createApprovalTicket } from './approval-ticket.js'
 import { createAuditEvent, renderAuditEvents, RuntimeAuditLog } from '../audit/runtime-audit-log.js'
-import { createApprovedRuntimeContext, createApprovedRuntimeRegistry } from '../runtime-approved-registry.js'
+import {
+  createApprovedRuntimeContext,
+  createApprovedRuntimeRegistry,
+} from '../runtime-approved-registry.js'
 import { createDefaultRuntimePolicy } from '../policy/runtime-policy.js'
 import { isValidApprovalScope, ALL_APPROVAL_SCOPES } from '../types.js'
 
 describe('approval gates', () => {
   it('requires approval before gated execution', () => {
-    expect(() => assertApprovalGate({
-      requiredScope: 'apply_edit',
-      workspaceRoot: process.cwd(),
-      policy: createDefaultRuntimePolicy(),
-    })).toThrow('approval ticket')
+    expect(() =>
+      assertApprovalGate({
+        requiredScope: 'apply_edit',
+        workspaceRoot: process.cwd(),
+        policy: createDefaultRuntimePolicy(),
+      }),
+    ).toThrow('approval ticket')
   })
 
   it('requires matching approval scope', () => {
@@ -24,12 +33,14 @@ describe('approval gates', () => {
       reason: 'test',
     })
 
-    expect(() => assertApprovalGate({
-      approval,
-      requiredScope: 'apply_edit',
-      workspaceRoot: process.cwd(),
-      policy: createDefaultRuntimePolicy(),
-    })).toThrow('missing required scope')
+    expect(() =>
+      assertApprovalGate({
+        approval,
+        requiredScope: 'apply_edit',
+        workspaceRoot: process.cwd(),
+        policy: createDefaultRuntimePolicy(),
+      }),
+    ).toThrow('missing required scope')
   })
 
   it('blocks protected paths even with approval', () => {
@@ -40,19 +51,23 @@ describe('approval gates', () => {
       reason: 'test',
     })
 
-    expect(() => assertApprovalGate({
-      approval,
-      requiredScope: 'apply_edit',
-      workspaceRoot: process.cwd(),
-      targetPath: '.git/config',
-      policy: createDefaultRuntimePolicy(),
-    })).toThrow('protected path')
+    expect(() =>
+      assertApprovalGate({
+        approval,
+        requiredScope: 'apply_edit',
+        workspaceRoot: process.cwd(),
+        targetPath: '.git/config',
+        policy: createDefaultRuntimePolicy(),
+      }),
+    ).toThrow('protected path')
   })
 })
 
 describe('approval-gated tools', () => {
   it('registers gated tools', () => {
-    const names = createApprovedRuntimeRegistry().list().map((tool) => tool.name)
+    const names = createApprovedRuntimeRegistry()
+      .list()
+      .map((tool) => tool.name)
 
     expect(names).toContain('apply_edit_gated')
     expect(names).toContain('command_dry_run_gated')
@@ -103,10 +118,9 @@ describe('approval-gated tools', () => {
     })
     const tool = createApprovedRuntimeRegistry().getOrThrow('command_dry_run_gated')
 
-    await expect(tool.execute(
-      { command: 'rm -rf .' },
-      createApprovedRuntimeContext(approval),
-    )).rejects.toThrow('not allowlisted')
+    await expect(
+      tool.execute({ command: 'rm -rf .' }, createApprovedRuntimeContext(approval)),
+    ).rejects.toThrow('not allowlisted')
   })
 })
 
@@ -141,21 +155,25 @@ describe('RuntimeAuditLog', () => {
 
 describe('createApprovalTicket edge cases', () => {
   it('throws on whitespace-only ticketId', () => {
-    expect(() => createApprovalTicket({
-      ticketId: '   ',
-      approvedBy: 'operator',
-      scopes: ['file:write'],
-      reason: 'test',
-    })).toThrow('ticket id is required')
+    expect(() =>
+      createApprovalTicket({
+        ticketId: '   ',
+        approvedBy: 'operator',
+        scopes: ['file:write'],
+        reason: 'test',
+      }),
+    ).toThrow('ticket id is required')
   })
 
   it('throws on whitespace-only approvedBy', () => {
-    expect(() => createApprovalTicket({
-      ticketId: 'T-1',
-      approvedBy: '   ',
-      scopes: ['file:write'],
-      reason: 'test',
-    })).toThrow('approver is required')
+    expect(() =>
+      createApprovalTicket({
+        ticketId: 'T-1',
+        approvedBy: '   ',
+        scopes: ['file:write'],
+        reason: 'test',
+      }),
+    ).toThrow('approver is required')
   })
 
   it('trims and defaults empty reason', () => {

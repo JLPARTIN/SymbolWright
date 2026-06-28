@@ -83,7 +83,14 @@ describe('agent-loop.types', () => {
       const events: AgentLoopEvent[] = [
         { type: 'text_delta', text: 'Hello' },
         { type: 'tool_call_start', id: 't-1', name: 'read_file' },
-        { type: 'tool_call_end', id: 't-1', name: 'read_file', output: 'contents', isError: false, durationMs: 50 },
+        {
+          type: 'tool_call_end',
+          id: 't-1',
+          name: 'read_file',
+          output: 'contents',
+          isError: false,
+          durationMs: 50,
+        },
         { type: 'iteration_start', iterationNumber: 1 },
         { type: 'iteration_end', iterationNumber: 1 },
         { type: 'loop_end', status: 'completed', totalIterations: 1 },

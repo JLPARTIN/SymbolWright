@@ -1,7 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { getCompletedRuntimeBuildPhaseCount, RUNTIME_BUILD_PHASES } from './runtime/runtime-build-state.js'
+import {
+  getCompletedRuntimeBuildPhaseCount,
+  RUNTIME_BUILD_PHASES,
+} from './runtime/runtime-build-state.js'
 import { runDoctor, type DoctorReport } from './cli-doctor.js'
 
 export const RELEASE_READINESS_BLOCK_ID = 'CODEMIND-RELEASE-01' as const

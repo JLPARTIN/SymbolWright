@@ -103,7 +103,11 @@ describe('shouldRetry', () => {
   })
 
   it('returns false for non-retryable error', () => {
-    const err: CodemindError = { category: 'permission_denied', message: 'denied', retryable: false }
+    const err: CodemindError = {
+      category: 'permission_denied',
+      message: 'denied',
+      retryable: false,
+    }
     expect(shouldRetry(err, 0, config)).toBe(false)
   })
 })
@@ -116,11 +120,14 @@ describe('withRetry', () => {
 
   it('retries on retryable error', async () => {
     let attempts = 0
-    const result = await withRetry(async () => {
-      attempts++
-      if (attempts < 3) throw new Error('Rate limit exceeded (429)')
-      return 'success'
-    }, { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 10 })
+    const result = await withRetry(
+      async () => {
+        attempts++
+        if (attempts < 3) throw new Error('Rate limit exceeded (429)')
+        return 'success'
+      },
+      { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 10 },
+    )
 
     expect(result).toBe('success')
     expect(attempts).toBe(3)
@@ -128,39 +135,61 @@ describe('withRetry', () => {
 
   it('throws on non-retryable error', async () => {
     await expect(
-      withRetry(async () => {
-        throw new Error('Invalid API key')
-      }, { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 10 }),
+      withRetry(
+        async () => {
+          throw new Error('Invalid API key')
+        },
+        { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 10 },
+      ),
     ).rejects.toThrow('Invalid API key')
   })
 
   it('throws after retries exhausted', async () => {
     await expect(
-      withRetry(async () => {
-        throw new Error('Rate limit exceeded (429)')
-      }, { maxRetries: 2, baseDelayMs: 1, maxDelayMs: 10 }),
+      withRetry(
+        async () => {
+          throw new Error('Rate limit exceeded (429)')
+        },
+        { maxRetries: 2, baseDelayMs: 1, maxDelayMs: 10 },
+      ),
     ).rejects.toThrow()
   })
 })
 
 describe('formatErrorForUser', () => {
   it('formats provider error', () => {
-    const msg = formatErrorForUser({ category: 'provider_error', message: 'key invalid', retryable: false })
+    const msg = formatErrorForUser({
+      category: 'provider_error',
+      message: 'key invalid',
+      retryable: false,
+    })
     expect(msg).toContain('Provider error')
   })
 
   it('formats retryable provider error', () => {
-    const msg = formatErrorForUser({ category: 'provider_error', message: 'rate limited', retryable: true })
+    const msg = formatErrorForUser({
+      category: 'provider_error',
+      message: 'rate limited',
+      retryable: true,
+    })
     expect(msg).toContain('temporarily unavailable')
   })
 
   it('formats permission denied', () => {
-    const msg = formatErrorForUser({ category: 'permission_denied', message: 'blocked', retryable: false })
+    const msg = formatErrorForUser({
+      category: 'permission_denied',
+      message: 'blocked',
+      retryable: false,
+    })
     expect(msg).toContain('governance policy')
   })
 
   it('formats context overflow', () => {
-    const msg = formatErrorForUser({ category: 'context_overflow', message: 'too long', retryable: false })
+    const msg = formatErrorForUser({
+      category: 'context_overflow',
+      message: 'too long',
+      retryable: false,
+    })
     expect(msg).toContain('compacted')
   })
 
@@ -172,12 +201,19 @@ describe('formatErrorForUser', () => {
 
 describe('formatErrorForLLM', () => {
   it('includes tool name when provided', () => {
-    const msg = formatErrorForLLM({ category: 'tool_error', message: 'not found', retryable: false }, 'read_file')
+    const msg = formatErrorForLLM(
+      { category: 'tool_error', message: 'not found', retryable: false },
+      'read_file',
+    )
     expect(msg).toContain('read_file')
   })
 
   it('includes recovery suggestion', () => {
-    const msg = formatErrorForLLM({ category: 'permission_denied', message: 'denied', retryable: false })
+    const msg = formatErrorForLLM({
+      category: 'permission_denied',
+      message: 'denied',
+      retryable: false,
+    })
     expect(msg).toContain('approval')
   })
 })

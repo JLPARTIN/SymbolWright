@@ -34,7 +34,10 @@ const EXPECTED_STEPS: readonly AjnaClientPipelineStep[] = [
   },
 ]
 
-function compareStep(actual: AjnaClientPipelineStep | undefined, expected: AjnaClientPipelineStep): string[] {
+function compareStep(
+  actual: AjnaClientPipelineStep | undefined,
+  expected: AjnaClientPipelineStep,
+): string[] {
   if (actual === undefined) {
     return [`missing step ${expected.order}: ${expected.name}`]
   }
@@ -95,7 +98,9 @@ export function renderAjnaClientPipelineCheck(
     'Ajna client pipeline check',
     `Status: ${result.status}`,
     `Checked steps: ${result.checkedSteps}`,
-    result.issues.length === 0 ? 'Issues: None' : ['Issues:', ...result.issues.map((issue) => `- ${issue}`)].join('\n'),
+    result.issues.length === 0
+      ? 'Issues: None'
+      : ['Issues:', ...result.issues.map((issue) => `- ${issue}`)].join('\n'),
     '',
     'Mode: READ_ONLY',
   ].join('\n')

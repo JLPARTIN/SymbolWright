@@ -1,9 +1,7 @@
 import { createAuditEvent, type RuntimeAuditEvent } from '../audit/runtime-audit-log.js'
 import type { PrPreparationResult } from './pr-preparation.js'
 
-export function createPrPreparationAuditEvent(
-  result: PrPreparationResult,
-): RuntimeAuditEvent {
+export function createPrPreparationAuditEvent(result: PrPreparationResult): RuntimeAuditEvent {
   if (result.decision === 'INCOMPLETE') {
     return createAuditEvent({
       action: 'pr_preparation',

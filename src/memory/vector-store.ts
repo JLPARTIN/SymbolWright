@@ -80,7 +80,9 @@ export class VectorStore {
 
   add(entry: VectorEntry): void {
     if (entry.embedding.length !== this.dimensions) {
-      throw new Error(`Embedding dimension mismatch: expected ${this.dimensions}, got ${entry.embedding.length}`)
+      throw new Error(
+        `Embedding dimension mismatch: expected ${this.dimensions}, got ${entry.embedding.length}`,
+      )
     }
 
     if (this.entries.size >= this.maxEntries && !this.entries.has(entry.id)) {
@@ -116,7 +118,9 @@ export class VectorStore {
 
   search(queryEmbedding: readonly number[], topK: number = 10): readonly VectorSearchResult[] {
     if (queryEmbedding.length !== this.dimensions) {
-      throw new Error(`Query dimension mismatch: expected ${this.dimensions}, got ${queryEmbedding.length}`)
+      throw new Error(
+        `Query dimension mismatch: expected ${this.dimensions}, got ${queryEmbedding.length}`,
+      )
     }
 
     const results: VectorSearchResult[] = []

@@ -57,7 +57,12 @@ describe('persistAuditLedger', () => {
   })
 
   it('warns on invalid events', () => {
-    const invalid: RuntimeAuditEvent = { action: '', status: 'allowed', detail: 'bad', timestamp: '2026-06-26T00:00:00.000Z' }
+    const invalid: RuntimeAuditEvent = {
+      action: '',
+      status: 'allowed',
+      detail: 'bad',
+      timestamp: '2026-06-26T00:00:00.000Z',
+    }
     const result = persistAuditLedger([baseEvent, invalid], '2026-06-26T00:00:00Z')
 
     expect(result.entriesWritten).toBe(1)
@@ -87,7 +92,12 @@ describe('serializeAuditLedger', () => {
   })
 
   it('skips invalid events', () => {
-    const invalid: RuntimeAuditEvent = { action: '', status: 'allowed', detail: 'bad', timestamp: '2026-06-26T00:00:00.000Z' }
+    const invalid: RuntimeAuditEvent = {
+      action: '',
+      status: 'allowed',
+      detail: 'bad',
+      timestamp: '2026-06-26T00:00:00.000Z',
+    }
     const lines = serializeAuditLedger([baseEvent, invalid], '2026-06-26T00:00:00Z')
 
     expect(lines).toHaveLength(1)

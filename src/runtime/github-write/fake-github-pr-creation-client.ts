@@ -1,7 +1,4 @@
-import type {
-  GitHubPrCreationClient,
-  GitHubPrCreationFile,
-} from './github-pr-creation.js'
+import type { GitHubPrCreationClient, GitHubPrCreationFile } from './github-pr-creation.js'
 
 export type FakeGitHubPrCreationOperation =
   | {

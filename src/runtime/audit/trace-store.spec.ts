@@ -50,8 +50,14 @@ describe('persistTraceFrames', () => {
   })
 
   it('warns on invalid frames', () => {
-    const invalid = { ...makeFrame('AGENT-KERNEL-01'), blockId: '' } as unknown as AgentKernelTraceFrame
-    const result = persistTraceFrames([makeFrame('AGENT-KERNEL-01'), invalid], '2026-06-26T00:00:00Z')
+    const invalid = {
+      ...makeFrame('AGENT-KERNEL-01'),
+      blockId: '',
+    } as unknown as AgentKernelTraceFrame
+    const result = persistTraceFrames(
+      [makeFrame('AGENT-KERNEL-01'), invalid],
+      '2026-06-26T00:00:00Z',
+    )
 
     expect(result.outcome).toBe('BLOCKED')
     expect(result.framesStored).toBe(1)
@@ -111,7 +117,11 @@ describe('replayTraceFrames', () => {
   it('detects invariant violations', () => {
     const violating: AgentKernelTraceFrame = {
       ...makeFrame('AGENT-KERNEL-01'),
-      invariants: { providerInvoked: true, repoMutationAllowed: false, commandExecutionAllowed: false },
+      invariants: {
+        providerInvoked: true,
+        repoMutationAllowed: false,
+        commandExecutionAllowed: false,
+      },
     }
     const lines = serializeTraceFrames([violating], '2026-06-26T00:00:00Z')
     const result = replayTraceFrames(lines, 'exec-1')

@@ -1,4 +1,8 @@
-import { assertApprovalGate, formatApprovalSummary, toWorkspaceRelativePath } from '../approval/approval-gate.js'
+import {
+  assertApprovalGate,
+  formatApprovalSummary,
+  toWorkspaceRelativePath,
+} from '../approval/approval-gate.js'
 import { createAuditEvent, RuntimeAuditLog, renderAuditEvents } from '../audit/runtime-audit-log.js'
 import type { RuntimeApproval, RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 
@@ -43,12 +47,14 @@ export async function executeApplyEditGatedTool(
     policy: context.policy,
   })
 
-  audit.record(createAuditEvent({
-    action: 'apply_edit_gated',
-    status: 'allowed',
-    approval,
-    detail: `dry-run edit approved for ${toWorkspaceRelativePath(context.cwd, input.path)}`,
-  }))
+  audit.record(
+    createAuditEvent({
+      action: 'apply_edit_gated',
+      status: 'allowed',
+      approval,
+      detail: `dry-run edit approved for ${toWorkspaceRelativePath(context.cwd, input.path)}`,
+    }),
+  )
 
   return [
     'CodeMind gated apply-edit',

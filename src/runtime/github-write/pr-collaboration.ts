@@ -1,8 +1,5 @@
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
-import {
-  evaluateGitHubWriteGate,
-  type GitHubWriteGateResult,
-} from './github-write-gate.js'
+import { evaluateGitHubWriteGate, type GitHubWriteGateResult } from './github-write-gate.js'
 
 export type PrCollaborationOutcome = 'BLOCKED' | 'DRY_RUN' | 'APPLIED'
 export type PrCollaborationAction = 'post_comment' | 'apply_label'
@@ -76,9 +73,10 @@ export async function executePrCollaboration(
     }
   }
 
-  const operation = request.action === 'post_comment'
-    ? `add conversation note to PR #${request.prNumber}`
-    : `apply label to PR #${request.prNumber}`
+  const operation =
+    request.action === 'post_comment'
+      ? `add conversation note to PR #${request.prNumber}`
+      : `apply label to PR #${request.prNumber}`
 
   if (request.dryRun) {
     return {

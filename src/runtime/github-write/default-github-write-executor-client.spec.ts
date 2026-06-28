@@ -16,10 +16,13 @@ describe('DefaultGitHubWriteExecutorClient', () => {
   describe('create_draft_pr', () => {
     it('creates a draft PR and returns summary and URL', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['POST /repos/owner/repo/pulls', {
-          status: 201,
-          body: { html_url: 'https://github.com/owner/repo/pull/7' },
-        }],
+        [
+          'POST /repos/owner/repo/pulls',
+          {
+            status: 201,
+            body: { html_url: 'https://github.com/owner/repo/pull/7' },
+          },
+        ],
       ])
       const http = createMockHttpClient(responses)
       const client = new DefaultGitHubWriteExecutorClient(http)
@@ -63,10 +66,13 @@ describe('DefaultGitHubWriteExecutorClient', () => {
   describe('post_comment', () => {
     it('posts a comment and returns summary and URL', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['POST /repos/owner/repo/issues/5/comments', {
-          status: 201,
-          body: { html_url: 'https://github.com/owner/repo/pull/5#issuecomment-123' },
-        }],
+        [
+          'POST /repos/owner/repo/issues/5/comments',
+          {
+            status: 201,
+            body: { html_url: 'https://github.com/owner/repo/pull/5#issuecomment-123' },
+          },
+        ],
       ])
       const http = createMockHttpClient(responses)
       const client = new DefaultGitHubWriteExecutorClient(http)
@@ -87,7 +93,10 @@ describe('DefaultGitHubWriteExecutorClient', () => {
 
     it('throws when comment post fails', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['POST /repos/owner/repo/issues/5/comments', { status: 403, body: { message: 'Forbidden' } }],
+        [
+          'POST /repos/owner/repo/issues/5/comments',
+          { status: 403, body: { message: 'Forbidden' } },
+        ],
       ])
       const http = createMockHttpClient(responses)
       const client = new DefaultGitHubWriteExecutorClient(http)
@@ -106,10 +115,13 @@ describe('DefaultGitHubWriteExecutorClient', () => {
   describe('apply_label', () => {
     it('applies a label and returns summary', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['POST /repos/owner/repo/issues/3/labels', {
-          status: 200,
-          body: [{ name: 'bug' }],
-        }],
+        [
+          'POST /repos/owner/repo/issues/3/labels',
+          {
+            status: 200,
+            body: [{ name: 'bug' }],
+          },
+        ],
       ])
       const http = createMockHttpClient(responses)
       const client = new DefaultGitHubWriteExecutorClient(http)
@@ -131,7 +143,10 @@ describe('DefaultGitHubWriteExecutorClient', () => {
 
     it('throws when label application fails', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['POST /repos/owner/repo/issues/3/labels', { status: 422, body: { message: 'Validation Failed' } }],
+        [
+          'POST /repos/owner/repo/issues/3/labels',
+          { status: 422, body: { message: 'Validation Failed' } },
+        ],
       ])
       const http = createMockHttpClient(responses)
       const client = new DefaultGitHubWriteExecutorClient(http)

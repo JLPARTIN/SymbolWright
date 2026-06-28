@@ -34,7 +34,12 @@ const request = {
 describe('executeGitHubPrCreation', () => {
   it('dry-runs without client operations', async () => {
     const client = new FakeGitHubPrCreationClient()
-    const result = await executeGitHubPrCreation({ ...request, dryRun: true }, policy, approval, client)
+    const result = await executeGitHubPrCreation(
+      { ...request, dryRun: true },
+      policy,
+      approval,
+      client,
+    )
 
     expect(result.outcome).toBe('DRY_RUN')
     expect(result.operations).toHaveLength(3)
@@ -56,7 +61,12 @@ describe('executeGitHubPrCreation', () => {
 
   it('renders dry-run details', async () => {
     const client = new FakeGitHubPrCreationClient()
-    const result = await executeGitHubPrCreation({ ...request, dryRun: true }, policy, approval, client)
+    const result = await executeGitHubPrCreation(
+      { ...request, dryRun: true },
+      policy,
+      approval,
+      client,
+    )
     const output = renderGitHubPrCreationResult(result)
 
     expect(output).toContain('CodeMind GitHub PR creation')

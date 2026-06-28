@@ -36,9 +36,13 @@ describe('parseAjnaClientCollectorFixtureRequest', () => {
   })
 
   it('rejects invalid request JSON', () => {
-    expect(() => parseAjnaClientCollectorFixtureRequest('[]')).toThrow('fixture request must be an object')
+    expect(() => parseAjnaClientCollectorFixtureRequest('[]')).toThrow(
+      'fixture request must be an object',
+    )
     expect(() =>
-      parseAjnaClientCollectorFixtureRequest(JSON.stringify({ repository: '', pullRequestNumber: 70 })),
+      parseAjnaClientCollectorFixtureRequest(
+        JSON.stringify({ repository: '', pullRequestNumber: 70 }),
+      ),
     ).toThrow('repository must be a non-empty string')
   })
 })

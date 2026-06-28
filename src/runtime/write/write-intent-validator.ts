@@ -8,7 +8,10 @@ export interface WriteIntentValidationResult {
   readonly errors: readonly string[]
 }
 
-export function validateWriteIntent(intent: WriteIntent, workspaceRoot: string): WriteIntentValidationResult {
+export function validateWriteIntent(
+  intent: WriteIntent,
+  workspaceRoot: string,
+): WriteIntentValidationResult {
   const errors: string[] = []
 
   if (intent.id.trim().length === 0) {

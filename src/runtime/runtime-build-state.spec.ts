@@ -10,7 +10,9 @@ import {
 describe('runtime build state', () => {
   it('records Phases A through T as complete', () => {
     expect(getCompletedRuntimeBuildPhaseCount()).toBe(20)
-    expect(RUNTIME_BUILD_PHASES.slice(0, 20).every((phase) => phase.state === 'COMPLETE')).toBe(true)
+    expect(RUNTIME_BUILD_PHASES.slice(0, 20).every((phase) => phase.state === 'COMPLETE')).toBe(
+      true,
+    )
   })
 
   it('reports no next phase when all phases are complete', () => {

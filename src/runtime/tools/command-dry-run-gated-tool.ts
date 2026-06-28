@@ -51,22 +51,26 @@ export async function executeCommandDryRunGatedTool(
     policy: context.policy,
   })
 
-  if (!ALLOWED_COMMANDS.includes(command as typeof ALLOWED_COMMANDS[number])) {
-    audit.record(createAuditEvent({
-      action: 'command_dry_run_gated',
-      status: 'blocked',
-      approval,
-      detail: `command is not allowlisted: ${command}`,
-    }))
+  if (!ALLOWED_COMMANDS.includes(command as (typeof ALLOWED_COMMANDS)[number])) {
+    audit.record(
+      createAuditEvent({
+        action: 'command_dry_run_gated',
+        status: 'blocked',
+        approval,
+        detail: `command is not allowlisted: ${command}`,
+      }),
+    )
     throw new Error(`Command is not allowlisted: ${command}`)
   }
 
-  audit.record(createAuditEvent({
-    action: 'command_dry_run_gated',
-    status: 'allowed',
-    approval,
-    detail: `dry-run command approved: ${command}`,
-  }))
+  audit.record(
+    createAuditEvent({
+      action: 'command_dry_run_gated',
+      status: 'allowed',
+      approval,
+      detail: `dry-run command approved: ${command}`,
+    }),
+  )
 
   return [
     'CodeMind gated command dry-run',
@@ -87,5 +91,6 @@ export const commandDryRunGatedTool: RuntimeToolDefinition = {
   name: 'command_dry_run_gated',
   description: 'Represent an approved allowlisted command without executing it.',
   capability: 'APPROVED_COMMAND',
-  execute: async (input, context) => executeCommandDryRunGatedTool(parseCommandInput(input), context),
+  execute: async (input, context) =>
+    executeCommandDryRunGatedTool(parseCommandInput(input), context),
 }

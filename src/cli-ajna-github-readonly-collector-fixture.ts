@@ -12,12 +12,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-export function parseAjnaGithubReadOnlyCollectorRequest(jsonText: string): AjnaGithubReadOnlyCollectorRequest {
+export function parseAjnaGithubReadOnlyCollectorRequest(
+  jsonText: string,
+): AjnaGithubReadOnlyCollectorRequest {
   const parsed = JSON.parse(jsonText) as unknown
   if (!isRecord(parsed)) {
     throw new Error('Ajna GitHub read-only collector request fixture must be an object.')
   }
-  return validateAjnaGithubReadOnlyCollectorRequest(parsed as unknown as AjnaGithubReadOnlyCollectorRequest)
+  return validateAjnaGithubReadOnlyCollectorRequest(
+    parsed as unknown as AjnaGithubReadOnlyCollectorRequest,
+  )
 }
 
 export function createAjnaGithubReadOnlyFixturePort(): AjnaGithubReadOnlyCollectorPort {
@@ -48,7 +52,9 @@ export async function buildAjnaGithubReadOnlyCollectorFixtureSnapshotForFile(
   return collectAjnaGithubReadOnlySnapshot(port, request)
 }
 
-export async function renderAjnaGithubReadOnlyCollectorFixtureForFile(inputPath: string): Promise<string> {
+export async function renderAjnaGithubReadOnlyCollectorFixtureForFile(
+  inputPath: string,
+): Promise<string> {
   const snapshot = await buildAjnaGithubReadOnlyCollectorFixtureSnapshotForFile(inputPath)
   return JSON.stringify(snapshot, null, 2)
 }

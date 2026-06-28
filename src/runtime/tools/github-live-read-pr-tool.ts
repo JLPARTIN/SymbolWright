@@ -39,7 +39,11 @@ export function createGitHubLiveReadPrTool(client: RuntimeLiveReadClient): Runti
     capability: 'LIVE_READ_CLIENT',
     execute: async (input: unknown, _context: RuntimeToolContext): Promise<string> => {
       const parsed = parseGitHubLiveReadPrInput(input)
-      const evidence = await client.getPullRequestEvidence(parsed.owner, parsed.repo, parsed.prNumber)
+      const evidence = await client.getPullRequestEvidence(
+        parsed.owner,
+        parsed.repo,
+        parsed.prNumber,
+      )
       const summary = buildPrEvidenceSummary(evidence)
       const ajna = bridgeRuntimeEvidenceToAjna({ pr: summary })
 

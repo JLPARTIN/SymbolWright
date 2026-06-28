@@ -12,7 +12,10 @@ import {
   parseOptionalRecord,
 } from './runtime/workflow/runtime-report-fixture-guards.js'
 import type { ZflowExecutionReport } from './runtime/workflow/zflow-report.js'
-import type { ZflowReportCatalog, ZflowReportArtifactManifest } from './runtime/workflow/zflow-report-catalog.js'
+import type {
+  ZflowReportCatalog,
+  ZflowReportArtifactManifest,
+} from './runtime/workflow/zflow-report-catalog.js'
 import type { ZflowReportSuite } from './runtime/workflow/zflow-report-suite.js'
 
 export interface RuntimeReportIndexFixtureRequest {
@@ -61,9 +64,7 @@ function parseFixture(raw: unknown): RuntimeReportIndexFixtureRequest {
   }
 }
 
-export async function renderRuntimeReportIndex(
-  fixturePath: string,
-): Promise<string> {
+export async function renderRuntimeReportIndex(fixturePath: string): Promise<string> {
   const raw = loadFixtureFile(fixturePath)
   const fixture = parseFixture(raw)
   const index = createRuntimeReportIndex({

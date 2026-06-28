@@ -141,7 +141,10 @@ export function assertNetworkAllowed(policy: RuntimePolicySnapshot): void {
 }
 
 const VALID_MODES: readonly CodemindRuntimeMode[] = [
-  'PLAN_ONLY', 'READ_ONLY', 'PROPOSAL_ONLY', 'APPROVED_EXECUTION',
+  'PLAN_ONLY',
+  'READ_ONLY',
+  'PROPOSAL_ONLY',
+  'APPROVED_EXECUTION',
 ]
 
 /** Validates that a policy object has correct shape and field types. */

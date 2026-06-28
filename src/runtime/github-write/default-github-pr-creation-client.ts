@@ -27,7 +27,9 @@ export class DefaultGitHubPrCreationClient implements GitHubPrCreationClient {
       `/repos/${owner}/${repo}/git/ref/heads/${encodeURIComponent(input.baseBranch)}`,
     )
     if (refResponse.status !== 200) {
-      throw new Error(`Failed to resolve base branch "${input.baseBranch}": status ${refResponse.status}`)
+      throw new Error(
+        `Failed to resolve base branch "${input.baseBranch}": status ${refResponse.status}`,
+      )
     }
 
     const refBody = refResponse.body as Record<string, unknown>
@@ -42,7 +44,9 @@ export class DefaultGitHubPrCreationClient implements GitHubPrCreationClient {
       sha,
     })
     if (createResponse.status !== 201) {
-      throw new Error(`Failed to create branch "${input.headBranch}": status ${createResponse.status}`)
+      throw new Error(
+        `Failed to create branch "${input.headBranch}": status ${createResponse.status}`,
+      )
     }
   }
 

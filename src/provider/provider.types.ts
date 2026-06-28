@@ -33,7 +33,10 @@ export interface ProviderToolResultContent {
   readonly isError?: boolean
 }
 
-export type ProviderContentBlock = ProviderTextContent | ProviderToolUseContent | ProviderToolResultContent
+export type ProviderContentBlock =
+  | ProviderTextContent
+  | ProviderToolUseContent
+  | ProviderToolResultContent
 
 export interface ProviderMessage {
   readonly role: ProviderMessageRole

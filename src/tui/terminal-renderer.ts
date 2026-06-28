@@ -86,16 +86,17 @@ export function createTerminalRenderer(
       case 'loop_end':
         process.stdout.write('\n')
         if (!quiet) {
-          const statusText = event.status === 'completed'
-            ? green('completed')
-            : event.status === 'tool_use_limit'
-              ? red('iteration limit reached')
-              : red(event.status)
+          const statusText =
+            event.status === 'completed'
+              ? green('completed')
+              : event.status === 'tool_use_limit'
+                ? red('iteration limit reached')
+                : red(event.status)
 
           process.stderr.write(
             `\n${dim('---')}\n` +
-            `${cyan('CodeMind')} | ${statusText} in ${event.totalIterations} iteration${event.totalIterations === 1 ? '' : 's'}\n` +
-            `${formatUsageLine(totalUsage, model)}\n`,
+              `${cyan('CodeMind')} | ${statusText} in ${event.totalIterations} iteration${event.totalIterations === 1 ? '' : 's'}\n` +
+              `${formatUsageLine(totalUsage, model)}\n`,
           )
         }
         break

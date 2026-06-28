@@ -212,9 +212,18 @@ describe('ProjectMemory indexRepository and queryRelevant', () => {
     }
 
     mkdirSync(join(TEST_REPO_DIR, 'src'), { recursive: true })
-    writeFileSync(join(TEST_REPO_DIR, 'src', 'auth.ts'), 'export function login(user: string) {\n  return true;\n}\n')
-    writeFileSync(join(TEST_REPO_DIR, 'src', 'db.ts'), 'export const pool = createPool({ host: "localhost" });\n')
-    writeFileSync(join(TEST_REPO_DIR, 'README.md'), '# Test Project\n\nA test project for indexing.\n')
+    writeFileSync(
+      join(TEST_REPO_DIR, 'src', 'auth.ts'),
+      'export function login(user: string) {\n  return true;\n}\n',
+    )
+    writeFileSync(
+      join(TEST_REPO_DIR, 'src', 'db.ts'),
+      'export const pool = createPool({ host: "localhost" });\n',
+    )
+    writeFileSync(
+      join(TEST_REPO_DIR, 'README.md'),
+      '# Test Project\n\nA test project for indexing.\n',
+    )
     writeFileSync(join(TEST_REPO_DIR, 'image.png'), 'binary data')
 
     memory = new ProjectMemory(TEST_MEM_DIR)
@@ -272,7 +281,9 @@ describe('ProjectMemory indexRepository and queryRelevant', () => {
   })
 
   it('respects maxFiles limit', async () => {
-    const result = await memory.indexRepository(TEST_REPO_DIR, embeddingProvider, vectorStore, { maxFiles: 1 })
+    const result = await memory.indexRepository(TEST_REPO_DIR, embeddingProvider, vectorStore, {
+      maxFiles: 1,
+    })
 
     expect(result.filesScanned).toBe(1)
   })

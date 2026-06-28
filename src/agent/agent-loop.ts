@@ -1,4 +1,9 @@
-import type { LLMProvider, ProviderMessage, ProviderStreamEvent, ProviderTokenUsage } from '../provider/provider.types.js'
+import type {
+  LLMProvider,
+  ProviderMessage,
+  ProviderStreamEvent,
+  ProviderTokenUsage,
+} from '../provider/provider.types.js'
 import type { RuntimeToolDefinition, RuntimeToolContext } from '../runtime/types.js'
 import type {
   AgentLoopConfig,
@@ -8,7 +13,11 @@ import type {
   AgentLoopToolCall,
   AgentLoopToolResult,
 } from './agent-loop.types.js'
-import { bridgeToolsForProvider, extractProviderTools, type BridgedToolDefinition } from './tool-schema-bridge.js'
+import {
+  bridgeToolsForProvider,
+  extractProviderTools,
+  type BridgedToolDefinition,
+} from './tool-schema-bridge.js'
 
 const DEFAULT_MAX_ITERATIONS = 50
 
@@ -20,7 +29,10 @@ function addUsage(a: ProviderTokenUsage, b: ProviderTokenUsage): ProviderTokenUs
       ? { cacheReadInputTokens: (a.cacheReadInputTokens ?? 0) + (b.cacheReadInputTokens ?? 0) }
       : {}),
     ...(a.cacheCreationInputTokens !== undefined || b.cacheCreationInputTokens !== undefined
-      ? { cacheCreationInputTokens: (a.cacheCreationInputTokens ?? 0) + (b.cacheCreationInputTokens ?? 0) }
+      ? {
+          cacheCreationInputTokens:
+            (a.cacheCreationInputTokens ?? 0) + (b.cacheCreationInputTokens ?? 0),
+        }
       : {}),
   }
 }
@@ -42,7 +54,6 @@ async function collectStreamEvents(
   const toolCalls: AgentLoopToolCall[] = []
   let stopReason = 'end_turn'
   let usage = emptyUsage()
-
 
   for await (const event of stream) {
     switch (event.type) {
@@ -135,9 +146,7 @@ function toolCallsToAssistantMessage(
   toolCalls: readonly AgentLoopToolCall[],
 ): ProviderMessage {
   const content = [
-    ...(textParts.length > 0
-      ? [{ type: 'text' as const, text: textParts.join('') }]
-      : []),
+    ...(textParts.length > 0 ? [{ type: 'text' as const, text: textParts.join('') }] : []),
     ...toolCalls.map((call) => ({
       type: 'tool_use' as const,
       id: call.id,

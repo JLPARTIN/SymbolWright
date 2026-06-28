@@ -154,10 +154,7 @@ describe('prCollaborationTool', () => {
   })
 
   it('blocks without approval', async () => {
-    const output = await prCollaborationTool.execute(
-      commentInput,
-      makeContext(ghWritePolicy),
-    )
+    const output = await prCollaborationTool.execute(commentInput, makeContext(ghWritePolicy))
 
     expect(output).toContain('BLOCKED')
   })
@@ -176,10 +173,7 @@ describe('prCollaborationTool', () => {
 
   it('defaults dryRun to true when not provided', async () => {
     const { dryRun: _, ...noDryRun } = commentInput
-    const output = await prCollaborationTool.execute(
-      noDryRun,
-      makeContext(ghWritePolicy, approval),
-    )
+    const output = await prCollaborationTool.execute(noDryRun, makeContext(ghWritePolicy, approval))
 
     expect(output).toContain('DRY_RUN')
   })

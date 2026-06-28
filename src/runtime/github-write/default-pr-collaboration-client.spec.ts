@@ -34,7 +34,10 @@ describe('DefaultPrCollaborationClient', () => {
 
     it('throws when comment post fails', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['POST /repos/owner/repo/issues/10/comments', { status: 403, body: { message: 'Forbidden' } }],
+        [
+          'POST /repos/owner/repo/issues/10/comments',
+          { status: 403, body: { message: 'Forbidden' } },
+        ],
       ])
       const http = createMockHttpClient(responses)
       const client = new DefaultPrCollaborationClient(http)
@@ -48,7 +51,10 @@ describe('DefaultPrCollaborationClient', () => {
   describe('addLabel', () => {
     it('applies a label to the correct PR', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['POST /repos/owner/repo/issues/7/labels', { status: 200, body: [{ name: 'enhancement' }] }],
+        [
+          'POST /repos/owner/repo/issues/7/labels',
+          { status: 200, body: [{ name: 'enhancement' }] },
+        ],
       ])
       const http = createMockHttpClient(responses)
       const client = new DefaultPrCollaborationClient(http)
@@ -66,7 +72,10 @@ describe('DefaultPrCollaborationClient', () => {
 
     it('throws when label application fails', async () => {
       const responses = new Map<string, GitHubHttpResponse>([
-        ['POST /repos/owner/repo/issues/7/labels', { status: 422, body: { message: 'Validation Failed' } }],
+        [
+          'POST /repos/owner/repo/issues/7/labels',
+          { status: 422, body: { message: 'Validation Failed' } },
+        ],
       ])
       const http = createMockHttpClient(responses)
       const client = new DefaultPrCollaborationClient(http)

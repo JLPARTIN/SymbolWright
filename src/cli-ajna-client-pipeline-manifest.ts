@@ -46,6 +46,8 @@ export function renderAjnaClientPipelineManifest(
     `Mode: ${manifest.mode}`,
     '',
     'Steps:',
-    ...manifest.steps.map((step) => `${step.order}. ${step.name}\n   Command: ${step.cli}\n   Output: ${step.result}`),
+    ...manifest.steps.map(
+      (step) => `${step.order}. ${step.name}\n   Command: ${step.cli}\n   Output: ${step.result}`,
+    ),
   ].join('\n')
 }

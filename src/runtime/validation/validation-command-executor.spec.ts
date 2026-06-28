@@ -137,7 +137,8 @@ describe('runValidationCommand', () => {
       path.join(workspace, 'package.json'),
       JSON.stringify({
         scripts: {
-          typecheck: 'node -e "console.log(\'api_key: sk-abcdefghijklmnopqrstuvwxyz1234567890abcdef12345678\')"',
+          typecheck:
+            'node -e "console.log(\'api_key: sk-abcdefghijklmnopqrstuvwxyz1234567890abcdef12345678\')"',
         },
       }),
       'utf8',

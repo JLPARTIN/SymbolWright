@@ -1,11 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest'
 
-import {
-  computeCost,
-  CostTracker,
-  renderUsageSummary,
-  DEFAULT_COST_RATES,
-} from './cost-tracker.js'
+import { computeCost, CostTracker, renderUsageSummary, DEFAULT_COST_RATES } from './cost-tracker.js'
 import type { ProviderTokenUsage } from '../provider/provider.types.js'
 
 const USAGE: ProviderTokenUsage = {
@@ -23,8 +18,7 @@ const USAGE_WITH_CACHE: ProviderTokenUsage = {
 describe('computeCost', () => {
   it('computes cost for known model', () => {
     const cost = computeCost(USAGE, 'claude-sonnet-4-20250514')
-    const expected =
-      (1000 / 1_000_000) * 3 + (500 / 1_000_000) * 15
+    const expected = (1000 / 1_000_000) * 3 + (500 / 1_000_000) * 15
 
     expect(cost).toBeCloseTo(expected)
   })

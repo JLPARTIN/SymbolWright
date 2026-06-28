@@ -139,8 +139,8 @@ export function executeRepairLoop(request: RepairLoopRequest): RepairLoopResult 
     }
   }
 
-  const allValidationsPassed = request.validationResults.length > 0 &&
-    request.validationResults.every((v) => v.passed)
+  const allValidationsPassed =
+    request.validationResults.length > 0 && request.validationResults.every((v) => v.passed)
 
   if (request.validationResults.length > 0 && !allValidationsPassed) {
     const failedCommands = request.validationResults
@@ -239,10 +239,7 @@ function blocked(
   }
 }
 
-function stoppedAt(
-  checkpoint: RepairLoopCheckpoint,
-  finding: RepairLoopFinding,
-): RepairLoopResult {
+function stoppedAt(checkpoint: RepairLoopCheckpoint, finding: RepairLoopFinding): RepairLoopResult {
   return {
     outcome: 'STOPPED_AT_CHECKPOINT',
     lastCheckpoint: checkpoint,

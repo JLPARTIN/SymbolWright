@@ -22,10 +22,15 @@ export function parseLintOutput(output: string): LintResult {
   const lines = output.split('\n')
 
   for (const line of lines) {
-    const match = line.match(
-      /^\s*(\d+):(\d+)\s+(warning|error)\s+(.+?)\s{2,}(\S+)\s*$/,
-    )
-    if (match !== null && match[1] !== undefined && match[2] !== undefined && match[3] !== undefined && match[4] !== undefined && match[5] !== undefined) {
+    const match = line.match(/^\s*(\d+):(\d+)\s+(warning|error)\s+(.+?)\s{2,}(\S+)\s*$/)
+    if (
+      match !== null &&
+      match[1] !== undefined &&
+      match[2] !== undefined &&
+      match[3] !== undefined &&
+      match[4] !== undefined &&
+      match[5] !== undefined
+    ) {
       violations.push({
         filePath: '',
         line: parseInt(match[1], 10),
@@ -38,10 +43,16 @@ export function parseLintOutput(output: string): LintResult {
       continue
     }
 
-    const eslintMatch = line.match(
-      /^(.+):(\d+):(\d+):\s+(warning|error)\s+(.+?)\s+\[(.+)\]$/,
-    )
-    if (eslintMatch !== null && eslintMatch[1] !== undefined && eslintMatch[2] !== undefined && eslintMatch[3] !== undefined && eslintMatch[4] !== undefined && eslintMatch[5] !== undefined && eslintMatch[6] !== undefined) {
+    const eslintMatch = line.match(/^(.+):(\d+):(\d+):\s+(warning|error)\s+(.+?)\s+\[(.+)\]$/)
+    if (
+      eslintMatch !== null &&
+      eslintMatch[1] !== undefined &&
+      eslintMatch[2] !== undefined &&
+      eslintMatch[3] !== undefined &&
+      eslintMatch[4] !== undefined &&
+      eslintMatch[5] !== undefined &&
+      eslintMatch[6] !== undefined
+    ) {
       violations.push({
         filePath: eslintMatch[1],
         line: parseInt(eslintMatch[2], 10),
@@ -54,9 +65,7 @@ export function parseLintOutput(output: string): LintResult {
     }
   }
 
-  const summaryMatch = output.match(
-    /(\d+)\s+problems?\s+\((\d+)\s+errors?,\s+(\d+)\s+warnings?\)/,
-  )
+  const summaryMatch = output.match(/(\d+)\s+problems?\s+\((\d+)\s+errors?,\s+(\d+)\s+warnings?\)/)
 
   let warningCount = violations.filter((v) => v.severity === 'warning').length
   let errorCount = violations.filter((v) => v.severity === 'error').length
@@ -66,10 +75,13 @@ export function parseLintOutput(output: string): LintResult {
     warningCount = parseInt(summaryMatch[3], 10)
   }
 
-  const fixableMatch = output.match(/(\d+)\s+errors?\s+and\s+(\d+)\s+warnings?\s+potentially\s+fixable/)
-  const fixableCount = fixableMatch !== null && fixableMatch[1] !== undefined && fixableMatch[2] !== undefined
-    ? parseInt(fixableMatch[1], 10) + parseInt(fixableMatch[2], 10)
-    : 0
+  const fixableMatch = output.match(
+    /(\d+)\s+errors?\s+and\s+(\d+)\s+warnings?\s+potentially\s+fixable/,
+  )
+  const fixableCount =
+    fixableMatch !== null && fixableMatch[1] !== undefined && fixableMatch[2] !== undefined
+      ? parseInt(fixableMatch[1], 10) + parseInt(fixableMatch[2], 10)
+      : 0
 
   const passed = errorCount === 0
 

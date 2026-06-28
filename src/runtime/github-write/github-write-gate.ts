@@ -1,5 +1,8 @@
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
-import { ALLOWED_GITHUB_WRITE_ACTIONS, type AllowedGitHubWriteAction } from './github-write-proposal.js'
+import {
+  ALLOWED_GITHUB_WRITE_ACTIONS,
+  type AllowedGitHubWriteAction,
+} from './github-write-proposal.js'
 
 export interface GitHubWriteGateRequest {
   readonly action: string

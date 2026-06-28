@@ -45,7 +45,11 @@ export interface OperatorSlashInput {
   readonly args: readonly string[]
 }
 
-export type ParsedOperatorInput = OperatorEmptyInput | OperatorInvalidInput | OperatorMissionInput | OperatorSlashInput
+export type ParsedOperatorInput =
+  | OperatorEmptyInput
+  | OperatorInvalidInput
+  | OperatorMissionInput
+  | OperatorSlashInput
 
 export interface OperatorHistoryEntry {
   readonly timestamp: string

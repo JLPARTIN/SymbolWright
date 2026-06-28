@@ -116,7 +116,13 @@ function walkAndSearch(
         continue
       }
       const subResults = walkAndSearch(
-        fullPath, regex, contextLines, basePath, filePattern, maxResults - results.length, depth + 1,
+        fullPath,
+        regex,
+        contextLines,
+        basePath,
+        filePattern,
+        maxResults - results.length,
+        depth + 1,
       )
       results.push(...subResults)
     }
@@ -125,13 +131,8 @@ function walkAndSearch(
   return results
 }
 
-export async function executeGrepTool(
-  input: GrepToolInput,
-  cwd: string,
-): Promise<string> {
-  const basePath = input.path
-    ? resolveWorkspacePath(cwd, input.path)
-    : cwd
+export async function executeGrepTool(input: GrepToolInput, cwd: string): Promise<string> {
+  const basePath = input.path ? resolveWorkspacePath(cwd, input.path) : cwd
   const contextLines = input.contextLines ?? 2
   const maxResults = input.maxResults ?? 50
 
@@ -142,7 +143,15 @@ export async function executeGrepTool(
     return `Invalid regex pattern: ${input.pattern}`
   }
 
-  const matches = walkAndSearch(basePath, regex, contextLines, basePath, input.filePattern, maxResults, 0)
+  const matches = walkAndSearch(
+    basePath,
+    regex,
+    contextLines,
+    basePath,
+    input.filePattern,
+    maxResults,
+    0,
+  )
 
   if (matches.length === 0) {
     return [

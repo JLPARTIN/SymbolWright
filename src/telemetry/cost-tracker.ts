@@ -66,7 +66,11 @@ export interface SourceUsageSummary {
 }
 
 /** Computes USD cost from token usage and model-specific rates. */
-export function computeCost(usage: ProviderTokenUsage, model: string, rates?: Record<string, CostRate>): number {
+export function computeCost(
+  usage: ProviderTokenUsage,
+  model: string,
+  rates?: Record<string, CostRate>,
+): number {
   const rateTable = rates ?? DEFAULT_COST_RATES
   const rate = rateTable[model] ?? FALLBACK_RATE
 
@@ -118,9 +122,8 @@ export class CostTracker {
   }
 
   summarize(sessionId?: string): UsageSummary {
-    const filtered = sessionId !== undefined
-      ? this.records.filter((r) => r.sessionId === sessionId)
-      : this.records
+    const filtered =
+      sessionId !== undefined ? this.records.filter((r) => r.sessionId === sessionId) : this.records
 
     let totalInputTokens = 0
     let totalOutputTokens = 0

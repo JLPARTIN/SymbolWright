@@ -6,7 +6,8 @@ export interface ValidationPlanInput {
 }
 
 function parseValidationPlanInput(input: unknown): ValidationPlanInput {
-  const value = typeof input === 'object' && input !== null ? (input as Record<string, unknown>) : {}
+  const value =
+    typeof input === 'object' && input !== null ? (input as Record<string, unknown>) : {}
   if (typeof value['focus'] === 'string') {
     return { focus: value['focus'] }
   }
@@ -47,5 +48,6 @@ export const validationPlanTool: RuntimeToolDefinition = {
   name: 'validation_plan',
   description: 'Render validation guidance without executing commands.',
   capability: 'VALIDATE',
-  execute: async (input, context) => executeValidationPlanTool(parseValidationPlanInput(input), context),
+  execute: async (input, context) =>
+    executeValidationPlanTool(parseValidationPlanInput(input), context),
 }

@@ -49,7 +49,9 @@ function makeFinding(overrides: Partial<AjnaReviewFinding> = {}): AjnaReviewFind
   }
 }
 
-function makeInput(overrides: Partial<CodemindAjnaMergeReadinessInput> = {}): CodemindAjnaMergeReadinessInput {
+function makeInput(
+  overrides: Partial<CodemindAjnaMergeReadinessInput> = {},
+): CodemindAjnaMergeReadinessInput {
   return {
     request: makeRequest(),
     findings: [],
@@ -133,7 +135,10 @@ describe('parseAjnaMergeReadinessInput', () => {
   })
 
   it('rejects malformed request subjects', () => {
-    const request: Record<string, unknown> = { ...makeRequest(), subject: { repository: 'JLPARTIN/CodeMind' } }
+    const request: Record<string, unknown> = {
+      ...makeRequest(),
+      subject: { repository: 'JLPARTIN/CodeMind' },
+    }
 
     expect(() => parseAjnaMergeReadinessInput(JSON.stringify({ request, findings: [] }))).toThrow(
       'request.subject.baseRef must be a non-empty string',

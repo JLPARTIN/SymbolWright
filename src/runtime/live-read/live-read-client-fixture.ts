@@ -23,7 +23,9 @@ export function readLiveReadClientFixtureFromFile(path: string): LiveReadClientF
   return JSON.parse(fs.readFileSync(path, 'utf8')) as LiveReadClientFixtureRequest
 }
 
-export async function runLiveReadClientFixture(request: LiveReadClientFixtureRequest): Promise<string> {
+export async function runLiveReadClientFixture(
+  request: LiveReadClientFixtureRequest,
+): Promise<string> {
   const client = new FakeLiveReadClient(request.clientData)
 
   const sections: string[] = [
@@ -44,7 +46,11 @@ export async function runLiveReadClientFixture(request: LiveReadClientFixtureReq
   }
 
   if (request.workflowRunId !== undefined) {
-    ciEvidence = await client.getWorkflowEvidence(request.owner, request.repo, request.workflowRunId)
+    ciEvidence = await client.getWorkflowEvidence(
+      request.owner,
+      request.repo,
+      request.workflowRunId,
+    )
     const summary = buildCiEvidenceSummary(ciEvidence)
     sections.push('', summary.title)
     sections.push(...summary.lines.map((line) => `- ${line}`))

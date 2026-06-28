@@ -32,7 +32,7 @@ describe('RuntimeRegistry', () => {
   it('lists entries in registration order', () => {
     const registry = createRuntimeRegistry([validationEntry, readEntry])
 
-    expect(registry.list().map(entry => entry.name)).toEqual(['validation_plan', 'read_file'])
+    expect(registry.list().map((entry) => entry.name)).toEqual(['validation_plan', 'read_file'])
   })
 
   it('rejects duplicate runtime entry names', () => {

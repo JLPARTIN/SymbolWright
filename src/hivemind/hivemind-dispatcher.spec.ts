@@ -1,7 +1,15 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { LLMProvider, ProviderStreamEvent, ProviderTokenUsage } from '../provider/provider.types.js'
-import type { RuntimeToolDefinition, RuntimeToolContext, RuntimePolicySnapshot } from '../runtime/types.js'
+import type {
+  LLMProvider,
+  ProviderStreamEvent,
+  ProviderTokenUsage,
+} from '../provider/provider.types.js'
+import type {
+  RuntimeToolDefinition,
+  RuntimeToolContext,
+  RuntimePolicySnapshot,
+} from '../runtime/types.js'
 import { HiveMindRegistry } from './hivemind-registry.js'
 import { HiveMindDispatcher } from './hivemind-dispatcher.js'
 

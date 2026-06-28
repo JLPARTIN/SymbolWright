@@ -18,11 +18,17 @@ export function assertValidToolContext(context: unknown): asserts context is Run
   if (ctx['approval'] !== undefined) {
     const approval = ctx['approval'] as Record<string, unknown>
 
-    if (typeof approval['ticketId'] !== 'string' || (approval['ticketId'] as string).trim().length === 0) {
+    if (
+      typeof approval['ticketId'] !== 'string' ||
+      (approval['ticketId'] as string).trim().length === 0
+    ) {
       throw new Error('RuntimeApproval.ticketId must be a non-empty string')
     }
 
-    if (typeof approval['approvedBy'] !== 'string' || (approval['approvedBy'] as string).trim().length === 0) {
+    if (
+      typeof approval['approvedBy'] !== 'string' ||
+      (approval['approvedBy'] as string).trim().length === 0
+    ) {
       throw new Error('RuntimeApproval.approvedBy must be a non-empty string')
     }
 

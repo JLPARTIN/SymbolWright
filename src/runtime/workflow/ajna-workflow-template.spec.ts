@@ -9,13 +9,19 @@ import {
   type AjnaWorkflowInput,
 } from './ajna-workflow-template.js'
 import { runRuntimeWorkflow, renderWorkflowResult } from './runtime-workflow.js'
-import { createWorkflowRuntimeContext, createWorkflowRuntimeRegistry } from '../runtime-workflow-registry.js'
+import {
+  createWorkflowRuntimeContext,
+  createWorkflowRuntimeRegistry,
+} from '../runtime-workflow-registry.js'
 import { renderRuntimeAjnaWorkflow } from '../../cli-runtime-ajna-workflow.js'
 
 describe('buildAjnaWorkflowRequest', () => {
   it('builds review-only workflow with PR read and review steps', () => {
     const input: AjnaWorkflowInput = {
-      owner: 'org', repo: 'repo', prNumber: 1, mode: 'review',
+      owner: 'org',
+      repo: 'repo',
+      prNumber: 1,
+      mode: 'review',
     }
     const request = buildAjnaWorkflowRequest(input)
 
@@ -27,7 +33,10 @@ describe('buildAjnaWorkflowRequest', () => {
 
   it('builds merge-readiness workflow with PR read and merge-readiness steps', () => {
     const input: AjnaWorkflowInput = {
-      owner: 'org', repo: 'repo', prNumber: 1, mode: 'merge-readiness',
+      owner: 'org',
+      repo: 'repo',
+      prNumber: 1,
+      mode: 'merge-readiness',
     }
     const request = buildAjnaWorkflowRequest(input)
 
@@ -38,7 +47,10 @@ describe('buildAjnaWorkflowRequest', () => {
 
   it('builds full workflow with PR read, review, and merge-readiness steps', () => {
     const input: AjnaWorkflowInput = {
-      owner: 'org', repo: 'repo', prNumber: 1, mode: 'full',
+      owner: 'org',
+      repo: 'repo',
+      prNumber: 1,
+      mode: 'full',
     }
     const request = buildAjnaWorkflowRequest(input)
 
@@ -50,7 +62,11 @@ describe('buildAjnaWorkflowRequest', () => {
 
   it('includes CI read step when workflowRunId is provided', () => {
     const input: AjnaWorkflowInput = {
-      owner: 'org', repo: 'repo', prNumber: 1, workflowRunId: 100, mode: 'review',
+      owner: 'org',
+      repo: 'repo',
+      prNumber: 1,
+      workflowRunId: 100,
+      mode: 'review',
     }
     const request = buildAjnaWorkflowRequest(input)
 
@@ -62,7 +78,11 @@ describe('buildAjnaWorkflowRequest', () => {
 
   it('includes CI read step in full mode with workflowRunId', () => {
     const input: AjnaWorkflowInput = {
-      owner: 'org', repo: 'repo', prNumber: 1, workflowRunId: 100, mode: 'full',
+      owner: 'org',
+      repo: 'repo',
+      prNumber: 1,
+      workflowRunId: 100,
+      mode: 'full',
     }
     const request = buildAjnaWorkflowRequest(input)
 
@@ -77,7 +97,10 @@ describe('buildAjnaWorkflowRequest', () => {
 
   it('passes owner/repo/prNumber to each step input', () => {
     const input: AjnaWorkflowInput = {
-      owner: 'my-org', repo: 'my-repo', prNumber: 99, mode: 'review',
+      owner: 'my-org',
+      repo: 'my-repo',
+      prNumber: 99,
+      mode: 'review',
     }
     const request = buildAjnaWorkflowRequest(input)
 
@@ -89,7 +112,10 @@ describe('buildAjnaWorkflowRequest', () => {
 
   it('sets maxSteps to 10', () => {
     const input: AjnaWorkflowInput = {
-      owner: 'org', repo: 'repo', prNumber: 1, mode: 'review',
+      owner: 'org',
+      repo: 'repo',
+      prNumber: 1,
+      mode: 'review',
     }
     const request = buildAjnaWorkflowRequest(input)
     expect(request.maxSteps).toBe(10)
@@ -99,7 +125,10 @@ describe('buildAjnaWorkflowRequest', () => {
 describe('renderAjnaWorkflowSummary', () => {
   it('renders review mode summary', () => {
     const input: AjnaWorkflowInput = {
-      owner: 'org', repo: 'repo', prNumber: 42, mode: 'review',
+      owner: 'org',
+      repo: 'repo',
+      prNumber: 42,
+      mode: 'review',
     }
     const output = renderAjnaWorkflowSummary(input)
 
@@ -111,7 +140,10 @@ describe('renderAjnaWorkflowSummary', () => {
 
   it('renders full mode as "review + merge-readiness"', () => {
     const input: AjnaWorkflowInput = {
-      owner: 'org', repo: 'repo', prNumber: 1, mode: 'full',
+      owner: 'org',
+      repo: 'repo',
+      prNumber: 1,
+      mode: 'full',
     }
     const output = renderAjnaWorkflowSummary(input)
     expect(output).toContain('review + merge-readiness')
@@ -119,7 +151,11 @@ describe('renderAjnaWorkflowSummary', () => {
 
   it('includes workflow run ID when present', () => {
     const input: AjnaWorkflowInput = {
-      owner: 'org', repo: 'repo', prNumber: 1, workflowRunId: 555, mode: 'review',
+      owner: 'org',
+      repo: 'repo',
+      prNumber: 1,
+      workflowRunId: 555,
+      mode: 'review',
     }
     const output = renderAjnaWorkflowSummary(input)
     expect(output).toContain('555')
@@ -127,7 +163,10 @@ describe('renderAjnaWorkflowSummary', () => {
 
   it('omits workflow line when workflowRunId is absent', () => {
     const input: AjnaWorkflowInput = {
-      owner: 'org', repo: 'repo', prNumber: 1, mode: 'review',
+      owner: 'org',
+      repo: 'repo',
+      prNumber: 1,
+      mode: 'review',
     }
     const output = renderAjnaWorkflowSummary(input)
     expect(output).not.toContain('Workflow:')
@@ -137,7 +176,10 @@ describe('renderAjnaWorkflowSummary', () => {
 describe('Ajna workflow end-to-end through runner', () => {
   it('runs a review workflow through the runner', async () => {
     const input: AjnaWorkflowInput = {
-      owner: 'org', repo: 'repo', prNumber: 1, mode: 'review',
+      owner: 'org',
+      repo: 'repo',
+      prNumber: 1,
+      mode: 'review',
     }
     const request = buildAjnaWorkflowRequest(input)
     const registry = createWorkflowRuntimeRegistry({})
@@ -151,7 +193,10 @@ describe('Ajna workflow end-to-end through runner', () => {
 
   it('renders workflow result with boundary lines', async () => {
     const input: AjnaWorkflowInput = {
-      owner: 'org', repo: 'repo', prNumber: 1, mode: 'review',
+      owner: 'org',
+      repo: 'repo',
+      prNumber: 1,
+      mode: 'review',
     }
     const request = buildAjnaWorkflowRequest(input)
     const registry = createWorkflowRuntimeRegistry({})
@@ -170,12 +215,15 @@ describe('renderRuntimeAjnaWorkflow (CLI)', () => {
     const dir = join(tmpdir(), `ajna-workflow-cli-${Date.now()}`)
     await mkdir(dir, { recursive: true })
     const fixturePath = join(dir, 'ajna-workflow.json')
-    await writeFile(fixturePath, JSON.stringify({
-      owner: 'test-org',
-      repo: 'test-repo',
-      prNumber: 42,
-      mode: 'review',
-    }))
+    await writeFile(
+      fixturePath,
+      JSON.stringify({
+        owner: 'test-org',
+        repo: 'test-repo',
+        prNumber: 42,
+        mode: 'review',
+      }),
+    )
 
     const output = await renderRuntimeAjnaWorkflow(fixturePath)
 
@@ -191,7 +239,9 @@ describe('renderRuntimeAjnaWorkflow (CLI)', () => {
     const fixturePath = join(dir, 'bad.json')
     await writeFile(fixturePath, JSON.stringify({ repo: 'r', prNumber: 1, mode: 'review' }))
 
-    await expect(renderRuntimeAjnaWorkflow(fixturePath)).rejects.toThrow('Missing or invalid owner.')
+    await expect(renderRuntimeAjnaWorkflow(fixturePath)).rejects.toThrow(
+      'Missing or invalid owner.',
+    )
   })
 
   it('throws when repo is missing', async () => {
@@ -209,14 +259,19 @@ describe('renderRuntimeAjnaWorkflow (CLI)', () => {
     const fixturePath = join(dir, 'bad.json')
     await writeFile(fixturePath, JSON.stringify({ owner: 'o', repo: 'r', mode: 'review' }))
 
-    await expect(renderRuntimeAjnaWorkflow(fixturePath)).rejects.toThrow('Missing or invalid prNumber.')
+    await expect(renderRuntimeAjnaWorkflow(fixturePath)).rejects.toThrow(
+      'Missing or invalid prNumber.',
+    )
   })
 
   it('throws when mode is invalid', async () => {
     const dir = join(tmpdir(), `ajna-workflow-mode-${Date.now()}`)
     await mkdir(dir, { recursive: true })
     const fixturePath = join(dir, 'bad.json')
-    await writeFile(fixturePath, JSON.stringify({ owner: 'o', repo: 'r', prNumber: 1, mode: 'invalid' }))
+    await writeFile(
+      fixturePath,
+      JSON.stringify({ owner: 'o', repo: 'r', prNumber: 1, mode: 'invalid' }),
+    )
 
     await expect(renderRuntimeAjnaWorkflow(fixturePath)).rejects.toThrow('Missing or invalid mode.')
   })
@@ -225,13 +280,16 @@ describe('renderRuntimeAjnaWorkflow (CLI)', () => {
     const dir = join(tmpdir(), `ajna-workflow-full-${Date.now()}`)
     await mkdir(dir, { recursive: true })
     const fixturePath = join(dir, 'full.json')
-    await writeFile(fixturePath, JSON.stringify({
-      owner: 'org',
-      repo: 'repo',
-      prNumber: 1,
-      workflowRunId: 200,
-      mode: 'full',
-    }))
+    await writeFile(
+      fixturePath,
+      JSON.stringify({
+        owner: 'org',
+        repo: 'repo',
+        prNumber: 1,
+        workflowRunId: 200,
+        mode: 'full',
+      }),
+    )
 
     const output = await renderRuntimeAjnaWorkflow(fixturePath)
     expect(output).toContain('review + merge-readiness')

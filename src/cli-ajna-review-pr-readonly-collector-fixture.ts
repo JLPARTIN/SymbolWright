@@ -14,12 +14,16 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-export function parseAjnaReadOnlyCollectorReviewRequest(jsonText: string): AjnaGithubReadOnlyCollectorRequest {
+export function parseAjnaReadOnlyCollectorReviewRequest(
+  jsonText: string,
+): AjnaGithubReadOnlyCollectorRequest {
   const parsed = JSON.parse(jsonText) as unknown
   if (!isObject(parsed)) {
     throw new Error('Ajna read-only collector review request must be an object.')
   }
-  return validateAjnaGithubReadOnlyCollectorRequest(parsed as unknown as AjnaGithubReadOnlyCollectorRequest)
+  return validateAjnaGithubReadOnlyCollectorRequest(
+    parsed as unknown as AjnaGithubReadOnlyCollectorRequest,
+  )
 }
 
 export function createAjnaReadOnlyCollectorReviewPort(): AjnaGithubReadOnlyCollectorPort {
@@ -31,8 +35,12 @@ export function createAjnaReadOnlyCollectorReviewPort(): AjnaGithubReadOnlyColle
         baseRef: 'main',
         headRef: `fixture-pr-${request.pullRequestNumber}`,
       },
-      changedFiles: [{ path: 'examples/ajna/github-readonly-collector-request.ready.json', status: 'modified' }],
-      checkRuns: [{ name: 'Fixture Validate CodeMind', status: 'completed', conclusion: 'success' }],
+      changedFiles: [
+        { path: 'examples/ajna/github-readonly-collector-request.ready.json', status: 'modified' },
+      ],
+      checkRuns: [
+        { name: 'Fixture Validate CodeMind', status: 'completed', conclusion: 'success' },
+      ],
     }),
   }
 }

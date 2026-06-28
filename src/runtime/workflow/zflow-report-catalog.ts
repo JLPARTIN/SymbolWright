@@ -89,7 +89,9 @@ export function createZflowReportArtifactManifest(
 
 export function renderZflowReportCatalogMarkdown(catalog: ZflowReportCatalog): string {
   if (catalog.entries.length === 0) {
-    return [`# ${catalog.title}`, '', `Generated: ${catalog.generatedAt}`, '', 'No reports.'].join('\n')
+    return [`# ${catalog.title}`, '', `Generated: ${catalog.generatedAt}`, '', 'No reports.'].join(
+      '\n',
+    )
   }
 
   return [

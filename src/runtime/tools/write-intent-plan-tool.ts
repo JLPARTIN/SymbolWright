@@ -1,7 +1,17 @@
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
-import { createWriteIntent, renderWriteIntent, type WriteIntentTarget } from '../write/write-intent.js'
-import { validateWriteIntent, renderWriteIntentValidation } from '../write/write-intent-validator.js'
-import { createWriteApprovalTicket, renderWriteApprovalTicket } from '../write/write-approval-ticket.js'
+import {
+  createWriteIntent,
+  renderWriteIntent,
+  type WriteIntentTarget,
+} from '../write/write-intent.js'
+import {
+  validateWriteIntent,
+  renderWriteIntentValidation,
+} from '../write/write-intent-validator.js'
+import {
+  createWriteApprovalTicket,
+  renderWriteApprovalTicket,
+} from '../write/write-approval-ticket.js'
 
 const VALID_TARGETS: ReadonlySet<string> = new Set<WriteIntentTarget>([
   'file_edit',
@@ -56,7 +66,9 @@ function parseWriteIntentPlanInput(input: unknown): WriteIntentPlanInput {
   }
 
   const validationPlan = Array.isArray(obj['validationPlan'])
-    ? (obj['validationPlan'] as unknown[]).filter((item): item is string => typeof item === 'string')
+    ? (obj['validationPlan'] as unknown[]).filter(
+        (item): item is string => typeof item === 'string',
+      )
     : []
 
   return {

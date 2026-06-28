@@ -63,7 +63,8 @@ export interface CodemindConfigSources {
 export function resolveCodemindConfig(sources: CodemindConfigSources = {}): CodemindConfig {
   const env = sources.env ?? process.env
   const homeConfigPath = sources.homeConfigPath ?? join(homedir(), '.codemind', 'config.json')
-  const projectConfigPath = sources.projectConfigPath ?? join(process.cwd(), '.codemind', 'config.json')
+  const projectConfigPath =
+    sources.projectConfigPath ?? join(process.cwd(), '.codemind', 'config.json')
 
   const homeConfig = loadJsonConfig(homeConfigPath)
   const projectConfig = loadJsonConfig(projectConfigPath)
@@ -178,7 +179,9 @@ export function validateCodemindConfig(config: CodemindConfig): CodemindConfigVa
   const hasVoyageApiKey = config.voyageApiKey !== undefined
 
   if (config.embeddingProvider === 'voyage' && !hasVoyageApiKey) {
-    warnings.push('embeddingProvider is "voyage" but no VOYAGE_API_KEY is set; falling back to hash embeddings.')
+    warnings.push(
+      'embeddingProvider is "voyage" but no VOYAGE_API_KEY is set; falling back to hash embeddings.',
+    )
   }
 
   return {
@@ -193,7 +196,9 @@ export function validateCodemindConfig(config: CodemindConfig): CodemindConfigVa
       ...(config.model !== undefined ? { model: config.model } : {}),
       ...(config.maxTokens !== undefined ? { maxTokens: config.maxTokens } : {}),
       ...(config.baseURL !== undefined ? { baseURL: config.baseURL } : {}),
-      ...(config.embeddingProvider !== undefined ? { embeddingProvider: config.embeddingProvider } : {}),
+      ...(config.embeddingProvider !== undefined
+        ? { embeddingProvider: config.embeddingProvider }
+        : {}),
       hasVoyageApiKey,
     },
   }

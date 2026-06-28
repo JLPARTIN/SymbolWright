@@ -26,7 +26,11 @@ export function buildAjnaWorkflowRequest(input: AjnaWorkflowInput): RuntimeWorkf
   }
 
   if (input.mode === 'review' || input.mode === 'full') {
-    const reviewInput: Record<string, unknown> = { owner: input.owner, repo: input.repo, prNumber: input.prNumber }
+    const reviewInput: Record<string, unknown> = {
+      owner: input.owner,
+      repo: input.repo,
+      prNumber: input.prNumber,
+    }
     if (input.workflowRunId !== undefined) {
       reviewInput['workflowRunId'] = input.workflowRunId
     }
@@ -37,7 +41,11 @@ export function buildAjnaWorkflowRequest(input: AjnaWorkflowInput): RuntimeWorkf
   }
 
   if (input.mode === 'merge-readiness' || input.mode === 'full') {
-    const mergeInput: Record<string, unknown> = { owner: input.owner, repo: input.repo, prNumber: input.prNumber }
+    const mergeInput: Record<string, unknown> = {
+      owner: input.owner,
+      repo: input.repo,
+      prNumber: input.prNumber,
+    }
     if (input.workflowRunId !== undefined) {
       mergeInput['workflowRunId'] = input.workflowRunId
     }

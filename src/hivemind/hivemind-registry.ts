@@ -1,9 +1,5 @@
 import type { AgentKernelRole } from '../kernel/agent-kernel.types.js'
-import type {
-  SwarmAgentType,
-  SwarmAgent,
-  SwarmAgentCapabilities,
-} from './hivemind.types.js'
+import type { SwarmAgentType, SwarmAgent, SwarmAgentCapabilities } from './hivemind.types.js'
 
 export interface SwarmAgentConfig {
   readonly agentType: SwarmAgentType
@@ -13,11 +9,11 @@ export interface SwarmAgentConfig {
 }
 
 const ROLE_TO_AGENT_TYPE: Record<AgentKernelRole, SwarmAgentType> = {
-  'orchestrator': 'investigator',
-  'researcher': 'investigator',
-  'coder': 'coder',
-  'validator': 'analyzer',
-  'scheduler': 'reporter',
+  orchestrator: 'investigator',
+  researcher: 'investigator',
+  coder: 'coder',
+  validator: 'analyzer',
+  scheduler: 'reporter',
   'memory-auditor': 'reporter',
 }
 
@@ -32,7 +28,8 @@ const DEFAULT_AGENT_CONFIGS: readonly SwarmAgentConfig[] = [
       canExecuteCommands: false,
       canReview: false,
     },
-    systemPromptSuffix: 'You are an investigator agent. Explore the codebase, find relevant files, understand structure. Read-only access.',
+    systemPromptSuffix:
+      'You are an investigator agent. Explore the codebase, find relevant files, understand structure. Read-only access.',
   },
   {
     agentType: 'coder',
@@ -44,7 +41,8 @@ const DEFAULT_AGENT_CONFIGS: readonly SwarmAgentConfig[] = [
       canExecuteCommands: false,
       canReview: false,
     },
-    systemPromptSuffix: 'You are a coder agent. Read files, understand context, and implement changes. Write access with approval.',
+    systemPromptSuffix:
+      'You are a coder agent. Read files, understand context, and implement changes. Write access with approval.',
   },
   {
     agentType: 'analyzer',
@@ -56,7 +54,8 @@ const DEFAULT_AGENT_CONFIGS: readonly SwarmAgentConfig[] = [
       canExecuteCommands: true,
       canReview: false,
     },
-    systemPromptSuffix: 'You are an analyzer agent. Run tests, typecheck, and lint. Report results. Command execution with approval.',
+    systemPromptSuffix:
+      'You are an analyzer agent. Run tests, typecheck, and lint. Report results. Command execution with approval.',
   },
   {
     agentType: 'reviewer',
@@ -68,7 +67,8 @@ const DEFAULT_AGENT_CONFIGS: readonly SwarmAgentConfig[] = [
       canExecuteCommands: false,
       canReview: true,
     },
-    systemPromptSuffix: 'You are a reviewer agent. Use Ajna review pipeline to assess code quality, risk, and merge readiness.',
+    systemPromptSuffix:
+      'You are a reviewer agent. Use Ajna review pipeline to assess code quality, risk, and merge readiness.',
   },
   {
     agentType: 'reporter',
@@ -80,7 +80,8 @@ const DEFAULT_AGENT_CONFIGS: readonly SwarmAgentConfig[] = [
       canExecuteCommands: false,
       canReview: false,
     },
-    systemPromptSuffix: 'You are a reporter agent. Track lineage, summarize findings, and report status. Read-only access.',
+    systemPromptSuffix:
+      'You are a reporter agent. Track lineage, summarize findings, and report status. Read-only access.',
   },
 ]
 

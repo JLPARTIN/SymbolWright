@@ -7,7 +7,11 @@ import type { RuntimeToolContext } from '../runtime/types.js'
 import { assembleAgentTools, getToolByName } from '../runtime/tools/tool-assembly.js'
 import { buildToolInputSchema, bridgeToolsForProvider } from '../agent/tool-schema-bridge.js'
 import { CostTracker, computeCost } from '../telemetry/cost-tracker.js'
-import { classifyError, formatErrorForUser, withRetry } from '../runtime/error-handling/error-handler.js'
+import {
+  classifyError,
+  formatErrorForUser,
+  withRetry,
+} from '../runtime/error-handling/error-handler.js'
 
 function createMockProvider(responses: ProviderStreamEvent[][]): LLMProvider {
   let callIndex = 0
@@ -83,7 +87,11 @@ describe('agent-e2e', () => {
         [
           { type: 'text_delta', text: 'Hello, ' },
           { type: 'text_delta', text: 'world!' },
-          { type: 'message_stop', stopReason: 'end_turn', usage: { inputTokens: 100, outputTokens: 20 } },
+          {
+            type: 'message_stop',
+            stopReason: 'end_turn',
+            usage: { inputTokens: 100, outputTokens: 20 },
+          },
         ],
       ])
 

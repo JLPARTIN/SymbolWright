@@ -138,17 +138,17 @@ describe('parseAjnaReviewPrInput', () => {
   it('rejects malformed finding records before rendering', () => {
     const finding = { ...makeFinding(), evidence: undefined }
 
-    expect(() => parseAjnaReviewPrInput(JSON.stringify({ request: makeRequest(), findings: [finding] }))).toThrow(
-      'findings[0].evidence must be an array',
-    )
+    expect(() =>
+      parseAjnaReviewPrInput(JSON.stringify({ request: makeRequest(), findings: [finding] })),
+    ).toThrow('findings[0].evidence must be an array')
   })
 
   it('rejects malformed evidence records before rendering', () => {
     const finding = { ...makeFinding(), evidence: [{ evidenceClass: 'DIRECT_DIFF_EVIDENCE' }] }
 
-    expect(() => parseAjnaReviewPrInput(JSON.stringify({ request: makeRequest(), findings: [finding] }))).toThrow(
-      'findings[0].evidence[0].summary must be a non-empty string',
-    )
+    expect(() =>
+      parseAjnaReviewPrInput(JSON.stringify({ request: makeRequest(), findings: [finding] })),
+    ).toThrow('findings[0].evidence[0].summary must be a non-empty string')
   })
 
   it('rejects non-string recommended next actions', () => {

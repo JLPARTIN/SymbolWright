@@ -2,7 +2,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { getCodemindFoundationSnapshot } from './codemind-foundation.js'
-import { getCompletedRuntimeBuildPhaseCount, RUNTIME_BUILD_PHASES } from './runtime/runtime-build-state.js'
+import {
+  getCompletedRuntimeBuildPhaseCount,
+  RUNTIME_BUILD_PHASES,
+} from './runtime/runtime-build-state.js'
 import { resolveCodemindConfig, validateCodemindConfig } from './config/codemind-config.js'
 import { assembleAgentTools } from './runtime/tools/tool-assembly.js'
 import { resolveStoragePaths } from './storage/storage-paths.js'
@@ -45,7 +48,11 @@ function checkPackageJson(workspaceRoot: string): DoctorCheck {
     if (pkg.name === 'codemind' && typeof pkg.version === 'string') {
       return { name: 'package.json', status: 'PASS', detail: `${pkg.name}@${pkg.version}` }
     }
-    return { name: 'package.json', status: 'WARN', detail: `name="${String(pkg.name)}", version="${String(pkg.version)}"` }
+    return {
+      name: 'package.json',
+      status: 'WARN',
+      detail: `name="${String(pkg.name)}", version="${String(pkg.version)}"`,
+    }
   } catch {
     return { name: 'package.json', status: 'FAIL', detail: 'Failed to parse' }
   }
@@ -56,7 +63,11 @@ function checkNodeModules(workspaceRoot: string): DoctorCheck {
   if (fs.existsSync(nmPath)) {
     return { name: 'Dependencies installed', status: 'PASS', detail: 'node_modules present' }
   }
-  return { name: 'Dependencies installed', status: 'FAIL', detail: 'node_modules missing — run npm install' }
+  return {
+    name: 'Dependencies installed',
+    status: 'FAIL',
+    detail: 'node_modules missing — run npm install',
+  }
 }
 
 function checkTsConfig(workspaceRoot: string): DoctorCheck {
@@ -85,7 +96,11 @@ function checkSafetyPosture(): DoctorCheck {
   if (snap.networkIngestionEnabled) violations.push('networkIngestion')
 
   if (violations.length === 0) {
-    return { name: 'Safety posture', status: 'PASS', detail: 'All gates locked (mutation, GitHub write, bash, network)' }
+    return {
+      name: 'Safety posture',
+      status: 'PASS',
+      detail: 'All gates locked (mutation, GitHub write, bash, network)',
+    }
   }
   return { name: 'Safety posture', status: 'WARN', detail: `Enabled: ${violations.join(', ')}` }
 }
@@ -102,9 +117,17 @@ function checkApiKey(): DoctorCheck {
   const config = resolveCodemindConfig()
   const validation = validateCodemindConfig(config)
   if (validation.redactedSummary.hasApiKey) {
-    return { name: 'API key', status: 'PASS', detail: `Present (${validation.redactedSummary.apiKeyPreview ?? 'set'})` }
+    return {
+      name: 'API key',
+      status: 'PASS',
+      detail: `Present (${validation.redactedSummary.apiKeyPreview ?? 'set'})`,
+    }
   }
-  return { name: 'API key', status: 'WARN', detail: 'Missing — set ANTHROPIC_API_KEY or add to config' }
+  return {
+    name: 'API key',
+    status: 'WARN',
+    detail: 'Missing — set ANTHROPIC_API_KEY or add to config',
+  }
 }
 
 function checkToolRegistry(): DoctorCheck {
@@ -112,7 +135,11 @@ function checkToolRegistry(): DoctorCheck {
   if (tools.length >= 30) {
     return { name: 'Tool registry', status: 'PASS', detail: `${tools.length} tools registered` }
   }
-  return { name: 'Tool registry', status: 'WARN', detail: `Only ${tools.length} tools (expected 30+)` }
+  return {
+    name: 'Tool registry',
+    status: 'WARN',
+    detail: `Only ${tools.length} tools (expected 30+)`,
+  }
 }
 
 function checkSessionsDir(workspaceRoot: string): DoctorCheck {
@@ -120,7 +147,11 @@ function checkSessionsDir(workspaceRoot: string): DoctorCheck {
   if (fs.existsSync(paths.sessionsDir)) {
     return { name: 'Sessions directory', status: 'PASS', detail: paths.sessionsDir }
   }
-  return { name: 'Sessions directory', status: 'WARN', detail: 'Not yet created (will be on first run)' }
+  return {
+    name: 'Sessions directory',
+    status: 'WARN',
+    detail: 'Not yet created (will be on first run)',
+  }
 }
 
 function checkWorkspaceConfig(workspaceRoot: string): DoctorCheck {
@@ -132,7 +163,11 @@ function checkWorkspaceConfig(workspaceRoot: string): DoctorCheck {
     JSON.parse(fs.readFileSync(configPath, 'utf8'))
     return { name: 'Workspace config', status: 'PASS', detail: configPath }
   } catch {
-    return { name: 'Workspace config', status: 'FAIL', detail: 'Invalid JSON in .codemind/workspace.json' }
+    return {
+      name: 'Workspace config',
+      status: 'FAIL',
+      detail: 'Invalid JSON in .codemind/workspace.json',
+    }
   }
 }
 
@@ -141,7 +176,11 @@ function checkMemoryDir(workspaceRoot: string): DoctorCheck {
   if (fs.existsSync(memDir)) {
     return { name: 'Project memory', status: 'PASS', detail: memDir }
   }
-  return { name: 'Project memory', status: 'WARN', detail: 'Not yet created (will be on first run)' }
+  return {
+    name: 'Project memory',
+    status: 'WARN',
+    detail: 'Not yet created (will be on first run)',
+  }
 }
 
 export function runDoctor(workspaceRoot: string): DoctorReport {
@@ -177,9 +216,12 @@ export function runDoctor(workspaceRoot: string): DoctorReport {
 export function renderDoctorReport(report: DoctorReport): string {
   const statusIcon = (s: DoctorCheckStatus): string => {
     switch (s) {
-      case 'PASS': return '[PASS]'
-      case 'FAIL': return '[FAIL]'
-      case 'WARN': return '[WARN]'
+      case 'PASS':
+        return '[PASS]'
+      case 'FAIL':
+        return '[FAIL]'
+      case 'WARN':
+        return '[WARN]'
     }
   }
 

@@ -4,7 +4,10 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { createReadOnlyRuntimeContext, createReadOnlyRuntimeRegistry } from '../runtime-readonly-registry.js'
+import {
+  createReadOnlyRuntimeContext,
+  createReadOnlyRuntimeRegistry,
+} from '../runtime-readonly-registry.js'
 
 function createFixtureWorkspace(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-runtime-'))
@@ -31,9 +34,9 @@ describe('read-only runtime tools', () => {
     const cwd = createFixtureWorkspace()
     const tool = createReadOnlyRuntimeRegistry().getOrThrow('read_file')
 
-    await expect(tool.execute({ path: 'README.md' }, createReadOnlyRuntimeContext(cwd))).resolves.toContain(
-      'CodeMind runtime fixture.',
-    )
+    await expect(
+      tool.execute({ path: 'README.md' }, createReadOnlyRuntimeContext(cwd)),
+    ).resolves.toContain('CodeMind runtime fixture.')
   })
 
   it('blocks protected paths', async () => {
@@ -42,25 +45,28 @@ describe('read-only runtime tools', () => {
     fs.writeFileSync(path.join(cwd, '.git', 'config'), 'secret')
     const tool = createReadOnlyRuntimeRegistry().getOrThrow('read_file')
 
-    await expect(tool.execute({ path: '.git/config' }, createReadOnlyRuntimeContext(cwd))).rejects.toThrow(
-      'protected path',
-    )
+    await expect(
+      tool.execute({ path: '.git/config' }, createReadOnlyRuntimeContext(cwd)),
+    ).rejects.toThrow('protected path')
   })
 
   it('searches allowed files', async () => {
     const cwd = createFixtureWorkspace()
     const tool = createReadOnlyRuntimeRegistry().getOrThrow('search_files')
 
-    await expect(tool.execute({ query: 'fixture' }, createReadOnlyRuntimeContext(cwd))).resolves.toContain(
-      'README.md',
-    )
+    await expect(
+      tool.execute({ query: 'fixture' }, createReadOnlyRuntimeContext(cwd)),
+    ).resolves.toContain('README.md')
   })
 
   it('renders validation guidance without execution', async () => {
     const cwd = createFixtureWorkspace()
     const tool = createReadOnlyRuntimeRegistry().getOrThrow('validation_plan')
 
-    const output = await tool.execute({ focus: 'runtime activation' }, createReadOnlyRuntimeContext(cwd))
+    const output = await tool.execute(
+      { focus: 'runtime activation' },
+      createReadOnlyRuntimeContext(cwd),
+    )
 
     expect(output).toContain('CodeMind validation plan')
     expect(output).toContain('npm run typecheck')

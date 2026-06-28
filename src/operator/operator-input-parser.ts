@@ -57,7 +57,10 @@ export function parseOperatorInput(raw: string): ParsedOperatorInput {
 }
 
 export function splitOperatorArgs(input: string): string[] {
-  return input.trim().split(/ +/u).filter((part) => part.length > 0)
+  return input
+    .trim()
+    .split(/ +/u)
+    .filter((part) => part.length > 0)
 }
 
 export function joinOperatorArgs(args: readonly string[]): string {

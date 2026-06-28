@@ -9,9 +9,7 @@ export interface OperatorReviewGateResult {
   readonly reason: string
 }
 
-const BLOCKED_ACTIONS: ReadonlySet<OperatorReviewAction> = new Set([
-  'merge_pr',
-])
+const BLOCKED_ACTIONS: ReadonlySet<OperatorReviewAction> = new Set(['merge_pr'])
 
 export function evaluateOperatorReviewGate(packet: OperatorReviewPacket): OperatorReviewGateResult {
   if (BLOCKED_ACTIONS.has(packet.proposedAction)) {
@@ -50,10 +48,7 @@ export function renderOperatorReviewGateResult(result: OperatorReviewGateResult)
   }
 
   if (result.decision === 'REJECTED') {
-    lines.push(
-      '',
-      'This action is blocked by policy and cannot proceed.',
-    )
+    lines.push('', 'This action is blocked by policy and cannot proceed.')
   }
 
   return lines.join('\n')

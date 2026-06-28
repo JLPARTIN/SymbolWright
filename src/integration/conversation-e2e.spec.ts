@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import { runAgentLoop } from '../agent/agent-loop.js'
 import type { AgentLoopConfig } from '../agent/agent-loop.types.js'
-import type { LLMProvider, ProviderMessage, ProviderStreamEvent } from '../provider/provider.types.js'
+import type {
+  LLMProvider,
+  ProviderMessage,
+  ProviderStreamEvent,
+} from '../provider/provider.types.js'
 import type { RuntimeToolContext } from '../runtime/types.js'
 import { conversationMessagesToProviderMessages } from '../conversation/transcript-bridge.js'
 import { trimConversationToFit } from '../conversation/context-window.js'
@@ -87,7 +91,13 @@ describe('conversation-e2e', () => {
 
       const priorMessages3 = conversationMessagesToProviderMessages(conversationHistory)
       const config3: AgentLoopConfig = { ...config, priorMessages: priorMessages3 }
-      const result3 = await runAgentLoop(provider, 'Does it support GitHub?', [], toolContext, config3)
+      const result3 = await runAgentLoop(
+        provider,
+        'Does it support GitHub?',
+        [],
+        toolContext,
+        config3,
+      )
 
       expect(result1.finalText).toContain('governed AI coding agent')
       expect(result2.finalText).toContain('policy-gated runtime')

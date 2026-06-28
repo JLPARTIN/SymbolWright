@@ -35,7 +35,9 @@ const wrongScopeApproval: RuntimeApproval = {
   scopes: ['command:validate'],
 }
 
-function makeRequest(overrides: Partial<GitHubWriteExecutorRequest> = {}): GitHubWriteExecutorRequest {
+function makeRequest(
+  overrides: Partial<GitHubWriteExecutorRequest> = {},
+): GitHubWriteExecutorRequest {
   return {
     action: 'post_comment',
     repository: 'owner/repo',
@@ -157,12 +159,7 @@ describe('executeGitHubWrite', () => {
 
   it('blocks on empty content', async () => {
     const client = new FakeGitHubWriteExecutorClient()
-    const result = await executeGitHubWrite(
-      makeRequest({ content: '' }),
-      policy,
-      approval,
-      client,
-    )
+    const result = await executeGitHubWrite(makeRequest({ content: '' }), policy, approval, client)
 
     expect(result.outcome).toBe('BLOCKED')
     expect(result.blockReasons.some((r) => r.includes('empty'))).toBe(true)
@@ -170,12 +167,7 @@ describe('executeGitHubWrite', () => {
 
   it('blocks on empty reason', async () => {
     const client = new FakeGitHubWriteExecutorClient()
-    const result = await executeGitHubWrite(
-      makeRequest({ reason: '' }),
-      policy,
-      approval,
-      client,
-    )
+    const result = await executeGitHubWrite(makeRequest({ reason: '' }), policy, approval, client)
 
     expect(result.outcome).toBe('BLOCKED')
     expect(result.blockReasons.some((r) => r.includes('reason'))).toBe(true)

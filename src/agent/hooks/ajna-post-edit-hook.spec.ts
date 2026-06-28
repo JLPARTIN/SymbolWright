@@ -99,10 +99,7 @@ describe('runAjnaPostEditHook', () => {
   })
 
   it('review includes risk level from Ajna pipeline', () => {
-    const result = runAjnaPostEditHook(
-      [makeFile({ additions: 5, deletions: 2 })],
-      DEFAULT_CONTEXT,
-    )
+    const result = runAjnaPostEditHook([makeFile({ additions: 5, deletions: 2 })], DEFAULT_CONTEXT)
 
     expect(result.triggered).toBe(true)
     expect(['LOW', 'MODERATE', 'HIGH', 'CRITICAL', 'BLOCKED']).toContain(result.riskLevel)

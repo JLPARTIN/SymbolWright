@@ -1,4 +1,7 @@
-import { createReadOnlyRuntimeContext, createReadOnlyRuntimeRegistry } from './runtime/runtime-readonly-registry.js'
+import {
+  createReadOnlyRuntimeContext,
+  createReadOnlyRuntimeRegistry,
+} from './runtime/runtime-readonly-registry.js'
 
 export async function renderRuntimeValidationPlan(
   focus: string | undefined,

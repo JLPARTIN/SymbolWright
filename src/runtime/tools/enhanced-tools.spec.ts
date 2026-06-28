@@ -117,11 +117,7 @@ describe('edit-file-tool', () => {
   it('fails when oldText appears multiple times without replaceAll', async () => {
     fs.writeFileSync(path.join(tempDir, 'dup.ts'), 'foo bar foo')
     await expect(
-      executeEditFileTool(
-        { path: 'dup.ts', oldText: 'foo', newText: 'baz' },
-        tempDir,
-        allowWrite,
-      ),
+      executeEditFileTool({ path: 'dup.ts', oldText: 'foo', newText: 'baz' }, tempDir, allowWrite),
     ).rejects.toThrow('multiple times')
   })
 
@@ -183,7 +179,12 @@ describe('bash-tool', () => {
   })
 
   it('captures stderr', async () => {
-    const result = await executeBashTool({ command: 'ls /nonexistent_dir_xyz 2>&1' }, tempDir, true, TEST_APPROVAL)
+    const result = await executeBashTool(
+      { command: 'ls /nonexistent_dir_xyz 2>&1' },
+      tempDir,
+      true,
+      TEST_APPROVAL,
+    )
     expect(result).toContain('Exit code:')
   })
 

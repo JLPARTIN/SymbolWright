@@ -123,9 +123,11 @@ export function renderPatchApplicationResult(result: PatchApplicationResult): st
   }
 
   lines.push('', 'File results:')
-  lines.push(...result.fileResults.map((fileResult) => (
-    `- ${fileResult.outcome} ${fileResult.gateResult.targetPath}`
-  )))
+  lines.push(
+    ...result.fileResults.map(
+      (fileResult) => `- ${fileResult.outcome} ${fileResult.gateResult.targetPath}`,
+    ),
+  )
 
   if (result.outcome === 'DRY_RUN') {
     lines.push('', 'Dry-run only. No files have been modified.')

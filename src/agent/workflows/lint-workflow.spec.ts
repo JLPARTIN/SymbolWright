@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  parseLintOutput,
-  groupLintViolationsByFile,
-  renderLintResult,
-} from './lint-workflow.js'
+import { parseLintOutput, groupLintViolationsByFile, renderLintResult } from './lint-workflow.js'
 
 describe('parseLintOutput', () => {
   it('returns passed for clean output', () => {
@@ -34,9 +30,7 @@ describe('parseLintOutput', () => {
   })
 
   it('detects error and warning counts from summary line', () => {
-    const output = [
-      '10 problems (5 errors, 5 warnings)',
-    ].join('\n')
+    const output = ['10 problems (5 errors, 5 warnings)'].join('\n')
 
     const result = parseLintOutput(output)
     expect(result.errorCount).toBe(5)
@@ -45,9 +39,7 @@ describe('parseLintOutput', () => {
   })
 
   it('marks as passed when only warnings', () => {
-    const output = [
-      'src/a.ts:1:1: warning unused var [no-unused-vars]',
-    ].join('\n')
+    const output = ['src/a.ts:1:1: warning unused var [no-unused-vars]'].join('\n')
 
     const result = parseLintOutput(output)
     expect(result.passed).toBe(true)
@@ -55,9 +47,7 @@ describe('parseLintOutput', () => {
   })
 
   it('detects fixable count', () => {
-    const output = [
-      '2 errors and 3 warnings potentially fixable',
-    ].join('\n')
+    const output = ['2 errors and 3 warnings potentially fixable'].join('\n')
 
     const result = parseLintOutput(output)
     expect(result.fixableCount).toBe(5)
@@ -67,9 +57,33 @@ describe('parseLintOutput', () => {
 describe('groupLintViolationsByFile', () => {
   it('groups violations by file', () => {
     const violations = [
-      { filePath: 'src/a.ts', line: 1, column: 1, ruleId: 'r1', message: 'm1', severity: 'error' as const, fixable: false },
-      { filePath: 'src/a.ts', line: 2, column: 1, ruleId: 'r2', message: 'm2', severity: 'error' as const, fixable: false },
-      { filePath: 'src/b.ts', line: 1, column: 1, ruleId: 'r3', message: 'm3', severity: 'warning' as const, fixable: true },
+      {
+        filePath: 'src/a.ts',
+        line: 1,
+        column: 1,
+        ruleId: 'r1',
+        message: 'm1',
+        severity: 'error' as const,
+        fixable: false,
+      },
+      {
+        filePath: 'src/a.ts',
+        line: 2,
+        column: 1,
+        ruleId: 'r2',
+        message: 'm2',
+        severity: 'error' as const,
+        fixable: false,
+      },
+      {
+        filePath: 'src/b.ts',
+        line: 1,
+        column: 1,
+        ruleId: 'r3',
+        message: 'm3',
+        severity: 'warning' as const,
+        fixable: true,
+      },
     ]
 
     const grouped = groupLintViolationsByFile(violations)
@@ -79,7 +93,15 @@ describe('groupLintViolationsByFile', () => {
 
   it('uses "unknown" for empty file paths', () => {
     const violations = [
-      { filePath: '', line: 1, column: 1, ruleId: 'r1', message: 'm1', severity: 'error' as const, fixable: false },
+      {
+        filePath: '',
+        line: 1,
+        column: 1,
+        ruleId: 'r1',
+        message: 'm1',
+        severity: 'error' as const,
+        fixable: false,
+      },
     ]
 
     const grouped = groupLintViolationsByFile(violations)

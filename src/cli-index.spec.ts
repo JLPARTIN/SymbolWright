@@ -2,7 +2,12 @@ import { describe, expect, it, beforeEach, afterEach } from 'vitest'
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { loadVectorStore, resolveVectorStorePath, runIndexCommand, saveVectorStore } from './cli-index.js'
+import {
+  loadVectorStore,
+  resolveVectorStorePath,
+  runIndexCommand,
+  saveVectorStore,
+} from './cli-index.js'
 import { VectorStore } from './memory/vector-store.js'
 
 const TEST_DIR = join(process.cwd(), '.test-cli-index')
@@ -71,7 +76,10 @@ describe('runIndexCommand', () => {
     if (existsSync(TEST_DIR)) rmSync(TEST_DIR, { recursive: true })
     mkdirSync(join(TEST_DIR, 'src'), { recursive: true })
     writeFileSync(join(TEST_DIR, 'src', 'app.ts'), 'export function main() { return 42; }\n')
-    writeFileSync(join(TEST_DIR, 'src', 'util.ts'), 'export function add(a: number, b: number) { return a + b; }\n')
+    writeFileSync(
+      join(TEST_DIR, 'src', 'util.ts'),
+      'export function add(a: number, b: number) { return a + b; }\n',
+    )
     writeFileSync(join(TEST_DIR, 'README.md'), '# Test\n\nA test project.\n')
   })
 
@@ -104,7 +112,15 @@ describe('runIndexCommand', () => {
     await runIndexCommand([TEST_DIR])
 
     const store = loadVectorStore(TEST_DIR)!
-    const results = store.search(store.get(store.listFilePaths().map((p) => `${p}#0`).find((id) => store.get(id) !== undefined)!)!.embedding, 3)
+    const results = store.search(
+      store.get(
+        store
+          .listFilePaths()
+          .map((p) => `${p}#0`)
+          .find((id) => store.get(id) !== undefined)!,
+      )!.embedding,
+      3,
+    )
     expect(results.length).toBeGreaterThan(0)
   })
 })

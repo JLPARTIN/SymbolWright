@@ -4,7 +4,10 @@ import {
   buildRuntimeStatusSnapshot,
   renderRuntimeStatusDashboard,
 } from './runtime-status-dashboard.js'
-import { createWorkflowRuntimeContext, createWorkflowRuntimeRegistry } from '../runtime-workflow-registry.js'
+import {
+  createWorkflowRuntimeContext,
+  createWorkflowRuntimeRegistry,
+} from '../runtime-workflow-registry.js'
 import { renderRuntimeStatusDashboardCommand } from '../../cli-runtime-status-dashboard.js'
 
 function createTestTools() {

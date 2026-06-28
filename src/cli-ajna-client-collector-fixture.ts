@@ -11,12 +11,16 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-export function parseAjnaClientCollectorFixtureRequest(jsonText: string): AjnaGithubReadOnlyCollectorRequest {
+export function parseAjnaClientCollectorFixtureRequest(
+  jsonText: string,
+): AjnaGithubReadOnlyCollectorRequest {
   const parsed = JSON.parse(jsonText) as unknown
   if (!isObject(parsed)) {
     throw new Error('Ajna client collector fixture request must be an object.')
   }
-  return validateAjnaGithubReadOnlyCollectorRequest(parsed as unknown as AjnaGithubReadOnlyCollectorRequest)
+  return validateAjnaGithubReadOnlyCollectorRequest(
+    parsed as unknown as AjnaGithubReadOnlyCollectorRequest,
+  )
 }
 
 export function createAjnaClientCollectorFixtureClient(): AjnaGithubReadOnlyClientPort {

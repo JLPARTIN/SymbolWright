@@ -26,21 +26,24 @@ const testContext: RuntimeToolContext = {
   },
 }
 
-function makeIntentInput(overrides: Partial<{
-  id: string
-  target: WriteIntentTarget
-  targetPath: string
-  reason: string
-  expectedDiffSummary: string
-  validationPlan: readonly string[]
-  rollbackNote: string
-}> = {}) {
+function makeIntentInput(
+  overrides: Partial<{
+    id: string
+    target: WriteIntentTarget
+    targetPath: string
+    reason: string
+    expectedDiffSummary: string
+    validationPlan: readonly string[]
+    rollbackNote: string
+  }> = {},
+) {
   return {
     id: overrides.id ?? 'WI-001',
     target: overrides.target ?? ('file_edit' as WriteIntentTarget),
     targetPath: overrides.targetPath ?? 'src/cli.ts',
     reason: overrides.reason ?? 'Add new CLI command',
-    expectedDiffSummary: overrides.expectedDiffSummary ?? 'Add case for new command in switch block',
+    expectedDiffSummary:
+      overrides.expectedDiffSummary ?? 'Add case for new command in switch block',
     validationPlan: overrides.validationPlan ?? ['npm run typecheck', 'npm test'],
     rollbackNote: overrides.rollbackNote ?? 'Revert the added case block',
   }
@@ -249,23 +252,33 @@ describe('write intent plan tool', () => {
   })
 
   it('rejects missing input', async () => {
-    await expect(writeIntentPlanTool.execute(null, testContext)).rejects.toThrow('Missing write intent plan input')
+    await expect(writeIntentPlanTool.execute(null, testContext)).rejects.toThrow(
+      'Missing write intent plan input',
+    )
   })
 
   it('rejects missing id', async () => {
-    await expect(writeIntentPlanTool.execute({ ...makeIntentInput(), id: '' }, testContext)).rejects.toThrow('Missing intent id')
+    await expect(
+      writeIntentPlanTool.execute({ ...makeIntentInput(), id: '' }, testContext),
+    ).rejects.toThrow('Missing intent id')
   })
 
   it('rejects invalid target', async () => {
-    await expect(writeIntentPlanTool.execute({ ...makeIntentInput(), target: 'invalid' }, testContext)).rejects.toThrow('Invalid target')
+    await expect(
+      writeIntentPlanTool.execute({ ...makeIntentInput(), target: 'invalid' }, testContext),
+    ).rejects.toThrow('Invalid target')
   })
 
   it('rejects missing targetPath', async () => {
-    await expect(writeIntentPlanTool.execute({ ...makeIntentInput(), targetPath: '' }, testContext)).rejects.toThrow('Missing targetPath')
+    await expect(
+      writeIntentPlanTool.execute({ ...makeIntentInput(), targetPath: '' }, testContext),
+    ).rejects.toThrow('Missing targetPath')
   })
 
   it('rejects missing reason', async () => {
-    await expect(writeIntentPlanTool.execute({ ...makeIntentInput(), reason: '' }, testContext)).rejects.toThrow('Missing reason')
+    await expect(
+      writeIntentPlanTool.execute({ ...makeIntentInput(), reason: '' }, testContext),
+    ).rejects.toThrow('Missing reason')
   })
 
   it('shows BLOCKED for protected path', async () => {
@@ -344,7 +357,13 @@ describe('CLI write intent', () => {
   })
 
   it('throws on missing id', async () => {
-    const fixture = { target: 'file_edit', targetPath: 'x.ts', reason: 'test', expectedDiffSummary: 'test', rollbackNote: 'test' }
+    const fixture = {
+      target: 'file_edit',
+      targetPath: 'x.ts',
+      reason: 'test',
+      expectedDiffSummary: 'test',
+      rollbackNote: 'test',
+    }
 
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'write-intent-'))
     const fixturePath = path.join(tmpDir, 'bad-fixture.json')

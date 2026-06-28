@@ -37,9 +37,13 @@ describe('parseAjnaGithubReadOnlyCollectorRequest', () => {
   })
 
   it('rejects invalid request fixtures', () => {
-    expect(() => parseAjnaGithubReadOnlyCollectorRequest('[]')).toThrow('request fixture must be an object')
+    expect(() => parseAjnaGithubReadOnlyCollectorRequest('[]')).toThrow(
+      'request fixture must be an object',
+    )
     expect(() =>
-      parseAjnaGithubReadOnlyCollectorRequest(JSON.stringify({ repository: '', pullRequestNumber: 63 })),
+      parseAjnaGithubReadOnlyCollectorRequest(
+        JSON.stringify({ repository: '', pullRequestNumber: 63 }),
+      ),
     ).toThrow('repository must be a non-empty string')
   })
 })

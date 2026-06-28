@@ -114,7 +114,10 @@ export class WorkspaceManager {
     let bestLen = 0
 
     for (const repo of this.repos.values()) {
-      if ((resolved.startsWith(repo.rootPath + '/') || resolved === repo.rootPath) && repo.rootPath.length > bestLen) {
+      if (
+        (resolved.startsWith(repo.rootPath + '/') || resolved === repo.rootPath) &&
+        repo.rootPath.length > bestLen
+      ) {
         best = repo
         bestLen = repo.rootPath.length
       }

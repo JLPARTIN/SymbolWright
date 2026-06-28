@@ -27,11 +27,7 @@ export function renderLocalFileWriteExecutionResult(result: LocalFileWriteExecut
   }
 
   if (result.outcome === 'DRY_RUN') {
-    lines.push(
-      '',
-      'Dry-run preview: write would be allowed.',
-      'No file has been modified.',
-    )
+    lines.push('', 'Dry-run preview: write would be allowed.', 'No file has been modified.')
   }
 
   if (result.outcome === 'WRITTEN') {

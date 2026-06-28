@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { appendTranscriptEntry, renderRuntimeTranscript, type RuntimeTranscript } from './runtime-transcript.js'
+import {
+  appendTranscriptEntry,
+  renderRuntimeTranscript,
+  type RuntimeTranscript,
+} from './runtime-transcript.js'
 
 describe('appendTranscriptEntry', () => {
   it('appends to empty transcript', () => {

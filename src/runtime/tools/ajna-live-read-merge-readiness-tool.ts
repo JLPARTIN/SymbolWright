@@ -1,5 +1,8 @@
 import type { RuntimeLiveReadClient } from '../live-read/runtime-live-read-client.js'
-import { assessLiveReadMergeReadiness, renderLiveReadAjnaMergeReadiness } from '../ajna/live-read-ajna-merge-readiness-pipeline.js'
+import {
+  assessLiveReadMergeReadiness,
+  renderLiveReadAjnaMergeReadiness,
+} from '../ajna/live-read-ajna-merge-readiness-pipeline.js'
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 
 export interface AjnaLiveReadMergeReadinessInput {
@@ -40,7 +43,9 @@ function parseAjnaLiveReadMergeReadinessInput(input: unknown): AjnaLiveReadMerge
   return result
 }
 
-export function createAjnaLiveReadMergeReadinessTool(client: RuntimeLiveReadClient): RuntimeToolDefinition {
+export function createAjnaLiveReadMergeReadinessTool(
+  client: RuntimeLiveReadClient,
+): RuntimeToolDefinition {
   return {
     name: 'ajna_live_read_merge_readiness',
     description: 'Assess merge readiness from live-read evidence.',
@@ -53,7 +58,9 @@ export function createAjnaLiveReadMergeReadinessTool(client: RuntimeLiveReadClie
       const mergeInput = {
         pr,
         ...(parsed.workflowRunId !== undefined
-          ? { ci: await client.getWorkflowEvidence(parsed.owner, parsed.repo, parsed.workflowRunId) }
+          ? {
+              ci: await client.getWorkflowEvidence(parsed.owner, parsed.repo, parsed.workflowRunId),
+            }
           : {}),
       }
 

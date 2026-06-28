@@ -5,7 +5,9 @@ import { githubWriteGateTool } from './tools/github-write-gate-tool.js'
 import type { FakeLiveReadClientData } from './live-read/fake-live-read-client.js'
 import type { RuntimeToolContext } from './types.js'
 
-export function createGitHubWriteGateRuntimeContext(cwd: string = process.cwd()): RuntimeToolContext {
+export function createGitHubWriteGateRuntimeContext(
+  cwd: string = process.cwd(),
+): RuntimeToolContext {
   return createGitHubWriteProposalRuntimeContext(cwd)
 }
 

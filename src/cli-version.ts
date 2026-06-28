@@ -2,7 +2,10 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import { CODEMIND_PLATFORM_NAME, CODEMIND_AJNA_CAPABILITY_NAME } from './codemind-foundation.js'
-import { getCompletedRuntimeBuildPhaseCount, RUNTIME_BUILD_PHASES } from './runtime/runtime-build-state.js'
+import {
+  getCompletedRuntimeBuildPhaseCount,
+  RUNTIME_BUILD_PHASES,
+} from './runtime/runtime-build-state.js'
 
 export const VERSION_BLOCK_ID = 'CODEMIND-VERSION-01' as const
 
