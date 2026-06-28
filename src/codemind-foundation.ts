@@ -17,10 +17,10 @@ export function getCodemindFoundationSnapshot(): CodemindFoundationSnapshot {
   return {
     platform: CODEMIND_PLATFORM_NAME,
     primaryCapability: CODEMIND_AJNA_CAPABILITY_NAME,
-    posture: ['EXECUTION_FIRST'],
-    mutationEnabled: true,
-    githubWriteEnabled: true,
-    bashExecutionEnabled: true,
-    networkIngestionEnabled: true,
+    posture: ['PLAN_FIRST'],
+    mutationEnabled: false,
+    githubWriteEnabled: false,
+    bashExecutionEnabled: false,
+    networkIngestionEnabled: false,
   }
 }

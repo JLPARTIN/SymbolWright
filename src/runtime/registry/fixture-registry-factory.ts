@@ -1,4 +1,5 @@
 import { createRuntimeRegistry, type RuntimeRegistry } from './runtime-registry.js'
+import { createDefaultRuntimePolicy } from '../policy/runtime-policy.js'
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 
 import { planGoalTool } from '../planner/goal-planner.js'
@@ -182,17 +183,24 @@ export function createFixtureRegistry(
   return createRuntimeRegistry(collectTools(preset, clientData, realClient))
 }
 
-export function createFixtureContext(cwd: string = process.cwd()): RuntimeToolContext {
+export function createFixtureContext(cwd?: string): RuntimeToolContext {
+  if (arguments.length === 0) {
+    return {
+      cwd: process.cwd(),
+      policy: {
+        mode: 'READ_ONLY',
+        allowNetwork: false,
+        allowShell: false,
+        allowWrites: false,
+        allowGitHubWrites: false,
+        protectedPaths: ['.git', '.env', '.env.local', 'node_modules', 'dist', 'coverage'],
+        noisyDirs: ['.git', 'node_modules', 'dist', 'coverage', '.next'],
+      },
+    }
+  }
+
   return {
-    cwd,
-    policy: {
-      mode: 'READ_ONLY',
-      allowNetwork: false,
-      allowShell: false,
-      allowWrites: false,
-      allowGitHubWrites: false,
-      protectedPaths: ['.git', '.env', '.env.local', 'node_modules', 'dist', 'coverage'],
-      noisyDirs: ['.git', 'node_modules', 'dist', 'coverage', '.next'],
-    },
+    cwd: cwd ?? process.cwd(),
+    policy: createDefaultRuntimePolicy(),
   }
 }

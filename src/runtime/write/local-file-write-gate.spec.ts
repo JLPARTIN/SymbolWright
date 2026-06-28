@@ -153,7 +153,11 @@ describe('local file write tool', () => {
 
   it('writes when dryRun is omitted', async () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'local-write-tool-'))
-    const context: RuntimeToolContext = { cwd: tmpDir, policy: createDefaultRuntimePolicy() }
+    const context: RuntimeToolContext = {
+      cwd: tmpDir,
+      policy: createDefaultRuntimePolicy(),
+      approval: legacyApproval,
+    }
 
     try {
       const output = await localFileWriteTool.execute(

@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { getCodemindFoundationSnapshot } from './codemind-foundation.js'
 import {
   getCompletedRuntimeBuildPhaseCount,
   RUNTIME_BUILD_PHASES,
@@ -87,21 +88,21 @@ function checkRuntimePhases(): DoctorCheck {
 }
 
 function checkSafetyPosture(): DoctorCheck {
-  const completed = getCompletedRuntimeBuildPhaseCount()
-  const total = RUNTIME_BUILD_PHASES.length
+  const snap = getCodemindFoundationSnapshot()
+  const violations: string[] = []
+  if (snap.mutationEnabled) violations.push('mutation')
+  if (snap.githubWriteEnabled) violations.push('githubWrite')
+  if (snap.bashExecutionEnabled) violations.push('bashExecution')
+  if (snap.networkIngestionEnabled) violations.push('networkIngestion')
 
-  if (completed === total) {
+  if (violations.length === 0) {
     return {
       name: 'Safety posture',
       status: 'PASS',
-      detail: `${completed}/${total} runtime phases complete`,
+      detail: 'All gates locked (mutation, GitHub write, bash, network)',
     }
   }
-  return {
-    name: 'Safety posture',
-    status: 'WARN',
-    detail: `${completed}/${total} runtime phases complete`,
-  }
+  return { name: 'Safety posture', status: 'WARN', detail: `Enabled: ${violations.join(', ')}` }
 }
 
 function checkSourceDirectory(workspaceRoot: string): DoctorCheck {
