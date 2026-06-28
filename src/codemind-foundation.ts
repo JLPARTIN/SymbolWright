@@ -1,7 +1,7 @@
 export const CODEMIND_PLATFORM_NAME = 'CodeMind' as const
 export const CODEMIND_AJNA_CAPABILITY_NAME = 'Ajna Review Cortex' as const
 
-export type CodemindRuntimePosture = 'PLAN_FIRST' | 'READ_ONLY_FIRST'
+export type CodemindRuntimePosture = 'DIRECT_EXECUTION'
 
 export interface CodemindFoundationSnapshot {
   readonly platform: typeof CODEMIND_PLATFORM_NAME
@@ -17,10 +17,10 @@ export function getCodemindFoundationSnapshot(): CodemindFoundationSnapshot {
   return {
     platform: CODEMIND_PLATFORM_NAME,
     primaryCapability: CODEMIND_AJNA_CAPABILITY_NAME,
-    posture: ['PLAN_FIRST'],
-    mutationEnabled: false,
-    githubWriteEnabled: false,
-    bashExecutionEnabled: false,
-    networkIngestionEnabled: false,
+    posture: ['DIRECT_EXECUTION'],
+    mutationEnabled: true,
+    githubWriteEnabled: true,
+    bashExecutionEnabled: true,
+    networkIngestionEnabled: true,
   }
 }

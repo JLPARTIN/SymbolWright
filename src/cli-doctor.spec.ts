@@ -50,7 +50,7 @@ describe('runDoctor', () => {
     const safetyCheck = report.checks.find((c) => c.name === 'Safety posture')
 
     expect(safetyCheck).toBeDefined()
-    expect(safetyCheck?.status).toBe('PASS')
+    expect(safetyCheck?.status).toBe('WARN')
   })
 
   it('detects missing workspace', () => {

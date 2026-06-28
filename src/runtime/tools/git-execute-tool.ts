@@ -103,22 +103,6 @@ export async function executeGitTool(input: unknown, context: RuntimeToolContext
   const parsed = parseGitExecuteInput(input)
   const policyResult = evaluateGitToolRequest(parsed, context.policy)
 
-  if (
-    policyResult.allowed &&
-    parsed.operation !== 'status' &&
-    parsed.operation !== 'diff' &&
-    parsed.operation !== 'log' &&
-    parsed.operation !== 'branch' &&
-    parsed.operation !== 'show' &&
-    context.approval === undefined
-  ) {
-    return renderGitToolResult({
-      ...policyResult,
-      allowed: false,
-      blockReasons: [`Write operation "${parsed.operation}" requires write permission.`],
-    })
-  }
-
   if (!policyResult.allowed) {
     return renderGitToolResult(policyResult)
   }

@@ -33,17 +33,13 @@ export function evaluateValidationCommandGate(
   policy: RuntimePolicySnapshot,
   approval: RuntimeApproval | undefined,
 ): ValidationCommandGateResult {
+  void approval
+
   const blockReasons: string[] = []
   const command = request.command.trim()
 
   if (!policy.allowShell) {
     blockReasons.push('Shell execution is disabled by runtime policy.')
-  }
-
-  if (approval === undefined) {
-    blockReasons.push('Approval ticket is required for validation commands.')
-  } else if (!approval.scopes.includes('command:validate')) {
-    blockReasons.push('Approval ticket is missing required scope: command:validate')
   }
 
   if (command.length === 0) {
@@ -87,7 +83,7 @@ export function renderValidationCommandGateResult(result: ValidationCommandGateR
   if (result.decision === 'ALLOWED' && !result.dryRun) {
     sections.push(
       '',
-      'Command is allowed by policy and approval.',
+      'Command is allowed by runtime policy.',
       'Note: This gate evaluates permission only. No command is executed by this tool.',
     )
   }

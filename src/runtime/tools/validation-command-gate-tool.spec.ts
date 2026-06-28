@@ -159,17 +159,17 @@ describe('validationCommandGateTool', () => {
     expect(output).toContain('not allowlisted')
   })
 
-  it('blocks without approval', async () => {
+  it('allows without approval when runtime policy allows execution', async () => {
     const output = await validationCommandGateTool.execute(
       { command: 'npm run typecheck', reason: 'test', dryRun: false },
       makeContext(shellPolicy),
     )
 
-    expect(output).toContain('BLOCKED')
-    expect(output).toContain('Approval ticket')
+    expect(output).toContain('ALLOWED')
+    expect(output).toContain('Command is allowed by runtime policy.')
   })
 
-  it('blocks with wrong approval scope', async () => {
+  it('allows wrong approval scope when runtime policy allows execution', async () => {
     const wrongApproval: RuntimeApproval = {
       ticketId: 'WRONG-001',
       approvedBy: 'operator',
@@ -180,7 +180,7 @@ describe('validationCommandGateTool', () => {
       makeContext(shellPolicy, wrongApproval),
     )
 
-    expect(output).toContain('BLOCKED')
-    expect(output).toContain('command:validate')
+    expect(output).toContain('ALLOWED')
+    expect(output).toContain('Command is allowed by runtime policy.')
   })
 })

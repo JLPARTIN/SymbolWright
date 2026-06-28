@@ -1,4 +1,10 @@
-# CodeMind Runtime Build State
+## Current Runtime Posture
+
+CodeMind now defaults to direct execution for normal coding-agent workflows. Runtime policy remains responsible for workspace boundaries, protected paths, allowlisted validation commands, and destructive-operation safeguards.
+
+The runtime is no longer governed, read-only, or approval-first by default for normal coding-agent work.
+
+\n# CodeMind Runtime Build State
 
 This document records the post-Phase T runtime state. All 20 runtime phases are complete.
 

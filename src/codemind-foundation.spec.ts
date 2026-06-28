@@ -14,18 +14,18 @@ describe('CodeMind foundation snapshot', () => {
     expect(snapshot.primaryCapability).toBe(CODEMIND_AJNA_CAPABILITY_NAME)
   })
 
-  it('uses a plan-first runtime posture', () => {
+  it('uses a direct execution runtime posture', () => {
     const snapshot = getCodemindFoundationSnapshot()
 
-    expect(snapshot.posture).toEqual(['PLAN_FIRST'])
+    expect(snapshot.posture).toEqual(['DIRECT_EXECUTION'])
   })
 
-  it('keeps the core runtime surfaces disabled', () => {
+  it('enables core direct execution runtime surfaces', () => {
     const snapshot = getCodemindFoundationSnapshot()
 
-    expect(snapshot.mutationEnabled).toBe(false)
-    expect(snapshot.githubWriteEnabled).toBe(false)
-    expect(snapshot.bashExecutionEnabled).toBe(false)
-    expect(snapshot.networkIngestionEnabled).toBe(false)
+    expect(snapshot.mutationEnabled).toBe(true)
+    expect(snapshot.githubWriteEnabled).toBe(true)
+    expect(snapshot.bashExecutionEnabled).toBe(true)
+    expect(snapshot.networkIngestionEnabled).toBe(true)
   })
 })
