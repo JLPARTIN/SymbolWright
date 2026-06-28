@@ -5,6 +5,12 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "bin": {
     "codemind": "dist/cli.js",
     "codemind-workspace": "dist/cli-workspace-bin.js"
@@ -24,7 +30,10 @@
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write src/",
     "format:check": "prettier --check src/",
-    "audit": "npm audit --omit=dev --audit-level=high"
+    "audit": "npm audit --omit=dev --audit-level=high",
+    "doctor": "node dist/cli.js doctor",
+    "release-readiness": "node dist/cli.js release-readiness",
+    "build-ledger": "node dist/cli.js build-ledger"
   },
   "keywords": [
     "codemind",
@@ -34,7 +43,7 @@
     "merge-readiness",
     "ajna"
   ],
-  "license": "UNLICENSED",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/jlpartin/codemind.git"
