@@ -46,3 +46,9 @@ All notable changes to CodeMind are documented in this file.
 - **License**: Changed from UNLICENSED to MIT license.
 - **Package Contract**: Added `exports` field for ESM resolution, npm script aliases for diagnostic commands (`doctor`, `release-readiness`, `build-ledger`).
 - **Deploy Pipeline**: Hardened deploy workflow to match CI strength (added audit, lint, format:check, coverage enforcement, build step).
+
+### Removed
+
+- **docs/pr-plans/**: 30 completed PR plan files superseded by merged PRs (PR-2 through PR-CM-TEST-10).
+- **docs/next-arc/**: 5 superseded analysis files (ANALYSIS_REPORT, NEURAL_WIRING_PLAN, PR_BUILD_PLAN, PR_IDEATION_MATRIX, VITEST_TEST_INTELLIGENCE_PLAN).
+- **docs/roadmap/**: 2 stale roadmap files (CODEMIND_PLATFORM_ROADMAP, CODEMIND_100_PERCENT_BUILD_PLAN) superseded by build ledger and release readiness gates.
