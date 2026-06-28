@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import type { RuntimePolicySnapshot } from '../types.js'
 import { evaluateLocalFileWriteGate, type LocalFileWriteRequest } from './local-file-write-gate.js'
 import { buildLocalFileWriteDiff, type LocalFileWriteDiff } from './local-file-write-diff.js'
 import type { LocalFileWriteExecutionResult } from './local-file-write-result.js'
@@ -10,9 +10,9 @@ export function executeLocalFileWrite(
   request: LocalFileWriteRequest,
   workspaceRoot: string,
   policy: RuntimePolicySnapshot,
-  approval: RuntimeApproval | undefined,
+  _approval?: unknown,
 ): LocalFileWriteExecutionResult {
-  const gateResult = evaluateLocalFileWriteGate(request, workspaceRoot, policy, approval)
+  const gateResult = evaluateLocalFileWriteGate(request, workspaceRoot, policy)
 
   if (gateResult.decision === 'BLOCKED') {
     return {
