@@ -136,10 +136,7 @@ describe('createFixtureRegistry', () => {
   })
 
   it('accepts FakeLiveReadClientData for live read presets', () => {
-    const registry = createFixtureRegistry('github_live_read', {
-      prTitle: 'Test PR',
-      prBody: 'Test body',
-    })
+    const registry = createFixtureRegistry('github_live_read', {})
     expect(registry.has('github_live_read_pr')).toBe(true)
     expect(registry.has('github_live_read_ci')).toBe(true)
   })
