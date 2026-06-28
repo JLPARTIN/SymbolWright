@@ -13,15 +13,63 @@ vi.mock('./activation/codemind-activation.js', () => ({
   runActivatedAgent: vi.fn(),
 }))
 
-import { runAgentCommand } from './cli-agent.js'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+
+import { runAgentCommand, renderSessionsList } from './cli-agent.js'
 import { resolveCodemindConfig, validateCodemindConfig } from './config/codemind-config.js'
 import { createAnthropicProvider } from './provider/anthropic-provider.js'
 import { runActivatedAgent } from './activation/codemind-activation.js'
+import { SessionPersistence } from './storage/session-persistence.js'
 
 const mockResolve = vi.mocked(resolveCodemindConfig)
 const mockValidate = vi.mocked(validateCodemindConfig)
 const mockCreateProvider = vi.mocked(createAnthropicProvider)
 const mockRunAgent = vi.mocked(runActivatedAgent)
+
+function validConfig() {
+  return {
+    valid: true as const,
+    errors: [] as string[],
+    warnings: [] as string[],
+    redactedSummary: {
+      hasApiKey: true,
+      apiKeyPreview: 'sk-t...tkey',
+      hasGitHubToken: false,
+      hasVoyageApiKey: false,
+    },
+  }
+}
+
+function mockProvider() {
+  return {
+    providerId: 'anthropic' as const,
+    displayName: 'Test Provider',
+    complete: async function* () {
+      yield {
+        type: 'message_stop' as const,
+        stopReason: 'end_turn' as const,
+        usage: { inputTokens: 10, outputTokens: 5 },
+      }
+    },
+  }
+}
+
+function mockAgentResult(status: 'completed' | 'error' = 'completed') {
+  return {
+    agentResult: {
+      status,
+      finalText: 'done',
+      iterations: [],
+      totalIterations: 1,
+      totalUsage: { inputTokens: 10, outputTokens: 5 },
+    },
+    swarmDispatches: [],
+    ajnaReviews: [],
+    tuiState: {} as never,
+  }
+}
 
 describe('cli-agent', () => {
   beforeEach(() => {
@@ -49,48 +97,97 @@ describe('cli-agent', () => {
       expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Missing API key'))
     })
 
-    it('runs one-shot mode when args are provided', async () => {
+    it('logs warnings from config validation', async () => {
       mockResolve.mockReturnValue({ anthropicApiKey: 'sk-test-key' })
       mockValidate.mockReturnValue({
-        valid: true,
-        errors: [],
-        warnings: [],
-        redactedSummary: {
-          hasApiKey: true,
-          apiKeyPreview: 'sk-t...tkey',
-          hasGitHubToken: false,
-          hasVoyageApiKey: false,
-        },
+        ...validConfig(),
+        warnings: ['Model not set, using default.'],
       })
-      mockCreateProvider.mockReturnValue({
-        providerId: 'anthropic',
-        displayName: 'Test Provider',
-        complete: async function* () {
-          yield {
-            type: 'message_stop' as const,
-            stopReason: 'end_turn',
-            usage: { inputTokens: 10, outputTokens: 5 },
-          }
-        },
-      })
-      mockRunAgent.mockResolvedValue({
-        agentResult: {
-          status: 'completed',
-          finalText: 'done',
-          iterations: [],
-          totalIterations: 1,
-          totalUsage: { inputTokens: 10, outputTokens: 5 },
-        },
-        swarmDispatches: [],
-        ajnaReviews: [],
-        tuiState: {} as never,
-      })
+      mockCreateProvider.mockReturnValue(mockProvider())
+      mockRunAgent.mockResolvedValue(mockAgentResult())
+
+      await runAgentCommand(['hello'])
+
+      expect(console.error).toHaveBeenCalledWith(expect.stringContaining('Model not set'))
+    })
+
+    it('runs one-shot mode when args are provided', async () => {
+      mockResolve.mockReturnValue({ anthropicApiKey: 'sk-test-key' })
+      mockValidate.mockReturnValue(validConfig())
+      mockCreateProvider.mockReturnValue(mockProvider())
+      mockRunAgent.mockResolvedValue(mockAgentResult())
 
       await runAgentCommand(['hello', 'world'])
 
       expect(mockRunAgent).toHaveBeenCalled()
       const callArgs = mockRunAgent.mock.calls[0]
       expect(callArgs?.[1]).toBe('hello world')
+    })
+
+    it('sets process.exitCode on agent error status', async () => {
+      mockResolve.mockReturnValue({ anthropicApiKey: 'sk-test-key' })
+      mockValidate.mockReturnValue(validConfig())
+      mockCreateProvider.mockReturnValue(mockProvider())
+      mockRunAgent.mockResolvedValue(mockAgentResult('error'))
+
+      await runAgentCommand(['fail'])
+
+      expect(process.exitCode).toBe(1)
+    })
+
+    it('handles --approved flag', async () => {
+      mockResolve.mockReturnValue({ anthropicApiKey: 'sk-test-key' })
+      mockValidate.mockReturnValue(validConfig())
+      mockCreateProvider.mockReturnValue(mockProvider())
+      mockRunAgent.mockResolvedValue(mockAgentResult())
+
+      await runAgentCommand(['--approved', 'do work'])
+
+      expect(mockRunAgent).toHaveBeenCalled()
+      const config = mockRunAgent.mock.calls[0]?.[0]
+      expect(config).toBeDefined()
+    })
+
+    it('exits when multiple validation errors exist', async () => {
+      mockResolve.mockReturnValue({})
+      mockValidate.mockReturnValue({
+        valid: false,
+        errors: ['Missing API key.', 'Invalid model.'],
+        warnings: [],
+        redactedSummary: { hasApiKey: false, hasGitHubToken: false, hasVoyageApiKey: false },
+      })
+
+      await expect(runAgentCommand(['test'])).rejects.toThrow('process.exit')
+      expect(console.error).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('renderSessionsList', () => {
+    it('returns empty message when no sessions exist', () => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-sessions-'))
+      const persistence = new SessionPersistence(dir)
+
+      const output = renderSessionsList(persistence)
+
+      expect(output).toBe('No saved sessions.')
+    })
+
+    it('lists sessions with metadata', () => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-sessions-'))
+      const persistence = new SessionPersistence(dir)
+
+      persistence.appendMessage('test-session-1', {
+        id: 'msg-1',
+        role: 'user',
+        content: 'hello',
+        timestamp: '2026-01-01T00:00:00.000Z',
+      })
+
+      const output = renderSessionsList(persistence)
+
+      expect(output).toContain('CodeMind Sessions')
+      expect(output).toContain('test-session-1')
+      expect(output).toContain('1 messages')
     })
   })
 })
