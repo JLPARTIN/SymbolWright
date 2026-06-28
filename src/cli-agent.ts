@@ -21,6 +21,7 @@ import { WorkspaceManager } from './workspace/workspace-manager.js'
 import { ProjectMemory, resolveProjectMemoryDir } from './memory/project-memory.js'
 import { createHashEmbeddingProvider, createVoyageEmbeddingProvider } from './memory/embedding-provider.js'
 import type { EmbeddingProvider } from './memory/embedding-provider.js'
+import { loadVectorStore } from './cli-index.js'
 
 function buildPolicy(approved: boolean): RuntimePolicySnapshot {
   if (approved) {
@@ -273,6 +274,8 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
     // memory dir may not exist yet — that's fine
   }
 
+  const vectorStore = loadVectorStore(cwd)
+
   let resumeSessionId: string | undefined
   let approvedMode = false
   const filteredArgs: string[] = []
@@ -308,7 +311,20 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
 
   try {
     if (userMessage.length > 0) {
-      await runOneShot(provider, toolContext, userMessage, config, costTracker, persistence, memoryContext)
+      let ragContext = ''
+      if (vectorStore !== undefined) {
+        try {
+          const { buildRagContext } = await import('./memory/rag-context-builder.js')
+          const ragResult = await buildRagContext(userMessage, vectorStore, embeddingProvider)
+          if (ragResult.chunksUsed > 0) {
+            ragContext = ragResult.contextText
+          }
+        } catch {
+          // RAG query failed — proceed without it
+        }
+      }
+      const fullContext = [memoryContext, ragContext].filter((s) => s.length > 0).join('\n\n')
+      await runOneShot(provider, toolContext, userMessage, config, costTracker, persistence, fullContext)
     } else {
       await runInteractive(provider, toolContext, config, costTracker, persistence, memoryContext, resumeSessionId)
     }

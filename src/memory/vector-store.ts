@@ -44,6 +44,11 @@ export function cosineSimilarity(a: readonly number[], b: readonly number[]): nu
   return dotProduct / denominator
 }
 
+export interface SerializedVectorStore {
+  readonly dimensions: number
+  readonly entries: readonly VectorEntry[]
+}
+
 export class VectorStore {
   private readonly entries = new Map<string, VectorEntry>()
   private readonly dimensions: number
@@ -52,6 +57,25 @@ export class VectorStore {
   constructor(config: VectorStoreConfig) {
     this.dimensions = config.dimensions
     this.maxEntries = config.maxEntries ?? 50000
+  }
+
+  getDimensions(): number {
+    return this.dimensions
+  }
+
+  serialize(): SerializedVectorStore {
+    return {
+      dimensions: this.dimensions,
+      entries: [...this.entries.values()],
+    }
+  }
+
+  static deserialize(data: SerializedVectorStore): VectorStore {
+    const store = new VectorStore({ dimensions: data.dimensions })
+    for (const entry of data.entries) {
+      store.entries.set(entry.id, entry)
+    }
+    return store
   }
 
   add(entry: VectorEntry): void {

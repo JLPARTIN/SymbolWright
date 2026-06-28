@@ -19,6 +19,7 @@ import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
 import { renderDoctorCommand } from './cli-doctor.js'
 import { findFixtureArg, renderFixtureCommand } from './cli-fixture-commands.js'
 import { renderGitHubWriteExecutorCommand } from './cli-github-write-executor.js'
+import { runIndexCommand } from './cli-index.js'
 import { renderMissionPacketCommand } from './cli-mission-packet.js'
 import { renderProjectContextCommand } from './cli-project-context.js'
 import { renderReleaseReadinessCommand } from './cli-release-readiness.js'
@@ -86,6 +87,10 @@ async function main(): Promise<void> {
       console.log(renderSessionsList(persistence))
       break
     }
+
+    case 'index':
+      console.log(await runIndexCommand(rest))
+      break
 
     case 'plan':
       console.log(await renderRuntimePlan(rest.join(' ')))
