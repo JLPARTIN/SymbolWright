@@ -79,7 +79,16 @@ export const localFileWriteTool: RuntimeToolDefinition = {
       return [gateOutput, '', '---', '', auditOutput].join('\n')
     }
 
-    const execResult = executeLocalFileWrite(request, context.cwd, context.policy)
+    const execResult = executeLocalFileWrite(
+      request,
+      context.cwd,
+      context.policy,
+      context.approval ?? {
+        ticketId: 'local-file-write-tool',
+        approvedBy: 'tool',
+        scopes: ['file:write'],
+      },
+    )
     const execOutput = renderLocalFileWriteExecutionResult(execResult)
     const auditEvent = createLocalFileWriteExecutionAuditEvent(execResult, context.approval)
     const sections: string[] = [execOutput]
