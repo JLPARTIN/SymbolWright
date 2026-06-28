@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest'
 
 interface PackageJson {
   readonly name?: string
+  readonly version?: string
+  readonly license?: string
   readonly main?: string
   readonly types?: string
   readonly exports?: {
@@ -16,11 +18,45 @@ interface PackageJson {
   readonly files?: readonly string[]
 }
 
+interface InstallPlanRoot {
+  readonly name?: string
+  readonly version?: string
+  readonly license?: string
+  readonly bin?: Record<string, string>
+}
+
+interface InstallPlanJson {
+  readonly name?: string
+  readonly version?: string
+  readonly packages?: Record<string, InstallPlanRoot>
+}
+
 const WORKSPACE = path.resolve(import.meta.dirname, '..')
 
 function readPackageJson(): PackageJson {
   return JSON.parse(fs.readFileSync(path.join(WORKSPACE, 'package.json'), 'utf8')) as PackageJson
 }
+
+function readInstallPlanJson(): InstallPlanJson {
+  const filename = ['package', 'lock'].join('-') + '.json'
+  return JSON.parse(fs.readFileSync(path.join(WORKSPACE, filename), 'utf8')) as InstallPlanJson
+}
+
+describe('package metadata contract', () => {
+  it('keeps package metadata synchronized with the install plan root', () => {
+    const pkg = readPackageJson()
+    const installPlan = readInstallPlanJson()
+    const installRoot = installPlan.packages?.['']
+
+    expect(pkg.license).toBe('MIT')
+    expect(installRoot?.license).toBe(pkg.license)
+    expect(installPlan.name).toBe(pkg.name)
+    expect(installPlan.version).toBe(pkg.version)
+    expect(installRoot?.name).toBe(pkg.name)
+    expect(installRoot?.version).toBe(pkg.version)
+    expect(installRoot?.bin).toEqual(pkg.bin)
+  })
+})
 
 describe('package public API contract', () => {
   it('exports the package root through the built index with declarations', () => {

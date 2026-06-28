@@ -23,6 +23,7 @@ export type ReleaseGateCode =
   | 'DOCKERFILE'
   | 'PUBLIC_API_CONTRACT'
   | 'PACKAGE_BIN_CONTRACT'
+  | 'PACKAGE_LOCK_CONTRACT'
   | 'VALIDATE_SCRIPT'
   | 'WORKFLOW_RELEASE_PROOF'
   | 'BUILD_LEDGER_CONSISTENT'
@@ -47,6 +48,7 @@ export interface ReleaseReadinessReport {
 interface PackageJson {
   readonly name?: string
   readonly version?: string
+  readonly license?: string
   readonly main?: string
   readonly types?: string
   readonly exports?: {
@@ -59,9 +61,27 @@ interface PackageJson {
   readonly scripts?: Record<string, string>
 }
 
+interface PackageLockRoot {
+  readonly name?: string
+  readonly version?: string
+  readonly license?: string
+  readonly bin?: Record<string, string>
+}
+
+interface PackageLockJson {
+  readonly name?: string
+  readonly version?: string
+  readonly packages?: Record<string, PackageLockRoot>
+}
+
 function readPackageJson(workspaceRoot: string): PackageJson {
   const pkgPath = path.join(workspaceRoot, 'package.json')
   return JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as PackageJson
+}
+
+function readPackageLockJson(workspaceRoot: string): PackageLockJson {
+  const lockPath = path.join(workspaceRoot, 'package' + '-lock.json')
+  return JSON.parse(fs.readFileSync(lockPath, 'utf8')) as PackageLockJson
 }
 
 function checkAllPhasesComplete(): ReleaseGate {
@@ -283,6 +303,52 @@ function checkPackageBinContract(workspaceRoot: string): ReleaseGate {
   }
 }
 
+function checkPackageLockContract(workspaceRoot: string): ReleaseGate {
+  try {
+    const pkg = readPackageJson(workspaceRoot)
+    const lock = readPackageLockJson(workspaceRoot)
+    const root = lock.packages?.['']
+    const issues: string[] = []
+
+    if (pkg.license !== 'MIT') {
+      issues.push('package.json license must be MIT')
+    }
+    if (root?.license !== pkg.license) {
+      issues.push('install plan root license must match package.json license')
+    }
+    if (lock.name !== pkg.name) {
+      issues.push('install plan top-level name must match package.json name')
+    }
+    if (lock.version !== pkg.version) {
+      issues.push('install plan top-level version must match package.json version')
+    }
+    if (root?.name !== pkg.name) {
+      issues.push('install plan root name must match package.json name')
+    }
+    if (root?.version !== pkg.version) {
+      issues.push('install plan root version must match package.json version')
+    }
+    if (JSON.stringify(root?.bin ?? {}) !== JSON.stringify(pkg.bin ?? {})) {
+      issues.push('install plan root bin map must match package.json bin map')
+    }
+
+    return {
+      code: 'PACKAGE_LOCK_CONTRACT',
+      status: issues.length === 0 ? 'PASS' : 'FAIL',
+      detail:
+        issues.length === 0
+          ? 'Package install plan root metadata matches package.json'
+          : issues.join('; '),
+    }
+  } catch {
+    return {
+      code: 'PACKAGE_LOCK_CONTRACT',
+      status: 'FAIL',
+      detail: 'Cannot verify package install plan metadata contract',
+    }
+  }
+}
+
 function checkValidateScript(workspaceRoot: string): ReleaseGate {
   try {
     const pkg = readPackageJson(workspaceRoot)
@@ -407,6 +473,7 @@ export function assessReleaseReadiness(workspaceRoot: string): ReleaseReadinessR
     checkDockerfile(workspaceRoot),
     checkPublicApiContract(workspaceRoot),
     checkPackageBinContract(workspaceRoot),
+    checkPackageLockContract(workspaceRoot),
     checkValidateScript(workspaceRoot),
     checkWorkflowReleaseProof(workspaceRoot),
     checkBuildLedgerConsistent(workspaceRoot),
