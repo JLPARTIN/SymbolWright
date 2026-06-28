@@ -1,9 +1,16 @@
-import { createInitialTuiState } from './tui/tui.types.js'
-import { renderTuiWorkspace } from './tui/tui-renderer.js'
+import { WorkspaceManager } from './workspace/workspace-manager.js'
 
 export interface WorkspaceCommandOptions {
   readonly mission?: string
   readonly json: boolean
+}
+
+export interface WorkspaceState {
+  readonly cwd: string
+  readonly primaryName: string
+  readonly primaryPath: string
+  readonly repos: readonly { readonly displayName: string; readonly rootPath: string }[]
+  readonly repoCount: number
 }
 
 export function parseWorkspaceArgs(args: readonly string[]): WorkspaceCommandOptions {
@@ -30,35 +37,66 @@ export function parseWorkspaceArgs(args: readonly string[]): WorkspaceCommandOpt
   }
 }
 
+export function buildWorkspaceState(cwd: string): WorkspaceState {
+  const manager = new WorkspaceManager()
+  manager.add(cwd)
+  const repos = manager.list()
+  const primary = manager.getPrimary()
+
+  return {
+    cwd,
+    primaryName: primary?.displayName ?? 'none',
+    primaryPath: primary?.rootPath ?? 'n/a',
+    repos: repos.map((r) => ({ displayName: r.displayName, rootPath: r.rootPath })),
+    repoCount: repos.length,
+  }
+}
+
+export function renderWorkspaceState(state: WorkspaceState): string {
+  return [
+    'CodeMind Workspace',
+    '',
+    `Primary: ${state.primaryName} (${state.primaryPath})`,
+    `Repos: ${state.repoCount}`,
+    ...state.repos.map((r) => `  - ${r.displayName} (${r.rootPath})`),
+    '',
+    'Boundary:',
+    '- read-only workspace listing',
+    '- no file writes or mutations',
+  ].join('\n')
+}
+
+export function renderWorkspaceJson(state: WorkspaceState, mission?: string): string {
+  return JSON.stringify(
+    {
+      command: 'codemind-workspace',
+      cwd: state.cwd,
+      primary: {
+        displayName: state.primaryName,
+        rootPath: state.primaryPath,
+      },
+      repos: state.repos,
+      repoCount: state.repoCount,
+      ...(mission !== undefined ? { mission } : {}),
+      boundary: {
+        mutatesFiles: false,
+        invokesProvider: false,
+        requiresApproval: false,
+      },
+    },
+    null,
+    2,
+  )
+}
+
 export function renderWorkspaceCommand(args: readonly string[]): string {
   const options = parseWorkspaceArgs(args)
-  const state = createInitialTuiState('workspace-preview', 'codemind-local-preview', 'interactive')
-  const commandHistory = [
-    'codemind status',
-    'codemind project-context .',
-    ...(options.mission !== undefined ? [`codemind workspace ${options.mission}`] : []),
-  ]
+  const cwd = process.cwd()
+  const state = buildWorkspaceState(cwd)
 
   if (options.json) {
-    return JSON.stringify(
-      {
-        command: 'codemind workspace',
-        mode: state.mode,
-        mission: options.mission ?? null,
-        panels: ['mission', 'history', 'stream', 'tools', 'swarm', 'ajna', 'approval'],
-        safety: {
-          mutatesFiles: false,
-          invokesProvider: false,
-          requiresApproval: false,
-        },
-      },
-      null,
-      2,
-    )
+    return renderWorkspaceJson(state, options.mission)
   }
 
-  return renderTuiWorkspace(state, {
-    ...(options.mission !== undefined ? { mission: options.mission } : {}),
-    commandHistory,
-  })
+  return renderWorkspaceState(state)
 }

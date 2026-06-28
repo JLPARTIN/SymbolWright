@@ -13,7 +13,7 @@ import { renderRuntimeStatusDashboardCommand } from '../cli-runtime-status-dashb
 import { renderRuntimeZflowReport } from '../cli-runtime-zflow-report.js'
 import { renderScan, scanRepo } from '../cli-scan.js'
 import { renderStatus } from '../cli-commands.js'
-import { WorkspaceManager } from '../workspace/workspace-manager.js'
+import { buildWorkspaceState, renderWorkspaceState } from '../cli-workspace.js'
 import { joinOperatorArgs, parseOperatorInput } from './operator-input-parser.js'
 import { OperatorHistoryStore } from './operator-history-store.js'
 import {
@@ -45,21 +45,7 @@ export function createOperatorSession(
 }
 
 function renderDefaultWorkspace(cwd: string): string {
-  const manager = new WorkspaceManager()
-  manager.add(cwd)
-  const repos = manager.list()
-  const primary = manager.getPrimary()
-  return [
-    'CodeMind Workspace',
-    '',
-    `Primary: ${primary?.displayName ?? 'none'} (${primary?.rootPath ?? 'n/a'})`,
-    `Repos: ${repos.length}`,
-    ...repos.map((r) => `  - ${r.displayName} (${r.rootPath})`),
-    '',
-    'Boundary:',
-    '- read-only workspace listing',
-    '- no file writes or mutations',
-  ].join('\n')
+  return renderWorkspaceState(buildWorkspaceState(cwd))
 }
 
 export function createDefaultOperatorConsoleHandlers(): OperatorConsoleHandlers {
