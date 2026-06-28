@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest'
 
 interface PackageJson {
   readonly name?: string
+  readonly version?: string
+  readonly license?: string
   readonly main?: string
   readonly types?: string
   readonly exports?: {
@@ -21,6 +23,14 @@ const WORKSPACE = path.resolve(import.meta.dirname, '..')
 function readPackageJson(): PackageJson {
   return JSON.parse(fs.readFileSync(path.join(WORKSPACE, 'package.json'), 'utf8')) as PackageJson
 }
+
+describe('package metadata contract', () => {
+  it('keeps package license declared', () => {
+    const pkg = readPackageJson()
+
+    expect(pkg.license).toBe('MIT')
+  })
+})
 
 describe('package public API contract', () => {
   it('exports the package root through the built index with declarations', () => {
