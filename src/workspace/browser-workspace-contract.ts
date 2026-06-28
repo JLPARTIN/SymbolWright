@@ -20,7 +20,8 @@ export const CODEMIND_BROWSER_WORKSPACE_PANELS = [
   'session-history',
 ] as const
 
-export type CodemindBrowserWorkspacePanel = (typeof CODEMIND_BROWSER_WORKSPACE_PANELS)[number]
+export type CodemindBrowserWorkspacePanel =
+  (typeof CODEMIND_BROWSER_WORKSPACE_PANELS)[number]
 export type CodemindBrowserWorkspaceKeyBoundary =
   | 'browser_to_codemind_only'
   | 'browser_to_provider_direct'
@@ -108,7 +109,11 @@ export function renderBrowserWorkspaceReadinessReport(
   ]
 
   if (report.findings.length > 0) {
-    lines.push('', 'Findings:', ...report.findings.map((finding) => `  - ${finding}`))
+    lines.push(
+      '',
+      'Findings:',
+      ...report.findings.map((finding) => `  - ${finding}`),
+    )
   } else {
     lines.push('', 'Findings: none')
   }
