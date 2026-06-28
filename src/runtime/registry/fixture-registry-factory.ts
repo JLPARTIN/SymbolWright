@@ -74,7 +74,11 @@ const READ_ONLY_TOOLS: readonly RuntimeToolDefinition[] = [
   validationPlanTool,
 ]
 
-const PROPOSAL_TOOLS: readonly RuntimeToolDefinition[] = [proposeEditTool, prNotesTool, ciReviewTool]
+const PROPOSAL_TOOLS: readonly RuntimeToolDefinition[] = [
+  proposeEditTool,
+  prNotesTool,
+  ciReviewTool,
+]
 
 const GITHUB_READ_TOOLS: readonly RuntimeToolDefinition[] = [
   githubPrFixtureReviewTool,

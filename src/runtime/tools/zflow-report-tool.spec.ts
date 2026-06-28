@@ -63,8 +63,8 @@ describe('zflowReportTool', () => {
   })
 
   it('rejects invalid input', async () => {
-    await expect(
-      zflowReportTool.execute(null, createFixtureContext('/workspace')),
-    ).rejects.toThrow('Missing zflow report input.')
+    await expect(zflowReportTool.execute(null, createFixtureContext('/workspace'))).rejects.toThrow(
+      'Missing zflow report input.',
+    )
   })
 })

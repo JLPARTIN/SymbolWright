@@ -34,9 +34,9 @@ describe('read-only runtime tools', () => {
     const cwd = createFixtureWorkspace()
     const tool = createFixtureRegistry('read_only').getOrThrow('read_file')
 
-    await expect(
-      tool.execute({ path: 'README.md' }, createFixtureContext(cwd)),
-    ).resolves.toContain('CodeMind runtime fixture.')
+    await expect(tool.execute({ path: 'README.md' }, createFixtureContext(cwd))).resolves.toContain(
+      'CodeMind runtime fixture.',
+    )
   })
 
   it('blocks protected paths', async () => {
@@ -45,28 +45,25 @@ describe('read-only runtime tools', () => {
     fs.writeFileSync(path.join(cwd, '.git', 'config'), 'secret')
     const tool = createFixtureRegistry('read_only').getOrThrow('read_file')
 
-    await expect(
-      tool.execute({ path: '.git/config' }, createFixtureContext(cwd)),
-    ).rejects.toThrow('protected path')
+    await expect(tool.execute({ path: '.git/config' }, createFixtureContext(cwd))).rejects.toThrow(
+      'protected path',
+    )
   })
 
   it('searches allowed files', async () => {
     const cwd = createFixtureWorkspace()
     const tool = createFixtureRegistry('read_only').getOrThrow('search_files')
 
-    await expect(
-      tool.execute({ query: 'fixture' }, createFixtureContext(cwd)),
-    ).resolves.toContain('README.md')
+    await expect(tool.execute({ query: 'fixture' }, createFixtureContext(cwd))).resolves.toContain(
+      'README.md',
+    )
   })
 
   it('renders validation guidance without execution', async () => {
     const cwd = createFixtureWorkspace()
     const tool = createFixtureRegistry('read_only').getOrThrow('validation_plan')
 
-    const output = await tool.execute(
-      { focus: 'runtime activation' },
-      createFixtureContext(cwd),
-    )
+    const output = await tool.execute({ focus: 'runtime activation' }, createFixtureContext(cwd))
 
     expect(output).toContain('CodeMind validation plan')
     expect(output).toContain('npm run typecheck')
