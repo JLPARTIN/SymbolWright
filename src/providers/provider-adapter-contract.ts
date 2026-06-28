@@ -62,7 +62,10 @@ export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContrac
     browserSafe: false,
     capabilities: ['chat', 'streaming', 'tool_use', 'structured_output'],
     defaultBaseUrl: 'https://api.openai.com/v1',
-    operatorNotes: ['Store API keys server-side only.', 'Expose provider choice, not raw key material.'],
+    operatorNotes: [
+      'Store provider credentials server-side only.',
+      'Expose provider choice, not raw credential material.',
+    ],
   },
   {
     id: 'anthropic',
@@ -72,7 +75,7 @@ export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContrac
     browserSafe: false,
     capabilities: ['chat', 'streaming', 'tool_use'],
     defaultBaseUrl: 'https://api.anthropic.com',
-    operatorNotes: ['Keep Anthropic keys behind the CodeMind API gateway.'],
+    operatorNotes: ['Keep Anthropic credentials behind the CodeMind gateway.'],
   },
   {
     id: 'google-gemini',
@@ -82,7 +85,7 @@ export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContrac
     browserSafe: false,
     capabilities: ['chat', 'streaming', 'structured_output'],
     defaultBaseUrl: 'https://generativelanguage.googleapis.com',
-    operatorNotes: ['Use the provider adapter layer to normalize Gemini responses.'],
+    operatorNotes: ['Use the adapter layer to normalize Gemini responses.'],
   },
   {
     id: 'groq',
@@ -92,7 +95,7 @@ export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContrac
     browserSafe: false,
     capabilities: ['chat', 'streaming'],
     defaultBaseUrl: 'https://api.groq.com/openai/v1',
-    operatorNotes: ['Route through CodeMind so browser clients never hold Groq keys.'],
+    operatorNotes: ['Route through CodeMind so browsers never hold credentials.'],
   },
   {
     id: 'openrouter',
@@ -102,7 +105,7 @@ export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContrac
     browserSafe: false,
     capabilities: ['chat', 'streaming', 'structured_output'],
     defaultBaseUrl: 'https://openrouter.ai/api/v1',
-    operatorNotes: ['Use as a multi-model gateway while preserving CodeMind audit boundaries.'],
+    operatorNotes: ['Use as a model gateway while preserving audit boundaries.'],
   },
   {
     id: 'github-models',
@@ -111,7 +114,7 @@ export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContrac
     endpointOwnership: 'codemind_server',
     browserSafe: false,
     capabilities: ['chat', 'streaming'],
-    operatorNotes: ['Use repository-scoped credentials only from the server runtime.'],
+    operatorNotes: ['Use repository-scoped credentials from the server runtime.'],
   },
   {
     id: 'ollama',
@@ -130,7 +133,7 @@ export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContrac
     endpointOwnership: 'codemind_server',
     browserSafe: false,
     capabilities: ['chat', 'streaming'],
-    operatorNotes: ['Custom providers must still route through CodeMind policy and redaction gates.'],
+    operatorNotes: ['Custom providers must route through policy and redaction gates.'],
   },
 ] as const
 
@@ -171,7 +174,9 @@ export function assertProviderKeyNeverLeavesServer(
 }
 
 export function buildProviderAdapterContractReport(): CodemindProviderAdapterContractReport {
-  const checks = CODEMIND_PROVIDER_ADAPTERS.map((adapter) => assertProviderKeyNeverLeavesServer(adapter))
+  const checks = CODEMIND_PROVIDER_ADAPTERS.map((adapter) =>
+    assertProviderKeyNeverLeavesServer(adapter),
+  )
   const hasFailures = checks.some((check) => check.status === 'FAIL')
 
   return {
