@@ -154,7 +154,7 @@ export async function runActivatedAgent(
     }
   }
 
-  const wiredTools = wireSwarmDispatchTool(config.tools, subsystems.dispatcher, (result) => {
+  const wiredTools = wireSwarmDispatchTool(subsystems.tools, subsystems.dispatcher, (result) => {
     swarmDispatches.push(result)
     updateTui({
       type: 'swarm_complete',

@@ -20,9 +20,15 @@ CLI fixture -> GitHubLiveReadPolicyWrapper -> RuntimeLiveReadClient -> evidence 
 
 ### Key classes
 
-- `GitHubLiveReadClient` — real GitHub adapter seam (not yet wired to live network)
+- `GitHubLiveReadClient` — real GitHub adapter using `DefaultGitHubHttpClient` for live API calls when a `GITHUB_TOKEN` is configured
 - `GitHubLiveReadPolicyWrapper` — enforces policy checks before every read
-- `FakeLiveReadClient` — used in all unit tests
+- `FakeLiveReadClient` — used in unit tests and fixture-mode CLI commands
+
+### Activation wiring
+
+When `githubToken` is present in `CodemindActivationConfig`, `activateSubsystems()` creates dynamic `github_live_read_pr` and `github_live_read_ci` tools backed by a policy-wrapped `GitHubLiveReadClient`. These dynamic tools are included in `subsystems.tools` and passed through `wireSwarmDispatchTool()` into the agent loop, ensuring the running agent can execute live GitHub reads.
+
+When no token is configured, the dynamic tools are not created and the agent loop operates with static tools only.
 
 ### Dependency injection
 
@@ -77,7 +83,8 @@ github_live_read_ci
 ## Boundary
 
 - Policy check required before every read
-- No live network calls yet (GitHubLiveReadClient throws not-yet-wired)
+- Live network calls require a configured `GITHUB_TOKEN`; without it, only fixture-mode CLI commands work
+- Dynamic live-read tools are only injected into the agent loop when a token is present
 - No comments are posted
 - No approvals are submitted
 - No merges are performed

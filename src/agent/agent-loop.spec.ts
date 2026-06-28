@@ -312,6 +312,33 @@ describe('agent-loop', () => {
       expect(capturedMessages[0]).toEqual({ role: 'user', content: 'Hi' })
     })
 
+    it('executes all tools in the supplied inventory without unknown errors', async () => {
+      const provider = makeMockProvider([
+        makeToolUseResponse('t-1', 'read_file', { path: '/a.ts' }),
+        makeToolUseResponse('t-2', 'search_files', { query: 'test' }),
+        makeTextResponse('Both tools executed successfully.'),
+      ])
+
+      const tools = [
+        makeTool('read_file', 'result from read'),
+        makeTool('search_files', 'result from search'),
+      ]
+
+      const result = await runAgentLoop(
+        provider,
+        'Use both tools',
+        tools,
+        makeToolContext(),
+        makeConfig(),
+      )
+
+      expect(result.status).toBe('completed')
+      expect(result.iterations[0]?.toolResults[0]?.isError).toBe(false)
+      expect(result.iterations[0]?.toolResults[0]?.output).toBe('result from read')
+      expect(result.iterations[1]?.toolResults[0]?.isError).toBe(false)
+      expect(result.iterations[1]?.toolResults[0]?.output).toBe('result from search')
+    })
+
     it('multi-tool call in single iteration', async () => {
       const provider = makeMockProvider([
         [

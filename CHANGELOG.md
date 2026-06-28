@@ -37,6 +37,10 @@ All notable changes to CodeMind are documented in this file.
 - Output redaction strips secrets before audit log persistence.
 - GitHub writes limited to draft PRs, comments, and labels (no merge, no force push, no branch deletion).
 
+### Fixed
+
+- **Runtime Activation Tool Inventory**: `runActivatedAgent()` now passes `subsystems.tools` (including dynamic GitHub live-read tools) to the agent loop instead of `config.tools`, which omitted dynamically injected tools.
+
 ### Changed
 
 - **GitHub Write Authorization**: Centralized write authorization with execution mode tracking and approval scope closure.

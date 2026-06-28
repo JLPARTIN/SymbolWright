@@ -442,6 +442,98 @@ describe('activateSubsystems GitHub wiring', () => {
   })
 })
 
+describe('runActivatedAgent GitHub dynamic tool wiring', () => {
+  it('includes dynamic live-read tools in agent loop when token is provided', async () => {
+    const toolCallNames: string[] = []
+    const provider = createMockProvider([
+      [
+        { type: 'tool_use_start', id: 'tu-lr', name: 'github_live_read_pr' },
+        {
+          type: 'tool_use_end',
+          id: 'tu-lr',
+          name: 'github_live_read_pr',
+          input: { owner: 'test', repo: 'repo', prNumber: 1 },
+        },
+        {
+          type: 'message_stop',
+          stopReason: 'tool_use',
+          usage: { inputTokens: 50, outputTokens: 30 },
+        },
+      ],
+      [
+        { type: 'text_delta', text: 'PR data retrieved.' },
+        {
+          type: 'message_stop',
+          stopReason: 'end_turn',
+          usage: { inputTokens: 80, outputTokens: 20 },
+        },
+      ],
+    ])
+
+    const config = createTestConfig({
+      provider,
+      githubToken: 'ghp_testtoken123456',
+      onEvent: (event) => {
+        if (event.type === 'tool_call_end') {
+          toolCallNames.push(event.name)
+        }
+      },
+    })
+
+    const result = await runActivatedAgent(config, 'Read PR #1')
+
+    expect(result.agentResult.status).toBe('completed')
+    expect(toolCallNames).toContain('github_live_read_pr')
+    const toolResult = result.agentResult.iterations[0]?.toolResults[0]
+    expect(toolResult?.name).toBe('github_live_read_pr')
+    expect(toolResult?.output).not.toContain('Unknown tool')
+  })
+
+  it('does not expose live-read tools to agent when no token', async () => {
+    const toolCallNames: string[] = []
+    const provider = createMockProvider([
+      [
+        { type: 'tool_use_start', id: 'tu-lr', name: 'github_live_read_pr' },
+        {
+          type: 'tool_use_end',
+          id: 'tu-lr',
+          name: 'github_live_read_pr',
+          input: { owner: 'test', repo: 'repo', prNumber: 1 },
+        },
+        {
+          type: 'message_stop',
+          stopReason: 'tool_use',
+          usage: { inputTokens: 50, outputTokens: 30 },
+        },
+      ],
+      [
+        { type: 'text_delta', text: 'Tool not found.' },
+        {
+          type: 'message_stop',
+          stopReason: 'end_turn',
+          usage: { inputTokens: 80, outputTokens: 20 },
+        },
+      ],
+    ])
+
+    const config = createTestConfig({
+      provider,
+      onEvent: (event) => {
+        if (event.type === 'tool_call_end') {
+          toolCallNames.push(event.name)
+        }
+      },
+    })
+
+    const result = await runActivatedAgent(config, 'Read PR #1')
+
+    expect(result.agentResult.status).toBe('completed')
+    const toolResult = result.agentResult.iterations[0]?.toolResults[0]
+    expect(toolResult?.isError).toBe(true)
+    expect(toolResult?.output).toContain('Unknown tool')
+  })
+})
+
 describe('activateSubsystems eventBus', () => {
   it('creates an event bus', () => {
     const config = createTestConfig()

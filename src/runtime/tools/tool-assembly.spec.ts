@@ -92,6 +92,18 @@ describe('tool-assembly', () => {
       }
     })
 
+    it('dynamic tools are not in static assembly', () => {
+      const tools = assembleAgentTools()
+      const assembledNames = new Set(tools.map((t) => t.name))
+
+      for (const name of DYNAMICALLY_WIRED_TOOLS) {
+        expect(
+          assembledNames.has(name),
+          `Dynamic tool ${name} should not be in static assembly`,
+        ).toBe(false)
+      }
+    })
+
     it('DYNAMICALLY_WIRED_TOOLS are valid CodemindToolNames', () => {
       const allNamesSet = new Set<string>(ALL_CODEMIND_TOOL_NAMES)
       for (const name of DYNAMICALLY_WIRED_TOOLS) {
