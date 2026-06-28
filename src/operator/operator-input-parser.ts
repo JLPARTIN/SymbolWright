@@ -18,6 +18,8 @@ const OPERATOR_COMMAND_ALIASES: Record<string, OperatorCommandName> = {
   '/propose': 'propose',
   '/propose-patch': 'propose',
   '/pr-notes': 'pr-notes',
+  '/zflow': 'zflow',
+  '/workspace': 'workspace',
   '/history': 'history',
   '/session': 'session',
   '/clear': 'clear',

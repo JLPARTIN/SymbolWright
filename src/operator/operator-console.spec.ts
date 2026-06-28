@@ -21,6 +21,8 @@ const handlers: OperatorConsoleHandlers = {
   renderProposePatch: async (goal: string, cwd: string) => `PROPOSE ${goal} ${cwd}`,
   renderPrNotes: async (focus: string | undefined, cwd: string) =>
     `PR ${focus ?? 'general'} ${cwd}`,
+  renderZflowReport: async (fixturePath: string, cwd: string) => `ZFLOW ${fixturePath} ${cwd}`,
+  renderWorkspace: (cwd: string) => `WORKSPACE ${cwd}`,
 }
 
 describe('runOperatorInput', () => {
@@ -209,6 +211,27 @@ describe('runOperatorInput — full command coverage', () => {
     const result = await runOperatorInput('/pr-notes security', session, handlers)
 
     expect(result.output).toBe('PR security /repo')
+  })
+
+  it('/zflow with fixture path delegates to renderZflowReport', async () => {
+    const session = createOperatorSession('/repo')
+    const result = await runOperatorInput('/zflow fixtures/zflow.json', session, handlers)
+
+    expect(result.output).toBe('ZFLOW fixtures/zflow.json /repo')
+  })
+
+  it('/zflow without path returns usage', async () => {
+    const session = createOperatorSession('/repo')
+    const result = await runOperatorInput('/zflow', session, handlers)
+
+    expect(result.output).toBe('Usage: /zflow <fixture-path>')
+  })
+
+  it('/workspace delegates to renderWorkspace with session cwd', async () => {
+    const session = createOperatorSession('/repo')
+    const result = await runOperatorInput('/workspace', session, handlers)
+
+    expect(result.output).toBe('WORKSPACE /repo')
   })
 
   it('/session renders current session metadata', async () => {

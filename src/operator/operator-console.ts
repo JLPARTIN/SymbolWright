@@ -10,8 +10,10 @@ import { renderRuntimeRun } from '../cli-runtime-run.js'
 import { renderRuntimeSearch } from '../cli-runtime-search.js'
 import { renderRuntimeValidationPlan } from '../cli-runtime-validation-plan.js'
 import { renderRuntimeStatusDashboardCommand } from '../cli-runtime-status-dashboard.js'
+import { renderRuntimeZflowReport } from '../cli-runtime-zflow-report.js'
 import { renderScan, scanRepo } from '../cli-scan.js'
 import { renderStatus } from '../cli-commands.js'
+import { WorkspaceManager } from '../workspace/workspace-manager.js'
 import { joinOperatorArgs, parseOperatorInput } from './operator-input-parser.js'
 import { OperatorHistoryStore } from './operator-history-store.js'
 import {
@@ -42,6 +44,24 @@ export function createOperatorSession(
   }
 }
 
+function renderDefaultWorkspace(cwd: string): string {
+  const manager = new WorkspaceManager()
+  manager.add(cwd)
+  const repos = manager.list()
+  const primary = manager.getPrimary()
+  return [
+    'CodeMind Workspace',
+    '',
+    `Primary: ${primary?.displayName ?? 'none'} (${primary?.rootPath ?? 'n/a'})`,
+    `Repos: ${repos.length}`,
+    ...repos.map((r) => `  - ${r.displayName} (${r.rootPath})`),
+    '',
+    'Boundary:',
+    '- read-only workspace listing',
+    '- no file writes or mutations',
+  ].join('\n')
+}
+
 export function createDefaultOperatorConsoleHandlers(): OperatorConsoleHandlers {
   return {
     renderStatus,
@@ -55,6 +75,8 @@ export function createDefaultOperatorConsoleHandlers(): OperatorConsoleHandlers 
     renderValidationPlan: renderRuntimeValidationPlan,
     renderProposePatch: renderRuntimeProposePatch,
     renderPrNotes: renderRuntimePrNotes,
+    renderZflowReport: renderRuntimeZflowReport,
+    renderWorkspace: renderDefaultWorkspace,
   }
 }
 
@@ -206,6 +228,18 @@ async function handleSlashInput(
         await handlers.renderPrNotes(argsText.length > 0 ? argsText : undefined, session.cwd),
         session,
       )
+    case 'zflow':
+      return continueWith(
+        await requireText(
+          argsText,
+          'Usage: /zflow <fixture-path>',
+          handlers.renderZflowReport,
+          session.cwd,
+        ),
+        session,
+      )
+    case 'workspace':
+      return continueWith(handlers.renderWorkspace(session.cwd), session)
     case 'history':
       return continueWith(renderOperatorHistory(historyStore?.list() ?? session.history), session)
     case 'session':

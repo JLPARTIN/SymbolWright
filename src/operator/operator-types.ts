@@ -11,6 +11,8 @@ export const OPERATOR_COMMAND_NAMES = [
   'validation-plan',
   'propose',
   'pr-notes',
+  'zflow',
+  'workspace',
   'history',
   'session',
   'clear',
@@ -63,6 +65,7 @@ export interface OperatorSessionState {
   readonly startedAt: string
   readonly history: readonly OperatorHistoryEntry[]
   readonly lastMission?: string
+  readonly workspaceRepos?: readonly string[]
 }
 
 export interface OperatorCommandResult {
@@ -83,4 +86,6 @@ export interface OperatorConsoleHandlers {
   readonly renderValidationPlan: (focus: string | undefined, cwd: string) => Promise<string>
   readonly renderProposePatch: (goal: string, cwd: string) => Promise<string>
   readonly renderPrNotes: (focus: string | undefined, cwd: string) => Promise<string>
+  readonly renderZflowReport: (fixturePath: string, cwd: string) => Promise<string>
+  readonly renderWorkspace: (cwd: string) => string
 }
