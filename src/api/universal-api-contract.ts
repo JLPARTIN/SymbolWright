@@ -1,9 +1,9 @@
 import {
   CODEMIND_PROVIDER_ADAPTERS,
   CODEMIND_PROVIDER_ADAPTER_BLOCK_ID,
+  buildProviderAdapterContractReport,
   type CodemindProviderAdapterContract,
   type CodemindProviderId,
-  buildProviderAdapterContractReport,
 } from '../providers/provider-adapter-contract.js'
 
 export const CODEMIND_UNIVERSAL_API_BLOCK_ID = 'CODEMIND-UNIVERSAL-API-01' as const
@@ -81,7 +81,7 @@ export const CODEMIND_PUBLIC_API_ROUTES: readonly CodemindPublicApiRoute[] = [
   {
     method: 'POST',
     path: '/api/tools/run',
-    purpose: 'Run a governed CodeMind tool through policy, approval, audit, and redaction gates.',
+    purpose: 'Run a governed tool through policy, approval, audit, and redaction gates.',
     requiresCodemindApiKey: true,
     browserMaySendRawProviderKey: false,
     allowedClients: ALL_CLIENTS,
@@ -90,7 +90,7 @@ export const CODEMIND_PUBLIC_API_ROUTES: readonly CodemindPublicApiRoute[] = [
   {
     method: 'POST',
     path: '/api/providers/test',
-    purpose: 'Verify provider adapter readiness without exposing provider keys to the browser.',
+    purpose: 'Verify provider adapter readiness without exposing credentials to the browser.',
     requiresCodemindApiKey: true,
     browserMaySendRawProviderKey: false,
     allowedClients: ALL_CLIENTS,
@@ -108,7 +108,7 @@ export const CODEMIND_PUBLIC_API_ROUTES: readonly CodemindPublicApiRoute[] = [
   {
     method: 'GET',
     path: '/api/missions/:id/events',
-    purpose: 'Stream mission events, tool output, terminal-safe logs, and PR readiness updates.',
+    purpose: 'Stream mission events, tool output, logs, and PR readiness updates.',
     requiresCodemindApiKey: true,
     browserMaySendRawProviderKey: false,
     allowedClients: ALL_CLIENTS,
@@ -150,7 +150,9 @@ export function buildUniversalApiContractReport(
   for (const route of routes) {
     for (const providerId of route.allowedProviders) {
       if (!providerIds.has(providerId)) {
-        findings.push(`${route.method} ${route.path} references unregistered provider ${providerId}`)
+        findings.push(
+          `${route.method} ${route.path} references unregistered provider ${providerId}`,
+        )
       }
     }
   }
