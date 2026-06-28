@@ -286,7 +286,7 @@ function checkPackageBinContract(workspaceRoot: string): ReleaseGate {
 function checkValidateScript(workspaceRoot: string): ReleaseGate {
   try {
     const pkg = readPackageJson(workspaceRoot)
-    const validateScript = pkg.scripts?.validate ?? ''
+    const validateScript = pkg.scripts?.['validate'] ?? ''
     const requiredCommands = [
       'npm run audit',
       'npm run typecheck',
