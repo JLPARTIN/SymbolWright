@@ -104,7 +104,11 @@ describe('evaluateGitHubWriteGate', () => {
 
 describe('renderGitHubWriteGateResult', () => {
   it('renders allowed dry-run output', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ dryRun: true }), githubWritePolicy)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ dryRun: true }),
+      githubWritePolicy,
+      undefined,
+    )
     const output = renderGitHubWriteGateResult(result)
 
     expect(output).toContain('CodeMind GitHub write gate')
@@ -113,7 +117,7 @@ describe('renderGitHubWriteGateResult', () => {
   })
 
   it('renders blocked output', () => {
-    const result = evaluateGitHubWriteGate(validRequest(), blockedPolicy)
+    const result = evaluateGitHubWriteGate(validRequest(), blockedPolicy, undefined)
     const output = renderGitHubWriteGateResult(result)
 
     expect(output).toContain('Decision: BLOCKED')
