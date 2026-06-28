@@ -9,7 +9,7 @@ All notable changes to CodeMind are documented in this file.
 - **Runtime Phases A-T**: Full governed loop from read-only planning through approved execution, PR creation, review, and merge-readiness assessment.
 - **Ajna Review Cortex**: Deterministic code review layer with PR evidence schema, collector fixtures, review normalization, and merge-readiness reporting.
 - **Agent Loop**: Multi-turn interactive coding agent with tool schema bridge, streaming provider support, session persistence, and cost tracking.
-- **Operator Console**: Interactive workspace console with 16 commands, aliases, history tracking, and persistent history store.
+- **Operator Console**: Interactive workspace console with 18 commands (`/zflow`, `/workspace`, and 16 core commands), aliases, history tracking, and persistent history store.
 - **Runtime Tool Assembly**: 44 registered tools across 22 capability categories with typed tool definitions and policy-gated execution.
 - **Approval Gates**: Typed approval scopes (`file:write`, `github:write`, `command:validate`, `shell:execute`, `git:write`) with ticket validation at every boundary.
 - **GitHub Live Read**: Policy-gated GitHub PR, CI, and file read operations behind explicit `allowNetwork` policy gates.
@@ -24,7 +24,7 @@ All notable changes to CodeMind are documented in this file.
 - **HiveMind**: Swarm agent registry and dispatch for specialized capability coordination.
 - **Build Ledger**: Machine-readable build state with 20/20 phase completion tracking and docs consistency checking.
 - **Doctor**: 12-point workspace health check covering Node.js version, dependencies, TypeScript config, runtime phases, safety posture, API keys, and project memory.
-- **Release Readiness**: 7-gate release assessment (phases, health, version, entry point, exports, CLI, Dockerfile).
+- **Release Readiness**: 8-gate release assessment (phases, health, version, changelog consistency, entry point, exports, CLI, Dockerfile).
 - **CI Pipeline**: Node 20+22 matrix testing, coverage enforcement (85/80/85/85 thresholds), format checking, and publish dry-run validation.
 - **75 CLI commands** covering all 20 runtime phases plus diagnostics, fixtures, and agent workflows.
 
@@ -36,3 +36,10 @@ All notable changes to CodeMind are documented in this file.
 - Workspace containment prevents directory traversal.
 - Output redaction strips secrets before audit log persistence.
 - GitHub writes limited to draft PRs, comments, and labels (no merge, no force push, no branch deletion).
+
+### Changed
+
+- **GitHub Write Authorization**: Centralized write authorization with execution mode tracking and approval scope closure.
+- **Runtime Registry**: Replaced 22 wrapper registries with canonical `createFixtureRegistry()` factory supporting 22 named presets.
+- **Operator Console**: Wired dormant `WorkspaceManager` into operator workspace via `/workspace` command; added `/zflow` for ZFlow report rendering.
+- **Release Gates**: Added CHANGELOG consistency gate to release readiness assessment.

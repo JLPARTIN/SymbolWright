@@ -30,6 +30,7 @@ describe('assessReleaseReadiness', () => {
     expect(codes).toContain('PHASES_COMPLETE')
     expect(codes).toContain('DOCTOR_HEALTHY')
     expect(codes).toContain('PACKAGE_VERSION')
+    expect(codes).toContain('CHANGELOG_CURRENT')
     expect(codes).toContain('ENTRY_POINT')
     expect(codes).toContain('INDEX_EXPORTS')
     expect(codes).toContain('CLI_ENTRY')
