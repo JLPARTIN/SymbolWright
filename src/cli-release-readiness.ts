@@ -88,11 +88,23 @@ function checkPackageVersion(workspaceRoot: string): ReleaseGate {
   try {
     const pkg = readPackageJson(workspaceRoot)
     if (typeof pkg.version === 'string' && pkg.version.length > 0) {
-      return { code: 'PACKAGE_VERSION', status: 'PASS', detail: `v${pkg.version}` }
+      return {
+        code: 'PACKAGE_VERSION',
+        status: 'PASS',
+        detail: `v${pkg.version}`,
+      }
     }
-    return { code: 'PACKAGE_VERSION', status: 'FAIL', detail: 'Missing version in package.json' }
+    return {
+      code: 'PACKAGE_VERSION',
+      status: 'FAIL',
+      detail: 'Missing version in package.json',
+    }
   } catch {
-    return { code: 'PACKAGE_VERSION', status: 'FAIL', detail: 'Cannot read package.json' }
+    return {
+      code: 'PACKAGE_VERSION',
+      status: 'FAIL',
+      detail: 'Cannot read package.json',
+    }
   }
 }
 
@@ -103,7 +115,11 @@ function checkChangelogCurrent(workspaceRoot: string): ReleaseGate {
 
     const changelogPath = path.join(workspaceRoot, 'CHANGELOG.md')
     if (!fs.existsSync(changelogPath)) {
-      return { code: 'CHANGELOG_CURRENT', status: 'FAIL', detail: 'CHANGELOG.md missing' }
+      return {
+        code: 'CHANGELOG_CURRENT',
+        status: 'FAIL',
+        detail: 'CHANGELOG.md missing',
+      }
     }
     const content = fs.readFileSync(changelogPath, 'utf8')
     if (content.includes(`[${version}]`)) {
@@ -130,9 +146,17 @@ function checkChangelogCurrent(workspaceRoot: string): ReleaseGate {
 function checkEntryPoint(workspaceRoot: string): ReleaseGate {
   const entryPath = path.join(workspaceRoot, 'src', 'index.ts')
   if (fs.existsSync(entryPath)) {
-    return { code: 'ENTRY_POINT', status: 'PASS', detail: 'src/index.ts present' }
+    return {
+      code: 'ENTRY_POINT',
+      status: 'PASS',
+      detail: 'src/index.ts present',
+    }
   }
-  return { code: 'ENTRY_POINT', status: 'FAIL', detail: 'src/index.ts missing' }
+  return {
+    code: 'ENTRY_POINT',
+    status: 'FAIL',
+    detail: 'src/index.ts missing',
+  }
 }
 
 function checkIndexExports(workspaceRoot: string): ReleaseGate {
@@ -141,11 +165,23 @@ function checkIndexExports(workspaceRoot: string): ReleaseGate {
     const content = fs.readFileSync(indexPath, 'utf8')
     const exportCount = (content.match(/^export /gm) ?? []).length
     if (exportCount > 0) {
-      return { code: 'INDEX_EXPORTS', status: 'PASS', detail: `${exportCount} export statement(s)` }
+      return {
+        code: 'INDEX_EXPORTS',
+        status: 'PASS',
+        detail: `${exportCount} export statement(s)`,
+      }
     }
-    return { code: 'INDEX_EXPORTS', status: 'FAIL', detail: 'No exports found in index.ts' }
+    return {
+      code: 'INDEX_EXPORTS',
+      status: 'FAIL',
+      detail: 'No exports found in index.ts',
+    }
   } catch {
-    return { code: 'INDEX_EXPORTS', status: 'FAIL', detail: 'Cannot read index.ts' }
+    return {
+      code: 'INDEX_EXPORTS',
+      status: 'FAIL',
+      detail: 'Cannot read index.ts',
+    }
   }
 }
 
@@ -208,7 +244,11 @@ function checkPackageBinContract(workspaceRoot: string): ReleaseGate {
   try {
     const pkg = readPackageJson(workspaceRoot)
     const requiredBins = [
-      { name: 'codemind', dist: 'dist/cli.js', source: path.join('src', 'cli.ts') },
+      {
+        name: 'codemind',
+        dist: 'dist/cli.js',
+        source: path.join('src', 'cli.ts'),
+      },
       {
         name: 'codemind-workspace',
         dist: 'dist/cli-workspace-bin.js',
@@ -267,7 +307,11 @@ function checkValidateScript(workspaceRoot: string): ReleaseGate {
           : `validate script missing: ${missing.join(', ')}`,
     }
   } catch {
-    return { code: 'VALIDATE_SCRIPT', status: 'FAIL', detail: 'Cannot verify validate script' }
+    return {
+      code: 'VALIDATE_SCRIPT',
+      status: 'FAIL',
+      detail: 'Cannot verify validate script',
+    }
   }
 }
 
@@ -313,7 +357,11 @@ function checkBuildLedgerConsistent(workspaceRoot: string): ReleaseGate {
     )
 
     if (!fs.existsSync(readmePath)) {
-      return { code: 'BUILD_LEDGER_CONSISTENT', status: 'FAIL', detail: 'README.md missing' }
+      return {
+        code: 'BUILD_LEDGER_CONSISTENT',
+        status: 'FAIL',
+        detail: 'README.md missing',
+      }
     }
     if (!fs.existsSync(runtimeDocsPath)) {
       return {
