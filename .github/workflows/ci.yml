@@ -34,6 +34,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # Shared release proof equivalent to: npm run validate
       - name: Audit dependencies
         run: npm run audit
 
