@@ -15,6 +15,7 @@ export type ReleaseGateCode =
   | 'PHASES_COMPLETE'
   | 'DOCTOR_HEALTHY'
   | 'PACKAGE_VERSION'
+  | 'CHANGELOG_CURRENT'
   | 'ENTRY_POINT'
   | 'INDEX_EXPORTS'
   | 'CLI_ENTRY'
@@ -70,6 +71,38 @@ function checkPackageVersion(workspaceRoot: string): ReleaseGate {
   }
 }
 
+function checkChangelogCurrent(workspaceRoot: string): ReleaseGate {
+  try {
+    const pkgPath = path.join(workspaceRoot, 'package.json')
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as { version?: string }
+    const version = pkg.version ?? ''
+
+    const changelogPath = path.join(workspaceRoot, 'CHANGELOG.md')
+    if (!fs.existsSync(changelogPath)) {
+      return { code: 'CHANGELOG_CURRENT', status: 'FAIL', detail: 'CHANGELOG.md missing' }
+    }
+    const content = fs.readFileSync(changelogPath, 'utf8')
+    if (content.includes(`[${version}]`)) {
+      return {
+        code: 'CHANGELOG_CURRENT',
+        status: 'PASS',
+        detail: `CHANGELOG.md contains v${version} entry`,
+      }
+    }
+    return {
+      code: 'CHANGELOG_CURRENT',
+      status: 'FAIL',
+      detail: `CHANGELOG.md missing entry for v${version}`,
+    }
+  } catch {
+    return {
+      code: 'CHANGELOG_CURRENT',
+      status: 'FAIL',
+      detail: 'Cannot verify CHANGELOG consistency',
+    }
+  }
+}
+
 function checkEntryPoint(workspaceRoot: string): ReleaseGate {
   const entryPath = path.join(workspaceRoot, 'src', 'index.ts')
   if (fs.existsSync(entryPath)) {
@@ -115,6 +148,7 @@ export function assessReleaseReadiness(workspaceRoot: string): ReleaseReadinessR
     checkAllPhasesComplete(),
     checkDoctorHealthy(doctorReport),
     checkPackageVersion(workspaceRoot),
+    checkChangelogCurrent(workspaceRoot),
     checkEntryPoint(workspaceRoot),
     checkIndexExports(workspaceRoot),
     checkCliEntry(workspaceRoot),
