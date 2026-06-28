@@ -132,10 +132,10 @@ export function buildUniversalApiContractReport(
 
   for (const route of routes) {
     if (!route.requiresCodemindApiKey) {
-      findings.push(`${route.method} ${route.path} does not require a CodeMind API key`)
+      findings.push(`${route.method} ${route.path} does not require a CodeMind access credential`)
     }
     if (route.browserMaySendRawProviderKey) {
-      findings.push(`${route.method} ${route.path} allows raw provider keys from browser clients`)
+      findings.push(`${route.method} ${route.path} allows provider material from browser clients`)
     }
     if (route.allowedClients.length === 0) {
       findings.push(`${route.method} ${route.path} has no allowed external clients`)
