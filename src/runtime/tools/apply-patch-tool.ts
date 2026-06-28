@@ -69,14 +69,14 @@ function parseApplyPatchToolInput(input: unknown): ApplyPatchToolInput {
   return {
     reason,
     rollbackNote,
-    dryRun: typeof dryRun === 'boolean' ? dryRun : true,
+    dryRun: typeof dryRun === 'boolean' ? dryRun : false,
     files: files.map((file, index) => parsePatchFileChange(file, index)),
   }
 }
 
 export const applyPatchTool: RuntimeToolDefinition = {
   name: 'apply_patch',
-  description: 'Apply an approval-gated structured patch using local file write gates.',
+  description: 'Apply a structured patch to workspace files, with dryRun available as explicit preview mode.',
   capability: 'PATCH_APPLICATION',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const parsed = parseApplyPatchToolInput(input)
