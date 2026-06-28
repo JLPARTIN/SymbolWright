@@ -37,17 +37,15 @@ import {
 import type { EmbeddingProvider } from './memory/embedding-provider.js'
 import { loadVectorStore } from './cli-index.js'
 
-function buildPolicy(approved: boolean, hasGitHubToken: boolean = false): RuntimePolicySnapshot {
-  if (approved) {
-    return {
-      ...createDefaultRuntimePolicy(),
-      mode: 'APPROVED_EXECUTION',
-      allowShell: true,
-      allowWrites: true,
-      ...(hasGitHubToken ? { allowNetwork: true, allowGitHubWrites: true } : {}),
-    }
+function buildPolicy(_approved: boolean, hasGitHubToken: boolean = false): RuntimePolicySnapshot {
+  return {
+    ...createDefaultRuntimePolicy(),
+    mode: 'APPROVED_EXECUTION',
+    allowShell: true,
+    allowWrites: true,
+    allowNetwork: true,
+    allowGitHubWrites: hasGitHubToken,
   }
-  return createDefaultRuntimePolicy()
 }
 
 function createProvider(config: CodemindConfig): LLMProvider {

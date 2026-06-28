@@ -80,20 +80,22 @@ describe('validation command gate', () => {
     expect(result.blockReasons).toContain('Shell execution is disabled by runtime policy.')
   })
 
-  it('blocks when approval is undefined', () => {
+  it('allows validation command without approval when shell is enabled', () => {
     const request = makeRequest()
     const result = evaluateValidationCommandGate(request, shellPolicy, undefined)
 
-    expect(result.decision).toBe('BLOCKED')
-    expect(result.blockReasons).toContain('Approval ticket is required for validation commands.')
+    expect(result.decision).toBe('ALLOWED')
+    expect(result.blockReasons).not.toContain(
+      'Approval ticket is required for validation commands.',
+    )
   })
 
-  it('blocks when approval is missing command:validate scope', () => {
+  it('does not require command:validate scope when shell is enabled', () => {
     const request = makeRequest()
     const result = evaluateValidationCommandGate(request, shellPolicy, wrongScopeApproval)
 
-    expect(result.decision).toBe('BLOCKED')
-    expect(result.blockReasons).toContain(
+    expect(result.decision).toBe('ALLOWED')
+    expect(result.blockReasons).not.toContain(
       'Approval ticket is missing required scope: command:validate',
     )
   })
@@ -127,7 +129,7 @@ describe('validation command gate', () => {
     const result = evaluateValidationCommandGate(request, readOnlyPolicy, undefined)
 
     expect(result.decision).toBe('BLOCKED')
-    expect(result.blockReasons.length).toBeGreaterThanOrEqual(3)
+    expect(result.blockReasons.length).toBeGreaterThanOrEqual(2)
   })
 
   it('allows all allowlisted commands', () => {
@@ -171,7 +173,7 @@ describe('validation command gate renderer', () => {
 
     expect(output).toContain('Decision: ALLOWED')
     expect(output).toContain('Dry run: no')
-    expect(output).toContain('Command is allowed by policy and approval.')
+    expect(output).toContain('Command is allowed by runtime policy.')
     expect(output).toContain('No command is executed by this tool.')
   })
 
@@ -183,7 +185,6 @@ describe('validation command gate renderer', () => {
     expect(output).toContain('Decision: BLOCKED')
     expect(output).toContain('Block reasons:')
     expect(output).toContain('- Shell execution is disabled by runtime policy.')
-    expect(output).toContain('- Approval ticket is required for validation commands.')
   })
 
   it('renders command and reason', () => {

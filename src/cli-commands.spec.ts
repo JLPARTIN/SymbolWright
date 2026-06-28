@@ -22,7 +22,7 @@ describe('renderHelp', () => {
     const output = renderHelp()
 
     expect(output).toContain('agent [message]')
-    expect(output).toContain('interactive coding agent')
+    expect(output).toContain('direct execution coding agent')
     expect(output).toContain('sessions')
     expect(output).toContain('List saved agent sessions')
     expect(output).toContain('index [dir]')
@@ -70,14 +70,14 @@ describe('renderHelp', () => {
     const output = renderHelp()
 
     expect(output).toContain('runtime run <goal> --read-only')
-    expect(output).toContain('Run a bounded read-only runtime loop')
+    expect(output).toContain('Run a bounded runtime loop')
   })
 
   it('marks Phase D approved runtime command as active', () => {
     const output = renderHelp()
 
     expect(output).toContain('runtime run <goal> --approval-ticket <id>')
-    expect(output).toContain('Render approval-gated dry-run execution with audit output')
+    expect(output).toContain('Render runtime execution with audit output')
   })
 
   it('marks Phase E local fixture read adapter commands as active', () => {
@@ -109,7 +109,9 @@ describe('renderHelp', () => {
     const output = renderHelp()
 
     expect(output).toContain('github-live-read <json-file>')
-    expect(output).toContain('Read GitHub PR or CI evidence through policy-gated live read adapter')
+    expect(output).toContain(
+      'Read GitHub PR or CI evidence through the runtime policy live read adapter',
+    )
   })
 
   it('marks Phase I Ajna live-read pipeline command as active', () => {
@@ -131,7 +133,7 @@ describe('renderHelp', () => {
 
     expect(output).toContain('write-intent <json-file>')
     expect(output).toContain(
-      'Create a write intent plan with validation and approval ticket from a local JSON fixture',
+      'Create a write intent plan with validation evidence from a local JSON fixture',
     )
   })
 
@@ -140,7 +142,7 @@ describe('renderHelp', () => {
 
     expect(output).toContain('local-write <json-file>')
     expect(output).toContain(
-      'Execute an approved local file write through the approval-gated write gate from a local JSON fixture',
+      'Execute a local file write through the runtime policy gate from a local JSON fixture',
     )
   })
 
@@ -149,7 +151,7 @@ describe('renderHelp', () => {
 
     expect(output).toContain('validation-command <json-file>')
     expect(output).toContain(
-      'Evaluate an approved validation command through the allowlisted command gate from a local JSON fixture',
+      'Evaluate a validation command through the allowlisted runtime policy gate from a local JSON fixture',
     )
   })
 
@@ -167,7 +169,7 @@ describe('renderHelp', () => {
 
     expect(output).toContain('github-write-proposal <json-file>')
     expect(output).toContain(
-      'Create a governed GitHub write proposal from a local JSON fixture without executing any GitHub API call',
+      'Create a GitHub write proposal from a local JSON fixture without executing any GitHub API call',
     )
   })
 
@@ -176,7 +178,7 @@ describe('renderHelp', () => {
 
     expect(output).toContain('github-write-gate <json-file>')
     expect(output).toContain(
-      'Evaluate an approved GitHub write through the policy-gated write gate from a local JSON fixture',
+      'Evaluate a GitHub write through the runtime policy gate from a local JSON fixture',
     )
   })
 
@@ -185,7 +187,7 @@ describe('renderHelp', () => {
 
     expect(output).toContain('workflow <json-file>')
     expect(output).toContain(
-      'Run a governed runtime workflow composing registered tools from a local JSON fixture',
+      'Run a runtime workflow composing registered tools from a local JSON fixture',
     )
   })
 
@@ -259,8 +261,8 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('Ajna Review Cortex')
   })
 
-  it('shows PLAN_FIRST posture', () => {
-    expect(renderStatus()).toContain('PLAN_FIRST')
+  it('shows DIRECT_EXECUTION posture', () => {
+    expect(renderStatus()).toContain('DIRECT_EXECUTION')
   })
 
   it('shows post-Phase T runtime build state', () => {
@@ -270,11 +272,19 @@ describe('renderStatus', () => {
     expect(output).toContain('Next runtime phase: none')
   })
 
-  it('shows all controlled capabilities as DISABLED', () => {
+  it('shows direct execution capabilities as ENABLED', () => {
     const output = renderStatus()
-    expect(output).not.toContain('ENABLED')
-    const disabledCount = (output.match(/DISABLED/g) ?? []).length
-    expect(disabledCount).toBe(4)
+    const enabledCount = (output.match(/ENABLED/g) ?? []).length
+    expect(enabledCount).toBe(4)
+  })
+
+  it('does not describe normal runtime work as approval-ticket gated', () => {
+    const output = renderHelp()
+
+    expect(output).not.toContain('approval-gated')
+    expect(output).not.toContain('approved local file write')
+    expect(output).not.toContain('approved validation command')
+    expect(output).not.toContain('governed runtime workflow')
   })
 })
 

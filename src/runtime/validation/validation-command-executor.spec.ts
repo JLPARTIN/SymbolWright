@@ -171,7 +171,7 @@ describe('runValidationCommand', () => {
     expect(result.transcript.blockReasons.some((r) => r.includes('not allowlisted'))).toBe(true)
   })
 
-  it('blocks without approval', () => {
+  it('runs without approval when runtime policy allows execution', () => {
     const result = runValidationCommand(
       'npm run typecheck',
       'Check types',
@@ -181,11 +181,11 @@ describe('runValidationCommand', () => {
       undefined,
     )
 
-    expect(result.outcome).toBe('BLOCKED')
-    expect(result.transcript.blockReasons.some((r) => r.includes('Approval ticket'))).toBe(true)
+    expect(result.outcome).toBe('PASS')
+    expect(result.transcript.blockReasons.some((r) => r.includes('Approval ticket'))).toBe(false)
   })
 
-  it('blocks with wrong approval scope', () => {
+  it('runs with wrong approval scope when runtime policy allows execution', () => {
     const wrongApproval: RuntimeApproval = {
       ticketId: 'WRONG-001',
       approvedBy: 'operator',
@@ -201,8 +201,8 @@ describe('runValidationCommand', () => {
       wrongApproval,
     )
 
-    expect(result.outcome).toBe('BLOCKED')
-    expect(result.transcript.blockReasons.some((r) => r.includes('command:validate'))).toBe(true)
+    expect(result.outcome).toBe('PASS')
+    expect(result.transcript.blockReasons.some((r) => r.includes('command:validate'))).toBe(false)
   })
 
   it('blocks chained commands', () => {

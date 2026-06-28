@@ -75,45 +75,47 @@ describe('executeLocalFileWrite', () => {
     }
   })
 
-  it('blocks write without approval', () => {
+  it('writes file without approval when policy allows writes', () => {
     const workspace = makeTmpWorkspace()
     try {
       const result = executeLocalFileWrite(
         {
-          targetPath: 'test.txt',
-          content: 'hello',
-          reason: 'test',
-          rollbackNote: 'delete',
+          targetPath: 'direct.txt',
+          content: 'direct write',
+          reason: 'direct execution regression',
+          rollbackNote: 'delete direct.txt',
           dryRun: false,
         },
         workspace,
         writePolicy,
         undefined,
       )
-      expect(result.outcome).toBe('BLOCKED')
-      expect(fs.existsSync(path.join(workspace, 'test.txt'))).toBe(false)
+
+      expect(result.outcome).toBe('WRITTEN')
+      expect(fs.readFileSync(path.join(workspace, 'direct.txt'), 'utf8')).toBe('direct write')
     } finally {
       cleanupWorkspace(workspace)
     }
   })
 
-  it('blocks write without file:write scope', () => {
+  it('does not require file:write approval scope when policy allows writes', () => {
     const workspace = makeTmpWorkspace()
     try {
       const result = executeLocalFileWrite(
         {
-          targetPath: 'test.txt',
-          content: 'hello',
-          reason: 'test',
-          rollbackNote: 'delete',
+          targetPath: 'wrong-scope.txt',
+          content: 'still writes',
+          reason: 'direct execution regression',
+          rollbackNote: 'delete wrong-scope.txt',
           dryRun: false,
         },
         workspace,
         writePolicy,
         wrongScopeApproval,
       )
-      expect(result.outcome).toBe('BLOCKED')
-      expect(fs.existsSync(path.join(workspace, 'test.txt'))).toBe(false)
+
+      expect(result.outcome).toBe('WRITTEN')
+      expect(fs.readFileSync(path.join(workspace, 'wrong-scope.txt'), 'utf8')).toBe('still writes')
     } finally {
       cleanupWorkspace(workspace)
     }

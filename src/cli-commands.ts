@@ -9,11 +9,11 @@ export const CODEMIND_CLI_COMMANDS = [
   { name: 'status', description: 'Report CodeMind mode, policy, and runtime build state' },
   {
     name: 'operator [mission]',
-    description: 'Open the read-only CodeMind Operator Workspace console',
+    description: 'Open the CodeMind Operator Workspace console',
   },
   {
     name: 'agent [message]',
-    description: 'Run the interactive coding agent (one-shot with message, interactive without)',
+    description: 'Run the direct execution coding agent',
   },
   { name: 'sessions', description: 'List saved agent sessions' },
   {
@@ -41,11 +41,11 @@ export const CODEMIND_CLI_COMMANDS = [
   },
   {
     name: 'runtime run <goal> --read-only [--max-iterations <n>] [--json]',
-    description: 'Run a bounded read-only runtime loop with operator controls and JSON output',
+    description: 'Run a bounded runtime loop with operator controls and JSON output',
   },
   {
     name: 'runtime run <goal> --approval-ticket <id>',
-    description: 'Render approval-gated dry-run execution with audit output',
+    description: 'Render runtime execution with audit output',
   },
   {
     name: 'live-read-policy <json-file>',
@@ -57,7 +57,7 @@ export const CODEMIND_CLI_COMMANDS = [
   },
   {
     name: 'github-live-read <json-file>',
-    description: 'Read GitHub PR or CI evidence through policy-gated live read adapter',
+    description: 'Read GitHub PR or CI evidence through the runtime policy live read adapter',
   },
   {
     name: 'ajna-live-read <json-file>',
@@ -69,18 +69,17 @@ export const CODEMIND_CLI_COMMANDS = [
   },
   {
     name: 'write-intent <json-file>',
-    description:
-      'Create a write intent plan with validation and approval ticket from a local JSON fixture',
+    description: 'Create a write intent plan with validation evidence from a local JSON fixture',
   },
   {
     name: 'local-write <json-file>',
     description:
-      'Execute an approved local file write through the approval-gated write gate from a local JSON fixture',
+      'Execute a local file write through the runtime policy gate from a local JSON fixture',
   },
   {
     name: 'apply-patch <json-file>',
     description:
-      'Apply a structured patch through the approval-gated patch application pipeline from a local JSON fixture',
+      'Apply a structured patch through the runtime policy patch pipeline from a local JSON fixture',
   },
   {
     name: 'repair-loop <json-file>',
@@ -90,7 +89,7 @@ export const CODEMIND_CLI_COMMANDS = [
   {
     name: 'validation-command <json-file>',
     description:
-      'Evaluate an approved validation command through the allowlisted command gate from a local JSON fixture',
+      'Evaluate a validation command through the allowlisted runtime policy gate from a local JSON fixture',
   },
   {
     name: 'pr-preparation <json-file>',
@@ -100,22 +99,21 @@ export const CODEMIND_CLI_COMMANDS = [
   {
     name: 'github-write-proposal <json-file>',
     description:
-      'Create a governed GitHub write proposal from a local JSON fixture without executing any GitHub API call',
+      'Create a GitHub write proposal from a local JSON fixture without executing any GitHub API call',
   },
   {
     name: 'github-write-executor <json-file>',
     description:
-      'Execute an approved GitHub write action through the policy-gated executor from a local JSON fixture',
+      'Execute a GitHub write action through the runtime policy executor from a local JSON fixture',
   },
   {
     name: 'github-write-gate <json-file>',
     description:
-      'Evaluate an approved GitHub write through the policy-gated write gate from a local JSON fixture',
+      'Evaluate a GitHub write through the runtime policy gate from a local JSON fixture',
   },
   {
     name: 'workflow <json-file>',
-    description:
-      'Run a governed runtime workflow composing registered tools from a local JSON fixture',
+    description: 'Run a runtime workflow composing registered tools from a local JSON fixture',
   },
   {
     name: 'ajna-workflow <json-file>',
@@ -228,7 +226,7 @@ export const CODEMIND_CLI_COMMANDS = [
 
 export function renderHelp(): string {
   const lines = [
-    'CodeMind — AI coding-agent platform',
+    'CodeMind — direct execution AI coding agent',
     '',
     'Usage: codemind <command> [args]',
     '',

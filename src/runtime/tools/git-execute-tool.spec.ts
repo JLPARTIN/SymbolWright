@@ -1,3 +1,8 @@
+import { spawnSync } from 'node:child_process'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
 import { createDefaultRuntimePolicy } from '../policy/runtime-policy.js'
@@ -11,6 +16,13 @@ function makeContext(overrides: Partial<RuntimeToolContext> = {}): RuntimeToolCo
     policy: createDefaultRuntimePolicy(),
     ...overrides,
   }
+}
+
+function makeGitWorkspace(): string {
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-git-'))
+  spawnSync('git', ['init'], { cwd: workspace })
+  fs.writeFileSync(path.join(workspace, 'file.txt'), 'hello')
+  return workspace
 }
 
 function makeApprovedContext(): RuntimeToolContext {
@@ -46,11 +58,41 @@ describe('executeGitTool', () => {
     await expect(executeGitTool(null, makeContext())).rejects.toThrow('Missing operation')
   })
 
-  it('blocks write operations in read-only mode', async () => {
-    const output = await executeGitTool({ operation: 'add', args: ['.'] }, makeContext())
+  it('blocks write operations when policy disables writes', async () => {
+    const output = await executeGitTool(
+      { operation: 'add', args: ['.'] },
+      makeContext({
+        policy: {
+          ...createDefaultRuntimePolicy(),
+          allowWrites: false,
+        },
+      }),
+    )
 
     expect(output).toContain('Allowed: no')
     expect(output).toContain('requires write permission')
+  })
+
+  it('executes git add without approval when writes are allowed', async () => {
+    const workspace = makeGitWorkspace()
+    try {
+      const output = await executeGitTool(
+        { operation: 'add', args: ['file.txt'] },
+        {
+          cwd: workspace,
+          policy: {
+            ...createDefaultRuntimePolicy(),
+            allowWrites: true,
+          },
+        },
+      )
+
+      expect(output).toContain('Git operation: add')
+      expect(output).toContain('Command: git add file.txt')
+      expect(output).not.toContain('requires write permission')
+    } finally {
+      fs.rmSync(workspace, { recursive: true, force: true })
+    }
   })
 
   it('executes read operations in read-only mode', async () => {
