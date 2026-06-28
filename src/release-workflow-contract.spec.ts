@@ -17,7 +17,8 @@ describe('release workflow proof gates', () => {
     ]
 
     for (const workflow of workflows) {
-      expect(readWorkflow(workflow), workflow).toContain('npm run validate')
+      const workflowContent = readWorkflow(workflow)
+      expect(workflowContent).toContain('npm run validate')
     }
   })
 
