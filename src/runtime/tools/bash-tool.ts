@@ -127,5 +127,10 @@ export const bashTool: RuntimeToolDefinition = {
   description: 'Execute a shell command in the active workspace with output redaction.',
   capability: 'APPROVED_COMMAND',
   execute: async (input, context) =>
-    executeBashTool(parseBashInput(input), context.cwd, context.policy.allowShell, context.approval),
+    executeBashTool(
+      parseBashInput(input),
+      context.cwd,
+      context.policy.allowShell,
+      context.approval,
+    ),
 }

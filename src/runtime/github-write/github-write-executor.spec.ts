@@ -112,7 +112,12 @@ describe('executeGitHubWrite', () => {
 
   it('dry-runs without executing client', async () => {
     const client = new FakeGitHubWriteExecutorClient()
-    const result = await executeGitHubWrite(makeRequest({ dryRun: true }), policy, undefined, client)
+    const result = await executeGitHubWrite(
+      makeRequest({ dryRun: true }),
+      policy,
+      undefined,
+      client,
+    )
 
     expect(result.outcome).toBe('DRY_RUN')
     expect(result.operationSummary).toContain('Would post comment')
@@ -185,10 +190,21 @@ describe('executeGitHubWrite', () => {
     const executed = await executeGitHubWrite(makeRequest(), policy, undefined, client, 'live')
     expect(executed.recommendedNextAction).toContain('Verify')
 
-    const dryRun = await executeGitHubWrite(makeRequest({ dryRun: true }), policy, undefined, client)
+    const dryRun = await executeGitHubWrite(
+      makeRequest({ dryRun: true }),
+      policy,
+      undefined,
+      client,
+    )
     expect(dryRun.recommendedNextAction).toContain('dry-run')
 
-    const blocked = await executeGitHubWrite(makeRequest(), blockedPolicy, undefined, client, 'live')
+    const blocked = await executeGitHubWrite(
+      makeRequest(),
+      blockedPolicy,
+      undefined,
+      client,
+      'live',
+    )
     expect(blocked.recommendedNextAction).toContain('block reasons')
   })
 })
@@ -208,7 +224,12 @@ describe('renderGitHubWriteExecutorResult', () => {
 
   it('renders dry-run result', async () => {
     const client = new FakeGitHubWriteExecutorClient()
-    const result = await executeGitHubWrite(makeRequest({ dryRun: true }), policy, undefined, client)
+    const result = await executeGitHubWrite(
+      makeRequest({ dryRun: true }),
+      policy,
+      undefined,
+      client,
+    )
     const output = renderGitHubWriteExecutorResult(result)
 
     expect(output).toContain('Outcome: DRY_RUN')

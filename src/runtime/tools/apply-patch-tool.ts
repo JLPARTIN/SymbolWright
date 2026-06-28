@@ -76,7 +76,8 @@ function parseApplyPatchToolInput(input: unknown): ApplyPatchToolInput {
 
 export const applyPatchTool: RuntimeToolDefinition = {
   name: 'apply_patch',
-  description: 'Apply a structured patch to workspace files, with dryRun available as explicit preview mode.',
+  description:
+    'Apply a structured patch to workspace files, with dryRun available as explicit preview mode.',
   capability: 'PATCH_APPLICATION',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const parsed = parseApplyPatchToolInput(input)

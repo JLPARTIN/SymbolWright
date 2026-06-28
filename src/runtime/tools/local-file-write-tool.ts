@@ -57,7 +57,8 @@ function parseLocalFileWriteToolInput(input: unknown): LocalFileWriteToolInput {
 
 export const localFileWriteTool: RuntimeToolDefinition = {
   name: 'local_file_write',
-  description: 'Write a file in the active workspace, with dryRun available as an explicit preview mode.',
+  description:
+    'Write a file in the active workspace, with dryRun available as an explicit preview mode.',
   capability: 'LOCAL_FILE_WRITE',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const parsed = parseLocalFileWriteToolInput(input)
