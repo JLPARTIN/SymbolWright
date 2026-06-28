@@ -211,7 +211,11 @@ export function renderUniversalApiContractReport(
   ]
 
   if (report.findings.length > 0) {
-    lines.push('', 'Findings:', ...report.findings.map((finding) => `  - ${finding}`))
+    lines.push(
+      '',
+      'Findings:',
+      ...report.findings.map((finding) => `  - ${finding}`),
+    )
   } else {
     lines.push('', 'Findings: none')
   }
