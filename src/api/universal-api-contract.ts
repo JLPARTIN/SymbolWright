@@ -1,7 +1,7 @@
 import {
   CODEMIND_PROVIDER_ADAPTERS,
-  CODEMIND_PROVIDER_ADAPTER_BLOCK_ID,
   buildProviderAdapterContractReport,
+  type CODEMIND_PROVIDER_ADAPTER_BLOCK_ID,
   type CodemindProviderAdapterContract,
   type CodemindProviderId,
 } from '../providers/provider-adapter-contract.js'
