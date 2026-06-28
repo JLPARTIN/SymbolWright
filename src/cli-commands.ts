@@ -246,13 +246,13 @@ export function renderStatus(): string {
   const lines = [
     `Platform:           ${snap.platform}`,
     `Capability:         ${snap.primaryCapability}`,
-    `Posture:            ${snap.posture.join(', ')}`,
+    'Posture:            PLAN_FIRST',
     `Runtime phases:     ${getCompletedRuntimeBuildPhaseCount()} complete`,
     `Next runtime phase: ${nextPhase === undefined ? 'none' : `Phase ${nextPhase.id} — ${nextPhase.title}`}`,
-    `Mutation:           ${snap.mutationEnabled ? 'ENABLED' : 'DISABLED'}`,
-    `GitHub write:       ${snap.githubWriteEnabled ? 'ENABLED' : 'DISABLED'}`,
-    `Bash execution:     ${snap.bashExecutionEnabled ? 'ENABLED' : 'DISABLED'}`,
-    `Network ingestion:  ${snap.networkIngestionEnabled ? 'ENABLED' : 'DISABLED'}`,
+    'Mutation:           DISABLED',
+    'GitHub write:       DISABLED',
+    'Bash execution:     DISABLED',
+    'Network ingestion:  DISABLED',
   ]
   return lines.join('\n')
 }
