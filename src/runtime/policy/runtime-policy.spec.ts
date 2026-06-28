@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
 import {
+  assertGitHubWriteApproved,
   assertGitWriteApproved,
   assertNetworkAllowed,
   assertReadablePath,
@@ -197,6 +198,52 @@ describe('assertGitWriteApproved', () => {
       scopes: ['apply_edit'],
     }
     expect(() => assertGitWriteApproved(approvedPolicy, approval)).not.toThrow()
+  })
+})
+
+describe('assertGitHubWriteApproved', () => {
+  const githubWritePolicy: RuntimePolicySnapshot = {
+    ...createDefaultRuntimePolicy(),
+    mode: 'APPROVED_EXECUTION',
+    allowGitHubWrites: true,
+  }
+
+  it('blocks when policy disables GitHub writes', () => {
+    const policy = createDefaultRuntimePolicy()
+    const approval: RuntimeApproval = {
+      ticketId: 'T-1',
+      approvedBy: 'operator',
+      scopes: ['github:write'],
+    }
+    expect(() => assertGitHubWriteApproved(policy, approval)).toThrow(
+      'GitHub writes are disabled by runtime policy.',
+    )
+  })
+
+  it('blocks when approval is undefined', () => {
+    expect(() => assertGitHubWriteApproved(githubWritePolicy, undefined)).toThrow(
+      'GitHub writes require explicit approval.',
+    )
+  })
+
+  it('blocks when approval lacks github:write scope', () => {
+    const approval: RuntimeApproval = {
+      ticketId: 'T-2',
+      approvedBy: 'operator',
+      scopes: ['file:write'],
+    }
+    expect(() => assertGitHubWriteApproved(githubWritePolicy, approval)).toThrow(
+      'Approval does not include github:write scope.',
+    )
+  })
+
+  it('allows with github:write scope', () => {
+    const approval: RuntimeApproval = {
+      ticketId: 'T-3',
+      approvedBy: 'operator',
+      scopes: ['github:write'],
+    }
+    expect(() => assertGitHubWriteApproved(githubWritePolicy, approval)).not.toThrow()
   })
 })
 

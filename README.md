@@ -141,7 +141,7 @@ The Phase H GitHub live read adapter adds policy-gated GitHub read operations:
 codemind github-live-read fixtures/github-live-read-fixture.json
 ```
 
-This command wraps a `RuntimeLiveReadClient` in a `GitHubLiveReadPolicyWrapper` that enforces policy checks before every read operation. The `GitHubLiveReadClient` class defines the real GitHub adapter seam but is not yet wired to live network calls. Unit tests use the fake client through the policy wrapper. Allowed operations: read PR metadata, read changed files list, read check/workflow summary, read file content. Forbidden: comments, approvals, merges, branch pushes, workflow reruns.
+This command wraps a `RuntimeLiveReadClient` in a `GitHubLiveReadPolicyWrapper` that enforces policy checks before every read operation. When a `GITHUB_TOKEN` is configured, the `GitHubLiveReadClient` uses the `DefaultGitHubHttpClient` for live API calls; otherwise it falls back to fixture data. Allowed operations: read PR metadata, read changed files list, read check/workflow summary, read file content. Forbidden: comments, approvals, merges, branch pushes, workflow reruns.
 
 The Phase I Ajna live-read review pipeline connects live-read evidence into Ajna review and merge-readiness:
 

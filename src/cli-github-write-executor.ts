@@ -6,6 +6,7 @@ import {
   type GitHubWriteExecutorAction,
   type GitHubWriteExecutorClient,
   type GitHubWriteExecutorRequest,
+  type GitHubWriteExecutionMode,
 } from './runtime/github-write/github-write-executor.js'
 import { FakeGitHubWriteExecutorClient } from './runtime/github-write/fake-github-write-executor-client.js'
 import { DefaultGitHubWriteExecutorClient } from './runtime/github-write/default-github-write-executor-client.js'
@@ -60,10 +61,17 @@ export async function renderGitHubWriteExecutorCommand(fixturePath: string): Pro
   const approval: RuntimeApproval | undefined = raw.approval
 
   const githubToken = process.env['GITHUB_TOKEN']
-  const client: GitHubWriteExecutorClient =
-    githubToken !== undefined && githubToken.length > 0
-      ? new DefaultGitHubWriteExecutorClient(new DefaultGitHubHttpClient({ token: githubToken }))
-      : new FakeGitHubWriteExecutorClient()
-  const result = await executeGitHubWrite(request, policy, approval, client)
+  let client: GitHubWriteExecutorClient
+  let executionMode: GitHubWriteExecutionMode
+  if (githubToken !== undefined && githubToken.length > 0) {
+    client = new DefaultGitHubWriteExecutorClient(
+      new DefaultGitHubHttpClient({ token: githubToken }),
+    )
+    executionMode = 'live'
+  } else {
+    client = new FakeGitHubWriteExecutorClient()
+    executionMode = 'fixture'
+  }
+  const result = await executeGitHubWrite(request, policy, approval, client, executionMode)
   return renderGitHubWriteExecutorResult(result)
 }

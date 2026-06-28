@@ -49,7 +49,7 @@ export class GitHubLiveReadClient implements RuntimeLiveReadClient {
         : undefined
 
     const filesResponse = await this.httpClient.get(
-      `/repos/${owner}/${repo}/pulls/${prNumber}/files`,
+      `/repos/${owner}/${repo}/pulls/${prNumber}/files?per_page=100`,
     )
     const files =
       filesResponse.status === 200 && Array.isArray(filesResponse.body)

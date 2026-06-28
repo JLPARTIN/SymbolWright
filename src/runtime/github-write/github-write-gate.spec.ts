@@ -107,13 +107,13 @@ describe('evaluateGitHubWriteGate', () => {
   it('blocks when no approval ticket', () => {
     const result = evaluateGitHubWriteGate(validRequest(), githubWritePolicy, undefined)
     expect(result.decision).toBe('BLOCKED')
-    expect(result.blockReasons).toContain('Approval ticket is required for GitHub writes.')
+    expect(result.blockReasons).toContain('GitHub writes require explicit approval.')
   })
 
   it('blocks when approval has wrong scope', () => {
     const result = evaluateGitHubWriteGate(validRequest(), githubWritePolicy, wrongScopeApproval)
     expect(result.decision).toBe('BLOCKED')
-    expect(result.blockReasons).toContain('Approval ticket is missing required scope: github:write')
+    expect(result.blockReasons).toContain('Approval does not include github:write scope.')
   })
 
   it('blocks empty action', () => {
@@ -326,7 +326,7 @@ describe('githubWriteGateTool', () => {
     )
 
     expect(output).toContain('Decision: BLOCKED')
-    expect(output).toContain('Approval ticket is required')
+    expect(output).toContain('GitHub writes require explicit approval')
     expect(output).toContain('Runtime audit log')
   })
 

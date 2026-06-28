@@ -1,4 +1,5 @@
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import { assertGitHubWriteApproved } from '../policy/runtime-policy.js'
 import {
   ALLOWED_GITHUB_WRITE_ACTIONS,
   type AllowedGitHubWriteAction,
@@ -34,14 +35,10 @@ export function evaluateGitHubWriteGate(
   const blockReasons: string[] = []
   const action = request.action.trim()
 
-  if (!policy.allowGitHubWrites) {
-    blockReasons.push('GitHub writes are disabled by runtime policy.')
-  }
-
-  if (approval === undefined) {
-    blockReasons.push('Approval ticket is required for GitHub writes.')
-  } else if (!approval.scopes.includes('github:write')) {
-    blockReasons.push('Approval ticket is missing required scope: github:write')
+  try {
+    assertGitHubWriteApproved(policy, approval)
+  } catch (error: unknown) {
+    blockReasons.push(error instanceof Error ? error.message : String(error))
   }
 
   if (action.length === 0) {

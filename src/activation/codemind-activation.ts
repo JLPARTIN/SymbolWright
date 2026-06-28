@@ -110,7 +110,7 @@ export function activateSubsystems(config: CodemindActivationConfig): CodemindSu
     timestamp: new Date().toISOString(),
     detail:
       `Session ${sessionId} activated with ${tools.length} tools` +
-      (githubClients !== undefined ? ' (GitHub live read enabled)' : ''),
+      (githubClients !== undefined ? ' (GitHub live read + write enabled)' : ''),
   })
 
   return {
