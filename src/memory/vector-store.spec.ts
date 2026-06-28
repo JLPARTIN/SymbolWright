@@ -154,4 +154,67 @@ describe('VectorStore', () => {
     expect(small.get('e2')).toBeDefined()
     expect(small.get('e3')).toBeDefined()
   })
+
+  it('getDimensions returns configured dimensions', () => {
+    expect(store.getDimensions()).toBe(3)
+  })
+})
+
+describe('VectorStore serialization', () => {
+  it('serialize returns dimensions and entries', () => {
+    const store = new VectorStore({ dimensions: 3 })
+    store.add(makeEntry('e1', [1, 0, 0], 'a.ts'))
+    store.add(makeEntry('e2', [0, 1, 0], 'b.ts'))
+
+    const serialized = store.serialize()
+    expect(serialized.dimensions).toBe(3)
+    expect(serialized.entries).toHaveLength(2)
+  })
+
+  it('serialize of empty store returns empty entries', () => {
+    const store = new VectorStore({ dimensions: 5 })
+    const serialized = store.serialize()
+    expect(serialized.dimensions).toBe(5)
+    expect(serialized.entries).toHaveLength(0)
+  })
+
+  it('deserialize restores store from serialized data', () => {
+    const original = new VectorStore({ dimensions: 3 })
+    original.add(makeEntry('e1', [1, 0, 0], 'a.ts'))
+    original.add(makeEntry('e2', [0, 1, 0], 'b.ts'))
+
+    const serialized = original.serialize()
+    const restored = VectorStore.deserialize(serialized)
+
+    expect(restored.size()).toBe(2)
+    expect(restored.getDimensions()).toBe(3)
+    expect(restored.get('e1')!.embedding).toEqual([1, 0, 0])
+    expect(restored.get('e2')!.filePath).toBe('b.ts')
+  })
+
+  it('roundtrip through JSON preserves data', () => {
+    const store = new VectorStore({ dimensions: 3 })
+    store.add(makeEntry('e1', [0.5, 0.3, 0.7], 'src/foo.ts'))
+
+    const json = JSON.stringify(store.serialize())
+    const restored = VectorStore.deserialize(JSON.parse(json))
+
+    expect(restored.size()).toBe(1)
+    const entry = restored.get('e1')!
+    expect(entry.embedding).toEqual([0.5, 0.3, 0.7])
+    expect(entry.filePath).toBe('src/foo.ts')
+    expect(entry.chunk).toBe('chunk for e1')
+  })
+
+  it('deserialized store supports search', () => {
+    const store = new VectorStore({ dimensions: 3 })
+    store.add(makeEntry('e1', [1, 0, 0]))
+    store.add(makeEntry('e2', [0, 1, 0]))
+
+    const restored = VectorStore.deserialize(store.serialize())
+    const results = restored.search([1, 0, 0])
+
+    expect(results[0]!.entry.id).toBe('e1')
+    expect(results[0]!.score).toBeCloseTo(1)
+  })
 })
