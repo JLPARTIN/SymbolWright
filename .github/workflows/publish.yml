@@ -33,17 +33,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Test with coverage
-        run: npm run test:coverage
-
-      - name: Build
-        run: npm run build
+      - name: Validate release proof
+        run: npm run validate
 
       - name: Dry-run publish
         run: npm publish --dry-run
