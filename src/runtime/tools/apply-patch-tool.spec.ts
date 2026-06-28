@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { applyPatchTool } from './apply-patch-tool.js'
-import { createPatchApplicationRuntimeRegistry } from '../runtime-patch-application-registry.js'
+import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 
 describe('applyPatchTool', () => {
   it('has expected metadata', () => {
@@ -10,7 +10,7 @@ describe('applyPatchTool', () => {
   })
 
   it('is registered by the patch application registry', () => {
-    const registry = createPatchApplicationRuntimeRegistry({})
+    const registry = createFixtureRegistry('patch_application')
 
     expect(registry.has('apply_patch')).toBe(true)
     expect(registry.has('local_file_write')).toBe(true)

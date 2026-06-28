@@ -1,9 +1,9 @@
 import fs from 'node:fs'
 
 import {
-  createGitHubWriteGateRuntimeContext,
-  createGitHubWriteGateRuntimeRegistry,
-} from './runtime/runtime-github-write-gate-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 
 export interface GitHubWriteGateFixtureRequest {
   readonly action: string
@@ -32,8 +32,8 @@ export async function renderRuntimeGitHubWriteGate(
     throw new Error('Fixture must include a non-empty "reason" field.')
   }
 
-  const registry = createGitHubWriteGateRuntimeRegistry({})
-  const context = createGitHubWriteGateRuntimeContext(cwd)
+  const registry = createFixtureRegistry('github_write_gate')
+  const context = createFixtureContext(cwd)
 
   const tool = registry.getOrThrow('github_write_gate')
   return tool.execute(

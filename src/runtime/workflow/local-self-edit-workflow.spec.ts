@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
 import { runLocalSelfEditWorkflow, renderLocalSelfEditResult } from './local-self-edit-workflow.js'
-import { createLocalSelfEditRuntimeRegistry } from '../runtime-local-self-edit-registry.js'
+import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 
 const policy: RuntimePolicySnapshot = {
   mode: 'APPROVED_EXECUTION',
@@ -36,7 +36,7 @@ function makeWorkspace(): string {
 
 describe('local self-edit workflow', () => {
   it('registers required local self-edit tools', () => {
-    const registry = createLocalSelfEditRuntimeRegistry({})
+    const registry = createFixtureRegistry('local_self_edit')
 
     expect(registry.has('apply_patch')).toBe(true)
     expect(registry.has('validation_command_gate')).toBe(true)

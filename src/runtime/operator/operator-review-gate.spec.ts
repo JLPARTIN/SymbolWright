@@ -16,7 +16,7 @@ import {
 } from './operator-review-gate.js'
 
 import { operatorReviewPacketTool } from '../tools/operator-review-packet-tool.js'
-import { createOperatorReviewRuntimeRegistry } from '../runtime-operator-review-registry.js'
+import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 import type { RuntimeToolContext } from '../types.js'
 import { renderRuntimeOperatorReview } from '../../cli-runtime-operator-review.js'
 
@@ -221,7 +221,7 @@ describe('operator review packet tool', () => {
 
 describe('operator review registry', () => {
   it('includes operator_review_packet tool', () => {
-    const registry = createOperatorReviewRuntimeRegistry({})
+    const registry = createFixtureRegistry('operator_review')
 
     expect(registry.has('operator_review_packet')).toBe(true)
     const tool = registry.getOrThrow('operator_review_packet')
@@ -229,7 +229,7 @@ describe('operator review registry', () => {
   })
 
   it('inherits all Phase I tools', () => {
-    const registry = createOperatorReviewRuntimeRegistry({})
+    const registry = createFixtureRegistry('operator_review')
 
     expect(registry.has('ajna_live_read_review')).toBe(true)
     expect(registry.has('ajna_live_read_merge_readiness')).toBe(true)

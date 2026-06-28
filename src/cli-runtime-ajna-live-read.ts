@@ -2,9 +2,9 @@ import fs from 'node:fs'
 
 import type { FakeLiveReadClientData } from './runtime/live-read/fake-live-read-client.js'
 import {
-  createAjnaLiveReadRuntimeContext,
-  createAjnaLiveReadRuntimeRegistry,
-} from './runtime/runtime-ajna-live-read-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 
 export interface AjnaLiveReadFixtureRequest {
   readonly mode: 'review' | 'merge-readiness'
@@ -25,8 +25,8 @@ export async function renderRuntimeAjnaLiveRead(
     throw new Error('Fixture must specify mode: "review" or "merge-readiness".')
   }
 
-  const registry = createAjnaLiveReadRuntimeRegistry(raw.clientData)
-  const context = createAjnaLiveReadRuntimeContext(cwd)
+  const registry = createFixtureRegistry('ajna_live_read', raw.clientData)
+  const context = createFixtureContext(cwd)
 
   if (raw.mode === 'review') {
     const tool = registry.getOrThrow('ajna_live_read_review')

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  createZflowReportRuntimeContext,
-  createZflowReportRuntimeRegistry,
-} from '../runtime-zflow-report-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from '../registry/fixture-registry-factory.js'
 import { zflowReportTool } from './zflow-report-tool.js'
 
 const result = {
@@ -27,7 +27,7 @@ describe('zflowReportTool', () => {
   })
 
   it('is registered in the zflow report registry', () => {
-    const registry = createZflowReportRuntimeRegistry()
+    const registry = createFixtureRegistry('zflow_report')
 
     expect(registry.has('zflow_report')).toBe(true)
   })
@@ -40,7 +40,7 @@ describe('zflowReportTool', () => {
         result,
         readiness,
       },
-      createZflowReportRuntimeContext('/workspace'),
+      createFixtureContext('/workspace'),
     )
 
     expect(output).toContain('# CodeMind Zflow Execution Report')
@@ -55,7 +55,7 @@ describe('zflowReportTool', () => {
         result,
         readiness,
       },
-      createZflowReportRuntimeContext('/workspace'),
+      createFixtureContext('/workspace'),
     )
     const parsed = JSON.parse(output) as { report: { readonly id: string } }
 
@@ -63,8 +63,8 @@ describe('zflowReportTool', () => {
   })
 
   it('rejects invalid input', async () => {
-    await expect(
-      zflowReportTool.execute(null, createZflowReportRuntimeContext('/workspace')),
-    ).rejects.toThrow('Missing zflow report input.')
+    await expect(zflowReportTool.execute(null, createFixtureContext('/workspace'))).rejects.toThrow(
+      'Missing zflow report input.',
+    )
   })
 })

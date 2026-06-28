@@ -1,7 +1,7 @@
 import {
-  createProposalRuntimeContext,
-  createProposalRuntimeRegistry,
-} from '../runtime-proposal-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from '../registry/fixture-registry-factory.js'
 import { createRuntimeSession, type RuntimeSession } from '../session/runtime-session.js'
 import { appendTranscriptEntry, renderRuntimeTranscript } from '../transcript/runtime-transcript.js'
 import type { RuntimeLoopResult } from '../types.js'
@@ -26,8 +26,8 @@ export async function runReadOnlyRuntimeLoop(
 ): Promise<ReadOnlyRuntimeRunResult> {
   const maxIterations = input.maxIterations ?? ALLOWED_TOOL_SEQUENCE.length
   let session = createRuntimeSession(input.goal, maxIterations)
-  const registry = createProposalRuntimeRegistry()
-  const context = createProposalRuntimeContext(cwd)
+  const registry = createFixtureRegistry('proposal')
+  const context = createFixtureContext(cwd)
   let finalMessage = 'Runtime loop completed.'
   let iterations = 0
 
@@ -76,8 +76,8 @@ export async function runReadOnlyRuntimeLoop(
 async function runAllowedTool(
   toolName: AllowedToolName,
   goal: string,
-  registry: ReturnType<typeof createProposalRuntimeRegistry>,
-  context: ReturnType<typeof createProposalRuntimeContext>,
+  registry: ReturnType<typeof createFixtureRegistry>,
+  context: ReturnType<typeof createFixtureContext>,
 ): Promise<string> {
   if (toolName === 'plan_goal') {
     return registry.getOrThrow(toolName).execute({ goal }, context)

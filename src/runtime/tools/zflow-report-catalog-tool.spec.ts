@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  createZflowReportCatalogRuntimeContext,
-  createZflowReportCatalogRuntimeRegistry,
-} from '../runtime-zflow-report-catalog-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from '../registry/fixture-registry-factory.js'
 import { zflowReportCatalogTool } from './zflow-report-catalog-tool.js'
 
 const report = {
@@ -31,7 +31,7 @@ describe('zflowReportCatalogTool', () => {
   })
 
   it('is registered in the catalog registry', () => {
-    const registry = createZflowReportCatalogRuntimeRegistry()
+    const registry = createFixtureRegistry('zflow_report_catalog')
 
     expect(registry.has('zflow_report_catalog')).toBe(true)
   })
@@ -44,7 +44,7 @@ describe('zflowReportCatalogTool', () => {
         reports: [report],
         generatedAt: '2026-01-01T00:00:00.000Z',
       },
-      createZflowReportCatalogRuntimeContext('/workspace'),
+      createFixtureContext('/workspace'),
     )
 
     expect(output).toContain('# Zflow Reports')
@@ -60,7 +60,7 @@ describe('zflowReportCatalogTool', () => {
         reports: [report],
         generatedAt: '2026-01-01T00:00:00.000Z',
       },
-      createZflowReportCatalogRuntimeContext('/workspace'),
+      createFixtureContext('/workspace'),
     )
     const parsed = JSON.parse(output) as { readonly artifactCount: number }
 
@@ -69,7 +69,7 @@ describe('zflowReportCatalogTool', () => {
 
   it('rejects invalid input', async () => {
     await expect(
-      zflowReportCatalogTool.execute(null, createZflowReportCatalogRuntimeContext('/workspace')),
+      zflowReportCatalogTool.execute(null, createFixtureContext('/workspace')),
     ).rejects.toThrow('Missing zflow report catalog input.')
   })
 })

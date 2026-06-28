@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { GitHubCiEvidence } from '../adapters/github-ci-read-adapter.js'
 import type { GitHubPrEvidence } from '../adapters/github-pr-read-adapter.js'
-import { createGitHubLiveReadRuntimeRegistry } from '../runtime-github-live-read-registry.js'
+import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 import type { RuntimeToolContext } from '../types.js'
 
 import { FakeLiveReadClient } from './fake-live-read-client.js'
@@ -206,7 +206,7 @@ describe('GitHubLiveReadPolicyWrapper', () => {
 
 describe('github live read PR tool', () => {
   it('renders PR evidence through policy-wrapped fake client', async () => {
-    const registry = createGitHubLiveReadRuntimeRegistry({ pr: fakePr })
+    const registry = createFixtureRegistry('github_live_read', { pr: fakePr })
     const tool = registry.getOrThrow('github_live_read_pr')
 
     const output = await tool.execute(
@@ -222,7 +222,7 @@ describe('github live read PR tool', () => {
   })
 
   it('rejects missing owner', async () => {
-    const registry = createGitHubLiveReadRuntimeRegistry({ pr: fakePr })
+    const registry = createFixtureRegistry('github_live_read', { pr: fakePr })
     const tool = registry.getOrThrow('github_live_read_pr')
 
     await expect(tool.execute({ repo: 'r', prNumber: 1 }, testContext)).rejects.toThrow(
@@ -231,7 +231,7 @@ describe('github live read PR tool', () => {
   })
 
   it('rejects missing prNumber', async () => {
-    const registry = createGitHubLiveReadRuntimeRegistry({ pr: fakePr })
+    const registry = createFixtureRegistry('github_live_read', { pr: fakePr })
     const tool = registry.getOrThrow('github_live_read_pr')
 
     await expect(tool.execute({ owner: 'o', repo: 'r' }, testContext)).rejects.toThrow(
@@ -242,7 +242,7 @@ describe('github live read PR tool', () => {
 
 describe('github live read CI tool', () => {
   it('renders CI evidence through policy-wrapped fake client', async () => {
-    const registry = createGitHubLiveReadRuntimeRegistry({ ci: fakeCi })
+    const registry = createFixtureRegistry('github_live_read', { ci: fakeCi })
     const tool = registry.getOrThrow('github_live_read_ci')
 
     const output = await tool.execute(
@@ -258,7 +258,7 @@ describe('github live read CI tool', () => {
   })
 
   it('rejects missing runId', async () => {
-    const registry = createGitHubLiveReadRuntimeRegistry({ ci: fakeCi })
+    const registry = createFixtureRegistry('github_live_read', { ci: fakeCi })
     const tool = registry.getOrThrow('github_live_read_ci')
 
     await expect(tool.execute({ owner: 'o', repo: 'r' }, testContext)).rejects.toThrow(

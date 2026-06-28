@@ -10,9 +10,9 @@ import { bridgeRuntimeEvidenceToAjna } from '../ajna/runtime-ajna-evidence-bridg
 import { buildCiEvidenceSummary } from '../evidence/ci-evidence-summary.js'
 import { buildPrEvidenceSummary } from '../evidence/pr-evidence-builder.js'
 import {
-  createGitHubReadRuntimeContext,
-  createGitHubReadRuntimeRegistry,
-} from '../runtime-github-read-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from '../registry/fixture-registry-factory.js'
 
 function createFixtureFile(): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-gh-fixture-'))
@@ -71,7 +71,7 @@ describe('GitHub read fixture adapters', () => {
   })
 
   it('registers local fixture review tools', () => {
-    const names = createGitHubReadRuntimeRegistry()
+    const names = createFixtureRegistry('github_read')
       .list()
       .map((tool) => tool.name)
 
@@ -81,8 +81,8 @@ describe('GitHub read fixture adapters', () => {
 
   it('renders PR and workflow fixture reviews without mutation', async () => {
     const fixture = createFixtureFile()
-    const registry = createGitHubReadRuntimeRegistry()
-    const context = createGitHubReadRuntimeContext(process.cwd())
+    const registry = createFixtureRegistry('github_read')
+    const context = createFixtureContext(process.cwd())
 
     const prOutput = await registry
       .getOrThrow('github_pr_fixture_review')

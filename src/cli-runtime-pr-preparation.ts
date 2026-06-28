@@ -1,9 +1,9 @@
 import fs from 'node:fs'
 
 import {
-  createPrPreparationRuntimeContext,
-  createPrPreparationRuntimeRegistry,
-} from './runtime/runtime-pr-preparation-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 
 export interface PrPreparationFixtureRequest {
   readonly title: string
@@ -33,8 +33,8 @@ export async function renderRuntimePrPreparation(
     throw new Error('Fixture must include a non-empty "reason" field.')
   }
 
-  const registry = createPrPreparationRuntimeRegistry({})
-  const context = createPrPreparationRuntimeContext(cwd)
+  const registry = createFixtureRegistry('pr_preparation')
+  const context = createFixtureContext(cwd)
 
   const tool = registry.getOrThrow('pr_preparation')
   return tool.execute(

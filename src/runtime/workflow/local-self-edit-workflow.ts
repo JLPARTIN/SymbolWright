@@ -5,9 +5,9 @@ import {
   type RuntimeWorkflowResult,
 } from './runtime-workflow.js'
 import {
-  createLocalSelfEditRuntimeContext,
-  createLocalSelfEditRuntimeRegistry,
-} from '../runtime-local-self-edit-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from '../registry/fixture-registry-factory.js'
 import type { PatchFileChange } from '../patch/patch-application.js'
 
 export type LocalSelfEditMode = 'preview-only' | 'apply-only' | 'apply-and-validate'
@@ -51,8 +51,8 @@ export async function runLocalSelfEditWorkflow(
   request: LocalSelfEditRequest,
   cwd: string = process.cwd(),
 ): Promise<LocalSelfEditResult> {
-  const registry = createLocalSelfEditRuntimeRegistry({})
-  const baseContext = createLocalSelfEditRuntimeContext(cwd)
+  const registry = createFixtureRegistry('local_self_edit')
+  const baseContext = createFixtureContext(cwd)
   const context = {
     ...baseContext,
     ...(request.policy !== undefined ? { policy: request.policy } : {}),

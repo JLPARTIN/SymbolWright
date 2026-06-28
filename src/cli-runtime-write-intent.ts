@@ -2,9 +2,9 @@ import fs from 'node:fs'
 
 import type { WriteIntentTarget } from './runtime/write/write-intent.js'
 import {
-  createWritePrepRuntimeContext,
-  createWritePrepRuntimeRegistry,
-} from './runtime/runtime-write-prep-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 
 export interface WriteIntentFixtureRequest {
   readonly id: string
@@ -30,8 +30,8 @@ export async function renderRuntimeWriteIntent(
     throw new Error('Fixture must include a "target" field.')
   }
 
-  const registry = createWritePrepRuntimeRegistry({})
-  const context = createWritePrepRuntimeContext(cwd)
+  const registry = createFixtureRegistry('write_prep')
+  const context = createFixtureContext(cwd)
 
   const tool = registry.getOrThrow('write_intent_plan')
   return tool.execute(

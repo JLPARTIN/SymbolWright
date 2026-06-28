@@ -1,14 +1,14 @@
 import {
-  createProposalRuntimeContext,
-  createProposalRuntimeRegistry,
-} from './runtime/runtime-proposal-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 
 export async function renderRuntimePrNotes(
   focus: string | undefined,
   cwd: string = process.cwd(),
 ): Promise<string> {
-  const registry = createProposalRuntimeRegistry()
+  const registry = createFixtureRegistry('proposal')
   const tool = registry.getOrThrow('pr_notes')
 
-  return tool.execute({ focus }, createProposalRuntimeContext(cwd))
+  return tool.execute({ focus }, createFixtureContext(cwd))
 }

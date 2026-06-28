@@ -9,7 +9,7 @@ import { validateWriteIntent, renderWriteIntentValidation } from './write-intent
 import { createWriteApprovalTicket, renderWriteApprovalTicket } from './write-approval-ticket.js'
 
 import { writeIntentPlanTool } from '../tools/write-intent-plan-tool.js'
-import { createWritePrepRuntimeRegistry } from '../runtime-write-prep-registry.js'
+import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 import type { RuntimeToolContext } from '../types.js'
 import { renderRuntimeWriteIntent } from '../../cli-runtime-write-intent.js'
 
@@ -292,7 +292,7 @@ describe('write intent plan tool', () => {
 
 describe('write prep registry', () => {
   it('includes write_intent_plan tool', () => {
-    const registry = createWritePrepRuntimeRegistry({})
+    const registry = createFixtureRegistry('write_prep')
 
     expect(registry.has('write_intent_plan')).toBe(true)
     const tool = registry.getOrThrow('write_intent_plan')
@@ -300,7 +300,7 @@ describe('write prep registry', () => {
   })
 
   it('inherits all Phase J tools', () => {
-    const registry = createWritePrepRuntimeRegistry({})
+    const registry = createFixtureRegistry('write_prep')
 
     expect(registry.has('operator_review_packet')).toBe(true)
     expect(registry.has('ajna_live_read_review')).toBe(true)
