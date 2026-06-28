@@ -35,6 +35,11 @@ describe('assessReleaseReadiness', () => {
     expect(codes).toContain('INDEX_EXPORTS')
     expect(codes).toContain('CLI_ENTRY')
     expect(codes).toContain('DOCKERFILE')
+    expect(codes).toContain('PUBLIC_API_CONTRACT')
+    expect(codes).toContain('PACKAGE_BIN_CONTRACT')
+    expect(codes).toContain('VALIDATE_SCRIPT')
+    expect(codes).toContain('WORKFLOW_RELEASE_PROOF')
+    expect(codes).toContain('BUILD_LEDGER_CONSISTENT')
   })
 
   it('includes doctor report', () => {
@@ -50,6 +55,17 @@ describe('assessReleaseReadiness', () => {
     expect(report.outcome).toBe('RELEASE_BLOCKED')
     expect(report.failCount).toBeGreaterThan(0)
   })
+
+  it('passes the source-of-truth release proof gates', () => {
+    const report = assessReleaseReadiness(WORKSPACE)
+    const gates = new Map(report.gates.map((gate) => [gate.code, gate.status]))
+
+    expect(gates.get('PUBLIC_API_CONTRACT')).toBe('PASS')
+    expect(gates.get('PACKAGE_BIN_CONTRACT')).toBe('PASS')
+    expect(gates.get('VALIDATE_SCRIPT')).toBe('PASS')
+    expect(gates.get('WORKFLOW_RELEASE_PROOF')).toBe('PASS')
+    expect(gates.get('BUILD_LEDGER_CONSISTENT')).toBe('PASS')
+  })
 })
 
 describe('renderReleaseReadinessReport', () => {
@@ -60,6 +76,8 @@ describe('renderReleaseReadinessReport', () => {
     expect(output).toContain('CodeMind Release Readiness')
     expect(output).toContain('Outcome: RELEASE_READY')
     expect(output).toContain('[PASS]')
+    expect(output).toContain('PUBLIC_API_CONTRACT')
+    expect(output).toContain('BUILD_LEDGER_CONSISTENT')
   })
 
   it('renders blocked report with blockers', () => {

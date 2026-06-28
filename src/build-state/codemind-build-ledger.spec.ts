@@ -54,6 +54,26 @@ describe('checkBuildLedgerConsistency', () => {
     expect(report.findings).toHaveLength(0)
   })
 
+  it('accepts the README 20/20 runtime build phases complete wording', () => {
+    const readme = '`codemind status` reports 20/20 runtime build phases complete.'
+    const docs = allPhasesComplete
+
+    const report = checkBuildLedgerConsistency(readme, docs)
+
+    expect(report.status).toBe('CONSISTENT')
+    expect(report.findings).toHaveLength(0)
+  })
+
+  it('accepts the README all runtime phases are complete wording', () => {
+    const readme = 'All 20 runtime phases (A–T) are complete.'
+    const docs = allPhasesComplete
+
+    const report = checkBuildLedgerConsistency(readme, docs)
+
+    expect(report.status).toBe('CONSISTENT')
+    expect(report.findings).toHaveLength(0)
+  })
+
   it('detects README phase count mismatch', () => {
     const readme = 'Runtime phases:     5 complete'
     const docs = allPhasesComplete

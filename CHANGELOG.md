@@ -24,9 +24,10 @@ All notable changes to CodeMind are documented in this file.
 - **HiveMind**: Swarm agent registry and dispatch for specialized capability coordination.
 - **Build Ledger**: Machine-readable build state with 20/20 phase completion tracking and docs consistency checking.
 - **Doctor**: 12-point workspace health check covering Node.js version, dependencies, TypeScript config, runtime phases, safety posture, API keys, and project memory.
-- **Release Readiness**: 8-gate release assessment (phases, health, version, changelog consistency, entry point, exports, CLI, Dockerfile).
+- **Release Readiness**: 13-gate release assessment (phases, health, version, changelog consistency, entry point, exports, CLI, Dockerfile, public API contract, bin contract, validate script, workflow proof, and build-ledger consistency).
 - **CI Pipeline**: Node 20+22 matrix testing, coverage enforcement (85/80/85/85 thresholds), format checking, and publish dry-run validation.
 - **75 CLI commands** covering all 20 runtime phases plus diagnostics, fixtures, and agent workflows.
+- **Release Proof Contract Tests**: Public API, package bin, workflow release proof, and source-of-truth build ledger regression coverage.
 
 ### Safety Posture
 
@@ -41,16 +42,18 @@ All notable changes to CodeMind are documented in this file.
 
 - **Runtime Activation Tool Inventory**: `runActivatedAgent()` now passes `subsystems.tools` (including dynamic GitHub live-read tools) to the agent loop instead of `config.tools`, which omitted dynamically injected tools.
 - **Workspace Package Bin**: `codemind-workspace` now renders real workspace state from `WorkspaceManager` instead of a static preview surface. Operator `/workspace` and package bin share the same workspace model.
+- **Build Ledger README Parsing**: Source-of-truth consistency checks now accept README wording used by the active project state (`20/20 runtime build phases complete` and `All 20 runtime phases are complete`) instead of requiring one brittle phrase.
 
 ### Changed
 
 - **GitHub Write Authorization**: Centralized write authorization with execution mode tracking and approval scope closure.
 - **Runtime Registry**: Replaced 22 wrapper registries with canonical `createFixtureRegistry()` factory supporting 22 named presets.
 - **Operator Console**: Wired dormant `WorkspaceManager` into operator workspace via `/workspace` command; added `/zflow` for ZFlow report rendering.
-- **Release Gates**: Added CHANGELOG consistency gate to release readiness assessment.
+- **Release Gates**: Expanded release readiness beyond CHANGELOG consistency to enforce public API, package bin, validate-script, workflow release-proof, and build-ledger source-of-truth gates.
 - **License**: Changed from UNLICENSED to MIT license.
-- **Package Contract**: Added `exports` field for ESM resolution, npm script aliases for diagnostic commands (`doctor`, `release-readiness`, `build-ledger`).
-- **Deploy Pipeline**: Hardened deploy workflow to match CI strength (added audit, lint, format:check, coverage enforcement, build step).
+- **Package Contract**: Added `exports` field for ESM resolution, npm script aliases for diagnostic commands (`doctor`, `release-readiness`, `build-ledger`), and a shared `validate` release proof script.
+- **Deploy Pipeline**: Hardened deploy workflow to run the shared validate release proof gate before container publishing.
+- **Publish Pipeline**: Hardened publish workflow to run the shared validate release proof gate before npm dry-run and release publishing.
 
 ### Removed
 
