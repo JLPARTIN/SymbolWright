@@ -18,7 +18,9 @@ import {
 
 describe('universal CodeMind API contract', () => {
   it('declares the required public API routes', () => {
-    const routeKeys = CODEMIND_PUBLIC_API_ROUTES.map((route) => `${route.method} ${route.path}`)
+    const routeKeys = CODEMIND_PUBLIC_API_ROUTES.map((route) =>
+      `${route.method} ${route.path}`,
+    )
 
     expect(routeKeys).toContain('POST /api/missions')
     expect(routeKeys).toContain('POST /api/chat')
@@ -28,7 +30,7 @@ describe('universal CodeMind API contract', () => {
     expect(routeKeys).toContain('GET /api/missions/:id/events')
   })
 
-  it('requires CodeMind API auth and blocks browser-side raw provider keys', () => {
+  it('requires CodeMind API auth and blocks browser-side provider material', () => {
     for (const route of CODEMIND_PUBLIC_API_ROUTES) {
       expect(route.requiresCodemindApiKey).toBe(true)
       expect(route.browserMaySendRawProviderKey).toBe(false)
@@ -60,7 +62,9 @@ describe('universal CodeMind API contract', () => {
       'ollama',
       'custom',
     ])
-    expect(CODEMIND_PROVIDER_ADAPTERS.every((provider) => provider.browserSafe === false)).toBe(true)
+    expect(CODEMIND_PROVIDER_ADAPTERS.every((provider) => provider.browserSafe === false)).toBe(
+      true,
+    )
     expect(
       CODEMIND_PROVIDER_ADAPTERS.every(
         (provider) => provider.endpointOwnership === 'codemind_server',
