@@ -4,12 +4,10 @@ import type { RuntimeToolDefinition, RuntimeToolContext } from '../types.js'
 import {
   evaluateGitToolRequest,
   renderGitToolResult,
-  READ_OPERATIONS,
   type GitToolInput,
   type GitOperation,
 } from './git-tool.js'
 import { renderRuntimeBoundary } from '../renderers/runtime-renderers.js'
-import { assertGitWriteApproved } from '../policy/runtime-policy.js'
 
 const VALID_OPERATIONS = new Set<string>([
   'status',
@@ -109,11 +107,6 @@ export async function executeGitTool(input: unknown, context: RuntimeToolContext
     return renderGitToolResult(policyResult)
   }
 
-  const isReadOp = READ_OPERATIONS.has(parsed.operation)
-  if (!isReadOp) {
-    assertGitWriteApproved(context.policy, context.approval)
-  }
-
   const args = buildGitArgs(parsed)
   const result = await executeGit(args, context.cwd, 60_000)
 
@@ -137,7 +130,7 @@ export async function executeGitTool(input: unknown, context: RuntimeToolContext
 export const gitExecuteTool: RuntimeToolDefinition = {
   name: 'git',
   description:
-    'Execute git operations (status, diff, log, add, commit, push, checkout -b). Read ops are always allowed; write ops require write permission.',
+    'Execute git operations (status, diff, log, add, commit, push, checkout -b) in the active workspace.',
   capability: 'APPROVED_COMMAND',
   execute: executeGitTool,
 }
