@@ -21,6 +21,10 @@ The active CLI package is `codemind` and exposes:
 ```txt
 codemind help
 codemind status
+codemind operator [mission]
+codemind agent [message]
+codemind sessions
+codemind index [dir]
 codemind plan <goal>
 codemind read <path>
 codemind search <query>
@@ -69,6 +73,7 @@ codemind github-write-executor <json-file>
 codemind mission-packet <json-file>
 codemind audit-ledger <json-file>
 codemind trace-store <json-file>
+codemind build-ledger
 codemind doctor
 codemind version
 codemind release-readiness

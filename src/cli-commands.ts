@@ -11,6 +11,15 @@ export const CODEMIND_CLI_COMMANDS = [
     name: 'operator [mission]',
     description: 'Open the read-only CodeMind Operator Workspace console',
   },
+  {
+    name: 'agent [message]',
+    description: 'Run the interactive coding agent (one-shot with message, interactive without)',
+  },
+  { name: 'sessions', description: 'List saved agent sessions' },
+  {
+    name: 'index [dir]',
+    description: 'Index repository files into the vector store for semantic search',
+  },
   { name: 'plan <goal>', description: 'Render a runtime-backed non-mutating work plan' },
   { name: 'scan [dir]', description: 'Summarize repository structure (defaults to cwd)' },
   { name: 'read <path>', description: 'Read an allowed workspace file without mutation' },
@@ -127,6 +136,11 @@ export const CODEMIND_CLI_COMMANDS = [
     name: 'trace-store <json-file>',
     description:
       'Persist or replay agent kernel trace frames from a local JSON fixture with lineage and invariant validation',
+  },
+  {
+    name: 'build-ledger',
+    description:
+      'Show the build ledger summary with phase details and consistency check against docs',
   },
   {
     name: 'doctor',

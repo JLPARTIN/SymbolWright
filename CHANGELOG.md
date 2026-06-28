@@ -1,0 +1,38 @@
+# Changelog
+
+All notable changes to CodeMind are documented in this file.
+
+## [0.1.0] - 2026-06-28
+
+### Added
+
+- **Runtime Phases A-T**: Full governed loop from read-only planning through approved execution, PR creation, review, and merge-readiness assessment.
+- **Ajna Review Cortex**: Deterministic code review layer with PR evidence schema, collector fixtures, review normalization, and merge-readiness reporting.
+- **Agent Loop**: Multi-turn interactive coding agent with tool schema bridge, streaming provider support, session persistence, and cost tracking.
+- **Operator Console**: Interactive workspace console with 16 commands, aliases, history tracking, and persistent history store.
+- **Runtime Tool Assembly**: 44 registered tools across 22 capability categories with typed tool definitions and policy-gated execution.
+- **Approval Gates**: Typed approval scopes (`file:write`, `github:write`, `command:validate`, `shell:execute`, `git:write`) with ticket validation at every boundary.
+- **GitHub Live Read**: Policy-gated GitHub PR, CI, and file read operations behind explicit `allowNetwork` policy gates.
+- **GitHub Write Surface**: Governed draft PR creation, comment posting, and label application through approval-gated write gates with audit trails.
+- **Local File Write Gate**: Approval-gated file writes with protected path enforcement, workspace containment, dry-run mode, and before/after diff capture.
+- **Validation Command Gate**: Allowlisted command execution (`npm test`, `npm run typecheck`, `npm run lint`, etc.) behind approval tickets.
+- **Repair Loop**: Ajna finding through patch proposal, apply, validate, reassess, and merge-readiness pipeline.
+- **Runtime Workflows**: Governed tool composition with bounded step execution and transcript capture.
+- **Audit Trail**: Persist and replay audit ledger entries and agent kernel trace frames with automatic secret redaction.
+- **Project Memory**: Vector store with cosine similarity search, disk persistence, and RAG context builder for semantic codebase queries.
+- **Workspace Manager**: Multi-repo workspace management with primary selection and cross-repo file lookups.
+- **HiveMind**: Swarm agent registry and dispatch for specialized capability coordination.
+- **Build Ledger**: Machine-readable build state with 20/20 phase completion tracking and docs consistency checking.
+- **Doctor**: 12-point workspace health check covering Node.js version, dependencies, TypeScript config, runtime phases, safety posture, API keys, and project memory.
+- **Release Readiness**: 7-gate release assessment (phases, health, version, entry point, exports, CLI, Dockerfile).
+- **CI Pipeline**: Node 20+22 matrix testing, coverage enforcement (85/80/85/85 thresholds), format checking, and publish dry-run validation.
+- **75 CLI commands** covering all 20 runtime phases plus diagnostics, fixtures, and agent workflows.
+
+### Safety Posture
+
+- Read-only by default with plan-first execution model.
+- All write operations require explicit approval tickets with typed scopes.
+- Protected paths (`.git`, `.env`, `node_modules`, `dist`, `coverage`) enforced at every boundary.
+- Workspace containment prevents directory traversal.
+- Output redaction strips secrets before audit log persistence.
+- GitHub writes limited to draft PRs, comments, and labels (no merge, no force push, no branch deletion).
