@@ -37,7 +37,7 @@ export async function renderRuntimeLocalWrite(
       content: raw.content ?? '',
       reason: raw.reason,
       rollbackNote: raw.rollbackNote ?? '',
-      dryRun: raw.dryRun ?? true,
+      dryRun: raw.dryRun ?? false,
     },
     context,
   )
