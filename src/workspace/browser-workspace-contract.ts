@@ -21,6 +21,12 @@ export const CODEMIND_BROWSER_WORKSPACE_PANELS = [
 ] as const
 
 export type CodemindBrowserWorkspacePanel = (typeof CODEMIND_BROWSER_WORKSPACE_PANELS)[number]
+export type CodemindBrowserWorkspaceKeyBoundary =
+  | 'browser_to_codemind_only'
+  | 'browser_to_provider_direct'
+export type CodemindBrowserWorkspaceProviderKeyStorage =
+  | 'server_side_vault_or_request_scoped_server_runtime'
+  | 'browser_runtime'
 
 export interface CodemindBrowserWorkspaceContract {
   readonly blockId: typeof CODEMIND_BROWSER_WORKSPACE_BLOCK_ID
@@ -29,9 +35,9 @@ export interface CodemindBrowserWorkspaceContract {
   readonly supportedClients: readonly CodemindExternalClientKind[]
   readonly publicApiRouteCount: number
   readonly providerCount: number
-  readonly keyBoundary: 'browser_to_codemind_only'
-  readonly providerKeyStorage: 'server_side_vault_or_request_scoped_server_runtime'
-  readonly browserStoresProviderKeys: false
+  readonly keyBoundary: CodemindBrowserWorkspaceKeyBoundary
+  readonly providerKeyStorage: CodemindBrowserWorkspaceProviderKeyStorage
+  readonly browserStoresProviderKeys: boolean
 }
 
 export interface CodemindBrowserWorkspaceReadinessReport {
@@ -73,7 +79,7 @@ export function assessBrowserWorkspaceReadiness(
     findings.push('Browser workspace does not expose enough provider choices')
   }
   if (contract.browserStoresProviderKeys) {
-    findings.push('Browser workspace must not store raw provider credentials')
+    findings.push('Browser workspace must not persist provider key material')
   }
   if (contract.keyBoundary !== 'browser_to_codemind_only') {
     findings.push('Browser workspace must route through CodeMind before provider calls')
