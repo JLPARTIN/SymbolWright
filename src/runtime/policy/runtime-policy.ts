@@ -1,6 +1,6 @@
 import path from 'node:path'
 
-import type { CodemindRuntimeMode, RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import type { CodemindRuntimeMode, RuntimePolicySnapshot } from '../types.js'
 
 /** Paths blocked from read/write access by default policy. */
 export const DEFAULT_RUNTIME_PROTECTED_PATHS = [
@@ -21,14 +21,14 @@ export const DEFAULT_RUNTIME_NOISY_DIRS = [
   '.next',
 ] as const
 
-/** Creates a read-only policy with all write flags disabled. */
+/** Creates an execution-ready policy with real local tools active by default. */
 export function createDefaultRuntimePolicy(): RuntimePolicySnapshot {
   return {
-    mode: 'READ_ONLY',
-    allowNetwork: false,
-    allowShell: false,
-    allowWrites: false,
-    allowGitHubWrites: false,
+    mode: 'APPROVED_EXECUTION',
+    allowNetwork: true,
+    allowShell: true,
+    allowWrites: true,
+    allowGitHubWrites: true,
     protectedPaths: DEFAULT_RUNTIME_PROTECTED_PATHS,
     noisyDirs: DEFAULT_RUNTIME_NOISY_DIRS,
   }
@@ -76,17 +76,13 @@ export function assertReadablePath(
   }
 }
 
-/** Throws if writes are disabled or approval is missing. */
+/** Throws only when local writes are disabled by policy. Approval tickets are not required. */
 export function assertWriteApproved(
   policy: RuntimePolicySnapshot,
-  approval: RuntimeApproval | undefined,
+  _approval?: unknown,
 ): void {
   if (!policy.allowWrites) {
     throw new Error('Write actions are disabled by runtime policy.')
-  }
-
-  if (approval === undefined) {
-    throw new Error('Write actions require explicit approval.')
   }
 }
 
@@ -97,57 +93,33 @@ export function assertShellAllowed(policy: RuntimePolicySnapshot): void {
   }
 }
 
-/** Throws if shell execution is disabled or approval is missing the shell:execute scope. */
+/** Throws only when shell execution is disabled by policy. Approval tickets are not required. */
 export function assertShellApproved(
   policy: RuntimePolicySnapshot,
-  approval: RuntimeApproval | undefined,
+  _approval?: unknown,
 ): void {
   if (!policy.allowShell) {
     throw new Error('Shell execution is disabled by runtime policy.')
   }
-
-  if (approval === undefined) {
-    throw new Error('Shell execution requires explicit approval.')
-  }
-
-  if (!approval.scopes.includes('shell:execute') && !approval.scopes.includes('command:validate')) {
-    throw new Error('Approval does not include shell:execute or command:validate scope.')
-  }
 }
 
-/** Throws if git write operations are disabled or approval is missing the git:write scope. */
+/** Throws only when git write operations are disabled by policy. Approval tickets are not required. */
 export function assertGitWriteApproved(
   policy: RuntimePolicySnapshot,
-  approval: RuntimeApproval | undefined,
+  _approval?: unknown,
 ): void {
   if (!policy.allowWrites) {
     throw new Error('Write actions are disabled by runtime policy.')
   }
-
-  if (approval === undefined) {
-    throw new Error('Git write operations require explicit approval.')
-  }
-
-  if (!approval.scopes.includes('git:write') && !approval.scopes.includes('apply_edit')) {
-    throw new Error('Approval does not include git:write scope.')
-  }
 }
 
-/** Throws if GitHub writes are disabled or approval is missing the github:write scope. */
+/** Throws only when GitHub writes are disabled by policy. Approval tickets are not required. */
 export function assertGitHubWriteApproved(
   policy: RuntimePolicySnapshot,
-  approval: RuntimeApproval | undefined,
+  _approval?: unknown,
 ): void {
   if (!policy.allowGitHubWrites) {
     throw new Error('GitHub writes are disabled by runtime policy.')
-  }
-
-  if (approval === undefined) {
-    throw new Error('GitHub writes require explicit approval.')
-  }
-
-  if (!approval.scopes.includes('github:write')) {
-    throw new Error('Approval does not include github:write scope.')
   }
 }
 
