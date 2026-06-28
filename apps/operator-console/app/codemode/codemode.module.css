@@ -1,0 +1,379 @@
+.workspace {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px 14px 0 0;
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.brandBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.eyebrow {
+  color: var(--ok);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.governanceControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.govBtn {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: rgba(15, 23, 42, 0.75);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.govBtnActive {
+  color: white;
+  border-color: rgba(59, 130, 246, 0.75);
+  background: rgba(59, 130, 246, 0.35);
+}
+
+.govBtnDanger.govBtnActive {
+  border-color: rgba(74, 222, 128, 0.7);
+  background: rgba(74, 222, 128, 0.18);
+}
+
+.runningIndicator {
+  padding: 7px 10px;
+  border-radius: 8px;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.tabBar {
+  display: flex;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  background: rgba(15, 23, 42, 0.58);
+}
+
+.tab,
+.clearBtn {
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.tabActive {
+  color: #93c5fd;
+  border-bottom: 2px solid #3b82f6;
+}
+
+.clearBtn {
+  margin-left: auto;
+}
+
+.quickBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  background: rgba(5, 8, 22, 0.45);
+}
+
+.quickBtn {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: rgba(15, 23, 42, 0.78);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.quickBtn:hover:not(:disabled) {
+  color: #93c5fd;
+  border-color: rgba(147, 197, 253, 0.45);
+}
+
+.quickBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.quickIcon {
+  color: #93c5fd;
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+
+.terminal {
+  flex: 1;
+  min-height: 54vh;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  padding: 14px 16px;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  background: rgba(5, 8, 22, 0.96);
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", "Courier New", monospace;
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+
+.entry {
+  display: flex;
+  gap: 8px;
+  padding: 5px 0;
+  align-items: flex-start;
+}
+
+.entryTime {
+  flex-shrink: 0;
+  min-width: 62px;
+  color: rgba(148, 163, 184, 0.45);
+  font-size: 0.7rem;
+}
+
+.entryPrefix {
+  flex-shrink: 0;
+  min-width: 82px;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.entrySystem .entryPrefix {
+  color: var(--warn);
+}
+
+.entryOperator .entryPrefix {
+  color: #93c5fd;
+}
+
+.entryCodemind .entryPrefix {
+  color: var(--ok);
+}
+
+.entryError .entryPrefix {
+  color: var(--danger);
+}
+
+.entryRunning .entryPrefix {
+  color: #38bdf8;
+}
+
+.entryContent {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: rgba(229, 231, 235, 0.92);
+}
+
+.entryError .entryContent {
+  color: #fca5a5;
+}
+
+.entryRunning .entryContent {
+  color: #7dd3fc;
+}
+
+.inputBar {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 0 0 14px 14px;
+  background: rgba(15, 23, 42, 0.92);
+  align-items: flex-end;
+}
+
+.missionInput {
+  flex: 1;
+  min-height: 52px;
+  resize: vertical;
+  padding: 11px 13px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: rgba(5, 8, 22, 0.82);
+  color: var(--text);
+  font-family: "SF Mono", "Fira Code", monospace;
+  line-height: 1.5;
+}
+
+.inputActions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sendBtn,
+.proposeBtn {
+  min-width: 86px;
+  min-height: 38px;
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.sendBtn {
+  color: white;
+  background: #2563eb;
+}
+
+.proposeBtn {
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  background: rgba(168, 85, 247, 0.15);
+}
+
+.sendBtn:disabled,
+.proposeBtn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.setupPanel {
+  flex: 1;
+  padding: 18px 16px;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0 0 14px 14px;
+  background: rgba(15, 23, 42, 0.68);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.setupSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.setupTitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.setupDesc {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.setupCode,
+.layoutPre {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(5, 8, 22, 0.9);
+  padding: 14px;
+}
+
+.setupPre,
+.layoutPre {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  color: var(--text);
+}
+
+.setupCopyBtn {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.18);
+  color: #93c5fd;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.statusGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.statusItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(5, 8, 22, 0.55);
+}
+
+.statusLabel {
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.statusValue {
+  font-weight: 800;
+}
+
+@media (max-width: 720px) {
+  .workspace {
+    padding: 8px;
+  }
+
+  .header,
+  .inputBar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .governanceControls,
+  .inputActions {
+    width: 100%;
+  }
+
+  .govBtn,
+  .sendBtn,
+  .proposeBtn {
+    flex: 1;
+  }
+}
