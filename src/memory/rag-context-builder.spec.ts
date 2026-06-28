@@ -9,9 +9,27 @@ function createPopulatedStore(dimensions: number): VectorStore {
   const store = new VectorStore({ dimensions })
 
   const chunks = [
-    { id: 'f1#0', filePath: 'auth.ts', chunk: 'function login(user: string) { return true; }', lineStart: 1, lineEnd: 5 },
-    { id: 'f1#1', filePath: 'auth.ts', chunk: 'function logout() { session.clear(); }', lineStart: 6, lineEnd: 10 },
-    { id: 'f2#0', filePath: 'db.ts', chunk: 'const pool = createPool({ host: "localhost" });', lineStart: 1, lineEnd: 3 },
+    {
+      id: 'f1#0',
+      filePath: 'auth.ts',
+      chunk: 'function login(user: string) { return true; }',
+      lineStart: 1,
+      lineEnd: 5,
+    },
+    {
+      id: 'f1#1',
+      filePath: 'auth.ts',
+      chunk: 'function logout() { session.clear(); }',
+      lineStart: 6,
+      lineEnd: 10,
+    },
+    {
+      id: 'f2#0',
+      filePath: 'db.ts',
+      chunk: 'const pool = createPool({ host: "localhost" });',
+      lineStart: 1,
+      lineEnd: 3,
+    },
   ]
 
   for (const c of chunks) {
@@ -116,7 +134,12 @@ describe('buildRagContext', () => {
       minScore: 0.99,
       charsPerToken: 4,
     }
-    const result = await buildRagContext('unrelated gibberish xyzzy', store, embeddingProvider, config)
+    const result = await buildRagContext(
+      'unrelated gibberish xyzzy',
+      store,
+      embeddingProvider,
+      config,
+    )
 
     for (const source of result.sources) {
       expect(source.score).toBeGreaterThanOrEqual(0.99)

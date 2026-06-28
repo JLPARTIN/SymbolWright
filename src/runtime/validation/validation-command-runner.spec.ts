@@ -5,7 +5,10 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
-import { executeValidationCommand, renderValidationCommandExecutionResult } from './validation-command-runner.js'
+import {
+  executeValidationCommand,
+  renderValidationCommandExecutionResult,
+} from './validation-command-runner.js'
 
 const shellPolicy: RuntimePolicySnapshot = {
   mode: 'APPROVED_EXECUTION',
@@ -58,7 +61,9 @@ describe('executeValidationCommand', () => {
 
     expect(result.outcome).toBe('BLOCKED')
     expect(result.exitCode).toBeNull()
-    expect(result.gateResult.blockReasons).toContain('Shell execution is disabled by runtime policy.')
+    expect(result.gateResult.blockReasons).toContain(
+      'Shell execution is disabled by runtime policy.',
+    )
   })
 
   it('dry-runs without executing command', () => {

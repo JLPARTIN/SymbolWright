@@ -14,5 +14,10 @@ export interface RuntimeLiveReadClient {
 
   getWorkflowEvidence(owner: string, repo: string, runId: number): Promise<GitHubCiEvidence>
 
-  getRepositoryFile(owner: string, repo: string, path: string, ref: string): Promise<RepositoryFileResult>
+  getRepositoryFile(
+    owner: string,
+    repo: string,
+    path: string,
+    ref: string,
+  ): Promise<RepositoryFileResult>
 }

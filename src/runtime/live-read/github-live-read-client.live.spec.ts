@@ -43,10 +43,7 @@ describe('GitHubLiveReadClient with mocked HTTP', () => {
       })
       http.addResponse('/repos/owner/repo/pulls/42/files', {
         status: 200,
-        body: [
-          { filename: 'src/feature.ts' },
-          { filename: 'src/feature.spec.ts' },
-        ],
+        body: [{ filename: 'src/feature.ts' }, { filename: 'src/feature.spec.ts' }],
       })
 
       const client = new GitHubLiveReadClient(http)
@@ -243,9 +240,9 @@ describe('GitHubLiveReadClient with mocked HTTP', () => {
       const http = new MockGitHubHttpClient()
 
       const client = new GitHubLiveReadClient(http)
-      await expect(
-        client.getRepositoryFile('owner', 'repo', 'missing.ts', 'main'),
-      ).rejects.toThrow('GitHub API returned 404')
+      await expect(client.getRepositoryFile('owner', 'repo', 'missing.ts', 'main')).rejects.toThrow(
+        'GitHub API returned 404',
+      )
     })
 
     it('redacts secrets in file content', async () => {

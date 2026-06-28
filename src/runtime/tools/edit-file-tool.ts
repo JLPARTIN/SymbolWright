@@ -81,9 +81,7 @@ export async function executeEditFileTool(
   fs.writeFileSync(resolvedPath, newContent, 'utf-8')
 
   const relativePath = path.relative(cwd, resolvedPath) || path.basename(resolvedPath)
-  const replacements = input.replaceAll
-    ? originalContent.split(input.oldText).length - 1
-    : 1
+  const replacements = input.replaceAll ? originalContent.split(input.oldText).length - 1 : 1
 
   return [
     'CodeMind edit',
@@ -106,12 +104,8 @@ export const editFileTool: RuntimeToolDefinition = {
   capability: 'APPROVED_EDIT',
   execute: async (input, context) => {
     assertWriteApproved(context.policy, context.approval)
-    return executeEditFileTool(
-      parseEditFileInput(input),
-      context.cwd,
-      () => {
-        assertWriteApproved(context.policy, context.approval)
-      },
-    )
+    return executeEditFileTool(parseEditFileInput(input), context.cwd, () => {
+      assertWriteApproved(context.policy, context.approval)
+    })
   },
 }

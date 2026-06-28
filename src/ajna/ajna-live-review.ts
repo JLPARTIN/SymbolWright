@@ -35,9 +35,7 @@ export interface AjnaLiveReviewResult {
   readonly pipelineReport: AjnaReviewPipelineReport
 }
 
-function deriveRepoImpactLevel(
-  changedFiles: readonly CodemindChangedFileContext[],
-): string {
+function deriveRepoImpactLevel(changedFiles: readonly CodemindChangedFileContext[]): string {
   const insights = buildAjnaFileInsights(changedFiles)
   const maxScore = insights.reduce((max, insight) => Math.max(max, insight.score), 0)
 
@@ -47,9 +45,7 @@ function deriveRepoImpactLevel(
   return 'LOW'
 }
 
-function deriveProofStatuses(
-  input: AjnaLiveReviewInput,
-): AjnaProofBundleInput {
+function deriveProofStatuses(input: AjnaLiveReviewInput): AjnaProofBundleInput {
   if (input.proofStatuses !== undefined) {
     return input.proofStatuses
   }
@@ -100,10 +96,14 @@ export function runAjnaLiveReview(input: AjnaLiveReviewInput): AjnaLiveReviewRes
     identity,
     proofStatuses,
     ...(input.reviewPanel !== undefined ? { reviewPanel: input.reviewPanel } : {}),
-    ...(input.governanceOverrides !== undefined ? { governanceOverrides: input.governanceOverrides } : {}),
+    ...(input.governanceOverrides !== undefined
+      ? { governanceOverrides: input.governanceOverrides }
+      : {}),
     repoImpactLevel,
     protectedFileCount,
-    ...(input.requiresOperatorApproval !== undefined ? { requiresOperatorApproval: input.requiresOperatorApproval } : {}),
+    ...(input.requiresOperatorApproval !== undefined
+      ? { requiresOperatorApproval: input.requiresOperatorApproval }
+      : {}),
     ...(findings.length > 0 ? { blockingFindings: findings } : {}),
     reportFormat: 'markdown',
     renderedAt: new Date().toISOString(),

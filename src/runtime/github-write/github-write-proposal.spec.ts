@@ -109,7 +109,9 @@ describe('evaluateGitHubWriteProposal', () => {
   it('blocks empty targetRef', () => {
     const result = evaluateGitHubWriteProposal(validInput({ targetRef: '' }))
     expect(result.decision).toBe('BLOCKED')
-    expect(result.blockReasons).toContain('Target reference (PR number, issue, or branch) must be specified.')
+    expect(result.blockReasons).toContain(
+      'Target reference (PR number, issue, or branch) must be specified.',
+    )
   })
 
   it('blocks empty content', () => {
@@ -269,9 +271,9 @@ describe('githubWriteProposalTool', () => {
   })
 
   it('rejects missing input', async () => {
-    await expect(
-      githubWriteProposalTool.execute(null, testContext()),
-    ).rejects.toThrow('Missing GitHub write proposal input.')
+    await expect(githubWriteProposalTool.execute(null, testContext())).rejects.toThrow(
+      'Missing GitHub write proposal input.',
+    )
   })
 
   it('rejects missing action', async () => {

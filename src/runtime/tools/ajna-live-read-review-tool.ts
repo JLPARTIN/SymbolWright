@@ -1,5 +1,9 @@
 import type { RuntimeLiveReadClient } from '../live-read/runtime-live-read-client.js'
-import { renderLiveReadAjnaReview, runLiveReadAjnaReview, type LiveReadAjnaReviewInput } from '../ajna/live-read-ajna-review-pipeline.js'
+import {
+  renderLiveReadAjnaReview,
+  runLiveReadAjnaReview,
+  type LiveReadAjnaReviewInput,
+} from '../ajna/live-read-ajna-review-pipeline.js'
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 
 export interface AjnaLiveReadReviewInput {
@@ -53,7 +57,9 @@ export function createAjnaLiveReadReviewTool(client: RuntimeLiveReadClient): Run
           ? { pr: await client.getPullRequestEvidence(parsed.owner, parsed.repo, parsed.prNumber) }
           : {}),
         ...(parsed.workflowRunId !== undefined
-          ? { ci: await client.getWorkflowEvidence(parsed.owner, parsed.repo, parsed.workflowRunId) }
+          ? {
+              ci: await client.getWorkflowEvidence(parsed.owner, parsed.repo, parsed.workflowRunId),
+            }
           : {}),
       }
 

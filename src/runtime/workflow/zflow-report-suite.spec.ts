@@ -8,7 +8,10 @@ import {
   renderZflowReportSuiteMarkdown,
 } from './zflow-report-suite.js'
 
-function makeReport(id: string, readiness: 'READY_FOR_OPERATOR_REVIEW' | 'NEEDS_RECOVERY_DETAIL' | 'BLOCKED'): ZflowExecutionReport {
+function makeReport(
+  id: string,
+  readiness: 'READY_FOR_OPERATOR_REVIEW' | 'NEEDS_RECOVERY_DETAIL' | 'BLOCKED',
+): ZflowExecutionReport {
   return {
     id,
     generatedAt: '2026-01-01T00:00:00.000Z',
@@ -49,7 +52,10 @@ describe('zflow report suite', () => {
   it('detects blocked reports in the rollup', () => {
     const catalog = createZflowReportCatalog({
       title: 'Zflow Reports',
-      reports: [makeReport('report-1', 'READY_FOR_OPERATOR_REVIEW'), makeReport('report-2', 'BLOCKED')],
+      reports: [
+        makeReport('report-1', 'READY_FOR_OPERATOR_REVIEW'),
+        makeReport('report-2', 'BLOCKED'),
+      ],
     })
     const suite = createZflowReportSuite({ title: 'Zflow Suite', catalog })
 

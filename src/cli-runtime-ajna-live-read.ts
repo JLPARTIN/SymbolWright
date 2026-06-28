@@ -31,7 +31,12 @@ export async function renderRuntimeAjnaLiveRead(
   if (raw.mode === 'review') {
     const tool = registry.getOrThrow('ajna_live_read_review')
     return tool.execute(
-      { owner: raw.owner, repo: raw.repo, prNumber: raw.prNumber, workflowRunId: raw.workflowRunId },
+      {
+        owner: raw.owner,
+        repo: raw.repo,
+        prNumber: raw.prNumber,
+        workflowRunId: raw.workflowRunId,
+      },
       context,
     )
   }

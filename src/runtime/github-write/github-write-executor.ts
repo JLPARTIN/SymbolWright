@@ -1,15 +1,9 @@
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
-import {
-  evaluateGitHubWriteGate,
-  type GitHubWriteGateResult,
-} from './github-write-gate.js'
+import { evaluateGitHubWriteGate, type GitHubWriteGateResult } from './github-write-gate.js'
 
 export type GitHubWriteExecutorOutcome = 'BLOCKED' | 'DRY_RUN' | 'EXECUTED'
 
-export type GitHubWriteExecutorAction =
-  | 'create_draft_pr'
-  | 'post_comment'
-  | 'apply_label'
+export type GitHubWriteExecutorAction = 'create_draft_pr' | 'post_comment' | 'apply_label'
 
 export const GITHUB_WRITE_EXECUTOR_ACTIONS: readonly GitHubWriteExecutorAction[] = [
   'create_draft_pr',

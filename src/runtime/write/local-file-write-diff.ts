@@ -29,7 +29,14 @@ export function renderLocalFileWriteDiff(diff: LocalFileWriteDiff): string {
   if (diff.isNew) {
     lines.push('', 'New content:', diff.newContent)
   } else {
-    lines.push('', 'Previous content:', diff.previousContent ?? '', '', 'New content:', diff.newContent)
+    lines.push(
+      '',
+      'Previous content:',
+      diff.previousContent ?? '',
+      '',
+      'New content:',
+      diff.newContent,
+    )
   }
 
   return lines.join('\n')

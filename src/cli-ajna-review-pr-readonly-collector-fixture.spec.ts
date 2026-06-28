@@ -36,9 +36,13 @@ describe('parseAjnaReadOnlyCollectorReviewRequest', () => {
   })
 
   it('rejects invalid request fixtures', () => {
-    expect(() => parseAjnaReadOnlyCollectorReviewRequest('[]')).toThrow('review request must be an object')
+    expect(() => parseAjnaReadOnlyCollectorReviewRequest('[]')).toThrow(
+      'review request must be an object',
+    )
     expect(() =>
-      parseAjnaReadOnlyCollectorReviewRequest(JSON.stringify({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 0 })),
+      parseAjnaReadOnlyCollectorReviewRequest(
+        JSON.stringify({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 0 }),
+      ),
     ).toThrow('pullRequestNumber must be a positive integer')
   })
 })

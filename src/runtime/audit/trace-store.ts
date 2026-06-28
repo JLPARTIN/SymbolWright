@@ -77,8 +77,10 @@ function checkLineage(frames: readonly AgentKernelTraceFrame[]): readonly string
   const blockIds = frames.map((f) => f.blockId)
 
   for (let i = 1; i < blockIds.length; i++) {
-    const prev = EXPECTED_BLOCK_ORDER.indexOf(blockIds[i - 1] as typeof EXPECTED_BLOCK_ORDER[number])
-    const curr = EXPECTED_BLOCK_ORDER.indexOf(blockIds[i] as typeof EXPECTED_BLOCK_ORDER[number])
+    const prev = EXPECTED_BLOCK_ORDER.indexOf(
+      blockIds[i - 1] as (typeof EXPECTED_BLOCK_ORDER)[number],
+    )
+    const curr = EXPECTED_BLOCK_ORDER.indexOf(blockIds[i] as (typeof EXPECTED_BLOCK_ORDER)[number])
 
     if (prev === -1 || curr === -1) {
       continue
@@ -313,7 +315,9 @@ export function renderTraceStoreReplayResult(result: TraceStoreReplayResult): st
   if (result.entries.length > 0) {
     lines.push('', 'Replayed frames:')
     for (const entry of result.entries) {
-      lines.push(`- [${entry.sequenceNumber}] ${entry.frame.blockId} (${entry.frame.payloadSummary.kind})`)
+      lines.push(
+        `- [${entry.sequenceNumber}] ${entry.frame.blockId} (${entry.frame.payloadSummary.kind})`,
+      )
     }
   }
 

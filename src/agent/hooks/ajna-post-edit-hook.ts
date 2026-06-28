@@ -22,9 +22,7 @@ export interface AjnaPostEditResult {
 const WARN_THRESHOLD_LEVELS: ReadonlySet<AjnaRiskLevel> = new Set(['HIGH', 'CRITICAL', 'BLOCKED'])
 
 function buildWarningMessage(review: AjnaLiveReviewResult): string {
-  const lines: string[] = [
-    `Ajna detected ${review.riskLevel} risk in your changes.`,
-  ]
+  const lines: string[] = [`Ajna detected ${review.riskLevel} risk in your changes.`]
 
   if (review.findings.length > 0) {
     lines.push('')
@@ -70,7 +68,9 @@ export function runAjnaPostEditHook(
     baseRef: context.baseRef,
     headSha: context.headSha,
     baseSha: context.baseSha,
-    ...(context.pullRequestNumber !== undefined ? { pullRequestNumber: context.pullRequestNumber } : {}),
+    ...(context.pullRequestNumber !== undefined
+      ? { pullRequestNumber: context.pullRequestNumber }
+      : {}),
     changedFiles: editedFiles,
   })
 

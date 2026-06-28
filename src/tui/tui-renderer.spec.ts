@@ -119,9 +119,7 @@ describe('renderTuiSwarmPanel', () => {
   it('renders completed agent with + icon', () => {
     const state: TuiState = {
       ...baseState(),
-      swarmAgents: [
-        { agentId: 'a-1', agentType: 'coder', status: 'completed' },
-      ],
+      swarmAgents: [{ agentId: 'a-1', agentType: 'coder', status: 'completed' }],
     }
     const output = renderTuiSwarmPanel(state)
     expect(output).toContain('[+] coder (a-1): completed')
@@ -130,9 +128,7 @@ describe('renderTuiSwarmPanel', () => {
   it('renders failed agent with x icon', () => {
     const state: TuiState = {
       ...baseState(),
-      swarmAgents: [
-        { agentId: 'a-1', agentType: 'analyzer', status: 'failed' },
-      ],
+      swarmAgents: [{ agentId: 'a-1', agentType: 'analyzer', status: 'failed' }],
     }
     const output = renderTuiSwarmPanel(state)
     expect(output).toContain('[x] analyzer (a-1): failed')
@@ -141,9 +137,7 @@ describe('renderTuiSwarmPanel', () => {
   it('renders idle agent with - icon', () => {
     const state: TuiState = {
       ...baseState(),
-      swarmAgents: [
-        { agentId: 'a-1', agentType: 'reporter', status: 'idle' },
-      ],
+      swarmAgents: [{ agentId: 'a-1', agentType: 'reporter', status: 'idle' }],
     }
     const output = renderTuiSwarmPanel(state)
     expect(output).toContain('[-] reporter (a-1): idle')
@@ -152,9 +146,7 @@ describe('renderTuiSwarmPanel', () => {
   it('includes header', () => {
     const state: TuiState = {
       ...baseState(),
-      swarmAgents: [
-        { agentId: 'a-1', agentType: 'investigator', status: 'active' },
-      ],
+      swarmAgents: [{ agentId: 'a-1', agentType: 'investigator', status: 'active' }],
     }
     const output = renderTuiSwarmPanel(state)
     expect(output).toContain('HiveMind Swarm Status:')
@@ -273,9 +265,7 @@ describe('renderTuiWorkspace', () => {
       ...baseState(),
       streaming: true,
       streamBuffer: 'Analyzing repository...',
-      activeTools: [
-        { toolName: 'read_file', startedAt: 1, elapsedMs: 10, status: 'running' },
-      ],
+      activeTools: [{ toolName: 'read_file', startedAt: 1, elapsedMs: 10, status: 'running' }],
       swarmAgents: [
         { agentId: 'swarm-1', agentType: 'investigator', status: 'active', task: 'map src/' },
       ],

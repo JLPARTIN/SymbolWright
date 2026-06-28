@@ -1,21 +1,35 @@
 import type { LLMProvider, ProviderMessage } from '../provider/provider.types.js'
-import type { RuntimeToolDefinition, RuntimeToolContext, GitHubClientRegistry } from '../runtime/types.js'
+import type {
+  RuntimeToolDefinition,
+  RuntimeToolContext,
+  GitHubClientRegistry,
+} from '../runtime/types.js'
 import type { AgentLoopConfig, AgentLoopEvent, AgentLoopResult } from '../agent/agent-loop.types.js'
 import { runAgentLoop } from '../agent/agent-loop.js'
 import { HiveMindRegistry } from '../hivemind/hivemind-registry.js'
 import { HiveMindDispatcher, type SwarmDispatchRequest } from '../hivemind/hivemind-dispatcher.js'
 import type { SwarmDispatchResult } from '../hivemind/hivemind.types.js'
 import { SWARM_AGENT_TYPES } from '../hivemind/hivemind.types.js'
-import { buildUnifiedSystemPrompt, type UnifiedPromptContext } from '../conversation/unified-system-prompt.js'
+import {
+  buildUnifiedSystemPrompt,
+  type UnifiedPromptContext,
+} from '../conversation/unified-system-prompt.js'
 import type { TuiState } from '../tui/tui.types.js'
 import { createInitialTuiState } from '../tui/tui.types.js'
 import { applyTuiEvent } from '../tui/tui-event-handler.js'
 import type { TuiEvent } from '../tui/tui-event-handler.js'
-import { runAjnaLiveReview, type AjnaLiveReviewInput, type AjnaLiveReviewResult } from '../ajna/ajna-live-review.js'
+import {
+  runAjnaLiveReview,
+  type AjnaLiveReviewInput,
+  type AjnaLiveReviewResult,
+} from '../ajna/ajna-live-review.js'
 import { evaluateAjnaMergeGate, type AjnaMergeGateResult } from '../ajna/ajna-merge-gate.js'
 import { createWiredSwarmDispatchTool } from '../runtime/tools/swarm-dispatch-tool.js'
 import { assertValidPolicy } from '../runtime/policy/runtime-policy.js'
-import { createRuntimeEventBus, type RuntimeEventBus } from '../runtime/observability/runtime-event-bus.js'
+import {
+  createRuntimeEventBus,
+  type RuntimeEventBus,
+} from '../runtime/observability/runtime-event-bus.js'
 import { DefaultGitHubHttpClient } from '../runtime/live-read/github-http-client.js'
 import { GitHubLiveReadClient } from '../runtime/live-read/github-live-read-client.js'
 import { GitHubLiveReadPolicyWrapper } from '../runtime/live-read/github-live-read-policy-wrapper.js'
@@ -80,17 +94,12 @@ export function activateSubsystems(config: CodemindActivationConfig): CodemindSu
     systemPrompt,
   )
 
-  const tuiState = createInitialTuiState(
-    sessionId,
-    config.provider.displayName,
-    'interactive',
-  )
+  const tuiState = createInitialTuiState(sessionId, config.provider.displayName, 'interactive')
 
   const { liveReadTools, githubClients } = wireGitHubClients(config.githubToken)
 
-  const toolContext: RuntimeToolContext = githubClients !== undefined
-    ? { ...config.toolContext, githubClients }
-    : config.toolContext
+  const toolContext: RuntimeToolContext =
+    githubClients !== undefined ? { ...config.toolContext, githubClients } : config.toolContext
 
   const tools: readonly RuntimeToolDefinition[] = [...config.tools, ...liveReadTools]
 
@@ -99,7 +108,8 @@ export function activateSubsystems(config: CodemindActivationConfig): CodemindSu
     category: 'session_lifecycle',
     action: 'activate_subsystems',
     timestamp: new Date().toISOString(),
-    detail: `Session ${sessionId} activated with ${tools.length} tools` +
+    detail:
+      `Session ${sessionId} activated with ${tools.length} tools` +
       (githubClients !== undefined ? ' (GitHub live read enabled)' : ''),
   })
 
@@ -144,18 +154,14 @@ export async function runActivatedAgent(
     }
   }
 
-  const wiredTools = wireSwarmDispatchTool(
-    config.tools,
-    subsystems.dispatcher,
-    (result) => {
-      swarmDispatches.push(result)
-      updateTui({
-        type: 'swarm_complete',
-        agentId: result.agentId,
-        status: result.status === 'completed' ? 'completed' : 'failed',
-      })
-    },
-  )
+  const wiredTools = wireSwarmDispatchTool(config.tools, subsystems.dispatcher, (result) => {
+    swarmDispatches.push(result)
+    updateTui({
+      type: 'swarm_complete',
+      agentId: result.agentId,
+      status: result.status === 'completed' ? 'completed' : 'failed',
+    })
+  })
 
   const loopConfig: AgentLoopConfig = {
     maxIterations: config.maxIterations ?? 50,
@@ -175,7 +181,10 @@ export async function runActivatedAgent(
   updateTui({
     type: 'token_update',
     tokenCount: agentResult.totalUsage.inputTokens + agentResult.totalUsage.outputTokens,
-    costEstimate: estimateCost(agentResult.totalUsage.inputTokens, agentResult.totalUsage.outputTokens),
+    costEstimate: estimateCost(
+      agentResult.totalUsage.inputTokens,
+      agentResult.totalUsage.outputTokens,
+    ),
   })
 
   return {

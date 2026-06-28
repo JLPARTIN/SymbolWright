@@ -1,17 +1,17 @@
 import type { AgentLoopEvent } from '../agent/agent-loop.types.js'
 import type { AjnaLiveReviewResult } from '../ajna/ajna-live-review.js'
 import type { SwarmAgentType, SwarmAgentStatus } from '../hivemind/hivemind.types.js'
-import type {
-  TuiState,
-  TuiToolStatus,
-  TuiSwarmAgentStatus,
-  TuiAjnaStatus,
-} from './tui.types.js'
+import type { TuiState, TuiToolStatus, TuiSwarmAgentStatus, TuiAjnaStatus } from './tui.types.js'
 
 export type TuiEvent =
   | { readonly type: 'agent_loop_event'; readonly event: AgentLoopEvent }
   | { readonly type: 'ajna_review'; readonly result: AjnaLiveReviewResult }
-  | { readonly type: 'swarm_dispatch'; readonly agentId: string; readonly agentType: SwarmAgentType; readonly task: string }
+  | {
+      readonly type: 'swarm_dispatch'
+      readonly agentId: string
+      readonly agentType: SwarmAgentType
+      readonly task: string
+    }
   | { readonly type: 'swarm_complete'; readonly agentId: string; readonly status: SwarmAgentStatus }
   | { readonly type: 'approval_request'; readonly prompt: string }
   | { readonly type: 'approval_response'; readonly approved: boolean }
@@ -130,11 +130,7 @@ function applySwarmDispatch(
   }
 }
 
-function applySwarmComplete(
-  state: TuiState,
-  agentId: string,
-  status: SwarmAgentStatus,
-): TuiState {
+function applySwarmComplete(state: TuiState, agentId: string, status: SwarmAgentStatus): TuiState {
   const updatedAgents = state.swarmAgents.map((agent) =>
     agent.agentId === agentId
       ? { ...agent, status: status as TuiSwarmAgentStatus['status'] }

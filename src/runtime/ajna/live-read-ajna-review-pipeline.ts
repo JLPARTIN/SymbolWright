@@ -2,7 +2,10 @@ import type { GitHubPrEvidence } from '../adapters/github-pr-read-adapter.js'
 import type { GitHubCiEvidence } from '../adapters/github-ci-read-adapter.js'
 import { buildPrEvidenceSummary } from '../evidence/pr-evidence-builder.js'
 import { buildCiEvidenceSummary } from '../evidence/ci-evidence-summary.js'
-import { bridgeRuntimeEvidenceToAjna, type RuntimeAjnaEvidenceBridgeOutput } from './runtime-ajna-evidence-bridge.js'
+import {
+  bridgeRuntimeEvidenceToAjna,
+  type RuntimeAjnaEvidenceBridgeOutput,
+} from './runtime-ajna-evidence-bridge.js'
 
 export interface LiveReadAjnaReviewInput {
   readonly pr?: GitHubPrEvidence
@@ -45,11 +48,7 @@ export function runLiveReadAjnaReview(input: LiveReadAjnaReviewInput): LiveReadA
 }
 
 export function renderLiveReadAjnaReview(result: LiveReadAjnaReviewResult): string {
-  const sections: string[] = [
-    'CodeMind Ajna live-read review',
-    '',
-    `Verdict: ${result.verdict}`,
-  ]
+  const sections: string[] = ['CodeMind Ajna live-read review', '', `Verdict: ${result.verdict}`]
 
   if (result.notes.length > 0) {
     sections.push('', 'Evidence notes:')

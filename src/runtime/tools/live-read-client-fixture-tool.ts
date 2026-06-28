@@ -39,5 +39,6 @@ export const liveReadClientFixtureTool: RuntimeToolDefinition = {
   name: 'live_read_client_fixture',
   description: 'Run live read client fixture through fake client and evidence pipeline.',
   capability: 'EVIDENCE_READ',
-  execute: async (input, context) => executeLiveReadClientFixtureTool(parseLiveReadClientFixtureToolInput(input), context),
+  execute: async (input, context) =>
+    executeLiveReadClientFixtureTool(parseLiveReadClientFixtureToolInput(input), context),
 }

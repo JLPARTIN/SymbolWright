@@ -1,6 +1,10 @@
 import path from 'node:path'
 
-import { assertReadablePath, isPathInsideWorkspace, resolveWorkspacePath } from '../policy/runtime-policy.js'
+import {
+  assertReadablePath,
+  isPathInsideWorkspace,
+  resolveWorkspacePath,
+} from '../policy/runtime-policy.js'
 import type { RuntimeApproval, RuntimeApprovalScope, RuntimePolicySnapshot } from '../types.js'
 
 /** Input for an approval gate check — scope, workspace, target path, and policy. */

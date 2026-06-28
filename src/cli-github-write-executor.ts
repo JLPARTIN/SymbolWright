@@ -60,9 +60,10 @@ export async function renderGitHubWriteExecutorCommand(fixturePath: string): Pro
   const approval: RuntimeApproval | undefined = raw.approval
 
   const githubToken = process.env['GITHUB_TOKEN']
-  const client: GitHubWriteExecutorClient = githubToken !== undefined && githubToken.length > 0
-    ? new DefaultGitHubWriteExecutorClient(new DefaultGitHubHttpClient({ token: githubToken }))
-    : new FakeGitHubWriteExecutorClient()
+  const client: GitHubWriteExecutorClient =
+    githubToken !== undefined && githubToken.length > 0
+      ? new DefaultGitHubWriteExecutorClient(new DefaultGitHubHttpClient({ token: githubToken }))
+      : new FakeGitHubWriteExecutorClient()
   const result = await executeGitHubWrite(request, policy, approval, client)
   return renderGitHubWriteExecutorResult(result)
 }

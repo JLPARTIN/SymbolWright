@@ -60,8 +60,7 @@ export class SessionPersistence {
   listSessions(): readonly PersistedSession[] {
     if (!existsSync(this.sessionsDir)) return []
 
-    const files = readdirSync(this.sessionsDir)
-      .filter((f) => f.endsWith('.jsonl'))
+    const files = readdirSync(this.sessionsDir).filter((f) => f.endsWith('.jsonl'))
 
     const sessions: PersistedSession[] = []
 
@@ -80,7 +79,9 @@ export class SessionPersistence {
           createdAt: stat.birthtime.toISOString(),
           updatedAt: stat.mtime.toISOString(),
           messageCount: entries.length,
-          ...(firstMessage !== undefined ? { goal: firstMessage.message.content.substring(0, 100) } : {}),
+          ...(firstMessage !== undefined
+            ? { goal: firstMessage.message.content.substring(0, 100) }
+            : {}),
         })
       } catch {
         // skip unreadable files

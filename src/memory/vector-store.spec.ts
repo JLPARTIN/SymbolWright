@@ -3,7 +3,11 @@ import { describe, expect, it, beforeEach } from 'vitest'
 import { VectorStore, cosineSimilarity } from './vector-store.js'
 import type { VectorEntry } from './vector-store.js'
 
-function makeEntry(id: string, embedding: readonly number[], filePath: string = 'test.ts'): VectorEntry {
+function makeEntry(
+  id: string,
+  embedding: readonly number[],
+  filePath: string = 'test.ts',
+): VectorEntry {
   return {
     id,
     filePath,

@@ -1,4 +1,8 @@
-import { type RuntimeReportStatus, reduceStatuses, statusFromReadiness } from './runtime-report-status.js'
+import {
+  type RuntimeReportStatus,
+  reduceStatuses,
+  statusFromReadiness,
+} from './runtime-report-status.js'
 import type { ZflowExecutionReport } from './zflow-report.js'
 import type { ZflowReportCatalog, ZflowReportArtifactManifest } from './zflow-report-catalog.js'
 import type { ZflowReportSuite } from './zflow-report-suite.js'
@@ -76,13 +80,15 @@ export function createRuntimeReportIndex(input: {
       id: 'catalog',
       kind: 'catalog',
       title: input.catalog.title,
-      status: summarize(input.catalog.entries.map((entry) => ({
-        id: entry.id,
-        kind: 'report' as const,
-        title: entry.title,
-        status: statusFromReadiness(entry.snapshot.readiness),
-        links: [],
-      }))).status,
+      status: summarize(
+        input.catalog.entries.map((entry) => ({
+          id: entry.id,
+          kind: 'report' as const,
+          title: entry.title,
+          status: statusFromReadiness(entry.snapshot.readiness),
+          links: [],
+        })),
+      ).status,
       links: [{ id: 'catalog:markdown', label: 'markdown', target: 'catalog:markdown' }],
     })
   }

@@ -24,8 +24,7 @@ export const AGENT_KERNEL_MISSION_FINDING_CODES = [
   'MISSION_ASSEMBLED',
   'MISSION_DEGRADED',
 ] as const
-export type AgentKernelMissionFindingCode =
-  (typeof AGENT_KERNEL_MISSION_FINDING_CODES)[number]
+export type AgentKernelMissionFindingCode = (typeof AGENT_KERNEL_MISSION_FINDING_CODES)[number]
 
 export interface AgentKernelMissionFinding {
   readonly code: AgentKernelMissionFindingCode
@@ -104,9 +103,7 @@ function validateInput(input: AgentKernelMissionPacketInput): readonly AgentKern
   }
 
   if (!input.routePlan.providerRouteReady) {
-    findings.push(
-      makeFinding('ROUTE_NOT_READY', 'BLOCK', 'Provider route plan is not ready.'),
-    )
+    findings.push(makeFinding('ROUTE_NOT_READY', 'BLOCK', 'Provider route plan is not ready.'))
   }
 
   if (!input.preflightDecision.accepted) {
@@ -124,19 +121,31 @@ function validateInput(input: AgentKernelMissionPacketInput): readonly AgentKern
   const hasPrimary = input.objectives.some((obj) => obj.priority === 'PRIMARY')
   if (input.objectives.length > 0 && !hasPrimary) {
     findings.push(
-      makeFinding('MISSING_OBJECTIVE', 'WARN', 'No PRIMARY objective specified; mission may lack focus.'),
+      makeFinding(
+        'MISSING_OBJECTIVE',
+        'WARN',
+        'No PRIMARY objective specified; mission may lack focus.',
+      ),
     )
   }
 
   if (input.constraints.length === 0) {
     findings.push(
-      makeFinding('MISSING_CONSTRAINT', 'WARN', 'No constraints specified; mission runs with default safety bounds.'),
+      makeFinding(
+        'MISSING_CONSTRAINT',
+        'WARN',
+        'No constraints specified; mission runs with default safety bounds.',
+      ),
     )
   }
 
   if (input.successCriteria.length === 0) {
     findings.push(
-      makeFinding('SUCCESS_CRITERIA_EMPTY', 'WARN', 'No success criteria specified; mission completion is undefined.'),
+      makeFinding(
+        'SUCCESS_CRITERIA_EMPTY',
+        'WARN',
+        'No success criteria specified; mission completion is undefined.',
+      ),
     )
   }
 
@@ -183,7 +192,9 @@ export function buildAgentKernelMissionPacket(
     rationale.push('All prerequisites met; mission packet is ready for execution planning.')
   }
 
-  rationale.push('AGENT-KERNEL-08 produces mission packets only; execution remains outside this block.')
+  rationale.push(
+    'AGENT-KERNEL-08 produces mission packets only; execution remains outside this block.',
+  )
 
   return {
     missionId: input.missionId,
@@ -232,14 +243,18 @@ export function renderAgentKernelMissionPacket(packet: AgentKernelMissionPacket)
   if (packet.successCriteria.length > 0) {
     lines.push('', 'Success criteria:')
     for (const criterion of packet.successCriteria) {
-      lines.push(`- ${criterion.id}: ${criterion.description} (measurable: ${criterion.measurable ? 'yes' : 'no'})`)
+      lines.push(
+        `- ${criterion.id}: ${criterion.description} (measurable: ${criterion.measurable ? 'yes' : 'no'})`,
+      )
     }
   }
 
   lines.push('', 'Execution boundary:')
   lines.push(`  Max steps: ${packet.executionBoundary.maxSteps}`)
   lines.push(`  Allow mutation: ${packet.executionBoundary.allowMutation ? 'yes' : 'no'}`)
-  lines.push(`  Allow external provider: ${packet.executionBoundary.allowExternalProvider ? 'yes' : 'no'}`)
+  lines.push(
+    `  Allow external provider: ${packet.executionBoundary.allowExternalProvider ? 'yes' : 'no'}`,
+  )
   lines.push(`  Timeout: ${packet.executionBoundary.timeoutMs}ms`)
 
   if (packet.findings.length > 0) {

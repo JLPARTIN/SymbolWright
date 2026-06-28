@@ -95,12 +95,14 @@ export const githubPrFixtureReviewTool: RuntimeToolDefinition = {
   name: 'github_pr_fixture_review',
   description: 'Review local GitHub PR fixture evidence without GitHub mutation.',
   capability: 'EVIDENCE_READ',
-  execute: async (input, context) => executeGitHubPrFixtureReviewTool(parseFixtureInput(input), context),
+  execute: async (input, context) =>
+    executeGitHubPrFixtureReviewTool(parseFixtureInput(input), context),
 }
 
 export const githubCiFixtureReviewTool: RuntimeToolDefinition = {
   name: 'github_ci_fixture_review',
   description: 'Review local GitHub CI fixture evidence without GitHub mutation.',
   capability: 'EVIDENCE_READ',
-  execute: async (input, context) => executeGitHubCiFixtureReviewTool(parseFixtureInput(input), context),
+  execute: async (input, context) =>
+    executeGitHubCiFixtureReviewTool(parseFixtureInput(input), context),
 }

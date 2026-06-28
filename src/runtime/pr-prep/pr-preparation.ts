@@ -107,11 +107,7 @@ export function renderPrPreparation(result: PrPreparationResult): string {
   }
 
   if (result.decision === 'READY') {
-    sections.push(
-      '',
-      'Body:',
-      result.body,
-    )
+    sections.push('', 'Body:', result.body)
   }
 
   sections.push(

@@ -2,7 +2,9 @@ import { createRuntimeRegistry } from './registry/runtime-registry.js'
 import { zflowReportCatalogTool } from './tools/zflow-report-catalog-tool.js'
 import type { RuntimeToolContext } from './types.js'
 
-export function createZflowReportCatalogRuntimeContext(cwd: string = process.cwd()): RuntimeToolContext {
+export function createZflowReportCatalogRuntimeContext(
+  cwd: string = process.cwd(),
+): RuntimeToolContext {
   return {
     cwd,
     policy: {

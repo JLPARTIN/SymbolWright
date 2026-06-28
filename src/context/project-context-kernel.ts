@@ -1,7 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { createBuildLedgerSummary, type BuildLedgerSummary } from '../build-state/codemind-build-ledger.js'
+import {
+  createBuildLedgerSummary,
+  type BuildLedgerSummary,
+} from '../build-state/codemind-build-ledger.js'
 import { loadProjectInstructionSet } from './project-instructions-loader.js'
 import type { ProjectInstructionSet } from './project-instructions.js'
 
@@ -98,9 +101,7 @@ function scanDocsDir(rootDir: string, relDir: string): readonly string[] {
       return []
     }
     const entries = fs.readdirSync(fullDir)
-    return entries
-      .filter((e) => e.endsWith('.md'))
-      .map((e) => path.join(relDir, e))
+    return entries.filter((e) => e.endsWith('.md')).map((e) => path.join(relDir, e))
   } catch {
     return []
   }
@@ -146,9 +147,7 @@ export function renderProjectContextPacket(packet: ProjectContextPacket): string
     `Found: ${packet.instructionSet.foundCount}`,
     `Missing: ${packet.instructionSet.missingCount}`,
     ...packet.instructionSet.instructions.map((inst) =>
-      inst.exists
-        ? `  ${inst.fileName}: ${inst.lineCount} lines`
-        : `  ${inst.fileName}: NOT FOUND`,
+      inst.exists ? `  ${inst.fileName}: ${inst.lineCount} lines` : `  ${inst.fileName}: NOT FOUND`,
     ),
     '',
     '--- Build State ---',

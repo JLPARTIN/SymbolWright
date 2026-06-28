@@ -115,7 +115,9 @@ export function assertToolAssemblyIntegrity(): void {
 
   for (const name of ALL_CODEMIND_TOOL_NAMES) {
     if (!dynamicSet.has(name) && !nameSet.has(name)) {
-      throw new Error(`CodemindToolName "${name}" is missing from tool assembly (and is not dynamically wired)`)
+      throw new Error(
+        `CodemindToolName "${name}" is missing from tool assembly (and is not dynamically wired)`,
+      )
     }
   }
 

@@ -27,15 +27,14 @@ export function createZflowReportSuite(input: {
 }): ZflowReportSuite {
   const manifest = createZflowReportArtifactManifest(input.catalog)
   const readinessValues = input.catalog.entries.map((entry) => entry.snapshot.readiness)
-  const readyCount = readinessValues.filter((readiness) => readiness === 'READY_FOR_OPERATOR_REVIEW').length
+  const readyCount = readinessValues.filter(
+    (readiness) => readiness === 'READY_FOR_OPERATOR_REVIEW',
+  ).length
   const blockedCount = readinessValues.filter((readiness) => readiness === 'BLOCKED').length
   const needsReviewCount = readinessValues.length - readyCount - blockedCount
 
-  const readiness: ZflowReportSuiteReadiness = blockedCount > 0
-    ? 'BLOCKED'
-    : needsReviewCount > 0
-      ? 'NEEDS_REVIEW'
-      : 'READY'
+  const readiness: ZflowReportSuiteReadiness =
+    blockedCount > 0 ? 'BLOCKED' : needsReviewCount > 0 ? 'NEEDS_REVIEW' : 'READY'
 
   return {
     title: input.title,

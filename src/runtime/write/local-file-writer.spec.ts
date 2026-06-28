@@ -56,7 +56,13 @@ describe('executeLocalFileWrite', () => {
     const workspace = makeTmpWorkspace()
     try {
       const result = executeLocalFileWrite(
-        { targetPath: 'test.txt', content: 'hello', reason: 'test', rollbackNote: 'delete test.txt', dryRun: false },
+        {
+          targetPath: 'test.txt',
+          content: 'hello',
+          reason: 'test',
+          rollbackNote: 'delete test.txt',
+          dryRun: false,
+        },
         workspace,
         readOnlyPolicy,
         validApproval,
@@ -73,7 +79,13 @@ describe('executeLocalFileWrite', () => {
     const workspace = makeTmpWorkspace()
     try {
       const result = executeLocalFileWrite(
-        { targetPath: 'test.txt', content: 'hello', reason: 'test', rollbackNote: 'delete', dryRun: false },
+        {
+          targetPath: 'test.txt',
+          content: 'hello',
+          reason: 'test',
+          rollbackNote: 'delete',
+          dryRun: false,
+        },
         workspace,
         writePolicy,
         undefined,
@@ -89,7 +101,13 @@ describe('executeLocalFileWrite', () => {
     const workspace = makeTmpWorkspace()
     try {
       const result = executeLocalFileWrite(
-        { targetPath: 'test.txt', content: 'hello', reason: 'test', rollbackNote: 'delete', dryRun: false },
+        {
+          targetPath: 'test.txt',
+          content: 'hello',
+          reason: 'test',
+          rollbackNote: 'delete',
+          dryRun: false,
+        },
         workspace,
         writePolicy,
         wrongScopeApproval,
@@ -105,7 +123,13 @@ describe('executeLocalFileWrite', () => {
     const workspace = makeTmpWorkspace()
     try {
       const result = executeLocalFileWrite(
-        { targetPath: '../../etc/passwd', content: 'bad', reason: 'test', rollbackNote: 'undo', dryRun: false },
+        {
+          targetPath: '../../etc/passwd',
+          content: 'bad',
+          reason: 'test',
+          rollbackNote: 'undo',
+          dryRun: false,
+        },
         workspace,
         writePolicy,
         validApproval,
@@ -120,7 +144,13 @@ describe('executeLocalFileWrite', () => {
     const workspace = makeTmpWorkspace()
     try {
       const result = executeLocalFileWrite(
-        { targetPath: '.env', content: 'SECRET=x', reason: 'test', rollbackNote: 'undo', dryRun: false },
+        {
+          targetPath: '.env',
+          content: 'SECRET=x',
+          reason: 'test',
+          rollbackNote: 'undo',
+          dryRun: false,
+        },
         workspace,
         writePolicy,
         validApproval,
@@ -136,7 +166,13 @@ describe('executeLocalFileWrite', () => {
     const workspace = makeTmpWorkspace()
     try {
       const result = executeLocalFileWrite(
-        { targetPath: 'test.txt', content: 'hello', reason: 'test', rollbackNote: 'delete', dryRun: true },
+        {
+          targetPath: 'test.txt',
+          content: 'hello',
+          reason: 'test',
+          rollbackNote: 'delete',
+          dryRun: true,
+        },
         workspace,
         writePolicy,
         validApproval,
@@ -157,7 +193,13 @@ describe('executeLocalFileWrite', () => {
       fs.writeFileSync(targetFile, 'original content')
 
       const result = executeLocalFileWrite(
-        { targetPath: 'existing.txt', content: 'new content', reason: 'update', rollbackNote: 'revert', dryRun: true },
+        {
+          targetPath: 'existing.txt',
+          content: 'new content',
+          reason: 'update',
+          rollbackNote: 'revert',
+          dryRun: true,
+        },
         workspace,
         writePolicy,
         validApproval,
@@ -176,7 +218,13 @@ describe('executeLocalFileWrite', () => {
     const workspace = makeTmpWorkspace()
     try {
       const result = executeLocalFileWrite(
-        { targetPath: 'output.txt', content: 'written content', reason: 'create file', rollbackNote: 'delete output.txt', dryRun: false },
+        {
+          targetPath: 'output.txt',
+          content: 'written content',
+          reason: 'create file',
+          rollbackNote: 'delete output.txt',
+          dryRun: false,
+        },
         workspace,
         writePolicy,
         validApproval,
@@ -195,7 +243,13 @@ describe('executeLocalFileWrite', () => {
     try {
       const content = 'line 1\nline 2\n\ttabbed\n'
       const result = executeLocalFileWrite(
-        { targetPath: 'exact.txt', content, reason: 'test exact', rollbackNote: 'delete', dryRun: false },
+        {
+          targetPath: 'exact.txt',
+          content,
+          reason: 'test exact',
+          rollbackNote: 'delete',
+          dryRun: false,
+        },
         workspace,
         writePolicy,
         validApproval,
@@ -211,7 +265,13 @@ describe('executeLocalFileWrite', () => {
     const workspace = makeTmpWorkspace()
     try {
       const result = executeLocalFileWrite(
-        { targetPath: 'src/deep/nested/file.ts', content: 'export {}', reason: 'create nested', rollbackNote: 'remove dir', dryRun: false },
+        {
+          targetPath: 'src/deep/nested/file.ts',
+          content: 'export {}',
+          reason: 'create nested',
+          rollbackNote: 'remove dir',
+          dryRun: false,
+        },
         workspace,
         writePolicy,
         validApproval,
@@ -230,7 +290,13 @@ describe('executeLocalFileWrite', () => {
       fs.writeFileSync(targetFile, 'old content')
 
       const result = executeLocalFileWrite(
-        { targetPath: 'update-me.txt', content: 'new content', reason: 'update file', rollbackNote: 'restore old content', dryRun: false },
+        {
+          targetPath: 'update-me.txt',
+          content: 'new content',
+          reason: 'update file',
+          rollbackNote: 'restore old content',
+          dryRun: false,
+        },
         workspace,
         writePolicy,
         validApproval,
@@ -249,7 +315,13 @@ describe('executeLocalFileWrite', () => {
     const workspace = makeTmpWorkspace()
     try {
       const result = executeLocalFileWrite(
-        { targetPath: 'test.txt', content: 'hello', reason: '', rollbackNote: 'delete', dryRun: false },
+        {
+          targetPath: 'test.txt',
+          content: 'hello',
+          reason: '',
+          rollbackNote: 'delete',
+          dryRun: false,
+        },
         workspace,
         writePolicy,
         validApproval,
@@ -265,13 +337,21 @@ describe('executeLocalFileWrite', () => {
     const workspace = makeTmpWorkspace()
     try {
       const result = executeLocalFileWrite(
-        { targetPath: 'test.txt', content: 'hello', reason: 'test', rollbackNote: '', dryRun: false },
+        {
+          targetPath: 'test.txt',
+          content: 'hello',
+          reason: 'test',
+          rollbackNote: '',
+          dryRun: false,
+        },
         workspace,
         writePolicy,
         validApproval,
       )
       expect(result.outcome).toBe('BLOCKED')
-      expect(result.gateResult.blockReasons).toContain('Write request must include a rollback note.')
+      expect(result.gateResult.blockReasons).toContain(
+        'Write request must include a rollback note.',
+      )
     } finally {
       cleanupWorkspace(workspace)
     }
@@ -281,7 +361,13 @@ describe('executeLocalFileWrite', () => {
     const workspace = makeTmpWorkspace()
     try {
       const result = executeLocalFileWrite(
-        { targetPath: 'test.txt', content: 'hello', reason: 'test', rollbackNote: 'delete test.txt', dryRun: false },
+        {
+          targetPath: 'test.txt',
+          content: 'hello',
+          reason: 'test',
+          rollbackNote: 'delete test.txt',
+          dryRun: false,
+        },
         workspace,
         writePolicy,
         validApproval,

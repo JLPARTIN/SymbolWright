@@ -12,9 +12,7 @@ export function createValidationCommandAuditEvent(
       status: 'blocked' as const,
       detail: `Command "${result.command}" blocked: ${result.blockReasons.join('; ')}`,
     }
-    return approval !== undefined
-      ? createAuditEvent({ ...base, approval })
-      : createAuditEvent(base)
+    return approval !== undefined ? createAuditEvent({ ...base, approval }) : createAuditEvent(base)
   }
 
   const detail = result.dryRun
@@ -26,7 +24,5 @@ export function createValidationCommandAuditEvent(
     status: 'allowed' as const,
     detail,
   }
-  return approval !== undefined
-    ? createAuditEvent({ ...base, approval })
-    : createAuditEvent(base)
+  return approval !== undefined ? createAuditEvent({ ...base, approval }) : createAuditEvent(base)
 }

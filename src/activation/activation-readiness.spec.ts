@@ -90,9 +90,7 @@ describe('renderActivationReadiness', () => {
   })
 
   it('shows NOT READY when failures exist', () => {
-    const failingChecks = [
-      { name: 'Test check', status: 'FAIL' as const, detail: 'broken' },
-    ]
+    const failingChecks = [{ name: 'Test check', status: 'FAIL' as const, detail: 'broken' }]
     const output = renderActivationReadiness(failingChecks)
 
     expect(output).toContain('NOT READY')

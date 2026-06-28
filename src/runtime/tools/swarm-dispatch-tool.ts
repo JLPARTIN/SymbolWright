@@ -1,7 +1,10 @@
 import type { RuntimeToolDefinition, RuntimeToolContext } from '../types.js'
 import { SWARM_AGENT_TYPES, type SwarmAgentType } from '../../hivemind/hivemind.types.js'
 import type { SwarmDispatchResult } from '../../hivemind/hivemind.types.js'
-import type { HiveMindDispatcher, SwarmDispatchRequest } from '../../hivemind/hivemind-dispatcher.js'
+import type {
+  HiveMindDispatcher,
+  SwarmDispatchRequest,
+} from '../../hivemind/hivemind-dispatcher.js'
 
 export interface SwarmDispatchToolInput {
   readonly agentType: SwarmAgentType

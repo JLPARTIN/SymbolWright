@@ -12,10 +12,7 @@ export function getAjnaDocsReference(): AjnaDocsReference {
     title: 'Ajna docs reference',
     hub: 'docs/ajna/CODEMIND_AJNA_DOCS_HUB.md',
     quickStart: 'docs/ajna-fixture-command-index.md',
-    planningDocs: [
-      'docs/ajna/CODEMIND_AJNA_ROADMAP.md',
-      'docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md',
-    ],
+    planningDocs: ['docs/ajna/CODEMIND_AJNA_ROADMAP.md', 'docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md'],
     commandDocs: [
       'docs/ajna-docs-command.md',
       'docs/ajna-client-pipeline-manifest-command.md',
@@ -34,7 +31,9 @@ export function getAjnaDocsReference(): AjnaDocsReference {
   }
 }
 
-export function renderAjnaDocsReference(reference: AjnaDocsReference = getAjnaDocsReference()): string {
+export function renderAjnaDocsReference(
+  reference: AjnaDocsReference = getAjnaDocsReference(),
+): string {
   return [
     reference.title,
     '',

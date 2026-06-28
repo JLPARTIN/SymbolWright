@@ -3,7 +3,10 @@ import {
   renderOperatorReviewPacket,
   type OperatorReviewPacket,
 } from '../operator/operator-review-packet.js'
-import { evaluateOperatorReviewGate, renderOperatorReviewGateResult } from '../operator/operator-review-gate.js'
+import {
+  evaluateOperatorReviewGate,
+  renderOperatorReviewGateResult,
+} from '../operator/operator-review-gate.js'
 import type { ZflowResult } from './zflow-workflow.js'
 
 export type ZflowReadiness = 'READY_FOR_OPERATOR_REVIEW' | 'NEEDS_RECOVERY_DETAIL' | 'BLOCKED'
@@ -66,15 +69,8 @@ export function createZflowHandoffPacket(input: {
       'Prepared output may need operator review before any live repository mutation.',
       'Rollback plan is reporting-only and does not execute recovery steps.',
     ],
-    validation: [
-      `Readiness: ${summary.readiness}`,
-      ...summary.reasons,
-    ],
-    boundary: [
-      'No live GitHub mutation by default.',
-      'No rollback execution.',
-      'No merge action.',
-    ],
+    validation: [`Readiness: ${summary.readiness}`, ...summary.reasons],
+    boundary: ['No live GitHub mutation by default.', 'No rollback execution.', 'No merge action.'],
     nextManualStep: input.nextManualStep,
   })
 

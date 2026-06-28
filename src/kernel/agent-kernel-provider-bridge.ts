@@ -1,9 +1,6 @@
 import type { AgentKernelProviderRoutePlan } from './agent-kernel-provider-routing-gateway.js'
 import type { LLMProvider } from '../provider/provider.types.js'
-import type {
-  ProviderRegistry,
-  ProviderRegistryEntry,
-} from '../provider/provider-registry.js'
+import type { ProviderRegistry, ProviderRegistryEntry } from '../provider/provider-registry.js'
 
 export const AGENT_KERNEL_PROVIDER_BRIDGE_BLOCK_ID = 'AGENT-KERNEL-05-BRIDGE' as const
 

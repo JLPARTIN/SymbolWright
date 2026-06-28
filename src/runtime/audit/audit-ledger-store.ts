@@ -65,7 +65,10 @@ function redactDetail(detail: string): string {
   return result
 }
 
-function redactEvent(event: RuntimeAuditEvent): { readonly event: RuntimeAuditEvent; readonly wasRedacted: boolean } {
+function redactEvent(event: RuntimeAuditEvent): {
+  readonly event: RuntimeAuditEvent
+  readonly wasRedacted: boolean
+} {
   const redacted = redactDetail(event.detail)
   if (redacted === event.detail) {
     return { event, wasRedacted: false }
@@ -152,9 +155,7 @@ export function persistAuditLedger(
   }
 }
 
-export function replayAuditLedger(
-  jsonlLines: readonly string[],
-): AuditLedgerReplayResult {
+export function replayAuditLedger(jsonlLines: readonly string[]): AuditLedgerReplayResult {
   const findings: AuditLedgerFinding[] = []
   const entries: AuditLedgerEntry[] = []
   let invalidEntries = 0
@@ -285,7 +286,9 @@ export function renderAuditLedgerReplayResult(result: AuditLedgerReplayResult): 
   if (result.entries.length > 0) {
     lines.push('', 'Replayed events:')
     for (const entry of result.entries) {
-      lines.push(`- [${entry.sequenceNumber}] ${entry.event.status.toUpperCase()} ${entry.event.action}: ${entry.event.detail}`)
+      lines.push(
+        `- [${entry.sequenceNumber}] ${entry.event.status.toUpperCase()} ${entry.event.action}: ${entry.event.detail}`,
+      )
     }
   }
 

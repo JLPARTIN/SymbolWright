@@ -1,6 +1,10 @@
 import fs from 'node:fs'
 
-import { evaluateLiveReadPolicy, type LiveReadPolicyDecision, type LiveReadPolicyRequest } from '../policy/live-read-policy.js'
+import {
+  evaluateLiveReadPolicy,
+  type LiveReadPolicyDecision,
+  type LiveReadPolicyRequest,
+} from '../policy/live-read-policy.js'
 
 export interface LiveReadPolicyHandshakeResult {
   readonly request: LiveReadPolicyRequest
@@ -11,7 +15,9 @@ export function readLiveReadPolicyRequestFromFile(path: string): LiveReadPolicyR
   return JSON.parse(fs.readFileSync(path, 'utf8')) as LiveReadPolicyRequest
 }
 
-export function runLiveReadPolicyHandshake(request: LiveReadPolicyRequest): LiveReadPolicyHandshakeResult {
+export function runLiveReadPolicyHandshake(
+  request: LiveReadPolicyRequest,
+): LiveReadPolicyHandshakeResult {
   return {
     request,
     decision: evaluateLiveReadPolicy(request),

@@ -59,7 +59,9 @@ function validRequest(overrides: Partial<GitHubWriteGateRequest> = {}): GitHubWr
   }
 }
 
-function testContext(overrides: { policy?: RuntimePolicySnapshot; approval?: RuntimeApproval } = {}): RuntimeToolContext {
+function testContext(
+  overrides: { policy?: RuntimePolicySnapshot; approval?: RuntimeApproval } = {},
+): RuntimeToolContext {
   const ctx: RuntimeToolContext = {
     cwd: '/test',
     policy: overrides.policy ?? githubWritePolicy,
@@ -79,12 +81,20 @@ describe('evaluateGitHubWriteGate', () => {
   })
 
   it('returns ALLOWED for post_comment action', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ action: 'post_comment' }), githubWritePolicy, validApproval)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ action: 'post_comment' }),
+      githubWritePolicy,
+      validApproval,
+    )
     expect(result.decision).toBe('ALLOWED')
   })
 
   it('returns ALLOWED for apply_label action', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ action: 'apply_label' }), githubWritePolicy, validApproval)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ action: 'apply_label' }),
+      githubWritePolicy,
+      validApproval,
+    )
     expect(result.decision).toBe('ALLOWED')
   })
 
@@ -107,43 +117,73 @@ describe('evaluateGitHubWriteGate', () => {
   })
 
   it('blocks empty action', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ action: '' }), githubWritePolicy, validApproval)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ action: '' }),
+      githubWritePolicy,
+      validApproval,
+    )
     expect(result.decision).toBe('BLOCKED')
     expect(result.blockReasons).toContain('GitHub write action must not be empty.')
   })
 
   it('blocks disallowed action merge_pr', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ action: 'merge_pr' }), githubWritePolicy, validApproval)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ action: 'merge_pr' }),
+      githubWritePolicy,
+      validApproval,
+    )
     expect(result.decision).toBe('BLOCKED')
     expect(result.blockReasons).toContain('Action is not allowed: merge_pr')
   })
 
   it('blocks disallowed action force_push', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ action: 'force_push' }), githubWritePolicy, validApproval)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ action: 'force_push' }),
+      githubWritePolicy,
+      validApproval,
+    )
     expect(result.decision).toBe('BLOCKED')
     expect(result.blockReasons).toContain('Action is not allowed: force_push')
   })
 
   it('blocks empty repository', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ repository: '' }), githubWritePolicy, validApproval)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ repository: '' }),
+      githubWritePolicy,
+      validApproval,
+    )
     expect(result.decision).toBe('BLOCKED')
     expect(result.blockReasons).toContain('Target repository must be specified.')
   })
 
   it('blocks empty targetRef', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ targetRef: '' }), githubWritePolicy, validApproval)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ targetRef: '' }),
+      githubWritePolicy,
+      validApproval,
+    )
     expect(result.decision).toBe('BLOCKED')
-    expect(result.blockReasons).toContain('Target reference (PR number, issue, or branch) must be specified.')
+    expect(result.blockReasons).toContain(
+      'Target reference (PR number, issue, or branch) must be specified.',
+    )
   })
 
   it('blocks empty content', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ content: '' }), githubWritePolicy, validApproval)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ content: '' }),
+      githubWritePolicy,
+      validApproval,
+    )
     expect(result.decision).toBe('BLOCKED')
     expect(result.blockReasons).toContain('Write content must not be empty.')
   })
 
   it('blocks empty reason', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ reason: '' }), githubWritePolicy, validApproval)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ reason: '' }),
+      githubWritePolicy,
+      validApproval,
+    )
     expect(result.decision).toBe('BLOCKED')
     expect(result.blockReasons).toContain('GitHub write request must include a reason.')
   })
@@ -159,17 +199,29 @@ describe('evaluateGitHubWriteGate', () => {
   })
 
   it('preserves dryRun flag in result', () => {
-    const dryResult = evaluateGitHubWriteGate(validRequest({ dryRun: true }), githubWritePolicy, validApproval)
+    const dryResult = evaluateGitHubWriteGate(
+      validRequest({ dryRun: true }),
+      githubWritePolicy,
+      validApproval,
+    )
     expect(dryResult.dryRun).toBe(true)
 
-    const liveResult = evaluateGitHubWriteGate(validRequest({ dryRun: false }), githubWritePolicy, validApproval)
+    const liveResult = evaluateGitHubWriteGate(
+      validRequest({ dryRun: false }),
+      githubWritePolicy,
+      validApproval,
+    )
     expect(liveResult.dryRun).toBe(false)
   })
 })
 
 describe('renderGitHubWriteGateResult', () => {
   it('renders ALLOWED dry-run result', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ dryRun: true }), githubWritePolicy, validApproval)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ dryRun: true }),
+      githubWritePolicy,
+      validApproval,
+    )
     const output = renderGitHubWriteGateResult(result)
 
     expect(output).toContain('CodeMind GitHub write gate')
@@ -181,7 +233,11 @@ describe('renderGitHubWriteGateResult', () => {
   })
 
   it('renders ALLOWED non-dry-run result', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ dryRun: false }), githubWritePolicy, validApproval)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ dryRun: false }),
+      githubWritePolicy,
+      validApproval,
+    )
     const output = renderGitHubWriteGateResult(result)
 
     expect(output).toContain('Decision: ALLOWED')
@@ -230,13 +286,21 @@ describe('createGitHubWriteGateAuditEvent', () => {
   })
 
   it('includes dry-run in allowed detail', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ dryRun: true }), githubWritePolicy, validApproval)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ dryRun: true }),
+      githubWritePolicy,
+      validApproval,
+    )
     const event = createGitHubWriteGateAuditEvent(result, validApproval)
     expect(event.detail).toContain('Dry-run')
   })
 
   it('includes reason in non-dry-run allowed detail', () => {
-    const result = evaluateGitHubWriteGate(validRequest({ dryRun: false, reason: 'Ship it' }), githubWritePolicy, validApproval)
+    const result = evaluateGitHubWriteGate(
+      validRequest({ dryRun: false, reason: 'Ship it' }),
+      githubWritePolicy,
+      validApproval,
+    )
     const event = createGitHubWriteGateAuditEvent(result, validApproval)
     expect(event.detail).toContain('Ship it')
     expect(event.detail).toContain('allowed')
@@ -298,26 +362,20 @@ describe('githubWriteGateTool', () => {
   })
 
   it('rejects missing input', async () => {
-    await expect(
-      githubWriteGateTool.execute(null, testContext()),
-    ).rejects.toThrow('Missing GitHub write gate input.')
+    await expect(githubWriteGateTool.execute(null, testContext())).rejects.toThrow(
+      'Missing GitHub write gate input.',
+    )
   })
 
   it('rejects missing action', async () => {
     await expect(
-      githubWriteGateTool.execute(
-        { repository: 'owner/repo', reason: 'y' },
-        testContext(),
-      ),
+      githubWriteGateTool.execute({ repository: 'owner/repo', reason: 'y' }, testContext()),
     ).rejects.toThrow('Missing action.')
   })
 
   it('rejects missing repository', async () => {
     await expect(
-      githubWriteGateTool.execute(
-        { action: 'post_comment', reason: 'y' },
-        testContext(),
-      ),
+      githubWriteGateTool.execute({ action: 'post_comment', reason: 'y' }, testContext()),
     ).rejects.toThrow('Missing repository.')
   })
 

@@ -93,7 +93,9 @@ describe('validation command gate', () => {
     const result = evaluateValidationCommandGate(request, shellPolicy, wrongScopeApproval)
 
     expect(result.decision).toBe('BLOCKED')
-    expect(result.blockReasons).toContain('Approval ticket is missing required scope: command:validate')
+    expect(result.blockReasons).toContain(
+      'Approval ticket is missing required scope: command:validate',
+    )
   })
 
   it('blocks when command is empty', () => {
@@ -247,7 +249,9 @@ describe('validation command gate tool', () => {
   })
 
   it('rejects missing input', async () => {
-    await expect(validationCommandGateTool.execute(null, testContext)).rejects.toThrow('Missing validation command gate input')
+    await expect(validationCommandGateTool.execute(null, testContext)).rejects.toThrow(
+      'Missing validation command gate input',
+    )
   })
 
   it('rejects missing command', async () => {
@@ -354,7 +358,9 @@ describe('CLI validation command', () => {
     const fixturePath = path.join(tmpDir, 'bad-fixture.json')
     fs.writeFileSync(fixturePath, JSON.stringify(fixture))
 
-    await expect(renderRuntimeValidationCommand(fixturePath, tmpDir)).rejects.toThrow('non-empty "command"')
+    await expect(renderRuntimeValidationCommand(fixturePath, tmpDir)).rejects.toThrow(
+      'non-empty "command"',
+    )
 
     fs.rmSync(tmpDir, { recursive: true })
   })
@@ -366,7 +372,9 @@ describe('CLI validation command', () => {
     const fixturePath = path.join(tmpDir, 'bad-fixture.json')
     fs.writeFileSync(fixturePath, JSON.stringify(fixture))
 
-    await expect(renderRuntimeValidationCommand(fixturePath, tmpDir)).rejects.toThrow('non-empty "reason"')
+    await expect(renderRuntimeValidationCommand(fixturePath, tmpDir)).rejects.toThrow(
+      'non-empty "reason"',
+    )
 
     fs.rmSync(tmpDir, { recursive: true })
   })

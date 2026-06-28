@@ -9,8 +9,14 @@ import type { GitHubPrEvidence } from '../adapters/github-pr-read-adapter.js'
 import { createAjnaLiveReadRuntimeRegistry } from '../runtime-ajna-live-read-registry.js'
 import type { RuntimeToolContext } from '../types.js'
 
-import { renderLiveReadAjnaMergeReadiness, assessLiveReadMergeReadiness } from './live-read-ajna-merge-readiness-pipeline.js'
-import { renderLiveReadAjnaReview, runLiveReadAjnaReview } from './live-read-ajna-review-pipeline.js'
+import {
+  renderLiveReadAjnaMergeReadiness,
+  assessLiveReadMergeReadiness,
+} from './live-read-ajna-merge-readiness-pipeline.js'
+import {
+  renderLiveReadAjnaReview,
+  runLiveReadAjnaReview,
+} from './live-read-ajna-review-pipeline.js'
 
 const fakePr: GitHubPrEvidence = {
   number: 42,
@@ -289,6 +295,8 @@ describe('CLI integration via fixture file', () => {
       clientData: {},
     })
 
-    await expect(renderRuntimeAjnaLiveRead(filePath)).rejects.toThrow('mode: "review" or "merge-readiness"')
+    await expect(renderRuntimeAjnaLiveRead(filePath)).rejects.toThrow(
+      'mode: "review" or "merge-readiness"',
+    )
   })
 })

@@ -20,9 +20,7 @@ export function buildSystemPrompt(context: SystemPromptContext = {}): string {
   )
 
   if (context.projectName !== undefined) {
-    const desc = context.projectDescription
-      ? ` — ${context.projectDescription}`
-      : ''
+    const desc = context.projectDescription ? ` — ${context.projectDescription}` : ''
     sections.push(`\nProject: ${context.projectName}${desc}`)
   }
 

@@ -6,7 +6,9 @@ import {
   type AjnaGithubCollectorSnapshot,
 } from './ajna-github-collector-contract.js'
 
-function makeSnapshot(overrides: Partial<AjnaGithubCollectorSnapshot> = {}): AjnaGithubCollectorSnapshot {
+function makeSnapshot(
+  overrides: Partial<AjnaGithubCollectorSnapshot> = {},
+): AjnaGithubCollectorSnapshot {
   return {
     pullRequest: {
       repository: 'JLPARTIN/CodeMind',
@@ -47,10 +49,7 @@ describe('buildAjnaGithubPullRequestPayloadFromCollectorSnapshot', () => {
     expect(payload.repository).toBe('JLPARTIN/CodeMind')
     expect(payload.pullRequestNumber).toBe(60)
     expect(payload.headSha).toBe('d20856ee90875e9c82bf254f0908dab2b0856a35')
-    expect(payload.changedFiles).toEqual([
-      'src/cli-ajna-review-pr-github-fixture.ts',
-      'src/cli.ts',
-    ])
+    expect(payload.changedFiles).toEqual(['src/cli-ajna-review-pr-github-fixture.ts', 'src/cli.ts'])
     expect(payload.diffEvidence).toEqual([
       'src/cli-ajna-review-pr-github-fixture.ts was added (35 additions, 0 deletions).',
       'src/cli.ts was modified (9 additions, 0 deletions).',
@@ -92,8 +91,8 @@ describe('buildAjnaGithubPullRequestPayloadFromCollectorSnapshot', () => {
   })
 
   it('rejects empty changed file snapshots', () => {
-    expect(() => buildAjnaGithubPullRequestPayloadFromCollectorSnapshot(makeSnapshot({ changedFiles: [] }))).toThrow(
-      'changedFiles must include at least one file',
-    )
+    expect(() =>
+      buildAjnaGithubPullRequestPayloadFromCollectorSnapshot(makeSnapshot({ changedFiles: [] })),
+    ).toThrow('changedFiles must include at least one file')
   })
 })

@@ -88,7 +88,9 @@ describe('checkBuildLedgerConsistency', () => {
 
     expect(report.status).toBe('INCONSISTENT')
     expect(
-      report.findings.some((f) => f.issue.includes('next phase exists but all phases are complete')),
+      report.findings.some((f) =>
+        f.issue.includes('next phase exists but all phases are complete'),
+      ),
     ).toBe(true)
   })
 

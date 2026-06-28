@@ -1,6 +1,12 @@
-import { createReadOnlyRuntimeContext, createReadOnlyRuntimeRegistry } from './runtime/runtime-readonly-registry.js'
+import {
+  createReadOnlyRuntimeContext,
+  createReadOnlyRuntimeRegistry,
+} from './runtime/runtime-readonly-registry.js'
 
-export async function renderRuntimeSearch(query: string, cwd: string = process.cwd()): Promise<string> {
+export async function renderRuntimeSearch(
+  query: string,
+  cwd: string = process.cwd(),
+): Promise<string> {
   const registry = createReadOnlyRuntimeRegistry()
   const tool = registry.getOrThrow('search_files')
 

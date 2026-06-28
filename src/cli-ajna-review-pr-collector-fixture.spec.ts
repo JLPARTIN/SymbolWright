@@ -11,7 +11,9 @@ import type { AjnaGithubCollectorSnapshot } from './ajna/ajna-github-collector-c
 
 const tempDirs: string[] = []
 
-function makeSnapshot(overrides: Partial<AjnaGithubCollectorSnapshot> = {}): AjnaGithubCollectorSnapshot {
+function makeSnapshot(
+  overrides: Partial<AjnaGithubCollectorSnapshot> = {},
+): AjnaGithubCollectorSnapshot {
   return {
     pullRequest: {
       repository: 'JLPARTIN/CodeMind',
@@ -62,7 +64,9 @@ describe('parseAjnaGithubCollectorFixture', () => {
   })
 
   it('rejects non-object fixture JSON', () => {
-    expect(() => parseAjnaGithubCollectorFixture('[]')).toThrow('collector fixture must be an object')
+    expect(() => parseAjnaGithubCollectorFixture('[]')).toThrow(
+      'collector fixture must be an object',
+    )
   })
 })
 
@@ -81,7 +85,9 @@ describe('renderAjnaReviewPrCollectorFixtureForFile', () => {
       pullRequest: source.pullRequest,
       changedFiles: source.changedFiles,
     }
-    const output = renderAjnaReviewPrCollectorFixtureForFile(writeSnapshotFile(snapshotWithoutChecks))
+    const output = renderAjnaReviewPrCollectorFixtureForFile(
+      writeSnapshotFile(snapshotWithoutChecks),
+    )
 
     expect(output).toContain('# Ajna Review Cortex Report')
     expect(output).toContain('- src/ajna/ajna-github-collector-contract.ts')

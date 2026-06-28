@@ -13,7 +13,11 @@ export class GitHubLiveReadPolicyWrapper implements RuntimeLiveReadClient {
     this.inner = inner
   }
 
-  async getPullRequestEvidence(owner: string, repo: string, prNumber: number): Promise<GitHubPrEvidence> {
+  async getPullRequestEvidence(
+    owner: string,
+    repo: string,
+    prNumber: number,
+  ): Promise<GitHubPrEvidence> {
     this.requirePolicy(['pr:read'], `read PR ${owner}/${repo}#${prNumber}`)
     return this.inner.getPullRequestEvidence(owner, repo, prNumber)
   }
@@ -23,7 +27,12 @@ export class GitHubLiveReadPolicyWrapper implements RuntimeLiveReadClient {
     return this.inner.getWorkflowEvidence(owner, repo, runId)
   }
 
-  async getRepositoryFile(owner: string, repo: string, path: string, ref: string): Promise<RepositoryFileResult> {
+  async getRepositoryFile(
+    owner: string,
+    repo: string,
+    path: string,
+    ref: string,
+  ): Promise<RepositoryFileResult> {
     this.requirePolicy(['contents:read'], `read file ${owner}/${repo}/${path}@${ref}`)
     return this.inner.getRepositoryFile(owner, repo, path, ref)
   }

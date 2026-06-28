@@ -42,7 +42,9 @@ describe('RuntimeEventBus', () => {
   it('unsubscribes correctly', () => {
     const bus = createRuntimeEventBus()
     const received: RuntimeEvent[] = []
-    const callback = (e: RuntimeEvent): void => { received.push(e) }
+    const callback = (e: RuntimeEvent): void => {
+      received.push(e)
+    }
 
     bus.subscribe('audit_record', callback)
     bus.emit(makeEvent('audit_record', 'first'))

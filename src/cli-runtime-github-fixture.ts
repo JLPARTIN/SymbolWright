@@ -1,4 +1,7 @@
-import { createGitHubReadRuntimeContext, createGitHubReadRuntimeRegistry } from './runtime/runtime-github-read-registry.js'
+import {
+  createGitHubReadRuntimeContext,
+  createGitHubReadRuntimeRegistry,
+} from './runtime/runtime-github-read-registry.js'
 
 export async function renderRuntimePrNotesGithubFixture(
   fixturePath: string,

@@ -8,7 +8,8 @@ export interface CiReviewInput {
 }
 
 function parseCiReviewInput(input: unknown): CiReviewInput {
-  const value = typeof input === 'object' && input !== null ? (input as Record<string, unknown>) : {}
+  const value =
+    typeof input === 'object' && input !== null ? (input as Record<string, unknown>) : {}
   const parsed: { status?: string; source?: string; findings?: readonly string[] } = {}
 
   if (typeof value['status'] === 'string') {
@@ -17,7 +18,10 @@ function parseCiReviewInput(input: unknown): CiReviewInput {
   if (typeof value['source'] === 'string') {
     parsed.source = value['source']
   }
-  if (Array.isArray(value['findings']) && value['findings'].every((item) => typeof item === 'string')) {
+  if (
+    Array.isArray(value['findings']) &&
+    value['findings'].every((item) => typeof item === 'string')
+  ) {
     parsed.findings = value['findings']
   }
 

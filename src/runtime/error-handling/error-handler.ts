@@ -81,7 +81,10 @@ export function classifyError(error: unknown): CodemindError {
       }
     }
 
-    if (msg.includes('context') && (msg.includes('overflow') || msg.includes('too long') || msg.includes('exceed'))) {
+    if (
+      msg.includes('context') &&
+      (msg.includes('overflow') || msg.includes('too long') || msg.includes('exceed'))
+    ) {
       return {
         category: 'context_overflow',
         message: `Context window exceeded: ${error.message}`,
@@ -110,7 +113,10 @@ export function classifyError(error: unknown): CodemindError {
 }
 
 /** Computes exponential backoff delay for the given retry attempt. */
-export function computeRetryDelay(attempt: number, config: RetryConfig = DEFAULT_RETRY_CONFIG): number {
+export function computeRetryDelay(
+  attempt: number,
+  config: RetryConfig = DEFAULT_RETRY_CONFIG,
+): number {
   const delay = config.baseDelayMs * Math.pow(2, attempt)
   return Math.min(delay, config.maxDelayMs)
 }

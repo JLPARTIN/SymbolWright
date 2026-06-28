@@ -10,10 +10,7 @@ import {
 } from './context-window.js'
 import type { ConversationMessage } from './conversation.types.js'
 
-function makeMessage(
-  content: string,
-  tokenEstimate?: number,
-): ConversationMessage {
+function makeMessage(content: string, tokenEstimate?: number): ConversationMessage {
   return {
     id: `msg-${Math.random().toString(36).slice(2)}`,
     role: 'user',
@@ -94,7 +91,12 @@ describe('context-window', () => {
   })
 
   describe('fitMessagesToWindow', () => {
-    const budget = computeContextBudget({ modelContextLimit: 1000, responseReserve: 0, systemPromptReserve: 0, toolSchemaReserve: 0 })
+    const budget = computeContextBudget({
+      modelContextLimit: 1000,
+      responseReserve: 0,
+      systemPromptReserve: 0,
+      toolSchemaReserve: 0,
+    })
 
     it('all messages fit', () => {
       const messages = [makeMessage('Hello', 100), makeMessage('World', 100)]
@@ -134,7 +136,12 @@ describe('context-window', () => {
   })
 
   describe('compactMessages', () => {
-    const budget = computeContextBudget({ modelContextLimit: 500, responseReserve: 0, systemPromptReserve: 0, toolSchemaReserve: 0 })
+    const budget = computeContextBudget({
+      modelContextLimit: 500,
+      responseReserve: 0,
+      systemPromptReserve: 0,
+      toolSchemaReserve: 0,
+    })
 
     it('returns all messages when they fit', () => {
       const messages = [makeMessage('Hello', 100)]
@@ -143,10 +150,7 @@ describe('context-window', () => {
     })
 
     it('drops old messages when they do not fit', () => {
-      const messages = [
-        makeMessage('Old', 300),
-        makeMessage('Recent', 300),
-      ]
+      const messages = [makeMessage('Old', 300), makeMessage('Recent', 300)]
       const result = compactMessages(messages, budget)
       expect(result).toHaveLength(1)
       expect(result[0]?.content).toBe('Recent')
@@ -166,10 +170,7 @@ describe('context-window', () => {
     })
 
     it('trims oldest messages when they exceed budget', () => {
-      const messages = [
-        makeMessage('Old message', 300),
-        makeMessage('Recent message', 300),
-      ]
+      const messages = [makeMessage('Old message', 300), makeMessage('Recent message', 300)]
       const result = trimConversationToFit(messages, {
         modelContextLimit: 500,
         systemPromptReserve: 0,

@@ -6,7 +6,10 @@ import {
   conversationMessagesToProviderMessages,
   renderConversation,
 } from './transcript-bridge.js'
-import type { RuntimeTranscript, RuntimeTranscriptEntry } from '../runtime/transcript/runtime-transcript.js'
+import type {
+  RuntimeTranscript,
+  RuntimeTranscriptEntry,
+} from '../runtime/transcript/runtime-transcript.js'
 import type { ConversationMessage } from './conversation.types.js'
 
 describe('transcript-bridge', () => {
@@ -21,14 +24,22 @@ describe('transcript-bridge', () => {
     })
 
     it('maps tool role to tool_use', () => {
-      const entry: RuntimeTranscriptEntry = { iteration: 1, role: 'tool', message: 'read_file executed' }
+      const entry: RuntimeTranscriptEntry = {
+        iteration: 1,
+        role: 'tool',
+        message: 'read_file executed',
+      }
       const msg = transcriptEntryToConversationMessage(entry, 'session-1')
 
       expect(msg.role).toBe('tool_use')
     })
 
     it('maps result role to tool_result', () => {
-      const entry: RuntimeTranscriptEntry = { iteration: 1, role: 'result', message: 'File contents' }
+      const entry: RuntimeTranscriptEntry = {
+        iteration: 1,
+        role: 'result',
+        message: 'File contents',
+      }
       const msg = transcriptEntryToConversationMessage(entry, 'session-1')
 
       expect(msg.role).toBe('tool_result')
@@ -136,7 +147,13 @@ describe('transcript-bridge', () => {
 
     it('includes tool name when present', () => {
       const messages: ConversationMessage[] = [
-        { id: '1', role: 'tool_use', content: 'read_file executed', timestamp: '', toolName: 'read_file' },
+        {
+          id: '1',
+          role: 'tool_use',
+          content: 'read_file executed',
+          timestamp: '',
+          toolName: 'read_file',
+        },
       ]
 
       const rendered = renderConversation(messages)

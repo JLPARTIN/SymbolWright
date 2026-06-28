@@ -94,12 +94,8 @@ describe('SessionPersistence', () => {
   })
 
   it('save overwrites existing session', () => {
-    persistence.save('session-overwrite', [
-      makeMessage({ id: '1', content: 'Original' }),
-    ])
-    persistence.save('session-overwrite', [
-      makeMessage({ id: '2', content: 'Replacement' }),
-    ])
+    persistence.save('session-overwrite', [makeMessage({ id: '1', content: 'Original' })])
+    persistence.save('session-overwrite', [makeMessage({ id: '2', content: 'Replacement' })])
 
     const loaded = persistence.load('session-overwrite')
     expect(loaded).toHaveLength(1)

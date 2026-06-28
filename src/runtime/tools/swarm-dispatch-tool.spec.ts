@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { parseSwarmDispatchInput, swarmDispatchTool, createWiredSwarmDispatchTool } from './swarm-dispatch-tool.js'
+import {
+  parseSwarmDispatchInput,
+  swarmDispatchTool,
+  createWiredSwarmDispatchTool,
+} from './swarm-dispatch-tool.js'
 import type { RuntimeToolContext, RuntimePolicySnapshot } from '../types.js'
 import type { SwarmDispatchResult } from '../../hivemind/hivemind.types.js'
 import type { HiveMindDispatcher } from '../../hivemind/hivemind-dispatcher.js'
@@ -43,11 +47,15 @@ describe('parseSwarmDispatchInput', () => {
   })
 
   it('rejects invalid agentType', () => {
-    expect(() => parseSwarmDispatchInput({ agentType: 'invalid', goal: 'test' })).toThrow('Invalid agentType')
+    expect(() => parseSwarmDispatchInput({ agentType: 'invalid', goal: 'test' })).toThrow(
+      'Invalid agentType',
+    )
   })
 
   it('rejects empty goal', () => {
-    expect(() => parseSwarmDispatchInput({ agentType: 'investigator', goal: '' })).toThrow('Missing or empty goal')
+    expect(() => parseSwarmDispatchInput({ agentType: 'investigator', goal: '' })).toThrow(
+      'Missing or empty goal',
+    )
   })
 })
 

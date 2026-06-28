@@ -30,7 +30,10 @@ import type {
   ParsedOperatorInput,
 } from './operator-types.js'
 
-export function createOperatorSession(cwd: string = process.cwd(), history: readonly OperatorHistoryEntry[] = []): OperatorSessionState {
+export function createOperatorSession(
+  cwd: string = process.cwd(),
+  history: readonly OperatorHistoryEntry[] = [],
+): OperatorSessionState {
   return {
     sessionId: `operator-${Date.now()}`,
     cwd,
@@ -156,21 +159,53 @@ async function handleSlashInput(
     case 'runtime-status':
       return continueWith(handlers.renderRuntimeStatus(), session)
     case 'scan':
-      return continueWith(handlers.renderScan(argsText.length > 0 ? argsText : session.cwd), session)
+      return continueWith(
+        handlers.renderScan(argsText.length > 0 ? argsText : session.cwd),
+        session,
+      )
     case 'plan':
-      return continueWith(await requireText(argsText, 'Usage: /plan <goal>', handlers.renderPlan, session.cwd), session)
+      return continueWith(
+        await requireText(argsText, 'Usage: /plan <goal>', handlers.renderPlan, session.cwd),
+        session,
+      )
     case 'run':
-      return continueWith(await requireText(argsText, 'Usage: /run <goal>', handlers.renderRun, session.cwd), session)
+      return continueWith(
+        await requireText(argsText, 'Usage: /run <goal>', handlers.renderRun, session.cwd),
+        session,
+      )
     case 'read':
-      return continueWith(await requireText(argsText, 'Usage: /read <path>', handlers.renderRead, session.cwd), session)
+      return continueWith(
+        await requireText(argsText, 'Usage: /read <path>', handlers.renderRead, session.cwd),
+        session,
+      )
     case 'search':
-      return continueWith(await requireText(argsText, 'Usage: /search <query>', handlers.renderSearch, session.cwd), session)
+      return continueWith(
+        await requireText(argsText, 'Usage: /search <query>', handlers.renderSearch, session.cwd),
+        session,
+      )
     case 'validation-plan':
-      return continueWith(await handlers.renderValidationPlan(argsText.length > 0 ? argsText : undefined, session.cwd), session)
+      return continueWith(
+        await handlers.renderValidationPlan(
+          argsText.length > 0 ? argsText : undefined,
+          session.cwd,
+        ),
+        session,
+      )
     case 'propose':
-      return continueWith(await requireText(argsText, 'Usage: /propose <goal>', handlers.renderProposePatch, session.cwd), session)
+      return continueWith(
+        await requireText(
+          argsText,
+          'Usage: /propose <goal>',
+          handlers.renderProposePatch,
+          session.cwd,
+        ),
+        session,
+      )
     case 'pr-notes':
-      return continueWith(await handlers.renderPrNotes(argsText.length > 0 ? argsText : undefined, session.cwd), session)
+      return continueWith(
+        await handlers.renderPrNotes(argsText.length > 0 ? argsText : undefined, session.cwd),
+        session,
+      )
     case 'history':
       return continueWith(renderOperatorHistory(historyStore?.list() ?? session.history), session)
     case 'session':

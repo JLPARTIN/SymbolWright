@@ -1,4 +1,7 @@
-import { renderRuntimeCiReviewGithubFixture, renderRuntimePrNotesGithubFixture } from './cli-runtime-github-fixture.js'
+import {
+  renderRuntimeCiReviewGithubFixture,
+  renderRuntimePrNotesGithubFixture,
+} from './cli-runtime-github-fixture.js'
 
 export async function renderFixtureCommand(command: string, fixturePath: string): Promise<string> {
   if (fixturePath.trim().length === 0) {

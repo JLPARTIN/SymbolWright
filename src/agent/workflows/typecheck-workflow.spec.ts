@@ -16,8 +16,8 @@ describe('parseTypecheckOutput', () => {
 
   it('parses TypeScript error lines', () => {
     const output = [
-      'src/utils.ts(10,5): error TS2322: Type \'string\' is not assignable to type \'number\'.',
-      'src/utils.ts(20,3): error TS2345: Argument of type \'null\' is not assignable to parameter of type \'string\'.',
+      "src/utils.ts(10,5): error TS2322: Type 'string' is not assignable to type 'number'.",
+      "src/utils.ts(20,3): error TS2345: Argument of type 'null' is not assignable to parameter of type 'string'.",
     ].join('\n')
 
     const result = parseTypecheckOutput(output)

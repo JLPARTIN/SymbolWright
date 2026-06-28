@@ -55,12 +55,23 @@ describe('cli-agent', () => {
         valid: true,
         errors: [],
         warnings: [],
-        redactedSummary: { hasApiKey: true, apiKeyPreview: 'sk-t...tkey', hasGitHubToken: false, hasVoyageApiKey: false },
+        redactedSummary: {
+          hasApiKey: true,
+          apiKeyPreview: 'sk-t...tkey',
+          hasGitHubToken: false,
+          hasVoyageApiKey: false,
+        },
       })
       mockCreateProvider.mockReturnValue({
         providerId: 'anthropic',
         displayName: 'Test Provider',
-        complete: async function* () { yield { type: 'message_stop' as const, stopReason: 'end_turn', usage: { inputTokens: 10, outputTokens: 5 } } },
+        complete: async function* () {
+          yield {
+            type: 'message_stop' as const,
+            stopReason: 'end_turn',
+            usage: { inputTokens: 10, outputTokens: 5 },
+          }
+        },
       })
       mockRunAgent.mockResolvedValue({
         agentResult: {

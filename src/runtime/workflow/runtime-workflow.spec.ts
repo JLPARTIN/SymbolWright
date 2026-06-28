@@ -9,7 +9,10 @@ import {
   renderWorkflowResult,
   type RuntimeWorkflowRequest,
 } from './runtime-workflow.js'
-import { createWorkflowRuntimeContext, createWorkflowRuntimeRegistry } from '../runtime-workflow-registry.js'
+import {
+  createWorkflowRuntimeContext,
+  createWorkflowRuntimeRegistry,
+} from '../runtime-workflow-registry.js'
 import { renderRuntimeWorkflow } from '../../cli-runtime-workflow.js'
 
 function createTestRegistry() {
@@ -125,7 +128,10 @@ describe('runRuntimeWorkflow', () => {
   it('blocks when a tool is not found in registry', async () => {
     const request: RuntimeWorkflowRequest = {
       name: 'missing-tool',
-      steps: [{ toolName: 'plan_goal', input: { goal: 'test' } }, { toolName: 'github_write_gate', input: {} }],
+      steps: [
+        { toolName: 'plan_goal', input: { goal: 'test' } },
+        { toolName: 'github_write_gate', input: {} },
+      ],
     }
     const registry = createWorkflowRuntimeRegistry({})
     const result = await runRuntimeWorkflow(request, registry, createTestContext())
@@ -250,12 +256,13 @@ describe('renderRuntimeWorkflow (CLI)', () => {
     const dir = join(tmpdir(), `workflow-cli-test-${Date.now()}`)
     await mkdir(dir, { recursive: true })
     const fixturePath = join(dir, 'workflow.json')
-    await writeFile(fixturePath, JSON.stringify({
-      name: 'cli-test-workflow',
-      steps: [
-        { toolName: 'plan_goal', input: { goal: 'cli test' } },
-      ],
-    }))
+    await writeFile(
+      fixturePath,
+      JSON.stringify({
+        name: 'cli-test-workflow',
+        steps: [{ toolName: 'plan_goal', input: { goal: 'cli test' } }],
+      }),
+    )
 
     const output = await renderRuntimeWorkflow(fixturePath)
 
@@ -268,61 +275,84 @@ describe('renderRuntimeWorkflow (CLI)', () => {
     const dir = join(tmpdir(), `workflow-cli-name-${Date.now()}`)
     await mkdir(dir, { recursive: true })
     const fixturePath = join(dir, 'workflow.json')
-    await writeFile(fixturePath, JSON.stringify({
-      steps: [{ toolName: 'plan_goal', input: { goal: 'test' } }],
-    }))
+    await writeFile(
+      fixturePath,
+      JSON.stringify({
+        steps: [{ toolName: 'plan_goal', input: { goal: 'test' } }],
+      }),
+    )
 
-    await expect(renderRuntimeWorkflow(fixturePath)).rejects.toThrow('Missing or invalid workflow name.')
+    await expect(renderRuntimeWorkflow(fixturePath)).rejects.toThrow(
+      'Missing or invalid workflow name.',
+    )
   })
 
   it('throws when steps is missing', async () => {
     const dir = join(tmpdir(), `workflow-cli-steps-${Date.now()}`)
     await mkdir(dir, { recursive: true })
     const fixturePath = join(dir, 'workflow.json')
-    await writeFile(fixturePath, JSON.stringify({
-      name: 'test',
-    }))
+    await writeFile(
+      fixturePath,
+      JSON.stringify({
+        name: 'test',
+      }),
+    )
 
-    await expect(renderRuntimeWorkflow(fixturePath)).rejects.toThrow('Missing or empty steps array.')
+    await expect(renderRuntimeWorkflow(fixturePath)).rejects.toThrow(
+      'Missing or empty steps array.',
+    )
   })
 
   it('throws when step toolName is missing', async () => {
     const dir = join(tmpdir(), `workflow-cli-toolname-${Date.now()}`)
     await mkdir(dir, { recursive: true })
     const fixturePath = join(dir, 'workflow.json')
-    await writeFile(fixturePath, JSON.stringify({
-      name: 'test',
-      steps: [{ input: { goal: 'test' } }],
-    }))
+    await writeFile(
+      fixturePath,
+      JSON.stringify({
+        name: 'test',
+        steps: [{ input: { goal: 'test' } }],
+      }),
+    )
 
-    await expect(renderRuntimeWorkflow(fixturePath)).rejects.toThrow('Step 1: missing or invalid toolName.')
+    await expect(renderRuntimeWorkflow(fixturePath)).rejects.toThrow(
+      'Step 1: missing or invalid toolName.',
+    )
   })
 
   it('throws when step input is missing', async () => {
     const dir = join(tmpdir(), `workflow-cli-input-${Date.now()}`)
     await mkdir(dir, { recursive: true })
     const fixturePath = join(dir, 'workflow.json')
-    await writeFile(fixturePath, JSON.stringify({
-      name: 'test',
-      steps: [{ toolName: 'plan_goal' }],
-    }))
+    await writeFile(
+      fixturePath,
+      JSON.stringify({
+        name: 'test',
+        steps: [{ toolName: 'plan_goal' }],
+      }),
+    )
 
-    await expect(renderRuntimeWorkflow(fixturePath)).rejects.toThrow('Step 1: missing or invalid input object.')
+    await expect(renderRuntimeWorkflow(fixturePath)).rejects.toThrow(
+      'Step 1: missing or invalid input object.',
+    )
   })
 
   it('respects maxSteps from fixture', async () => {
     const dir = join(tmpdir(), `workflow-cli-maxsteps-${Date.now()}`)
     await mkdir(dir, { recursive: true })
     const fixturePath = join(dir, 'workflow.json')
-    await writeFile(fixturePath, JSON.stringify({
-      name: 'maxsteps-test',
-      steps: [
-        { toolName: 'plan_goal', input: { goal: 'a' } },
-        { toolName: 'plan_goal', input: { goal: 'b' } },
-        { toolName: 'plan_goal', input: { goal: 'c' } },
-      ],
-      maxSteps: 2,
-    }))
+    await writeFile(
+      fixturePath,
+      JSON.stringify({
+        name: 'maxsteps-test',
+        steps: [
+          { toolName: 'plan_goal', input: { goal: 'a' } },
+          { toolName: 'plan_goal', input: { goal: 'b' } },
+          { toolName: 'plan_goal', input: { goal: 'c' } },
+        ],
+        maxSteps: 2,
+      }),
+    )
 
     const output = await renderRuntimeWorkflow(fixturePath)
     expect(output).toContain('BLOCKED')
@@ -333,13 +363,14 @@ describe('renderRuntimeWorkflow (CLI)', () => {
     const dir = join(tmpdir(), `workflow-cli-client-${Date.now()}`)
     await mkdir(dir, { recursive: true })
     const fixturePath = join(dir, 'workflow.json')
-    await writeFile(fixturePath, JSON.stringify({
-      name: 'client-data-test',
-      steps: [
-        { toolName: 'plan_goal', input: { goal: 'with client data' } },
-      ],
-      clientData: {},
-    }))
+    await writeFile(
+      fixturePath,
+      JSON.stringify({
+        name: 'client-data-test',
+        steps: [{ toolName: 'plan_goal', input: { goal: 'with client data' } }],
+        clientData: {},
+      }),
+    )
 
     const output = await renderRuntimeWorkflow(fixturePath)
     expect(output).toContain('COMPLETED')

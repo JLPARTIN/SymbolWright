@@ -1,13 +1,28 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { LLMProvider, ProviderStreamEvent } from '../provider/provider.types.js'
-import type { RuntimePolicySnapshot, RuntimeToolContext, RuntimeToolDefinition } from '../runtime/types.js'
-import { activateSubsystems, verifySubsystemHealth, renderSubsystemHealthReport } from '../activation/codemind-activation.js'
+import type {
+  RuntimePolicySnapshot,
+  RuntimeToolContext,
+  RuntimeToolDefinition,
+} from '../runtime/types.js'
+import {
+  activateSubsystems,
+  verifySubsystemHealth,
+  renderSubsystemHealthReport,
+} from '../activation/codemind-activation.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { bridgeToolsForProvider, extractProviderTools } from '../agent/tool-schema-bridge.js'
 import { createRuntimeSession } from '../runtime/session/runtime-session.js'
-import { appendTranscriptEntry, renderRuntimeTranscript } from '../runtime/transcript/runtime-transcript.js'
-import { RuntimeAuditLog, createAuditEvent, renderAuditEvents } from '../runtime/audit/runtime-audit-log.js'
+import {
+  appendTranscriptEntry,
+  renderRuntimeTranscript,
+} from '../runtime/transcript/runtime-transcript.js'
+import {
+  RuntimeAuditLog,
+  createAuditEvent,
+  renderAuditEvents,
+} from '../runtime/audit/runtime-audit-log.js'
 import { classifyError, formatErrorForUser } from '../runtime/error-handling/error-handler.js'
 import { assertValidPolicy, createDefaultRuntimePolicy } from '../runtime/policy/runtime-policy.js'
 
@@ -17,15 +32,29 @@ function createMockProvider(): LLMProvider {
     displayName: 'Mock Provider',
     complete: vi.fn().mockImplementation(function* (): Generator<ProviderStreamEvent> {
       yield { type: 'text_delta', text: 'Hello' }
-      yield { type: 'message_stop', stopReason: 'end_turn', usage: { inputTokens: 10, outputTokens: 5 } }
+      yield {
+        type: 'message_stop',
+        stopReason: 'end_turn',
+        usage: { inputTokens: 10, outputTokens: 5 },
+      }
     }),
   }
 }
 
 function createTestTools(): RuntimeToolDefinition[] {
   return [
-    { name: 'read_file', description: 'Read', capability: 'READ', execute: vi.fn().mockResolvedValue('ok') },
-    { name: 'search_files', description: 'Search', capability: 'SEARCH', execute: vi.fn().mockResolvedValue('ok') },
+    {
+      name: 'read_file',
+      description: 'Read',
+      capability: 'READ',
+      execute: vi.fn().mockResolvedValue('ok'),
+    },
+    {
+      name: 'search_files',
+      description: 'Search',
+      capability: 'SEARCH',
+      execute: vi.fn().mockResolvedValue('ok'),
+    },
   ]
 }
 
@@ -97,9 +126,21 @@ describe('Session lifecycle proof', () => {
     const session = createRuntimeSession('Analyze the project structure')
 
     let transcript = session.transcript
-    transcript = appendTranscriptEntry(transcript, { iteration: 1, role: 'system', message: 'Starting analysis' })
-    transcript = appendTranscriptEntry(transcript, { iteration: 2, role: 'tool', message: 'Reading src/' })
-    transcript = appendTranscriptEntry(transcript, { iteration: 3, role: 'result', message: 'Found 42 files' })
+    transcript = appendTranscriptEntry(transcript, {
+      iteration: 1,
+      role: 'system',
+      message: 'Starting analysis',
+    })
+    transcript = appendTranscriptEntry(transcript, {
+      iteration: 2,
+      role: 'tool',
+      message: 'Reading src/',
+    })
+    transcript = appendTranscriptEntry(transcript, {
+      iteration: 3,
+      role: 'result',
+      message: 'Found 42 files',
+    })
 
     expect(transcript.entries).toHaveLength(3)
 
@@ -116,14 +157,18 @@ describe('Audit chain proof', () => {
   it('RuntimeAuditLog.record → list → renderAuditEvents includes all events with timestamps', () => {
     const log = new RuntimeAuditLog()
 
-    log.record(createAuditEvent({ action: 'read_file', status: 'allowed', detail: 'Read README.md' }))
+    log.record(
+      createAuditEvent({ action: 'read_file', status: 'allowed', detail: 'Read README.md' }),
+    )
     log.record(createAuditEvent({ action: 'write_file', status: 'blocked', detail: 'No approval' }))
-    log.record(createAuditEvent({
-      action: 'apply_edit',
-      status: 'allowed',
-      detail: 'Applied patch',
-      approval: { ticketId: 'T-1', approvedBy: 'operator', scopes: ['apply_edit'] },
-    }))
+    log.record(
+      createAuditEvent({
+        action: 'apply_edit',
+        status: 'allowed',
+        detail: 'Applied patch',
+        approval: { ticketId: 'T-1', approvedBy: 'operator', scopes: ['apply_edit'] },
+      }),
+    )
 
     const events = log.list()
     expect(events).toHaveLength(3)
@@ -148,8 +193,14 @@ describe('Error classification proof', () => {
       { error: new Error('Rate limit exceeded (429)'), expectedCategory: 'provider_error' },
       { error: new Error('Server overloaded (503)'), expectedCategory: 'provider_error' },
       { error: new Error('Connection timeout ETIMEDOUT'), expectedCategory: 'network_error' },
-      { error: new Error('Permission denied for this action'), expectedCategory: 'permission_denied' },
-      { error: new Error('Context overflow: message too long'), expectedCategory: 'context_overflow' },
+      {
+        error: new Error('Permission denied for this action'),
+        expectedCategory: 'permission_denied',
+      },
+      {
+        error: new Error('Context overflow: message too long'),
+        expectedCategory: 'context_overflow',
+      },
       { error: new Error('Swarm agent dispatch failed'), expectedCategory: 'swarm_error' },
       { error: new Error('Something completely unknown'), expectedCategory: 'unknown_error' },
     ]

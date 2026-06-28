@@ -64,7 +64,8 @@ function buildSwarmSection(
   descriptions?: Readonly<Record<string, string>>,
 ): string {
   const defaultDescriptions: Record<string, string> = {
-    investigator: 'Read-only exploration of codebases — file search, pattern matching, structure analysis.',
+    investigator:
+      'Read-only exploration of codebases — file search, pattern matching, structure analysis.',
     coder: 'Code implementation — reads context, writes fixes and features with approval.',
     analyzer: 'Validation — runs tests, typecheck, lint. Reports results.',
     reviewer: 'Quality assessment — triggers Ajna review pipeline for risk and merge readiness.',

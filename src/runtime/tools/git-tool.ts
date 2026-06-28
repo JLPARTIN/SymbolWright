@@ -12,11 +12,18 @@ export type GitOperation =
   | 'push'
 
 export const READ_OPERATIONS: ReadonlySet<GitOperation> = new Set([
-  'status', 'diff', 'log', 'branch', 'show',
+  'status',
+  'diff',
+  'log',
+  'branch',
+  'show',
 ])
 
 export const WRITE_OPERATIONS: ReadonlySet<GitOperation> = new Set([
-  'checkout_new', 'add', 'commit', 'push',
+  'checkout_new',
+  'add',
+  'commit',
+  'push',
 ])
 
 export interface GitToolInput {

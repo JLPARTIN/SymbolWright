@@ -146,10 +146,7 @@ describe('githubCreatePrTool', () => {
   })
 
   it('blocks without approval', async () => {
-    const output = await githubCreatePrTool.execute(
-      validInput,
-      makeContext(ghWritePolicy),
-    )
+    const output = await githubCreatePrTool.execute(validInput, makeContext(ghWritePolicy))
 
     expect(output).toContain('BLOCKED')
   })
@@ -168,10 +165,7 @@ describe('githubCreatePrTool', () => {
 
   it('defaults dryRun to true when not provided', async () => {
     const { dryRun: _, ...noDryRun } = validInput
-    const output = await githubCreatePrTool.execute(
-      noDryRun,
-      makeContext(ghWritePolicy, approval),
-    )
+    const output = await githubCreatePrTool.execute(noDryRun, makeContext(ghWritePolicy, approval))
 
     expect(output).toContain('DRY_RUN')
   })

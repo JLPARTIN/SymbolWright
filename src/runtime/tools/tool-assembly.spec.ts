@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { assembleAgentTools, assembleAgentToolsByCapability, getToolByName, assertToolAssemblyIntegrity, DYNAMICALLY_WIRED_TOOLS } from './tool-assembly.js'
+import {
+  assembleAgentTools,
+  assembleAgentToolsByCapability,
+  getToolByName,
+  assertToolAssemblyIntegrity,
+  DYNAMICALLY_WIRED_TOOLS,
+} from './tool-assembly.js'
 import { ALL_CODEMIND_TOOL_NAMES } from '../types.js'
 
 describe('tool-assembly', () => {

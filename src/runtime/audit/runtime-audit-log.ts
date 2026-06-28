@@ -54,7 +54,10 @@ export function renderAuditEvents(events: readonly RuntimeAuditEvent[]): string 
     'Runtime audit log',
     '',
     ...(events.length > 0
-      ? events.map((event) => `- [${event.timestamp}] ${event.status.toUpperCase()} ${event.action}: ${event.detail}`)
+      ? events.map(
+          (event) =>
+            `- [${event.timestamp}] ${event.status.toUpperCase()} ${event.action}: ${event.detail}`,
+        )
       : ['- No audit events recorded.']),
   ].join('\n')
 }

@@ -92,12 +92,7 @@ export function renderZflowReportMarkdown(report: ZflowExecutionReport): string 
     '',
     ...report.readiness.reasons.map((reason) => `- ${reason}`),
     '',
-    ...report.sections.flatMap((section) => [
-      `## ${section.title}`,
-      '',
-      section.body,
-      '',
-    ]),
+    ...report.sections.flatMap((section) => [`## ${section.title}`, '', section.body, '']),
     '## Boundary',
     '',
     '- Reporting/export only.',

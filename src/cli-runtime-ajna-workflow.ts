@@ -1,10 +1,20 @@
 import { readFile } from 'node:fs/promises'
-import { createWorkflowRuntimeContext, createWorkflowRuntimeRegistry } from './runtime/runtime-workflow-registry.js'
+import {
+  createWorkflowRuntimeContext,
+  createWorkflowRuntimeRegistry,
+} from './runtime/runtime-workflow-registry.js'
 import { runRuntimeWorkflow, renderWorkflowResult } from './runtime/workflow/runtime-workflow.js'
-import { buildAjnaWorkflowRequest, renderAjnaWorkflowSummary, type AjnaWorkflowInput } from './runtime/workflow/ajna-workflow-template.js'
+import {
+  buildAjnaWorkflowRequest,
+  renderAjnaWorkflowSummary,
+  type AjnaWorkflowInput,
+} from './runtime/workflow/ajna-workflow-template.js'
 import type { FakeLiveReadClientData } from './runtime/live-read/fake-live-read-client.js'
 
-export async function renderRuntimeAjnaWorkflow(fixturePath: string, cwd: string = process.cwd()): Promise<string> {
+export async function renderRuntimeAjnaWorkflow(
+  fixturePath: string,
+  cwd: string = process.cwd(),
+): Promise<string> {
   const raw = await readFile(fixturePath, 'utf-8')
   const parsed: Record<string, unknown> = JSON.parse(raw) as Record<string, unknown>
 
@@ -28,16 +38,19 @@ export async function renderRuntimeAjnaWorkflow(fixturePath: string, cwd: string
     throw new Error('Missing or invalid mode. Must be "review", "merge-readiness", or "full".')
   }
 
-  const workflowRunId = typeof parsed['workflowRunId'] === 'number' ? parsed['workflowRunId'] : undefined
+  const workflowRunId =
+    typeof parsed['workflowRunId'] === 'number' ? parsed['workflowRunId'] : undefined
 
-  const input: AjnaWorkflowInput = workflowRunId !== undefined
-    ? { owner, repo, prNumber, workflowRunId, mode: rawMode }
-    : { owner, repo, prNumber, mode: rawMode }
+  const input: AjnaWorkflowInput =
+    workflowRunId !== undefined
+      ? { owner, repo, prNumber, workflowRunId, mode: rawMode }
+      : { owner, repo, prNumber, mode: rawMode }
 
   const rawClientData = parsed['clientData']
-  const clientData: FakeLiveReadClientData = typeof rawClientData === 'object' && rawClientData !== null && !Array.isArray(rawClientData)
-    ? rawClientData as FakeLiveReadClientData
-    : {}
+  const clientData: FakeLiveReadClientData =
+    typeof rawClientData === 'object' && rawClientData !== null && !Array.isArray(rawClientData)
+      ? (rawClientData as FakeLiveReadClientData)
+      : {}
 
   const request = buildAjnaWorkflowRequest(input)
   const registry = createWorkflowRuntimeRegistry(clientData)

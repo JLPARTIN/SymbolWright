@@ -20,11 +20,15 @@ export class GitHubLiveReadClient implements RuntimeLiveReadClient {
     this.httpClient = httpClient
   }
 
-  async getPullRequestEvidence(owner: string, repo: string, prNumber: number): Promise<GitHubPrEvidence> {
+  async getPullRequestEvidence(
+    owner: string,
+    repo: string,
+    prNumber: number,
+  ): Promise<GitHubPrEvidence> {
     if (this.httpClient === undefined) {
       throw new Error(
         `No GitHub HTTP client configured for PR read: ${owner}/${repo}#${prNumber}. ` +
-        'Provide a GITHUB_TOKEN to enable live reads.',
+          'Provide a GITHUB_TOKEN to enable live reads.',
       )
     }
 
@@ -35,17 +39,24 @@ export class GitHubLiveReadClient implements RuntimeLiveReadClient {
     }
 
     const pr = assertGitHubApiObject(response.body, `PR ${owner}/${repo}#${prNumber}`)
-    const base = typeof pr['base'] === 'object' && pr['base'] !== null
-      ? pr['base'] as Record<string, unknown>
-      : undefined
-    const head = typeof pr['head'] === 'object' && pr['head'] !== null
-      ? pr['head'] as Record<string, unknown>
-      : undefined
+    const base =
+      typeof pr['base'] === 'object' && pr['base'] !== null
+        ? (pr['base'] as Record<string, unknown>)
+        : undefined
+    const head =
+      typeof pr['head'] === 'object' && pr['head'] !== null
+        ? (pr['head'] as Record<string, unknown>)
+        : undefined
 
-    const filesResponse = await this.httpClient.get(`/repos/${owner}/${repo}/pulls/${prNumber}/files`)
-    const files = filesResponse.status === 200 && Array.isArray(filesResponse.body)
-      ? (filesResponse.body as Array<Record<string, unknown>>).map((f) => String(f['filename'] ?? ''))
-      : []
+    const filesResponse = await this.httpClient.get(
+      `/repos/${owner}/${repo}/pulls/${prNumber}/files`,
+    )
+    const files =
+      filesResponse.status === 200 && Array.isArray(filesResponse.body)
+        ? (filesResponse.body as Array<Record<string, unknown>>).map((f) =>
+            String(f['filename'] ?? ''),
+          )
+        : []
 
     return {
       number: Number(pr['number'] ?? prNumber),
@@ -64,23 +75,30 @@ export class GitHubLiveReadClient implements RuntimeLiveReadClient {
     if (this.httpClient === undefined) {
       throw new Error(
         `No GitHub HTTP client configured for workflow read: ${owner}/${repo} run ${runId}. ` +
-        'Provide a GITHUB_TOKEN to enable live reads.',
+          'Provide a GITHUB_TOKEN to enable live reads.',
       )
     }
 
     const runResponse = await this.httpClient.get(`/repos/${owner}/${repo}/actions/runs/${runId}`)
 
     if (runResponse.status !== 200) {
-      throw new Error(`GitHub API returned ${runResponse.status} for workflow run ${owner}/${repo}#${runId}`)
+      throw new Error(
+        `GitHub API returned ${runResponse.status} for workflow run ${owner}/${repo}#${runId}`,
+      )
     }
 
     const run = assertGitHubApiObject(runResponse.body, `workflow run ${owner}/${repo}#${runId}`)
 
-    const jobsResponse = await this.httpClient.get(`/repos/${owner}/${repo}/actions/runs/${runId}/jobs`)
-    const jobsBody = jobsResponse.status === 200
-      ? assertGitHubApiObject(jobsResponse.body, `workflow jobs ${owner}/${repo}#${runId}`)
-      : {}
-    const rawJobs = Array.isArray(jobsBody['jobs']) ? jobsBody['jobs'] as Array<Record<string, unknown>> : []
+    const jobsResponse = await this.httpClient.get(
+      `/repos/${owner}/${repo}/actions/runs/${runId}/jobs`,
+    )
+    const jobsBody =
+      jobsResponse.status === 200
+        ? assertGitHubApiObject(jobsResponse.body, `workflow jobs ${owner}/${repo}#${runId}`)
+        : {}
+    const rawJobs = Array.isArray(jobsBody['jobs'])
+      ? (jobsBody['jobs'] as Array<Record<string, unknown>>)
+      : []
 
     return {
       workflow: redactGitHubContent(String(run['name'] ?? 'unknown')),
@@ -94,11 +112,16 @@ export class GitHubLiveReadClient implements RuntimeLiveReadClient {
     }
   }
 
-  async getRepositoryFile(owner: string, repo: string, filePath: string, ref: string): Promise<RepositoryFileResult> {
+  async getRepositoryFile(
+    owner: string,
+    repo: string,
+    filePath: string,
+    ref: string,
+  ): Promise<RepositoryFileResult> {
     if (this.httpClient === undefined) {
       throw new Error(
         `No GitHub HTTP client configured for file read: ${owner}/${repo}/${filePath}@${ref}. ` +
-        'Provide a GITHUB_TOKEN to enable live reads.',
+          'Provide a GITHUB_TOKEN to enable live reads.',
       )
     }
 
@@ -107,7 +130,9 @@ export class GitHubLiveReadClient implements RuntimeLiveReadClient {
     )
 
     if (response.status !== 200) {
-      throw new Error(`GitHub API returned ${response.status} for file ${owner}/${repo}/${filePath}@${ref}`)
+      throw new Error(
+        `GitHub API returned ${response.status} for file ${owner}/${repo}/${filePath}@${ref}`,
+      )
     }
 
     const body = assertGitHubApiObject(response.body, `file ${owner}/${repo}/${filePath}@${ref}`)

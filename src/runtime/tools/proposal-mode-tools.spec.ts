@@ -2,11 +2,16 @@ import { describe, expect, it } from 'vitest'
 
 import { critiquePlanText } from '../ajna/plan-critique-bridge.js'
 import { critiqueProposalText } from '../ajna/proposal-critique-bridge.js'
-import { createProposalRuntimeContext, createProposalRuntimeRegistry } from '../runtime-proposal-registry.js'
+import {
+  createProposalRuntimeContext,
+  createProposalRuntimeRegistry,
+} from '../runtime-proposal-registry.js'
 
 describe('proposal mode runtime tools', () => {
   it('registers proposal mode tools after read-only tools', () => {
-    const names = createProposalRuntimeRegistry().list().map((entry) => entry.name)
+    const names = createProposalRuntimeRegistry()
+      .list()
+      .map((entry) => entry.name)
 
     expect(names).toContain('propose_edit')
     expect(names).toContain('pr_notes')
@@ -52,7 +57,10 @@ describe('proposal mode runtime tools', () => {
   })
 
   it('critiques plan and proposal text deterministically', () => {
-    expect(critiquePlanText('Plan\nBoundary:\nvalidation')).toEqual({ verdict: 'READY', findings: [] })
+    expect(critiquePlanText('Plan\nBoundary:\nvalidation')).toEqual({
+      verdict: 'READY',
+      findings: [],
+    })
     expect(critiqueProposalText('Proposal note: this is a planning artifact only')).toEqual({
       verdict: 'READY',
       findings: [],

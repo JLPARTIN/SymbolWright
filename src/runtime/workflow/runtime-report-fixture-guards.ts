@@ -1,6 +1,9 @@
 import fs from 'node:fs'
 
-export function assertRecord(value: unknown, message: string): asserts value is Record<string, unknown> {
+export function assertRecord(
+  value: unknown,
+  message: string,
+): asserts value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null) {
     throw new Error(message)
   }

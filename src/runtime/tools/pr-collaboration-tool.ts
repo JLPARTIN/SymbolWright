@@ -69,7 +69,8 @@ function resolveClient(context: RuntimeToolContext): PrCollaborationClient {
 
 export const prCollaborationTool: RuntimeToolDefinition = {
   name: 'pr_collaboration',
-  description: 'Apply approved PR collaboration actions through the GitHub API (or fake client when no token).',
+  description:
+    'Apply approved PR collaboration actions through the GitHub API (or fake client when no token).',
   capability: 'GITHUB_PR_COLLABORATION',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const parsed = parsePrCollaborationToolInput(input)

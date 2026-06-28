@@ -8,10 +8,7 @@ import {
 import type { RuntimeToolDefinition, RuntimePolicySnapshot } from '../runtime/types.js'
 import { ALL_CODEMIND_TOOL_NAMES } from '../runtime/types.js'
 
-function makeTool(
-  name: string,
-  capability: string,
-): RuntimeToolDefinition {
+function makeTool(name: string, capability: string): RuntimeToolDefinition {
   return {
     name: name as RuntimeToolDefinition['name'],
     description: `Test tool: ${name}`,

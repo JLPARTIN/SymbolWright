@@ -2,7 +2,12 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
 import { JsonlStore } from '../storage/jsonl-store.js'
-import { isIndexableFile, chunkFileContentSemantic, generateChunkId, detectLanguage } from './chunk-indexer.js'
+import {
+  isIndexableFile,
+  chunkFileContentSemantic,
+  generateChunkId,
+  detectLanguage,
+} from './chunk-indexer.js'
 import type { EmbeddingProvider } from './embedding-provider.js'
 import { buildRagContext } from './rag-context-builder.js'
 import type { RagContextResult } from './rag-context-builder.js'
@@ -232,7 +237,13 @@ export class ProjectMemory {
     const all = this.loadAll()
     const updated = all.map((e) =>
       e.id === id
-        ? { ...e, value: updates.value, confidence: updates.confidence, source: updates.source, learnedAt: new Date().toISOString() }
+        ? {
+            ...e,
+            value: updates.value,
+            confidence: updates.confidence,
+            source: updates.source,
+            learnedAt: new Date().toISOString(),
+          }
         : e,
     )
     this.store.clear()
@@ -262,9 +273,19 @@ export interface IndexRepositoryResult {
 }
 
 const DEFAULT_EXCLUDE_DIRS = [
-  'node_modules', '.git', 'dist', 'build', 'coverage',
-  '.next', '.nuxt', '.output', '__pycache__', '.venv',
-  'vendor', 'target', '.codemind',
+  'node_modules',
+  '.git',
+  'dist',
+  'build',
+  'coverage',
+  '.next',
+  '.nuxt',
+  '.output',
+  '__pycache__',
+  '.venv',
+  'vendor',
+  'target',
+  '.codemind',
 ]
 
 function collectFiles(

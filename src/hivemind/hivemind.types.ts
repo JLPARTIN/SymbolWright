@@ -12,7 +12,13 @@ export type SwarmAgentType = (typeof SWARM_AGENT_TYPES)[number]
 export const SWARM_AGENT_STATUSES = ['idle', 'active', 'completed', 'failed'] as const
 export type SwarmAgentStatus = (typeof SWARM_AGENT_STATUSES)[number]
 
-export const SWARM_TASK_STATUSES = ['pending', 'dispatched', 'running', 'completed', 'failed'] as const
+export const SWARM_TASK_STATUSES = [
+  'pending',
+  'dispatched',
+  'running',
+  'completed',
+  'failed',
+] as const
 export type SwarmTaskStatus = (typeof SWARM_TASK_STATUSES)[number]
 
 export interface SwarmAgentCapabilities {

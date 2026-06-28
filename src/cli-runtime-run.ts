@@ -1,7 +1,13 @@
 import { parseRuntimeRunArgs } from './cli-runtime-run-options.js'
-import { runReadOnlyRuntimeLoop, type ReadOnlyRuntimeRunResult } from './runtime/loop/codemind-agent-loop.js'
+import {
+  runReadOnlyRuntimeLoop,
+  type ReadOnlyRuntimeRunResult,
+} from './runtime/loop/codemind-agent-loop.js'
 
-export async function renderRuntimeRun(args: readonly string[], cwd: string = process.cwd()): Promise<string> {
+export async function renderRuntimeRun(
+  args: readonly string[],
+  cwd: string = process.cwd(),
+): Promise<string> {
   const options = parseRuntimeRunArgs(args)
 
   if (!options.readOnly) {

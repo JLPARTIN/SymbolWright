@@ -54,7 +54,9 @@ describe('parseFixtureFormat', () => {
   })
 
   it('rejects undefined', () => {
-    expect(() => parseFixtureFormat(undefined)).toThrow('Fixture format must be "markdown" or "json".')
+    expect(() => parseFixtureFormat(undefined)).toThrow(
+      'Fixture format must be "markdown" or "json".',
+    )
   })
 
   it('rejects a number', () => {
@@ -138,9 +140,7 @@ describe('parseFixtureTitle', () => {
   })
 
   it('rejects a missing title', () => {
-    expect(() => parseFixtureTitle({})).toThrow(
-      'Fixture must include a non-empty "title" field.',
-    )
+    expect(() => parseFixtureTitle({})).toThrow('Fixture must include a non-empty "title" field.')
   })
 
   it('rejects a numeric title', () => {
@@ -152,8 +152,9 @@ describe('parseFixtureTitle', () => {
 
 describe('parseFixtureGeneratedAt', () => {
   it('returns a valid string', () => {
-    expect(parseFixtureGeneratedAt({ generatedAt: '2026-01-01T00:00:00.000Z' }))
-      .toBe('2026-01-01T00:00:00.000Z')
+    expect(parseFixtureGeneratedAt({ generatedAt: '2026-01-01T00:00:00.000Z' })).toBe(
+      '2026-01-01T00:00:00.000Z',
+    )
   })
 
   it('returns undefined when field is missing', () => {

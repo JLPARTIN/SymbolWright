@@ -12,7 +12,9 @@ import type { AjnaGithubPullRequestPayload } from './ajna/ajna-github-review-nor
 
 const tempDirs: string[] = []
 
-function makePayload(overrides: Partial<AjnaGithubPullRequestPayload> = {}): AjnaGithubPullRequestPayload {
+function makePayload(
+  overrides: Partial<AjnaGithubPullRequestPayload> = {},
+): AjnaGithubPullRequestPayload {
   return {
     repository: 'JLPARTIN/CodeMind',
     pullRequestNumber: 59,
@@ -20,7 +22,9 @@ function makePayload(overrides: Partial<AjnaGithubPullRequestPayload> = {}): Ajn
     headRef: 'ajna-github-payload-normalizer',
     headSha: '17ada8661847dddd8ed181267789d3a77d0f37d4',
     changedFiles: ['src/ajna/ajna-github-review-normalizer.ts'],
-    diffEvidence: ['The normalizer converts mocked GitHub pull request payloads into Ajna review input.'],
+    diffEvidence: [
+      'The normalizer converts mocked GitHub pull request payloads into Ajna review input.',
+    ],
     ciEvidence: ['CI completed successfully for the mocked pull request head.'],
     ...overrides,
   }
@@ -49,7 +53,9 @@ describe('parseAjnaGithubPullRequestFixture', () => {
   })
 
   it('rejects non-object fixture JSON', () => {
-    expect(() => parseAjnaGithubPullRequestFixture('[]')).toThrow('GitHub review fixture input must be an object')
+    expect(() => parseAjnaGithubPullRequestFixture('[]')).toThrow(
+      'GitHub review fixture input must be an object',
+    )
   })
 })
 

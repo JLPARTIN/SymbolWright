@@ -1,4 +1,9 @@
-import type { SwarmAgentType, SwarmTask, SwarmDispatchResult, SwarmAuditReceipt } from './hivemind.types.js'
+import type {
+  SwarmAgentType,
+  SwarmTask,
+  SwarmDispatchResult,
+  SwarmAuditReceipt,
+} from './hivemind.types.js'
 
 export type HiveMindTransport = 'local' | 'stdio' | 'http'
 
@@ -52,9 +57,10 @@ export class HiveMindRemoteBridge {
     return {
       connected: this.config.transport === 'local',
       transport: this.config.transport,
-      availableAgentTypes: this.config.transport === 'local'
-        ? ['investigator', 'reporter', 'analyzer', 'coder', 'reviewer']
-        : [],
+      availableAgentTypes:
+        this.config.transport === 'local'
+          ? ['investigator', 'reporter', 'analyzer', 'coder', 'reviewer']
+          : [],
       activeAgents: this.activeTasks.size,
       ...(this.config.transport === 'local' ? { lastHeartbeat: new Date().toISOString() } : {}),
     }
@@ -99,7 +105,9 @@ export class HiveMindRemoteBridge {
     }
   }
 
-  private async dispatchLocal(request: HiveMindRemoteDispatchRequest): Promise<HiveMindRemoteDispatchResponse> {
+  private async dispatchLocal(
+    request: HiveMindRemoteDispatchRequest,
+  ): Promise<HiveMindRemoteDispatchResponse> {
     const startTime = Date.now()
 
     return {
@@ -110,7 +118,10 @@ export class HiveMindRemoteBridge {
     }
   }
 
-  private createAuditReceipt(request: HiveMindRemoteDispatchRequest, _durationMs: number): SwarmAuditReceipt {
+  private createAuditReceipt(
+    request: HiveMindRemoteDispatchRequest,
+    _durationMs: number,
+  ): SwarmAuditReceipt {
     return {
       taskId: request.taskId,
       agentId: `remote-${request.agentType}-${request.taskId}`,
@@ -135,7 +146,10 @@ export class HiveMindRemoteBridge {
     return this.config.transport !== 'local'
   }
 
-  toDispatchResult(response: HiveMindRemoteDispatchResponse, durationMs: number): SwarmDispatchResult {
+  toDispatchResult(
+    response: HiveMindRemoteDispatchResponse,
+    durationMs: number,
+  ): SwarmDispatchResult {
     return {
       taskId: response.taskId,
       agentId: response.auditReceipt.agentId,

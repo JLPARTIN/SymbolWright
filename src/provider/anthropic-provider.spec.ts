@@ -155,14 +155,11 @@ describe('anthropic-provider', () => {
       const provider = createAnthropicProvider({ apiKey: 'test-key' })
 
       mockStreamFn.mockReturnValue(
-        makeMockStream(
-          [{ type: 'message_stop' }],
-          {
-            stop_reason: 'end_turn',
-            usage: { input_tokens: 10, output_tokens: 5 },
-            content: [],
-          },
-        ),
+        makeMockStream([{ type: 'message_stop' }], {
+          stop_reason: 'end_turn',
+          usage: { input_tokens: 10, output_tokens: 5 },
+          content: [],
+        }),
       )
 
       const tools = [
@@ -178,10 +175,7 @@ describe('anthropic-provider', () => {
       ]
 
       const events: ProviderStreamEvent[] = []
-      for await (const event of provider.complete(
-        [{ role: 'user', content: 'Hi' }],
-        tools,
-      )) {
+      for await (const event of provider.complete([{ role: 'user', content: 'Hi' }], tools)) {
         events.push(event)
       }
 
@@ -204,22 +198,18 @@ describe('anthropic-provider', () => {
       const provider = createAnthropicProvider({ apiKey: 'test-key' })
 
       mockStreamFn.mockReturnValue(
-        makeMockStream(
-          [{ type: 'message_stop' }],
-          {
-            stop_reason: 'end_turn',
-            usage: { input_tokens: 10, output_tokens: 5 },
-            content: [],
-          },
-        ),
+        makeMockStream([{ type: 'message_stop' }], {
+          stop_reason: 'end_turn',
+          usage: { input_tokens: 10, output_tokens: 5 },
+          content: [],
+        }),
       )
 
       const events: ProviderStreamEvent[] = []
-      for await (const event of provider.complete(
-        [{ role: 'user', content: 'Hi' }],
-        [],
-        { systemPrompt: 'Be helpful.', temperature: 0.5 },
-      )) {
+      for await (const event of provider.complete([{ role: 'user', content: 'Hi' }], [], {
+        systemPrompt: 'Be helpful.',
+        temperature: 0.5,
+      })) {
         events.push(event)
       }
 
@@ -232,14 +222,11 @@ describe('anthropic-provider', () => {
       const provider = createAnthropicProvider({ apiKey: 'test-key' })
 
       mockStreamFn.mockReturnValue(
-        makeMockStream(
-          [{ type: 'message_stop' }],
-          {
-            stop_reason: 'end_turn',
-            usage: { input_tokens: 10, output_tokens: 5 },
-            content: [],
-          },
-        ),
+        makeMockStream([{ type: 'message_stop' }], {
+          stop_reason: 'end_turn',
+          usage: { input_tokens: 10, output_tokens: 5 },
+          content: [],
+        }),
       )
 
       const events: ProviderStreamEvent[] = []
@@ -260,22 +247,18 @@ describe('anthropic-provider', () => {
       })
 
       mockStreamFn.mockReturnValue(
-        makeMockStream(
-          [{ type: 'message_stop' }],
-          {
-            stop_reason: 'end_turn',
-            usage: { input_tokens: 10, output_tokens: 5 },
-            content: [],
-          },
-        ),
+        makeMockStream([{ type: 'message_stop' }], {
+          stop_reason: 'end_turn',
+          usage: { input_tokens: 10, output_tokens: 5 },
+          content: [],
+        }),
       )
 
       const events: ProviderStreamEvent[] = []
-      for await (const event of provider.complete(
-        [{ role: 'user', content: 'Hi' }],
-        [],
-        { model: 'claude-opus-4-20250514', maxTokens: 4096 },
-      )) {
+      for await (const event of provider.complete([{ role: 'user', content: 'Hi' }], [], {
+        model: 'claude-opus-4-20250514',
+        maxTokens: 4096,
+      })) {
         events.push(event)
       }
 
@@ -288,14 +271,11 @@ describe('anthropic-provider', () => {
       const provider = createAnthropicProvider({ apiKey: 'test-key' })
 
       mockStreamFn.mockReturnValue(
-        makeMockStream(
-          [{ type: 'message_stop' }],
-          {
-            stop_reason: 'end_turn',
-            usage: { input_tokens: 10, output_tokens: 5 },
-            content: [],
-          },
-        ),
+        makeMockStream([{ type: 'message_stop' }], {
+          stop_reason: 'end_turn',
+          usage: { input_tokens: 10, output_tokens: 5 },
+          content: [],
+        }),
       )
 
       const events: ProviderStreamEvent[] = []
@@ -304,9 +284,7 @@ describe('anthropic-provider', () => {
         { role: 'assistant', content: 'Hello' },
         {
           role: 'tool_result',
-          content: [
-            { type: 'tool_result', toolUseId: 'tool-1', content: 'result' },
-          ],
+          content: [{ type: 'tool_result', toolUseId: 'tool-1', content: 'result' }],
         },
       ])) {
         events.push(event)
@@ -323,19 +301,16 @@ describe('anthropic-provider', () => {
       const provider = createAnthropicProvider({ apiKey: 'test-key' })
 
       mockStreamFn.mockReturnValue(
-        makeMockStream(
-          [{ type: 'message_stop' }],
-          {
-            stop_reason: 'end_turn',
-            usage: {
-              input_tokens: 100,
-              output_tokens: 50,
-              cache_read_input_tokens: 80,
-              cache_creation_input_tokens: 20,
-            },
-            content: [],
+        makeMockStream([{ type: 'message_stop' }], {
+          stop_reason: 'end_turn',
+          usage: {
+            input_tokens: 100,
+            output_tokens: 50,
+            cache_read_input_tokens: 80,
+            cache_creation_input_tokens: 20,
           },
-        ),
+          content: [],
+        }),
       )
 
       const events: ProviderStreamEvent[] = []

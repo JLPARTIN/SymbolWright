@@ -28,7 +28,8 @@ export function buildGoalPlan(goal: string): GoalPlan {
     {
       id: 'context',
       title: 'Confirm context',
-      detail: 'Review the repository state, relevant docs, and active safety policy before proposing work.',
+      detail:
+        'Review the repository state, relevant docs, and active safety policy before proposing work.',
     },
     {
       id: 'scope',
@@ -39,7 +40,8 @@ export function buildGoalPlan(goal: string): GoalPlan {
     {
       id: 'plan',
       title: 'Draft implementation plan',
-      detail: 'Describe implementation steps before any patch proposal or approved edit path is used.',
+      detail:
+        'Describe implementation steps before any patch proposal or approved edit path is used.',
       dependsOn: ['scope'],
     },
     {
@@ -61,7 +63,8 @@ export function renderGoalPlan(plan: GoalPlan): string {
     '',
     'Steps:',
     ...plan.steps.map((step, index) => {
-      const dependency = step.dependsOn === undefined ? '' : ` Depends on: ${step.dependsOn.join(', ')}.`
+      const dependency =
+        step.dependsOn === undefined ? '' : ` Depends on: ${step.dependsOn.join(', ')}.`
       return `${index + 1}. ${step.title} — ${step.detail}${dependency}`
     }),
     '',

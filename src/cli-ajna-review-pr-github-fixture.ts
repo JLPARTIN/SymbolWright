@@ -4,7 +4,10 @@ import {
   normalizeGithubPullRequestForAjnaReview,
   type AjnaGithubPullRequestPayload,
 } from './ajna/ajna-github-review-normalizer.js'
-import { buildAjnaReviewPrForInput, type CodemindAjnaReviewPrCommandResult } from './cli-ajna-review-pr.js'
+import {
+  buildAjnaReviewPrForInput,
+  type CodemindAjnaReviewPrCommandResult,
+} from './cli-ajna-review-pr.js'
 
 export interface CodemindAjnaReviewPrGithubFixtureCommandResult extends CodemindAjnaReviewPrCommandResult {
   readonly githubFixturePath: string
@@ -34,5 +37,6 @@ export function buildAjnaReviewPrForGithubFixture(
 }
 
 export function renderAjnaReviewPrGithubFixtureForFile(inputPath: string): string {
-  return buildAjnaReviewPrForGithubFixture(readAjnaGithubPullRequestFixture(inputPath), inputPath).output
+  return buildAjnaReviewPrForGithubFixture(readAjnaGithubPullRequestFixture(inputPath), inputPath)
+    .output
 }

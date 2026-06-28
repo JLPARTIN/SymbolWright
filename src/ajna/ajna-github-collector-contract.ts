@@ -18,7 +18,15 @@ export interface AjnaGithubCollectorChangedFile {
 export interface AjnaGithubCollectorCheckRun {
   readonly name: string
   readonly status: 'queued' | 'in_progress' | 'completed' | 'unknown'
-  readonly conclusion?: 'success' | 'failure' | 'cancelled' | 'skipped' | 'neutral' | 'timed_out' | 'action_required' | 'unknown'
+  readonly conclusion?:
+    | 'success'
+    | 'failure'
+    | 'cancelled'
+    | 'skipped'
+    | 'neutral'
+    | 'timed_out'
+    | 'action_required'
+    | 'unknown'
 }
 
 export interface AjnaGithubCollectorSnapshot {

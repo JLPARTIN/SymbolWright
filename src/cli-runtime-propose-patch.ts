@@ -1,4 +1,7 @@
-import { createProposalRuntimeContext, createProposalRuntimeRegistry } from './runtime/runtime-proposal-registry.js'
+import {
+  createProposalRuntimeContext,
+  createProposalRuntimeRegistry,
+} from './runtime/runtime-proposal-registry.js'
 
 export async function renderRuntimeProposePatch(
   goal: string,

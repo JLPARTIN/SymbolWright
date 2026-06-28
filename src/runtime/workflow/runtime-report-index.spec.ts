@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { createZflowReportCatalog, createZflowReportArtifactManifest } from './zflow-report-catalog.js'
+import {
+  createZflowReportCatalog,
+  createZflowReportArtifactManifest,
+} from './zflow-report-catalog.js'
 import type { ZflowExecutionReport } from './zflow-report.js'
 import { createZflowReportSuite } from './zflow-report-suite.js'
 import {
@@ -9,7 +12,10 @@ import {
   renderRuntimeReportIndexMarkdown,
 } from './runtime-report-index.js'
 
-function makeReport(id: string, readiness: 'READY_FOR_OPERATOR_REVIEW' | 'NEEDS_RECOVERY_DETAIL' | 'BLOCKED'): ZflowExecutionReport {
+function makeReport(
+  id: string,
+  readiness: 'READY_FOR_OPERATOR_REVIEW' | 'NEEDS_RECOVERY_DETAIL' | 'BLOCKED',
+): ZflowExecutionReport {
   return {
     id,
     generatedAt: '2026-01-01T00:00:00.000Z',
@@ -46,11 +52,19 @@ describe('runtime report index', () => {
 
     expect(index.summary.status).toBe('READY')
     expect(index.summary.entryCount).toBe(4)
-    expect(index.entries.map((entry) => entry.kind)).toEqual(['report', 'catalog', 'manifest', 'suite'])
+    expect(index.entries.map((entry) => entry.kind)).toEqual([
+      'report',
+      'catalog',
+      'manifest',
+      'suite',
+    ])
   })
 
   it('rolls blocked status up to the index', () => {
-    const reports = [makeReport('report-1', 'READY_FOR_OPERATOR_REVIEW'), makeReport('report-2', 'BLOCKED')]
+    const reports = [
+      makeReport('report-1', 'READY_FOR_OPERATOR_REVIEW'),
+      makeReport('report-2', 'BLOCKED'),
+    ]
     const index = createRuntimeReportIndex({ title: 'Runtime Report Index', reports })
 
     expect(index.summary.status).toBe('BLOCKED')

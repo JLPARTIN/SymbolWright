@@ -58,7 +58,14 @@ describe('applyTuiEvent', () => {
       })
       state = applyTuiEvent(state, {
         type: 'agent_loop_event',
-        event: { type: 'tool_call_end', id: 'tc-1', name: 'read_file', output: 'contents', isError: false, durationMs: 50 },
+        event: {
+          type: 'tool_call_end',
+          id: 'tc-1',
+          name: 'read_file',
+          output: 'contents',
+          isError: false,
+          durationMs: 50,
+        },
       })
       expect(state.activeTools).toHaveLength(1)
       expect(state.activeTools[0]!.status).toBe('completed')
@@ -73,7 +80,14 @@ describe('applyTuiEvent', () => {
       })
       state = applyTuiEvent(state, {
         type: 'agent_loop_event',
-        event: { type: 'tool_call_end', id: 'tc-1', name: 'bash', output: 'err', isError: true, durationMs: 100 },
+        event: {
+          type: 'tool_call_end',
+          id: 'tc-1',
+          name: 'bash',
+          output: 'err',
+          isError: true,
+          durationMs: 100,
+        },
       })
       expect(state.activeTools[0]!.status).toBe('error')
     })
@@ -87,7 +101,14 @@ describe('applyTuiEvent', () => {
       const longOutput = 'x'.repeat(300)
       state = applyTuiEvent(state, {
         type: 'agent_loop_event',
-        event: { type: 'tool_call_end', id: 'tc-1', name: 'read_file', output: longOutput, isError: false, durationMs: 10 },
+        event: {
+          type: 'tool_call_end',
+          id: 'tc-1',
+          name: 'read_file',
+          output: longOutput,
+          isError: false,
+          durationMs: 10,
+        },
       })
       expect(state.activeTools[0]!.output).toHaveLength(200)
     })
@@ -100,7 +121,14 @@ describe('applyTuiEvent', () => {
       })
       state = applyTuiEvent(state, {
         type: 'agent_loop_event',
-        event: { type: 'tool_call_end', id: 'tc-1', name: 'read_file', output: '', isError: false, durationMs: 10 },
+        event: {
+          type: 'tool_call_end',
+          id: 'tc-1',
+          name: 'read_file',
+          output: '',
+          isError: false,
+          durationMs: 10,
+        },
       })
       expect(state.activeTools[0]!.output).toBeUndefined()
     })
@@ -134,7 +162,14 @@ describe('applyTuiEvent', () => {
       })
       state = applyTuiEvent(state, {
         type: 'agent_loop_event',
-        event: { type: 'tool_call_end', id: 'tc-1', name: 'read_file', output: '', isError: false, durationMs: 10 },
+        event: {
+          type: 'tool_call_end',
+          id: 'tc-1',
+          name: 'read_file',
+          output: '',
+          isError: false,
+          durationMs: 10,
+        },
       })
       state = applyTuiEvent(state, {
         type: 'agent_loop_event',

@@ -5,7 +5,9 @@ import { validationCommandGateTool } from './tools/validation-command-gate-tool.
 import type { FakeLiveReadClientData } from './live-read/fake-live-read-client.js'
 import type { RuntimeToolContext } from './types.js'
 
-export function createValidationCommandRuntimeContext(cwd: string = process.cwd()): RuntimeToolContext {
+export function createValidationCommandRuntimeContext(
+  cwd: string = process.cwd(),
+): RuntimeToolContext {
   return createLocalWriteRuntimeContext(cwd)
 }
 

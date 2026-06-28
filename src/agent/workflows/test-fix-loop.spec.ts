@@ -48,10 +48,7 @@ describe('parseTestFailures', () => {
   })
 
   it('returns empty for passing output', () => {
-    const output = [
-      ' ✓ src/utils.spec.ts',
-      ' Test Files  1 passed (1)',
-    ].join('\n')
+    const output = [' ✓ src/utils.spec.ts', ' Test Files  1 passed (1)'].join('\n')
 
     const failures = parseTestFailures(output)
     expect(failures).toHaveLength(0)
@@ -149,10 +146,7 @@ describe('buildTestFixLoopResult', () => {
 
 describe('renderTestFixLoopResult', () => {
   it('renders passed result', () => {
-    const result = buildTestFixLoopResult(
-      [makeIteration(1, makeTestResult())],
-      3,
-    )
+    const result = buildTestFixLoopResult([makeIteration(1, makeTestResult())], 3)
     const rendered = renderTestFixLoopResult(result)
 
     expect(rendered).toContain('TESTS_PASSED')
@@ -162,13 +156,20 @@ describe('renderTestFixLoopResult', () => {
   it('renders failed test names', () => {
     const result = buildTestFixLoopResult(
       [
-        makeIteration(1, makeTestResult({
-          passed: false,
-          exitCode: 1,
-          failedTests: [
-            { testName: 'should add numbers', filePath: 'src/math.spec.ts', error: 'expected 3 to be 4' },
-          ],
-        })),
+        makeIteration(
+          1,
+          makeTestResult({
+            passed: false,
+            exitCode: 1,
+            failedTests: [
+              {
+                testName: 'should add numbers',
+                filePath: 'src/math.spec.ts',
+                error: 'expected 3 to be 4',
+              },
+            ],
+          }),
+        ),
       ],
       3,
     )

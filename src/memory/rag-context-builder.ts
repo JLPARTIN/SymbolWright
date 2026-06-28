@@ -55,9 +55,10 @@ export async function buildRagContext(
 
   for (const result of selected) {
     const { entry, score } = result
-    const locationInfo = entry.metadata.lineStart !== undefined
-      ? ` (lines ${entry.metadata.lineStart}-${entry.metadata.lineEnd ?? '?'})`
-      : ''
+    const locationInfo =
+      entry.metadata.lineStart !== undefined
+        ? ` (lines ${entry.metadata.lineStart}-${entry.metadata.lineEnd ?? '?'})`
+        : ''
 
     sections.push(`### ${entry.filePath}${locationInfo}`)
     sections.push('```')

@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  analyzeCiOutput,
-  renderCiDiagnosticReport,
-} from './ci-diagnostics.js'
+import { analyzeCiOutput, renderCiDiagnosticReport } from './ci-diagnostics.js'
 
 describe('analyzeCiOutput', () => {
   it('reports no issues for clean exit', () => {

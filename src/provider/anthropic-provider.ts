@@ -53,9 +53,7 @@ function toAnthropicMessages(
   })
 }
 
-function toAnthropicTools(
-  tools: readonly ProviderToolDefinition[],
-): Anthropic.Tool[] {
+function toAnthropicTools(tools: readonly ProviderToolDefinition[]): Anthropic.Tool[] {
   return tools.map((tool) => ({
     name: tool.name,
     description: tool.description,
@@ -90,9 +88,7 @@ export function createAnthropicProvider(config: AnthropicProviderConfig): LLMPro
         max_tokens: maxTokens,
         messages: anthropicMessages,
         stream: true,
-        ...(tools !== undefined && tools.length > 0
-          ? { tools: toAnthropicTools(tools) }
-          : {}),
+        ...(tools !== undefined && tools.length > 0 ? { tools: toAnthropicTools(tools) } : {}),
         ...(options?.systemPrompt !== undefined ? { system: options.systemPrompt } : {}),
         ...(options?.temperature !== undefined ? { temperature: options.temperature } : {}),
         ...(options?.stopSequences !== undefined
@@ -129,8 +125,7 @@ export function createAnthropicProvider(config: AnthropicProviderConfig): LLMPro
           if (currentToolId !== undefined && currentToolName !== undefined) {
             const finalMessage = await stream.finalMessage()
             const toolBlock = finalMessage.content.find(
-              (b): b is Anthropic.ToolUseBlock =>
-                b.type === 'tool_use' && b.id === currentToolId,
+              (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use' && b.id === currentToolId,
             )
             yield {
               type: 'tool_use_end',
@@ -143,15 +138,24 @@ export function createAnthropicProvider(config: AnthropicProviderConfig): LLMPro
           }
         } else if (event.type === 'message_stop') {
           const finalMessage = await stream.finalMessage()
-          const { input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens } = finalMessage.usage
+          const {
+            input_tokens,
+            output_tokens,
+            cache_read_input_tokens,
+            cache_creation_input_tokens,
+          } = finalMessage.usage
           yield {
             type: 'message_stop',
             stopReason: finalMessage.stop_reason === 'tool_use' ? 'tool_use' : 'end_turn',
             usage: {
               inputTokens: input_tokens,
               outputTokens: output_tokens,
-              ...(cache_read_input_tokens !== null ? { cacheReadInputTokens: cache_read_input_tokens } : {}),
-              ...(cache_creation_input_tokens !== null ? { cacheCreationInputTokens: cache_creation_input_tokens } : {}),
+              ...(cache_read_input_tokens !== null
+                ? { cacheReadInputTokens: cache_read_input_tokens }
+                : {}),
+              ...(cache_creation_input_tokens !== null
+                ? { cacheCreationInputTokens: cache_creation_input_tokens }
+                : {}),
             },
           }
         }

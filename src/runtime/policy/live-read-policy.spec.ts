@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { evaluateLiveReadPolicy, liveReadBoundary, type LiveReadPolicyRequest } from './live-read-policy.js'
+import {
+  evaluateLiveReadPolicy,
+  liveReadBoundary,
+  type LiveReadPolicyRequest,
+} from './live-read-policy.js'
 
 function allowedRequest(overrides: Partial<LiveReadPolicyRequest> = {}): LiveReadPolicyRequest {
   return {

@@ -80,7 +80,9 @@ describe('FakeLiveReadClient', () => {
 
   it('throws when PR evidence is not configured', async () => {
     const client = new FakeLiveReadClient({})
-    await expect(client.getPullRequestEvidence('owner', 'repo', 1)).rejects.toThrow('no PR evidence')
+    await expect(client.getPullRequestEvidence('owner', 'repo', 1)).rejects.toThrow(
+      'no PR evidence',
+    )
   })
 
   it('throws when CI evidence is not configured', async () => {
@@ -90,7 +92,9 @@ describe('FakeLiveReadClient', () => {
 
   it('throws when file is not configured', async () => {
     const client = new FakeLiveReadClient({})
-    await expect(client.getRepositoryFile('owner', 'repo', 'missing.ts', 'main')).rejects.toThrow('no file configured')
+    await expect(client.getRepositoryFile('owner', 'repo', 'missing.ts', 'main')).rejects.toThrow(
+      'no file configured',
+    )
   })
 
   it('reports provider as fake', () => {

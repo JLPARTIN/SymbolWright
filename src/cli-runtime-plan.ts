@@ -1,6 +1,12 @@
-import { createReadOnlyRuntimeContext, createReadOnlyRuntimeRegistry } from './runtime/runtime-readonly-registry.js'
+import {
+  createReadOnlyRuntimeContext,
+  createReadOnlyRuntimeRegistry,
+} from './runtime/runtime-readonly-registry.js'
 
-export async function renderRuntimePlan(goal: string, cwd: string = process.cwd()): Promise<string> {
+export async function renderRuntimePlan(
+  goal: string,
+  cwd: string = process.cwd(),
+): Promise<string> {
   const registry = createReadOnlyRuntimeRegistry()
   const tool = registry.getOrThrow('plan_goal')
 

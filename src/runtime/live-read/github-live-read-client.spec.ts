@@ -29,9 +29,7 @@ const fakePr: GitHubPrEvidence = {
 const fakeCi: GitHubCiEvidence = {
   workflow: 'CI',
   conclusion: 'success',
-  jobs: [
-    { name: 'build', status: 'completed', conclusion: 'success', summary: '' },
-  ],
+  jobs: [{ name: 'build', status: 'completed', conclusion: 'success', summary: '' }],
 }
 
 const testContext: RuntimeToolContext = {
@@ -55,17 +53,23 @@ describe('GitHubLiveReadClient', () => {
 
   it('throws not-yet-wired error for PR read', async () => {
     const client = new GitHubLiveReadClient()
-    await expect(client.getPullRequestEvidence('owner', 'repo', 1)).rejects.toThrow('No GitHub HTTP client configured')
+    await expect(client.getPullRequestEvidence('owner', 'repo', 1)).rejects.toThrow(
+      'No GitHub HTTP client configured',
+    )
   })
 
   it('throws not-yet-wired error for workflow read', async () => {
     const client = new GitHubLiveReadClient()
-    await expect(client.getWorkflowEvidence('owner', 'repo', 1)).rejects.toThrow('No GitHub HTTP client configured')
+    await expect(client.getWorkflowEvidence('owner', 'repo', 1)).rejects.toThrow(
+      'No GitHub HTTP client configured',
+    )
   })
 
   it('throws not-yet-wired error for file read', async () => {
     const client = new GitHubLiveReadClient()
-    await expect(client.getRepositoryFile('owner', 'repo', 'README.md', 'main')).rejects.toThrow('No GitHub HTTP client configured')
+    await expect(client.getRepositoryFile('owner', 'repo', 'README.md', 'main')).rejects.toThrow(
+      'No GitHub HTTP client configured',
+    )
   })
 })
 
@@ -76,8 +80,7 @@ describe('GitHubLiveReadClient with mock HTTP', () => {
       post: async () => ({ status: 404, body: null }),
     }
     const client = new GitHubLiveReadClient(mockHttp)
-    await expect(client.getPullRequestEvidence('o', 'r', 1))
-      .rejects.toThrow('not an object')
+    await expect(client.getPullRequestEvidence('o', 'r', 1)).rejects.toThrow('not an object')
   })
 
   it('rejects null PR response body', async () => {
@@ -86,8 +89,7 @@ describe('GitHubLiveReadClient with mock HTTP', () => {
       post: async () => ({ status: 404, body: null }),
     }
     const client = new GitHubLiveReadClient(mockHttp)
-    await expect(client.getPullRequestEvidence('o', 'r', 1))
-      .rejects.toThrow('not an object')
+    await expect(client.getPullRequestEvidence('o', 'r', 1)).rejects.toThrow('not an object')
   })
 
   it('extracts PR evidence from valid response', async () => {
@@ -144,8 +146,7 @@ describe('GitHubLiveReadClient with mock HTTP', () => {
       post: async () => ({ status: 404, body: null }),
     }
     const client = new GitHubLiveReadClient(mockHttp)
-    await expect(client.getWorkflowEvidence('o', 'r', 1))
-      .rejects.toThrow('not an object')
+    await expect(client.getWorkflowEvidence('o', 'r', 1)).rejects.toThrow('not an object')
   })
 
   it('rejects null file contents response body', async () => {
@@ -154,8 +155,9 @@ describe('GitHubLiveReadClient with mock HTTP', () => {
       post: async () => ({ status: 404, body: null }),
     }
     const client = new GitHubLiveReadClient(mockHttp)
-    await expect(client.getRepositoryFile('o', 'r', 'f.txt', 'main'))
-      .rejects.toThrow('not an object')
+    await expect(client.getRepositoryFile('o', 'r', 'f.txt', 'main')).rejects.toThrow(
+      'not an object',
+    )
   })
 })
 
@@ -179,7 +181,9 @@ describe('GitHubLiveReadPolicyWrapper', () => {
   })
 
   it('delegates file read through policy check to inner client', async () => {
-    const inner = new FakeLiveReadClient({ files: [{ path: 'README.md', ref: 'main', content: '# Test' }] })
+    const inner = new FakeLiveReadClient({
+      files: [{ path: 'README.md', ref: 'main', content: '# Test' }],
+    })
     const wrapper = new GitHubLiveReadPolicyWrapper(inner)
 
     const result = await wrapper.getRepositoryFile('owner', 'repo', 'README.md', 'main')
@@ -221,14 +225,18 @@ describe('github live read PR tool', () => {
     const registry = createGitHubLiveReadRuntimeRegistry({ pr: fakePr })
     const tool = registry.getOrThrow('github_live_read_pr')
 
-    await expect(tool.execute({ repo: 'r', prNumber: 1 }, testContext)).rejects.toThrow('Missing owner')
+    await expect(tool.execute({ repo: 'r', prNumber: 1 }, testContext)).rejects.toThrow(
+      'Missing owner',
+    )
   })
 
   it('rejects missing prNumber', async () => {
     const registry = createGitHubLiveReadRuntimeRegistry({ pr: fakePr })
     const tool = registry.getOrThrow('github_live_read_pr')
 
-    await expect(tool.execute({ owner: 'o', repo: 'r' }, testContext)).rejects.toThrow('Missing or invalid prNumber')
+    await expect(tool.execute({ owner: 'o', repo: 'r' }, testContext)).rejects.toThrow(
+      'Missing or invalid prNumber',
+    )
   })
 })
 
@@ -253,7 +261,9 @@ describe('github live read CI tool', () => {
     const registry = createGitHubLiveReadRuntimeRegistry({ ci: fakeCi })
     const tool = registry.getOrThrow('github_live_read_ci')
 
-    await expect(tool.execute({ owner: 'o', repo: 'r' }, testContext)).rejects.toThrow('Missing or invalid runId')
+    await expect(tool.execute({ owner: 'o', repo: 'r' }, testContext)).rejects.toThrow(
+      'Missing or invalid runId',
+    )
   })
 })
 

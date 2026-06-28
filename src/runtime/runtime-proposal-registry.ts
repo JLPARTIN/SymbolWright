@@ -1,4 +1,7 @@
-import { createReadOnlyRuntimeContext, createReadOnlyRuntimeRegistry } from './runtime-readonly-registry.js'
+import {
+  createReadOnlyRuntimeContext,
+  createReadOnlyRuntimeRegistry,
+} from './runtime-readonly-registry.js'
 import { createRuntimeRegistry } from './registry/runtime-registry.js'
 import { ciReviewTool } from './tools/ci-review-tool.js'
 import { prNotesTool } from './tools/pr-notes-tool.js'

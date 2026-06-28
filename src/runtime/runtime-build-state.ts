@@ -44,7 +44,11 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
     title: 'Approval gates and audit trail',
     state: 'COMPLETE',
     activeCommands: ['codemind runtime run <goal> --approval-ticket <id>'],
-    boundary: ['approval ticket required', 'protected paths blocked', 'dry-run representation only'],
+    boundary: [
+      'approval ticket required',
+      'protected paths blocked',
+      'dry-run representation only',
+    ],
   },
   {
     id: 'E',
@@ -61,7 +65,13 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
     title: 'Live read adapter policy handshake',
     state: 'COMPLETE',
     activeCommands: ['codemind live-read-policy <json-file>'],
-    boundary: ['dry-run policy handshake only', 'no live service call', 'no writes', 'no comments', 'no merges'],
+    boundary: [
+      'dry-run policy handshake only',
+      'no live service call',
+      'no writes',
+      'no comments',
+      'no merges',
+    ],
   },
   {
     id: 'G',
@@ -75,7 +85,13 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
     title: 'Live GitHub read adapter behind policy',
     state: 'COMPLETE',
     activeCommands: ['codemind github-live-read <json-file>'],
-    boundary: ['policy-gated live reads', 'read-only GitHub operations', 'no writes', 'no comments', 'no merges'],
+    boundary: [
+      'policy-gated live reads',
+      'read-only GitHub operations',
+      'no writes',
+      'no comments',
+      'no merges',
+    ],
   },
   {
     id: 'I',
@@ -103,14 +119,24 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
     title: 'Controlled local file write gate',
     state: 'COMPLETE',
     activeCommands: ['codemind local-write <json-file>'],
-    boundary: ['approval ticket required', 'protected paths blocked', 'workspace only', 'no GitHub writes'],
+    boundary: [
+      'approval ticket required',
+      'protected paths blocked',
+      'workspace only',
+      'no GitHub writes',
+    ],
   },
   {
     id: 'M',
     title: 'Approved validation command gate',
     state: 'COMPLETE',
     activeCommands: ['codemind validation-command <json-file>'],
-    boundary: ['allowlisted commands only', 'approval ticket required', 'no arbitrary shell', 'no GitHub writes'],
+    boundary: [
+      'allowlisted commands only',
+      'approval ticket required',
+      'no arbitrary shell',
+      'no GitHub writes',
+    ],
   },
   {
     id: 'N',
@@ -131,14 +157,24 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
     title: 'Approved GitHub write gate',
     state: 'COMPLETE',
     activeCommands: ['codemind github-write-gate <json-file>'],
-    boundary: ['approval required', 'create draft PR only', 'post comment only', 'apply label only', 'no merge'],
+    boundary: [
+      'approval required',
+      'create draft PR only',
+      'post comment only',
+      'apply label only',
+      'no merge',
+    ],
   },
   {
     id: 'Q',
     title: 'Runtime integration and workflow composition',
     state: 'COMPLETE',
     activeCommands: ['codemind workflow <json-file>'],
-    boundary: ['governed composition only', 'no new mutation surface', 'existing tool gates enforced'],
+    boundary: [
+      'governed composition only',
+      'no new mutation surface',
+      'existing tool gates enforced',
+    ],
   },
   {
     id: 'R',
@@ -159,7 +195,15 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
     title: 'Approved local file write execution',
     state: 'COMPLETE',
     activeCommands: ['codemind local-write <json-file>'],
-    boundary: ['approval ticket required', 'file:write scope required', 'protected paths blocked', 'workspace only', 'dry-run by default', 'no GitHub writes', 'no shell execution'],
+    boundary: [
+      'approval ticket required',
+      'file:write scope required',
+      'protected paths blocked',
+      'workspace only',
+      'dry-run by default',
+      'no GitHub writes',
+      'no shell execution',
+    ],
   },
 ] as const
 
@@ -177,7 +221,9 @@ export function renderRuntimeBuildState(): string {
     'CodeMind runtime build state',
     '',
     `Completed phases: ${getCompletedRuntimeBuildPhaseCount()}`,
-    nextPhase === undefined ? 'Next phase: none' : `Next phase: Phase ${nextPhase.id} — ${nextPhase.title}`,
+    nextPhase === undefined
+      ? 'Next phase: none'
+      : `Next phase: Phase ${nextPhase.id} — ${nextPhase.title}`,
     '',
     'Phases:',
     ...RUNTIME_BUILD_PHASES.flatMap((phase) => [

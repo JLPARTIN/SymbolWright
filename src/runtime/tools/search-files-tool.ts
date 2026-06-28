@@ -22,7 +22,14 @@ function isSkipped(relativePath: string, skippedDirs: readonly string[]): boolea
   return segments.some((segment) => skippedDirs.includes(segment))
 }
 
-function searchDirectory(root: string, currentDir: string, query: string, skippedDirs: readonly string[], limit: number, matches: SearchMatch[]): void {
+function searchDirectory(
+  root: string,
+  currentDir: string,
+  query: string,
+  skippedDirs: readonly string[],
+  limit: number,
+  matches: SearchMatch[],
+): void {
   if (matches.length >= limit) {
     return
   }
@@ -79,7 +86,10 @@ function parseSearchFilesInput(input: unknown): SearchFilesInput {
   return parsed
 }
 
-export async function executeSearchFilesTool(input: SearchFilesInput, context: RuntimeToolContext): Promise<string> {
+export async function executeSearchFilesTool(
+  input: SearchFilesInput,
+  context: RuntimeToolContext,
+): Promise<string> {
   const query = input.query.trim()
   if (query.length === 0) {
     throw new Error('Missing query: codemind search <query>')

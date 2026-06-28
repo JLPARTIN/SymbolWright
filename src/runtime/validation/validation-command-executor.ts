@@ -30,10 +30,7 @@ function deriveOutcome(result: ValidationCommandExecutionResult): ValidationExec
   return 'FAIL'
 }
 
-function deriveRecommendedNextAction(
-  outcome: ValidationExecutorOutcome,
-  command: string,
-): string {
+function deriveRecommendedNextAction(outcome: ValidationExecutorOutcome, command: string): string {
   switch (outcome) {
     case 'BLOCKED':
       return 'Resolve block reasons before retrying.'
@@ -58,12 +55,7 @@ export function runValidationCommand(
 ): ValidationExecutorResult {
   const startMs = Date.now()
 
-  const result = executeValidationCommand(
-    { command, reason, dryRun },
-    cwd,
-    policy,
-    approval,
-  )
+  const result = executeValidationCommand({ command, reason, dryRun }, cwd, policy, approval)
 
   const elapsedMs = Date.now() - startMs
   const outcome = deriveOutcome(result)

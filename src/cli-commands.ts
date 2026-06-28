@@ -1,49 +1,155 @@
 import { getCodemindFoundationSnapshot } from './codemind-foundation.js'
-import { getCompletedRuntimeBuildPhaseCount, getNextRuntimeBuildPhase } from './runtime/runtime-build-state.js'
+import {
+  getCompletedRuntimeBuildPhaseCount,
+  getNextRuntimeBuildPhase,
+} from './runtime/runtime-build-state.js'
 
 export const CODEMIND_CLI_COMMANDS = [
   { name: 'help', description: 'Show available command surface' },
   { name: 'status', description: 'Report CodeMind mode, policy, and runtime build state' },
-  { name: 'operator [mission]', description: 'Open the read-only CodeMind Operator Workspace console' },
+  {
+    name: 'operator [mission]',
+    description: 'Open the read-only CodeMind Operator Workspace console',
+  },
   { name: 'plan <goal>', description: 'Render a runtime-backed non-mutating work plan' },
   { name: 'scan [dir]', description: 'Summarize repository structure (defaults to cwd)' },
   { name: 'read <path>', description: 'Read an allowed workspace file without mutation' },
   { name: 'search <query>', description: 'Search allowed workspace files without mutation' },
   { name: 'propose-patch <goal>', description: 'Draft a patch proposal without applying it' },
-  { name: 'validation-plan [focus]', description: 'Render validation guidance without executing commands' },
+  {
+    name: 'validation-plan [focus]',
+    description: 'Render validation guidance without executing commands',
+  },
   { name: 'ci-review [source]', description: 'Draft a local CI review without querying services' },
-  { name: 'ci-review --fixture-file <json-file>', description: 'Draft CI review from local workflow fixture evidence' },
+  {
+    name: 'ci-review --fixture-file <json-file>',
+    description: 'Draft CI review from local workflow fixture evidence',
+  },
   { name: 'pr-notes [focus]', description: 'Draft PR notes without posting them' },
-  { name: 'pr-notes --fixture-file <json-file>', description: 'Draft PR notes from local PR fixture evidence' },
+  {
+    name: 'pr-notes --fixture-file <json-file>',
+    description: 'Draft PR notes from local PR fixture evidence',
+  },
   {
     name: 'runtime run <goal> --read-only [--max-iterations <n>] [--json]',
     description: 'Run a bounded read-only runtime loop with operator controls and JSON output',
   },
-  { name: 'runtime run <goal> --approval-ticket <id>', description: 'Render approval-gated dry-run execution with audit output' },
-  { name: 'live-read-policy <json-file>', description: 'Evaluate live read policy handshake from a local JSON fixture' },
-  { name: 'live-read-client-fixture <json-file>', description: 'Run live read client fixture through fake client and evidence pipeline' },
-  { name: 'github-live-read <json-file>', description: 'Read GitHub PR or CI evidence through policy-gated live read adapter' },
-  { name: 'ajna-live-read <json-file>', description: 'Run Ajna review or merge-readiness pipeline from live-read evidence' },
-  { name: 'operator-review <json-file>', description: 'Create an operator review packet from a local JSON fixture' },
-  { name: 'write-intent <json-file>', description: 'Create a write intent plan with validation and approval ticket from a local JSON fixture' },
-  { name: 'local-write <json-file>', description: 'Execute an approved local file write through the approval-gated write gate from a local JSON fixture' },
-  { name: 'apply-patch <json-file>', description: 'Apply a structured patch through the approval-gated patch application pipeline from a local JSON fixture' },
-  { name: 'repair-loop <json-file>', description: 'Run a full repair loop from Ajna finding through merge readiness from a local JSON fixture' },
-  { name: 'validation-command <json-file>', description: 'Evaluate an approved validation command through the allowlisted command gate from a local JSON fixture' },
-  { name: 'pr-preparation <json-file>', description: 'Prepare a PR title, body, and validation checklist from a local JSON fixture without pushing or creating a PR' },
-  { name: 'github-write-proposal <json-file>', description: 'Create a governed GitHub write proposal from a local JSON fixture without executing any GitHub API call' },
-  { name: 'github-write-executor <json-file>', description: 'Execute an approved GitHub write action through the policy-gated executor from a local JSON fixture' },
-  { name: 'github-write-gate <json-file>', description: 'Evaluate an approved GitHub write through the policy-gated write gate from a local JSON fixture' },
-  { name: 'workflow <json-file>', description: 'Run a governed runtime workflow composing registered tools from a local JSON fixture' },
-  { name: 'ajna-workflow <json-file>', description: 'Run a read-only Ajna review or merge-readiness workflow from a local JSON fixture' },
-  { name: 'mission-packet <json-file>', description: 'Build a governed agent kernel mission packet from pipeline outputs in a local JSON fixture' },
-  { name: 'audit-ledger <json-file>', description: 'Persist or replay audit ledger entries from a local JSON fixture with automatic secret redaction' },
-  { name: 'trace-store <json-file>', description: 'Persist or replay agent kernel trace frames from a local JSON fixture with lineage and invariant validation' },
-  { name: 'doctor', description: 'Run health checks on the CodeMind workspace and report diagnostics' },
-  { name: 'version', description: 'Show CodeMind version, platform identity, and runtime phase count' },
-  { name: 'release-readiness', description: 'Assess release readiness by validating all gates (phases, health, exports, config)' },
-  { name: 'runtime-status', description: 'Show the runtime status dashboard with tool inventory, policy, and phase summary' },
-  { name: 'project-context [dir]', description: 'Build a deterministic project context packet from repository instructions, build state, and configuration' },
+  {
+    name: 'runtime run <goal> --approval-ticket <id>',
+    description: 'Render approval-gated dry-run execution with audit output',
+  },
+  {
+    name: 'live-read-policy <json-file>',
+    description: 'Evaluate live read policy handshake from a local JSON fixture',
+  },
+  {
+    name: 'live-read-client-fixture <json-file>',
+    description: 'Run live read client fixture through fake client and evidence pipeline',
+  },
+  {
+    name: 'github-live-read <json-file>',
+    description: 'Read GitHub PR or CI evidence through policy-gated live read adapter',
+  },
+  {
+    name: 'ajna-live-read <json-file>',
+    description: 'Run Ajna review or merge-readiness pipeline from live-read evidence',
+  },
+  {
+    name: 'operator-review <json-file>',
+    description: 'Create an operator review packet from a local JSON fixture',
+  },
+  {
+    name: 'write-intent <json-file>',
+    description:
+      'Create a write intent plan with validation and approval ticket from a local JSON fixture',
+  },
+  {
+    name: 'local-write <json-file>',
+    description:
+      'Execute an approved local file write through the approval-gated write gate from a local JSON fixture',
+  },
+  {
+    name: 'apply-patch <json-file>',
+    description:
+      'Apply a structured patch through the approval-gated patch application pipeline from a local JSON fixture',
+  },
+  {
+    name: 'repair-loop <json-file>',
+    description:
+      'Run a full repair loop from Ajna finding through merge readiness from a local JSON fixture',
+  },
+  {
+    name: 'validation-command <json-file>',
+    description:
+      'Evaluate an approved validation command through the allowlisted command gate from a local JSON fixture',
+  },
+  {
+    name: 'pr-preparation <json-file>',
+    description:
+      'Prepare a PR title, body, and validation checklist from a local JSON fixture without pushing or creating a PR',
+  },
+  {
+    name: 'github-write-proposal <json-file>',
+    description:
+      'Create a governed GitHub write proposal from a local JSON fixture without executing any GitHub API call',
+  },
+  {
+    name: 'github-write-executor <json-file>',
+    description:
+      'Execute an approved GitHub write action through the policy-gated executor from a local JSON fixture',
+  },
+  {
+    name: 'github-write-gate <json-file>',
+    description:
+      'Evaluate an approved GitHub write through the policy-gated write gate from a local JSON fixture',
+  },
+  {
+    name: 'workflow <json-file>',
+    description:
+      'Run a governed runtime workflow composing registered tools from a local JSON fixture',
+  },
+  {
+    name: 'ajna-workflow <json-file>',
+    description:
+      'Run a read-only Ajna review or merge-readiness workflow from a local JSON fixture',
+  },
+  {
+    name: 'mission-packet <json-file>',
+    description:
+      'Build a governed agent kernel mission packet from pipeline outputs in a local JSON fixture',
+  },
+  {
+    name: 'audit-ledger <json-file>',
+    description:
+      'Persist or replay audit ledger entries from a local JSON fixture with automatic secret redaction',
+  },
+  {
+    name: 'trace-store <json-file>',
+    description:
+      'Persist or replay agent kernel trace frames from a local JSON fixture with lineage and invariant validation',
+  },
+  {
+    name: 'doctor',
+    description: 'Run health checks on the CodeMind workspace and report diagnostics',
+  },
+  {
+    name: 'version',
+    description: 'Show CodeMind version, platform identity, and runtime phase count',
+  },
+  {
+    name: 'release-readiness',
+    description:
+      'Assess release readiness by validating all gates (phases, health, exports, config)',
+  },
+  {
+    name: 'runtime-status',
+    description: 'Show the runtime status dashboard with tool inventory, policy, and phase summary',
+  },
+  {
+    name: 'project-context [dir]',
+    description:
+      'Build a deterministic project context packet from repository instructions, build state, and configuration',
+  },
   {
     name: 'ajna scan-profile [dir]',
     description: 'Render a read-only Ajna scan profile from repository scan facts',

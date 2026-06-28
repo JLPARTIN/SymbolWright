@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { createRuntimeReportBundleManifest } from './runtime-report-bundle-manifest.js'
-import {
-  createRuntimeReportCollection,
-} from './runtime-report-collection.js'
+import { createRuntimeReportCollection } from './runtime-report-collection.js'
 import {
   createRuntimeReportHub,
   renderRuntimeReportHubJson,

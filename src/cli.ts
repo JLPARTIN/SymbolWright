@@ -133,23 +133,35 @@ async function main(): Promise<void> {
     }
 
     case 'ajna-live-read':
-      console.log(await renderRuntimeAjnaLiveRead(requireInput('codemind ajna-live-read <json-file>')))
+      console.log(
+        await renderRuntimeAjnaLiveRead(requireInput('codemind ajna-live-read <json-file>')),
+      )
       break
 
     case 'github-live-read':
-      console.log(await renderRuntimeGitHubLiveRead(requireInput('codemind github-live-read <json-file>')))
+      console.log(
+        await renderRuntimeGitHubLiveRead(requireInput('codemind github-live-read <json-file>')),
+      )
       break
 
     case 'live-read-client-fixture':
-      console.log(await renderRuntimeLiveReadClientFixture(requireInput('codemind live-read-client-fixture <json-file>')))
+      console.log(
+        await renderRuntimeLiveReadClientFixture(
+          requireInput('codemind live-read-client-fixture <json-file>'),
+        ),
+      )
       break
 
     case 'live-read-policy':
-      console.log(await renderRuntimeLiveReadPolicy(requireInput('codemind live-read-policy <json-file>')))
+      console.log(
+        await renderRuntimeLiveReadPolicy(requireInput('codemind live-read-policy <json-file>')),
+      )
       break
 
     case 'operator-review':
-      console.log(await renderRuntimeOperatorReview(requireInput('codemind operator-review <json-file>')))
+      console.log(
+        await renderRuntimeOperatorReview(requireInput('codemind operator-review <json-file>')),
+      )
       break
 
     case 'write-intent':
@@ -169,23 +181,39 @@ async function main(): Promise<void> {
       break
 
     case 'validation-command':
-      console.log(await renderRuntimeValidationCommand(requireInput('codemind validation-command <json-file>')))
+      console.log(
+        await renderRuntimeValidationCommand(
+          requireInput('codemind validation-command <json-file>'),
+        ),
+      )
       break
 
     case 'pr-preparation':
-      console.log(await renderRuntimePrPreparation(requireInput('codemind pr-preparation <json-file>')))
+      console.log(
+        await renderRuntimePrPreparation(requireInput('codemind pr-preparation <json-file>')),
+      )
       break
 
     case 'github-write-proposal':
-      console.log(await renderRuntimeGitHubWriteProposal(requireInput('codemind github-write-proposal <json-file>')))
+      console.log(
+        await renderRuntimeGitHubWriteProposal(
+          requireInput('codemind github-write-proposal <json-file>'),
+        ),
+      )
       break
 
     case 'github-write-executor':
-      console.log(await renderGitHubWriteExecutorCommand(requireInput('codemind github-write-executor <json-file>')))
+      console.log(
+        await renderGitHubWriteExecutorCommand(
+          requireInput('codemind github-write-executor <json-file>'),
+        ),
+      )
       break
 
     case 'github-write-gate':
-      console.log(await renderRuntimeGitHubWriteGate(requireInput('codemind github-write-gate <json-file>')))
+      console.log(
+        await renderRuntimeGitHubWriteGate(requireInput('codemind github-write-gate <json-file>')),
+      )
       break
 
     case 'mission-packet':
@@ -223,7 +251,9 @@ async function main(): Promise<void> {
     }
 
     case 'ajna-workflow':
-      console.log(await renderRuntimeAjnaWorkflow(requireInput('codemind ajna-workflow <json-file>')))
+      console.log(
+        await renderRuntimeAjnaWorkflow(requireInput('codemind ajna-workflow <json-file>')),
+      )
       break
 
     case 'workflow':
@@ -291,57 +321,110 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   }
 
   if (subcommand === 'review-pr') {
-    console.log(renderAjnaReviewPrForFile(requireAjnaInput(maybeInput, 'codemind ajna review-pr <json-file>')))
+    console.log(
+      renderAjnaReviewPrForFile(
+        requireAjnaInput(maybeInput, 'codemind ajna review-pr <json-file>'),
+      ),
+    )
     return
   }
 
   if (subcommand === 'review-pr-github-fixture') {
-    console.log(renderAjnaReviewPrGithubFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna review-pr-github-fixture <json-file>')))
+    console.log(
+      renderAjnaReviewPrGithubFixtureForFile(
+        requireAjnaInput(maybeInput, 'codemind ajna review-pr-github-fixture <json-file>'),
+      ),
+    )
     return
   }
 
   if (subcommand === 'review-pr-github-api-fixture') {
-    console.log(renderAjnaReviewPrGithubApiFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna review-pr-github-api-fixture <json-file>')))
+    console.log(
+      renderAjnaReviewPrGithubApiFixtureForFile(
+        requireAjnaInput(maybeInput, 'codemind ajna review-pr-github-api-fixture <json-file>'),
+      ),
+    )
     return
   }
 
   if (subcommand === 'github-api-snapshot-fixture') {
-    console.log(renderAjnaGithubApiSnapshotFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna github-api-snapshot-fixture <json-file>')))
+    console.log(
+      renderAjnaGithubApiSnapshotFixtureForFile(
+        requireAjnaInput(maybeInput, 'codemind ajna github-api-snapshot-fixture <json-file>'),
+      ),
+    )
     return
   }
 
   if (subcommand === 'client-collector-fixture') {
-    console.log(await renderAjnaClientCollectorFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna client-collector-fixture <json-file>')))
+    console.log(
+      await renderAjnaClientCollectorFixtureForFile(
+        requireAjnaInput(maybeInput, 'codemind ajna client-collector-fixture <json-file>'),
+      ),
+    )
     return
   }
 
   if (subcommand === 'review-pr-client-collector-fixture') {
-    console.log(await renderAjnaReviewPrClientCollectorFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna review-pr-client-collector-fixture <json-file>')))
+    console.log(
+      await renderAjnaReviewPrClientCollectorFixtureForFile(
+        requireAjnaInput(
+          maybeInput,
+          'codemind ajna review-pr-client-collector-fixture <json-file>',
+        ),
+      ),
+    )
     return
   }
 
   if (subcommand === 'merge-readiness-client-collector-fixture') {
-    console.log(await renderAjnaMergeReadinessClientCollectorFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna merge-readiness-client-collector-fixture <json-file>')))
+    console.log(
+      await renderAjnaMergeReadinessClientCollectorFixtureForFile(
+        requireAjnaInput(
+          maybeInput,
+          'codemind ajna merge-readiness-client-collector-fixture <json-file>',
+        ),
+      ),
+    )
     return
   }
 
   if (subcommand === 'review-pr-collector-fixture') {
-    console.log(renderAjnaReviewPrCollectorFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna review-pr-collector-fixture <json-file>')))
+    console.log(
+      renderAjnaReviewPrCollectorFixtureForFile(
+        requireAjnaInput(maybeInput, 'codemind ajna review-pr-collector-fixture <json-file>'),
+      ),
+    )
     return
   }
 
   if (subcommand === 'review-pr-readonly-collector-fixture') {
-    console.log(await renderAjnaReviewPrReadOnlyCollectorFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna review-pr-readonly-collector-fixture <json-file>')))
+    console.log(
+      await renderAjnaReviewPrReadOnlyCollectorFixtureForFile(
+        requireAjnaInput(
+          maybeInput,
+          'codemind ajna review-pr-readonly-collector-fixture <json-file>',
+        ),
+      ),
+    )
     return
   }
 
   if (subcommand === 'github-readonly-collector-fixture') {
-    console.log(await renderAjnaGithubReadOnlyCollectorFixtureForFile(requireAjnaInput(maybeInput, 'codemind ajna github-readonly-collector-fixture <json-file>')))
+    console.log(
+      await renderAjnaGithubReadOnlyCollectorFixtureForFile(
+        requireAjnaInput(maybeInput, 'codemind ajna github-readonly-collector-fixture <json-file>'),
+      ),
+    )
     return
   }
 
   if (subcommand === 'merge-readiness') {
-    console.log(renderAjnaMergeReadinessForFile(requireAjnaInput(maybeInput, 'codemind ajna merge-readiness <json-file>')))
+    console.log(
+      renderAjnaMergeReadinessForFile(
+        requireAjnaInput(maybeInput, 'codemind ajna merge-readiness <json-file>'),
+      ),
+    )
     return
   }
 

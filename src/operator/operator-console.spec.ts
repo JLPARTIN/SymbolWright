@@ -16,9 +16,11 @@ const handlers: OperatorConsoleHandlers = {
   renderRun: async (goal: string, cwd: string) => `RUN ${goal} ${cwd}`,
   renderRead: async (path: string, cwd: string) => `READ ${path} ${cwd}`,
   renderSearch: async (query: string, cwd: string) => `SEARCH ${query} ${cwd}`,
-  renderValidationPlan: async (focus: string | undefined, cwd: string) => `VALIDATION ${focus ?? 'all'} ${cwd}`,
+  renderValidationPlan: async (focus: string | undefined, cwd: string) =>
+    `VALIDATION ${focus ?? 'all'} ${cwd}`,
   renderProposePatch: async (goal: string, cwd: string) => `PROPOSE ${goal} ${cwd}`,
-  renderPrNotes: async (focus: string | undefined, cwd: string) => `PR ${focus ?? 'general'} ${cwd}`,
+  renderPrNotes: async (focus: string | undefined, cwd: string) =>
+    `PR ${focus ?? 'general'} ${cwd}`,
 }
 
 describe('runOperatorInput', () => {

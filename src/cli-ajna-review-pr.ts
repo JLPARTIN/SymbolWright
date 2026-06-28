@@ -96,7 +96,10 @@ export function parseAjnaReviewPrInput(jsonText: string): CodemindAjnaReviewPrIn
   const parsed = JSON.parse(jsonText) as { findings?: unknown; recommendedNextAction?: unknown }
   const base = parseAjnaMergeReadinessInput(jsonText)
 
-  if (parsed.recommendedNextAction !== undefined && typeof parsed.recommendedNextAction !== 'string') {
+  if (
+    parsed.recommendedNextAction !== undefined &&
+    typeof parsed.recommendedNextAction !== 'string'
+  ) {
     throw new Error('Ajna review-pr input recommendedNextAction must be a string when provided.')
   }
 
@@ -134,7 +137,8 @@ export function buildAjnaReviewPrForInput(
     subtitle: 'Expand your vision beyond the diff.',
     findings: input.findings,
     mergeReadiness,
-    recommendedNextAction: input.recommendedNextAction ?? defaultRecommendedNextAction(mergeReadiness),
+    recommendedNextAction:
+      input.recommendedNextAction ?? defaultRecommendedNextAction(mergeReadiness),
   }
 
   return {

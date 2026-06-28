@@ -115,7 +115,9 @@ describe('PR preparation', () => {
   })
 
   it('creates checklist items from validation list', () => {
-    const result = evaluatePrPreparation(makeInput({ validationChecklist: ['npm test', 'npm run lint'] }))
+    const result = evaluatePrPreparation(
+      makeInput({ validationChecklist: ['npm test', 'npm run lint'] }),
+    )
 
     expect(result.validationChecklist).toHaveLength(2)
     expect(result.validationChecklist[0]?.label).toBe('npm test')
@@ -227,7 +229,9 @@ describe('PR preparation tool', () => {
   })
 
   it('rejects missing input', async () => {
-    await expect(prPreparationTool.execute(null, testContext)).rejects.toThrow('Missing PR preparation input')
+    await expect(prPreparationTool.execute(null, testContext)).rejects.toThrow(
+      'Missing PR preparation input',
+    )
   })
 
   it('rejects missing title', async () => {
@@ -344,7 +348,9 @@ describe('CLI PR preparation', () => {
     const fixturePath = path.join(tmpDir, 'bad-fixture.json')
     fs.writeFileSync(fixturePath, JSON.stringify(fixture))
 
-    await expect(renderRuntimePrPreparation(fixturePath, tmpDir)).rejects.toThrow('non-empty "title"')
+    await expect(renderRuntimePrPreparation(fixturePath, tmpDir)).rejects.toThrow(
+      'non-empty "title"',
+    )
 
     fs.rmSync(tmpDir, { recursive: true })
   })
@@ -356,7 +362,9 @@ describe('CLI PR preparation', () => {
     const fixturePath = path.join(tmpDir, 'bad-fixture.json')
     fs.writeFileSync(fixturePath, JSON.stringify(fixture))
 
-    await expect(renderRuntimePrPreparation(fixturePath, tmpDir)).rejects.toThrow('non-empty "body"')
+    await expect(renderRuntimePrPreparation(fixturePath, tmpDir)).rejects.toThrow(
+      'non-empty "body"',
+    )
 
     fs.rmSync(tmpDir, { recursive: true })
   })
@@ -368,7 +376,9 @@ describe('CLI PR preparation', () => {
     const fixturePath = path.join(tmpDir, 'bad-fixture.json')
     fs.writeFileSync(fixturePath, JSON.stringify(fixture))
 
-    await expect(renderRuntimePrPreparation(fixturePath, tmpDir)).rejects.toThrow('non-empty "reason"')
+    await expect(renderRuntimePrPreparation(fixturePath, tmpDir)).rejects.toThrow(
+      'non-empty "reason"',
+    )
 
     fs.rmSync(tmpDir, { recursive: true })
   })

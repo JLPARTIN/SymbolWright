@@ -47,7 +47,9 @@ function optionalNonNegativeInteger(value: unknown, field: string): number | und
     return undefined
   }
   if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
-    throw new Error(`Ajna GitHub API payload ${field} must be a non-negative integer when provided.`)
+    throw new Error(
+      `Ajna GitHub API payload ${field} must be a non-negative integer when provided.`,
+    )
   }
   return value
 }
@@ -75,7 +77,9 @@ function mapCheckStatus(status: string | undefined): AjnaGithubCollectorCheckRun
   }
 }
 
-function mapCheckConclusion(conclusion: string | null | undefined): AjnaGithubCollectorCheckRun['conclusion'] | undefined {
+function mapCheckConclusion(
+  conclusion: string | null | undefined,
+): AjnaGithubCollectorCheckRun['conclusion'] | undefined {
   if (conclusion === undefined || conclusion === null) {
     return undefined
   }
@@ -120,15 +124,17 @@ export function buildAjnaGithubCollectorSnapshotFromApiPayload(
     }
   })
 
-  const checkRuns = (payload.checkRuns ?? []).map((checkRun, index): AjnaGithubCollectorCheckRun => {
-    assertNonEmptyString(checkRun.name, `checkRuns[${index}].name`)
-    const conclusion = mapCheckConclusion(checkRun.conclusion)
-    return {
-      name: checkRun.name,
-      status: mapCheckStatus(checkRun.status),
-      ...(conclusion === undefined ? {} : { conclusion }),
-    }
-  })
+  const checkRuns = (payload.checkRuns ?? []).map(
+    (checkRun, index): AjnaGithubCollectorCheckRun => {
+      assertNonEmptyString(checkRun.name, `checkRuns[${index}].name`)
+      const conclusion = mapCheckConclusion(checkRun.conclusion)
+      return {
+        name: checkRun.name,
+        status: mapCheckStatus(checkRun.status),
+        ...(conclusion === undefined ? {} : { conclusion }),
+      }
+    },
+  )
 
   return {
     pullRequest: {
@@ -136,7 +142,9 @@ export function buildAjnaGithubCollectorSnapshotFromApiPayload(
       pullRequestNumber: payload.pullRequest.number,
       baseRef: payload.pullRequest.base.ref,
       headRef: payload.pullRequest.head.ref,
-      ...(payload.pullRequest.head.sha === undefined ? {} : { headSha: payload.pullRequest.head.sha }),
+      ...(payload.pullRequest.head.sha === undefined
+        ? {}
+        : { headSha: payload.pullRequest.head.sha }),
     },
     changedFiles,
     checkRuns,

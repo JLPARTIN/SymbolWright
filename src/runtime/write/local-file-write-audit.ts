@@ -13,9 +13,7 @@ export function createLocalFileWriteAuditEvent(
       status: 'blocked' as const,
       detail: `Write to ${result.targetPath} blocked: ${result.blockReasons.join('; ')}`,
     }
-    return approval !== undefined
-      ? createAuditEvent({ ...base, approval })
-      : createAuditEvent(base)
+    return approval !== undefined ? createAuditEvent({ ...base, approval }) : createAuditEvent(base)
   }
 
   const detail = result.dryRun
@@ -27,9 +25,7 @@ export function createLocalFileWriteAuditEvent(
     status: 'allowed' as const,
     detail,
   }
-  return approval !== undefined
-    ? createAuditEvent({ ...base, approval })
-    : createAuditEvent(base)
+  return approval !== undefined ? createAuditEvent({ ...base, approval }) : createAuditEvent(base)
 }
 
 export function createLocalFileWriteExecutionAuditEvent(
@@ -37,17 +33,16 @@ export function createLocalFileWriteExecutionAuditEvent(
   approval: RuntimeApproval | undefined,
 ): RuntimeAuditEvent {
   if (execResult.outcome === 'BLOCKED') {
-    const blockDetail = execResult.error !== null
-      ? `Write to ${execResult.gateResult.targetPath} failed: ${execResult.error}`
-      : `Write to ${execResult.gateResult.targetPath} blocked: ${execResult.gateResult.blockReasons.join('; ')}`
+    const blockDetail =
+      execResult.error !== null
+        ? `Write to ${execResult.gateResult.targetPath} failed: ${execResult.error}`
+        : `Write to ${execResult.gateResult.targetPath} blocked: ${execResult.gateResult.blockReasons.join('; ')}`
     const base = {
       action: 'local_file_write_execution',
       status: 'blocked' as const,
       detail: blockDetail,
     }
-    return approval !== undefined
-      ? createAuditEvent({ ...base, approval })
-      : createAuditEvent(base)
+    return approval !== undefined ? createAuditEvent({ ...base, approval }) : createAuditEvent(base)
   }
 
   if (execResult.outcome === 'DRY_RUN') {
@@ -56,9 +51,7 @@ export function createLocalFileWriteExecutionAuditEvent(
       status: 'allowed' as const,
       detail: `Dry-run write to ${execResult.gateResult.targetPath}: ${execResult.gateResult.reason}`,
     }
-    return approval !== undefined
-      ? createAuditEvent({ ...base, approval })
-      : createAuditEvent(base)
+    return approval !== undefined ? createAuditEvent({ ...base, approval }) : createAuditEvent(base)
   }
 
   const fileAction = execResult.diff?.isNew ? 'Created' : 'Updated'
@@ -67,7 +60,5 @@ export function createLocalFileWriteExecutionAuditEvent(
     status: 'allowed' as const,
     detail: `${fileAction} ${execResult.gateResult.targetPath}: ${execResult.gateResult.reason}`,
   }
-  return approval !== undefined
-    ? createAuditEvent({ ...base, approval })
-    : createAuditEvent(base)
+  return approval !== undefined ? createAuditEvent({ ...base, approval }) : createAuditEvent(base)
 }

@@ -4,7 +4,7 @@ export const ALLOWED_GITHUB_WRITE_ACTIONS = [
   'apply_label',
 ] as const
 
-export type AllowedGitHubWriteAction = typeof ALLOWED_GITHUB_WRITE_ACTIONS[number]
+export type AllowedGitHubWriteAction = (typeof ALLOWED_GITHUB_WRITE_ACTIONS)[number]
 
 export interface GitHubWriteProposalInput {
   readonly action: string
@@ -26,7 +26,9 @@ export interface GitHubWriteProposalResult {
   readonly blockReasons: readonly string[]
 }
 
-export function evaluateGitHubWriteProposal(input: GitHubWriteProposalInput): GitHubWriteProposalResult {
+export function evaluateGitHubWriteProposal(
+  input: GitHubWriteProposalInput,
+): GitHubWriteProposalResult {
   const blockReasons: string[] = []
   const action = input.action.trim()
 

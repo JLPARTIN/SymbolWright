@@ -39,7 +39,9 @@ export async function executeLiveReadPolicyTool(
 
 export const liveReadPolicyHandshakeTool: RuntimeToolDefinition = {
   name: 'live_read_policy_handshake',
-  description: 'Evaluate live read policy handshake from a local JSON fixture without performing live reads.',
+  description:
+    'Evaluate live read policy handshake from a local JSON fixture without performing live reads.',
   capability: 'POLICY_CHECK',
-  execute: async (input, context) => executeLiveReadPolicyTool(parseLiveReadPolicyToolInput(input), context),
+  execute: async (input, context) =>
+    executeLiveReadPolicyTool(parseLiveReadPolicyToolInput(input), context),
 }

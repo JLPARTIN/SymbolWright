@@ -89,18 +89,11 @@ export function renderLocalFileWriteGateResult(result: LocalFileWriteGateResult)
   }
 
   if (result.decision === 'ALLOWED' && result.dryRun) {
-    sections.push(
-      '',
-      'Dry-run preview: write would be allowed.',
-      'No file has been modified.',
-    )
+    sections.push('', 'Dry-run preview: write would be allowed.', 'No file has been modified.')
   }
 
   if (result.decision === 'ALLOWED' && !result.dryRun) {
-    sections.push(
-      '',
-      'Write is allowed by policy and approval.',
-    )
+    sections.push('', 'Write is allowed by policy and approval.')
   }
 
   return sections.join('\n')

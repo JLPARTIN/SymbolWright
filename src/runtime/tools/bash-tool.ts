@@ -146,14 +146,16 @@ export async function executeBashTool(
     })
 
     child.on('error', (err) => {
-      resolve([
-        'CodeMind bash',
-        '',
-        `Command: ${input.command}`,
-        `Error: ${err.message}`,
-        '',
-        renderRuntimeBoundary(),
-      ].join('\n'))
+      resolve(
+        [
+          'CodeMind bash',
+          '',
+          `Command: ${input.command}`,
+          `Error: ${err.message}`,
+          '',
+          renderRuntimeBoundary(),
+        ].join('\n'),
+      )
     })
   })
 }
@@ -163,5 +165,10 @@ export const bashTool: RuntimeToolDefinition = {
   description: 'Execute an allowed shell command with output redaction. Requires shell approval.',
   capability: 'APPROVED_COMMAND',
   execute: async (input, context) =>
-    executeBashTool(parseBashInput(input), context.cwd, context.policy.allowShell, context.approval),
+    executeBashTool(
+      parseBashInput(input),
+      context.cwd,
+      context.policy.allowShell,
+      context.approval,
+    ),
 }

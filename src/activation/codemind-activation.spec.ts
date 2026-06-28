@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { LLMProvider, ProviderStreamEvent } from '../provider/provider.types.js'
-import type { RuntimeToolDefinition, RuntimeToolContext, RuntimePolicySnapshot } from '../runtime/types.js'
+import type {
+  RuntimeToolDefinition,
+  RuntimeToolContext,
+  RuntimePolicySnapshot,
+} from '../runtime/types.js'
 import {
   activateSubsystems,
   runActivatedAgent,
@@ -21,7 +25,8 @@ function createMockProvider(responses?: ProviderStreamEvent[][]): LLMProvider {
     providerId: 'mock-anthropic',
     displayName: 'Mock Anthropic Provider',
     complete: vi.fn().mockImplementation(function* (): Generator<ProviderStreamEvent> {
-      const events = responses !== undefined ? responses[callIndex++] ?? defaultResponse : defaultResponse
+      const events =
+        responses !== undefined ? (responses[callIndex++] ?? defaultResponse) : defaultResponse
       for (const event of events) {
         yield event
       }
@@ -163,7 +168,8 @@ describe('runActivatedAgent', () => {
   it('calls onTuiUpdate callback', async () => {
     const updates: TuiStateSnapshot[] = []
     const config = createTestConfig({
-      onTuiUpdate: (state) => updates.push({ streaming: state.streaming, tokenCount: state.session.tokenCount }),
+      onTuiUpdate: (state) =>
+        updates.push({ streaming: state.streaming, tokenCount: state.session.tokenCount }),
     })
 
     await runActivatedAgent(config, 'Hello')
@@ -175,11 +181,19 @@ describe('runActivatedAgent', () => {
       [
         { type: 'tool_use_start', id: 'tu-1', name: 'read_file' },
         { type: 'tool_use_end', id: 'tu-1', name: 'read_file', input: { path: 'README.md' } },
-        { type: 'message_stop', stopReason: 'tool_use', usage: { inputTokens: 50, outputTokens: 30 } },
+        {
+          type: 'message_stop',
+          stopReason: 'tool_use',
+          usage: { inputTokens: 50, outputTokens: 30 },
+        },
       ],
       [
         { type: 'text_delta', text: 'Based on the README...' },
-        { type: 'message_stop', stopReason: 'end_turn', usage: { inputTokens: 80, outputTokens: 60 } },
+        {
+          type: 'message_stop',
+          stopReason: 'end_turn',
+          usage: { inputTokens: 80, outputTokens: 60 },
+        },
       ],
     ])
 
@@ -210,12 +224,25 @@ describe('runActivatedAgent', () => {
     const provider = createMockProvider([
       [
         { type: 'tool_use_start', id: 'tu-sw', name: 'swarm_dispatch' },
-        { type: 'tool_use_end', id: 'tu-sw', name: 'swarm_dispatch', input: { agentType: 'investigator', goal: 'analyze code' } },
-        { type: 'message_stop', stopReason: 'tool_use', usage: { inputTokens: 50, outputTokens: 30 } },
+        {
+          type: 'tool_use_end',
+          id: 'tu-sw',
+          name: 'swarm_dispatch',
+          input: { agentType: 'investigator', goal: 'analyze code' },
+        },
+        {
+          type: 'message_stop',
+          stopReason: 'tool_use',
+          usage: { inputTokens: 50, outputTokens: 30 },
+        },
       ],
       [
         { type: 'text_delta', text: 'Done.' },
-        { type: 'message_stop', stopReason: 'end_turn', usage: { inputTokens: 80, outputTokens: 20 } },
+        {
+          type: 'message_stop',
+          stopReason: 'end_turn',
+          usage: { inputTokens: 80, outputTokens: 20 },
+        },
       ],
     ])
 
@@ -239,7 +266,7 @@ describe('runActivatedAgent', () => {
     const result = await runActivatedAgent(config, 'Dispatch an investigator')
 
     expect(result.agentResult.status).toBe('completed')
-    expect((swarmTool.execute as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled()
+    expect(swarmTool.execute as ReturnType<typeof vi.fn>).not.toHaveBeenCalled()
   })
 })
 
