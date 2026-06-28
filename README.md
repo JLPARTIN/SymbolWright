@@ -334,7 +334,6 @@ future live read adapters behind policy gates
 
 ```txt
 docs/migration/AELIB_CODEMIND_EXTRACTION_NOTES.md
-docs/roadmap/CODEMIND_PLATFORM_ROADMAP.md
 docs/governance/CODEMIND_PERMISSION_MODEL.md
 docs/governance/CODEMIND_THREAT_MODEL.md
 docs/cli/CODEMIND_CLI_TERMINAL_UX_PLAN.md
@@ -373,7 +372,6 @@ docs/ajna-review-pr-client-collector-fixture-command.md
 docs/ajna-merge-readiness-client-collector-fixture-command.md
 docs/build-state/CODEMIND_BUILD_LEDGER.md
 docs/context/CODEMIND_PROJECT_CONTEXT_KERNEL.md
-docs/roadmap/CODEMIND_100_PERCENT_BUILD_PLAN.md
 docs/runtime/CODEMIND_GITHUB_LIVE_READ_V1.md
 docs/runtime/CODEMIND_APPROVED_VALIDATION_EXECUTION.md
 ```
