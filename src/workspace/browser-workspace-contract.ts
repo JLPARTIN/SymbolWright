@@ -73,7 +73,7 @@ export function assessBrowserWorkspaceReadiness(
     findings.push('Browser workspace does not expose enough provider choices')
   }
   if (contract.browserStoresProviderKeys) {
-    findings.push('Browser workspace must not store raw provider keys')
+    findings.push('Browser workspace must not store raw provider credentials')
   }
   if (contract.keyBoundary !== 'browser_to_codemind_only') {
     findings.push('Browser workspace must route through CodeMind before provider calls')
@@ -102,7 +102,11 @@ export function renderBrowserWorkspaceReadinessReport(
   ]
 
   if (report.findings.length > 0) {
-    lines.push('', 'Findings:', ...report.findings.map((finding) => `  - ${finding}`))
+    lines.push(
+      '',
+      'Findings:',
+      ...report.findings.map((finding) => `  - ${finding}`),
+    )
   } else {
     lines.push('', 'Findings: none')
   }
