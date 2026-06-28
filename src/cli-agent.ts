@@ -300,6 +300,7 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
     cwd,
     policy,
     embeddingProvider,
+    workspace,
     ...(approval !== undefined ? { approval } : {}),
   }
 
