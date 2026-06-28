@@ -42,10 +42,10 @@ function parseEditFileInput(input: unknown): EditFileInput {
 export async function executeEditFileTool(
   input: EditFileInput,
   cwd: string,
-  assertWrite: (cwd: string, filePath: string) => void,
+  assertWrite?: (cwd: string, filePath: string) => void,
 ): Promise<string> {
   const resolvedPath = resolveWorkspacePath(cwd, input.path)
-  assertWrite(cwd, resolvedPath)
+  assertWrite?.(cwd, resolvedPath)
 
   if (!fs.existsSync(resolvedPath)) {
     throw new Error(`File not found: ${input.path}`)
@@ -100,12 +100,10 @@ export async function executeEditFileTool(
 
 export const editFileTool: RuntimeToolDefinition = {
   name: 'edit_file',
-  description: 'Make a surgical search-and-replace edit to a file. Requires write approval.',
+  description: 'Make a surgical search-and-replace edit to a file in the active workspace.',
   capability: 'APPROVED_EDIT',
   execute: async (input, context) => {
     assertWriteApproved(context.policy, context.approval)
-    return executeEditFileTool(parseEditFileInput(input), context.cwd, () => {
-      assertWriteApproved(context.policy, context.approval)
-    })
+    return executeEditFileTool(parseEditFileInput(input), context.cwd)
   },
 }

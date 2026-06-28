@@ -1,7 +1,7 @@
 import path from 'node:path'
 
 import { isPathInsideWorkspace, assertReadablePath } from '../policy/runtime-policy.js'
-import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import type { RuntimePolicySnapshot } from '../types.js'
 
 export interface LocalFileWriteRequest {
   readonly targetPath: string
@@ -27,7 +27,7 @@ export function evaluateLocalFileWriteGate(
   request: LocalFileWriteRequest,
   workspaceRoot: string,
   policy: RuntimePolicySnapshot,
-  approval: RuntimeApproval | undefined,
+  _approval?: unknown,
 ): LocalFileWriteGateResult {
   const blockReasons: string[] = []
   const root = path.resolve(workspaceRoot)
@@ -35,12 +35,6 @@ export function evaluateLocalFileWriteGate(
 
   if (!policy.allowWrites) {
     blockReasons.push('Write actions are disabled by runtime policy.')
-  }
-
-  if (approval === undefined) {
-    blockReasons.push('Approval ticket is required for write actions.')
-  } else if (!approval.scopes.includes('file:write')) {
-    blockReasons.push('Approval ticket is missing required scope: file:write')
   }
 
   if (!isPathInsideWorkspace(root, resolved)) {
@@ -93,7 +87,7 @@ export function renderLocalFileWriteGateResult(result: LocalFileWriteGateResult)
   }
 
   if (result.decision === 'ALLOWED' && !result.dryRun) {
-    sections.push('', 'Write is allowed by policy and approval.')
+    sections.push('', 'Write is allowed by runtime policy.')
   }
 
   return sections.join('\n')

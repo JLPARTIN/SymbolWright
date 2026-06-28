@@ -84,6 +84,32 @@ export const prCollaborationTool: RuntimeToolDefinition = {
     }
 
     const client = resolveClient(context)
+    if (context.approval === undefined) {
+      const blocked = {
+        outcome: 'BLOCKED' as const,
+        gateResult: {
+          decision: 'BLOCKED' as const,
+          action: parsed.action,
+          repository: request.repository,
+          targetRef: String(request.prNumber),
+          content: request.content,
+          reason: request.reason,
+          dryRun: request.dryRun,
+          blockReasons: ['GitHub write operation requires approval.'],
+        },
+        operation: null,
+        blockReasons: ['GitHub write operation requires approval.'],
+      }
+      const auditEvent = createGitHubWriteGateAuditEvent(blocked.gateResult, context.approval)
+      return [
+        renderPrCollaborationResult(blocked),
+        '',
+        '---',
+        '',
+        renderAuditEvents([auditEvent]),
+      ].join('\n')
+    }
+
     const result = await executePrCollaboration(request, context.policy, context.approval, client)
     const output = renderPrCollaborationResult(result)
     const auditEvent = createGitHubWriteGateAuditEvent(result.gateResult, context.approval)

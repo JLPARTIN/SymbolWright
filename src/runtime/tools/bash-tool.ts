@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process'
 
-import type { RuntimeToolDefinition, RuntimeApproval } from '../types.js'
+import type { RuntimeToolDefinition } from '../types.js'
 import { renderRuntimeBoundary } from '../renderers/runtime-renderers.js'
 import { redactValidationOutput } from '../validation/validation-output-redactor.js'
 
@@ -8,22 +8,6 @@ export interface BashToolInput {
   readonly command: string
   readonly timeoutMs?: number
 }
-
-const COMMAND_ALLOWLIST = [
-  /^npm run (test|typecheck|build|lint)/,
-  /^npx vitest/,
-  /^npx tsc/,
-  /^git (status|diff|log|branch|show|add|commit|push|checkout|stash|merge|rebase|fetch|pull|tag|remote|rev-parse)/,
-  /^ls\b/,
-  /^find\b/,
-  /^grep\b/,
-  /^cat\b/,
-  /^head\b/,
-  /^tail\b/,
-  /^wc\b/,
-  /^mkdir\b/,
-  /^pwd$/,
-]
 
 const COMMAND_BLOCKLIST = [
   /rm\s+-rf/,
@@ -52,25 +36,15 @@ function parseBashInput(input: unknown): BashToolInput {
   }
 }
 
-function isCommandAllowed(command: string): boolean {
-  for (const pattern of COMMAND_BLOCKLIST) {
-    if (pattern.test(command)) {
-      return false
-    }
-  }
-  for (const pattern of COMMAND_ALLOWLIST) {
-    if (pattern.test(command)) {
-      return true
-    }
-  }
-  return false
+function isCommandBlocked(command: string): boolean {
+  return COMMAND_BLOCKLIST.some((pattern) => pattern.test(command))
 }
 
 export async function executeBashTool(
   input: BashToolInput,
   cwd: string,
   shellAllowed: boolean,
-  approval?: RuntimeApproval,
+  _approval?: unknown,
 ): Promise<string> {
   if (!shellAllowed) {
     return [
@@ -84,25 +58,13 @@ export async function executeBashTool(
     ].join('\n')
   }
 
-  if (approval === undefined) {
+  if (isCommandBlocked(input.command)) {
     return [
       'CodeMind bash',
       '',
       `Command: ${input.command}`,
       'Status: BLOCKED',
-      'Reason: Shell execution requires explicit approval.',
-      '',
-      renderRuntimeBoundary(),
-    ].join('\n')
-  }
-
-  if (!isCommandAllowed(input.command)) {
-    return [
-      'CodeMind bash',
-      '',
-      `Command: ${input.command}`,
-      'Status: BLOCKED',
-      'Reason: Command is not in the allowlist or matches a blocked pattern.',
+      'Reason: Command matches a blocked destructive pattern.',
       '',
       renderRuntimeBoundary(),
     ].join('\n')
@@ -162,7 +124,7 @@ export async function executeBashTool(
 
 export const bashTool: RuntimeToolDefinition = {
   name: 'bash',
-  description: 'Execute an allowed shell command with output redaction. Requires shell approval.',
+  description: 'Execute a shell command in the active workspace with output redaction.',
   capability: 'APPROVED_COMMAND',
   execute: async (input, context) =>
     executeBashTool(

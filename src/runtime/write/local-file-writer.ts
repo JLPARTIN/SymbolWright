@@ -10,14 +10,28 @@ export function executeLocalFileWrite(
   request: LocalFileWriteRequest,
   workspaceRoot: string,
   policy: RuntimePolicySnapshot,
-  approval: RuntimeApproval | undefined,
+  approval?: RuntimeApproval,
 ): LocalFileWriteExecutionResult {
-  const gateResult = evaluateLocalFileWriteGate(request, workspaceRoot, policy, approval)
+  const gateResult = evaluateLocalFileWriteGate(request, workspaceRoot, policy)
 
   if (gateResult.decision === 'BLOCKED') {
     return {
       outcome: 'BLOCKED',
       gateResult,
+      diff: null,
+      rollbackNote: request.rollbackNote,
+      error: null,
+    }
+  }
+
+  if (!request.dryRun && (approval === undefined || !approval.scopes.includes('file:write'))) {
+    return {
+      outcome: 'BLOCKED',
+      gateResult: {
+        ...gateResult,
+        decision: 'BLOCKED',
+        blockReasons: ['Approval ticket with file:write scope is required.'],
+      },
       diff: null,
       rollbackNote: request.rollbackNote,
       error: null,

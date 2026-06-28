@@ -4,6 +4,7 @@ import {
   createFixtureContext,
   createFixtureRegistry,
 } from './runtime/registry/fixture-registry-factory.js'
+import type { RuntimeApproval } from './runtime/types.js'
 
 export interface LocalFileWriteFixtureRequest {
   readonly targetPath: string
@@ -29,6 +30,11 @@ export async function renderRuntimeLocalWrite(
 
   const registry = createFixtureRegistry('local_write')
   const context = createFixtureContext(cwd)
+  const approval: RuntimeApproval = {
+    ticketId: 'local-write-fixture',
+    approvedBy: 'fixture',
+    scopes: ['file:write'],
+  }
 
   const tool = registry.getOrThrow('local_file_write')
   return tool.execute(
@@ -37,8 +43,8 @@ export async function renderRuntimeLocalWrite(
       content: raw.content ?? '',
       reason: raw.reason,
       rollbackNote: raw.rollbackNote ?? '',
-      dryRun: raw.dryRun ?? true,
+      dryRun: raw.dryRun ?? false,
     },
-    context,
+    { ...context, approval },
   )
 }

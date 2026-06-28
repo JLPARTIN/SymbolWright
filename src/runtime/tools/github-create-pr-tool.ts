@@ -111,6 +111,33 @@ export const githubCreatePrTool: RuntimeToolDefinition = {
     }
 
     const client = resolveClient(context)
+    if (context.approval === undefined) {
+      const blocked = {
+        outcome: 'BLOCKED' as const,
+        gateResult: {
+          decision: 'BLOCKED' as const,
+          action: 'create_draft_pr',
+          repository: request.repository,
+          targetRef: request.headBranch,
+          content: `${request.title}\n\n${request.body}`,
+          reason: request.reason,
+          dryRun: request.dryRun,
+          blockReasons: ['GitHub write operation requires approval.'],
+        },
+        pullRequestUrl: null,
+        operations: [],
+        blockReasons: ['GitHub write operation requires approval.'],
+      }
+      const auditEvent = createGitHubWriteGateAuditEvent(blocked.gateResult, context.approval)
+      return [
+        renderGitHubPrCreationResult(blocked),
+        '',
+        '---',
+        '',
+        renderAuditEvents([auditEvent]),
+      ].join('\n')
+    }
+
     const result = await executeGitHubPrCreation(request, context.policy, context.approval, client)
     const output = renderGitHubPrCreationResult(result)
     const auditEvent = createGitHubWriteGateAuditEvent(result.gateResult, context.approval)

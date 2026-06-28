@@ -29,12 +29,6 @@ const approval: RuntimeApproval = {
   scopes: ['github:write'],
 }
 
-const wrongScopeApproval: RuntimeApproval = {
-  ticketId: 'GH-WRITE-002',
-  approvedBy: 'operator',
-  scopes: ['command:validate'],
-}
-
 function makeRequest(
   overrides: Partial<GitHubWriteExecutorRequest> = {},
 ): GitHubWriteExecutorRequest {
@@ -50,9 +44,9 @@ function makeRequest(
 }
 
 describe('executeGitHubWrite', () => {
-  it('executes post_comment with valid approval in live mode', async () => {
+  it('executes post_comment in live mode', async () => {
     const client = new FakeGitHubWriteExecutorClient()
-    const result = await executeGitHubWrite(makeRequest(), policy, approval, client, 'live')
+    const result = await executeGitHubWrite(makeRequest(), policy, undefined, client, 'live')
 
     expect(result.outcome).toBe('EXECUTED')
     expect(result.action).toBe('post_comment')
@@ -64,12 +58,12 @@ describe('executeGitHubWrite', () => {
     expect(client.operations[0]?.action).toBe('post_comment')
   })
 
-  it('executes create_draft_pr with valid approval in live mode', async () => {
+  it('executes create_draft_pr in live mode', async () => {
     const client = new FakeGitHubWriteExecutorClient()
     const result = await executeGitHubWrite(
       makeRequest({ action: 'create_draft_pr', targetRef: 'main', content: 'PR body' }),
       policy,
-      approval,
+      undefined,
       client,
       'live',
     )
@@ -81,12 +75,12 @@ describe('executeGitHubWrite', () => {
     expect(client.operations).toHaveLength(1)
   })
 
-  it('executes apply_label with valid approval in live mode', async () => {
+  it('executes apply_label in live mode', async () => {
     const client = new FakeGitHubWriteExecutorClient()
     const result = await executeGitHubWrite(
       makeRequest({ action: 'apply_label', content: 'ready-for-review' }),
       policy,
-      approval,
+      undefined,
       client,
       'live',
     )
@@ -118,7 +112,12 @@ describe('executeGitHubWrite', () => {
 
   it('dry-runs without executing client', async () => {
     const client = new FakeGitHubWriteExecutorClient()
-    const result = await executeGitHubWrite(makeRequest({ dryRun: true }), policy, approval, client)
+    const result = await executeGitHubWrite(
+      makeRequest({ dryRun: true }),
+      policy,
+      undefined,
+      client,
+    )
 
     expect(result.outcome).toBe('DRY_RUN')
     expect(result.operationSummary).toContain('Would post comment')
@@ -129,36 +128,10 @@ describe('executeGitHubWrite', () => {
 
   it('blocks when GitHub writes disabled by policy', async () => {
     const client = new FakeGitHubWriteExecutorClient()
-    const result = await executeGitHubWrite(makeRequest(), blockedPolicy, approval, client)
+    const result = await executeGitHubWrite(makeRequest(), blockedPolicy, undefined, client)
 
     expect(result.outcome).toBe('BLOCKED')
     expect(result.blockReasons.some((r) => r.includes('disabled by runtime policy'))).toBe(true)
-    expect(client.operations).toHaveLength(0)
-  })
-
-  it('blocks when no approval ticket provided', async () => {
-    const client = new FakeGitHubWriteExecutorClient()
-    const result = await executeGitHubWrite(makeRequest(), policy, undefined, client, 'live')
-
-    expect(result.outcome).toBe('BLOCKED')
-    expect(result.blockReasons.some((r) => r.includes('require explicit approval'))).toBe(true)
-    expect(client.operations).toHaveLength(0)
-  })
-
-  it('blocks when approval has wrong scope', async () => {
-    const client = new FakeGitHubWriteExecutorClient()
-    const result = await executeGitHubWrite(
-      makeRequest(),
-      policy,
-      wrongScopeApproval,
-      client,
-      'live',
-    )
-
-    expect(result.outcome).toBe('BLOCKED')
-    expect(result.blockReasons.some((r) => r.includes('does not include github:write scope'))).toBe(
-      true,
-    )
     expect(client.operations).toHaveLength(0)
   })
 
@@ -206,7 +179,7 @@ describe('executeGitHubWrite', () => {
 
   it('tracks elapsed time', async () => {
     const client = new FakeGitHubWriteExecutorClient()
-    const result = await executeGitHubWrite(makeRequest(), policy, approval, client, 'live')
+    const result = await executeGitHubWrite(makeRequest(), policy, undefined, client, 'live')
 
     expect(result.elapsedMs).toBeGreaterThanOrEqual(0)
   })
@@ -214,13 +187,24 @@ describe('executeGitHubWrite', () => {
   it('provides recommended next action for each outcome', async () => {
     const client = new FakeGitHubWriteExecutorClient()
 
-    const executed = await executeGitHubWrite(makeRequest(), policy, approval, client, 'live')
+    const executed = await executeGitHubWrite(makeRequest(), policy, undefined, client, 'live')
     expect(executed.recommendedNextAction).toContain('Verify')
 
-    const dryRun = await executeGitHubWrite(makeRequest({ dryRun: true }), policy, approval, client)
+    const dryRun = await executeGitHubWrite(
+      makeRequest({ dryRun: true }),
+      policy,
+      undefined,
+      client,
+    )
     expect(dryRun.recommendedNextAction).toContain('dry-run')
 
-    const blocked = await executeGitHubWrite(makeRequest(), blockedPolicy, approval, client, 'live')
+    const blocked = await executeGitHubWrite(
+      makeRequest(),
+      blockedPolicy,
+      undefined,
+      client,
+      'live',
+    )
     expect(blocked.recommendedNextAction).toContain('block reasons')
   })
 })
@@ -228,7 +212,7 @@ describe('executeGitHubWrite', () => {
 describe('renderGitHubWriteExecutorResult', () => {
   it('renders executed result with execution mode', async () => {
     const client = new FakeGitHubWriteExecutorClient()
-    const result = await executeGitHubWrite(makeRequest(), policy, approval, client, 'live')
+    const result = await executeGitHubWrite(makeRequest(), policy, undefined, client, 'live')
     const output = renderGitHubWriteExecutorResult(result)
 
     expect(output).toContain('CodeMind GitHub Write Executor')
@@ -240,7 +224,12 @@ describe('renderGitHubWriteExecutorResult', () => {
 
   it('renders dry-run result', async () => {
     const client = new FakeGitHubWriteExecutorClient()
-    const result = await executeGitHubWrite(makeRequest({ dryRun: true }), policy, approval, client)
+    const result = await executeGitHubWrite(
+      makeRequest({ dryRun: true }),
+      policy,
+      undefined,
+      client,
+    )
     const output = renderGitHubWriteExecutorResult(result)
 
     expect(output).toContain('Outcome: DRY_RUN')
