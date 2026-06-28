@@ -1,14 +1,16 @@
-import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import type { GitHubClientRegistry, RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
 import { runLocalSelfEditWorkflow, type LocalSelfEditMode } from './local-self-edit-workflow.js'
 import {
   executeGitHubPrCreation,
   renderGitHubPrCreationResult,
+  type GitHubPrCreationClient,
   type GitHubPrCreationFile,
 } from '../github-write/github-pr-creation.js'
 import { FakeGitHubPrCreationClient } from '../github-write/fake-github-pr-creation-client.js'
 import {
   executePrCollaboration,
   renderPrCollaborationResult,
+  type PrCollaborationClient,
 } from '../github-write/pr-collaboration.js'
 import { FakePrCollaborationClient } from '../github-write/fake-pr-collaboration-client.js'
 import {
@@ -78,9 +80,18 @@ function createRecoveryRecords(request: ZflowRequest): readonly RecoveryChangeRe
   }))
 }
 
+function resolvePrCreationClient(clients?: GitHubClientRegistry): GitHubPrCreationClient {
+  return clients?.prCreationClient ?? new FakeGitHubPrCreationClient()
+}
+
+function resolveCollaborationClient(clients?: GitHubClientRegistry): PrCollaborationClient {
+  return clients?.collaborationClient ?? new FakePrCollaborationClient()
+}
+
 export async function runZflowWorkflow(
   request: ZflowRequest,
   cwd: string = process.cwd(),
+  githubClients?: GitHubClientRegistry,
 ): Promise<ZflowResult> {
   const policy = request.policy ?? DEFAULT_ZFLOW_POLICY
   const recoveryRecords = createRecoveryRecords(request)
@@ -117,7 +128,7 @@ export async function runZflowWorkflow(
     }
   }
 
-  const prClient = new FakeGitHubPrCreationClient()
+  const prClient = resolvePrCreationClient(githubClients)
   const prResult = await executeGitHubPrCreation(
     {
       repository: request.repository,
@@ -134,7 +145,7 @@ export async function runZflowWorkflow(
     prClient,
   )
 
-  const collabClient = new FakePrCollaborationClient()
+  const collabClient = resolveCollaborationClient(githubClients)
   const collabResult = await executePrCollaboration(
     {
       action: 'apply_label',
