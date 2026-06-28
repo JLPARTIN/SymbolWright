@@ -14,6 +14,7 @@ import { localFileWriteTool } from '../tools/local-file-write-tool.js'
 import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 import type { RuntimeApproval, RuntimePolicySnapshot, RuntimeToolContext } from '../types.js'
 import { renderRuntimeLocalWrite } from '../../cli-runtime-local-write.js'
+import { createDefaultRuntimePolicy } from '../policy/runtime-policy.js'
 
 const writePolicy: RuntimePolicySnapshot = {
   mode: 'APPROVED_EXECUTION',
@@ -35,16 +36,10 @@ const readOnlyPolicy: RuntimePolicySnapshot = {
   noisyDirs: [],
 }
 
-const validApproval: RuntimeApproval = {
+const legacyApproval: RuntimeApproval = {
   ticketId: 'WRITE-TICKET-001',
   approvedBy: 'operator',
   scopes: ['file:write'],
-}
-
-const wrongScopeApproval: RuntimeApproval = {
-  ticketId: 'WRITE-TICKET-002',
-  approvedBy: 'operator',
-  scopes: ['github:write'],
 }
 
 function makeRequest(overrides: Partial<LocalFileWriteRequest> = {}): LocalFileWriteRequest {
@@ -63,14 +58,9 @@ const testContext: RuntimeToolContext = {
 }
 
 describe('local file write gate', () => {
-  it('allows write with valid policy and approval', () => {
+  it('allows write with valid policy and no approval ticket', () => {
     const request = makeRequest()
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
 
     expect(result.decision).toBe('ALLOWED')
     expect(result.blockReasons).toHaveLength(0)
@@ -78,48 +68,25 @@ describe('local file write gate', () => {
     expect(result.dryRun).toBe(true)
   })
 
+  it('ignores legacy approval data when policy allows writes', () => {
+    const request = makeRequest()
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, legacyApproval)
+
+    expect(result.decision).toBe('ALLOWED')
+    expect(result.blockReasons).toHaveLength(0)
+  })
+
   it('blocks when writes are disabled by policy', () => {
     const request = makeRequest()
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      readOnlyPolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', readOnlyPolicy, undefined)
 
     expect(result.decision).toBe('BLOCKED')
     expect(result.blockReasons).toContain('Write actions are disabled by runtime policy.')
   })
 
-  it('blocks when approval is undefined', () => {
-    const request = makeRequest()
-    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
-
-    expect(result.decision).toBe('BLOCKED')
-    expect(result.blockReasons).toContain('Approval ticket is required for write actions.')
-  })
-
-  it('blocks when approval is missing file:write scope', () => {
-    const request = makeRequest()
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      wrongScopeApproval,
-    )
-
-    expect(result.decision).toBe('BLOCKED')
-    expect(result.blockReasons).toContain('Approval ticket is missing required scope: file:write')
-  })
-
   it('blocks when target path is outside workspace', () => {
     const request = makeRequest({ targetPath: '../../etc/passwd' })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
 
     expect(result.decision).toBe('BLOCKED')
     expect(result.blockReasons.some((r) => r.includes('outside workspace'))).toBe(true)
@@ -127,12 +94,7 @@ describe('local file write gate', () => {
 
   it('blocks when target path is protected .env', () => {
     const request = makeRequest({ targetPath: '.env' })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
 
     expect(result.decision).toBe('BLOCKED')
     expect(result.blockReasons.some((r) => r.includes('protected'))).toBe(true)
@@ -140,12 +102,7 @@ describe('local file write gate', () => {
 
   it('blocks when target path is in node_modules', () => {
     const request = makeRequest({ targetPath: 'node_modules/pkg/index.js' })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
 
     expect(result.decision).toBe('BLOCKED')
     expect(result.blockReasons.some((r) => r.includes('protected'))).toBe(true)
@@ -153,12 +110,7 @@ describe('local file write gate', () => {
 
   it('blocks when target path is in .git', () => {
     const request = makeRequest({ targetPath: '.git/config' })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
 
     expect(result.decision).toBe('BLOCKED')
     expect(result.blockReasons.some((r) => r.includes('protected'))).toBe(true)
@@ -166,12 +118,7 @@ describe('local file write gate', () => {
 
   it('blocks when reason is empty', () => {
     const request = makeRequest({ reason: '' })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
 
     expect(result.decision).toBe('BLOCKED')
     expect(result.blockReasons).toContain('Write request must include a reason.')
@@ -179,12 +126,7 @@ describe('local file write gate', () => {
 
   it('blocks when rollback note is empty', () => {
     const request = makeRequest({ rollbackNote: '' })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
 
     expect(result.decision).toBe('BLOCKED')
     expect(result.blockReasons).toContain('Write request must include a rollback note.')
@@ -200,24 +142,14 @@ describe('local file write gate', () => {
 
   it('returns resolved path', () => {
     const request = makeRequest({ targetPath: 'src/cli.ts' })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
 
     expect(result.resolvedPath).toBe(path.resolve('/test/workspace', 'src/cli.ts'))
   })
 
   it('preserves reason and rollback note in result', () => {
     const request = makeRequest({ reason: 'Fix bug', rollbackNote: 'Revert fix' })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
 
     expect(result.reason).toBe('Fix bug')
     expect(result.rollbackNote).toBe('Revert fix')
@@ -227,12 +159,7 @@ describe('local file write gate', () => {
 describe('local file write gate renderer', () => {
   it('renders allowed result with dry-run', () => {
     const request = makeRequest({ dryRun: true })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
     const output = renderLocalFileWriteGateResult(result)
 
     expect(output).toContain('CodeMind local file write gate')
@@ -244,17 +171,12 @@ describe('local file write gate renderer', () => {
 
   it('renders allowed result without dry-run', () => {
     const request = makeRequest({ dryRun: false })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
     const output = renderLocalFileWriteGateResult(result)
 
     expect(output).toContain('Decision: ALLOWED')
     expect(output).toContain('Dry run: no')
-    expect(output).toContain('Write is allowed by policy and approval.')
+    expect(output).toContain('Write is allowed by runtime policy.')
   })
 
   it('renders blocked result with block reasons', () => {
@@ -265,17 +187,11 @@ describe('local file write gate renderer', () => {
     expect(output).toContain('Decision: BLOCKED')
     expect(output).toContain('Block reasons:')
     expect(output).toContain('- Write actions are disabled by runtime policy.')
-    expect(output).toContain('- Approval ticket is required for write actions.')
   })
 
   it('renders target path and reason', () => {
     const request = makeRequest({ targetPath: 'src/app.ts', reason: 'Update app' })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
     const output = renderLocalFileWriteGateResult(result)
 
     expect(output).toContain('Target: src/app.ts')
@@ -284,12 +200,7 @@ describe('local file write gate renderer', () => {
 
   it('renders rollback note', () => {
     const request = makeRequest({ rollbackNote: 'Undo change' })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
     const output = renderLocalFileWriteGateResult(result)
 
     expect(output).toContain('Rollback: Undo change')
@@ -297,30 +208,20 @@ describe('local file write gate renderer', () => {
 })
 
 describe('local file write audit', () => {
-  it('creates allowed audit event', () => {
+  it('creates allowed audit event without approval', () => {
     const request = makeRequest({ dryRun: false })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
-    const event = createLocalFileWriteAuditEvent(result, validApproval)
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, undefined)
+    const event = createLocalFileWriteAuditEvent(result, undefined)
 
     expect(event.action).toBe('local_file_write')
     expect(event.status).toBe('allowed')
     expect(event.detail).toContain('Write to src/cli.ts')
   })
 
-  it('creates dry-run audit event', () => {
+  it('continues to render legacy approval data when supplied', () => {
     const request = makeRequest({ dryRun: true })
-    const result = evaluateLocalFileWriteGate(
-      request,
-      '/test/workspace',
-      writePolicy,
-      validApproval,
-    )
-    const event = createLocalFileWriteAuditEvent(result, validApproval)
+    const result = evaluateLocalFileWriteGate(request, '/test/workspace', writePolicy, legacyApproval)
+    const event = createLocalFileWriteAuditEvent(result, legacyApproval)
 
     expect(event.action).toBe('local_file_write')
     expect(event.status).toBe('allowed')
@@ -344,7 +245,7 @@ describe('local file write tool', () => {
     expect(localFileWriteTool.capability).toBe('LOCAL_FILE_WRITE')
   })
 
-  it('executes with valid input and returns combined output', async () => {
+  it('returns blocked output when policy disables writes', async () => {
     const output = await localFileWriteTool.execute(
       {
         targetPath: 'src/cli.ts',
@@ -358,6 +259,30 @@ describe('local file write tool', () => {
 
     expect(output).toContain('CodeMind local file write gate')
     expect(output).toContain('Decision: BLOCKED')
+  })
+
+  it('writes by default when dryRun is omitted', async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'local-write-tool-'))
+    const context: RuntimeToolContext = { cwd: tmpDir, policy: createDefaultRuntimePolicy() }
+
+    try {
+      const output = await localFileWriteTool.execute(
+        {
+          targetPath: 'src/generated.ts',
+          content: 'export const generated = true\n',
+          reason: 'Generate file',
+          rollbackNote: 'Delete file',
+        },
+        context,
+      )
+
+      expect(output).toContain('Outcome: WRITTEN')
+      expect(fs.readFileSync(path.join(tmpDir, 'src', 'generated.ts'), 'utf8')).toContain(
+        'generated = true',
+      )
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true })
+    }
   })
 
   it('rejects missing input', async () => {
@@ -395,22 +320,20 @@ describe('local file write tool', () => {
 
   it('rejects missing content', async () => {
     await expect(
-      localFileWriteTool.execute(
-        { targetPath: 'x.ts', reason: 'y', rollbackNote: 'z' },
-        testContext,
-      ),
+      localFileWriteTool.execute({ targetPath: 'x.ts', reason: 'y', rollbackNote: 'z' }, testContext),
     ).rejects.toThrow('Missing content')
   })
 
-  it('defaults dryRun to true when not provided', async () => {
+  it('shows explicit dryRun previews', async () => {
     const output = await localFileWriteTool.execute(
       {
         targetPath: 'src/cli.ts',
         content: 'test',
         reason: 'Add feature',
         rollbackNote: 'Revert',
+        dryRun: true,
       },
-      testContext,
+      { cwd: '/test/workspace', policy: writePolicy },
     )
 
     expect(output).toContain('Dry run: yes')
@@ -452,25 +375,29 @@ describe('local write registry', () => {
 })
 
 describe('CLI local write', () => {
-  it('renders local file write from fixture file', async () => {
+  it('renders and applies local file write from fixture file', async () => {
     const fixture = {
       targetPath: 'src/cli.ts',
       content: 'console.log("hello")',
       reason: 'Add logging',
       rollbackNote: 'Remove log line',
-      dryRun: true,
     }
 
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'local-write-'))
     const fixturePath = path.join(tmpDir, 'local-write-fixture.json')
     fs.writeFileSync(fixturePath, JSON.stringify(fixture))
 
-    const output = await renderRuntimeLocalWrite(fixturePath, tmpDir)
+    try {
+      const output = await renderRuntimeLocalWrite(fixturePath, tmpDir)
 
-    expect(output).toContain('CodeMind local file write gate')
-    expect(output).toContain('Target: src/cli.ts')
-
-    fs.rmSync(tmpDir, { recursive: true })
+      expect(output).toContain('CodeMind local file write execution')
+      expect(output).toContain('Target: src/cli.ts')
+      expect(fs.readFileSync(path.join(tmpDir, 'src', 'cli.ts'), 'utf8')).toContain(
+        'console.log("hello")',
+      )
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true })
+    }
   })
 
   it('shows BLOCKED for protected path fixture', async () => {
@@ -486,11 +413,13 @@ describe('CLI local write', () => {
     const fixturePath = path.join(tmpDir, 'local-write-fixture.json')
     fs.writeFileSync(fixturePath, JSON.stringify(fixture))
 
-    const output = await renderRuntimeLocalWrite(fixturePath, tmpDir)
+    try {
+      const output = await renderRuntimeLocalWrite(fixturePath, tmpDir)
 
-    expect(output).toContain('BLOCKED')
-
-    fs.rmSync(tmpDir, { recursive: true })
+      expect(output).toContain('BLOCKED')
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true })
+    }
   })
 
   it('throws on missing targetPath', async () => {
@@ -500,11 +429,13 @@ describe('CLI local write', () => {
     const fixturePath = path.join(tmpDir, 'bad-fixture.json')
     fs.writeFileSync(fixturePath, JSON.stringify(fixture))
 
-    await expect(renderRuntimeLocalWrite(fixturePath, tmpDir)).rejects.toThrow(
-      'non-empty "targetPath"',
-    )
-
-    fs.rmSync(tmpDir, { recursive: true })
+    try {
+      await expect(renderRuntimeLocalWrite(fixturePath, tmpDir)).rejects.toThrow(
+        'non-empty "targetPath"',
+      )
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true })
+    }
   })
 
   it('throws on missing reason', async () => {
@@ -514,8 +445,10 @@ describe('CLI local write', () => {
     const fixturePath = path.join(tmpDir, 'bad-fixture.json')
     fs.writeFileSync(fixturePath, JSON.stringify(fixture))
 
-    await expect(renderRuntimeLocalWrite(fixturePath, tmpDir)).rejects.toThrow('non-empty "reason"')
-
-    fs.rmSync(tmpDir, { recursive: true })
+    try {
+      await expect(renderRuntimeLocalWrite(fixturePath, tmpDir)).rejects.toThrow('non-empty "reason"')
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true })
+    }
   })
 })
