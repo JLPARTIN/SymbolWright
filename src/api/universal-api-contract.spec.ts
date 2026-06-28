@@ -18,9 +18,7 @@ import {
 
 describe('universal CodeMind API contract', () => {
   it('declares the required public API routes', () => {
-    const routeKeys = CODEMIND_PUBLIC_API_ROUTES.map((route) =>
-      `${route.method} ${route.path}`,
-    )
+    const routeKeys = CODEMIND_PUBLIC_API_ROUTES.map((route) => `${route.method} ${route.path}`)
 
     expect(routeKeys).toContain('POST /api/missions')
     expect(routeKeys).toContain('POST /api/chat')
