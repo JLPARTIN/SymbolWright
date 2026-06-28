@@ -23,8 +23,8 @@ export class GitHubLiveReadClient implements RuntimeLiveReadClient {
   async getPullRequestEvidence(owner: string, repo: string, prNumber: number): Promise<GitHubPrEvidence> {
     if (this.httpClient === undefined) {
       throw new Error(
-        `Live GitHub PR read not yet wired: ${owner}/${repo}#${prNumber}. ` +
-        'Inject a GitHubHttpClient to enable live reads.',
+        `No GitHub HTTP client configured for PR read: ${owner}/${repo}#${prNumber}. ` +
+        'Provide a GITHUB_TOKEN to enable live reads.',
       )
     }
 
@@ -63,8 +63,8 @@ export class GitHubLiveReadClient implements RuntimeLiveReadClient {
   async getWorkflowEvidence(owner: string, repo: string, runId: number): Promise<GitHubCiEvidence> {
     if (this.httpClient === undefined) {
       throw new Error(
-        `Live GitHub workflow read not yet wired: ${owner}/${repo} run ${runId}. ` +
-        'Inject a GitHubHttpClient to enable live reads.',
+        `No GitHub HTTP client configured for workflow read: ${owner}/${repo} run ${runId}. ` +
+        'Provide a GITHUB_TOKEN to enable live reads.',
       )
     }
 
@@ -97,8 +97,8 @@ export class GitHubLiveReadClient implements RuntimeLiveReadClient {
   async getRepositoryFile(owner: string, repo: string, filePath: string, ref: string): Promise<RepositoryFileResult> {
     if (this.httpClient === undefined) {
       throw new Error(
-        `Live GitHub file read not yet wired: ${owner}/${repo}/${filePath}@${ref}. ` +
-        'Inject a GitHubHttpClient to enable live reads.',
+        `No GitHub HTTP client configured for file read: ${owner}/${repo}/${filePath}@${ref}. ` +
+        'Provide a GITHUB_TOKEN to enable live reads.',
       )
     }
 

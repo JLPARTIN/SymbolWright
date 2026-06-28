@@ -55,17 +55,17 @@ describe('GitHubLiveReadClient', () => {
 
   it('throws not-yet-wired error for PR read', async () => {
     const client = new GitHubLiveReadClient()
-    await expect(client.getPullRequestEvidence('owner', 'repo', 1)).rejects.toThrow('not yet wired')
+    await expect(client.getPullRequestEvidence('owner', 'repo', 1)).rejects.toThrow('No GitHub HTTP client configured')
   })
 
   it('throws not-yet-wired error for workflow read', async () => {
     const client = new GitHubLiveReadClient()
-    await expect(client.getWorkflowEvidence('owner', 'repo', 1)).rejects.toThrow('not yet wired')
+    await expect(client.getWorkflowEvidence('owner', 'repo', 1)).rejects.toThrow('No GitHub HTTP client configured')
   })
 
   it('throws not-yet-wired error for file read', async () => {
     const client = new GitHubLiveReadClient()
-    await expect(client.getRepositoryFile('owner', 'repo', 'README.md', 'main')).rejects.toThrow('not yet wired')
+    await expect(client.getRepositoryFile('owner', 'repo', 'README.md', 'main')).rejects.toThrow('No GitHub HTTP client configured')
   })
 })
 

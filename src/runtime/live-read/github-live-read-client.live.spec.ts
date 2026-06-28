@@ -269,21 +269,21 @@ describe('GitHubLiveReadClient with mocked HTTP', () => {
     it('throws not-yet-wired for PR read', async () => {
       const client = new GitHubLiveReadClient()
       await expect(client.getPullRequestEvidence('o', 'r', 1)).rejects.toThrow(
-        'not yet wired',
+        'No GitHub HTTP client configured',
       )
     })
 
     it('throws not-yet-wired for workflow read', async () => {
       const client = new GitHubLiveReadClient()
       await expect(client.getWorkflowEvidence('o', 'r', 1)).rejects.toThrow(
-        'not yet wired',
+        'No GitHub HTTP client configured',
       )
     })
 
     it('throws not-yet-wired for file read', async () => {
       const client = new GitHubLiveReadClient()
       await expect(client.getRepositoryFile('o', 'r', 'f', 'main')).rejects.toThrow(
-        'not yet wired',
+        'No GitHub HTTP client configured',
       )
     })
   })

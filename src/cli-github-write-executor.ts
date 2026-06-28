@@ -4,9 +4,12 @@ import {
   executeGitHubWrite,
   renderGitHubWriteExecutorResult,
   type GitHubWriteExecutorAction,
+  type GitHubWriteExecutorClient,
   type GitHubWriteExecutorRequest,
 } from './runtime/github-write/github-write-executor.js'
 import { FakeGitHubWriteExecutorClient } from './runtime/github-write/fake-github-write-executor-client.js'
+import { DefaultGitHubWriteExecutorClient } from './runtime/github-write/default-github-write-executor-client.js'
+import { DefaultGitHubHttpClient } from './runtime/live-read/github-http-client.js'
 import type { RuntimeApproval, RuntimePolicySnapshot } from './runtime/types.js'
 
 interface GitHubWriteExecutorFixtureRequest {
@@ -56,7 +59,10 @@ export async function renderGitHubWriteExecutorCommand(fixturePath: string): Pro
 
   const approval: RuntimeApproval | undefined = raw.approval
 
-  const client = new FakeGitHubWriteExecutorClient()
+  const githubToken = process.env['GITHUB_TOKEN']
+  const client: GitHubWriteExecutorClient = githubToken !== undefined && githubToken.length > 0
+    ? new DefaultGitHubWriteExecutorClient(new DefaultGitHubHttpClient({ token: githubToken }))
+    : new FakeGitHubWriteExecutorClient()
   const result = await executeGitHubWrite(request, policy, approval, client)
   return renderGitHubWriteExecutorResult(result)
 }
