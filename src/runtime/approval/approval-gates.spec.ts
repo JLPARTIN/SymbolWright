@@ -7,12 +7,29 @@ import {
 } from './approval-gate.js'
 import { createApprovalTicket } from './approval-ticket.js'
 import { createAuditEvent, renderAuditEvents, RuntimeAuditLog } from '../audit/runtime-audit-log.js'
-import {
-  createApprovedRuntimeContext,
-  createApprovedRuntimeRegistry,
-} from '../runtime-approved-registry.js'
+import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 import { createDefaultRuntimePolicy } from '../policy/runtime-policy.js'
 import { isValidApprovalScope, ALL_APPROVAL_SCOPES } from '../types.js'
+import type { RuntimeApproval, RuntimeToolContext } from '../types.js'
+
+function createApprovedRuntimeContext(approval?: RuntimeApproval): RuntimeToolContext {
+  const ctx: RuntimeToolContext = {
+    cwd: process.cwd(),
+    policy: {
+      mode: 'APPROVED_EXECUTION',
+      allowNetwork: false,
+      allowShell: false,
+      allowWrites: false,
+      allowGitHubWrites: false,
+      protectedPaths: ['.git', '.env', 'node_modules'],
+      noisyDirs: ['node_modules', 'dist', 'coverage', '.git'],
+    },
+  }
+  if (approval !== undefined) {
+    return { ...ctx, approval }
+  }
+  return ctx
+}
 
 describe('approval gates', () => {
   it('requires approval before gated execution', () => {
@@ -65,7 +82,7 @@ describe('approval gates', () => {
 
 describe('approval-gated tools', () => {
   it('registers gated tools', () => {
-    const names = createApprovedRuntimeRegistry()
+    const names = createFixtureRegistry('approved')
       .list()
       .map((tool) => tool.name)
 
@@ -80,7 +97,7 @@ describe('approval-gated tools', () => {
       scopes: ['apply_edit'],
       reason: 'test',
     })
-    const tool = createApprovedRuntimeRegistry().getOrThrow('apply_edit_gated')
+    const tool = createFixtureRegistry('approved').getOrThrow('apply_edit_gated')
     const output = await tool.execute(
       { path: 'README.md', proposedContent: '# Proposed\n' },
       createApprovedRuntimeContext(approval),
@@ -98,7 +115,7 @@ describe('approval-gated tools', () => {
       scopes: ['command_dry_run'],
       reason: 'test',
     })
-    const tool = createApprovedRuntimeRegistry().getOrThrow('command_dry_run_gated')
+    const tool = createFixtureRegistry('approved').getOrThrow('command_dry_run_gated')
     const output = await tool.execute(
       { command: 'npm run typecheck' },
       createApprovedRuntimeContext(approval),
@@ -116,7 +133,7 @@ describe('approval-gated tools', () => {
       scopes: ['command_dry_run'],
       reason: 'test',
     })
-    const tool = createApprovedRuntimeRegistry().getOrThrow('command_dry_run_gated')
+    const tool = createFixtureRegistry('approved').getOrThrow('command_dry_run_gated')
 
     await expect(
       tool.execute({ command: 'rm -rf .' }, createApprovedRuntimeContext(approval)),

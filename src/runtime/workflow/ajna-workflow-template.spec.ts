@@ -10,9 +10,9 @@ import {
 } from './ajna-workflow-template.js'
 import { runRuntimeWorkflow, renderWorkflowResult } from './runtime-workflow.js'
 import {
-  createWorkflowRuntimeContext,
-  createWorkflowRuntimeRegistry,
-} from '../runtime-workflow-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from '../registry/fixture-registry-factory.js'
 import { renderRuntimeAjnaWorkflow } from '../../cli-runtime-ajna-workflow.js'
 
 describe('buildAjnaWorkflowRequest', () => {
@@ -182,8 +182,8 @@ describe('Ajna workflow end-to-end through runner', () => {
       mode: 'review',
     }
     const request = buildAjnaWorkflowRequest(input)
-    const registry = createWorkflowRuntimeRegistry({})
-    const context = createWorkflowRuntimeContext()
+    const registry = createFixtureRegistry('workflow')
+    const context = createFixtureContext()
 
     const result = await runRuntimeWorkflow(request, registry, context)
 
@@ -199,8 +199,8 @@ describe('Ajna workflow end-to-end through runner', () => {
       mode: 'review',
     }
     const request = buildAjnaWorkflowRequest(input)
-    const registry = createWorkflowRuntimeRegistry({})
-    const context = createWorkflowRuntimeContext()
+    const registry = createFixtureRegistry('workflow')
+    const context = createFixtureContext()
 
     const result = await runRuntimeWorkflow(request, registry, context)
     const output = renderWorkflowResult(result)

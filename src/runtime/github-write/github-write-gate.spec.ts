@@ -7,7 +7,7 @@ import {
 } from './github-write-gate.js'
 import { createGitHubWriteGateAuditEvent } from './github-write-gate-audit.js'
 import { githubWriteGateTool } from '../tools/github-write-gate-tool.js'
-import { createGitHubWriteGateRuntimeRegistry } from '../runtime-github-write-gate-registry.js'
+import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 import { renderRuntimeGitHubWriteGate } from '../../cli-runtime-github-write-gate.js'
 import type { RuntimeApproval, RuntimePolicySnapshot, RuntimeToolContext } from '../types.js'
 
@@ -421,15 +421,15 @@ describe('githubWriteGateTool', () => {
   })
 })
 
-describe('createGitHubWriteGateRuntimeRegistry', () => {
+describe('fixture registry github_write_gate preset', () => {
   it('includes the github_write_gate tool', () => {
-    const registry = createGitHubWriteGateRuntimeRegistry({})
+    const registry = createFixtureRegistry('github_write_gate')
     const tool = registry.getOrThrow('github_write_gate')
     expect(tool.name).toBe('github_write_gate')
   })
 
   it('preserves all previous registry tools', () => {
-    const registry = createGitHubWriteGateRuntimeRegistry({})
+    const registry = createFixtureRegistry('github_write_gate')
     const tools = registry.list()
     const names = tools.map((t) => t.name)
 

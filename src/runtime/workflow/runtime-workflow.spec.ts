@@ -10,17 +10,17 @@ import {
   type RuntimeWorkflowRequest,
 } from './runtime-workflow.js'
 import {
-  createWorkflowRuntimeContext,
-  createWorkflowRuntimeRegistry,
-} from '../runtime-workflow-registry.js'
+  createFixtureContext,
+  createFixtureRegistry,
+} from '../registry/fixture-registry-factory.js'
 import { renderRuntimeWorkflow } from '../../cli-runtime-workflow.js'
 
 function createTestRegistry() {
-  return createWorkflowRuntimeRegistry({})
+  return createFixtureRegistry('workflow')
 }
 
 function createTestContext() {
-  return createWorkflowRuntimeContext()
+  return createFixtureContext()
 }
 
 describe('evaluateWorkflowRequest', () => {
@@ -133,7 +133,7 @@ describe('runRuntimeWorkflow', () => {
         { toolName: 'github_write_gate', input: {} },
       ],
     }
-    const registry = createWorkflowRuntimeRegistry({})
+    const registry = createFixtureRegistry('workflow')
     const result = await runRuntimeWorkflow(request, registry, createTestContext())
 
     expect(result.stepsExecuted).toBeGreaterThanOrEqual(1)
@@ -192,7 +192,7 @@ describe('runRuntimeWorkflow', () => {
       steps: [{ toolName: 'github_write_gate', input: {} }],
     }
 
-    const emptyRegistry = createWorkflowRuntimeRegistry({})
+    const emptyRegistry = createFixtureRegistry('workflow')
     const hasTool = emptyRegistry.has('github_write_gate')
 
     if (!hasTool) {

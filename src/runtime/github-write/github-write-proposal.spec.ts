@@ -338,7 +338,7 @@ describe('githubWriteProposalTool', () => {
   })
 })
 
-describe('createGitHubWriteProposalRuntimeRegistry', () => {
+describe('fixture registry github_write_proposal preset', () => {
   it('includes the github_write_proposal tool', () => {
     const registry = createFixtureRegistry('github_write_proposal')
     const tool = registry.getOrThrow('github_write_proposal')
