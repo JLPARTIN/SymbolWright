@@ -6,6 +6,7 @@ import type {
   ProviderGatewayMessage,
   ProviderGatewayRequest,
   ProviderGatewayResponse,
+  ProviderGatewayUsage,
   ProviderHttpResponse,
   ProviderResolvedConfig,
 } from './provider-gateway.types.js'
@@ -21,6 +22,20 @@ function asRecord(value: unknown): JsonRecord {
 
 function readString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined
+}
+
+function buildUsage(
+  inputTokens: number | undefined,
+  outputTokens: number | undefined,
+  totalTokens: number | undefined,
+): ProviderGatewayUsage | undefined {
+  const usage = {
+    ...(inputTokens === undefined ? {} : { inputTokens }),
+    ...(outputTokens === undefined ? {} : { outputTokens }),
+    ...(totalTokens === undefined ? {} : { totalTokens }),
+  }
+
+  return Object.keys(usage).length === 0 ? undefined : usage
 }
 
 function requireModel(request: ProviderGatewayRequest, config: ProviderResolvedConfig): string {
@@ -57,17 +72,17 @@ function normalizeMessages(request: ProviderGatewayRequest): readonly ProviderGa
   return messages
 }
 
-function parseUsage(rawUsage: unknown): ProviderGatewayResponse['usage'] {
+function parseUsage(rawUsage: unknown): ProviderGatewayUsage | undefined {
   const usage = typeof rawUsage === 'object' && rawUsage !== null ? (rawUsage as JsonRecord) : undefined
   if (usage === undefined) {
     return undefined
   }
 
-  const inputTokens = typeof usage['prompt_tokens'] === 'number' ? usage['prompt_tokens'] : undefined
-  const outputTokens = typeof usage['completion_tokens'] === 'number' ? usage['completion_tokens'] : undefined
-  const totalTokens = typeof usage['total_tokens'] === 'number' ? usage['total_tokens'] : undefined
-
-  return { inputTokens, outputTokens, totalTokens }
+  return buildUsage(
+    typeof usage['prompt_tokens'] === 'number' ? usage['prompt_tokens'] : undefined,
+    typeof usage['completion_tokens'] === 'number' ? usage['completion_tokens'] : undefined,
+    typeof usage['total_tokens'] === 'number' ? usage['total_tokens'] : undefined,
+  )
 }
 
 function parseOpenAiCompatibleResponse(
@@ -96,11 +111,13 @@ function parseOpenAiCompatibleResponse(
     })
   }
 
+  const usage = parseUsage(body['usage'])
+
   return {
     providerId,
     model,
     text,
-    usage: parseUsage(body['usage']),
+    ...(usage === undefined ? {} : { usage }),
     raw: body,
   }
 }
@@ -190,16 +207,18 @@ function parseAnthropicResponse(
     })
   }
 
-  const usage = asRecord(body['usage'] ?? {})
+  const rawUsage = asRecord(body['usage'] ?? {})
+  const usage = buildUsage(
+    typeof rawUsage['input_tokens'] === 'number' ? rawUsage['input_tokens'] : undefined,
+    typeof rawUsage['output_tokens'] === 'number' ? rawUsage['output_tokens'] : undefined,
+    undefined,
+  )
 
   return {
     providerId,
     model,
     text,
-    usage: {
-      inputTokens: typeof usage['input_tokens'] === 'number' ? usage['input_tokens'] : undefined,
-      outputTokens: typeof usage['output_tokens'] === 'number' ? usage['output_tokens'] : undefined,
-    },
+    ...(usage === undefined ? {} : { usage }),
     raw: body,
   }
 }
