@@ -63,6 +63,19 @@ describe('runDoctor', () => {
     expect(providerCheck?.detail).toContain('secrets redacted')
   })
 
+  it('checks sandbox configuration and readiness without requiring host fallback', () => {
+    const report = runDoctor(WORKSPACE)
+    const configCheck = report.checks.find((c) => c.name === 'Sandbox configuration')
+    const readinessCheck = report.checks.find((c) => c.name === 'Sandbox readiness')
+
+    expect(configCheck).toBeDefined()
+    expect(configCheck?.status).toBe('PASS')
+    expect(configCheck?.detail).toContain('image=')
+    expect(configCheck?.detail).toContain('network=none')
+    expect(readinessCheck).toBeDefined()
+    expect(readinessCheck?.status).not.toBe('FAIL')
+  })
+
   it('detects missing workspace', () => {
     const report = runDoctor('/nonexistent/path')
 
@@ -87,5 +100,13 @@ describe('renderDoctorReport', () => {
 
     expect(output).toContain('Provider gateway')
     expect(output).toContain('secrets redacted')
+  })
+
+  it('renders sandbox diagnostics', () => {
+    const output = renderDoctorReport(runDoctor(WORKSPACE))
+
+    expect(output).toContain('Sandbox configuration')
+    expect(output).toContain('Sandbox readiness')
+    expect(output).toContain('network=none')
   })
 })
