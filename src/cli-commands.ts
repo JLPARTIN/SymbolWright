@@ -4,8 +4,6 @@ import {
   getNextRuntimeBuildPhase,
 } from './runtime/runtime-build-state.js'
 
-const LINE_BREAK = String.fromCharCode(10)
-
 export const CODEMIND_CLI_COMMANDS = [
   { name: 'help', description: 'Show available command surface' },
   { name: 'status', description: 'Report CodeMind mode, policy, and runtime build state' },
@@ -14,13 +12,9 @@ export const CODEMIND_CLI_COMMANDS = [
     description: 'Open the CodeMind Operator Workspace console',
   },
   {
-    name: 'agent [message] [--mode <mode>] [--provider <id>] [--model <model>]',
+    name: 'agent [message] [--mode <mode>]',
     description:
-      'Run the direct execution coding agent with selected runtime mode, provider, and model',
-  },
-  {
-    name: 'providers [list|status|health|models]',
-    description: 'Show configured AI providers, redacted key state, health, and default models',
+      'Run the direct execution coding agent with APPROVED_EXECUTION, PROPOSAL_ONLY, READ_ONLY, or PLAN_ONLY runtime mode',
   },
   { name: 'sessions', description: 'List saved agent sessions' },
   {
@@ -241,11 +235,9 @@ export function renderHelp(): string {
     ...CODEMIND_CLI_COMMANDS.map(({ name, description }) => `  ${name.padEnd(56)} ${description}`),
     '',
     'Run "codemind agent --mode APPROVED_EXECUTION" for direct agent work.',
-    'Run "codemind agent --provider openai --model gpt-4o-mini" to select a provider.',
-    'Run "codemind providers status" to inspect configured provider state.',
     'Run "codemind status" to see platform posture and active policy.',
   ]
-  return lines.join(LINE_BREAK)
+  return lines.join('\n')
 }
 
 export function renderStatus(): string {
@@ -262,11 +254,12 @@ export function renderStatus(): string {
     `Bash execution:     ${snap.bashExecutionEnabled ? 'ENABLED' : 'DISABLED'}`,
     `Network ingestion:  ${snap.networkIngestionEnabled ? 'ENABLED' : 'DISABLED'}`,
   ]
-  return lines.join(LINE_BREAK)
+  return lines.join('\n')
 }
 
 export function renderNotYetActive(command: string): string {
-  return [`Command not yet active: ${command}`, 'Run "codemind help" for available commands.'].join(
-    LINE_BREAK,
-  )
+  return [
+    `codemind ${command}: not yet active — awaiting runtime phase`,
+    'Run "codemind help" for available commands.',
+  ].join('\n')
 }

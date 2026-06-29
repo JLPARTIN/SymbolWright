@@ -1,13 +1,13 @@
 # CodeMind Provider Gateway
 
-**Status:** Provider Gateway + Agent Wiring Foundation  
-**Scope:** Multi-provider AI request configuration, routing, request mapping, response normalization, CLI-facing provider state, and secret-safe reporting
+**Status:** Provider Gateway Foundation  
+**Scope:** Multi-provider AI request configuration, routing, request mapping, response normalization, and secret-safe reporting
 
 ---
 
 ## What exists now
 
-CodeMind has a real provider gateway foundation under `src/providers/`.
+CodeMind now has a real provider gateway foundation under `src/providers/`.
 
 It supports these provider IDs through one internal gateway interface:
 
@@ -36,7 +36,6 @@ Google Gemini request mapping
 HTTP transport injection
 provider response normalization
 provider error normalization
-provider gateway to LLMProvider bridge
 ```
 
 ---
@@ -72,30 +71,7 @@ CODEMIND_PROVIDER_FALLBACKS
 built-in safe fallback order
 ```
 
-`codemind agent` can also receive provider and model selection through CLI flags:
-
-```bash
-codemind agent --provider openai --model gpt-4o-mini "explain this repo"
-codemind agent --provider google-gemini --model gemini-1.5-flash "summarize the build state"
-codemind agent --provider custom --model my-model "run with a custom compatible endpoint"
-```
-
 Fallback only handles unavailable configuration states such as missing credentials or disabled provider configuration. Provider HTTP failures are returned as real failures instead of silently hiding provider outages.
-
----
-
-## Provider status rendering
-
-The provider CLI renderer can show redacted provider state:
-
-```txt
-providers list
-providers status
-providers health
-providers models
-```
-
-Provider status output distinguishes configured providers from missing credentials and disabled providers. It does not print raw API keys.
 
 ---
 
@@ -139,8 +115,6 @@ POST /v1/messages
 
 System messages are folded into Anthropic's `system` field. User and assistant messages remain in the `messages` array.
 
-The default `codemind agent` path still uses the Anthropic SDK provider because that path already supports the existing agent-loop tool-use stream. This preserves current coding-agent behavior while gateway-backed providers are wired in.
-
 ---
 
 ## Google Gemini provider
@@ -155,31 +129,22 @@ System prompt content is mapped into `systemInstruction`. Assistant messages are
 
 ---
 
-## Agent bridge behavior
-
-The provider gateway to `LLMProvider` bridge allows `codemind agent --provider <id>` to route through the provider gateway.
-
-Current gateway-backed provider behavior is text-response oriented. It is real and callable, but it does not yet implement provider-native tool-calling for every provider. Anthropic remains the full tool-use provider path for direct coding-agent tool execution.
-
-Future provider bundles should add provider-native tool-call mapping for OpenAI-compatible and Gemini providers before claiming full tool parity.
-
----
-
 ## Test strategy
 
 Tests use injected HTTP transport. They do not require live API keys and do not call external provider APIs.
 
-This keeps CI deterministic while still proving that request mapping, fallback routing, redaction, provider CLI rendering, agent bridge behavior, and response parsing are real.
+This keeps CI deterministic while still proving that request mapping, fallback routing, redaction, and response parsing are real.
 
 ---
 
 ## Not included in this bundle
 
-This bundle intentionally does not add browser UI or AELIB-X1YA0I connector files.
+This bundle intentionally does not add the provider CLI or browser UI.
 
 Those belong in later bundles:
 
 ```txt
+Bundle #2 Provider CLI and agent runtime wiring
 Bundle #3 Standalone app/browser provider surface
 Bundle #4 AELIB-X1YA0I connector contract
 ```
