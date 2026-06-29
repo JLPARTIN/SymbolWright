@@ -63,6 +63,17 @@ export interface DockerSandboxRunnerOptions {
   readonly maxOutputBytes?: number
 }
 
+interface MutableDockerSandboxRunnerOptions {
+  dockerBinary?: string
+  image?: string
+  memory?: string
+  cpus?: string
+  network?: 'none'
+  user?: string
+  timeoutMs?: number
+  maxOutputBytes?: number
+}
+
 export interface DockerSandboxResolvedConfig {
   readonly dockerBinary: string
   readonly image: string
@@ -126,7 +137,7 @@ function parsePositiveInteger(value: string | undefined): number | undefined {
 export function resolveDockerSandboxRunnerOptionsFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): DockerSandboxRunnerOptions {
-  const options: DockerSandboxRunnerOptions = {}
+  const options: MutableDockerSandboxRunnerOptions = {}
   const dockerBinary = firstEnvValue(env, ['CODEMIND_SANDBOX_DOCKER_BINARY'])
   const image = firstEnvValue(env, ['CODEMIND_SANDBOX_IMAGE'])
   const memory = firstEnvValue(env, ['CODEMIND_SANDBOX_MEMORY'])
