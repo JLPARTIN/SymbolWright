@@ -275,6 +275,7 @@ docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
 docs/build-state/CODEMIND_BUILD_LEDGER.md
+docs/build-state/CODEMIND_FINAL_FORENSIC_AUDIT.md
 docs/context/CODEMIND_PROJECT_CONTEXT_KERNEL.md
 ```
 
