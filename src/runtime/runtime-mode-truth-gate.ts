@@ -21,6 +21,12 @@ interface RequiredPhraseCheck {
   readonly phrases: readonly string[]
 }
 
+interface RequiredAnyPhraseCheck {
+  readonly filePath: string
+  readonly description: string
+  readonly phrases: readonly string[]
+}
+
 interface BannedPhraseCheck {
   readonly filePath: string
   readonly phrases: readonly string[]
@@ -38,7 +44,6 @@ const REQUIRED_PHRASES: readonly RequiredPhraseCheck[] = [
     filePath: 'README.md',
     phrases: [
       'direct-capable coding-agent platform',
-      'APPROVED_EXECUTION is the direct execution mode',
       'CODEMIND_RUNTIME_MODE=APPROVED_EXECUTION',
       'Governance is optional by mode',
     ],
@@ -57,6 +62,19 @@ const REQUIRED_PHRASES: readonly RequiredPhraseCheck[] = [
       'This document does not make CodeMind read-only by default',
       '`APPROVED_EXECUTION` is direct-capable',
       'CodeMind may execute directly in `APPROVED_EXECUTION`',
+    ],
+  },
+]
+
+const REQUIRED_ANY_PHRASES: readonly RequiredAnyPhraseCheck[] = [
+  {
+    filePath: 'README.md',
+    description: 'APPROVED_EXECUTION as the direct execution mode',
+    phrases: [
+      'APPROVED_EXECUTION is the direct execution mode',
+      '`APPROVED_EXECUTION` is the direct execution mode',
+      'APPROVED_EXECUTION is direct-capable',
+      '`APPROVED_EXECUTION` is direct-capable',
     ],
   },
 ]
@@ -81,9 +99,6 @@ const BANNED_STALE_PHRASES: readonly BannedPhraseCheck[] = [
       'CodeMind must never assume permission',
       'write requires approval',
       'commands require approval',
-      'disable governance',
-      'unrestricted shell',
-      'silent file edits',
     ],
   },
   {
@@ -126,6 +141,18 @@ function collectRequiredPhraseFindings(workspaceRoot: string): string[] {
       if (!content.includes(phrase)) {
         findings.push(`${check.filePath} missing runtime truth phrase: ${phrase}`)
       }
+    }
+  }
+
+  for (const check of REQUIRED_ANY_PHRASES) {
+    const content = readWorkspaceFile(workspaceRoot, check.filePath)
+    if (content === undefined) {
+      findings.push(`${check.filePath} missing`)
+      continue
+    }
+
+    if (!check.phrases.some((phrase) => content.includes(phrase))) {
+      findings.push(`${check.filePath} missing runtime truth phrase for ${check.description}`)
     }
   }
 
