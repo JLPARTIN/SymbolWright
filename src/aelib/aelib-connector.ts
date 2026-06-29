@@ -8,12 +8,12 @@ export type AelibConnectorState =
   | 'CONNECTED'
 
 export interface AelibConnectorEnv {
-  readonly CODEMIND_AELIB_ENDPOINT?: string
-  readonly AELIB_ENDPOINT?: string
-  readonly CODEMIND_AELIB_HEALTH_PATH?: string
-  readonly AELIB_HEALTH_PATH?: string
-  readonly CODEMIND_AELIB_TOKEN?: string
-  readonly AELIB_TOKEN?: string
+  readonly CODEMIND_AELIB_ENDPOINT?: string | undefined
+  readonly AELIB_ENDPOINT?: string | undefined
+  readonly CODEMIND_AELIB_HEALTH_PATH?: string | undefined
+  readonly AELIB_HEALTH_PATH?: string | undefined
+  readonly CODEMIND_AELIB_TOKEN?: string | undefined
+  readonly AELIB_TOKEN?: string | undefined
 }
 
 export interface AelibConnectorConfig {
@@ -157,7 +157,13 @@ export async function checkAelibConnection(
     const response = await transport.request(healthUrl, { method: 'GET', headers })
 
     if (response.status >= 200 && response.status < 300) {
-      return toStatus('CONNECTED', config, `AELIB health check returned HTTP ${response.status}.`, checkedAt, healthUrl)
+      return toStatus(
+        'CONNECTED',
+        config,
+        `AELIB health check returned HTTP ${response.status}.`,
+        checkedAt,
+        healthUrl,
+      )
     }
 
     return toStatus(
