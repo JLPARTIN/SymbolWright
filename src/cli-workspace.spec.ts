@@ -120,6 +120,7 @@ describe('renderWorkspaceServePlan', () => {
     expect(output).toContain('http://127.0.0.1:3005')
     expect(output).toContain('GET /api/health')
     expect(output).toContain('GET /api/providers')
+    expect(output).toContain('GET /api/aelib')
     expect(output).toContain('no browser shell execution')
     expect(output).toContain('no fake external connection state')
   })
@@ -153,5 +154,6 @@ describe('renderWorkspaceCommand', () => {
 
     expect(output).toContain('CodeMind Workspace Web Surface')
     expect(output).toContain('GET /api/providers')
+    expect(output).toContain('GET /api/aelib')
   })
 })

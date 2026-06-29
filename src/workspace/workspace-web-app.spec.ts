@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
+import type { AelibConnectorStatus } from '../aelib/aelib-connector.js'
 import type { WorkspaceState } from '../cli-workspace.js'
 import {
   buildWorkspaceWebSnapshot,
+  renderAelibWebResponse,
   renderWorkspaceWebHtml,
   renderWorkspaceWebResponse,
 } from './workspace-web-app.js'
@@ -15,6 +17,14 @@ const WORKSPACE: WorkspaceState = {
   repoCount: 1,
 }
 
+const AELIB_STATUS: AelibConnectorStatus = {
+  connectorId: 'AELIB-X1YA0I',
+  state: 'NOT_CONFIGURED',
+  tokenState: 'missing',
+  detail: 'Set CODEMIND_AELIB_ENDPOINT to enable the AELIB-X1YA0I connector health check.',
+  checkedAt: '2026-06-29T00:00:00.000Z',
+}
+
 describe('workspace web app', () => {
   it('renders a browser page backed by local API endpoints', () => {
     const html = renderWorkspaceWebHtml()
@@ -22,6 +32,8 @@ describe('workspace web app', () => {
     expect(html).toContain('CodeMind Workspace')
     expect(html).toContain('/api/health')
     expect(html).toContain('/api/providers')
+    expect(html).toContain('/api/aelib')
+    expect(html).toContain('AELIB-X1YA0I')
     expect(html).toContain('no provider invocation')
     expect(html).not.toContain('AELIB connected')
   })
@@ -45,10 +57,11 @@ describe('workspace web app', () => {
     ).toBe(true)
   })
 
-  it('renders health and provider API responses', () => {
+  it('renders health, provider, and AELIB API responses', async () => {
     const snapshot = buildWorkspaceWebSnapshot(WORKSPACE)
     const health = renderWorkspaceWebResponse('/api/health', () => snapshot)
     const providers = renderWorkspaceWebResponse('/api/providers', () => snapshot)
+    const aelib = await renderAelibWebResponse(async () => AELIB_STATUS)
 
     expect(health.statusCode).toBe(200)
     expect(health.contentType).toContain('application/json')
@@ -57,6 +70,10 @@ describe('workspace web app', () => {
     expect(providers.statusCode).toBe(200)
     expect(providers.contentType).toContain('application/json')
     expect(JSON.parse(providers.body).statuses.length).toBeGreaterThan(0)
+
+    expect(aelib.statusCode).toBe(200)
+    expect(aelib.contentType).toContain('application/json')
+    expect(JSON.parse(aelib.body).state).toBe('NOT_CONFIGURED')
   })
 
   it('returns 404 for unknown routes', () => {

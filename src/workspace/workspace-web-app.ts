@@ -1,5 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 
+import { checkAelibConnection, type AelibConnectorStatus } from '../aelib/aelib-connector.js'
 import { ProviderGateway } from '../providers/provider-gateway.js'
 import type {
   ProviderStatusReport,
@@ -35,10 +36,13 @@ export interface WorkspaceWebHttpResponse {
   readonly body: string
 }
 
+export type WorkspaceWebAelibStatusFactory = () => Promise<AelibConnectorStatus>
+
 export interface WorkspaceWebServerOptions {
   readonly host: string
   readonly port: number
   readonly snapshotFactory: () => WorkspaceWebSnapshot
+  readonly aelibStatusFactory?: WorkspaceWebAelibStatusFactory
 }
 
 export interface StartedWorkspaceWebServer {
@@ -112,7 +116,7 @@ export function renderWorkspaceWebHtml(): string {
 <body>
   <main>
     <h1>CodeMind Workspace</h1>
-    <p>This is a local runtime API surface. It reports workspace and provider readiness from CodeMind. It does not execute shell commands, mutate files, or claim external providers are connected without real local evidence.</p>
+    <p>This is a local runtime API surface. It reports workspace, provider, and AELIB-X1YA0I readiness from CodeMind. It does not execute shell commands, mutate files, invoke LLM providers, or claim external systems are connected without real local evidence.</p>
     <section class="grid">
       <article class="card">
         <div class="label">Local API</div>
@@ -125,8 +129,13 @@ export function renderWorkspaceWebHtml(): string {
         <p id="provider-summary">Waiting for /api/providers.</p>
       </article>
       <article class="card">
+        <div class="label">AELIB-X1YA0I</div>
+        <h2 id="aelib-status">Checking...</h2>
+        <p id="aelib-summary">Waiting for /api/aelib.</p>
+      </article>
+      <article class="card">
         <div class="label">Boundary</div>
-        <p>No file writes, no shell execution, no provider invocation, and no external API calls are performed by this page.</p>
+        <p>No file writes, no shell execution, and no provider invocation are performed by this page. The AELIB health check only calls the configured AELIB endpoint when CODEMIND_AELIB_ENDPOINT is set.</p>
       </article>
     </section>
     <h2>Runtime payload</h2>
@@ -145,8 +154,14 @@ export function renderWorkspaceWebHtml(): string {
       return 'fail';
     }
 
-    Promise.all([loadJson('/api/health'), loadJson('/api/providers')])
-      .then(([health, providers]) => {
+    function classForAelibState(state) {
+      if (state === 'CONNECTED') return 'ok';
+      if (state === 'NOT_CONFIGURED' || state === 'MISCONFIGURED') return 'warn';
+      return 'fail';
+    }
+
+    Promise.all([loadJson('/api/health'), loadJson('/api/providers'), loadJson('/api/aelib')])
+      .then(([health, providers, aelib]) => {
         document.getElementById('api-status').textContent = 'Live local API';
         document.getElementById('api-status').className = 'ok';
         document.getElementById('workspace-summary').textContent = health.workspace.primary.displayName + ' — ' + health.workspace.repoCount + ' repo(s)';
@@ -156,7 +171,12 @@ export function renderWorkspaceWebHtml(): string {
         document.getElementById('provider-status').textContent = configured + '/' + total + ' configured';
         document.getElementById('provider-status').className = configured > 0 ? 'ok' : 'warn';
         document.getElementById('provider-summary').innerHTML = providers.statuses.map((provider) => '<span class="' + classForStatus(provider.status) + '">' + provider.providerId + ': ' + provider.status + '</span>').join('<br>');
-        document.getElementById('payload').textContent = JSON.stringify({ health, providers }, null, 2);
+
+        document.getElementById('aelib-status').textContent = aelib.state;
+        document.getElementById('aelib-status').className = classForAelibState(aelib.state);
+        document.getElementById('aelib-summary').textContent = aelib.detail;
+
+        document.getElementById('payload').textContent = JSON.stringify({ health, providers, aelib }, null, 2);
       })
       .catch((error) => {
         document.getElementById('api-status').textContent = 'Local API unavailable';
@@ -201,22 +221,38 @@ export function renderWorkspaceWebResponse(
   return textResponse(404, `Not found: ${url.pathname}`)
 }
 
+export async function renderAelibWebResponse(
+  aelibStatusFactory: WorkspaceWebAelibStatusFactory = () => checkAelibConnection(),
+): Promise<WorkspaceWebHttpResponse> {
+  return jsonResponse(await aelibStatusFactory())
+}
+
 export function createWorkspaceWebRequestHandler(
   snapshotFactory: () => WorkspaceWebSnapshot,
+  aelibStatusFactory: WorkspaceWebAelibStatusFactory = () => checkAelibConnection(),
 ): (request: IncomingMessage, response: ServerResponse) => void {
   return (request, response) => {
-    const rendered = renderWorkspaceWebResponse(request.url ?? '/', snapshotFactory)
-    response.statusCode = rendered.statusCode
-    response.setHeader('content-type', rendered.contentType)
-    response.setHeader('cache-control', 'no-store')
-    response.end(rendered.body)
+    void (async () => {
+      const url = new URL(request.url ?? '/', 'http://localhost')
+      const rendered =
+        url.pathname === '/api/aelib'
+          ? await renderAelibWebResponse(aelibStatusFactory)
+          : renderWorkspaceWebResponse(request.url ?? '/', snapshotFactory)
+
+      response.statusCode = rendered.statusCode
+      response.setHeader('content-type', rendered.contentType)
+      response.setHeader('cache-control', 'no-store')
+      response.end(rendered.body)
+    })()
   }
 }
 
 export async function startWorkspaceWebServer(
   options: WorkspaceWebServerOptions,
 ): Promise<StartedWorkspaceWebServer> {
-  const server = createServer(createWorkspaceWebRequestHandler(options.snapshotFactory))
+  const server = createServer(
+    createWorkspaceWebRequestHandler(options.snapshotFactory, options.aelibStatusFactory),
+  )
 
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject)
