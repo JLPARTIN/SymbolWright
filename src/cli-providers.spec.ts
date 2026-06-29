@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import { renderProvidersCommand } from './cli-providers.js'
 
+const OPENAI_API_KEY_ENV = 'OPENAI_API_KEY'
+
 describe('renderProvidersCommand', () => {
   it('renders provider list without exposing secrets', () => {
-    const previous = process.env.OPENAI_API_KEY
-    process.env.OPENAI_API_KEY = 'openai-secret-value'
+    const previous = process.env[OPENAI_API_KEY_ENV]
+    process.env[OPENAI_API_KEY_ENV] = 'openai-secret-value'
 
     try {
       const output = renderProvidersCommand(['list'])
@@ -16,9 +18,9 @@ describe('renderProvidersCommand', () => {
       expect(output).not.toContain('openai-secret-value')
     } finally {
       if (previous === undefined) {
-        delete process.env.OPENAI_API_KEY
+        delete process.env[OPENAI_API_KEY_ENV]
       } else {
-        process.env.OPENAI_API_KEY = previous
+        process.env[OPENAI_API_KEY_ENV] = previous
       }
     }
   })
