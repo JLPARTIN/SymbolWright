@@ -88,7 +88,7 @@ function resolveProviderConfig(
     displayName: adapter.displayName,
     enabled: readEnv(env, `CODEMIND_PROVIDER_${providerId.toUpperCase()}_DISABLED`) !== '1',
     baseUrl: resolveBaseUrl(providerId, env),
-    apiKey,
+    ...(apiKey === undefined ? {} : { apiKey }),
     defaultModel: DEFAULT_MODELS[providerId],
     capabilities: adapter.capabilities,
   }
@@ -98,10 +98,12 @@ export function loadProviderGatewayConfig(env: ProviderGatewayEnv = process.env)
   const providers = Object.fromEntries(
     CODEMIND_PROVIDER_ADAPTERS.map((adapter) => [adapter.id, resolveProviderConfig(adapter.id, env)]),
   ) as Record<CodemindProviderId, ProviderResolvedConfig>
+  const activeProvider = parseProviderId(readEnv(env, 'CODEMIND_PROVIDER'))
+  const activeModel = readEnv(env, 'CODEMIND_MODEL')
 
   return {
-    activeProvider: parseProviderId(readEnv(env, 'CODEMIND_PROVIDER')),
-    activeModel: readEnv(env, 'CODEMIND_MODEL'),
+    ...(activeProvider === undefined ? {} : { activeProvider }),
+    ...(activeModel === undefined ? {} : { activeModel }),
     fallbackProviders: parseProviderList(readEnv(env, 'CODEMIND_PROVIDER_FALLBACKS')),
     providers,
   }
