@@ -80,7 +80,13 @@ describe('createProviderGatewayLlmProvider', () => {
     for await (const _event of provider.complete([
       {
         role: 'tool_result',
-        content: [{ type: 'tool_result', toolUseId: 'tool-1', content: 'tool output' }],
+        content: [
+          {
+            type: 'tool_result',
+            toolUseId: 'tool-1',
+            content: 'tool output',
+          },
+        ],
       },
     ])) {
       // consume stream
