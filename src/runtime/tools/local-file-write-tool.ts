@@ -58,7 +58,7 @@ function parseLocalFileWriteToolInput(input: unknown): LocalFileWriteToolInput {
 export const localFileWriteTool: RuntimeToolDefinition = {
   name: 'local_file_write',
   description:
-    'Write a file in the active workspace, with dryRun available as an explicit preview mode.',
+    'Write a file in the active workspace through the zero-trust sandbox runner, with dryRun available as an explicit preview mode.',
   capability: 'LOCAL_FILE_WRITE',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const parsed = parseLocalFileWriteToolInput(input)
@@ -79,7 +79,13 @@ export const localFileWriteTool: RuntimeToolDefinition = {
       return [gateOutput, '', '---', '', auditOutput].join('\n')
     }
 
-    const execResult = executeLocalFileWrite(request, context.cwd, context.policy, context.approval)
+    const execResult = executeLocalFileWrite(
+      request,
+      context.cwd,
+      context.policy,
+      context.approval,
+      context.sandboxFileWriter,
+    )
     const execOutput = renderLocalFileWriteExecutionResult(execResult)
     const auditEvent = createLocalFileWriteExecutionAuditEvent(execResult, context.approval)
     const sections: string[] = [execOutput]
