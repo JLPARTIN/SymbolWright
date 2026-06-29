@@ -1,12 +1,9 @@
 import type { CodemindProviderId } from './provider-adapter-contract.js'
+import { findProviderGatewayAdapter } from './provider-adapters.js'
 import { loadProviderGatewayConfig } from './provider-config.js'
 import { ProviderGatewayError, normalizeProviderGatewayError } from './provider-errors.js'
 import { FetchProviderHttpTransport } from './provider-http-transport.js'
-import { findProviderGatewayAdapter } from './provider-adapters.js'
-import {
-  redactProviderGatewayConfig,
-  type RedactedProviderGatewayConfig,
-} from './provider-redaction.js'
+import { redactProviderGatewayConfig } from './provider-redaction.js'
 import type {
   ProviderGatewayAdapter,
   ProviderGatewayConfig,
@@ -14,6 +11,7 @@ import type {
   ProviderGatewayResponse,
   ProviderHttpTransport,
   ProviderStatusReport,
+  RedactedProviderGatewayConfig,
 } from './provider-gateway.types.js'
 
 export interface ProviderGatewayOptions {
@@ -80,8 +78,7 @@ export class ProviderGateway {
     }
 
     throw (
-      lastError ??
-      new ProviderGatewayError('NO_AVAILABLE_PROVIDER', 'No configured provider was available')
+      lastError ?? new ProviderGatewayError('NO_AVAILABLE_PROVIDER', 'No configured provider was available')
     )
   }
 
