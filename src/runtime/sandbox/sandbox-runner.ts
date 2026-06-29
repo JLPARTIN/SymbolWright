@@ -72,17 +72,17 @@ const DEFAULT_MAX_OUTPUT_BYTES = 1024 * 1024
 const FILE_WRITE_SCRIPT = [
   "const fs = require('node:fs')",
   "const path = require('node:path')",
-  "const targetPath = process.argv[1]",
-  "const chunks = []",
+  'const targetPath = process.argv[1]',
+  'const chunks = []',
   "process.stdin.on('data', (chunk) => chunks.push(chunk))",
   "process.stdin.on('end', () => {",
   "  const root = path.resolve('/workspace')",
-  "  const target = path.resolve(root, targetPath)",
-  "  if (target !== root && !target.startsWith(root + path.sep)) {",
+  '  const target = path.resolve(root, targetPath)',
+  '  if (target !== root && !target.startsWith(root + path.sep)) {',
   "    console.error('workspace boundary escaped')",
-  "    process.exit(71)",
+  '    process.exit(71)',
   '  }',
-  "  fs.mkdirSync(path.dirname(target), { recursive: true })",
+  '  fs.mkdirSync(path.dirname(target), { recursive: true })',
   "  fs.writeFileSync(target, Buffer.concat(chunks).toString('utf8'), { encoding: 'utf8', mode: 0o600 })",
   '})',
 ].join(';')
@@ -146,7 +146,11 @@ export function buildDockerRunArgs(
   request: SandboxCommandRequest,
   options: DockerSandboxRunnerOptions = {},
 ): readonly string[] {
-  return [...buildDockerWorkspaceArgs(request.workspaceRoot, options), request.binary, ...request.args]
+  return [
+    ...buildDockerWorkspaceArgs(request.workspaceRoot, options),
+    request.binary,
+    ...request.args,
+  ]
 }
 
 export function buildDockerFileWriteArgs(
