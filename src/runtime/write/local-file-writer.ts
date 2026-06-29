@@ -1,10 +1,7 @@
 import fs from 'node:fs'
 
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
-import {
-  DockerSandboxFileWriter,
-  type SandboxFileWriter,
-} from '../sandbox/sandbox-runner.js'
+import { DockerSandboxFileWriter, type SandboxFileWriter } from '../sandbox/sandbox-runner.js'
 import { evaluateLocalFileWriteGate, type LocalFileWriteRequest } from './local-file-write-gate.js'
 import { buildLocalFileWriteDiff, type LocalFileWriteDiff } from './local-file-write-diff.js'
 import type { LocalFileWriteExecutionResult } from './local-file-write-result.js'
