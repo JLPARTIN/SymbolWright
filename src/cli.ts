@@ -23,6 +23,7 @@ import { renderGitHubWriteExecutorCommand } from './cli-github-write-executor.js
 import { runIndexCommand } from './cli-index.js'
 import { renderMissionPacketCommand } from './cli-mission-packet.js'
 import { renderProjectContextCommand } from './cli-project-context.js'
+import { renderProvidersCommand } from './cli-providers.js'
 import { renderReleaseReadinessCommand } from './cli-release-readiness.js'
 import { renderRepairLoopCommand } from './cli-repair-loop.js'
 import { renderRuntimeAjnaLiveRead } from './cli-runtime-ajna-live-read.js'
@@ -85,6 +86,10 @@ async function main(): Promise<void> {
 
     case 'agent':
       await runAgentCommand(rest)
+      break
+
+    case 'providers':
+      console.log(renderProvidersCommand(rest))
       break
 
     case 'sessions': {
