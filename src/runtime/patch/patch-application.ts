@@ -1,4 +1,5 @@
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import type { SandboxFileWriter } from '../sandbox/sandbox-runner.js'
 import {
   evaluateLocalFileWriteGate,
   type LocalFileWriteRequest,
@@ -49,6 +50,7 @@ export function applyStructuredPatch(
   workspaceRoot: string,
   policy: RuntimePolicySnapshot,
   approval: RuntimeApproval | undefined,
+  sandboxFileWriter?: SandboxFileWriter,
 ): PatchApplicationResult {
   const blockReasons: string[] = []
 
@@ -93,16 +95,17 @@ export function applyStructuredPatch(
   }
 
   const fileResults = writeRequests.map((writeRequest) =>
-    executeLocalFileWrite(writeRequest, workspaceRoot, policy, approval),
+    executeLocalFileWrite(writeRequest, workspaceRoot, policy, approval, sandboxFileWriter),
   )
+  const failedResults = fileResults.filter((result) => result.outcome === 'BLOCKED')
 
   return {
-    outcome: request.dryRun ? 'DRY_RUN' : 'APPLIED',
+    outcome: failedResults.length > 0 ? 'BLOCKED' : request.dryRun ? 'DRY_RUN' : 'APPLIED',
     reason: request.reason,
     rollbackNote: request.rollbackNote,
     dryRun: request.dryRun,
     fileResults,
-    blockReasons: [],
+    blockReasons: failedResults.flatMap((result) => result.gateResult.blockReasons),
   }
 }
 
@@ -134,7 +137,7 @@ export function renderPatchApplicationResult(result: PatchApplicationResult): st
   }
 
   if (result.outcome === 'APPLIED') {
-    lines.push('', 'Approved structured patch applied.')
+    lines.push('', 'Structured patch applied through the sandbox runner.')
   }
 
   return lines.join('\n')
