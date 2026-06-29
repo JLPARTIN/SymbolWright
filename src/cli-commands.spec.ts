@@ -257,8 +257,8 @@ describe('renderStatus', () => {
     expect(renderStatus()).toContain('CodeMind')
   })
 
-  it('shows the primary capability', () => {
-    expect(renderStatus()).toContain('Primary capability')
+  it('shows the capability label', () => {
+    expect(renderStatus()).toContain('Capability:')
   })
 })
 
