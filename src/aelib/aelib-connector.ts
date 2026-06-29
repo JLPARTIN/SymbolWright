@@ -1,11 +1,7 @@
 export const AELIB_CONNECTOR_ID = 'AELIB-X1YA0I' as const
 export const DEFAULT_AELIB_HEALTH_PATH = '/health' as const
 
-export type AelibConnectorState =
-  | 'NOT_CONFIGURED'
-  | 'MISCONFIGURED'
-  | 'UNREACHABLE'
-  | 'CONNECTED'
+export type AelibConnectorState = 'NOT_CONFIGURED' | 'MISCONFIGURED' | 'UNREACHABLE' | 'CONNECTED'
 
 export interface AelibConnectorEnv {
   readonly CODEMIND_AELIB_ENDPOINT?: string | undefined
