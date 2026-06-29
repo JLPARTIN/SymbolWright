@@ -6,6 +6,7 @@ import {
   buildWorkspaceState,
   renderWorkspaceState,
   renderWorkspaceJson,
+  renderWorkspaceServePlan,
 } from './cli-workspace.js'
 
 describe('parseWorkspaceArgs', () => {
@@ -16,8 +17,23 @@ describe('parseWorkspaceArgs', () => {
     })
   })
 
+  it('parses serve host and port flags', () => {
+    expect(parseWorkspaceArgs(['--serve', '--host', '0.0.0.0', '--port', '3005'])).toEqual({
+      json: false,
+      serve: true,
+      host: '0.0.0.0',
+      port: 3005,
+    })
+  })
+
   it('omits blank missions', () => {
     expect(parseWorkspaceArgs([])).toEqual({ json: false })
+  })
+
+  it('rejects invalid ports', () => {
+    expect(() => parseWorkspaceArgs(['--serve', '--port', '99999'])).toThrow(
+      'Invalid workspace port',
+    )
   })
 
   it('rejects unknown flags', () => {
@@ -96,6 +112,19 @@ describe('renderWorkspaceJson', () => {
   })
 })
 
+describe('renderWorkspaceServePlan', () => {
+  it('renders the real local web API endpoints and boundary', () => {
+    const output = renderWorkspaceServePlan({ json: false, serve: true, port: 3005 })
+
+    expect(output).toContain('CodeMind Workspace Web Surface')
+    expect(output).toContain('http://127.0.0.1:3005')
+    expect(output).toContain('GET /api/health')
+    expect(output).toContain('GET /api/providers')
+    expect(output).toContain('no browser shell execution')
+    expect(output).toContain('no fake external connection state')
+  })
+})
+
 describe('renderWorkspaceCommand', () => {
   it('renders real workspace state for text output', () => {
     const output = renderWorkspaceCommand([])
@@ -117,5 +146,12 @@ describe('renderWorkspaceCommand', () => {
     expect(parsed.command).toBe('codemind-workspace')
     expect(parsed.cwd).toBeTruthy()
     expect(parsed.repoCount).toBe(1)
+  })
+
+  it('renders serve plan without starting the server in pure render mode', () => {
+    const output = renderWorkspaceCommand(['--serve', '--port', '3005'])
+
+    expect(output).toContain('CodeMind Workspace Web Surface')
+    expect(output).toContain('GET /api/providers')
   })
 })
