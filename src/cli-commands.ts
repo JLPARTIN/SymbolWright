@@ -45,10 +45,6 @@ export const CODEMIND_CLI_COMMANDS = [
     description: 'Run a bounded runtime loop with operator controls and JSON output',
   },
   {
-    name: 'runtime run <goal> --approval-ticket <id>',
-    description: 'Render runtime execution with audit output',
-  },
-  {
     name: 'live-read-policy <json-file>',
     description: 'Evaluate live read policy handshake from a local JSON fixture',
   },
@@ -241,25 +237,31 @@ export function renderHelp(): string {
 }
 
 export function renderStatus(): string {
-  const snap = getCodemindFoundationSnapshot()
+  const snapshot = getCodemindFoundationSnapshot()
   const nextPhase = getNextRuntimeBuildPhase()
-  const lines = [
-    `Platform:           ${snap.platform}`,
-    `Capability:         ${snap.primaryCapability}`,
-    `Posture:            ${snap.posture.join(', ')}`,
-    `Runtime phases:     ${getCompletedRuntimeBuildPhaseCount()} complete`,
-    `Next runtime phase: ${nextPhase === undefined ? 'none' : `Phase ${nextPhase.id} — ${nextPhase.title}`}`,
-    `Mutation:           ${snap.mutationEnabled ? 'ENABLED' : 'DISABLED'}`,
-    `GitHub write:       ${snap.githubWriteEnabled ? 'ENABLED' : 'DISABLED'}`,
-    `Bash execution:     ${snap.bashExecutionEnabled ? 'ENABLED' : 'DISABLED'}`,
-    `Network ingestion:  ${snap.networkIngestionEnabled ? 'ENABLED' : 'DISABLED'}`,
-  ]
-  return lines.join('\n')
+  return [
+    'CodeMind status',
+    '',
+    `Mode: ${snapshot.mode}`,
+    `Primary capability: ${snapshot.primaryCapability}`,
+    `Runtime build phases complete: ${getCompletedRuntimeBuildPhaseCount()}`,
+    nextPhase === undefined
+      ? 'Next runtime build phase: none'
+      : `Next runtime build phase: Phase ${nextPhase.id} — ${nextPhase.title}`,
+    '',
+    'Active surfaces:',
+    ...snapshot.activeSurfaces.map((surface) => `- ${surface}`),
+    '',
+    'Policy:',
+    ...snapshot.policy.map((item) => `- ${item}`),
+  ].join('\n')
 }
 
 export function renderNotYetActive(command: string): string {
   return [
-    `codemind ${command}: not yet active — awaiting runtime phase`,
-    'Run "codemind help" for available commands.',
+    `Command not active yet: ${command}`,
+    '',
+    'This command is reserved for a later CodeMind runtime phase.',
+    'Run "codemind status" to see the current activation surface.',
   ].join('\n')
 }
