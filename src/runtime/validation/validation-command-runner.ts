@@ -1,6 +1,9 @@
-import { spawnSync } from 'node:child_process'
-
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import {
+  DockerSandboxRunner,
+  parseWorkspaceCommand,
+  type SandboxRunner,
+} from '../sandbox/sandbox-runner.js'
 import {
   evaluateValidationCommandGate,
   type ValidationCommandGateResult,
@@ -18,27 +21,13 @@ export interface ValidationCommandExecutionResult {
   readonly error: string | null
 }
 
-const MAX_OUTPUT_LENGTH = 8_000
-const VALIDATION_TIMEOUT_MS = 120_000
-
-function sanitizeOutput(output: string): string {
-  if (output.length <= MAX_OUTPUT_LENGTH) {
-    return output
-  }
-
-  return `${output.slice(0, MAX_OUTPUT_LENGTH)}\n[output truncated]`
-}
-
-function commandToArgs(command: string): readonly string[] {
-  return command.split(' ')
-}
-
-export function executeValidationCommand(
+export async function executeValidationCommand(
   request: ValidationCommandRequest,
   cwd: string,
   policy: RuntimePolicySnapshot,
   approval: RuntimeApproval | undefined,
-): ValidationCommandExecutionResult {
+  sandboxRunner: SandboxRunner = new DockerSandboxRunner(),
+): Promise<ValidationCommandExecutionResult> {
   const gateResult = evaluateValidationCommandGate(request, policy, approval)
 
   if (gateResult.decision === 'BLOCKED') {
@@ -63,38 +52,50 @@ export function executeValidationCommand(
     }
   }
 
-  const [command, ...args] = commandToArgs(gateResult.command)
-
-  if (command === undefined) {
+  let parsedCommand
+  try {
+    parsedCommand = parseWorkspaceCommand(gateResult.command)
+  } catch (error) {
     return {
       outcome: 'BLOCKED',
-      gateResult,
+      gateResult: {
+        ...gateResult,
+        decision: 'BLOCKED',
+        blockReasons: [
+          ...gateResult.blockReasons,
+          error instanceof Error ? error.message : String(error),
+        ],
+      },
       exitCode: null,
       stdout: '',
       stderr: '',
-      error: 'Validation command resolved to an empty executable.',
+      error: error instanceof Error ? error.message : String(error),
     }
   }
 
-  const result = spawnSync(command, args, {
-    cwd,
-    encoding: 'utf8',
-    shell: false,
-    timeout: VALIDATION_TIMEOUT_MS,
-    env: {
-      PATH: process.env['PATH'] ?? '',
-      NODE_ENV: process.env['NODE_ENV'] ?? 'test',
-      npm_config_cache: process.env['npm_config_cache'] ?? '',
-    },
+  const result = await sandboxRunner.runCommand({
+    ...parsedCommand,
+    workspaceRoot: cwd,
   })
+
+  if (result.outcome === 'BLOCKED') {
+    return {
+      outcome: 'BLOCKED',
+      gateResult,
+      exitCode: result.exitCode,
+      stdout: result.stdout,
+      stderr: result.stderr,
+      error: result.reason,
+    }
+  }
 
   return {
     outcome: 'EXECUTED',
     gateResult,
-    exitCode: typeof result.status === 'number' ? result.status : null,
-    stdout: sanitizeOutput(result.stdout ?? ''),
-    stderr: sanitizeOutput(result.stderr ?? ''),
-    error: result.error instanceof Error ? result.error.message : null,
+    exitCode: result.exitCode,
+    stdout: result.stdout,
+    stderr: result.stderr,
+    error: null,
   }
 }
 
@@ -120,7 +121,7 @@ export function renderValidationCommandExecutionResult(
   }
 
   if (result.outcome === 'EXECUTED') {
-    sections.push('', 'Approved validation command executed.')
+    sections.push('', 'Approved validation command executed in the sandbox runner.')
   }
 
   if (result.stdout.length > 0) {
