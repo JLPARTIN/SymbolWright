@@ -45,7 +45,7 @@ describe('ProviderGateway', () => {
     expect(result.text).toBe('OpenAI response')
     expect(result.usage?.totalTokens).toBe(15)
     expect(transport.requests[0]?.url).toBe('https://api.openai.com/v1/chat/completions')
-    expect(transport.requests[0]?.headers.authorization).toBe('Bearer openai-secret')
+    expect(transport.requests[0]?.headers['authorization']).toBe('Bearer openai-secret')
     expect(JSON.parse(transport.requests[0]?.body ?? '{}')).toMatchObject({
       model: 'gpt-test',
       messages: [{ role: 'user', content: 'hello' }],
