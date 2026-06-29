@@ -60,7 +60,9 @@ describe('workspace web app', () => {
   })
 
   it('returns 404 for unknown routes', () => {
-    const response = renderWorkspaceWebResponse('/missing', () => buildWorkspaceWebSnapshot(WORKSPACE))
+    const response = renderWorkspaceWebResponse('/missing', () =>
+      buildWorkspaceWebSnapshot(WORKSPACE),
+    )
 
     expect(response.statusCode).toBe(404)
     expect(response.body).toContain('Not found')
