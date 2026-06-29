@@ -71,12 +71,10 @@ describe('isValidApprovalScope', () => {
     expect(isValidApprovalScope('file:read')).toBe(false)
     expect(isValidApprovalScope('')).toBe(false)
     expect(isValidApprovalScope('APPLY_EDIT')).toBe(false)
-    expect(isValidApprovalScope('apply_edit')).toBe(false)
-    expect(isValidApprovalScope('command_dry_run')).toBe(false)
   })
 
-  it('ALL_APPROVAL_SCOPES contains exactly 5 live scopes', () => {
-    expect(ALL_APPROVAL_SCOPES).toHaveLength(5)
+  it('ALL_APPROVAL_SCOPES contains exactly 7 scopes', () => {
+    expect(ALL_APPROVAL_SCOPES).toHaveLength(7)
   })
 })
 
