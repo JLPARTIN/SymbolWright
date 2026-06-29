@@ -229,7 +229,9 @@ export function validateCodemindConfig(config: CodemindConfig): CodemindConfigVa
       ...(config.model !== undefined ? { model: config.model } : {}),
       ...(config.maxTokens !== undefined ? { maxTokens: config.maxTokens } : {}),
       ...(config.baseURL !== undefined ? { baseURL: config.baseURL } : {}),
-      ...(config.embeddingProvider !== undefined ? { embeddingProvider: config.embeddingProvider } : {}),
+      ...(config.embeddingProvider !== undefined
+        ? { embeddingProvider: config.embeddingProvider }
+        : {}),
       hasVoyageApiKey,
       ...(config.runtimeMode !== undefined ? { runtimeMode: config.runtimeMode } : {}),
     },
