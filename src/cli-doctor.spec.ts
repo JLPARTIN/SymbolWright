@@ -53,6 +53,16 @@ describe('runDoctor', () => {
     expect(safetyCheck?.status).toBe('WARN')
   })
 
+  it('checks provider gateway readiness without requiring live provider calls', () => {
+    const report = runDoctor(WORKSPACE)
+    const providerCheck = report.checks.find((c) => c.name === 'Provider gateway')
+
+    expect(providerCheck).toBeDefined()
+    expect(providerCheck?.status).not.toBe('FAIL')
+    expect(providerCheck?.detail).toContain('providers registered')
+    expect(providerCheck?.detail).toContain('secrets redacted')
+  })
+
   it('detects missing workspace', () => {
     const report = runDoctor('/nonexistent/path')
 
@@ -70,5 +80,12 @@ describe('renderDoctorReport', () => {
     expect(output).toContain('HEALTHY')
     expect(output).toContain('[PASS]')
     expect(output).toContain('passed')
+  })
+
+  it('renders provider gateway proof', () => {
+    const output = renderDoctorReport(runDoctor(WORKSPACE))
+
+    expect(output).toContain('Provider gateway')
+    expect(output).toContain('secrets redacted')
   })
 })
