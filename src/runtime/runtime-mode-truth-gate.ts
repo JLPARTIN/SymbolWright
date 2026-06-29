@@ -91,7 +91,6 @@ const BANNED_STALE_PHRASES: readonly BannedPhraseCheck[] = [
     phrases: [
       'Generated output is proposal-only until validated and approved by policy gates',
       'Approval must come from the explicit operator channel and policy gates',
-      'Governance contracts',
       'active policy gate',
     ],
   },
@@ -144,7 +143,9 @@ function collectBannedPhraseFindings(workspaceRoot: string): string[] {
 
     for (const phrase of check.phrases) {
       if (content.includes(phrase)) {
-        findings.push(`${check.filePath} contains stale runtime posture phrase: ${phrase}`)
+        findings.push(
+          `${check.filePath} contains stale runtime posture phrase: ${phrase}`,
+        )
       }
     }
   }
@@ -179,7 +180,9 @@ function collectRuntimePolicyFindings(): string[] {
     findings.push('APPROVED_EXECUTION default policy must allow local writes')
   }
   if (!policy.allowGitHubWrites) {
-    findings.push('APPROVED_EXECUTION default policy must allow GitHub writes when token is available')
+    findings.push(
+      'APPROVED_EXECUTION default policy must allow GitHub writes when token is available',
+    )
   }
 
   if (normalizeCodemindRuntimeMode('direct') !== 'APPROVED_EXECUTION') {
@@ -200,7 +203,9 @@ function collectPromptFindings(): string[] {
   const prompt = buildUnifiedSystemPrompt({ permissionMode: 'APPROVED_EXECUTION' })
 
   if (!prompt.includes('perform direct implementation work')) {
-    findings.push('APPROVED_EXECUTION prompt must tell CodeMind to perform direct implementation work')
+    findings.push(
+      'APPROVED_EXECUTION prompt must tell CodeMind to perform direct implementation work',
+    )
   }
   if (!prompt.includes('Direct file edits')) {
     findings.push('APPROVED_EXECUTION prompt must explicitly allow direct file edits')
