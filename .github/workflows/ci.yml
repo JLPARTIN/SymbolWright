@@ -54,5 +54,5 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Release readiness
-        run: npm run release-readiness
+      - name: Validate
+        run: npm run validate
