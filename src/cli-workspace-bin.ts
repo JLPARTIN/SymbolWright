@@ -1,6 +1,10 @@
 #!/usr/bin/env node
-import { renderWorkspaceCommand } from './cli-workspace.js'
+import { runWorkspaceCommand } from './cli-workspace.js'
 
 const [, , ...args] = process.argv
 
-console.log(renderWorkspaceCommand(args))
+runWorkspaceCommand(args).catch((error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error)
+  console.error(message)
+  process.exit(1)
+})
