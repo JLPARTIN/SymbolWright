@@ -81,7 +81,6 @@ codemind pr-notes --fixture-file <json-file>
 codemind ci-review [source]
 codemind ci-review --fixture-file <json-file>
 codemind runtime run <goal> --read-only
-codemind runtime run <goal> --approval-ticket <id>
 codemind live-read-policy <json-file>
 codemind live-read-client-fixture <json-file>
 codemind github-live-read <json-file>
@@ -148,7 +147,7 @@ codemind propose-patch "draft the change only"
 codemind ci-review "local fixture"
 ```
 
-The legacy `codemind runtime run` paths remain bounded runtime workflows. They are separate from the direct `codemind agent` surface.
+The legacy `codemind runtime run` path remains a bounded read-only runtime workflow. It is separate from the direct `codemind agent` surface.
 
 ## Hard Safety Rails
 
@@ -277,7 +276,7 @@ docs/build-state/CODEMIND_BUILD_LEDGER.md
 docs/context/CODEMIND_PROJECT_CONTEXT_KERNEL.md
 ```
 
-Some historical docs still use approval-era names because they describe earlier runtime phases. Current behavior is controlled by the runtime mode selected for the active command.
+Some historical docs still use approval-era names because they describe earlier runtime phases or migration notes. Current behavior is controlled by the runtime mode selected for the active command.
 
 ## Relationship to AELIB-X1YA0I
 
