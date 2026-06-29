@@ -7,6 +7,7 @@ import {
   RUNTIME_BUILD_PHASES,
 } from './runtime/runtime-build-state.js'
 import { resolveCodemindConfig, validateCodemindConfig } from './config/codemind-config.js'
+import { ProviderGateway } from './providers/provider-gateway.js'
 import { assembleAgentTools } from './runtime/tools/tool-assembly.js'
 import { resolveStoragePaths } from './storage/storage-paths.js'
 
@@ -130,6 +131,60 @@ function checkApiKey(): DoctorCheck {
   }
 }
 
+function checkProviderGateway(): DoctorCheck {
+  try {
+    const gateway = new ProviderGateway()
+    const redactedConfig = gateway.getRedactedConfig()
+    const statuses = gateway.getProviderStatuses()
+    const configuredCount = statuses.filter((status) => status.status === 'configured').length
+    const missingCredentialCount = statuses.filter(
+      (status) => status.status === 'missing_credentials',
+    ).length
+    const disabledCount = statuses.filter((status) => status.status === 'disabled').length
+    const hasUnexpectedSecretState = redactedConfig.providers.some(
+      (provider) => provider.apiKey !== 'configured' && provider.apiKey !== 'missing',
+    )
+
+    if (statuses.length === 0) {
+      return {
+        name: 'Provider gateway',
+        status: 'FAIL',
+        detail: 'No provider adapters registered',
+      }
+    }
+
+    if (hasUnexpectedSecretState) {
+      return {
+        name: 'Provider gateway',
+        status: 'FAIL',
+        detail: 'Provider report contains an unexpected secret state',
+      }
+    }
+
+    const detail = [
+      `${statuses.length} providers registered`,
+      `${configuredCount} configured`,
+      `${missingCredentialCount} missing credentials`,
+      `${disabledCount} disabled`,
+      `active=${redactedConfig.activeProvider ?? 'not configured'}`,
+      'secrets redacted',
+    ].join('; ')
+
+    return {
+      name: 'Provider gateway',
+      status: configuredCount > 0 ? 'PASS' : 'WARN',
+      detail,
+    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    return {
+      name: 'Provider gateway',
+      status: 'FAIL',
+      detail: `Provider gateway failed: ${message}`,
+    }
+  }
+}
+
 function checkToolRegistry(): DoctorCheck {
   const tools = assembleAgentTools()
   if (tools.length >= 30) {
@@ -193,6 +248,7 @@ export function runDoctor(workspaceRoot: string): DoctorReport {
     checkRuntimePhases(),
     checkSafetyPosture(),
     checkApiKey(),
+    checkProviderGateway(),
     checkToolRegistry(),
     checkSessionsDir(workspaceRoot),
     checkMemoryDir(workspaceRoot),
