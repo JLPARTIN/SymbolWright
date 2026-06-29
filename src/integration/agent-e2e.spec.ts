@@ -140,9 +140,9 @@ describe('agent-e2e', () => {
       const classified = classifyError(error)
       const formatted = formatErrorForUser(classified)
 
-      expect(classified.kind).toBe('rate_limit')
+      expect(classified.category).toBe('provider_error')
       expect(classified.retryable).toBe(true)
-      expect(formatted).toContain('rate limit')
+      expect(formatted).toContain('rate limited')
     })
 
     it('withRetry succeeds on second attempt', async () => {
@@ -153,7 +153,7 @@ describe('agent-e2e', () => {
           if (attempts === 1) throw new Error('network timeout')
           return 'success'
         },
-        { maxAttempts: 3, baseDelayMs: 1 },
+        { maxRetries: 3, baseDelayMs: 1, maxDelayMs: 1 },
       )
 
       expect(result).toBe('success')
@@ -171,10 +171,13 @@ describe('agent-e2e', () => {
 
   describe('cost calculation integration', () => {
     it('computes cost for known model', () => {
-      const cost = computeCost('claude-sonnet-4-20250514', {
-        inputTokens: 1_000_000,
-        outputTokens: 1_000_000,
-      })
+      const cost = computeCost(
+        {
+          inputTokens: 1_000_000,
+          outputTokens: 1_000_000,
+        },
+        'claude-sonnet-4-20250514',
+      )
 
       expect(cost).toBeGreaterThan(0)
     })
