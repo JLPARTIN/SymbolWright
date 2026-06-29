@@ -92,8 +92,7 @@ export async function executeBashTool(
 
 export const bashTool: RuntimeToolDefinition = {
   name: 'bash',
-  description:
-    'Execute a parameterized workspace command inside the zero-trust sandbox runner.',
+  description: 'Execute a parameterized workspace command inside the zero-trust sandbox runner.',
   capability: 'APPROVED_COMMAND',
   execute: async (input, context) =>
     executeBashTool(
