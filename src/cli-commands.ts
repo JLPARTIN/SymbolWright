@@ -237,24 +237,20 @@ export function renderHelp(): string {
 }
 
 export function renderStatus(): string {
-  const snapshot = getCodemindFoundationSnapshot()
+  const snap = getCodemindFoundationSnapshot()
   const nextPhase = getNextRuntimeBuildPhase()
-  return [
-    'CodeMind status',
-    '',
-    `Mode: ${snapshot.mode}`,
-    `Primary capability: ${snapshot.primaryCapability}`,
-    `Runtime build phases complete: ${getCompletedRuntimeBuildPhaseCount()}`,
-    nextPhase === undefined
-      ? 'Next runtime build phase: none'
-      : `Next runtime build phase: Phase ${nextPhase.id} — ${nextPhase.title}`,
-    '',
-    'Active surfaces:',
-    ...snapshot.activeSurfaces.map((surface) => `- ${surface}`),
-    '',
-    'Policy:',
-    ...snapshot.policy.map((item) => `- ${item}`),
-  ].join('\n')
+  const lines = [
+    `Platform:           ${snap.platform}`,
+    `Capability:         ${snap.primaryCapability}`,
+    `Posture:            ${snap.posture.join(', ')}`,
+    `Runtime phases:     ${getCompletedRuntimeBuildPhaseCount()} complete`,
+    `Next runtime phase: ${nextPhase === undefined ? 'none' : `Phase ${nextPhase.id} — ${nextPhase.title}`}`,
+    `Mutation:           ${snap.mutationEnabled ? 'ENABLED' : 'DISABLED'}`,
+    `GitHub write:       ${snap.githubWriteEnabled ? 'ENABLED' : 'DISABLED'}`,
+    `Bash execution:     ${snap.bashExecutionEnabled ? 'ENABLED' : 'DISABLED'}`,
+    `Network ingestion:  ${snap.networkIngestionEnabled ? 'ENABLED' : 'DISABLED'}`,
+  ]
+  return lines.join('\n')
 }
 
 export function renderNotYetActive(command: string): string {
