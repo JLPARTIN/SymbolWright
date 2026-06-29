@@ -56,14 +56,14 @@ describe('tool-schema-bridge', () => {
       expect(schema.required).toContain('query')
     })
 
-    it('returns schema for apply_edit_gated', () => {
-      const tool = makeTool('apply_edit_gated', 'APPROVED_EDIT')
+    it('returns schema for local_file_write', () => {
+      const tool = makeTool('local_file_write', 'LOCAL_FILE_WRITE')
       const schema = buildToolInputSchema(tool)
 
-      expect(schema.properties).toHaveProperty('path')
-      expect(schema.properties).toHaveProperty('proposedContent')
-      expect(schema.required).toContain('path')
-      expect(schema.required).toContain('proposedContent')
+      expect(schema.properties).toHaveProperty('targetPath')
+      expect(schema.properties).toHaveProperty('content')
+      expect(schema.required).toContain('targetPath')
+      expect(schema.required).toContain('content')
     })
 
     it('returns schema for pr_collaboration', () => {
@@ -200,7 +200,7 @@ describe('tool-schema-bridge', () => {
       makeTool('plan_goal', 'PLAN'),
       makeTool('read_file', 'READ'),
       makeTool('propose_edit', 'PROPOSE'),
-      makeTool('apply_edit_gated', 'APPROVED_EDIT'),
+      makeTool('local_file_write', 'LOCAL_FILE_WRITE'),
     ]
 
     it('filters tools by READ_ONLY mode', () => {
@@ -210,7 +210,7 @@ describe('tool-schema-bridge', () => {
       expect(names).toContain('plan_goal')
       expect(names).toContain('read_file')
       expect(names).not.toContain('propose_edit')
-      expect(names).not.toContain('apply_edit_gated')
+      expect(names).not.toContain('local_file_write')
     })
 
     it('filters tools by PLAN_ONLY mode', () => {
@@ -227,7 +227,7 @@ describe('tool-schema-bridge', () => {
       const names = bridged.map((bt) => bt.providerTool.name)
 
       expect(names).toContain('propose_edit')
-      expect(names).not.toContain('apply_edit_gated')
+      expect(names).not.toContain('local_file_write')
     })
 
     it('includes all tools in APPROVED_EXECUTION mode', () => {
