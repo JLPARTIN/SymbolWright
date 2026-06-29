@@ -27,7 +27,6 @@ import { renderProvidersCommand } from './cli-providers.js'
 import { renderReleaseReadinessCommand } from './cli-release-readiness.js'
 import { renderRepairLoopCommand } from './cli-repair-loop.js'
 import { renderRuntimeAjnaLiveRead } from './cli-runtime-ajna-live-read.js'
-import { renderRuntimeAjnaWorkflow } from './cli-runtime-ajna-workflow.js'
 import { renderRuntimeApplyPatch } from './cli-runtime-apply-patch.js'
 import { renderRuntimeCiReview } from './cli-runtime-ci-review.js'
 import { renderRuntimeGitHubLiveRead } from './cli-runtime-github-live-read.js'
@@ -49,10 +48,11 @@ import { renderRuntimeValidationCommand } from './cli-runtime-validation-command
 import { renderRuntimeValidationPlan } from './cli-runtime-validation-plan.js'
 import { renderRuntimeWorkflow } from './cli-runtime-workflow.js'
 import { renderRuntimeWriteIntent } from './cli-runtime-write-intent.js'
+import { renderRuntimeAjnaWorkflow } from './cli-runtime-ajna-workflow.js'
 import { renderScan, scanRepo } from './cli-scan.js'
 import { renderTraceStoreCommand } from './cli-trace-store.js'
 import { renderVersionCommand } from './cli-version.js'
-import { renderSessionsList, runAgentCommand } from './cli-agent.js'
+import { runAgentCommand, renderSessionsList } from './cli-agent.js'
 import { runOperatorCommand } from './operator/operator-console.js'
 import { SessionPersistence } from './storage/session-persistence.js'
 import { resolveStoragePaths } from './storage/storage-paths.js'
@@ -115,9 +115,7 @@ async function main(): Promise<void> {
       break
 
     case 'validation-plan':
-      console.log(
-        await renderRuntimeValidationPlan(rest.length > 0 ? rest.join(' ') : undefined),
-      )
+      console.log(await renderRuntimeValidationPlan(rest.length > 0 ? rest.join(' ') : undefined))
       break
 
     case 'propose-patch':
@@ -334,15 +332,8 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
 
   if (subcommand === 'review-pr') {
     console.log(
-      await renderAjnaReviewPrForFile(requireInput('codemind ajna review-pr <json-file>')),
-    )
-    return
-  }
-
-  if (subcommand === 'merge-readiness') {
-    console.log(
-      await renderAjnaMergeReadinessForFile(
-        requireInput('codemind ajna merge-readiness <json-file>'),
+      renderAjnaReviewPrForFile(
+        requireAjnaInput(maybeInput, 'codemind ajna review-pr <json-file>'),
       ),
     )
     return
@@ -350,8 +341,8 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
 
   if (subcommand === 'review-pr-github-fixture') {
     console.log(
-      await renderAjnaReviewPrGithubFixtureForFile(
-        requireInput('codemind ajna review-pr-github-fixture <json-file>'),
+      renderAjnaReviewPrGithubFixtureForFile(
+        requireAjnaInput(maybeInput, 'codemind ajna review-pr-github-fixture <json-file>'),
       ),
     )
     return
@@ -359,8 +350,8 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
 
   if (subcommand === 'review-pr-github-api-fixture') {
     console.log(
-      await renderAjnaReviewPrGithubApiFixtureForFile(
-        requireInput('codemind ajna review-pr-github-api-fixture <json-file>'),
+      renderAjnaReviewPrGithubApiFixtureForFile(
+        requireAjnaInput(maybeInput, 'codemind ajna review-pr-github-api-fixture <json-file>'),
       ),
     )
     return
@@ -369,7 +360,7 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'github-api-snapshot-fixture') {
     console.log(
       renderAjnaGithubApiSnapshotFixtureForFile(
-        requireInput('codemind ajna github-api-snapshot-fixture <json-file>'),
+        requireAjnaInput(maybeInput, 'codemind ajna github-api-snapshot-fixture <json-file>'),
       ),
     )
     return
@@ -378,7 +369,7 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'client-collector-fixture') {
     console.log(
       await renderAjnaClientCollectorFixtureForFile(
-        requireInput('codemind ajna client-collector-fixture <json-file>'),
+        requireAjnaInput(maybeInput, 'codemind ajna client-collector-fixture <json-file>'),
       ),
     )
     return
@@ -387,7 +378,10 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'review-pr-client-collector-fixture') {
     console.log(
       await renderAjnaReviewPrClientCollectorFixtureForFile(
-        requireInput('codemind ajna review-pr-client-collector-fixture <json-file>'),
+        requireAjnaInput(
+          maybeInput,
+          'codemind ajna review-pr-client-collector-fixture <json-file>',
+        ),
       ),
     )
     return
@@ -396,7 +390,10 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'merge-readiness-client-collector-fixture') {
     console.log(
       await renderAjnaMergeReadinessClientCollectorFixtureForFile(
-        requireInput('codemind ajna merge-readiness-client-collector-fixture <json-file>'),
+        requireAjnaInput(
+          maybeInput,
+          'codemind ajna merge-readiness-client-collector-fixture <json-file>',
+        ),
       ),
     )
     return
@@ -404,8 +401,8 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
 
   if (subcommand === 'review-pr-collector-fixture') {
     console.log(
-      await renderAjnaReviewPrCollectorFixtureForFile(
-        requireInput('codemind ajna review-pr-collector-fixture <json-file>'),
+      renderAjnaReviewPrCollectorFixtureForFile(
+        requireAjnaInput(maybeInput, 'codemind ajna review-pr-collector-fixture <json-file>'),
       ),
     )
     return
@@ -414,7 +411,10 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'review-pr-readonly-collector-fixture') {
     console.log(
       await renderAjnaReviewPrReadOnlyCollectorFixtureForFile(
-        requireInput('codemind ajna review-pr-readonly-collector-fixture <json-file>'),
+        requireAjnaInput(
+          maybeInput,
+          'codemind ajna review-pr-readonly-collector-fixture <json-file>',
+        ),
       ),
     )
     return
@@ -423,22 +423,35 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'github-readonly-collector-fixture') {
     console.log(
       await renderAjnaGithubReadOnlyCollectorFixtureForFile(
-        requireInput('codemind ajna github-readonly-collector-fixture <json-file>'),
+        requireAjnaInput(maybeInput, 'codemind ajna github-readonly-collector-fixture <json-file>'),
       ),
     )
     return
   }
 
-  console.log(renderNotYetActive(`ajna ${args.join(' ')}`))
+  if (subcommand === 'merge-readiness') {
+    console.log(
+      renderAjnaMergeReadinessForFile(
+        requireAjnaInput(maybeInput, 'codemind ajna merge-readiness <json-file>'),
+      ),
+    )
+    return
+  }
+
+  const full = args.length > 0 ? `ajna ${args.join(' ')}` : 'ajna'
+  console.log(renderNotYetActive(full))
 }
 
-function requireInput(message: string): string {
-  const value = rest[0]
-  if (value === undefined || value.trim().length === 0) {
-    console.error(`Missing input: ${message}`)
+function requireInput(usage: string): string {
+  return requireAjnaInput(rest[0], usage)
+}
+
+function requireAjnaInput(input: string | undefined, usage: string): string {
+  if (input === undefined) {
+    console.error(`Missing input JSON file: ${usage}`)
     process.exit(1)
   }
-  return value
+  return input
 }
 
 main().catch((error: unknown) => {
