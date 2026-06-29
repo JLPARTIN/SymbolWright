@@ -34,6 +34,7 @@ describe('workspace web app', () => {
     expect(html).toContain('/api/providers')
     expect(html).toContain('/api/aelib')
     expect(html).toContain('AELIB-X1YA0I')
+    expect(html).toContain('health.workspace.primary.displayName')
     expect(html).toContain('no provider invocation')
     expect(html).not.toContain('AELIB connected')
   })
@@ -63,9 +64,20 @@ describe('workspace web app', () => {
     const providers = renderWorkspaceWebResponse('/api/providers', () => snapshot)
     const aelib = await renderAelibWebResponse(async () => AELIB_STATUS)
 
+    const healthBody = JSON.parse(health.body) as {
+      readonly workspace: {
+        readonly primaryName: string
+        readonly primaryPath: string
+        readonly primary: { readonly displayName: string; readonly rootPath: string }
+      }
+    }
+
     expect(health.statusCode).toBe(200)
     expect(health.contentType).toContain('application/json')
-    expect(JSON.parse(health.body).workspace.primaryPath).toBe('/workspace/project')
+    expect(healthBody.workspace.primaryName).toBe('project')
+    expect(healthBody.workspace.primaryPath).toBe('/workspace/project')
+    expect(healthBody.workspace.primary.displayName).toBe('project')
+    expect(healthBody.workspace.primary.rootPath).toBe('/workspace/project')
 
     expect(providers.statusCode).toBe(200)
     expect(providers.contentType).toContain('application/json')
