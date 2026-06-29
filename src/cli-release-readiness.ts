@@ -10,6 +10,7 @@ import { runDoctor, type DoctorReport } from './cli-doctor.js'
 import { buildUniversalApiContractReport } from './api/universal-api-contract.js'
 import { buildProviderAdapterContractReport } from './providers/provider-adapter-contract.js'
 import { assessBrowserWorkspaceReadiness } from './workspace/browser-workspace-contract.js'
+import { assessRuntimeModeTruth } from './runtime/runtime-mode-truth-gate.js'
 
 export const RELEASE_READINESS_BLOCK_ID = 'CODEMIND-RELEASE-01' as const
 
@@ -28,6 +29,7 @@ export type ReleaseGateCode =
   | 'PACKAGE_BIN_CONTRACT'
   | 'PACKAGE_LOCK_CONTRACT'
   | 'UNIVERSAL_API_GATEWAY_CONTRACT'
+  | 'RUNTIME_MODE_TRUTH'
   | 'VALIDATE_SCRIPT'
   | 'WORKFLOW_RELEASE_PROOF'
   | 'BUILD_LEDGER_CONSISTENT'
@@ -407,6 +409,19 @@ function checkUniversalApiGatewayContract(workspaceRoot: string): ReleaseGate {
   }
 }
 
+function checkRuntimeModeTruth(workspaceRoot: string): ReleaseGate {
+  const report = assessRuntimeModeTruth(workspaceRoot)
+
+  return {
+    code: 'RUNTIME_MODE_TRUTH',
+    status: report.status,
+    detail:
+      report.status === 'PASS'
+        ? 'Runtime policy, prompt, README, and governance docs agree on direct APPROVED_EXECUTION behavior'
+        : report.findings.join('; '),
+  }
+}
+
 function checkValidateScript(workspaceRoot: string): ReleaseGate {
   try {
     const pkg = readPackageJson(workspaceRoot)
@@ -533,6 +548,7 @@ export function assessReleaseReadiness(workspaceRoot: string): ReleaseReadinessR
     checkPackageBinContract(workspaceRoot),
     checkPackageLockContract(workspaceRoot),
     checkUniversalApiGatewayContract(workspaceRoot),
+    checkRuntimeModeTruth(workspaceRoot),
     checkValidateScript(workspaceRoot),
     checkWorkflowReleaseProof(workspaceRoot),
     checkBuildLedgerConsistent(workspaceRoot),
