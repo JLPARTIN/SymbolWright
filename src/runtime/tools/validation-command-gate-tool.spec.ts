@@ -56,7 +56,6 @@ beforeEach(() => {
     JSON.stringify({
       scripts: {
         typecheck: 'node -e "console.log(42)"',
-        lint: 'node -e "console.log(\"lint ok\")"',
       },
     }),
     'utf8',
