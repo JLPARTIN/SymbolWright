@@ -77,7 +77,7 @@ function parseApplyPatchToolInput(input: unknown): ApplyPatchToolInput {
 export const applyPatchTool: RuntimeToolDefinition = {
   name: 'apply_patch',
   description:
-    'Apply a structured patch to workspace files, with dryRun available as explicit preview mode.',
+    'Apply a structured patch to workspace files through the zero-trust sandbox runner, with dryRun available as explicit preview mode.',
   capability: 'PATCH_APPLICATION',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const parsed = parseApplyPatchToolInput(input)
@@ -88,7 +88,13 @@ export const applyPatchTool: RuntimeToolDefinition = {
       files: parsed.files,
     }
 
-    const result = applyStructuredPatch(request, context.cwd, context.policy, context.approval)
+    const result = applyStructuredPatch(
+      request,
+      context.cwd,
+      context.policy,
+      context.approval,
+      context.sandboxFileWriter,
+    )
     const sections: string[] = [renderPatchApplicationResult(result)]
 
     const diffs = result.fileResults

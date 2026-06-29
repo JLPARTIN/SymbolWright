@@ -1,7 +1,7 @@
 import fs from 'node:fs'
-import path from 'node:path'
 
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import { DockerSandboxFileWriter, type SandboxFileWriter } from '../sandbox/sandbox-runner.js'
 import { evaluateLocalFileWriteGate, type LocalFileWriteRequest } from './local-file-write-gate.js'
 import { buildLocalFileWriteDiff, type LocalFileWriteDiff } from './local-file-write-diff.js'
 import type { LocalFileWriteExecutionResult } from './local-file-write-result.js'
@@ -11,6 +11,7 @@ export function executeLocalFileWrite(
   workspaceRoot: string,
   policy: RuntimePolicySnapshot,
   approval?: RuntimeApproval,
+  sandboxFileWriter: SandboxFileWriter = new DockerSandboxFileWriter(),
 ): LocalFileWriteExecutionResult {
   void approval
 
@@ -56,20 +57,19 @@ export function executeLocalFileWrite(
   }
 
   const diff = buildLocalFileWriteDiff(gateResult.targetPath, previousContent, request.content)
+  const writeResult = sandboxFileWriter.writeFile({
+    workspaceRoot,
+    targetPath: request.targetPath,
+    content: request.content,
+  })
 
-  try {
-    const parentDir = path.dirname(gateResult.resolvedPath)
-    if (!fs.existsSync(parentDir)) {
-      fs.mkdirSync(parentDir, { recursive: true })
-    }
-    fs.writeFileSync(gateResult.resolvedPath, request.content, 'utf8')
-  } catch (err) {
+  if (writeResult.outcome === 'BLOCKED') {
     return {
       outcome: 'BLOCKED',
       gateResult,
       diff,
       rollbackNote: request.rollbackNote,
-      error: err instanceof Error ? err.message : String(err),
+      error: writeResult.reason ?? 'Sandbox file writer blocked the write.',
     }
   }
 

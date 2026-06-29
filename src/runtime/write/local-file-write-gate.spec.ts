@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { renderRuntimeLocalWrite } from '../../cli-runtime-local-write.js'
 import { createDefaultRuntimePolicy } from '../policy/runtime-policy.js'
 import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
+import type { SandboxFileWriter } from '../sandbox/sandbox-runner.js'
 import { localFileWriteTool } from '../tools/local-file-write-tool.js'
 import type { RuntimeApproval, RuntimePolicySnapshot, RuntimeToolContext } from '../types.js'
 import { createLocalFileWriteAuditEvent } from './local-file-write-audit.js'
@@ -37,6 +38,23 @@ const legacyApproval: RuntimeApproval = {
   ticketId: 'WRITE-TICKET-001',
   approvedBy: 'operator',
   scopes: ['file:write'],
+}
+
+const hostBackedSandboxWriter: SandboxFileWriter = {
+  writeFile: (request) => {
+    const target = path.resolve(request.workspaceRoot, request.targetPath)
+    fs.mkdirSync(path.dirname(target), { recursive: true })
+    fs.writeFileSync(target, request.content, 'utf8')
+    return {
+      outcome: 'WRITTEN',
+      runner: 'docker',
+      targetPath: request.targetPath,
+      stdout: '',
+      stderr: '',
+      exitCode: 0,
+      reason: null,
+    }
+  },
 }
 
 function makeRequest(overrides: Partial<LocalFileWriteRequest> = {}): LocalFileWriteRequest {
@@ -93,7 +111,7 @@ describe('local file write gate', () => {
 
   it('blocks protected targets and missing request notes', () => {
     const protectedPath = evaluateLocalFileWriteGate(
-      makeRequest({ targetPath: '.env', reason: '', rollbackNote: '' }),
+      makeRequest({ targetPath: '.git/config', reason: '', rollbackNote: '' }),
       '/test/workspace',
       writePolicy,
       undefined,
@@ -151,12 +169,13 @@ describe('local file write tool', () => {
     expect(output).toContain('Decision: BLOCKED')
   })
 
-  it('writes when dryRun is omitted', async () => {
+  it('writes through injected sandbox writer when dryRun is omitted', async () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'local-write-tool-'))
     const context: RuntimeToolContext = {
       cwd: tmpDir,
       policy: createDefaultRuntimePolicy(),
       approval: legacyApproval,
+      sandboxFileWriter: hostBackedSandboxWriter,
     }
 
     try {
@@ -221,7 +240,7 @@ describe('local write registry and CLI', () => {
     expect(registry.getOrThrow('local_file_write').name).toBe('local_file_write')
   })
 
-  it('renders and applies local file write from fixture file', async () => {
+  it('renders and applies local file write from fixture file through injected sandbox writer', async () => {
     const fixture = {
       targetPath: 'src/cli.ts',
       content: 'console.log("hello")',
@@ -233,7 +252,7 @@ describe('local write registry and CLI', () => {
     fs.writeFileSync(fixturePath, JSON.stringify(fixture))
 
     try {
-      const output = await renderRuntimeLocalWrite(fixturePath, tmpDir)
+      const output = await renderRuntimeLocalWrite(fixturePath, tmpDir, hostBackedSandboxWriter)
 
       expect(output).toContain('CodeMind local file write execution')
       expect(fs.readFileSync(path.join(tmpDir, 'src', 'cli.ts'), 'utf8')).toContain(

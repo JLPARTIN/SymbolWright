@@ -16,11 +16,13 @@ permissions:
 jobs:
   validate:
     name: Validate CodeMind
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js 22
         uses: actions/setup-node@v4
@@ -29,9 +31,8 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # Shared release proof equivalent to: npm run validate
       - name: Audit dependencies
         run: npm run audit
 
@@ -44,11 +45,14 @@ jobs:
       - name: Format check
         run: npm run format:check
 
+      - name: Sandbox runner contract tests
+        run: npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
+
       - name: Test with coverage
         run: npm run test:coverage
 
       - name: Build
         run: npm run build
 
-      - name: Release readiness
-        run: npm run release-readiness
+      - name: Validate
+        run: npm run validate

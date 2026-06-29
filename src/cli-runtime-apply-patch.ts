@@ -4,6 +4,7 @@ import {
   createFixtureContext,
   createFixtureRegistry,
 } from './runtime/registry/fixture-registry-factory.js'
+import type { SandboxFileWriter } from './runtime/sandbox/sandbox-runner.js'
 import type { RuntimeApproval, RuntimePolicySnapshot } from './runtime/types.js'
 
 export interface ApplyPatchFixtureRequest {
@@ -23,6 +24,7 @@ export interface ApplyPatchFixtureRequest {
 export async function renderRuntimeApplyPatch(
   fixturePath: string,
   cwd: string = process.cwd(),
+  sandboxFileWriter?: SandboxFileWriter,
 ): Promise<string> {
   const raw = JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as ApplyPatchFixtureRequest
 
@@ -44,6 +46,7 @@ export async function renderRuntimeApplyPatch(
     ...defaultContext,
     ...(raw.policy !== undefined ? { policy: raw.policy } : {}),
     ...(raw.approval !== undefined ? { approval: raw.approval } : {}),
+    ...(sandboxFileWriter !== undefined ? { sandboxFileWriter } : {}),
   }
 
   const tool = registry.getOrThrow('apply_patch')

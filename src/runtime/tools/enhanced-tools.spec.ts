@@ -7,6 +7,7 @@ import { executeGlobTool } from './glob-tool.js'
 import { executeGrepTool } from './grep-tool.js'
 import { executeEditFileTool } from './edit-file-tool.js'
 import { executeBashTool } from './bash-tool.js'
+import type { SandboxRunner } from '../sandbox/sandbox-runner.js'
 
 let tempDir: string
 
@@ -22,6 +23,18 @@ beforeEach(() => {
 afterEach(() => {
   fs.rmSync(tempDir, { recursive: true, force: true })
 })
+
+const successfulSandboxRunner: SandboxRunner = {
+  runCommand: async (request) => ({
+    outcome: 'EXECUTED',
+    runner: 'docker',
+    command: [request.binary, ...request.args].join(' '),
+    stdout: 'hello.ts\nworld.ts\n',
+    stderr: '',
+    exitCode: 0,
+    reason: null,
+  }),
+}
 
 describe('glob-tool', () => {
   it('finds files matching pattern', async () => {
@@ -142,42 +155,52 @@ describe('edit-file-tool', () => {
 })
 
 describe('bash-tool', () => {
-  it('executes shell command without approval tickets', async () => {
-    const result = await executeBashTool({ command: 'ls' }, tempDir, true)
+  it('routes allowed commands through the sandbox runner', async () => {
+    const result = await executeBashTool(
+      { command: 'npm test' },
+      tempDir,
+      true,
+      successfulSandboxRunner,
+    )
+
+    expect(result).toContain('Runner: docker')
+    expect(result).toContain('Status: EXECUTED')
     expect(result).toContain('hello.ts')
-    expect(result).toContain('Exit code: 0')
   })
 
-  it('executes commands outside the old allowlist', async () => {
-    const result = await executeBashTool({ command: 'printf codemind-direct' }, tempDir, true)
-    expect(result).toContain('codemind-direct')
-    expect(result).toContain('Exit code: 0')
-  })
+  it('blocks when shell is disabled', async () => {
+    const result = await executeBashTool(
+      { command: 'npm test' },
+      tempDir,
+      false,
+      successfulSandboxRunner,
+    )
 
-  it('blocks when shell not allowed', async () => {
-    const result = await executeBashTool({ command: 'ls' }, tempDir, false)
     expect(result).toContain('BLOCKED')
     expect(result).toContain('not allowed')
   })
 
-  it('blocks dangerous commands', async () => {
-    const result = await executeBashTool({ command: 'rm -rf /' }, tempDir, true)
+  it('rejects unsupported binaries', async () => {
+    const result = await executeBashTool(
+      { command: 'python script.py' },
+      tempDir,
+      true,
+      successfulSandboxRunner,
+    )
+
     expect(result).toContain('BLOCKED')
-    expect(result).toContain('blocked destructive pattern')
+    expect(result).toContain('not allowed')
   })
 
-  it('blocks sudo commands', async () => {
-    const result = await executeBashTool({ command: 'sudo rm file' }, tempDir, true)
+  it('rejects shell metacharacters before execution', async () => {
+    const result = await executeBashTool(
+      { command: 'npm test && echo nope' },
+      tempDir,
+      true,
+      successfulSandboxRunner,
+    )
+
     expect(result).toContain('BLOCKED')
-  })
-
-  it('captures stderr', async () => {
-    const result = await executeBashTool({ command: 'ls /nonexistent_dir_xyz 2>&1' }, tempDir, true)
-    expect(result).toContain('Exit code:')
-  })
-
-  it('allows git status', async () => {
-    const result = await executeBashTool({ command: 'git status' }, tempDir, true)
-    expect(result).toContain('Exit code:')
+    expect(result).toContain('shell metacharacters')
   })
 })

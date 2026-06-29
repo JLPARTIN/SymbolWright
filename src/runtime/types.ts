@@ -4,6 +4,7 @@ import type { GitHubWriteExecutorClient } from './github-write/github-write-exec
 import type { PrCollaborationClient } from './github-write/pr-collaboration.js'
 import type { EmbeddingProvider } from '../memory/embedding-provider.js'
 import type { WorkspaceManager } from '../workspace/workspace-manager.js'
+import type { SandboxFileWriter, SandboxRunner } from './sandbox/sandbox-runner.js'
 
 /** Supported execution modes from plan-only to approved execution. */
 export type CodemindRuntimeMode = 'PLAN_ONLY' | 'READ_ONLY' | 'PROPOSAL_ONLY' | 'APPROVED_EXECUTION'
@@ -130,7 +131,7 @@ export interface GitHubClientRegistry {
   readonly collaborationClient?: PrCollaborationClient
 }
 
-/** Context passed to every tool execution — cwd, policy, and optional approval. */
+/** Context passed to every tool execution — cwd, policy, and optional execution adapters. */
 export interface RuntimeToolContext {
   readonly cwd: string
   readonly policy: RuntimePolicySnapshot
@@ -138,6 +139,8 @@ export interface RuntimeToolContext {
   readonly githubClients?: GitHubClientRegistry
   readonly embeddingProvider?: EmbeddingProvider
   readonly workspace?: WorkspaceManager
+  readonly sandboxRunner?: SandboxRunner
+  readonly sandboxFileWriter?: SandboxFileWriter
 }
 
 /** Defines a runtime tool with name, capability, and typed execute function. */
