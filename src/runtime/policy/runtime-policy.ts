@@ -21,17 +21,109 @@ export const DEFAULT_RUNTIME_NOISY_DIRS = [
   '.next',
 ] as const
 
-/** Creates an execution-ready policy with real local tools active by default. */
-export function createDefaultRuntimePolicy(): RuntimePolicySnapshot {
-  return {
-    mode: 'APPROVED_EXECUTION',
-    allowNetwork: true,
-    allowShell: true,
-    allowWrites: true,
-    allowGitHubWrites: true,
+/** Existing runtime modes are the single source of truth for strictness. */
+export const CODEMIND_RUNTIME_MODES = [
+  'PLAN_ONLY',
+  'READ_ONLY',
+  'PROPOSAL_ONLY',
+  'APPROVED_EXECUTION',
+] as const satisfies readonly CodemindRuntimeMode[]
+
+export const DEFAULT_CODEMIND_RUNTIME_MODE: CodemindRuntimeMode = 'APPROVED_EXECUTION'
+
+const RUNTIME_MODE_ALIASES: Readonly<Record<string, CodemindRuntimeMode>> = {
+  PLAN: 'PLAN_ONLY',
+  PLAN_ONLY: 'PLAN_ONLY',
+  READ: 'READ_ONLY',
+  READ_ONLY: 'READ_ONLY',
+  PROPOSAL: 'PROPOSAL_ONLY',
+  PATCH_PROPOSAL: 'PROPOSAL_ONLY',
+  PROPOSAL_ONLY: 'PROPOSAL_ONLY',
+  APPROVED: 'APPROVED_EXECUTION',
+  APPROVED_EDIT: 'APPROVED_EXECUTION',
+  APPROVED_COMMAND: 'APPROVED_EXECUTION',
+  APPROVED_EXECUTION: 'APPROVED_EXECUTION',
+  DIRECT: 'APPROVED_EXECUTION',
+  UNRESTRICTED: 'APPROVED_EXECUTION',
+  OFF: 'APPROVED_EXECUTION',
+}
+
+export interface RuntimePolicyOptions {
+  readonly hasGitHubToken?: boolean
+}
+
+/** Normalizes CLI/env/config aliases onto the existing runtime-mode union. */
+export function normalizeCodemindRuntimeMode(value: unknown): CodemindRuntimeMode | undefined {
+  if (typeof value !== 'string') {
+    return undefined
+  }
+
+  const normalized = value.trim().toUpperCase().replaceAll('-', '_').replaceAll(' ', '_')
+  if (normalized.length === 0) {
+    return undefined
+  }
+
+  return RUNTIME_MODE_ALIASES[normalized]
+}
+
+/** Returns true when value is one of the canonical runtime modes. */
+export function isCodemindRuntimeMode(value: string): value is CodemindRuntimeMode {
+  return (CODEMIND_RUNTIME_MODES as readonly string[]).includes(value)
+}
+
+/** Creates a policy for the selected runtime mode without inventing another mode system. */
+export function createRuntimePolicyForMode(
+  mode: CodemindRuntimeMode,
+  options: RuntimePolicyOptions = {},
+): RuntimePolicySnapshot {
+  const base = {
     protectedPaths: DEFAULT_RUNTIME_PROTECTED_PATHS,
     noisyDirs: DEFAULT_RUNTIME_NOISY_DIRS,
+  } as const
+
+  switch (mode) {
+    case 'PLAN_ONLY':
+      return {
+        mode,
+        allowNetwork: false,
+        allowShell: false,
+        allowWrites: false,
+        allowGitHubWrites: false,
+        ...base,
+      }
+    case 'READ_ONLY':
+      return {
+        mode,
+        allowNetwork: false,
+        allowShell: false,
+        allowWrites: false,
+        allowGitHubWrites: false,
+        ...base,
+      }
+    case 'PROPOSAL_ONLY':
+      return {
+        mode,
+        allowNetwork: false,
+        allowShell: false,
+        allowWrites: false,
+        allowGitHubWrites: false,
+        ...base,
+      }
+    case 'APPROVED_EXECUTION':
+      return {
+        mode,
+        allowNetwork: true,
+        allowShell: true,
+        allowWrites: true,
+        allowGitHubWrites: options.hasGitHubToken ?? true,
+        ...base,
+      }
   }
+}
+
+/** Creates an execution-ready policy with real local tools active by default. */
+export function createDefaultRuntimePolicy(): RuntimePolicySnapshot {
+  return createRuntimePolicyForMode(DEFAULT_CODEMIND_RUNTIME_MODE, { hasGitHubToken: true })
 }
 
 /** Resolves a user path against the workspace root, blocking traversal. */
@@ -121,13 +213,6 @@ export function assertNetworkAllowed(policy: RuntimePolicySnapshot): void {
   }
 }
 
-const VALID_MODES: readonly CodemindRuntimeMode[] = [
-  'PLAN_ONLY',
-  'READ_ONLY',
-  'PROPOSAL_ONLY',
-  'APPROVED_EXECUTION',
-]
-
 /** Validates that a policy object has correct shape and field types. */
 export function assertValidPolicy(policy: unknown): asserts policy is RuntimePolicySnapshot {
   if (typeof policy !== 'object' || policy === null) {
@@ -135,7 +220,7 @@ export function assertValidPolicy(policy: unknown): asserts policy is RuntimePol
   }
   const p = policy as Record<string, unknown>
 
-  if (!(VALID_MODES as readonly string[]).includes(p['mode'] as string)) {
+  if (typeof p['mode'] !== 'string' || !isCodemindRuntimeMode(p['mode'])) {
     throw new Error(`Invalid policy mode: ${String(p['mode'])}`)
   }
 
