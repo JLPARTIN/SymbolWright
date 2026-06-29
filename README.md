@@ -3,18 +3,64 @@
 </p>
 
 <p align="center">
-  <strong>Standalone AI coding-agent platform for repository intelligence, safe code work, PR review, and merge-readiness.</strong>
+  <strong>Standalone AI coding-agent platform for repository intelligence, direct code work, PR review, and merge-readiness.</strong>
 </p>
 
-CodeMind is a governed coding-agent platform. It operates read-only and plan-first by default, with approved code edits, validation, CI diagnosis, PR preparation, and merge-readiness workflows behind explicit policy gates and operator approval.
+CodeMind is a direct-capable coding-agent platform with optional governance and forensic review features. Its runtime strictness is controlled by the active runtime mode, not by a hardcoded read-only personality.
 
-Ajna Review Cortex is the first native CodeMind capability. Ajna gives CodeMind a deterministic review layer for pull-request evidence, local fixture pipelines, and merge-readiness reporting before live provider or live GitHub mutation work is introduced.
+Ajna Review Cortex is the native forensic review capability. Ajna gives CodeMind deterministic review, risk, evidence, and merge-readiness reporting when those workflows are requested or required.
 
 ## Current State
 
-All 20 runtime phases (A–T) are complete. The platform provides a full governed loop: scan, load instructions, build context, plan, propose, approve, apply, validate, diagnose, prepare PR, create draft PR, review, assess merge-readiness, generate handoff, and record/replay audit trails.
+All 20 runtime phases (A–T) are complete. The platform supports scanning, context building, direct agent execution, proposal workflows, local file writes, validation, GitHub write preparation/execution, PR review, merge-readiness, handoff generation, and audit/trace replay.
 
-`codemind status` reports 20/20 runtime build phases complete. `codemind doctor` validates workspace health. `codemind release-readiness` checks all release gates.
+`codemind status` reports runtime build state. `codemind doctor` validates workspace health. `codemind release-readiness` checks the release gates.
+
+## Runtime Modes
+
+CodeMind uses one canonical runtime-mode set:
+
+```txt
+PLAN_ONLY
+READ_ONLY
+PROPOSAL_ONLY
+APPROVED_EXECUTION
+```
+
+`APPROVED_EXECUTION` is the direct execution mode. It allows local writes, shell execution, validation commands, git operations, provider/network access, and GitHub writes when the matching credentials and tool surfaces are available.
+
+`PLAN_ONLY`, `READ_ONLY`, and `PROPOSAL_ONLY` remain available when the operator wants non-mutating planning, inspection, or patch proposal behavior.
+
+Mode selection:
+
+```bash
+codemind agent --mode APPROVED_EXECUTION "fix the failing tests"
+codemind agent --mode READ_ONLY "inspect the repo for stale docs"
+codemind agent --mode PROPOSAL_ONLY "draft the patch without applying it"
+codemind agent --mode PLAN_ONLY "make a plan only"
+```
+
+Aliases:
+
+```bash
+codemind agent --approved "run direct implementation"
+codemind agent --read-only "inspect only"
+codemind agent --proposal-only "draft only"
+codemind agent --plan-only "plan only"
+```
+
+Environment/config support:
+
+```bash
+CODEMIND_RUNTIME_MODE=APPROVED_EXECUTION
+CODEMIND_RUNTIME_MODE=READ_ONLY
+CODEMIND_RUNTIME_MODE=PROPOSAL_ONLY
+CODEMIND_RUNTIME_MODE=PLAN_ONLY
+```
+
+The aliases `direct`, `off`, and `approved` normalize to `APPROVED_EXECUTION`. They do not create a second mode system.
+
+## CLI Surface
 
 The active CLI package is `codemind` and exposes:
 
@@ -22,7 +68,7 @@ The active CLI package is `codemind` and exposes:
 codemind help
 codemind status
 codemind operator [mission]
-codemind agent [message]
+codemind agent [--mode <mode>] [message]
 codemind sessions
 codemind index [dir]
 codemind plan <goal>
@@ -43,15 +89,25 @@ codemind ajna-live-read <json-file>
 codemind operator-review <json-file>
 codemind write-intent <json-file>
 codemind local-write <json-file>
+codemind apply-patch <json-file>
 codemind validation-command <json-file>
 codemind pr-preparation <json-file>
 codemind github-write-proposal <json-file>
 codemind github-write-gate <json-file>
+codemind github-write-executor <json-file>
 codemind workflow <json-file>
 codemind ajna-workflow <json-file>
+codemind repair-loop <json-file>
 codemind runtime-status
 codemind project-context [dir]
 codemind scan [dir]
+codemind mission-packet <json-file>
+codemind audit-ledger <json-file>
+codemind trace-store <json-file>
+codemind build-ledger
+codemind doctor
+codemind version
+codemind release-readiness
 codemind ajna scan-profile [dir]
 codemind ajna docs
 codemind ajna client-pipeline-manifest
@@ -67,185 +123,86 @@ codemind ajna review-pr-collector-fixture <json-file>
 codemind ajna review-pr-readonly-collector-fixture <json-file>
 codemind ajna github-readonly-collector-fixture <json-file>
 codemind ajna merge-readiness <json-file>
-codemind apply-patch <json-file>
-codemind repair-loop <json-file>
-codemind github-write-executor <json-file>
-codemind mission-packet <json-file>
-codemind audit-ledger <json-file>
-codemind trace-store <json-file>
-codemind build-ledger
-codemind doctor
-codemind version
-codemind release-readiness
 ```
 
-The Phase A read-only runtime commands are intentionally non-mutating:
+## Direct Agent Usage
 
-```txt
-codemind plan "add guarded patch proposal"
+Use the agent command for normal implementation work:
+
+```bash
+codemind agent --mode APPROVED_EXECUTION "implement the requested fix and validate it"
+```
+
+In direct mode, CodeMind should prefer useful completed work over approval theater. It can still use Ajna, audit ledgers, and governance analysis when the task asks for forensic review, release proof, or merge-readiness evidence.
+
+## Non-Mutating Workflows
+
+Use these when you want planning or evidence without mutation:
+
+```bash
+codemind plan "add runtime mode docs"
 codemind read README.md
 codemind search runtime
 codemind validation-plan "runtime activation"
-```
-
-The Phase B proposal-mode commands add useful coding-agent output without applying changes:
-
-```txt
-codemind propose-patch "add guarded patch proposal"
-codemind pr-notes "proposal mode"
+codemind propose-patch "draft the change only"
 codemind ci-review "local fixture"
 ```
 
-The Phase C read-only runtime loop runs a bounded tool sequence and captures a transcript:
+The legacy `codemind runtime run` paths remain bounded runtime workflows. They are separate from the direct `codemind agent` surface.
+
+## Hard Safety Rails
+
+Governance is optional by mode, but hard safety rails remain part of the runtime boundary:
 
 ```txt
-codemind runtime run "prepare proposal follow-up" --read-only
+workspace boundary enforcement
+protected path blocking for .git, .env, .env.local, node_modules, dist, and coverage
+secret redaction in audit/trace outputs
+destructive shell-command blocking
+protected branch and force-push blocking
+GitHub write credential checks
+bounded validation and release-readiness gates
 ```
 
-The Phase D approval gate path represents approved actions with audit output:
+These rails are not approval theater. They prevent accidental repo damage while keeping CodeMind useful as a direct coding agent.
+
+## Platform Capabilities
+
+CodeMind can:
 
 ```txt
-codemind runtime run "dry-run approved follow-up" --approval-ticket APPROVE-123
+understand repository structure
+load project instructions
+scan code and docs
+plan implementation work
+perform direct implementation through codemind agent
+propose patches without applying them
+write allowed local files
+run validation commands
+diagnose CI failures
+prepare PR summaries
+create and evaluate GitHub write operations
+review pull requests
+assess merge-readiness
+coordinate specialized capabilities such as Ajna Review Cortex
+support Codespaces/operator runbooks
+record and replay audit trails with secret redaction
+generate agent kernel mission handoff packets
+validate workspace health and release readiness
 ```
 
-No approval ticket means approved execution fails. The current Phase D path is still dry-run by design: it records approval-gated edit and command representations, emits audit events, blocks protected paths, and does not modify files, execute shell commands, use network access, call providers, post PR comments, or mutate GitHub state.
-
-The Phase E read adapter path uses local fixture evidence for PR and workflow review:
+Ajna remains evidence-first:
 
 ```txt
-codemind pr-notes --fixture-file fixtures/github-read-fixture.json
-codemind ci-review --fixture-file fixtures/github-read-fixture.json
+PR evidence schema
+local collector fixtures
+offline API payload adapter
+collector snapshot contract
+review-pr normalization
+merge-readiness reporting
+client pipeline manifest/status checks
+live read adapters behind runtime policy checks
 ```
-
-These commands read local fixture evidence only. They do not call live GitHub APIs, post comments, request approvals, merge pull requests, push branches, or rerun workflows.
-
-The Phase F live read policy handshake evaluates whether a future live read request would be allowed by CodeMind policy:
-
-```txt
-codemind live-read-policy fixtures/live-read-request.json
-```
-
-This command reads a local JSON fixture describing a proposed live read request and returns a policy decision (ALLOW or BLOCK) without performing the live read. It validates provider, purpose, scopes, and dry-run status against the policy allowlist.
-
-The Phase G live read client seam runs fake client evidence through the existing evidence pipeline:
-
-```txt
-codemind live-read-client-fixture fixtures/live-read-client-fixture.json
-```
-
-This command uses a provider-neutral `RuntimeLiveReadClient` interface with a `FakeLiveReadClient` implementation. It exercises `getPullRequestEvidence`, `getWorkflowEvidence`, and `getRepositoryFile` methods and passes the results through the existing evidence builders and Ajna evidence bridge. No live service calls are made.
-
-The Phase H GitHub live read adapter adds policy-gated GitHub read operations:
-
-```txt
-codemind github-live-read fixtures/github-live-read-fixture.json
-```
-
-This command wraps a `RuntimeLiveReadClient` in a `GitHubLiveReadPolicyWrapper` that enforces policy checks before every read operation. When a `GITHUB_TOKEN` is configured, the `GitHubLiveReadClient` uses the `DefaultGitHubHttpClient` for live API calls; otherwise it falls back to fixture data. Allowed operations: read PR metadata, read changed files list, read check/workflow summary, read file content. Forbidden: comments, approvals, merges, branch pushes, workflow reruns.
-
-The Phase I Ajna live-read review pipeline connects live-read evidence into Ajna review and merge-readiness:
-
-```txt
-codemind ajna-live-read fixtures/ajna-live-read-fixture.json
-```
-
-This command supports two modes: `review` (Ajna review with deterministic verdict) and `merge-readiness` (blocker assessment). Evidence flows from the fake live-read client through evidence builders and into Ajna pipelines. Verdicts remain deterministic. No comments, review submissions, merges, or workflow reruns.
-
-The Phase N PR preparation generates a PR title, body, changed file list, and validation checklist from approved local changes:
-
-```txt
-codemind pr-preparation fixtures/pr-preparation-fixture.json
-```
-
-This command evaluates a PR preparation request. It checks that title, body, base/head branches, changed files, validation checklist, and reason are all provided and valid. The evaluator returns READY or INCOMPLETE with accumulated issues. The output includes validation checklist with unchecked checkboxes. No branch is pushed. No PR is created. No GitHub writes.
-
-The Phase O governed GitHub write proposal creates structured proposals for GitHub write actions:
-
-```txt
-codemind github-write-proposal fixtures/github-write-proposal-fixture.json
-```
-
-This command evaluates a proposed GitHub write action (create draft PR, post comment, or apply label) against the allowed action set. It returns PROPOSED when all fields are valid, or BLOCKED with accumulated block reasons. Disallowed actions (e.g. merge_pr, force_push, delete_branch) are always blocked. The output includes clear PROPOSAL_ONLY status. No GitHub API call is made. No PR is created, no comment posted, no label applied.
-
-The Phase P approved GitHub write gate evaluates GitHub write actions against policy, approval, and action allowlist:
-
-```txt
-codemind github-write-gate fixtures/github-write-gate-fixture.json
-```
-
-This command evaluates a GitHub write request through the approval-gated write gate. It checks that GitHub writes are enabled by policy (`allowGitHubWrites`), an approval ticket with `github:write` scope is present, the action is in the allowed set (create draft PR, post comment, apply label), and repository/target/content/reason are provided. The gate returns ALLOWED or BLOCKED with accumulated block reasons. Dry-run mode (default) previews the decision without executing. An audit event is emitted for every evaluation. No GitHub API call is made by this tool. No merge.
-
-The Phase Q runtime workflow composition runs a governed workflow that composes registered tools into a bounded, sequenced execution:
-
-```txt
-codemind workflow fixtures/workflow-fixture.json
-```
-
-This command reads a workflow definition from a local JSON fixture. The workflow specifies a name, a sequence of tool steps (each with a tool name and input), and an optional step limit. The workflow runner validates the request, then executes each step against the full Phase P registry, capturing transcript entries and audit events at each step. If a tool is not found or a step fails, the workflow stops and reports the block reason. No new mutation surface is added — the workflow runner enforces existing tool gates. Audit events are emitted for workflow start, each step, and workflow completion.
-
-The Phase R read-only Ajna workflow surface provides a purpose-built workflow template for Ajna review and merge-readiness:
-
-```txt
-codemind ajna-workflow fixtures/ajna-workflow-fixture.json
-```
-
-This command reads a fixture specifying owner, repo, prNumber, optional workflowRunId, and mode (`review`, `merge-readiness`, or `full`). It builds a predefined Ajna workflow that composes `github_live_read_pr`, optionally `github_live_read_ci`, and the appropriate Ajna pipeline tools (`ajna_live_read_review` and/or `ajna_live_read_merge_readiness`). The workflow runs through the Phase Q workflow runner with transcript and audit capture. Read-only Ajna pipelines only. No new mutation surface.
-
-The Phase S runtime status dashboard provides a comprehensive view of the runtime state:
-
-```txt
-codemind runtime-status
-```
-
-This command shows the full runtime status dashboard including completed phase count, next phase, registered tool inventory with capabilities, policy snapshot (mode, allowNetwork, allowShell, allowWrites, allowGitHubWrites, protected paths), workflow and Ajna workflow support flags, and a phase summary listing all phases with their state. Read-only status only. No new mutation surface.
-
-The Phase M approved validation command gate evaluates validation commands against an allowlist, policy, and approval:
-
-```txt
-codemind validation-command fixtures/validation-command-fixture.json
-```
-
-This command evaluates a validation command request through the allowlisted command gate. It checks that shell execution is enabled by policy, an approval ticket with `command:validate` scope is present, the command is in the allowlist (`npm run typecheck`, `npm test`, `npm run test:coverage`, `npm run lint`, `npm run audit`, `npm run build`, `npm run build:app`), and a reason is provided. The gate returns ALLOWED or BLOCKED with accumulated block reasons. Dry-run mode previews the decision without executing any command. An audit event is emitted for every evaluation. No arbitrary shell execution. No GitHub writes.
-
-The Phase T approved local file write execution converts the local file write gate into an actual file writer:
-
-```txt
-codemind local-write fixtures/local-write-fixture.json
-```
-
-This command executes an approved local file write through the approval-gated write gate. It checks that writes are enabled by policy (`allowWrites`), an approval ticket with `file:write` scope is present, the target path is inside the workspace and not protected, and reason/rollback note are provided. When `dryRun` is true (the default), the gate evaluates permission and renders a diff preview without modifying any file. When `dryRun` is false and all checks pass, the file is written to disk, parent directories are created if needed, and a before/after diff is captured. An audit event is emitted for every evaluation and execution. Protected paths (.git, .env, .env.local, node_modules, dist, coverage) are always blocked. No GitHub writes. No shell execution.
-
-The Phase K approved write preparation introduces write-intent plans and approval tickets:
-
-```txt
-codemind write-intent fixtures/write-intent-fixture.json
-```
-
-This command creates a write intent plan showing the exact target, reason, expected diff summary, validation plan, approval ticket requirement, and rollback note. The intent is validated against workspace boundaries and protected paths, then a write approval ticket is issued (PENDING or BLOCKED). No actual writes are performed. No GitHub mutation.
-
-The Phase J operator review gate creates review packets that require operator confirmation before any action:
-
-```txt
-codemind operator-review fixtures/operator-review-fixture.json
-```
-
-This command creates an operator review packet showing source evidence, proposed action, risks, validation, boundary, and next manual step. The review gate evaluates the packet and returns a decision (PENDING or REJECTED). No automatic approval is granted. Blocked actions (e.g. merge_pr) are rejected by policy. No writes, no PR comments, no merges.
-
-Current Ajna work is intentionally local-first:
-
-```txt
-local fixtures -> collector snapshot -> Ajna review input -> review report -> merge-readiness
-```
-
-The recent client-collector fixture pipeline is visible through:
-
-```txt
-codemind ajna docs
-codemind ajna client-pipeline-manifest
-codemind ajna client-pipeline-status
-```
-
-These commands document and check the local fixture chain without introducing live GitHub ingestion, live PR comments, provider calls, shell execution, or repository mutation.
 
 ## Build and Validation
 
@@ -261,6 +218,7 @@ npm run lint
 npm run audit
 npm run build
 npm run build:app
+npm run release-readiness
 ```
 
 Script map:
@@ -273,62 +231,12 @@ npm run lint          eslint src/
 npm run audit         npm audit --omit=dev --audit-level=high
 npm run build         tsc -p tsconfig.json
 npm run build:app     npm run typecheck && npm run build
+npm run validate      audit + typecheck + lint + format + coverage + build + release-readiness
 ```
 
-## Safety Posture
+## CI Strategy
 
-CodeMind starts with a conservative operating model:
-
-```txt
-read-only first
-plan-first by default
-proposal-only before execution
-bounded loops before approved execution
-approval ticket required for gated execution
-local fixtures before live integrations
-no network by default
-no file writes without operator approval
-no shell execution without operator approval
-no uncontrolled PR mutation
-```
-
-Write actions, live GitHub operations, command execution, PR comments, approvals, merges, and provider-backed reasoning should stay behind explicit policy gates and operator approval.
-
-## Platform Capabilities
-
-CodeMind is a governed repo-aware coding-agent platform that can:
-
-```txt
-understand repository structure
-load project instructions
-scan code and docs
-plan implementation work
-propose patches
-edit approved files
-run approved validation commands
-diagnose CI failures
-prepare PR summaries
-review pull requests
-assess merge-readiness
-coordinate specialized capabilities such as Ajna Review Cortex
-support Codespaces/operator runbooks
-record and replay audit trails with secret redaction
-generate agent kernel mission handoff packets
-validate workspace health and release readiness
-```
-
-Ajna's build path remains evidence-first:
-
-```txt
-PR evidence schema
-local collector fixtures
-offline API payload adapter
-collector snapshot contract
-review-pr normalization
-merge-readiness reporting
-client pipeline manifest/status checks
-future live read adapters behind policy gates
-```
+Normal PR validation runs on Node 22 for one clear required signal. Node 20 and Node 22 compatibility proof lives in the separate `Node Compatibility` workflow, which can be run manually or on schedule.
 
 ## Current Foundation Docs
 
@@ -348,11 +256,13 @@ docs/runtime/CODEMIND_READ_ADAPTERS.md
 docs/runtime/CODEMIND_LIVE_READ_POLICY_HANDSHAKE.md
 docs/runtime/CODEMIND_LIVE_READ_CLIENT_SEAM.md
 docs/runtime/CODEMIND_GITHUB_LIVE_READ_ADAPTER.md
+docs/runtime/CODEMIND_GITHUB_LIVE_READ_V1.md
 docs/runtime/CODEMIND_AJNA_LIVE_READ_PIPELINE.md
 docs/runtime/CODEMIND_OPERATOR_REVIEW_GATE.md
 docs/runtime/CODEMIND_APPROVED_WRITE_PREPARATION.md
 docs/runtime/CODEMIND_CONTROLLED_LOCAL_FILE_WRITE_GATE.md
 docs/runtime/CODEMIND_APPROVED_VALIDATION_COMMAND_GATE.md
+docs/runtime/CODEMIND_APPROVED_VALIDATION_EXECUTION.md
 docs/runtime/CODEMIND_PR_PREPARATION.md
 docs/runtime/CODEMIND_GITHUB_WRITE_PROPOSAL.md
 docs/runtime/CODEMIND_APPROVED_GITHUB_WRITE_GATE.md
@@ -363,24 +273,17 @@ docs/runtime/CODEMIND_APPROVED_LOCAL_FILE_WRITES.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
-docs/ajna-fixture-command-index.md
-docs/ajna-docs-command.md
-docs/ajna-client-pipeline-manifest-command.md
-docs/ajna-client-pipeline-status-command.md
-docs/ajna-client-collector-fixture-command.md
-docs/ajna-review-pr-client-collector-fixture-command.md
-docs/ajna-merge-readiness-client-collector-fixture-command.md
 docs/build-state/CODEMIND_BUILD_LEDGER.md
 docs/context/CODEMIND_PROJECT_CONTEXT_KERNEL.md
-docs/runtime/CODEMIND_GITHUB_LIVE_READ_V1.md
-docs/runtime/CODEMIND_APPROVED_VALIDATION_EXECUTION.md
 ```
+
+Some historical docs still use approval-era names because they describe earlier runtime phases. Current behavior is controlled by the runtime mode selected for the active command.
 
 ## Relationship to AELIB-X1YA0I
 
 CodeMind was extracted from earlier AELIB-side coding-agent planning work, but it is now developed as its own standalone platform.
 
-AELIB-X1YA0I may later integrate CodeMind through a thin governed external adapter.
+AELIB-X1YA0I may later integrate CodeMind through a thin external adapter.
 
 CodeMind should be able to work on any authorized repository, not only AELIB-X1YA0I.
 
