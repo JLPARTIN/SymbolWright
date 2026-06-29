@@ -233,7 +233,7 @@ export {
   AGENT_KERNEL_TRACE_PAYLOAD_KINDS,
   AGENT_KERNEL_TRACE_REPLAY_BLOCK_ID,
   AGENT_KERNEL_TRACE_REPLAY_PHASE_ID,
-  AGENT_KERNEL_TRACE_PR_ID,
+  AGENT_KERNEL_TRACE_REPLAY_PR_ID,
 } from './kernel/agent-kernel-trace.types.js'
 export type {
   AgentKernelBlockId,
