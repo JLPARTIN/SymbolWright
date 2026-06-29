@@ -61,11 +61,11 @@ describe('buildUnifiedSystemPrompt', () => {
     expect(prompt).not.toContain('Ajna Review Intelligence')
   })
 
-  it('includes permission mode', () => {
+  it('includes runtime mode', () => {
     const prompt = buildUnifiedSystemPrompt({
       permissionMode: 'READ_ONLY',
     })
-    expect(prompt).toContain('Permission Mode')
+    expect(prompt).toContain('Runtime Mode')
     expect(prompt).toContain('READ_ONLY')
   })
 
