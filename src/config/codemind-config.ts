@@ -2,8 +2,6 @@ import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 
-import type { CodemindProviderId } from '../providers/provider-adapter-contract.js'
-import { parseProviderId } from '../providers/provider-config.js'
 import type { CodemindRuntimeMode } from '../runtime/types.js'
 import { normalizeCodemindRuntimeMode } from '../runtime/policy/runtime-policy.js'
 
@@ -12,7 +10,6 @@ export type EmbeddingProviderType = 'voyage' | 'hash'
 export interface CodemindConfig {
   readonly anthropicApiKey?: string
   readonly githubToken?: string
-  readonly provider?: CodemindProviderId
   readonly model?: string
   readonly maxTokens?: number
   readonly baseURL?: string
@@ -24,7 +21,6 @@ export interface CodemindConfig {
 interface RawConfigFile {
   readonly anthropicApiKey?: unknown
   readonly githubToken?: unknown
-  readonly provider?: unknown
   readonly model?: unknown
   readonly maxTokens?: unknown
   readonly baseURL?: unknown
@@ -91,12 +87,6 @@ export function resolveCodemindConfig(sources: CodemindConfigSources = {}): Code
     stringOrUndefined(homeConfig?.githubToken) ??
     stringOrUndefined(projectConfig?.githubToken)
 
-  const provider =
-    parseProviderId(stringOrUndefined(cli.provider)) ??
-    parseProviderId(env['CODEMIND_PROVIDER']) ??
-    parseProviderId(stringOrUndefined(homeConfig?.provider)) ??
-    parseProviderId(stringOrUndefined(projectConfig?.provider))
-
   const model =
     stringOrUndefined(cli.model) ??
     stringOrUndefined(env['CODEMIND_MODEL']) ??
@@ -141,7 +131,6 @@ export function resolveCodemindConfig(sources: CodemindConfigSources = {}): Code
   return {
     ...(anthropicApiKey !== undefined ? { anthropicApiKey } : {}),
     ...(githubToken !== undefined ? { githubToken } : {}),
-    ...(provider !== undefined ? { provider } : {}),
     ...(model !== undefined ? { model } : {}),
     ...(maxTokens !== undefined ? { maxTokens } : {}),
     ...(baseURL !== undefined ? { baseURL } : {}),
@@ -167,7 +156,6 @@ export interface CodemindConfigValidationResult {
     readonly apiKeyPreview?: string
     readonly hasGitHubToken: boolean
     readonly githubTokenPreview?: string
-    readonly provider?: CodemindProviderId
     readonly model?: string
     readonly maxTokens?: number
     readonly baseURL?: string
@@ -181,9 +169,7 @@ export function validateCodemindConfig(config: CodemindConfig): CodemindConfigVa
   const errors: string[] = []
   const warnings: string[] = []
 
-  const providerRequiresAnthropicKey =
-    config.provider === undefined || config.provider === 'anthropic'
-  if (providerRequiresAnthropicKey && config.anthropicApiKey === undefined) {
+  if (config.anthropicApiKey === undefined) {
     errors.push(
       'Missing API key. Set ANTHROPIC_API_KEY environment variable or add anthropicApiKey to config.',
     )
@@ -226,7 +212,6 @@ export function validateCodemindConfig(config: CodemindConfig): CodemindConfigVa
       ...(hasApiKey ? { apiKeyPreview: redactApiKey(config.anthropicApiKey!) } : {}),
       hasGitHubToken,
       ...(hasGitHubToken ? { githubTokenPreview: redactApiKey(config.githubToken!) } : {}),
-      ...(config.provider !== undefined ? { provider: config.provider } : {}),
       ...(config.model !== undefined ? { model: config.model } : {}),
       ...(config.maxTokens !== undefined ? { maxTokens: config.maxTokens } : {}),
       ...(config.baseURL !== undefined ? { baseURL: config.baseURL } : {}),
