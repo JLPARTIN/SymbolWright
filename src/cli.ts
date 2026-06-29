@@ -27,6 +27,7 @@ import { renderProvidersCommand } from './cli-providers.js'
 import { renderReleaseReadinessCommand } from './cli-release-readiness.js'
 import { renderRepairLoopCommand } from './cli-repair-loop.js'
 import { renderRuntimeAjnaLiveRead } from './cli-runtime-ajna-live-read.js'
+import { renderRuntimeAjnaWorkflow } from './cli-runtime-ajna-workflow.js'
 import { renderRuntimeApplyPatch } from './cli-runtime-apply-patch.js'
 import { renderRuntimeCiReview } from './cli-runtime-ci-review.js'
 import { renderRuntimeGitHubLiveRead } from './cli-runtime-github-live-read.js'
@@ -48,11 +49,10 @@ import { renderRuntimeValidationCommand } from './cli-runtime-validation-command
 import { renderRuntimeValidationPlan } from './cli-runtime-validation-plan.js'
 import { renderRuntimeWorkflow } from './cli-runtime-workflow.js'
 import { renderRuntimeWriteIntent } from './cli-runtime-write-intent.js'
-import { renderRuntimeAjnaWorkflow } from './cli-runtime-ajna-workflow.js'
 import { renderScan, scanRepo } from './cli-scan.js'
 import { renderTraceStoreCommand } from './cli-trace-store.js'
 import { renderVersionCommand } from './cli-version.js'
-import { runAgentCommand, renderSessionsList } from './cli-agent.js'
+import { renderSessionsList, runAgentCommand } from './cli-agent.js'
 import { runOperatorCommand } from './operator/operator-console.js'
 import { SessionPersistence } from './storage/session-persistence.js'
 import { resolveStoragePaths } from './storage/storage-paths.js'
@@ -115,7 +115,9 @@ async function main(): Promise<void> {
       break
 
     case 'validation-plan':
-      console.log(await renderRuntimeValidationPlan(rest.length > 0 ? rest.join(' ') : undefined))
+      console.log(
+        await renderRuntimeValidationPlan(rest.length > 0 ? rest.join(' ') : undefined),
+      )
       break
 
     case 'propose-patch':
@@ -331,13 +333,17 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   }
 
   if (subcommand === 'review-pr') {
-    console.log(await renderAjnaReviewPrForFile(requireInput('codemind ajna review-pr <json-file>')))
+    console.log(
+      await renderAjnaReviewPrForFile(requireInput('codemind ajna review-pr <json-file>')),
+    )
     return
   }
 
   if (subcommand === 'merge-readiness') {
     console.log(
-      await renderAjnaMergeReadinessForFile(requireInput('codemind ajna merge-readiness <json-file>')),
+      await renderAjnaMergeReadinessForFile(
+        requireInput('codemind ajna merge-readiness <json-file>'),
+      ),
     )
     return
   }
