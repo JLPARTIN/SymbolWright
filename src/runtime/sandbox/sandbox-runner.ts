@@ -275,7 +275,9 @@ export class DockerSandboxRunner implements SandboxRunner {
   private readonly dockerBinary: string
   private readonly options: DockerSandboxRunnerOptions
 
-  public constructor(options: DockerSandboxRunnerOptions = resolveDockerSandboxRunnerOptionsFromEnv()) {
+  public constructor(
+    options: DockerSandboxRunnerOptions = resolveDockerSandboxRunnerOptionsFromEnv(),
+  ) {
     const config = resolveDockerSandboxConfig(options)
     this.dockerBinary = config.dockerBinary
     this.options = options
@@ -343,7 +345,9 @@ export class DockerSandboxFileWriter implements SandboxFileWriter {
   private readonly dockerBinary: string
   private readonly options: DockerSandboxRunnerOptions
 
-  public constructor(options: DockerSandboxRunnerOptions = resolveDockerSandboxRunnerOptionsFromEnv()) {
+  public constructor(
+    options: DockerSandboxRunnerOptions = resolveDockerSandboxRunnerOptionsFromEnv(),
+  ) {
     const config = resolveDockerSandboxConfig(options)
     this.dockerBinary = config.dockerBinary
     this.options = options
