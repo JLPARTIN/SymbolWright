@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import type { ProviderStreamEvent } from '../provider/provider.types.js'
 import { loadProviderGatewayConfig } from './provider-config.js'
 import { createProviderGatewayLlmProvider } from './provider-gateway-llm-provider.js'
 import type {
@@ -38,7 +39,7 @@ describe('createProviderGatewayLlmProvider', () => {
       transport,
     })
 
-    const events = []
+    const events: ProviderStreamEvent[] = []
     for await (const event of provider.complete(
       [{ role: 'user', content: 'hello' }],
       [],
@@ -58,9 +59,7 @@ describe('createProviderGatewayLlmProvider', () => {
     ])
     expect(JSON.parse(transport.requests[0]?.body ?? '{}')).toMatchObject({
       model: 'gpt-test',
-      messages: [
-        { role: 'user', content: 'hello' },
-      ],
+      messages: [{ role: 'user', content: 'hello' }],
     })
   })
 
