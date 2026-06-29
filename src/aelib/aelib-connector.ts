@@ -117,7 +117,7 @@ export async function checkAelibConnection(
   options: CheckAelibConnectionOptions = {},
 ): Promise<AelibConnectorStatus> {
   const checkedAt = options.now?.() ?? new Date()
-  const env = options.env ?? process.env
+  const env: AelibConnectorEnv = options.env ?? process.env
   const config = resolveAelibConnectorConfig(env)
   const token = firstNonEmpty(env.CODEMIND_AELIB_TOKEN, env.AELIB_TOKEN)
 
