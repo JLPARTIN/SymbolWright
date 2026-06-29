@@ -9,6 +9,7 @@ import {
   createFixtureRegistry,
 } from '../registry/fixture-registry-factory.js'
 import type { PatchFileChange } from '../patch/patch-application.js'
+import type { SandboxFileWriter, SandboxRunner } from '../sandbox/sandbox-runner.js'
 
 export type LocalSelfEditMode = 'preview-only' | 'apply-only' | 'apply-and-validate'
 
@@ -21,6 +22,8 @@ export interface LocalSelfEditRequest {
   readonly validationCommand?: string
   readonly policy?: RuntimePolicySnapshot
   readonly approval?: RuntimeApproval
+  readonly sandboxRunner?: SandboxRunner
+  readonly sandboxFileWriter?: SandboxFileWriter
 }
 
 export interface LocalSelfEditResult {
@@ -57,6 +60,10 @@ export async function runLocalSelfEditWorkflow(
     ...baseContext,
     ...(request.policy !== undefined ? { policy: request.policy } : {}),
     ...(request.approval !== undefined ? { approval: request.approval } : {}),
+    ...(request.sandboxRunner !== undefined ? { sandboxRunner: request.sandboxRunner } : {}),
+    ...(request.sandboxFileWriter !== undefined
+      ? { sandboxFileWriter: request.sandboxFileWriter }
+      : {}),
   }
 
   const applyDryRun = request.mode === 'preview-only'
