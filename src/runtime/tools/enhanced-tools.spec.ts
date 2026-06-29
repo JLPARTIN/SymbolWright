@@ -156,7 +156,12 @@ describe('edit-file-tool', () => {
 
 describe('bash-tool', () => {
   it('routes allowed commands through the sandbox runner', async () => {
-    const result = await executeBashTool({ command: 'npm test' }, tempDir, true, successfulSandboxRunner)
+    const result = await executeBashTool(
+      { command: 'npm test' },
+      tempDir,
+      true,
+      successfulSandboxRunner,
+    )
 
     expect(result).toContain('Runner: docker')
     expect(result).toContain('Status: EXECUTED')
