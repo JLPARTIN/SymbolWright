@@ -75,7 +75,9 @@ describe('executeValidationCommand', () => {
 
     expect(result.outcome).toBe('BLOCKED')
     expect(result.exitCode).toBeNull()
-    expect(result.gateResult.blockReasons).toContain('Shell execution is disabled by runtime policy.')
+    expect(result.gateResult.blockReasons).toContain(
+      'Shell execution is disabled by runtime policy.',
+    )
   })
 
   it('dry-runs without executing command', async () => {
