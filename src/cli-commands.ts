@@ -12,9 +12,9 @@ export const CODEMIND_CLI_COMMANDS = [
     description: 'Open the CodeMind Operator Workspace console',
   },
   {
-    name: 'agent [--mode <mode>] [message]',
+    name: 'agent [message] [--mode <mode>]',
     description:
-      'Run the direct execution coding agent. Modes: APPROVED_EXECUTION, PROPOSAL_ONLY, READ_ONLY, PLAN_ONLY',
+      'Run the direct execution coding agent with APPROVED_EXECUTION, PROPOSAL_ONLY, READ_ONLY, or PLAN_ONLY runtime mode',
   },
   { name: 'sessions', description: 'List saved agent sessions' },
   {
@@ -37,12 +37,16 @@ export const CODEMIND_CLI_COMMANDS = [
   },
   { name: 'pr-notes [focus]', description: 'Draft PR notes without posting them' },
   {
+    name: 'pr-notes --fixture-file <json-file>',
+    description: 'Draft PR notes from local PR fixture evidence',
+  },
+  {
     name: 'runtime run <goal> --read-only [--max-iterations <n>] [--json]',
-    description: 'Run the legacy bounded read-only runtime loop with JSON output',
+    description: 'Run a bounded runtime loop with operator controls and JSON output',
   },
   {
     name: 'runtime run <goal> --approval-ticket <id>',
-    description: 'Render legacy approved runtime dry-run output',
+    description: 'Render runtime execution with audit output',
   },
   {
     name: 'live-read-policy <json-file>',
@@ -175,37 +179,87 @@ export const CODEMIND_CLI_COMMANDS = [
     name: 'ajna client-pipeline-status',
     description: 'Render the local Ajna client collector fixture pipeline status',
   },
+  {
+    name: 'ajna review-pr <json-file>',
+    description: 'Render a read-only Ajna PR review report from evidence JSON',
+  },
+  {
+    name: 'ajna review-pr-github-fixture <json-file>',
+    description: 'Render Ajna review-pr from a mocked local GitHub PR payload fixture',
+  },
+  {
+    name: 'ajna review-pr-github-api-fixture <json-file>',
+    description: 'Render Ajna review-pr from a local GitHub-shaped API payload fixture',
+  },
+  {
+    name: 'ajna github-api-snapshot-fixture <json-file>',
+    description: 'Render collector snapshot JSON from a local GitHub-shaped API payload fixture',
+  },
+  {
+    name: 'ajna client-collector-fixture <json-file>',
+    description: 'Render collector snapshot JSON from a local fake client bridge fixture',
+  },
+  {
+    name: 'ajna review-pr-client-collector-fixture <json-file>',
+    description: 'Render Ajna review-pr from a local fake client bridge fixture',
+  },
+  {
+    name: 'ajna merge-readiness-client-collector-fixture <json-file>',
+    description: 'Assess merge-readiness from a local fake client bridge fixture',
+  },
+  {
+    name: 'ajna review-pr-collector-fixture <json-file>',
+    description: 'Render Ajna review-pr from a local collector snapshot fixture',
+  },
+  {
+    name: 'ajna review-pr-readonly-collector-fixture <json-file>',
+    description: 'Render Ajna review-pr from a local read-only collector request fixture',
+  },
+  {
+    name: 'ajna github-readonly-collector-fixture <json-file>',
+    description: 'Render a local read-only collector snapshot fixture as JSON',
+  },
+  {
+    name: 'ajna merge-readiness <json-file>',
+    description: 'Assess merge-readiness from read-only Ajna evidence JSON',
+  },
 ] as const
 
 export function renderHelp(): string {
-  const lines = ['CodeMind CLI', '', 'Commands:']
-  for (const command of CODEMIND_CLI_COMMANDS) {
-    lines.push(`  ${command.name.padEnd(54)} ${command.description}`)
-  }
+  const lines = [
+    'CodeMind — direct execution AI coding agent',
+    '',
+    'Usage: codemind <command> [args]',
+    '',
+    'Commands:',
+    ...CODEMIND_CLI_COMMANDS.map(({ name, description }) => `  ${name.padEnd(56)} ${description}`),
+    '',
+    'Run "codemind agent --mode APPROVED_EXECUTION" for direct agent work.',
+    'Run "codemind status" to see platform posture and active policy.',
+  ]
   return lines.join('\n')
 }
 
 export function renderStatus(): string {
-  const snapshot = getCodemindFoundationSnapshot()
-  const completed = getCompletedRuntimeBuildPhaseCount()
-  const next = getNextRuntimeBuildPhase()
-  return [
-    'CodeMind Status',
-    '',
-    `Mode: ${snapshot.mode}`,
-    `Policy: ${snapshot.policy}`,
-    `Runtime phases complete: ${completed}`,
-    `Next runtime phase: ${next?.title ?? 'none'}`,
-    '',
-    'Active capabilities:',
-    ...snapshot.capabilities.map((capability) => `- ${capability}`),
-  ].join('\n')
+  const snap = getCodemindFoundationSnapshot()
+  const nextPhase = getNextRuntimeBuildPhase()
+  const lines = [
+    `Platform:           ${snap.platform}`,
+    `Capability:         ${snap.primaryCapability}`,
+    `Posture:            ${snap.posture.join(', ')}`,
+    `Runtime phases:     ${getCompletedRuntimeBuildPhaseCount()} complete`,
+    `Next runtime phase: ${nextPhase === undefined ? 'none' : `Phase ${nextPhase.id} — ${nextPhase.title}`}`,
+    `Mutation:           ${snap.mutationEnabled ? 'ENABLED' : 'DISABLED'}`,
+    `GitHub write:       ${snap.githubWriteEnabled ? 'ENABLED' : 'DISABLED'}`,
+    `Bash execution:     ${snap.bashExecutionEnabled ? 'ENABLED' : 'DISABLED'}`,
+    `Network ingestion:  ${snap.networkIngestionEnabled ? 'ENABLED' : 'DISABLED'}`,
+  ]
+  return lines.join('\n')
 }
 
 export function renderNotYetActive(command: string): string {
   return [
-    `Command not yet active: ${command}`,
-    '',
-    'This command is reserved in the public CLI surface and will be activated in a later build phase.',
+    `codemind ${command}: not yet active — awaiting runtime phase`,
+    'Run "codemind help" for available commands.',
   ].join('\n')
 }
