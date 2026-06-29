@@ -149,7 +149,7 @@ export async function checkAelibConnection(
   }
 
   if (token !== undefined) {
-    headers.authorization = `Bearer ${token}`
+    headers['authorization'] = `Bearer ${token}`
   }
 
   try {
