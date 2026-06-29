@@ -37,8 +37,8 @@ export function redactProviderGatewayConfig(
   config: ProviderGatewayConfig,
 ): RedactedProviderGatewayConfig {
   return {
-    activeProvider: config.activeProvider,
-    activeModel: config.activeModel,
+    ...(config.activeProvider === undefined ? {} : { activeProvider: config.activeProvider }),
+    ...(config.activeModel === undefined ? {} : { activeModel: config.activeModel }),
     fallbackProviders: config.fallbackProviders,
     providers: Object.values(config.providers).map((provider) => ({
       id: provider.id,
@@ -46,7 +46,7 @@ export function redactProviderGatewayConfig(
       enabled: provider.enabled,
       baseUrl: provider.baseUrl,
       apiKey: provider.apiKey === undefined ? 'missing' : 'configured',
-      defaultModel: provider.defaultModel,
+      ...(provider.defaultModel === undefined ? {} : { defaultModel: provider.defaultModel }),
       capabilities: provider.capabilities,
     })),
   }
