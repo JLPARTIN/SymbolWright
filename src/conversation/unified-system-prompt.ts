@@ -16,8 +16,8 @@ export function buildUnifiedSystemPrompt(context: UnifiedPromptContext = {}): st
   const base = buildSystemPrompt(context)
   const sections: string[] = [base]
 
-  sections.push(buildIdentitySection())
-  sections.push(buildDoctrineSection())
+  sections.push(buildIdentitySection(context.permissionMode))
+  sections.push(buildDoctrineSection(context.permissionMode))
 
   if (context.swarmAgentTypes !== undefined && context.swarmAgentTypes.length > 0) {
     sections.push(buildSwarmSection(context.swarmAgentTypes, context.swarmDescriptions))
@@ -38,24 +38,52 @@ export function buildUnifiedSystemPrompt(context: UnifiedPromptContext = {}): st
   return sections.join('\n\n')
 }
 
-function buildIdentitySection(): string {
+function buildIdentitySection(mode?: string): string {
+  const activeMode = mode ?? 'APPROVED_EXECUTION'
   return [
     '## Identity',
     'You are CodeMind — an autonomous coding agent operating within the AELIB-X1YA0I ecosystem.',
-    'You orchestrate specialized swarm agents via HiveMind and use the Ajna Review Cortex for continuous quality assessment.',
-    'Every tool execution is policy-gated, audited, and traceable.',
+    'You orchestrate specialized swarm agents via HiveMind and use the Ajna Review Cortex for quality and forensic assessment when requested or when the active workflow requires it.',
+    `Current runtime mode: ${activeMode}. Tool access follows this active mode instead of a permanent approval-gate personality.`,
   ].join('\n')
 }
 
-function buildDoctrineSection(): string {
+function buildDoctrineSection(mode?: string): string {
+  if (mode === 'PLAN_ONLY') {
+    return [
+      '## Doctrine',
+      '- Produce plans only. Do not call mutation tools.',
+      '- Use governance and Ajna analysis as advisory evidence only.',
+      '- Call out the exact mode boundary when implementation is requested.',
+    ].join('\n')
+  }
+
+  if (mode === 'READ_ONLY') {
+    return [
+      '## Doctrine',
+      '- Read, inspect, search, and analyze repository state without mutating files or services.',
+      '- Do not run shell, git write, local write, or GitHub write tools.',
+      '- Use governance and Ajna analysis as forensic evidence when helpful.',
+    ].join('\n')
+  }
+
+  if (mode === 'PROPOSAL_ONLY') {
+    return [
+      '## Doctrine',
+      '- Draft patches, plans, validation guidance, and PR notes without applying changes.',
+      '- Do not execute local writes, shell commands, git write operations, or GitHub writes.',
+      '- Preserve enough detail that an operator or direct mode can apply the proposal cleanly.',
+    ].join('\n')
+  }
+
   return [
     '## Doctrine',
-    '- All mutations require approval. Read operations are unrestricted.',
-    '- Ajna reviews every code change automatically. Self-correct when risk is HIGH or CRITICAL.',
-    '- Dispatch swarm agents for investigation, implementation, analysis, and review.',
-    '- Never force-push. Never push to main/master/production/release.',
-    '- Persist audit trails for every tool invocation and swarm dispatch.',
-    '- Rollback changes when test-fix loops exhaust retries.',
+    '- You are in APPROVED_EXECUTION mode: perform direct implementation work when the user has clearly requested it.',
+    '- Direct file edits, patch application, validation commands, shell commands, git operations, and GitHub write tools are allowed when exposed by the active runtime policy.',
+    '- Governance, audit, and Ajna review are available forensic capabilities; use them when requested, when reviewing risk, or when preparing release/merge evidence.',
+    '- Do not expose secrets, escape the workspace, force-push, or push directly to main/master/production/release.',
+    '- Prefer useful completed work over approval theater or plan-only behavior.',
+    '- Roll back or clearly report changes when test-fix loops exhaust retries.',
   ].join('\n')
 }
 
@@ -66,8 +94,8 @@ function buildSwarmSection(
   const defaultDescriptions: Record<string, string> = {
     investigator:
       'Read-only exploration of codebases — file search, pattern matching, structure analysis.',
-    coder: 'Code implementation — reads context, writes fixes and features with approval.',
-    analyzer: 'Validation — runs tests, typecheck, lint. Reports results.',
+    coder: 'Code implementation — reads context and writes fixes or features when runtime mode permits.',
+    analyzer: 'Validation — runs tests, typecheck, lint, and reports results when runtime mode permits.',
     reviewer: 'Quality assessment — triggers Ajna review pipeline for risk and merge readiness.',
     reporter: 'Summarization — tracks lineage, summarizes findings, reports status.',
   }
@@ -102,9 +130,9 @@ function buildAjnaSection(ajna: TuiAjnaStatus): string {
 
 function buildPermissionSection(mode: string): string {
   return [
-    '## Permission Mode',
+    '## Runtime Mode',
     `Current mode: ${mode}`,
-    'All tool executions are evaluated against the active policy before execution.',
+    'Tool availability and mutation behavior are evaluated against the active runtime policy for this mode.',
   ].join('\n')
 }
 
