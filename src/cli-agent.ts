@@ -14,6 +14,9 @@ import {
 } from './runtime/policy/runtime-policy.js'
 import { createAnthropicProvider } from './provider/anthropic-provider.js'
 import type { LLMProvider } from './provider/provider.types.js'
+import type { CodemindProviderId } from './providers/provider-adapter-contract.js'
+import { loadProviderGatewayConfig, parseProviderId } from './providers/provider-config.js'
+import { createProviderGatewayLlmProvider } from './providers/provider-gateway-llm-provider.js'
 import { assembleAgentTools } from './runtime/tools/tool-assembly.js'
 import type {
   CodemindRuntimeMode,
@@ -49,6 +52,8 @@ import { loadVectorStore } from './cli-index.js'
 interface ParsedAgentArgs {
   readonly resumeSessionId?: string
   readonly runtimeMode?: CodemindRuntimeMode
+  readonly provider?: CodemindProviderId
+  readonly model?: string
   readonly attachApprovalTicket: boolean
   readonly userArgs: readonly string[]
 }
@@ -70,9 +75,19 @@ function parseModeFlag(value: string): CodemindRuntimeMode {
   return mode
 }
 
+function parseProviderFlag(value: string): CodemindProviderId {
+  const provider = parseProviderId(value)
+  if (provider === undefined) {
+    throw new Error(`Invalid provider: ${value}. Run "codemind providers" for supported providers.`)
+  }
+  return provider
+}
+
 function parseAgentArgs(args: readonly string[]): ParsedAgentArgs {
   let resumeSessionId: string | undefined
   let runtimeMode: CodemindRuntimeMode | undefined
+  let provider: CodemindProviderId | undefined
+  let model: string | undefined
   let attachApprovalTicket = false
   const userArgs: string[] = []
 
@@ -98,6 +113,36 @@ function parseAgentArgs(args: readonly string[]): ParsedAgentArgs {
 
     if (arg.startsWith('--mode=')) {
       runtimeMode = parseModeFlag(arg.slice('--mode='.length))
+      continue
+    }
+
+    if (arg === '--provider') {
+      const value = args[i + 1]
+      if (value === undefined || value.startsWith('--')) {
+        throw new Error('Missing value for --provider')
+      }
+      provider = parseProviderFlag(value)
+      i++
+      continue
+    }
+
+    if (arg.startsWith('--provider=')) {
+      provider = parseProviderFlag(arg.slice('--provider='.length))
+      continue
+    }
+
+    if (arg === '--model') {
+      const value = args[i + 1]
+      if (value === undefined || value.startsWith('--')) {
+        throw new Error('Missing value for --model')
+      }
+      model = value
+      i++
+      continue
+    }
+
+    if (arg.startsWith('--model=')) {
+      model = arg.slice('--model='.length)
       continue
     }
 
@@ -128,12 +173,23 @@ function parseAgentArgs(args: readonly string[]): ParsedAgentArgs {
   return {
     ...(resumeSessionId !== undefined ? { resumeSessionId } : {}),
     ...(runtimeMode !== undefined ? { runtimeMode } : {}),
+    ...(provider !== undefined ? { provider } : {}),
+    ...(model !== undefined ? { model } : {}),
     attachApprovalTicket,
     userArgs,
   }
 }
 
 function createProvider(config: CodemindConfig): LLMProvider {
+  if (config.provider !== undefined && config.provider !== 'anthropic') {
+    const gatewayConfig = loadProviderGatewayConfig({
+      ...process.env,
+      CODEMIND_PROVIDER: config.provider,
+      ...(config.model === undefined ? {} : { CODEMIND_MODEL: config.model }),
+    })
+    return createProviderGatewayLlmProvider({ config: gatewayConfig })
+  }
+
   return createAnthropicProvider({
     apiKey: config.anthropicApiKey!,
     ...(config.model !== undefined ? { model: config.model } : {}),
@@ -151,6 +207,16 @@ function resolveEmbeddingProvider(config: CodemindConfig): EmbeddingProvider {
     return createVoyageEmbeddingProvider({ apiKey: config.voyageApiKey })
   }
   return createHashEmbeddingProvider()
+}
+
+function resolveDisplayModel(config: CodemindConfig): string {
+  if (config.model !== undefined) {
+    return config.model
+  }
+  if (config.provider !== undefined && config.provider !== 'anthropic') {
+    return `${config.provider}:default`
+  }
+  return 'claude-sonnet-4-20250514'
 }
 
 function createMessage(role: ConversationMessage['role'], content: string): ConversationMessage {
@@ -172,7 +238,7 @@ async function runOneShot(
   memoryContext: string,
 ): Promise<void> {
   const tools = assembleAgentTools()
-  const model = config.model ?? 'claude-sonnet-4-20250514'
+  const model = resolveDisplayModel(config)
   const renderer = createTerminalRenderer({ model })
   const sessionId = `cm-${Date.now()}`
 
@@ -209,7 +275,7 @@ async function runInteractive(
   resumeSessionId?: string,
 ): Promise<void> {
   const tools = assembleAgentTools()
-  const model = config.model ?? 'claude-sonnet-4-20250514'
+  const model = resolveDisplayModel(config)
   const sessionId = resumeSessionId ?? `cm-${Date.now()}`
 
   const conversationHistory: ConversationMessage[] = []
@@ -227,6 +293,7 @@ async function runInteractive(
   console.log('\x1b[36mCodeMind\x1b[0m interactive mode')
   console.log(`\x1b[2mSession: ${sessionId}\x1b[0m`)
   console.log(`\x1b[2mRuntime mode: ${toolContext.policy.mode}\x1b[0m`)
+  console.log(`\x1b[2mProvider: ${provider.displayName}\x1b[0m`)
   console.log('\x1b[2mCommands: /exit, /cost, /session, /clear, /help\x1b[0m\n')
 
   try {
@@ -325,9 +392,12 @@ export function renderSessionsList(persistence: SessionPersistence): string {
 
 export async function runAgentCommand(args: readonly string[]): Promise<void> {
   const parsedArgs = parseAgentArgs(args)
-  const config = resolveCodemindConfig({
-    cliFlags: parsedArgs.runtimeMode !== undefined ? { runtimeMode: parsedArgs.runtimeMode } : {},
-  })
+  const cliFlags: Partial<CodemindConfig> = {
+    ...(parsedArgs.runtimeMode !== undefined ? { runtimeMode: parsedArgs.runtimeMode } : {}),
+    ...(parsedArgs.provider !== undefined ? { provider: parsedArgs.provider } : {}),
+    ...(parsedArgs.model !== undefined ? { model: parsedArgs.model } : {}),
+  }
+  const config = resolveCodemindConfig({ cliFlags })
   const validation = validateCodemindConfig(config)
 
   if (!validation.valid) {
