@@ -57,7 +57,10 @@ describe('createProviderGatewayLlmProvider', () => {
     ])
     expect(JSON.parse(transport.requests[0]?.body ?? '{}')).toMatchObject({
       model: 'gpt-test',
-      messages: [{ role: 'user', content: 'hello' }],
+      messages: [
+        { role: 'system', content: 'system prompt' },
+        { role: 'user', content: 'hello' },
+      ],
     })
   })
 
