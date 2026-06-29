@@ -4,9 +4,10 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
-import { runLocalSelfEditWorkflow, renderLocalSelfEditResult } from './local-self-edit-workflow.js'
 import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
+import type { SandboxFileWriter } from '../sandbox/sandbox-runner.js'
+import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import { renderLocalSelfEditResult, runLocalSelfEditWorkflow } from './local-self-edit-workflow.js'
 
 const policy: RuntimePolicySnapshot = {
   mode: 'APPROVED_EXECUTION',
@@ -22,6 +23,23 @@ const approval: RuntimeApproval = {
   ticketId: 'SELF-EDIT-W-001',
   approvedBy: 'operator',
   scopes: ['file:write', 'command:validate'],
+}
+
+const hostBackedSandboxWriter: SandboxFileWriter = {
+  writeFile: (request) => {
+    const target = path.resolve(request.workspaceRoot, request.targetPath)
+    fs.mkdirSync(path.dirname(target), { recursive: true })
+    fs.writeFileSync(target, request.content, 'utf8')
+    return {
+      outcome: 'WRITTEN',
+      runner: 'docker',
+      targetPath: request.targetPath,
+      stdout: '',
+      stderr: '',
+      exitCode: 0,
+      reason: null,
+    }
+  },
 }
 
 function makeWorkspace(): string {
@@ -53,6 +71,7 @@ describe('local self-edit workflow', () => {
         files: [{ targetPath: 'src/generated.ts', content: 'export const generated = true\n' }],
         policy,
         approval,
+        sandboxFileWriter: hostBackedSandboxWriter,
       },
       workspace,
     )
@@ -74,6 +93,7 @@ describe('local self-edit workflow', () => {
         validationCommand: 'npm run typecheck',
         policy,
         approval,
+        sandboxFileWriter: hostBackedSandboxWriter,
       },
       workspace,
     )
@@ -97,6 +117,7 @@ describe('local self-edit workflow', () => {
         files: [{ targetPath: 'src/generated.ts', content: 'export const generated = true\n' }],
         policy,
         approval,
+        sandboxFileWriter: hostBackedSandboxWriter,
       },
       workspace,
     )
