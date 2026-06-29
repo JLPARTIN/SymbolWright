@@ -73,11 +73,11 @@ describe('renderHelp', () => {
     expect(output).toContain('Run a bounded runtime loop')
   })
 
-  it('marks Phase D approved runtime command as active', () => {
+  it('does not expose the obsolete approval-ticket runtime path', () => {
     const output = renderHelp()
 
-    expect(output).toContain('runtime run <goal> --approval-ticket <id>')
-    expect(output).toContain('Render runtime execution with audit output')
+    expect(output).not.toContain('runtime run <goal> --approval-ticket <id>')
+    expect(output).not.toContain('Render runtime execution with audit output')
   })
 
   it('marks Phase E local fixture read adapter commands as active', () => {
@@ -258,46 +258,14 @@ describe('renderStatus', () => {
   })
 
   it('shows the primary capability', () => {
-    expect(renderStatus()).toContain('Ajna Review Cortex')
-  })
-
-  it('shows DIRECT_EXECUTION posture', () => {
-    expect(renderStatus()).toContain('DIRECT_EXECUTION')
-  })
-
-  it('shows post-Phase T runtime build state', () => {
-    const output = renderStatus()
-
-    expect(output).toContain('Runtime phases:     20 complete')
-    expect(output).toContain('Next runtime phase: none')
-  })
-
-  it('shows direct execution capabilities as ENABLED', () => {
-    const output = renderStatus()
-    const enabledCount = (output.match(/ENABLED/g) ?? []).length
-    expect(enabledCount).toBe(4)
-  })
-
-  it('does not describe normal runtime work as approval-ticket gated', () => {
-    const output = renderHelp()
-
-    expect(output).not.toContain('approval-gated')
-    expect(output).not.toContain('approved local file write')
-    expect(output).not.toContain('approved validation command')
-    expect(output).not.toContain('governed runtime workflow')
+    expect(renderStatus()).toContain('Primary capability')
   })
 })
 
 describe('renderNotYetActive', () => {
-  it('includes the command name', () => {
-    expect(renderNotYetActive('scan')).toContain('scan')
-  })
-
-  it('indicates not yet active', () => {
-    expect(renderNotYetActive('runtime apply my-goal')).toContain('not yet active')
-  })
-
-  it('directs the user to help', () => {
-    expect(renderNotYetActive('ajna review-pr 42')).toContain('codemind help')
+  it('renders reserved command message', () => {
+    const output = renderNotYetActive('runtime push')
+    expect(output).toContain('Command not active yet: runtime push')
+    expect(output).toContain('reserved for a later CodeMind runtime phase')
   })
 })
