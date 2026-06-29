@@ -163,6 +163,7 @@ export function renderWorkspaceServePlan(options: WorkspaceCommandOptions): stri
     '- GET /',
     '- GET /api/health',
     '- GET /api/providers',
+    '- GET /api/aelib',
     '',
     'Boundary:',
     '- no browser shell execution',
