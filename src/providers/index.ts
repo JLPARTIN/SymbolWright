@@ -31,6 +31,9 @@ export { FetchProviderHttpTransport } from './provider-http-transport.js'
 export { ProviderGateway, runProviderGatewayRequest } from './provider-gateway.js'
 export type { ProviderGatewayOptions } from './provider-gateway.js'
 
+export { createProviderGatewayLlmProvider } from './provider-gateway-llm-provider.js'
+export type { ProviderGatewayLlmProviderOptions } from './provider-gateway-llm-provider.js'
+
 export {
   redactProviderGatewayConfig,
   redactProviderSecret,
