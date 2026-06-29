@@ -243,7 +243,8 @@ export function renderHelp(): string {
     'Run "codemind providers status" to inspect configured provider state.',
     'Run "codemind status" to see platform posture and active policy.',
   ]
-  return lines.join('\n')
+  return lines.join('
+')
 }
 
 export function renderStatus(): string {
@@ -260,9 +261,13 @@ export function renderStatus(): string {
     `Bash execution:     ${snap.bashExecutionEnabled ? 'ENABLED' : 'DISABLED'}`,
     `Network ingestion:  ${snap.networkIngestionEnabled ? 'ENABLED' : 'DISABLED'}`,
   ]
-  return lines.join('\n')
+  return lines.join('
+')
 }
 
 export function renderNotYetActive(command: string): string {
-  return `Command not yet active: ${command}`
+  return [`Command not yet active: ${command}`, 'Run "codemind help" for available commands.'].join(
+    '
+',
+  )
 }
