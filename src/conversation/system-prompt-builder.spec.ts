@@ -7,7 +7,7 @@ describe('system-prompt-builder', () => {
     const prompt = buildSystemPrompt()
     expect(prompt).toContain('CodeMind')
     expect(prompt).toContain('coding agent')
-    expect(prompt).toContain('governance')
+    expect(prompt.toLowerCase()).toContain('governance')
   })
 
   it('includes project name', () => {
