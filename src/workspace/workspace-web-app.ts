@@ -91,6 +91,16 @@ function textResponse(statusCode: number, body: string): WorkspaceWebHttpRespons
   }
 }
 
+function renderHealthWorkspacePayload(workspace: WorkspaceState) {
+  return {
+    ...workspace,
+    primary: {
+      displayName: workspace.primaryName,
+      rootPath: workspace.primaryPath,
+    },
+  }
+}
+
 export function renderWorkspaceWebHtml(): string {
   return `<!doctype html>
 <html lang="en">
@@ -208,7 +218,7 @@ export function renderWorkspaceWebResponse(
     return jsonResponse({
       status: 'ok',
       app: snapshot.app,
-      workspace: snapshot.workspace,
+      workspace: renderHealthWorkspacePayload(snapshot.workspace),
       boundary: snapshot.boundary,
     })
   }
