@@ -8,6 +8,8 @@ import {
 } from './runtime/runtime-build-state.js'
 import { resolveCodemindConfig, validateCodemindConfig } from './config/codemind-config.js'
 import { ProviderGateway } from './providers/provider-gateway.js'
+import { runSandboxReadinessCheck } from './runtime/sandbox/sandbox-diagnostics.js'
+import { renderDockerSandboxConfig } from './runtime/sandbox/sandbox-runner.js'
 import { assembleAgentTools } from './runtime/tools/tool-assembly.js'
 import { resolveStoragePaths } from './storage/storage-paths.js'
 
@@ -185,6 +187,35 @@ function checkProviderGateway(): DoctorCheck {
   }
 }
 
+function checkSandboxConfiguration(): DoctorCheck {
+  const report = runSandboxReadinessCheck()
+  return {
+    name: 'Sandbox configuration',
+    status: 'PASS',
+    detail: renderDockerSandboxConfig(report.config),
+  }
+}
+
+function checkSandboxReadiness(): DoctorCheck {
+  const report = runSandboxReadinessCheck()
+  if (report.ready) {
+    return {
+      name: 'Sandbox readiness',
+      status: 'PASS',
+      detail: 'Docker sandbox is available for isolated command execution.',
+    }
+  }
+
+  const dockerCheck = report.checks.find((check) => check.name === 'Docker availability')
+  return {
+    name: 'Sandbox readiness',
+    status: 'WARN',
+    detail:
+      dockerCheck?.detail ??
+      'Docker sandbox is unavailable; sandboxed execution will stop instead of using host fallback.',
+  }
+}
+
 function checkToolRegistry(): DoctorCheck {
   const tools = assembleAgentTools()
   if (tools.length >= 30) {
@@ -249,6 +280,8 @@ export function runDoctor(workspaceRoot: string): DoctorReport {
     checkSafetyPosture(),
     checkApiKey(),
     checkProviderGateway(),
+    checkSandboxConfiguration(),
+    checkSandboxReadiness(),
     checkToolRegistry(),
     checkSessionsDir(workspaceRoot),
     checkMemoryDir(workspaceRoot),
