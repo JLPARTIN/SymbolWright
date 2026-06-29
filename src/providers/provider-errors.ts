@@ -11,8 +11,8 @@ export type ProviderGatewayErrorCode =
 
 export class ProviderGatewayError extends Error {
   public readonly code: ProviderGatewayErrorCode
-  public readonly providerId?: CodemindProviderId
-  public readonly status?: number
+  public readonly providerId: CodemindProviderId | undefined
+  public readonly status: number | undefined
 
   public constructor(
     code: ProviderGatewayErrorCode,
