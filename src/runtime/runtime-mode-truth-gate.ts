@@ -96,7 +96,10 @@ const BANNED_STALE_PHRASES: readonly BannedPhraseCheck[] = [
   },
 ]
 
-function readWorkspaceFile(workspaceRoot: string, filePath: string): string | undefined {
+function readWorkspaceFile(
+  workspaceRoot: string,
+  filePath: string,
+): string | undefined {
   const absolutePath = path.join(workspaceRoot, filePath)
   if (!fs.existsSync(absolutePath)) {
     return undefined
@@ -119,12 +122,16 @@ function collectRequiredPhraseFindings(workspaceRoot: string): string[] {
     }
 
     if (!includesAllRuntimeModes(content)) {
-      findings.push(`${check.filePath} must document all canonical runtime modes`)
+      findings.push(
+        `${check.filePath} must document all canonical runtime modes`,
+      )
     }
 
     for (const phrase of check.phrases) {
       if (!content.includes(phrase)) {
-        findings.push(`${check.filePath} missing runtime truth phrase: ${phrase}`)
+        findings.push(
+          `${check.filePath} missing runtime truth phrase: ${phrase}`,
+        )
       }
     }
   }
@@ -171,10 +178,14 @@ function collectRuntimePolicyFindings(): string[] {
     findings.push('default runtime policy must resolve to APPROVED_EXECUTION')
   }
   if (!policy.allowNetwork) {
-    findings.push('APPROVED_EXECUTION default policy must allow network/provider access')
+    findings.push(
+      'APPROVED_EXECUTION default policy must allow network/provider access',
+    )
   }
   if (!policy.allowShell) {
-    findings.push('APPROVED_EXECUTION default policy must allow shell execution')
+    findings.push(
+      'APPROVED_EXECUTION default policy must allow shell execution',
+    )
   }
   if (!policy.allowWrites) {
     findings.push('APPROVED_EXECUTION default policy must allow local writes')
@@ -200,7 +211,9 @@ function collectRuntimePolicyFindings(): string[] {
 
 function collectPromptFindings(): string[] {
   const findings: string[] = []
-  const prompt = buildUnifiedSystemPrompt({ permissionMode: 'APPROVED_EXECUTION' })
+  const prompt = buildUnifiedSystemPrompt({
+    permissionMode: 'APPROVED_EXECUTION',
+  })
 
   if (!prompt.includes('perform direct implementation work')) {
     findings.push(
@@ -208,13 +221,19 @@ function collectPromptFindings(): string[] {
     )
   }
   if (!prompt.includes('Direct file edits')) {
-    findings.push('APPROVED_EXECUTION prompt must explicitly allow direct file edits')
+    findings.push(
+      'APPROVED_EXECUTION prompt must explicitly allow direct file edits',
+    )
   }
   if (!prompt.includes('Prefer useful completed work over approval theater')) {
-    findings.push('APPROVED_EXECUTION prompt must reject approval-theater behavior')
+    findings.push(
+      'APPROVED_EXECUTION prompt must reject approval-theater behavior',
+    )
   }
   if (prompt.includes('All mutations require approval')) {
-    findings.push('APPROVED_EXECUTION prompt must not say all mutations require approval')
+    findings.push(
+      'APPROVED_EXECUTION prompt must not say all mutations require approval',
+    )
   }
 
   return findings
@@ -224,7 +243,9 @@ function collectPromptFindings(): string[] {
  * Release-readiness guard that prevents CodeMind from drifting back into a
  * default read-only / approval-first posture after direct runtime mode support.
  */
-export function assessRuntimeModeTruth(workspaceRoot: string): RuntimeModeTruthReport {
+export function assessRuntimeModeTruth(
+  workspaceRoot: string,
+): RuntimeModeTruthReport {
   const findings = [
     ...collectRuntimePolicyFindings(),
     ...collectPromptFindings(),
