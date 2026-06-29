@@ -1,4 +1,8 @@
-import type { ProviderHttpRequest, ProviderHttpResponse, ProviderHttpTransport } from './provider-gateway.types.js'
+import type {
+  ProviderHttpRequest,
+  ProviderHttpResponse,
+  ProviderHttpTransport,
+} from './provider-gateway.types.js'
 
 export class FetchProviderHttpTransport implements ProviderHttpTransport {
   public async request(request: ProviderHttpRequest): Promise<ProviderHttpResponse> {

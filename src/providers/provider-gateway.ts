@@ -78,7 +78,8 @@ export class ProviderGateway {
     }
 
     throw (
-      lastError ?? new ProviderGatewayError('NO_AVAILABLE_PROVIDER', 'No configured provider was available')
+      lastError ??
+      new ProviderGatewayError('NO_AVAILABLE_PROVIDER', 'No configured provider was available')
     )
   }
 
@@ -101,9 +102,13 @@ export class ProviderGateway {
 
     const adapter = this.resolveAdapter(providerId)
     if (adapter.requiredApiKey && provider.apiKey === undefined) {
-      throw new ProviderGatewayError('MISSING_CREDENTIALS', `${provider.displayName} API key is missing`, {
-        providerId,
-      })
+      throw new ProviderGatewayError(
+        'MISSING_CREDENTIALS',
+        `${provider.displayName} API key is missing`,
+        {
+          providerId,
+        },
+      )
     }
 
     const plan = adapter.buildHttpPlan(request, provider)
@@ -114,14 +119,20 @@ export class ProviderGateway {
   private resolveAdapter(providerId: CodemindProviderId): ProviderGatewayAdapter {
     const adapter = findProviderGatewayAdapter(providerId)
     if (adapter === undefined) {
-      throw new ProviderGatewayError('UNKNOWN_PROVIDER', `Unknown provider adapter: ${providerId}`, {
-        providerId,
-      })
+      throw new ProviderGatewayError(
+        'UNKNOWN_PROVIDER',
+        `Unknown provider adapter: ${providerId}`,
+        {
+          providerId,
+        },
+      )
     }
     return adapter
   }
 
-  private resolveProviderCandidates(requestedProvider?: CodemindProviderId): readonly CodemindProviderId[] {
+  private resolveProviderCandidates(
+    requestedProvider?: CodemindProviderId,
+  ): readonly CodemindProviderId[] {
     const primary = requestedProvider ?? this.config.activeProvider
     const candidates: CodemindProviderId[] = []
 

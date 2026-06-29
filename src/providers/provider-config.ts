@@ -94,9 +94,14 @@ function resolveProviderConfig(
   }
 }
 
-export function loadProviderGatewayConfig(env: ProviderGatewayEnv = process.env): ProviderGatewayConfig {
+export function loadProviderGatewayConfig(
+  env: ProviderGatewayEnv = process.env,
+): ProviderGatewayConfig {
   const providers = Object.fromEntries(
-    CODEMIND_PROVIDER_ADAPTERS.map((adapter) => [adapter.id, resolveProviderConfig(adapter.id, env)]),
+    CODEMIND_PROVIDER_ADAPTERS.map((adapter) => [
+      adapter.id,
+      resolveProviderConfig(adapter.id, env),
+    ]),
   ) as Record<CodemindProviderId, ProviderResolvedConfig>
   const activeProvider = parseProviderId(readEnv(env, 'CODEMIND_PROVIDER'))
   const activeModel = readEnv(env, 'CODEMIND_MODEL')

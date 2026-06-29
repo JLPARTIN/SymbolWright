@@ -35,7 +35,9 @@ describe('provider gateway config', () => {
     const redacted = redactProviderGatewayConfig(config)
 
     expect(JSON.stringify(redacted)).not.toContain('sk-test-secret')
-    expect(redacted.providers.find((provider) => provider.id === 'openai')?.apiKey).toBe('configured')
+    expect(redacted.providers.find((provider) => provider.id === 'openai')?.apiKey).toBe(
+      'configured',
+    )
   })
 
   it('masks standalone provider secrets', () => {

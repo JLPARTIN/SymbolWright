@@ -100,5 +100,8 @@ export interface ProviderGatewayAdapter {
   readonly id: CodemindProviderId
   readonly displayName: string
   readonly requiredApiKey: boolean
-  buildHttpPlan(request: ProviderGatewayRequest, config: ProviderResolvedConfig): ProviderAdapterHttpPlan
+  buildHttpPlan(
+    request: ProviderGatewayRequest,
+    config: ProviderResolvedConfig,
+  ): ProviderAdapterHttpPlan
 }

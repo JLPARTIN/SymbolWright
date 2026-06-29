@@ -1,4 +1,7 @@
-import type { ProviderGatewayConfig, RedactedProviderGatewayConfig } from './provider-gateway.types.js'
+import type {
+  ProviderGatewayConfig,
+  RedactedProviderGatewayConfig,
+} from './provider-gateway.types.js'
 
 const SECRET_ENV_KEYS = [
   'ANTHROPIC_API_KEY',

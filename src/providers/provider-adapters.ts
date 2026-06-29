@@ -50,9 +50,13 @@ function requireModel(request: ProviderGatewayRequest, config: ProviderResolvedC
 
 function requireApiKey(config: ProviderResolvedConfig): string {
   if (config.apiKey === undefined) {
-    throw new ProviderGatewayError('MISSING_CREDENTIALS', `${config.displayName} API key is missing`, {
-      providerId: config.id,
-    })
+    throw new ProviderGatewayError(
+      'MISSING_CREDENTIALS',
+      `${config.displayName} API key is missing`,
+      {
+        providerId: config.id,
+      },
+    )
   }
   return config.apiKey
 }
@@ -73,7 +77,8 @@ function normalizeMessages(request: ProviderGatewayRequest): readonly ProviderGa
 }
 
 function parseUsage(rawUsage: unknown): ProviderGatewayUsage | undefined {
-  const usage = typeof rawUsage === 'object' && rawUsage !== null ? (rawUsage as JsonRecord) : undefined
+  const usage =
+    typeof rawUsage === 'object' && rawUsage !== null ? (rawUsage as JsonRecord) : undefined
   if (usage === undefined) {
     return undefined
   }
@@ -100,7 +105,8 @@ function parseOpenAiCompatibleResponse(
   const body = asRecord(response.body)
   const choices = Array.isArray(body['choices']) ? body['choices'] : []
   const firstChoice = choices[0]
-  const choice = typeof firstChoice === 'object' && firstChoice !== null ? (firstChoice as JsonRecord) : {}
+  const choice =
+    typeof firstChoice === 'object' && firstChoice !== null ? (firstChoice as JsonRecord) : {}
   const message = asRecord(choice['message'] ?? {})
   const text = readString(message['content'])
 
@@ -174,7 +180,9 @@ function extractAnthropicSystem(request: ProviderGatewayRequest): string | undef
   return systemMessages.length === 0 ? undefined : systemMessages.join('\n\n')
 }
 
-function buildAnthropicMessages(request: ProviderGatewayRequest): readonly ProviderGatewayMessage[] {
+function buildAnthropicMessages(
+  request: ProviderGatewayRequest,
+): readonly ProviderGatewayMessage[] {
   return normalizeMessages(request).filter((message) => message.role !== 'system')
 }
 
@@ -278,7 +286,9 @@ function parseGoogleResponse(
   const candidates = Array.isArray(body['candidates']) ? body['candidates'] : []
   const firstCandidate = candidates[0]
   const candidate =
-    typeof firstCandidate === 'object' && firstCandidate !== null ? (firstCandidate as JsonRecord) : {}
+    typeof firstCandidate === 'object' && firstCandidate !== null
+      ? (firstCandidate as JsonRecord)
+      : {}
   const content = asRecord(candidate['content'] ?? {})
   const parts = Array.isArray(content['parts']) ? content['parts'] : []
   const text = parts
@@ -312,7 +322,9 @@ function createGoogleAdapter(): ProviderGatewayAdapter {
     buildHttpPlan(request, config) {
       const model = requireModel(request, config)
       const apiKey = requireApiKey(config)
-      const systemMessages = normalizeMessages(request).filter((message) => message.role === 'system')
+      const systemMessages = normalizeMessages(request).filter(
+        (message) => message.role === 'system',
+      )
       const conversation = normalizeMessages(request).filter((message) => message.role !== 'system')
       const body: JsonRecord = {
         contents: conversation.map((message) => ({
