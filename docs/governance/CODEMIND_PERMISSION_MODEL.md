@@ -1,80 +1,43 @@
 # CodeMind Permission Model
 
-**Status:** Foundation Policy  
-**Version:** v1.0  
-**Track:** CODEMIND-2  
-**Purpose:** Define the initial permission model for CodeMind tools, modes, and actions.
+**Status:** Current Governance Reference  
+**Version:** v2.0  
+**Track:** Runtime Truth Alignment  
+**Purpose:** Define how CodeMind separates runtime modes, hard safety rails, and optional governance/forensic controls.
 
 ---
 
-## 1. Core Principle
+## 1. Current Principle
 
-CodeMind must never assume permission.
+CodeMind permissions should make useful direct work possible while making dangerous actions obvious and bounded.
 
-Every tool action should resolve through a permission policy.
-
-Default posture:
+Governance is a feature, not the default personality. The active runtime mode controls strictness:
 
 ```txt
-read is easiest
-write requires approval
-commands require approval
-destructive actions are denied by default
-```
-
----
-
-## 2. Permission Dispositions
-
-CodeMind actions resolve to one of:
-
-```txt
-ALLOW
-ASK
-DENY
-```
-
-Rule order:
-
-```txt
-DENY > ASK > ALLOW
-```
-
-Deny always wins.
-
----
-
-## 3. Permission Modes
-
-Recommended modes:
-
-```txt
-PLAN
+PLAN_ONLY
 READ_ONLY
-ASK
-PATCH_PROPOSAL
-PR_REVIEW
-CI_REVIEW
-APPROVED_EDIT
-APPROVED_COMMAND
-RESTRICTED_AUTOMATION
+PROPOSAL_ONLY
+APPROVED_EXECUTION
 ```
 
-No write-capable mode should be active by default.
+`APPROVED_EXECUTION` is the direct execution mode. It may allow local writes, shell commands, git operations, provider/network use, validation commands, and GitHub writes when the active policy and credentials allow those capabilities.
+
+`PLAN_ONLY`, `READ_ONLY`, and `PROPOSAL_ONLY` remain available for non-mutating planning, inspection, and proposal workflows.
 
 ---
 
-## 4. PLAN Mode
+## 2. Runtime Modes
+
+### PLAN_ONLY
 
 Allowed:
 
 ```txt
-read high-level repo maps
-read project docs
 propose steps
 draft commands
 draft patches in text
 summarize risks
+identify validation needs
 ```
 
 Blocked:
@@ -83,32 +46,29 @@ Blocked:
 file writes
 bash execution
 git mutation
-PR mutation
-memory writes
-network access unless explicitly enabled
+GitHub mutation
+network/provider execution unless explicitly enabled by a future policy
 ```
 
----
-
-## 5. READ_ONLY Mode
+### READ_ONLY
 
 Allowed:
 
 ```txt
 read files
 list directories
-inspect package files
-inspect config files
+inspect package/config files
 summarize code
 search text
 generate reports
+collect evidence
 ```
 
 Blocked:
 
 ```txt
 write files
-run bash commands
+run shell commands
 modify git state
 create branches
 commit
@@ -117,100 +77,125 @@ merge
 delete
 ```
 
----
+### PROPOSAL_ONLY
 
-## 6. ASK Mode
-
-Allowed after approval:
+Allowed:
 
 ```txt
-specific file edits
-specific test commands
-specific build commands
-specific git read commands
-specific GitHub CLI read commands
+draft patches without applying them
+prepare validation plans
+prepare PR notes
+explain risk and rollback
+produce operator-ready implementation guidance
 ```
 
-Blocked unless separately approved:
+Blocked:
 
 ```txt
-destructive commands
+actual file writes
+actual command execution
+actual git mutation
+actual GitHub writes
+```
+
+### APPROVED_EXECUTION
+
+Allowed when exposed by the active runtime policy and available credentials:
+
+```txt
+local file edits
+patch application
+validation commands
+shell commands
+git operations
+provider/network access
+GitHub write operations
+```
+
+Still blocked by hard safety rails:
+
+```txt
+secret exposure
+workspace escape
+protected path mutation
 force push
-merge
-delete branch
-delete files
-modify secrets
-modify auth policy
-modify memory state
+protected branch push
+obvious destructive shell commands
+GitHub writes without credentials
 ```
 
 ---
 
-## 7. Approved Edit Mode
+## 3. Permission Dispositions
 
-Approved Edit mode may edit files only inside approved paths.
-
-Each edit should produce:
+Governance evaluators may still resolve actions to:
 
 ```txt
-files changed
-reason
-risk level
-validation needed
-rollback note
+ALLOW
+ASK
+DENY
 ```
 
----
+These dispositions are useful for forensic workflows, operator review packets, Ajna review, and explicit governance gates.
 
-## 8. Approved Command Mode
+They are not the same thing as the global runtime mode. A direct `APPROVED_EXECUTION` agent can still be stopped by hard DENY invariants, but it should not be forced into ASK/approval behavior for routine implementation work.
 
-Approved Command mode may run approved commands only.
-
-Recommended safe command examples:
-
-```bash
-git status
-git diff
-npm run build
-npm test -- --runInBand
-```
-
-Commands that require extra review:
-
-```bash
-git push
-gh pr create
-gh pr merge
-git reset
-git rebase
-rm -rf
-```
-
----
-
-## 9. Deny-By-Default Actions
-
-Deny by default:
+Recommended resolution order for governed checks:
 
 ```txt
-delete audit logs
-delete memory or review history
-write secrets
+hard DENY invariant > explicit policy block > ASK when the mode requires review > ALLOW
+```
+
+---
+
+## 4. Hard DENY Invariants
+
+Always deny or block:
+
+```txt
 print secrets
-disable governance
-bypass CI
+write secrets
+exfiltrate credential material
+escape the workspace root
 force push
-merge without operator approval
-network ingestion without approval
-unrestricted shell
-silent file edits
+push directly to main/master/production/release without an explicit protected-branch workflow
+delete audit logs to hide activity
+delete memory or review history to hide activity
+bypass CI or release-readiness gates
+run obvious destructive shell commands accidentally
 ```
+
+These are runtime safety rails, not governance theater.
 
 ---
 
-## 10. Tool Categories
+## 5. Protected Paths
 
-Initial tool categories:
+Protected path policy should continue to block high-risk areas by default:
+
+```txt
+.git
+.env
+.env.*
+*.pem
+*.key
+id_rsa
+id_ed25519
+secrets/
+.secret/
+node_modules
+dist
+coverage
+credential material
+```
+
+Workflow and governance files may be changed in normal development PRs, but those changes should remain visible, reviewable, and validated through CI.
+
+---
+
+## 6. Tool Categories
+
+Current and historical tool categories include:
 
 ```txt
 READ_FILE
@@ -232,26 +217,49 @@ CI_REVIEW
 PATCH_PROPOSAL
 ```
 
+Tool category alone does not decide whether a tool can run. The runtime mode, active policy snapshot, credentials, target path, command content, and hard safety rails decide execution.
+
 ---
 
-## 11. Required Audit
+## 7. Audit and Forensics
 
-Audit should be required for:
+Audit records should be preserved for:
 
 ```txt
-approved edits
-approved commands
+local writes
+shell commands
+GitHub writes
 PR creation
 CI failure diagnosis
 runbook updates
 project docs updates
-memory candidate creation
 policy changes
-Ajna merge-readiness reports
+Ajna review and merge-readiness reports
 ```
+
+Audit is evidence and traceability. It should not turn every routine action into an approval ceremony.
 
 ---
 
-## 12. Final Rule
+## 8. Ajna and Governance Role
 
-CodeMind permissions should make the safe path easy and the dangerous path obvious.
+Ajna and governance features remain important CodeMind capabilities:
+
+```txt
+risk review
+merge-readiness evidence
+policy analysis
+operator review packets
+forensic audit trails
+release proof
+```
+
+They should be invoked when the operator asks for them, when the workflow requires them, or when hard safety rails detect risky behavior.
+
+They should not make CodeMind act read-only by default when `APPROVED_EXECUTION` is active.
+
+---
+
+## 9. Final Rule
+
+CodeMind should be direct-capable by runtime mode, forensic when requested, and always bounded by hard safety rails.
