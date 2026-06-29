@@ -181,7 +181,8 @@ export function validateCodemindConfig(config: CodemindConfig): CodemindConfigVa
   const errors: string[] = []
   const warnings: string[] = []
 
-  const providerRequiresAnthropicKey = config.provider === undefined || config.provider === 'anthropic'
+  const providerRequiresAnthropicKey =
+    config.provider === undefined || config.provider === 'anthropic'
   if (providerRequiresAnthropicKey && config.anthropicApiKey === undefined) {
     errors.push(
       'Missing API key. Set ANTHROPIC_API_KEY environment variable or add anthropicApiKey to config.',
