@@ -4,6 +4,7 @@ import type {
   ProviderContentBlock,
   ProviderMessage,
   ProviderStreamEvent,
+  ProviderToolDefinition,
 } from '../provider/provider.types.js'
 import { ProviderGateway } from './provider-gateway.js'
 import type {
@@ -37,6 +38,13 @@ function providerMessageToGatewayMessage(message: ProviderMessage): ProviderGate
   return { role, content }
 }
 
+function resolveRequestModel(
+  config: ProviderGatewayConfig,
+  completionOptions: ProviderCompletionOptions | undefined,
+): string | undefined {
+  return completionOptions?.model ?? config.activeModel
+}
+
 export function createProviderGatewayLlmProvider(
   options: ProviderGatewayLlmProviderOptions,
 ): LLMProvider {
@@ -51,14 +59,15 @@ export function createProviderGatewayLlmProvider(
 
     async *complete(
       messages: readonly ProviderMessage[],
-      _tools?: readonly unknown[],
+      _tools?: readonly ProviderToolDefinition[],
       completionOptions?: ProviderCompletionOptions,
     ): AsyncIterable<ProviderStreamEvent> {
+      const model = resolveRequestModel(options.config, completionOptions)
       const response = await gateway.run({
         ...(options.config.activeProvider === undefined
           ? {}
           : { providerId: options.config.activeProvider }),
-        ...(completionOptions?.model === undefined ? {} : { model: completionOptions.model }),
+        ...(model === undefined ? {} : { model }),
         ...(completionOptions?.systemPrompt === undefined
           ? {}
           : { systemPrompt: completionOptions.systemPrompt }),
