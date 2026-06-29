@@ -4,6 +4,7 @@ import {
   createFixtureContext,
   createFixtureRegistry,
 } from './runtime/registry/fixture-registry-factory.js'
+import type { SandboxFileWriter } from './runtime/sandbox/sandbox-runner.js'
 import type { RuntimeApproval } from './runtime/types.js'
 
 export interface LocalFileWriteFixtureRequest {
@@ -17,6 +18,7 @@ export interface LocalFileWriteFixtureRequest {
 export async function renderRuntimeLocalWrite(
   fixturePath: string,
   cwd: string = process.cwd(),
+  sandboxFileWriter?: SandboxFileWriter,
 ): Promise<string> {
   const raw = JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as LocalFileWriteFixtureRequest
 
@@ -45,6 +47,6 @@ export async function renderRuntimeLocalWrite(
       rollbackNote: raw.rollbackNote ?? '',
       dryRun: raw.dryRun ?? false,
     },
-    { ...context, approval },
+    { ...context, approval, ...(sandboxFileWriter !== undefined ? { sandboxFileWriter } : {}) },
   )
 }
