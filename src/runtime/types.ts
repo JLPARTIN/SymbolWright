@@ -59,6 +59,8 @@ export type RuntimeToolCapability =
   | 'VALIDATE'
   | 'REVIEW'
   | 'DRAFT_NOTES'
+  | 'APPROVED_EDIT'
+  | 'APPROVED_COMMAND'
   | 'EVIDENCE_READ'
   | 'POLICY_CHECK'
   | 'LIVE_READ_CLIENT'
@@ -80,6 +82,8 @@ export type RuntimeApprovalScope =
   | 'file:write'
   | 'github:write'
   | 'command:validate'
+  | 'apply_edit'
+  | 'command_dry_run'
   | 'shell:execute'
   | 'git:write'
 
@@ -88,6 +92,8 @@ export const ALL_APPROVAL_SCOPES: readonly RuntimeApprovalScope[] = [
   'file:write',
   'github:write',
   'command:validate',
+  'apply_edit',
+  'command_dry_run',
   'shell:execute',
   'git:write',
 ] as const
