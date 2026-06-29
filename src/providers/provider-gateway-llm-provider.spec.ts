@@ -40,11 +40,9 @@ describe('createProviderGatewayLlmProvider', () => {
     })
 
     const events: ProviderStreamEvent[] = []
-    for await (const event of provider.complete(
-      [{ role: 'user', content: 'hello' }],
-      [],
-      { systemPrompt: 'system prompt' },
-    )) {
+    for await (const event of provider.complete([{ role: 'user', content: 'hello' }], [], {
+      systemPrompt: 'system prompt',
+    })) {
       events.push(event)
     }
 
