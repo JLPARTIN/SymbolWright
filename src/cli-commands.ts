@@ -4,6 +4,8 @@ import {
   getNextRuntimeBuildPhase,
 } from './runtime/runtime-build-state.js'
 
+const LINE_BREAK = String.fromCharCode(10)
+
 export const CODEMIND_CLI_COMMANDS = [
   { name: 'help', description: 'Show available command surface' },
   { name: 'status', description: 'Report CodeMind mode, policy, and runtime build state' },
@@ -243,8 +245,7 @@ export function renderHelp(): string {
     'Run "codemind providers status" to inspect configured provider state.',
     'Run "codemind status" to see platform posture and active policy.',
   ]
-  return lines.join('
-')
+  return lines.join(LINE_BREAK)
 }
 
 export function renderStatus(): string {
@@ -261,13 +262,11 @@ export function renderStatus(): string {
     `Bash execution:     ${snap.bashExecutionEnabled ? 'ENABLED' : 'DISABLED'}`,
     `Network ingestion:  ${snap.networkIngestionEnabled ? 'ENABLED' : 'DISABLED'}`,
   ]
-  return lines.join('
-')
+  return lines.join(LINE_BREAK)
 }
 
 export function renderNotYetActive(command: string): string {
   return [`Command not yet active: ${command}`, 'Run "codemind help" for available commands.'].join(
-    '
-',
+    LINE_BREAK,
   )
 }
