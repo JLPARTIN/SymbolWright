@@ -1,44 +1,32 @@
-# CodeMind Approved Execution Gates
+# CodeMind Retired Approval-Era Gates
 
-This document records Phase D approval gates and audit trail activation.
+This document is now a migration note for an older Phase D runtime surface.
 
-## Active command
+## Status
 
-```text
-codemind runtime run <goal> --approval-ticket <id>
-```
-
-## Purpose
-
-Approved execution gates prepare CodeMind for controlled execution without making mutation the default behavior.
-
-## Runtime tools
+The old representation-only tools are no longer registered as active runtime tools.
 
 ```text
-apply_edit_gated
-command_dry_run_gated
+apply_edit_gated       retired
+command_dry_run_gated  retired
 ```
 
-## Boundary
+## Replacement surfaces
 
-The Phase D implementation remains conservative.
+Use the current runtime surfaces instead:
 
-No approval ticket means hard fail.
+```text
+codemind agent --mode APPROVED_EXECUTION "implement the requested fix"
+codemind local-write <json-file>
+codemind apply-patch <json-file>
+codemind validation-command <json-file>
+codemind workflow <json-file>
+```
 
-Approved tools currently emit dry-run representations only. They do not modify files, execute shell commands, use network access, call providers, write to GitHub, post PR comments, approve reviews, or merge pull requests.
+## Current boundary
 
-## Protected paths
+The old implementation only represented work. Current runtime paths use the live write, patch, validation, and workflow surfaces with workspace policy checks, protected path checks, audit output, and secret redaction.
 
-Protected path enforcement stays active for approved actions. Paths such as `.git`, `.env`, `node_modules`, `dist`, and `coverage` remain blocked.
+## Migration rule
 
-## Command gate
-
-The command gate only accepts allowlisted validation commands and still does not execute them in this phase.
-
-## Audit trail
-
-Every approved action emits audit output with action, status, ticket, and detail information.
-
-## Next phase
-
-The next build phase is read-only GitHub / PR / CI adapters. Live mutation should remain disabled unless a later explicit operator-approved execution phase enables it.
+Do not restore representation-only tools as active runtime capabilities. Workspace mutation and validation must use the current runtime surfaces and must stay covered by CI.

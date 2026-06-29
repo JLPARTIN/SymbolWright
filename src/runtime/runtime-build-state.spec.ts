@@ -19,6 +19,14 @@ describe('runtime build state', () => {
     expect(getNextRuntimeBuildPhase()).toBeUndefined()
   })
 
+  it('records Phase D as retired approval-ticket dry-run cleanup', () => {
+    const phaseD = RUNTIME_BUILD_PHASES.find((phase) => phase.id === 'D')
+    expect(phaseD).toBeDefined()
+    expect(phaseD?.title).toContain('Retired approval-ticket dry-run surface')
+    expect(phaseD?.activeCommands).toHaveLength(0)
+    expect(phaseD?.boundary).toContain('legacy dry-run tool surface removed')
+  })
+
   it('records Phase F active command', () => {
     const phaseF = RUNTIME_BUILD_PHASES.find((phase) => phase.id === 'F')
     expect(phaseF).toBeDefined()
@@ -115,7 +123,9 @@ describe('runtime build state', () => {
     expect(output).toContain('CodeMind runtime build state')
     expect(output).toContain('Completed phases: 20')
     expect(output).toContain('Phase A')
-    expect(output).toContain('codemind runtime run <goal> --approval-ticket <id>')
+    expect(output).toContain('Retired approval-ticket dry-run surface')
+    expect(output).toContain('legacy dry-run tool surface removed')
+    expect(output).not.toContain('codemind runtime run <goal> --approval-ticket <id>')
     expect(output).toContain('codemind ci-review --fixture-file <json-file>')
     expect(output).toContain('codemind live-read-policy <json-file>')
     expect(output).toContain('codemind live-read-client-fixture <json-file>')

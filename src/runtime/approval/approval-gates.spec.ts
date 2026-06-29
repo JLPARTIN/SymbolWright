@@ -7,35 +7,14 @@ import {
 } from './approval-gate.js'
 import { createApprovalTicket } from './approval-ticket.js'
 import { createAuditEvent, renderAuditEvents, RuntimeAuditLog } from '../audit/runtime-audit-log.js'
-import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
 import { createDefaultRuntimePolicy } from '../policy/runtime-policy.js'
 import { isValidApprovalScope, ALL_APPROVAL_SCOPES } from '../types.js'
-import type { RuntimeApproval, RuntimeToolContext } from '../types.js'
-
-function createApprovedRuntimeContext(approval?: RuntimeApproval): RuntimeToolContext {
-  const ctx: RuntimeToolContext = {
-    cwd: process.cwd(),
-    policy: {
-      mode: 'APPROVED_EXECUTION',
-      allowNetwork: false,
-      allowShell: false,
-      allowWrites: false,
-      allowGitHubWrites: false,
-      protectedPaths: ['.git', '.env', 'node_modules'],
-      noisyDirs: ['node_modules', 'dist', 'coverage', '.git'],
-    },
-  }
-  if (approval !== undefined) {
-    return { ...ctx, approval }
-  }
-  return ctx
-}
 
 describe('approval gates', () => {
   it('requires approval before gated execution', () => {
     expect(() =>
       assertApprovalGate({
-        requiredScope: 'apply_edit',
+        requiredScope: 'file:write',
         workspaceRoot: process.cwd(),
         policy: createDefaultRuntimePolicy(),
       }),
@@ -46,14 +25,14 @@ describe('approval gates', () => {
     const approval = createApprovalTicket({
       ticketId: 'APPROVE-1',
       approvedBy: 'operator',
-      scopes: ['command_dry_run'],
+      scopes: ['command:validate'],
       reason: 'test',
     })
 
     expect(() =>
       assertApprovalGate({
         approval,
-        requiredScope: 'apply_edit',
+        requiredScope: 'file:write',
         workspaceRoot: process.cwd(),
         policy: createDefaultRuntimePolicy(),
       }),
@@ -64,80 +43,19 @@ describe('approval gates', () => {
     const approval = createApprovalTicket({
       ticketId: 'APPROVE-2',
       approvedBy: 'operator',
-      scopes: ['apply_edit'],
+      scopes: ['file:write'],
       reason: 'test',
     })
 
     expect(() =>
       assertApprovalGate({
         approval,
-        requiredScope: 'apply_edit',
+        requiredScope: 'file:write',
         workspaceRoot: process.cwd(),
-        targetPath: '.git/config',
+        targetPath: 'node_modules/package.json',
         policy: createDefaultRuntimePolicy(),
       }),
     ).toThrow('protected path')
-  })
-})
-
-describe('approval-gated tools', () => {
-  it('registers gated tools', () => {
-    const names = createFixtureRegistry('approved')
-      .list()
-      .map((tool) => tool.name)
-
-    expect(names).toContain('apply_edit_gated')
-    expect(names).toContain('command_dry_run_gated')
-  })
-
-  it('renders approved edit dry-run without modifying files', async () => {
-    const approval = createApprovalTicket({
-      ticketId: 'APPROVE-3',
-      approvedBy: 'operator',
-      scopes: ['apply_edit'],
-      reason: 'test',
-    })
-    const tool = createFixtureRegistry('approved').getOrThrow('apply_edit_gated')
-    const output = await tool.execute(
-      { path: 'README.md', proposedContent: '# Proposed\n' },
-      createApprovedRuntimeContext(approval),
-    )
-
-    expect(output).toContain('CodeMind gated apply-edit')
-    expect(output).toContain('No file is modified')
-    expect(output).toContain('Runtime audit log')
-  })
-
-  it('renders approved command dry-run without execution', async () => {
-    const approval = createApprovalTicket({
-      ticketId: 'APPROVE-4',
-      approvedBy: 'operator',
-      scopes: ['command_dry_run'],
-      reason: 'test',
-    })
-    const tool = createFixtureRegistry('approved').getOrThrow('command_dry_run_gated')
-    const output = await tool.execute(
-      { command: 'npm run typecheck' },
-      createApprovedRuntimeContext(approval),
-    )
-
-    expect(output).toContain('CodeMind gated command dry-run')
-    expect(output).toContain('No shell command is executed')
-    expect(output).toContain('npm run typecheck')
-  })
-
-  it('blocks non-allowlisted commands', async () => {
-    const approval = createApprovalTicket({
-      ticketId: 'APPROVE-5',
-      approvedBy: 'operator',
-      scopes: ['command_dry_run'],
-      reason: 'test',
-    })
-    const tool = createFixtureRegistry('approved').getOrThrow('command_dry_run_gated')
-
-    await expect(
-      tool.execute({ command: 'rm -rf .' }, createApprovedRuntimeContext(approval)),
-    ).rejects.toThrow('not allowlisted')
   })
 })
 

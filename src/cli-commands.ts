@@ -45,10 +45,6 @@ export const CODEMIND_CLI_COMMANDS = [
     description: 'Run a bounded runtime loop with operator controls and JSON output',
   },
   {
-    name: 'runtime run <goal> --approval-ticket <id>',
-    description: 'Render runtime execution with audit output',
-  },
-  {
     name: 'live-read-policy <json-file>',
     description: 'Evaluate live read policy handshake from a local JSON fixture',
   },
@@ -259,7 +255,9 @@ export function renderStatus(): string {
 
 export function renderNotYetActive(command: string): string {
   return [
-    `codemind ${command}: not yet active — awaiting runtime phase`,
-    'Run "codemind help" for available commands.',
+    `Command not active yet: ${command}`,
+    '',
+    'This command is reserved for a later CodeMind runtime phase.',
+    'Run "codemind status" to see the current activation surface.',
   ].join('\n')
 }

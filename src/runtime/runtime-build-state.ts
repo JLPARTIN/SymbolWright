@@ -41,13 +41,13 @@ export const RUNTIME_BUILD_PHASES: readonly RuntimeBuildPhase[] = [
   },
   {
     id: 'D',
-    title: 'Approval gates and audit trail',
+    title: 'Retired approval-ticket dry-run surface',
     state: 'COMPLETE',
-    activeCommands: ['codemind runtime run <goal> --approval-ticket <id>'],
+    activeCommands: [],
     boundary: [
-      'approval ticket required',
-      'protected paths blocked',
-      'dry-run representation only',
+      'legacy dry-run tool surface removed',
+      'workspace mutation uses sandbox-backed write tools',
+      'validation commands use sandbox runner',
     ],
   },
   {

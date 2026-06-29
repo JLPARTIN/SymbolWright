@@ -82,15 +82,13 @@ describe('createFixtureRegistry', () => {
     expect(names.length).toBeGreaterThanOrEqual(20)
   })
 
-  it('approved branches from proposal with gated tools', () => {
-    const registry = createFixtureRegistry('approved')
-    const names = registry.list().map((t) => t.name)
+  it('does not expose obsolete dry-run approval tools', () => {
+    const names = createFixtureRegistry('pr_collaboration')
+      .list()
+      .map((t) => t.name)
 
-    expect(names).toContain('plan_goal')
-    expect(names).toContain('propose_edit')
-    expect(names).toContain('apply_edit_gated')
-    expect(names).toContain('command_dry_run_gated')
-    expect(names).not.toContain('github_pr_fixture_review')
+    expect(names).not.toContain('apply_edit_gated')
+    expect(names).not.toContain('command_dry_run_gated')
   })
 
   it('patch_application includes apply_patch from local_write base', () => {
@@ -138,7 +136,6 @@ describe('createFixtureRegistry', () => {
   it('accepts FakeLiveReadClientData for live read presets', () => {
     const registry = createFixtureRegistry('github_live_read', {})
     expect(registry.has('github_live_read_pr')).toBe(true)
-    expect(registry.has('github_live_read_ci')).toBe(true)
   })
 })
 

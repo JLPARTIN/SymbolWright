@@ -1,10 +1,10 @@
 ## Current Runtime Posture
 
-CodeMind now defaults to direct execution for normal coding-agent workflows. Runtime policy remains responsible for workspace boundaries, protected paths, allowlisted validation commands, and destructive-operation safeguards.
+CodeMind now defaults to direct execution for normal coding-agent workflows. Runtime policy remains responsible for workspace boundaries, protected paths, allowlisted validation commands, sandboxed execution, and destructive-operation safeguards.
 
 The runtime is no longer governed, read-only, or approval-first by default for normal coding-agent work.
 
-\n# CodeMind Runtime Build State
+# CodeMind Runtime Build State
 
 This document records the post-Phase T runtime state. All 20 runtime phases are complete.
 
@@ -14,7 +14,7 @@ This document records the post-Phase T runtime state. All 20 runtime phases are 
 Phase A: COMPLETE — Read-only runtime activation
 Phase B: COMPLETE — Proposal mode and operator notes
 Phase C: COMPLETE — Bounded read-only runtime loop
-Phase D: COMPLETE — Approval gates and audit trail
+Phase D: COMPLETE — Retired approval-ticket dry-run surface
 Phase E: COMPLETE — Local PR and workflow read adapters
 Phase F: COMPLETE — Live read adapter policy handshake
 Phase G: COMPLETE — Live read adapter client seam
@@ -38,6 +38,10 @@ Phase T: COMPLETE — Approved local file write execution
 ```text
 codemind help
 codemind status
+codemind operator [mission]
+codemind agent [--mode <mode>] [message]
+codemind sessions
+codemind index [dir]
 codemind plan <goal>
 codemind read <path>
 codemind search <query>
@@ -48,7 +52,6 @@ codemind pr-notes --fixture-file <json-file>
 codemind ci-review [source]
 codemind ci-review --fixture-file <json-file>
 codemind runtime run <goal> --read-only
-codemind runtime run <goal> --approval-ticket <id>
 codemind live-read-policy <json-file>
 codemind live-read-client-fixture <json-file>
 codemind github-live-read <json-file>
@@ -56,6 +59,7 @@ codemind ajna-live-read <json-file>
 codemind operator-review <json-file>
 codemind write-intent <json-file>
 codemind local-write <json-file>
+codemind apply-patch <json-file>
 codemind validation-command <json-file>
 codemind pr-preparation <json-file>
 codemind github-write-proposal <json-file>
@@ -81,6 +85,16 @@ codemind ajna review-pr-readonly-collector-fixture <json-file>
 codemind ajna github-readonly-collector-fixture <json-file>
 codemind ajna merge-readiness <json-file>
 ```
+
+## Retired Phase D surface
+
+```text
+codemind runtime run <goal> --approval-ticket <id>  retired
+apply_edit_gated                                    retired
+command_dry_run_gated                              retired
+```
+
+The retired Phase D path represented edits and commands without doing useful runtime work. Current workspace mutation and validation use the live write, patch, validation, workflow, agent, and sandbox-backed execution surfaces.
 
 ## Next runtime phase
 

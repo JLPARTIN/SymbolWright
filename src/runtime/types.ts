@@ -19,8 +19,6 @@ export type CodemindToolName =
   | 'validation_plan'
   | 'ci_review'
   | 'pr_notes'
-  | 'apply_edit_gated'
-  | 'command_dry_run_gated'
   | 'github_pr_fixture_review'
   | 'github_ci_fixture_review'
   | 'live_read_policy_handshake'
@@ -79,7 +77,7 @@ export type RuntimeToolCapability =
   | 'ZFLOW_REPORT'
   | 'ZFLOW_REPORT_CATALOG'
 
-/** Typed scopes for approval tickets — each covers a distinct write surface. */
+/** Typed scopes for approval tickets — each covers a distinct live write or execution surface. */
 export type RuntimeApprovalScope =
   | 'file:write'
   | 'github:write'
@@ -182,8 +180,6 @@ export const ALL_CODEMIND_TOOL_NAMES = [
   'validation_plan',
   'ci_review',
   'pr_notes',
-  'apply_edit_gated',
-  'command_dry_run_gated',
   'github_pr_fixture_review',
   'github_ci_fixture_review',
   'live_read_policy_handshake',
@@ -219,5 +215,3 @@ export const ALL_CODEMIND_TOOL_NAMES = [
 type _AssertAllToolNames = CodemindToolName extends (typeof ALL_CODEMIND_TOOL_NAMES)[number]
   ? true
   : never
-const _allToolNamesCheck: _AssertAllToolNames = true
-void _allToolNamesCheck

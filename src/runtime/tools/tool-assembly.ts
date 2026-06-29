@@ -19,8 +19,6 @@ import { ciReviewTool } from './ci-review-tool.js'
 import { operatorReviewPacketTool } from './operator-review-packet-tool.js'
 import { writeIntentPlanTool } from './write-intent-plan-tool.js'
 import { proposeEditTool } from './propose-edit-tool.js'
-import { applyEditGatedTool } from './apply-edit-gated-tool.js'
-import { commandDryRunGatedTool } from './command-dry-run-gated-tool.js'
 import { prCollaborationTool } from './pr-collaboration-tool.js'
 import { githubCreatePrTool } from './github-create-pr-tool.js'
 import { githubWriteGateTool } from './github-write-gate-tool.js'
@@ -55,8 +53,6 @@ const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   operatorReviewPacketTool,
   writeIntentPlanTool,
   proposeEditTool,
-  applyEditGatedTool,
-  commandDryRunGatedTool,
   prCollaborationTool,
   githubCreatePrTool,
   githubWriteGateTool,

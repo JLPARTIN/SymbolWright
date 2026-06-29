@@ -26,8 +26,6 @@ import { githubWriteGateTool } from '../tools/github-write-gate-tool.js'
 import { githubCreatePrTool } from '../tools/github-create-pr-tool.js'
 import { prCollaborationTool } from '../tools/pr-collaboration-tool.js'
 import { applyPatchTool } from '../tools/apply-patch-tool.js'
-import { applyEditGatedTool } from '../tools/apply-edit-gated-tool.js'
-import { commandDryRunGatedTool } from '../tools/command-dry-run-gated-tool.js'
 import { zflowReportTool } from '../tools/zflow-report-tool.js'
 import { zflowReportCatalogTool } from '../tools/zflow-report-catalog-tool.js'
 
@@ -62,7 +60,6 @@ export type FixtureRegistryPreset =
   | 'pr_collaboration'
   | 'patch_application'
   | 'local_self_edit'
-  | 'approved'
   | 'zflow_report'
   | 'zflow_report_catalog'
 
@@ -113,11 +110,6 @@ function collectTools(
 
   tools.push(...READ_ONLY_TOOLS)
   if (preset === 'read_only') return tools
-
-  if (preset === 'approved') {
-    tools.push(...PROPOSAL_TOOLS, applyEditGatedTool, commandDryRunGatedTool)
-    return tools
-  }
 
   tools.push(...PROPOSAL_TOOLS)
   if (preset === 'proposal') return tools

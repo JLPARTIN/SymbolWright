@@ -27,7 +27,6 @@ import { renderProvidersCommand } from './cli-providers.js'
 import { renderReleaseReadinessCommand } from './cli-release-readiness.js'
 import { renderRepairLoopCommand } from './cli-repair-loop.js'
 import { renderRuntimeAjnaLiveRead } from './cli-runtime-ajna-live-read.js'
-import { renderApprovedRuntimeRun } from './cli-runtime-approved-run.js'
 import { renderRuntimeApplyPatch } from './cli-runtime-apply-patch.js'
 import { renderRuntimeCiReview } from './cli-runtime-ci-review.js'
 import { renderRuntimeGitHubLiveRead } from './cli-runtime-github-live-read.js'
@@ -278,10 +277,6 @@ async function main(): Promise<void> {
     case 'runtime': {
       const [subcommand, ...runtimeArgs] = rest
       if (subcommand === 'run') {
-        if (runtimeArgs.includes('--approval-ticket')) {
-          console.log(await renderApprovedRuntimeRun(runtimeArgs))
-          break
-        }
         console.log(await renderRuntimeRun(runtimeArgs))
         break
       }
