@@ -4,9 +4,10 @@ import path from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { createHashEmbeddingProvider } from '../../memory/embedding-provider.js'
+import type { SandboxRunner } from '../sandbox/sandbox-runner.js'
 import type { RuntimeApproval, RuntimePolicySnapshot, RuntimeToolContext } from '../types.js'
 import { validationCommandGateTool } from './validation-command-gate-tool.js'
-import { createHashEmbeddingProvider } from '../../memory/embedding-provider.js'
 
 const shellPolicy: RuntimePolicySnapshot = {
   mode: 'APPROVED_EXECUTION',
@@ -34,6 +35,18 @@ const approval: RuntimeApproval = {
   scopes: ['command:validate'],
 }
 
+const successfulSandboxRunner: SandboxRunner = {
+  runCommand: async (request) => ({
+    outcome: 'EXECUTED',
+    runner: 'docker',
+    command: [request.binary, ...request.args].join(' '),
+    stdout: '42\n',
+    stderr: '',
+    exitCode: 0,
+    reason: null,
+  }),
+}
+
 let tempDir: string
 
 beforeEach(() => {
@@ -43,7 +56,6 @@ beforeEach(() => {
     JSON.stringify({
       scripts: {
         typecheck: 'node -e "console.log(42)"',
-        lint: 'node -e "console.log(\\"lint ok\\")"',
       },
     }),
     'utf8',
@@ -62,6 +74,7 @@ function makeContext(
     cwd: tempDir,
     policy,
     embeddingProvider: createHashEmbeddingProvider(),
+    sandboxRunner: successfulSandboxRunner,
   }
   if (runtimeApproval !== undefined) {
     return { ...base, approval: runtimeApproval }

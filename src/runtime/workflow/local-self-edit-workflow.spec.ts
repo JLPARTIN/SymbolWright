@@ -5,7 +5,7 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { createFixtureRegistry } from '../registry/fixture-registry-factory.js'
-import type { SandboxFileWriter } from '../sandbox/sandbox-runner.js'
+import type { SandboxFileWriter, SandboxRunner } from '../sandbox/sandbox-runner.js'
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
 import { renderLocalSelfEditResult, runLocalSelfEditWorkflow } from './local-self-edit-workflow.js'
 
@@ -40,6 +40,18 @@ const hostBackedSandboxWriter: SandboxFileWriter = {
       reason: null,
     }
   },
+}
+
+const successfulSandboxRunner: SandboxRunner = {
+  runCommand: async (request) => ({
+    outcome: 'EXECUTED',
+    runner: 'docker',
+    command: [request.binary, ...request.args].join(' '),
+    stdout: '7\n',
+    stderr: '',
+    exitCode: 0,
+    reason: null,
+  }),
 }
 
 function makeWorkspace(): string {
@@ -93,6 +105,7 @@ describe('local self-edit workflow', () => {
         validationCommand: 'npm run typecheck',
         policy,
         approval,
+        sandboxRunner: successfulSandboxRunner,
         sandboxFileWriter: hostBackedSandboxWriter,
       },
       workspace,

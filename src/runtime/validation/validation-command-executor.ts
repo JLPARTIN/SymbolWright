@@ -1,4 +1,5 @@
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import type { SandboxRunner } from '../sandbox/sandbox-runner.js'
 import {
   executeValidationCommand,
   type ValidationCommandExecutionResult,
@@ -45,17 +46,24 @@ function deriveRecommendedNextAction(outcome: ValidationExecutorOutcome, command
   }
 }
 
-export function runValidationCommand(
+export async function runValidationCommand(
   command: string,
   reason: string,
   dryRun: boolean,
   cwd: string,
   policy: RuntimePolicySnapshot,
   approval: RuntimeApproval | undefined,
-): ValidationExecutorResult {
+  sandboxRunner?: SandboxRunner,
+): Promise<ValidationExecutorResult> {
   const startMs = Date.now()
 
-  const result = executeValidationCommand({ command, reason, dryRun }, cwd, policy, approval)
+  const result = await executeValidationCommand(
+    { command, reason, dryRun },
+    cwd,
+    policy,
+    approval,
+    sandboxRunner,
+  )
 
   const elapsedMs = Date.now() - startMs
   const outcome = deriveOutcome(result)

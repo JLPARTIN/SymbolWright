@@ -42,7 +42,7 @@ function parseValidationCommandGateToolInput(input: unknown): ValidationCommandG
 
 export const validationCommandGateTool: RuntimeToolDefinition = {
   name: 'validation_command_gate',
-  description: 'Run an approved validation command through the allowlisted command gate.',
+  description: 'Run an approved validation command through the sandbox runner.',
   capability: 'VALIDATION_COMMAND',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const parsed = parseValidationCommandGateToolInput(input)
@@ -53,7 +53,13 @@ export const validationCommandGateTool: RuntimeToolDefinition = {
       dryRun: parsed.dryRun,
     }
 
-    const result = executeValidationCommand(request, context.cwd, context.policy, context.approval)
+    const result = await executeValidationCommand(
+      request,
+      context.cwd,
+      context.policy,
+      context.approval,
+      context.sandboxRunner,
+    )
     const gateOutput = renderValidationCommandGateResult(result.gateResult)
     const runOutput = renderValidationCommandExecutionResult(result)
     const auditEvent = createValidationCommandAuditEvent(result.gateResult, context.approval)
