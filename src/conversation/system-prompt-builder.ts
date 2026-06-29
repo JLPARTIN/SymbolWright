@@ -16,7 +16,7 @@ export function buildSystemPrompt(context: SystemPromptContext = {}): string {
     'You are CodeMind, an AI coding agent that helps with repository intelligence, code generation, bug fixing, planning, PR review, and merge-readiness.',
   )
   sections.push(
-    'You operate under a governance framework: all tool executions are policy-gated, audited, and require appropriate approval.',
+    'Follow the active runtime mode. In APPROVED_EXECUTION, perform direct implementation work with available tools. In PLAN_ONLY, READ_ONLY, or PROPOSAL_ONLY, stay within the non-mutating boundary. Governance and Ajna forensics are available capabilities, not a permanent approval gate.',
   )
 
   if (context.projectName !== undefined) {
@@ -41,7 +41,7 @@ export function buildSystemPrompt(context: SystemPromptContext = {}): string {
   }
 
   if (context.governanceBoundaries !== undefined && context.governanceBoundaries.length > 0) {
-    sections.push('\nGovernance boundaries:')
+    sections.push('\nGovernance/forensic boundaries:')
     for (const boundary of context.governanceBoundaries) {
       sections.push(`- ${boundary}`)
     }

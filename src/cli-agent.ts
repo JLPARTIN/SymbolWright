@@ -7,11 +7,20 @@ import {
   validateCodemindConfig,
   type CodemindConfig,
 } from './config/codemind-config.js'
-import { createDefaultRuntimePolicy } from './runtime/policy/runtime-policy.js'
+import {
+  createRuntimePolicyForMode,
+  DEFAULT_CODEMIND_RUNTIME_MODE,
+  normalizeCodemindRuntimeMode,
+} from './runtime/policy/runtime-policy.js'
 import { createAnthropicProvider } from './provider/anthropic-provider.js'
 import type { LLMProvider } from './provider/provider.types.js'
 import { assembleAgentTools } from './runtime/tools/tool-assembly.js'
-import type { RuntimeToolContext, RuntimePolicySnapshot, RuntimeApproval } from './runtime/types.js'
+import type {
+  CodemindRuntimeMode,
+  RuntimeToolContext,
+  RuntimePolicySnapshot,
+  RuntimeApproval,
+} from './runtime/types.js'
 import {
   runActivatedAgent,
   type CodemindActivationConfig,
@@ -37,14 +46,90 @@ import {
 import type { EmbeddingProvider } from './memory/embedding-provider.js'
 import { loadVectorStore } from './cli-index.js'
 
-function buildPolicy(_approved: boolean, hasGitHubToken: boolean = false): RuntimePolicySnapshot {
+interface ParsedAgentArgs {
+  readonly resumeSessionId?: string
+  readonly runtimeMode?: CodemindRuntimeMode
+  readonly attachApprovalTicket: boolean
+  readonly userArgs: readonly string[]
+}
+
+function buildPolicy(
+  mode: CodemindRuntimeMode,
+  hasGitHubToken: boolean = false,
+): RuntimePolicySnapshot {
+  return createRuntimePolicyForMode(mode, { hasGitHubToken })
+}
+
+function parseModeFlag(value: string): CodemindRuntimeMode {
+  const mode = normalizeCodemindRuntimeMode(value)
+  if (mode === undefined) {
+    throw new Error(
+      `Invalid runtime mode: ${value}. Expected PLAN_ONLY, READ_ONLY, PROPOSAL_ONLY, or APPROVED_EXECUTION.`,
+    )
+  }
+  return mode
+}
+
+function parseAgentArgs(args: readonly string[]): ParsedAgentArgs {
+  let resumeSessionId: string | undefined
+  let runtimeMode: CodemindRuntimeMode | undefined
+  let attachApprovalTicket = false
+  const userArgs: string[] = []
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i]
+    if (arg === undefined) continue
+
+    if (arg === '--resume' && i + 1 < args.length) {
+      resumeSessionId = args[i + 1]
+      i++
+      continue
+    }
+
+    if (arg === '--mode') {
+      const value = args[i + 1]
+      if (value === undefined || value.startsWith('--')) {
+        throw new Error('Missing value for --mode')
+      }
+      runtimeMode = parseModeFlag(value)
+      i++
+      continue
+    }
+
+    if (arg.startsWith('--mode=')) {
+      runtimeMode = parseModeFlag(arg.slice('--mode='.length))
+      continue
+    }
+
+    if (arg === '--read-only') {
+      runtimeMode = 'READ_ONLY'
+      continue
+    }
+
+    if (arg === '--proposal-only') {
+      runtimeMode = 'PROPOSAL_ONLY'
+      continue
+    }
+
+    if (arg === '--plan-only') {
+      runtimeMode = 'PLAN_ONLY'
+      continue
+    }
+
+    if (arg === '--approved') {
+      runtimeMode = 'APPROVED_EXECUTION'
+      attachApprovalTicket = true
+      continue
+    }
+
+    userArgs.push(arg)
+  }
+
   return {
-    ...createDefaultRuntimePolicy(),
-    mode: 'APPROVED_EXECUTION',
-    allowShell: true,
-    allowWrites: true,
-    allowNetwork: true,
-    allowGitHubWrites: hasGitHubToken,
+    ...(resumeSessionId !== undefined ? { resumeSessionId } : {}),
+    ...(runtimeMode !== undefined ? { runtimeMode } : {}),
+    attachApprovalTicket,
+    userArgs,
   }
 }
 
@@ -141,6 +226,7 @@ async function runInteractive(
 
   console.log('\x1b[36mCodeMind\x1b[0m interactive mode')
   console.log(`\x1b[2mSession: ${sessionId}\x1b[0m`)
+  console.log(`\x1b[2mRuntime mode: ${toolContext.policy.mode}\x1b[0m`)
   console.log('\x1b[2mCommands: /exit, /cost, /session, /clear, /help\x1b[0m\n')
 
   try {
@@ -238,7 +324,10 @@ export function renderSessionsList(persistence: SessionPersistence): string {
 }
 
 export async function runAgentCommand(args: readonly string[]): Promise<void> {
-  const config = resolveCodemindConfig()
+  const parsedArgs = parseAgentArgs(args)
+  const config = resolveCodemindConfig({
+    cliFlags: parsedArgs.runtimeMode !== undefined ? { runtimeMode: parsedArgs.runtimeMode } : {},
+  })
   const validation = validateCodemindConfig(config)
 
   if (!validation.valid) {
@@ -275,23 +364,9 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
 
   const vectorStore = loadVectorStore(cwd)
 
-  let resumeSessionId: string | undefined
-  let approvedMode = false
-  const filteredArgs: string[] = []
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i]
-    if (arg === '--resume' && i + 1 < args.length) {
-      resumeSessionId = args[i + 1]
-      i++
-    } else if (arg === '--approved') {
-      approvedMode = true
-    } else {
-      filteredArgs.push(arg!)
-    }
-  }
-
+  const runtimeMode = config.runtimeMode ?? DEFAULT_CODEMIND_RUNTIME_MODE
   const hasGitHubToken = config.githubToken !== undefined
-  const policy = buildPolicy(approvedMode, hasGitHubToken)
+  const policy = buildPolicy(runtimeMode, hasGitHubToken)
   const scopes: RuntimeApproval['scopes'][number][] = [
     'file:write',
     'apply_edit',
@@ -299,10 +374,10 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
     'shell:execute',
     'git:write',
   ]
-  if (approvedMode && hasGitHubToken) {
+  if (policy.allowGitHubWrites) {
     scopes.push('github:write')
   }
-  const approval: RuntimeApproval | undefined = approvedMode
+  const approval: RuntimeApproval | undefined = parsedArgs.attachApprovalTicket
     ? {
         ticketId: `cli-${Date.now()}`,
         approvedBy: 'operator',
@@ -317,7 +392,7 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
     ...(approval !== undefined ? { approval } : {}),
   }
 
-  const userMessage = filteredArgs.join(' ').trim()
+  const userMessage = parsedArgs.userArgs.join(' ').trim()
 
   try {
     if (userMessage.length > 0) {
@@ -351,7 +426,7 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
         costTracker,
         persistence,
         memoryContext,
-        resumeSessionId,
+        parsedArgs.resumeSessionId,
       )
     }
   } catch (error: unknown) {

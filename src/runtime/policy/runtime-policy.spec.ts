@@ -13,7 +13,10 @@ import {
   assertValidPolicy,
   assertWriteApproved,
   createDefaultRuntimePolicy,
+  createRuntimePolicyForMode,
+  isCodemindRuntimeMode,
   isPathInsideWorkspace,
+  normalizeCodemindRuntimeMode,
   resolveWorkspacePath,
 } from './runtime-policy.js'
 
@@ -26,6 +29,52 @@ describe('runtime policy', () => {
     expect(policy.allowShell).toBe(true)
     expect(policy.allowWrites).toBe(true)
     expect(policy.allowGitHubWrites).toBe(true)
+  })
+
+  it('creates strict non-mutating policies from existing runtime modes', () => {
+    for (const mode of ['PLAN_ONLY', 'READ_ONLY', 'PROPOSAL_ONLY'] as const) {
+      const policy = createRuntimePolicyForMode(mode)
+      expect(policy.mode).toBe(mode)
+      expect(policy.allowNetwork).toBe(false)
+      expect(policy.allowShell).toBe(false)
+      expect(policy.allowWrites).toBe(false)
+      expect(policy.allowGitHubWrites).toBe(false)
+    }
+  })
+
+  it('creates direct execution policy from APPROVED_EXECUTION', () => {
+    const policy = createRuntimePolicyForMode('APPROVED_EXECUTION', { hasGitHubToken: true })
+
+    expect(policy.allowNetwork).toBe(true)
+    expect(policy.allowShell).toBe(true)
+    expect(policy.allowWrites).toBe(true)
+    expect(policy.allowGitHubWrites).toBe(true)
+  })
+
+  it('keeps GitHub writes disabled in direct mode when no token is configured', () => {
+    const policy = createRuntimePolicyForMode('APPROVED_EXECUTION', { hasGitHubToken: false })
+
+    expect(policy.allowNetwork).toBe(true)
+    expect(policy.allowShell).toBe(true)
+    expect(policy.allowWrites).toBe(true)
+    expect(policy.allowGitHubWrites).toBe(false)
+  })
+
+  it('normalizes runtime mode aliases onto the existing mode union', () => {
+    expect(normalizeCodemindRuntimeMode('direct')).toBe('APPROVED_EXECUTION')
+    expect(normalizeCodemindRuntimeMode('off')).toBe('APPROVED_EXECUTION')
+    expect(normalizeCodemindRuntimeMode('approved')).toBe('APPROVED_EXECUTION')
+    expect(normalizeCodemindRuntimeMode('read-only')).toBe('READ_ONLY')
+    expect(normalizeCodemindRuntimeMode('proposal only')).toBe('PROPOSAL_ONLY')
+    expect(normalizeCodemindRuntimeMode('invalid')).toBeUndefined()
+  })
+
+  it('recognizes canonical runtime modes', () => {
+    expect(isCodemindRuntimeMode('PLAN_ONLY')).toBe(true)
+    expect(isCodemindRuntimeMode('READ_ONLY')).toBe(true)
+    expect(isCodemindRuntimeMode('PROPOSAL_ONLY')).toBe(true)
+    expect(isCodemindRuntimeMode('APPROVED_EXECUTION')).toBe(true)
+    expect(isCodemindRuntimeMode('DIRECT')).toBe(false)
   })
 
   it('resolves paths inside the workspace', () => {

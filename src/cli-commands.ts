@@ -12,8 +12,9 @@ export const CODEMIND_CLI_COMMANDS = [
     description: 'Open the CodeMind Operator Workspace console',
   },
   {
-    name: 'agent [message]',
-    description: 'Run the direct execution coding agent',
+    name: 'agent [message] [--mode <mode>]',
+    description:
+      'Run the direct execution coding agent with APPROVED_EXECUTION, PROPOSAL_ONLY, READ_ONLY, or PLAN_ONLY runtime mode',
   },
   { name: 'sessions', description: 'List saved agent sessions' },
   {
@@ -233,6 +234,7 @@ export function renderHelp(): string {
     'Commands:',
     ...CODEMIND_CLI_COMMANDS.map(({ name, description }) => `  ${name.padEnd(56)} ${description}`),
     '',
+    'Run "codemind agent --mode APPROVED_EXECUTION" for direct agent work.',
     'Run "codemind status" to see platform posture and active policy.',
   ]
   return lines.join('\n')

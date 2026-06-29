@@ -2,6 +2,9 @@ import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 
+import type { CodemindRuntimeMode } from '../runtime/types.js'
+import { normalizeCodemindRuntimeMode } from '../runtime/policy/runtime-policy.js'
+
 export type EmbeddingProviderType = 'voyage' | 'hash'
 
 export interface CodemindConfig {
@@ -12,6 +15,7 @@ export interface CodemindConfig {
   readonly baseURL?: string
   readonly embeddingProvider?: EmbeddingProviderType
   readonly voyageApiKey?: string
+  readonly runtimeMode?: CodemindRuntimeMode
 }
 
 interface RawConfigFile {
@@ -22,6 +26,7 @@ interface RawConfigFile {
   readonly baseURL?: unknown
   readonly embeddingProvider?: unknown
   readonly voyageApiKey?: unknown
+  readonly runtimeMode?: unknown
 }
 
 function loadJsonConfig(filePath: string): RawConfigFile | undefined {
@@ -117,6 +122,12 @@ export function resolveCodemindConfig(sources: CodemindConfigSources = {}): Code
     stringOrUndefined(homeConfig?.voyageApiKey) ??
     stringOrUndefined(projectConfig?.voyageApiKey)
 
+  const runtimeMode =
+    normalizeCodemindRuntimeMode(cli.runtimeMode) ??
+    normalizeCodemindRuntimeMode(env['CODEMIND_RUNTIME_MODE']) ??
+    normalizeCodemindRuntimeMode(homeConfig?.runtimeMode) ??
+    normalizeCodemindRuntimeMode(projectConfig?.runtimeMode)
+
   return {
     ...(anthropicApiKey !== undefined ? { anthropicApiKey } : {}),
     ...(githubToken !== undefined ? { githubToken } : {}),
@@ -125,6 +136,7 @@ export function resolveCodemindConfig(sources: CodemindConfigSources = {}): Code
     ...(baseURL !== undefined ? { baseURL } : {}),
     ...(embeddingProvider !== undefined ? { embeddingProvider } : {}),
     ...(voyageApiKey !== undefined ? { voyageApiKey } : {}),
+    ...(runtimeMode !== undefined ? { runtimeMode } : {}),
   }
 }
 
@@ -149,6 +161,7 @@ export interface CodemindConfigValidationResult {
     readonly baseURL?: string
     readonly embeddingProvider?: EmbeddingProviderType
     readonly hasVoyageApiKey: boolean
+    readonly runtimeMode?: CodemindRuntimeMode
   }
 }
 
@@ -206,6 +219,7 @@ export function validateCodemindConfig(config: CodemindConfig): CodemindConfigVa
         ? { embeddingProvider: config.embeddingProvider }
         : {}),
       hasVoyageApiKey,
+      ...(config.runtimeMode !== undefined ? { runtimeMode: config.runtimeMode } : {}),
     },
   }
 }
