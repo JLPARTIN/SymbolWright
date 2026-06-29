@@ -63,11 +63,26 @@ export interface DockerSandboxRunnerOptions {
   readonly maxOutputBytes?: number
 }
 
+export interface DockerSandboxResolvedConfig {
+  readonly dockerBinary: string
+  readonly image: string
+  readonly memory: string
+  readonly cpus: string
+  readonly network: 'none'
+  readonly user: string
+  readonly timeoutMs: number
+  readonly maxOutputBytes: number
+}
+
 const ALLOWED_BINARIES = new Set<SandboxCommandBinary>(['git', 'npm', 'npx', 'node', 'prettier'])
 const SHELL_META_PATTERN = /[;&|`$<>\n\r]/
-const DEFAULT_DOCKER_IMAGE = 'node:22-alpine'
-const DEFAULT_TIMEOUT_MS = 120_000
-const DEFAULT_MAX_OUTPUT_BYTES = 1024 * 1024
+export const DEFAULT_DOCKER_IMAGE = 'node:22-alpine'
+export const DEFAULT_SANDBOX_MEMORY = '512m'
+export const DEFAULT_SANDBOX_CPUS = '1'
+export const DEFAULT_SANDBOX_NETWORK = 'none' as const
+export const DEFAULT_SANDBOX_USER = 'node'
+export const DEFAULT_TIMEOUT_MS = 120_000
+export const DEFAULT_MAX_OUTPUT_BYTES = 1024 * 1024
 
 const FILE_WRITE_SCRIPT = [
   "const fs = require('node:fs')",
@@ -83,9 +98,87 @@ const FILE_WRITE_SCRIPT = [
   '    process.exit(71)',
   '  }',
   '  fs.mkdirSync(path.dirname(target), { recursive: true })',
-  "  fs.writeFileSync(target, Buffer.concat(chunks).toString('utf8'), { encoding: 'utf8', mode: 0o600 })",
+  '  fs.writeFileSync(target, Buffer.concat(chunks).toString(\'utf8\'), {',
+  "    encoding: 'utf8',",
+  '    mode: 0o600,',
+  '  })',
   '})',
 ].join(';')
+
+function firstEnvValue(env: NodeJS.ProcessEnv, names: readonly string[]): string | undefined {
+  for (const name of names) {
+    const value = env[name]?.trim()
+    if (value !== undefined && value.length > 0) {
+      return value
+    }
+  }
+  return undefined
+}
+
+function parsePositiveInteger(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined
+
+  const parsed = Number(value)
+  if (!Number.isInteger(parsed) || parsed <= 0) return undefined
+  return parsed
+}
+
+export function resolveDockerSandboxRunnerOptionsFromEnv(
+  env: NodeJS.ProcessEnv = process.env,
+): DockerSandboxRunnerOptions {
+  const options: DockerSandboxRunnerOptions = {}
+  const dockerBinary = firstEnvValue(env, ['CODEMIND_SANDBOX_DOCKER_BINARY'])
+  const image = firstEnvValue(env, ['CODEMIND_SANDBOX_IMAGE'])
+  const memory = firstEnvValue(env, ['CODEMIND_SANDBOX_MEMORY'])
+  const cpus = firstEnvValue(env, ['CODEMIND_SANDBOX_CPUS'])
+  const user = firstEnvValue(env, ['CODEMIND_SANDBOX_USER'])
+  const network = firstEnvValue(env, ['CODEMIND_SANDBOX_NETWORK'])
+  const timeoutMs = parsePositiveInteger(firstEnvValue(env, ['CODEMIND_SANDBOX_TIMEOUT_MS']))
+  const maxOutputBytes = parsePositiveInteger(
+    firstEnvValue(env, ['CODEMIND_SANDBOX_MAX_OUTPUT_BYTES']),
+  )
+
+  if (dockerBinary !== undefined) options.dockerBinary = dockerBinary
+  if (image !== undefined) options.image = image
+  if (memory !== undefined) options.memory = memory
+  if (cpus !== undefined) options.cpus = cpus
+  if (user !== undefined) options.user = user
+  if (network === 'none') options.network = 'none'
+  if (timeoutMs !== undefined) options.timeoutMs = timeoutMs
+  if (maxOutputBytes !== undefined) options.maxOutputBytes = maxOutputBytes
+
+  return options
+}
+
+export function resolveDockerSandboxConfig(
+  options: DockerSandboxRunnerOptions = resolveDockerSandboxRunnerOptionsFromEnv(),
+): DockerSandboxResolvedConfig {
+  return {
+    dockerBinary: options.dockerBinary ?? 'docker',
+    image: options.image ?? DEFAULT_DOCKER_IMAGE,
+    memory: options.memory ?? DEFAULT_SANDBOX_MEMORY,
+    cpus: options.cpus ?? DEFAULT_SANDBOX_CPUS,
+    network: options.network ?? DEFAULT_SANDBOX_NETWORK,
+    user: options.user ?? DEFAULT_SANDBOX_USER,
+    timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+    maxOutputBytes: options.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES,
+  }
+}
+
+export function renderDockerSandboxConfig(
+  config: DockerSandboxResolvedConfig = resolveDockerSandboxConfig(),
+): string {
+  return [
+    `docker=${config.dockerBinary}`,
+    `image=${config.image}`,
+    `memory=${config.memory}`,
+    `cpus=${config.cpus}`,
+    `network=${config.network}`,
+    `user=${config.user}`,
+    `timeoutMs=${config.timeoutMs}`,
+    `maxOutputBytes=${config.maxOutputBytes}`,
+  ].join('; ')
+}
 
 export function parseWorkspaceCommand(command: string): ParsedWorkspaceCommand {
   const trimmed = command.trim()
@@ -120,6 +213,7 @@ function buildDockerWorkspaceArgs(
   options: DockerSandboxRunnerOptions = {},
 ): readonly string[] {
   const resolvedWorkspaceRoot = path.resolve(workspaceRoot)
+  const config = resolveDockerSandboxConfig(options)
 
   return [
     'run',
@@ -127,18 +221,18 @@ function buildDockerWorkspaceArgs(
     '--cap-drop=ALL',
     '--security-opt=no-new-privileges:true',
     '--network',
-    options.network ?? 'none',
+    config.network,
     '--memory',
-    options.memory ?? '512m',
+    config.memory,
     '--cpus',
-    options.cpus ?? '1',
+    config.cpus,
     '--user',
-    options.user ?? 'node',
+    config.user,
     '-v',
     `${resolvedWorkspaceRoot}:/workspace:rw`,
     '-w',
     '/workspace',
-    options.image ?? DEFAULT_DOCKER_IMAGE,
+    config.image,
   ]
 }
 
@@ -170,8 +264,9 @@ export class DockerSandboxRunner implements SandboxRunner {
   private readonly dockerBinary: string
   private readonly options: DockerSandboxRunnerOptions
 
-  public constructor(options: DockerSandboxRunnerOptions = {}) {
-    this.dockerBinary = options.dockerBinary ?? 'docker'
+  public constructor(options: DockerSandboxRunnerOptions = resolveDockerSandboxRunnerOptionsFromEnv()) {
+    const config = resolveDockerSandboxConfig(options)
+    this.dockerBinary = config.dockerBinary
     this.options = options
   }
 
@@ -237,8 +332,9 @@ export class DockerSandboxFileWriter implements SandboxFileWriter {
   private readonly dockerBinary: string
   private readonly options: DockerSandboxRunnerOptions
 
-  public constructor(options: DockerSandboxRunnerOptions = {}) {
-    this.dockerBinary = options.dockerBinary ?? 'docker'
+  public constructor(options: DockerSandboxRunnerOptions = resolveDockerSandboxRunnerOptionsFromEnv()) {
+    const config = resolveDockerSandboxConfig(options)
+    this.dockerBinary = config.dockerBinary
     this.options = options
   }
 
