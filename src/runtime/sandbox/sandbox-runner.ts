@@ -109,7 +109,7 @@ const FILE_WRITE_SCRIPT = [
   '    process.exit(71)',
   '  }',
   '  fs.mkdirSync(path.dirname(target), { recursive: true })',
-  '  fs.writeFileSync(target, Buffer.concat(chunks).toString(\'utf8\'), {',
+  "  fs.writeFileSync(target, Buffer.concat(chunks).toString('utf8'), {",
   "    encoding: 'utf8',",
   '    mode: 0o600,',
   '  })',
