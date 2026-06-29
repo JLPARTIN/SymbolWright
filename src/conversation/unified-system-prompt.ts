@@ -94,8 +94,10 @@ function buildSwarmSection(
   const defaultDescriptions: Record<string, string> = {
     investigator:
       'Read-only exploration of codebases — file search, pattern matching, structure analysis.',
-    coder: 'Code implementation — reads context and writes fixes or features when runtime mode permits.',
-    analyzer: 'Validation — runs tests, typecheck, lint, and reports results when runtime mode permits.',
+    coder:
+      'Code implementation — reads context and writes fixes or features when runtime mode permits.',
+    analyzer:
+      'Validation — runs tests, typecheck, lint, and reports results when runtime mode permits.',
     reviewer: 'Quality assessment — triggers Ajna review pipeline for risk and merge readiness.',
     reporter: 'Summarization — tracks lineage, summarizes findings, reports status.',
   }

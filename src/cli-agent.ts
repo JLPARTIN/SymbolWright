@@ -53,7 +53,10 @@ interface ParsedAgentArgs {
   readonly userArgs: readonly string[]
 }
 
-function buildPolicy(mode: CodemindRuntimeMode, hasGitHubToken: boolean = false): RuntimePolicySnapshot {
+function buildPolicy(
+  mode: CodemindRuntimeMode,
+  hasGitHubToken: boolean = false,
+): RuntimePolicySnapshot {
   return createRuntimePolicyForMode(mode, { hasGitHubToken })
 }
 
