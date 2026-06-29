@@ -134,14 +134,6 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       },
       required: ['command'],
     },
-    command_dry_run_gated: {
-      type: 'object',
-      properties: {
-        command: { type: 'string', description: 'Shell command to execute (must be in allowlist)' },
-        timeoutMs: { type: 'number', description: 'Timeout in milliseconds (default 120000)' },
-      },
-      required: ['command'],
-    },
     git: {
       type: 'object',
       properties: {
@@ -303,14 +295,6 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       type: 'object',
       properties: {},
     },
-    apply_edit_gated: {
-      type: 'object',
-      properties: {
-        path: { type: 'string', description: 'File path to edit' },
-        proposedContent: { type: 'string', description: 'Proposed new content for the file' },
-      },
-      required: ['path', 'proposedContent'],
-    },
     pr_collaboration: {
       type: 'object',
       properties: {
@@ -416,7 +400,7 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
         result: { type: 'object', description: 'Zflow execution result' },
         readiness: { type: 'object', description: 'Zflow readiness summary' },
       },
-      required: ['id', 'format', 'result', 'readiness'],
+      required: ['id'],
     },
     zflow_report_rollup: {
       type: 'object',
