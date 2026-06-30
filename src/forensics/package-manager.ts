@@ -3,7 +3,10 @@ import path from 'node:path'
 
 import type { PackageManager } from './types.js'
 
-const PACKAGE_MANAGER_LOCKFILES: Record<Exclude<PackageManager, 'unknown' | 'conflict'>, readonly string[]> = {
+const PACKAGE_MANAGER_LOCKFILES: Record<
+  Exclude<PackageManager, 'unknown' | 'conflict'>,
+  readonly string[]
+> = {
   pnpm: ['pnpm-lock.yaml'],
   yarn: ['yarn.lock'],
   npm: ['package-lock.json', 'npm-shrinkwrap.json'],
