@@ -158,6 +158,7 @@ workspace boundary enforcement
 protected path blocking for .git, .env, .env.local, node_modules, dist, and coverage
 secret redaction in audit/trace outputs
 destructive shell-command blocking
+sandboxed command execution with fail-closed behavior
 protected branch and force-push blocking
 GitHub write credential checks
 bounded validation and release-readiness gates
@@ -269,10 +270,12 @@ docs/runtime/CODEMIND_RUNTIME_WORKFLOW_COMPOSITION.md
 docs/runtime/CODEMIND_AJNA_WORKFLOW_SURFACE.md
 docs/runtime/CODEMIND_RUNTIME_STATUS_DASHBOARD.md
 docs/runtime/CODEMIND_APPROVED_LOCAL_FILE_WRITES.md
+docs/runtime/CODEMIND_SANDBOX_PRODUCTION_HARDENING.md
 docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
 docs/ajna/CODEMIND_AJNA_ROADMAP.md
 docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
 docs/build-state/CODEMIND_BUILD_LEDGER.md
+docs/build-state/CODEMIND_FINAL_FORENSIC_AUDIT.md
 docs/context/CODEMIND_PROJECT_CONTEXT_KERNEL.md
 ```
 
