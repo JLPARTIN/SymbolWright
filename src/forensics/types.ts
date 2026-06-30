@@ -1,10 +1,21 @@
-export type FileKind = 'source' | 'test' | 'package-metadata' | 'lockfile' | 'workflow' | 'documentation' | 'config' | 'unknown'
+export type FileKind =
+  | 'source'
+  | 'test'
+  | 'package-metadata'
+  | 'lockfile'
+  | 'workflow'
+  | 'documentation'
+  | 'config'
+  | 'unknown'
 
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical'
 export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'unknown' | 'conflict'
 export type CommandStatus = 'passed' | 'failed' | 'missing' | 'skipped' | 'blocked'
 export type PrReadinessVerdict = 'READY' | 'NEEDS_WORK' | 'BLOCKED' | 'RISK_ACCEPTED'
-export type PushRecommendation = 'SAFE_TO_PUSH' | 'DO_NOT_PUSH' | 'PUSH_ONLY_WITH_RISK_ACCEPTANCE'
+export type PushRecommendation =
+  | 'SAFE_TO_PUSH'
+  | 'DO_NOT_PUSH'
+  | 'PUSH_ONLY_WITH_RISK_ACCEPTANCE'
 
 export interface ChangedFileAnalysis {
   readonly originalPath: string
