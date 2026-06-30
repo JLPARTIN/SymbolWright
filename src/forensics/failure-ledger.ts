@@ -20,24 +20,31 @@ function isFailureRecord(value: unknown): value is FailureRecord {
     return false
   }
 
+  const affectedFilePatterns = value['affectedFilePatterns']
+
   return (
-    typeof value.failureClass === 'string' &&
-    typeof value.rootCause === 'string' &&
-    typeof value.preventionRule === 'string' &&
-    typeof value.regressionTest === 'string' &&
-    typeof value.firstSeen === 'string' &&
-    (value.status === 'active' || value.status === 'inactive') &&
-    Array.isArray(value.affectedFilePatterns) &&
-    value.affectedFilePatterns.every((pattern) => typeof pattern === 'string')
+    typeof value['failureClass'] === 'string' &&
+    typeof value['rootCause'] === 'string' &&
+    typeof value['preventionRule'] === 'string' &&
+    typeof value['regressionTest'] === 'string' &&
+    typeof value['firstSeen'] === 'string' &&
+    (value['status'] === 'active' || value['status'] === 'inactive') &&
+    Array.isArray(affectedFilePatterns) &&
+    affectedFilePatterns.every((pattern) => typeof pattern === 'string')
   )
 }
 
 function isFailureLedger(value: unknown): value is FailureLedger {
+  if (!isObject(value)) {
+    return false
+  }
+
+  const failures = value['failures']
+
   return (
-    isObject(value) &&
-    typeof value.schemaVersion === 'number' &&
-    Array.isArray(value.failures) &&
-    value.failures.every((failure) => isFailureRecord(failure))
+    typeof value['schemaVersion'] === 'number' &&
+    Array.isArray(failures) &&
+    failures.every((failure) => isFailureRecord(failure))
   )
 }
 
