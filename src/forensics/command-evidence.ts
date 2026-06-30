@@ -42,17 +42,36 @@ export async function collectCommandEvidence(
 ): Promise<readonly CommandResult[]> {
   if (packageManager === 'unknown' || packageManager === 'conflict') {
     return requiredScripts.map((script) =>
-      createCommandResult(packageManager, script, 'blocked', `package manager detection returned ${packageManager}`),
+      createCommandResult(
+        packageManager,
+        script,
+        'blocked',
+        `package manager detection returned ${packageManager}`,
+      ),
     )
   }
 
   const results: CommandResult[] = []
   for (const script of requiredScripts) {
     if (!availableScripts.has(script)) {
-      results.push(createCommandResult(packageManager, script, 'missing', `${script} is not defined in package.json`))
+      results.push(
+        createCommandResult(
+          packageManager,
+          script,
+          'missing',
+          `${script} is not defined in package.json`,
+        ),
+      )
       continue
     }
-    results.push(await evidenceProvider({ repoRoot, packageManager, script, command: renderScriptCommand(packageManager, script) }))
+    results.push(
+      await evidenceProvider({
+        repoRoot,
+        packageManager,
+        script,
+        command: renderScriptCommand(packageManager, script),
+      }),
+    )
   }
   return results
 }
