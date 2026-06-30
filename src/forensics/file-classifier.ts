@@ -15,10 +15,21 @@ function kindForPath(filePath: string): FileKind {
   const name = filePath.split('/').at(-1) ?? filePath
   if (LOCKFILES.includes(name as (typeof LOCKFILES)[number])) return 'lockfile'
   if (name === 'package.json') return 'package-metadata'
-  if (filePath.startsWith('.github/workflows/') && endsWithAny(filePath, ['.yml', '.yaml'])) return 'workflow'
-  if (filePath.includes('__tests__') || filePath.includes('/tests/') || filePath.includes('.spec.') || filePath.includes('.test.')) return 'test'
+  if (filePath.startsWith('.github/workflows/') && endsWithAny(filePath, ['.yml', '.yaml'])) {
+    return 'workflow'
+  }
+  if (
+    filePath.includes('__tests__') ||
+    filePath.includes('/tests/') ||
+    filePath.includes('.spec.') ||
+    filePath.includes('.test.')
+  ) {
+    return 'test'
+  }
   if (filePath.endsWith('.md')) return 'documentation'
-  if (filePath.startsWith('src/') && endsWithAny(filePath, ['.ts', '.tsx', '.js', '.jsx'])) return 'source'
+  if (filePath.startsWith('src/') && endsWithAny(filePath, ['.ts', '.tsx', '.js', '.jsx'])) {
+    return 'source'
+  }
   if (endsWithAny(filePath, ['.json', '.yml', '.yaml'])) return 'config'
   return 'unknown'
 }
