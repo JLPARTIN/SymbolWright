@@ -1,5 +1,12 @@
 import { RELEASE_READINESS_SCRIPT } from './validation-planner.js'
-import type { ChangedFileAnalysis, CommandResult, PrReadinessReport, PrReadinessVerdict, PushRecommendation, ValidationPlan } from './types.js'
+import type {
+  ChangedFileAnalysis,
+  CommandResult,
+  PrReadinessReport,
+  PrReadinessVerdict,
+  PushRecommendation,
+  ValidationPlan,
+} from './types.js'
 
 function findResult(commands: readonly CommandResult[], script: string): CommandResult | undefined {
   return commands.find((item) => item.script === script)
@@ -51,7 +58,8 @@ export function evaluatePreflightEvidence(
   }
 
   const finalVerdict = chooseVerdict(blockers, fixes)
-  const confidence = finalVerdict === 'READY' ? 100 : Math.max(0, 100 - blockers.length * 40 - fixes.length * 25)
+  const confidence =
+    finalVerdict === 'READY' ? 100 : Math.max(0, 100 - blockers.length * 40 - fixes.length * 25)
 
   return {
     verdict: finalVerdict,
