@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, unlinkSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-import { MemoryDatabase } from './storage/database.js'
+import type { MemoryDatabase } from './storage/database.js'
 
 const DEFAULT_LEGACY_PATH = resolve(process.cwd(), '.codemind/ci-failure-ledger.json')
 
