@@ -59,7 +59,7 @@ export class LocalLexicalStore {
   private tokenizeQuery(query: string): string[] {
     return query
       .toLowerCase()
-      .split(/[^a-z0-9_]+/i)
+      .split(/[^a-z0-9]+/i)
       .map((term) => term.trim())
       .filter(Boolean)
       .slice(0, 20)
@@ -72,14 +72,14 @@ export class LocalLexicalStore {
     const terms = this.tokenizeQuery(query)
     if (terms.length === 0) return []
 
-    const likeTerm = `%${this.escapeLike(terms[0] ?? '')}%`
+    const likeTerm = `%${terms[0] ?? ''}%`
     const rows = this.db
       .getDb()
       .prepare(
         `
           SELECT id, text, metadata, timestamp
           FROM lexical_store
-          WHERE text LIKE ? ESCAPE '\'
+          WHERE text LIKE ?
           LIMIT ?
         `,
       )
@@ -119,9 +119,5 @@ export class LocalLexicalStore {
   private scoreFromRank(rank: number | undefined): number {
     if (rank === undefined) return 0.5
     return 1 / (1 + Math.abs(rank))
-  }
-
-  private escapeLike(input: string): string {
-    return input.replace(/[\%_]/g, (match) => `\${match}`)
   }
 }
