@@ -1,4 +1,4 @@
-import { MemoryDatabase } from './storage/database.js'
+import type { MemoryDatabase } from './storage/database.js'
 
 interface ArchiveCandidateRow {
   readonly id: string
