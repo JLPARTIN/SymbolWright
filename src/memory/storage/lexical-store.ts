@@ -79,7 +79,7 @@ export class LocalLexicalStore {
         `
           SELECT id, text, metadata, timestamp
           FROM lexical_store
-          WHERE text LIKE ? ESCAPE '\\'
+          WHERE text LIKE ? ESCAPE '\'
           LIMIT ?
         `,
       )
@@ -88,7 +88,10 @@ export class LocalLexicalStore {
     return rows.map((row) => this.toRecord(row, 0.25))
   }
 
-  private toRecord(row: LexicalStoreRow, score: number): LexicalRecord & { readonly score: number } {
+  private toRecord(
+    row: LexicalStoreRow,
+    score: number,
+  ): LexicalRecord & { readonly score: number } {
     return {
       id: row.id,
       text: row.text,
@@ -119,6 +122,6 @@ export class LocalLexicalStore {
   }
 
   private escapeLike(input: string): string {
-    return input.replace(/[\\%_]/g, (match) => `\\${match}`)
+    return input.replace(/[\%_]/g, (match) => `\${match}`)
   }
 }
