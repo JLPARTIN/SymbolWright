@@ -1,7 +1,6 @@
-import { ContextBudgeter } from './context-budgeter.js'
-import type { MemoryCandidate } from './context-budgeter.js'
-import { MemoryDatabase } from './storage/database.js'
-import { LocalLexicalStore } from './storage/lexical-store.js'
+import type { ContextBudgeter, MemoryCandidate } from './context-budgeter.js'
+import type { MemoryDatabase } from './storage/database.js'
+import type { LocalLexicalStore } from './storage/lexical-store.js'
 
 interface EpisodicRow {
   readonly id: string
