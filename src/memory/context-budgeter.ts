@@ -1,4 +1,4 @@
-import { ProceduralMemory } from './procedural-memory.js'
+import type { ProceduralMemory } from './procedural-memory.js'
 
 export interface MemoryCandidate {
   readonly id: string
