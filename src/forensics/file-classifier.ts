@@ -71,6 +71,8 @@ export function classifyChangedFile(filePath: string): ChangedFileAnalysis {
   }
 }
 
-export function classifyChangedFiles(changedFiles: readonly string[]): readonly ChangedFileAnalysis[] {
+export function classifyChangedFiles(
+  changedFiles: readonly string[],
+): readonly ChangedFileAnalysis[] {
   return changedFiles.map(classifyChangedFile)
 }
