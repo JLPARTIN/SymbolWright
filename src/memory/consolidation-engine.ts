@@ -1,6 +1,5 @@
-import { ShortTermMemory } from './short-term-memory.js'
-import type { SessionMessage } from './short-term-memory.js'
-import { MemoryDatabase } from './storage/database.js'
+import type { MemoryDatabase } from './storage/database.js'
+import type { SessionMessage, ShortTermMemory } from './short-term-memory.js'
 
 export interface LLMProvider {
   generate(prompt: string): Promise<string>
