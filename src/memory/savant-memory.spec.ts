@@ -101,10 +101,7 @@ describe('Savant Cognitive Memory Architecture', () => {
   })
 
   it('preserves an invalid legacy ledger shape instead of deleting source data', () => {
-    writeFileSync(
-      legacyLedgerPath,
-      JSON.stringify({ failures: [{ failureClass: 'BROKEN' }] }),
-    )
+    writeFileSync(legacyLedgerPath, JSON.stringify({ failures: [{ failureClass: 'BROKEN' }] }))
 
     const result = migrateLegacyLedger(db, legacyLedgerPath)
     const rows = db.getDb().prepare('SELECT id FROM episodic_interactions').all()
