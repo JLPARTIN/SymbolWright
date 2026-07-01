@@ -1,7 +1,12 @@
 import type { ChangedFileAnalysis, FileKind, RiskLevel } from './types.js'
 
 const FORMATTED = ['.ts', '.tsx', '.js', '.jsx', '.json', '.md', '.yml', '.yaml'] as const
-const LOCKFILES = ['package-lock.json', 'npm-shrinkwrap.json', 'pnpm-lock.yaml', 'yarn.lock'] as const
+const LOCKFILES = [
+  'package-lock.json',
+  'npm-shrinkwrap.json',
+  'pnpm-lock.yaml',
+  'yarn.lock',
+] as const
 
 export function normalizeRepoPath(filePath: string): string {
   return filePath.replaceAll(String.fromCharCode(92), '/').replace(/^[.][/]/, '')
