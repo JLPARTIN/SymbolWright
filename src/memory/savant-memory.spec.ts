@@ -83,7 +83,9 @@ describe('Savant Cognitive Memory Architecture', () => {
 
     expect(result).toEqual({ status: 'migrated', migratedCount: 1 })
     expect(rows).toHaveLength(1)
-    expect(JSON.parse(rows[0]!.content)).toMatchObject({ failureClass: 'FORMAT_CHECK_FAILURE' })
+    expect(JSON.parse(rows[0]!.content)).toMatchObject({
+      failureClass: 'FORMAT_CHECK_FAILURE',
+    })
     expect(existsSync(legacyLedgerPath)).toBe(false)
   })
 
@@ -99,7 +101,10 @@ describe('Savant Cognitive Memory Architecture', () => {
   })
 
   it('preserves an invalid legacy ledger shape instead of deleting source data', () => {
-    writeFileSync(legacyLedgerPath, JSON.stringify({ failures: [{ failureClass: 'BROKEN' }] }))
+    writeFileSync(
+      legacyLedgerPath,
+      JSON.stringify({ failures: [{ failureClass: 'BROKEN' }] }),
+    )
 
     const result = migrateLegacyLedger(db, legacyLedgerPath)
     const rows = db.getDb().prepare('SELECT id FROM episodic_interactions').all()
@@ -192,9 +197,9 @@ describe('Savant Cognitive Memory Architecture', () => {
 
     const results = retrievalEngine.retrieve('anything', 1000, ['fileA'])
 
-    expect(results.some((result) => result.source === 'graph' && result.content.includes('fileB'))).toBe(
-      true,
-    )
+    expect(
+      results.some((result) => result.source === 'graph' && result.content.includes('fileB')),
+    ).toBe(true)
   })
 
   it('archives old low-relevance episodic memories', () => {
@@ -210,8 +215,14 @@ describe('Savant Cognitive Memory Architecture', () => {
       .run(oldTimestamp, oldTimestamp)
 
     const archivedCount = new DecayManager(db).runDecayCycle()
-    const activeRows = db.getDb().prepare("SELECT id FROM episodic_interactions WHERE id = 'old1'").all()
-    const archivedRows = db.getDb().prepare("SELECT id FROM archived_memories WHERE id = 'old1'").all()
+    const activeRows = db
+      .getDb()
+      .prepare("SELECT id FROM episodic_interactions WHERE id = 'old1'")
+      .all()
+    const archivedRows = db
+      .getDb()
+      .prepare("SELECT id FROM archived_memories WHERE id = 'old1'")
+      .all()
 
     expect(archivedCount).toBe(1)
     expect(activeRows).toHaveLength(0)
