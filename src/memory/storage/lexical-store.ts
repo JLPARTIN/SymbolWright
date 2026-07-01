@@ -1,4 +1,4 @@
-import { MemoryDatabase } from './database.js'
+import type { MemoryDatabase } from './database.js'
 
 export interface LexicalRecord {
   readonly id: string
