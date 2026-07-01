@@ -22,7 +22,10 @@ export class AgentMemoryTools {
     if (results.length === 0) return 'No relevant memories found.'
 
     return results
-      .map((result) => `[${result.source.toUpperCase()}] (Score: ${result.score.toFixed(2)})\n${result.content}`)
+      .map(
+        (result) =>
+          `[${result.source.toUpperCase()}] (Score: ${result.score.toFixed(2)})\n${result.content}`,
+      )
       .join('\n\n')
   }
 
