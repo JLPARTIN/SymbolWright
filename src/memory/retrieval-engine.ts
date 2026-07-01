@@ -89,7 +89,9 @@ export class RetrievalEngine {
 
     this.updateLastAccessed(
       now,
-      candidates.filter((candidate) => candidate.source === 'episodic').map((candidate) => candidate.id),
+      candidates
+        .filter((candidate) => candidate.source === 'episodic')
+        .map((candidate) => candidate.id),
     )
 
     return this.budgeter.truncateToBudget(candidates, budgetTokens)
@@ -99,7 +101,9 @@ export class RetrievalEngine {
     if (ids.length === 0) return
 
     const dbInstance = this.db.getDb()
-    const stmt = dbInstance.prepare('UPDATE episodic_interactions SET last_accessed = ? WHERE id = ?')
+    const stmt = dbInstance.prepare(
+      'UPDATE episodic_interactions SET last_accessed = ? WHERE id = ?',
+    )
 
     dbInstance.exec('BEGIN')
     try {
