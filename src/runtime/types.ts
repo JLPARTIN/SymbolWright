@@ -160,6 +160,8 @@ export interface RuntimeToolContext {
   readonly sandboxRunner?: SandboxRunner
   readonly sandboxFileWriter?: SandboxFileWriter
   readonly memoryTools?: AgentMemoryTools
+  /** Groups checkpoints under `.codemind/checkpoints/<sessionId>/`. Auto-generated when absent. */
+  readonly sessionId?: string
 }
 
 /** Defines a runtime tool with name, capability, and typed execute function. */

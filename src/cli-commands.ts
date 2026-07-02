@@ -244,6 +244,18 @@ export const CODEMIND_CLI_COMMANDS = [
     name: 'web search "<query>" [--json] [--mode <mode>]',
     description: 'Search the public web (default: DuckDuckGo) through the web policy gate',
   },
+  {
+    name: 'checkpoint list [--session <id>] [--json]',
+    description: 'List checkpoints snapshotted before mutating writes',
+  },
+  {
+    name: 'checkpoint show <id> [--json]',
+    description: "Show a checkpoint's touched files, hashes, and restore history",
+  },
+  {
+    name: 'checkpoint restore <id> [--json]',
+    description: 'Restore every file in a checkpoint to its pre-mutation state',
+  },
 ] as const
 
 export function renderHelp(): string {

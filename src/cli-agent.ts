@@ -491,6 +491,7 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
     policy,
     embeddingProvider,
     workspace,
+    sessionId: parsedArgs.resumeSessionId ?? `cm-${Date.now()}`,
     ...(approval !== undefined ? { approval } : {}),
     ...(memorySession !== undefined ? { memoryTools: memorySession.tools } : {}),
   }

@@ -12,6 +12,7 @@ import { renderAuditEvents } from '../audit/runtime-audit-log.js'
 import { executeLocalFileWrite } from '../write/local-file-writer.js'
 import { renderLocalFileWriteExecutionResult } from '../write/local-file-write-result.js'
 import { renderLocalFileWriteDiff } from '../write/local-file-write-diff.js'
+import { checkpointBeforeWrite } from '../../checkpoint/checkpoint-tool-hook.js'
 
 export interface LocalFileWriteToolInput {
   readonly targetPath: string
@@ -86,6 +87,23 @@ export const localFileWriteTool: RuntimeToolDefinition = {
       context.approval,
       context.sandboxFileWriter,
     )
+
+    if (execResult.outcome === 'WRITTEN' && execResult.diff !== null) {
+      checkpointBeforeWrite(
+        context,
+        'local_file_write',
+        [
+          {
+            targetPath: execResult.gateResult.targetPath,
+            resolvedPath: execResult.gateResult.resolvedPath,
+            existedBefore: !execResult.diff.isNew,
+            originalContent: execResult.diff.previousContent,
+          },
+        ],
+        parsed.reason,
+      )
+    }
+
     const execOutput = renderLocalFileWriteExecutionResult(execResult)
     const auditEvent = createLocalFileWriteExecutionAuditEvent(execResult, context.approval)
     const sections: string[] = [execOutput]

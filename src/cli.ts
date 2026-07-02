@@ -21,6 +21,11 @@ import { renderDoctorCommand } from './cli-doctor.js'
 import { findFixtureArg, renderFixtureCommand } from './cli-fixture-commands.js'
 import { renderGitHubWriteExecutorCommand } from './cli-github-write-executor.js'
 import { runIndexCommand } from './cli-index.js'
+import {
+  renderCheckpointListCommand,
+  renderCheckpointShowCommand,
+  renderCheckpointRestoreCommand,
+} from './cli-checkpoint.js'
 import { renderMcpListCommand, renderMcpToolsCommand, renderMcpCallCommand } from './cli-mcp.js'
 import { renderMissionPacketCommand } from './cli-mission-packet.js'
 import { renderWebFetchCommand, renderWebSearchCommand } from './cli-web.js'
@@ -314,6 +319,10 @@ async function main(): Promise<void> {
       await handleWebCommand(rest)
       break
 
+    case 'checkpoint':
+      handleCheckpointCommand(rest)
+      break
+
     default:
       if (NOT_YET_ACTIVE.has(command)) {
         const full = rest.length > 0 ? `${command} ${rest.join(' ')}` : command
@@ -498,6 +507,28 @@ async function handleWebCommand(args: readonly string[]): Promise<void> {
   }
 
   const full = args.length > 0 ? `web ${args.join(' ')}` : 'web'
+  console.log(renderNotYetActive(full))
+}
+
+function handleCheckpointCommand(args: readonly string[]): void {
+  const [subcommand, ...checkpointArgs] = args
+
+  if (subcommand === 'list') {
+    console.log(renderCheckpointListCommand(checkpointArgs))
+    return
+  }
+
+  if (subcommand === 'show') {
+    console.log(renderCheckpointShowCommand(checkpointArgs))
+    return
+  }
+
+  if (subcommand === 'restore') {
+    console.log(renderCheckpointRestoreCommand(checkpointArgs))
+    return
+  }
+
+  const full = args.length > 0 ? `checkpoint ${args.join(' ')}` : 'checkpoint'
   console.log(renderNotYetActive(full))
 }
 
