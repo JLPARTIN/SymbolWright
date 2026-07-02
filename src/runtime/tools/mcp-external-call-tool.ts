@@ -25,7 +25,10 @@ function parseMcpToolCallInput(input: unknown): McpToolCallInput {
   if (args !== undefined && !isRecord(args)) {
     throw new Error('MCP arguments must be a JSON object when provided.')
   }
-  if (configPath !== undefined && (typeof configPath !== 'string' || configPath.trim().length === 0)) {
+  if (
+    configPath !== undefined &&
+    (typeof configPath !== 'string' || configPath.trim().length === 0)
+  ) {
     throw new Error('MCP configPath must be a non-empty string when provided.')
   }
 
