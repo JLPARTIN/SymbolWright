@@ -224,6 +224,18 @@ export const CODEMIND_CLI_COMMANDS = [
     name: 'ajna merge-readiness <json-file>',
     description: 'Assess merge-readiness from read-only Ajna evidence JSON',
   },
+  {
+    name: 'mcp list',
+    description: 'List configured MCP servers from .codemind/mcp.json and probe reachability',
+  },
+  {
+    name: 'mcp tools [server]',
+    description: 'Discover tools advertised by one or all configured MCP servers',
+  },
+  {
+    name: 'mcp call <server.tool> [json-args]',
+    description: 'Invoke a tool on a configured MCP server through the policy gate',
+  },
 ] as const
 
 export function renderHelp(): string {

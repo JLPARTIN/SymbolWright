@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "fixture": {
+      "command": "node",
+      "args": ["fixtures/mcp/fixture-server.mjs"]
+    }
+  }
+}
