@@ -218,6 +218,14 @@ async function main(): Promise<void> {
       )
       break
 
+    case 'github-write-executor':
+      console.log(
+        await renderGitHubWriteExecutorCommand(
+          requireInput('codemind github-write-executor <json-file>'),
+        ),
+      )
+      break
+
     case 'github-write-gate':
       console.log(
         await renderRuntimeGitHubWriteGate(requireInput('codemind github-write-gate <json-file>')),
