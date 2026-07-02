@@ -122,6 +122,13 @@ describe('createFixtureRegistry', () => {
     expect(names).toEqual(['zflow_report_catalog'])
   })
 
+  it('mcp is a standalone external-tool runtime preset', () => {
+    const registry = createFixtureRegistry('mcp')
+    const names = registry.list().map((t) => t.name)
+
+    expect(names).toEqual(['mcp_external_call'])
+  })
+
   it('workflow and github_write_gate produce the same tools', () => {
     const workflowNames = createFixtureRegistry('workflow')
       .list()
