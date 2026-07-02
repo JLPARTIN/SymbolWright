@@ -23,9 +23,9 @@ The Docker runner is constructed with these default constraints:
 - `--cap-drop=ALL`
 - `--security-opt=no-new-privileges:true`
 - `--network none`
-- `--memory 512m`
+- `--memory 2048m`
 - `--cpus 1`
-- `--user node`
+- `--user <host checkout UID:GID>` (matches whatever owns the mounted workspace, not a fixed container-image user — see below)
 - workspace mounted at `/workspace`
 
 The runtime fails closed when the sandbox runner is unavailable. There is no fallback path to host shell execution or host file writes.
@@ -69,3 +69,16 @@ npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
 ```
 
 The CI workflow runs this contract test before the full test suite.
+
+## Container User Resolution
+
+The container `--user` is resolved to the host process's UID:GID (`resolveDefaultSandboxUser()`
+in `sandbox-runner.ts`), not a fixed container-image username. This was fixed after
+`codemind preflight` (see `CODEMIND_RUNTIME_BUILD_STATE.md`) first ran real
+`npm run build`/`npm test`/`npm run typecheck` through the sandbox in CI and hit `EACCES`
+writing into the bind-mounted `/workspace` (`dist/` for build, `node_modules/.vite-temp/` for
+vitest's config cache) — the previously fixed `--user node` did not match the UID that owns
+the checkout on the host. Matching the host UID:GID is the standard fix for Docker bind-mount
+permission mismatches and does not change `--cap-drop=ALL`, `--security-opt=no-new-privileges`,
+or `--network none`. Set `CODEMIND_SANDBOX_USER` to override explicitly (for example to pin a
+specific non-root UID:GID) if the host UID should not be trusted implicitly.

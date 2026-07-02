@@ -10,7 +10,7 @@ Sandboxed commands use parameterized Docker execution with:
 --cap-drop=ALL
 --security-opt=no-new-privileges:true
 --network none
---memory 512m
+--memory 2048m
 --cpus 1
 --user node
 -v <workspace>:/workspace:rw
@@ -29,7 +29,7 @@ Optional environment variables:
 ```bash
 CODEMIND_SANDBOX_DOCKER_BINARY=docker
 CODEMIND_SANDBOX_IMAGE=node:22-alpine
-CODEMIND_SANDBOX_MEMORY=512m
+CODEMIND_SANDBOX_MEMORY=2048m
 CODEMIND_SANDBOX_CPUS=1
 CODEMIND_SANDBOX_NETWORK=none
 CODEMIND_SANDBOX_USER=node

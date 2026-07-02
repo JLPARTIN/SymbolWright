@@ -27,6 +27,9 @@ describe('tool-assembly', () => {
       expect(names).toContain('grep')
       expect(names).toContain('bash')
       expect(names).toContain('git')
+      expect(names).toContain('memory_recall')
+      expect(names).toContain('memory_store')
+      expect(names).toContain('preflight')
     })
 
     it('every tool has name, description, capability, and execute', () => {

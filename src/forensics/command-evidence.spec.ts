@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { collectCommandEvidence, renderScriptCommand } from '../../src/forensics/command-evidence.js'
-import type { CommandResult } from '../../src/forensics/types.js'
+import { collectCommandEvidence, renderScriptCommand } from './command-evidence.js'
+import type { CommandResult } from './types.js'
 
 describe('command evidence collection', () => {
   it('renders detected package manager commands', () => {
@@ -26,12 +26,24 @@ describe('command evidence collection', () => {
   })
 
   it('blocks unknown and conflicting package managers before execution', async () => {
-    const unknown = await collectCommandEvidence('/repo', 'unknown', ['test'], new Set(['test']), () => {
-      throw new Error('should not execute unknown package manager')
-    })
-    const conflict = await collectCommandEvidence('/repo', 'conflict', ['test'], new Set(['test']), () => {
-      throw new Error('should not execute conflicting package manager')
-    })
+    const unknown = await collectCommandEvidence(
+      '/repo',
+      'unknown',
+      ['test'],
+      new Set(['test']),
+      () => {
+        throw new Error('should not execute unknown package manager')
+      },
+    )
+    const conflict = await collectCommandEvidence(
+      '/repo',
+      'conflict',
+      ['test'],
+      new Set(['test']),
+      () => {
+        throw new Error('should not execute conflicting package manager')
+      },
+    )
 
     expect(unknown[0]).toMatchObject({ status: 'blocked' })
     expect(conflict[0]).toMatchObject({ status: 'blocked' })

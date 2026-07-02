@@ -4,12 +4,8 @@ import path from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import {
-  globToRegex,
-  loadFailureLedger,
-  matchFailureLedgerRules,
-} from '../../src/forensics/failure-ledger.js'
-import type { FailureLedger } from '../../src/forensics/types.js'
+import { globToRegex, loadFailureLedger, matchFailureLedgerRules } from './failure-ledger.js'
+import type { FailureLedger } from './types.js'
 
 const roots: string[] = []
 

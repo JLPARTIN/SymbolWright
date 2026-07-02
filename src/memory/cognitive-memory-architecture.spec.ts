@@ -14,7 +14,7 @@ import { ShortTermMemory } from './short-term-memory.js'
 import { MemoryDatabase } from './storage/database.js'
 import { LocalLexicalStore } from './storage/lexical-store.js'
 
-describe('Savant Cognitive Memory Architecture', () => {
+describe('CodeMind Cognitive Memory Architecture', () => {
   let tempDir: string
   let dbPath: string
   let proceduresPath: string
