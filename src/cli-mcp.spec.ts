@@ -100,7 +100,9 @@ describe('cli-mcp', () => {
     })
 
     it('throws when no target is given', async () => {
-      await expect(renderMcpCallCommand([], workspaceDir)).rejects.toThrow(/Usage: codemind mcp call/)
+      await expect(renderMcpCallCommand([], workspaceDir)).rejects.toThrow(
+        /Usage: codemind mcp call/,
+      )
     })
 
     it('throws on invalid JSON arguments', async () => {

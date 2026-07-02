@@ -21,7 +21,11 @@ describe('McpStdioTransport', () => {
 
     const response = await transport.request(
       'initialize',
-      { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'test', version: '0' } },
+      {
+        protocolVersion: '2024-11-05',
+        capabilities: {},
+        clientInfo: { name: 'test', version: '0' },
+      },
       5000,
     )
 

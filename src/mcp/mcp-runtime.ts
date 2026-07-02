@@ -89,7 +89,10 @@ export async function discoverMcpTools(
 ): Promise<readonly McpToolListing[]> {
   assertMcpAllowed(policy)
 
-  const targets = serverName !== undefined ? [requireMcpServer(config, serverName)] : Object.values(config.servers)
+  const targets =
+    serverName !== undefined
+      ? [requireMcpServer(config, serverName)]
+      : Object.values(config.servers)
   const listings: McpToolListing[] = []
 
   for (const server of targets) {
@@ -177,16 +180,25 @@ export async function callMcpTool(request: McpCallRequest): Promise<McpCallEvide
       createAuditEvent({
         action,
         status: 'allowed',
-        detail: redacted.isError ? 'MCP tool call returned isError=true' : 'MCP tool call completed',
+        detail: redacted.isError
+          ? 'MCP tool call returned isError=true'
+          : 'MCP tool call completed',
       }),
     )
 
-    return finish(redacted.isError ? 'tool_error' : 'ok', redacted.isError, redacted.content, stderrLog)
+    return finish(
+      redacted.isError ? 'tool_error' : 'ok',
+      redacted.isError,
+      redacted.content,
+      stderrLog,
+    )
   } catch (error) {
     const message = redactMcpText(errorMessage(error))
     const stderrLog = redactMcpText(client.stderrLog)
 
-    record(createAuditEvent({ action, status: 'allowed', detail: `MCP transport error: ${message}` }))
+    record(
+      createAuditEvent({ action, status: 'allowed', detail: `MCP transport error: ${message}` }),
+    )
 
     return finish('transport_error', true, [{ type: 'text', text: message }], stderrLog)
   } finally {

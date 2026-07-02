@@ -38,7 +38,9 @@ function parseMcpFlags(args: readonly string[]): ParsedMcpFlags {
     if (arg === '--mode') {
       const value = normalizeCodemindRuntimeMode(args[++i])
       if (value === undefined) {
-        throw new Error('--mode must be one of PLAN_ONLY, READ_ONLY, PROPOSAL_ONLY, APPROVED_EXECUTION')
+        throw new Error(
+          '--mode must be one of PLAN_ONLY, READ_ONLY, PROPOSAL_ONLY, APPROVED_EXECUTION',
+        )
       }
       mode = value
       continue
@@ -77,7 +79,9 @@ export async function renderMcpListCommand(
 
   const lines = ['CodeMind MCP servers', '']
   for (const status of statuses) {
-    const reachability = status.reachable ? `reachable (${status.toolCount ?? 0} tools)` : 'unreachable'
+    const reachability = status.reachable
+      ? `reachable (${status.toolCount ?? 0} tools)`
+      : 'unreachable'
     lines.push(`- ${status.name}: ${status.command} ${status.args.join(' ')} — ${reachability}`)
     if (status.error !== undefined) {
       lines.push(`  reason: ${status.error}`)

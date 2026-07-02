@@ -10,7 +10,15 @@ import type { RuntimeToolContext } from '../types.js'
 import { executeMcpCallTool, mcpCallTool } from './mcp-call-tool.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const FIXTURE_SERVER_PATH = join(__dirname, '..', '..', '..', 'fixtures', 'mcp', 'fixture-server.mjs')
+const FIXTURE_SERVER_PATH = join(
+  __dirname,
+  '..',
+  '..',
+  '..',
+  'fixtures',
+  'mcp',
+  'fixture-server.mjs',
+)
 
 describe('mcp-call-tool', () => {
   let workspaceDir: string

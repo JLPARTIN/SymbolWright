@@ -62,7 +62,8 @@ export function renderMcpCallEvidence(evidence: McpCallEvidence): string {
     '',
     'Audit trace:',
     ...evidence.auditTrace.map(
-      (event) => `- [${event.timestamp}] ${event.status.toUpperCase()} ${event.action}: ${event.detail}`,
+      (event) =>
+        `- [${event.timestamp}] ${event.status.toUpperCase()} ${event.action}: ${event.detail}`,
     ),
   )
 

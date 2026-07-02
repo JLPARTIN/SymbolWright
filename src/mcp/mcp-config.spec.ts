@@ -15,9 +15,7 @@ import {
 describe('mcp-config', () => {
   describe('parseMcpConfig', () => {
     it('parses a minimal server entry with defaults', () => {
-      const config = parseMcpConfig(
-        JSON.stringify({ servers: { fixture: { command: 'node' } } }),
-      )
+      const config = parseMcpConfig(JSON.stringify({ servers: { fixture: { command: 'node' } } }))
 
       expect(config.servers['fixture']).toEqual({
         name: 'fixture',

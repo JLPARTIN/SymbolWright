@@ -69,7 +69,11 @@ function parseServerEntry(name: string, raw: unknown): McpServerConfig {
 
   let timeoutMs = DEFAULT_MCP_TIMEOUT_MS
   if (entry['timeoutMs'] !== undefined) {
-    if (typeof entry['timeoutMs'] !== 'number' || !Number.isFinite(entry['timeoutMs']) || entry['timeoutMs'] <= 0) {
+    if (
+      typeof entry['timeoutMs'] !== 'number' ||
+      !Number.isFinite(entry['timeoutMs']) ||
+      entry['timeoutMs'] <= 0
+    ) {
       throw new Error(`mcp.json servers["${name}"].timeoutMs must be a positive number`)
     }
     timeoutMs = entry['timeoutMs']
@@ -96,7 +100,8 @@ export function parseMcpConfig(raw: string): McpConfig {
   }
 
   const root = assertRecord(parsed, 'mcp.json')
-  const rawServers = root['servers'] === undefined ? {} : assertRecord(root['servers'], 'mcp.json.servers')
+  const rawServers =
+    root['servers'] === undefined ? {} : assertRecord(root['servers'], 'mcp.json.servers')
 
   const servers: Record<string, McpServerConfig> = {}
   for (const [name, value] of Object.entries(rawServers)) {
