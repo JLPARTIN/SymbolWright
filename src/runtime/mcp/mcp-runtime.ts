@@ -70,7 +70,9 @@ export async function discoverMcpTools(input: {
         : ['- None']),
       '',
       'Blocked tools:',
-      ...(blockedTools.length > 0 ? blockedTools.map((tool) => `- ${tool.name}`) : ['- None']),
+      ...(blockedTools.length > 0
+        ? blockedTools.map((tool) => `- ${tool.name}`)
+        : ['- None']),
       '',
       '---',
       '',
