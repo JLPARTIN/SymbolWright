@@ -96,7 +96,9 @@ function parseToolDescriptors(result: unknown): readonly McpToolDescriptor[] {
     const inputSchema = record['inputSchema']
 
     if (typeof description === 'string') {
-      return inputSchema === undefined ? { ...descriptor, description } : { ...descriptor, description, inputSchema }
+      return inputSchema === undefined
+        ? { ...descriptor, description }
+        : { ...descriptor, description, inputSchema }
     }
 
     return inputSchema === undefined ? descriptor : { ...descriptor, inputSchema }
@@ -192,10 +194,12 @@ export class StdioMcpClient {
       throw new Error('MCP server is not connected.')
     }
 
+    const child = this.child
     const id = this.nextId
     this.nextId += 1
 
-    const request: JsonRpcRequest = params === undefined ? { jsonrpc: '2.0', id, method } : { jsonrpc: '2.0', id, method, params }
+    const request: JsonRpcRequest =
+      params === undefined ? { jsonrpc: '2.0', id, method } : { jsonrpc: '2.0', id, method, params }
 
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -204,7 +208,7 @@ export class StdioMcpClient {
       }, this.server.timeoutMs)
 
       this.pending.set(id, { resolve, reject, timer })
-      this.child?.stdin.write(encodeMcpMessage(request), (error) => {
+      child.stdin.write(encodeMcpMessage(request), (error) => {
         if (error !== undefined && error !== null) {
           clearTimeout(timer)
           this.pending.delete(id)
@@ -219,7 +223,8 @@ export class StdioMcpClient {
       return
     }
 
-    const notification = params === undefined ? { jsonrpc: '2.0', method } : { jsonrpc: '2.0', method, params }
+    const notification =
+      params === undefined ? { jsonrpc: '2.0', method } : { jsonrpc: '2.0', method, params }
     this.child.stdin.write(encodeMcpMessage(notification))
   }
 
@@ -237,7 +242,9 @@ export class StdioMcpClient {
     this.pending.delete(message.id)
 
     if (message.error !== undefined) {
-      pending.reject(new Error(message.error.message ?? `MCP JSON-RPC error ${message.error.code ?? 'unknown'}`))
+      pending.reject(
+        new Error(message.error.message ?? `MCP JSON-RPC error ${message.error.code ?? 'unknown'}`),
+      )
       return
     }
 
