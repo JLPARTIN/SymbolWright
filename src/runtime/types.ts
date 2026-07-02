@@ -53,6 +53,7 @@ export type CodemindToolName =
   | 'memory_recall'
   | 'memory_store'
   | 'preflight'
+  | 'mcp_external_call'
 
 /** Capability categories that determine tool availability per mode. */
 export type RuntimeToolCapability =
@@ -82,6 +83,7 @@ export type RuntimeToolCapability =
   | 'ZFLOW_REPORT_CATALOG'
   | 'MEMORY_ACCESS'
   | 'PR_PREFLIGHT'
+  | 'MCP_EXTERNAL_TOOL'
 
 /** Typed scopes for approval tickets — each covers a distinct live write or execution surface. */
 export type RuntimeApprovalScope =
@@ -220,6 +222,7 @@ export const ALL_CODEMIND_TOOL_NAMES = [
   'memory_recall',
   'memory_store',
   'preflight',
+  'mcp_external_call',
 ] as const satisfies readonly CodemindToolName[]
 
 type _AssertAllToolNames = CodemindToolName extends (typeof ALL_CODEMIND_TOOL_NAMES)[number]
