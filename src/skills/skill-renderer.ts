@@ -19,6 +19,10 @@ function parseSkillArguments(rawArguments: string): readonly string[] {
   return args
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')
+}
+
 function replaceUnescapedDollars(content: string, replacement: (content: string) => string): string {
   return replacement(content.replace(/\\\$/gu, ESCAPED_DOLLAR_SENTINEL)).replace(
     new RegExp(ESCAPED_DOLLAR_SENTINEL, 'gu'),
@@ -37,18 +41,18 @@ function substituteArguments(input: SkillRenderInput): string {
 
   return replaceUnescapedDollars(input.skill.body, (content) => {
     let rendered = content
-      .replace(/\$ARGUMENTS\[(\d+)]/gu, (_match, index: string) => parsedArgs[Number(index)] ?? '')
+      .replace(/\$ARGUMENTS\[(\d+)\]/gu, (_match, index: string) => parsedArgs[Number(index)] ?? '')
       .replace(/\$(\d+)/gu, (_match, index: string) => parsedArgs[Number(index)] ?? '')
       .replace(/\$ARGUMENTS/gu, rawArguments)
-      .replace(/\$\{CODEMIND_SESSION_ID}/gu, input.sessionId)
-      .replace(/\$\{CLAUDE_SESSION_ID}/gu, input.sessionId)
-      .replace(/\$\{CODEMIND_SKILL_DIR}/gu, input.skill.skillDir)
-      .replace(/\$\{CLAUDE_SKILL_DIR}/gu, input.skill.skillDir)
-      .replace(/\$\{CODEMIND_PROJECT_DIR}/gu, input.projectDir)
-      .replace(/\$\{CLAUDE_PROJECT_DIR}/gu, input.projectDir)
+      .replace(/\$\{CODEMIND_SESSION_ID\}/gu, input.sessionId)
+      .replace(/\$\{CLAUDE_SESSION_ID\}/gu, input.sessionId)
+      .replace(/\$\{CODEMIND_SKILL_DIR\}/gu, input.skill.skillDir)
+      .replace(/\$\{CLAUDE_SKILL_DIR\}/gu, input.skill.skillDir)
+      .replace(/\$\{CODEMIND_PROJECT_DIR\}/gu, input.projectDir)
+      .replace(/\$\{CLAUDE_PROJECT_DIR\}/gu, input.projectDir)
 
     for (const [name, value] of namedArgs.entries()) {
-      rendered = rendered.replace(new RegExp(`\\$${name}\\b`, 'gu'), value)
+      rendered = rendered.replace(new RegExp(`\\$${escapeRegExp(name)}\\b`, 'gu'), value)
     }
 
     return rendered
