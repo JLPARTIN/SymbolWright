@@ -1,5 +1,8 @@
 import { createDefaultRuntimePolicy } from './runtime/policy/runtime-policy.js'
-import { createFixtureContext, createFixtureRegistry } from './runtime/registry/fixture-registry-factory.js'
+import {
+  createFixtureContext,
+  createFixtureRegistry,
+} from './runtime/registry/fixture-registry-factory.js'
 import { discoverMcpTools, renderMcpServerList } from './runtime/mcp/mcp-runtime.js'
 import { loadMcpConfig } from './runtime/mcp/mcp-config.js'
 import type { McpToolCallInput } from './runtime/mcp/mcp-types.js'
@@ -67,7 +70,11 @@ function renderMcpHelp(): string {
   ].join('\n')
 }
 
-function resolveServerName(cwd: string, parsed: ParsedArgs, maybeServer: string | undefined): string {
+function resolveServerName(
+  cwd: string,
+  parsed: ParsedArgs,
+  maybeServer: string | undefined,
+): string {
   if (maybeServer !== undefined) {
     return maybeServer
   }
@@ -90,7 +97,12 @@ export async function renderMcpCommand(
   const [subcommand, ...rest] = args
   const parsed = parseArgs(rest)
 
-  if (subcommand === undefined || subcommand === 'help' || subcommand === '--help' || subcommand === '-h') {
+  if (
+    subcommand === undefined ||
+    subcommand === 'help' ||
+    subcommand === '--help' ||
+    subcommand === '-h'
+  ) {
     return renderMcpHelp()
   }
 
