@@ -64,6 +64,7 @@ function createTestContext(): RuntimeToolContext {
     policy: {
       mode: 'READ_ONLY',
       allowNetwork: false,
+      allowReadOnlyNetwork: true,
       allowShell: false,
       allowWrites: false,
       allowGitHubWrites: false,
@@ -100,6 +101,7 @@ describe('Tool assembly pipeline proof', () => {
     const policy: RuntimePolicySnapshot = {
       mode: 'APPROVED_EXECUTION',
       allowNetwork: false,
+      allowReadOnlyNetwork: true,
       allowShell: false,
       allowWrites: false,
       allowGitHubWrites: false,

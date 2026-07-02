@@ -19,6 +19,7 @@ import { renderRuntimeValidationCommand } from '../../cli-runtime-validation-com
 const shellPolicy: RuntimePolicySnapshot = {
   mode: 'APPROVED_EXECUTION',
   allowNetwork: false,
+  allowReadOnlyNetwork: true,
   allowShell: true,
   allowWrites: false,
   allowGitHubWrites: false,
@@ -29,6 +30,7 @@ const shellPolicy: RuntimePolicySnapshot = {
 const readOnlyPolicy: RuntimePolicySnapshot = {
   mode: 'READ_ONLY',
   allowNetwork: false,
+  allowReadOnlyNetwork: true,
   allowShell: false,
   allowWrites: false,
   allowGitHubWrites: false,

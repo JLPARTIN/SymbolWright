@@ -18,6 +18,7 @@ function createToolContext(): RuntimeToolContext {
     policy: {
       mode: 'APPROVED_EXECUTION',
       allowNetwork: false,
+      allowReadOnlyNetwork: true,
       allowShell: false,
       allowWrites: false,
       allowGitHubWrites: false,

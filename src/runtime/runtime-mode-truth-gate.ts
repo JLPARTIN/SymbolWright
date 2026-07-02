@@ -6,6 +6,7 @@ import {
   CODEMIND_RUNTIME_MODES,
   DEFAULT_CODEMIND_RUNTIME_MODE,
   createDefaultRuntimePolicy,
+  createRuntimePolicyForMode,
   normalizeCodemindRuntimeMode,
 } from './policy/runtime-policy.js'
 
@@ -218,6 +219,14 @@ function collectRuntimePolicyFindings(): string[] {
   }
   if (normalizeCodemindRuntimeMode('approved') !== 'APPROVED_EXECUTION') {
     findings.push('approved alias must normalize to APPROVED_EXECUTION')
+  }
+
+  for (const mode of REQUIRED_RUNTIME_MODES) {
+    if (!createRuntimePolicyForMode(mode).allowReadOnlyNetwork) {
+      findings.push(
+        `${mode} policy must allow read-only network access (docs/package lookups, web fetch/search) — governance gates mutation, not information`,
+      )
+    }
   }
 
   return findings

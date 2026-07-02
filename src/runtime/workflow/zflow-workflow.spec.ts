@@ -10,6 +10,7 @@ import { renderZflowResult, runZflowWorkflow } from './zflow-workflow.js'
 const policy: RuntimePolicySnapshot = {
   mode: 'APPROVED_EXECUTION',
   allowNetwork: false,
+  allowReadOnlyNetwork: true,
   allowShell: false,
   allowWrites: true,
   allowGitHubWrites: true,

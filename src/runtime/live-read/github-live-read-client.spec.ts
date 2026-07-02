@@ -37,6 +37,7 @@ const testContext: RuntimeToolContext = {
   policy: {
     mode: 'READ_ONLY',
     allowNetwork: false,
+    allowReadOnlyNetwork: true,
     allowShell: false,
     allowWrites: false,
     allowGitHubWrites: false,

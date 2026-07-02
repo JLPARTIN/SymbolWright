@@ -21,6 +21,7 @@ function makePolicy(mode: RuntimePolicySnapshot['mode']): RuntimePolicySnapshot 
   return {
     mode,
     allowNetwork: false,
+    allowReadOnlyNetwork: true,
     allowShell: false,
     allowWrites: false,
     allowGitHubWrites: false,

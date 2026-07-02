@@ -35,6 +35,7 @@ const context = {
   policy: {
     mode: 'READ_ONLY' as const,
     allowNetwork: false,
+    allowReadOnlyNetwork: true,
     allowShell: false,
     allowWrites: false,
     allowGitHubWrites: false,

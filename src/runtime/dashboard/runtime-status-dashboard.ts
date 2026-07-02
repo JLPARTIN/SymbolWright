@@ -51,6 +51,7 @@ export function renderRuntimeStatusDashboard(snapshot: RuntimeStatusSnapshot): s
     'Policy:',
     `  mode:               ${snapshot.policy.mode}`,
     `  allowNetwork:       ${snapshot.policy.allowNetwork}`,
+    `  allowReadOnlyNetwork: ${snapshot.policy.allowReadOnlyNetwork}`,
     `  allowShell:         ${snapshot.policy.allowShell}`,
     `  allowWrites:        ${snapshot.policy.allowWrites}`,
     `  allowGitHubWrites:  ${snapshot.policy.allowGitHubWrites}`,

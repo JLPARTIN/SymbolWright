@@ -25,6 +25,7 @@ function buildSwarmPolicy(
   return {
     mode: canWrite ? 'APPROVED_EXECUTION' : 'READ_ONLY',
     allowNetwork: parentPolicy.allowNetwork,
+    allowReadOnlyNetwork: parentPolicy.allowReadOnlyNetwork,
     allowShell: canExecuteCommands && parentPolicy.allowShell,
     allowWrites: canWrite && parentPolicy.allowWrites,
     allowGitHubWrites: false,
