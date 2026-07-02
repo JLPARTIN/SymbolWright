@@ -13,7 +13,7 @@ import { StdioMcpClient } from './stdio-mcp-client.js'
 import type { McpConfig, McpToolCallInput, McpToolCallResult } from './mcp-types.js'
 
 function renderUnknownJson(value: unknown): string {
-  return JSON.stringify(value, null, 2)
+  return JSON.stringify(value, null, 2) ?? 'undefined'
 }
 
 export function renderMcpServerList(config: McpConfig): string {
@@ -64,7 +64,8 @@ export async function discoverMcpTools(input: {
       'Allowed tools:',
       ...(visibleTools.length > 0
         ? visibleTools.map(
-            (tool) => `- ${tool.name}${tool.description === undefined ? '' : `: ${tool.description}`}`,
+            (tool) =>
+              `- ${tool.name}${tool.description === undefined ? '' : `: ${tool.description}`}`,
           )
         : ['- None']),
       '',
@@ -118,6 +119,7 @@ export async function renderMcpToolExecution(input: {
   const config = loadMcpConfig(input.cwd, input.request.configPath)
   const server = findMcpServer(config, input.request.server)
   const decision = evaluateMcpToolPolicy(server, input.request.tool)
+  const secrets = getMcpRedactionSecrets(server)
 
   if (!decision.allowed) {
     const audit = createAuditEvent({
@@ -159,7 +161,7 @@ export async function renderMcpToolExecution(input: {
       result.redactedResult,
       '',
       'Request arguments:',
-      redactMcpJson(input.request.arguments ?? {}, getMcpRedactionSecrets(server)),
+      redactMcpJson(input.request.arguments ?? {}, secrets),
       '',
       '---',
       '',
@@ -182,7 +184,7 @@ export async function renderMcpToolExecution(input: {
       `Reason: ${message}`,
       '',
       'Raw request:',
-      renderUnknownJson(input.request),
+      redactMcpJson(renderUnknownJson(input.request), secrets),
       '',
       '---',
       '',
