@@ -47,6 +47,11 @@ import {
   createVoyageEmbeddingProvider,
 } from './memory/embedding-provider.js'
 import type { EmbeddingProvider } from './memory/embedding-provider.js'
+import {
+  initializeAgentMemorySession,
+  type AgentMemorySession,
+} from './memory/agent-memory-session.js'
+import type { SessionMessage } from './memory/short-term-memory.js'
 import { loadVectorStore } from './cli-index.js'
 
 interface ParsedAgentArgs {
@@ -236,6 +241,7 @@ async function runOneShot(
   costTracker: CostTracker,
   persistence: SessionPersistence,
   memoryContext: string,
+  memorySession: AgentMemorySession | undefined,
 ): Promise<void> {
   const tools = assembleAgentTools()
   const model = resolveDisplayModel(config)
@@ -258,11 +264,27 @@ async function runOneShot(
 
   persistence.appendMessage(sessionId, createMessage('assistant', result.agentResult.finalText))
 
+  await recordMemoryTurns(memorySession, userMessage, result.agentResult.finalText)
+
   costTracker.record(sessionId, model, result.agentResult.totalUsage, 'orchestrator')
 
   if (result.agentResult.status === 'error') {
     process.exitCode = 1
   }
+}
+
+async function recordMemoryTurns(
+  memorySession: AgentMemorySession | undefined,
+  userMessage: string,
+  assistantMessage: string,
+): Promise<void> {
+  if (memorySession === undefined) return
+
+  const userTurn: SessionMessage = { role: 'user', content: userMessage }
+  const assistantTurn: SessionMessage = { role: 'assistant', content: assistantMessage }
+  await memorySession.recordTurn(userTurn)
+  await memorySession.recordTurn(assistantTurn)
+  memorySession.runMaintenance()
 }
 
 async function runInteractive(
@@ -272,6 +294,7 @@ async function runInteractive(
   costTracker: CostTracker,
   persistence: SessionPersistence,
   memoryContext: string,
+  memorySession: AgentMemorySession | undefined,
   resumeSessionId?: string,
 ): Promise<void> {
   const tools = assembleAgentTools()
@@ -361,6 +384,8 @@ async function runInteractive(
         conversationHistory.push(assistantMsg)
         persistence.appendMessage(sessionId, assistantMsg)
 
+        await recordMemoryTurns(memorySession, trimmed, result.agentResult.finalText)
+
         costTracker.record(sessionId, model, result.agentResult.totalUsage, 'orchestrator')
       } catch (error: unknown) {
         const classified = classifyError(error)
@@ -434,6 +459,13 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
 
   const vectorStore = loadVectorStore(cwd)
 
+  let memorySession: AgentMemorySession | undefined
+  try {
+    memorySession = initializeAgentMemorySession(cwd, provider)
+  } catch {
+    memorySession = undefined
+  }
+
   const runtimeMode = config.runtimeMode ?? DEFAULT_CODEMIND_RUNTIME_MODE
   const hasGitHubToken = config.githubToken !== undefined
   const policy = buildPolicy(runtimeMode, hasGitHubToken)
@@ -460,6 +492,7 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
     embeddingProvider,
     workspace,
     ...(approval !== undefined ? { approval } : {}),
+    ...(memorySession !== undefined ? { memoryTools: memorySession.tools } : {}),
   }
 
   const userMessage = parsedArgs.userArgs.join(' ').trim()
@@ -487,6 +520,7 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
         costTracker,
         persistence,
         fullContext,
+        memorySession,
       )
     } else {
       await runInteractive(
@@ -496,6 +530,7 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
         costTracker,
         persistence,
         memoryContext,
+        memorySession,
         parsedArgs.resumeSessionId,
       )
     }
@@ -503,5 +538,7 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
     const classified = classifyError(error)
     console.error(formatErrorForUser(classified))
     process.exit(1)
+  } finally {
+    memorySession?.close()
   }
 }

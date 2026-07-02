@@ -23,6 +23,11 @@ export const CODEMIND_CLI_COMMANDS = [
   },
   { name: 'plan <goal>', description: 'Render a runtime-backed non-mutating work plan' },
   { name: 'scan [dir]', description: 'Summarize repository structure (defaults to cwd)' },
+  {
+    name: 'preflight [changed-file...]',
+    description:
+      'Run the sandboxed PR preflight evidence pipeline against changed files and report a READY/NEEDS_WORK/BLOCKED verdict',
+  },
   { name: 'read <path>', description: 'Read an allowed workspace file without mutation' },
   { name: 'search <query>', description: 'Search allowed workspace files without mutation' },
   { name: 'propose-patch <goal>', description: 'Draft a patch proposal without applying it' },

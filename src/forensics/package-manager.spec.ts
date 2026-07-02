@@ -4,7 +4,7 @@ import path from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { detectPackageManager } from '../../src/forensics/package-manager.js'
+import { detectPackageManager } from './package-manager.js'
 
 const roots: string[] = []
 

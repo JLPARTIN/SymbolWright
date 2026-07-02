@@ -100,6 +100,7 @@ codemind repair-loop <json-file>
 codemind runtime-status
 codemind project-context [dir]
 codemind scan [dir]
+codemind preflight [changed-file...]
 codemind mission-packet <json-file>
 codemind audit-ledger <json-file>
 codemind trace-store <json-file>
@@ -189,6 +190,8 @@ support Codespaces/operator runbooks
 record and replay audit trails with secret redaction
 generate agent kernel mission handoff packets
 validate workspace health and release readiness
+recall and store durable episodic, lexical, and procedural memory across agent turns
+run sandboxed PR preflight evidence checks and block pushes on regression
 ```
 
 Ajna remains evidence-first:

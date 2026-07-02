@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { classifyChangedFile, normalizeRepoPath } from '../../src/forensics/file-classifier.js'
+import { classifyChangedFile, normalizeRepoPath } from './file-classifier.js'
 
 describe('forensic file classifier', () => {
   it('normalizes Windows paths', () => {

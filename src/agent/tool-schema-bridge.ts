@@ -460,6 +460,41 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       },
       required: ['owner', 'repo', 'prNumber'],
     },
+    memory_recall: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Query describing what to recall from memory' },
+        changedFiles: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Changed files to pull related graph-dependency memories for',
+        },
+      },
+      required: ['query'],
+    },
+    memory_store: {
+      type: 'object',
+      properties: {
+        type: {
+          type: 'string',
+          description: 'Memory kind to store: episodic, lexical, or procedural',
+        },
+        content: { type: 'string', description: 'Content to remember' },
+        metadata: { type: 'object', description: 'Optional metadata for the stored memory' },
+      },
+      required: ['type', 'content'],
+    },
+    preflight: {
+      type: 'object',
+      properties: {
+        changedFiles: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Changed file paths to evaluate before pushing',
+        },
+      },
+      required: ['changedFiles'],
+    },
   }
 
   const schema = schemaMap[tool.name]

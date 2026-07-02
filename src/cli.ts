@@ -22,6 +22,7 @@ import { findFixtureArg, renderFixtureCommand } from './cli-fixture-commands.js'
 import { renderGitHubWriteExecutorCommand } from './cli-github-write-executor.js'
 import { runIndexCommand } from './cli-index.js'
 import { renderMissionPacketCommand } from './cli-mission-packet.js'
+import { runPreflightCommand } from './cli-preflight.js'
 import { renderProjectContextCommand } from './cli-project-context.js'
 import { renderProvidersCommand } from './cli-providers.js'
 import { renderReleaseReadinessCommand } from './cli-release-readiness.js'
@@ -287,6 +288,15 @@ async function main(): Promise<void> {
     case 'scan': {
       const dir = rest[0] ?? process.cwd()
       console.log(renderScan(scanRepo(dir)))
+      break
+    }
+
+    case 'preflight': {
+      const preflightResult = await runPreflightCommand(rest)
+      console.log(preflightResult.output)
+      if (preflightResult.blocking) {
+        process.exitCode = 1
+      }
       break
     }
 

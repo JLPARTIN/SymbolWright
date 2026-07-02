@@ -1,4 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { runAgentLoop } from '../agent/agent-loop.js'
 import type { AgentLoopEvent, AgentLoopConfig } from '../agent/agent-loop.types.js'
@@ -12,6 +16,12 @@ import {
   formatErrorForUser,
   withRetry,
 } from '../runtime/error-handling/error-handler.js'
+import { AgentMemoryTools } from '../memory/agent-tools.js'
+import { ContextBudgeter } from '../memory/context-budgeter.js'
+import { ProceduralMemory } from '../memory/procedural-memory.js'
+import { RetrievalEngine } from '../memory/retrieval-engine.js'
+import { MemoryDatabase } from '../memory/storage/database.js'
+import { LocalLexicalStore } from '../memory/storage/lexical-store.js'
 
 function createMockProvider(responses: ProviderStreamEvent[][]): LLMProvider {
   let callIndex = 0
@@ -40,6 +50,37 @@ function createToolContext(): RuntimeToolContext {
       protectedPaths: [],
       noisyDirs: ['node_modules', '.git', 'dist'],
     },
+  }
+}
+
+const memoryRoots: string[] = []
+
+afterEach(() => {
+  for (const root of memoryRoots.splice(0)) {
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+})
+
+function createMemoryToolContext(): RuntimeToolContext {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-agent-e2e-memory-'))
+  memoryRoots.push(root)
+
+  const db = new MemoryDatabase(path.join(root, 'codemind.db'))
+  const lexicalStore = new LocalLexicalStore(db)
+  const proceduralMemory = new ProceduralMemory(path.join(root, 'procedures.yaml'))
+  const budgeter = new ContextBudgeter()
+  const retrievalEngine = new RetrievalEngine(db, lexicalStore, budgeter)
+  const memoryTools = new AgentMemoryTools(
+    db,
+    lexicalStore,
+    proceduralMemory,
+    retrievalEngine,
+    budgeter,
+  )
+
+  return {
+    ...createToolContext(),
+    memoryTools,
   }
 }
 
@@ -79,9 +120,12 @@ describe('agent-e2e', () => {
       expect(names).toContain('run_lint')
       expect(names).toContain('apply_patch')
       expect(names).toContain('validation_command_gate')
+      expect(names).toContain('memory_recall')
+      expect(names).toContain('memory_store')
+      expect(names).toContain('preflight')
       expect(names).not.toContain('apply_edit_gated')
       expect(names).not.toContain('command_dry_run_gated')
-      expect(tools.length).toBeGreaterThanOrEqual(33)
+      expect(tools.length).toBeGreaterThanOrEqual(36)
     })
   })
 
@@ -116,6 +160,130 @@ describe('agent-e2e', () => {
       expect(result.totalIterations).toBe(1)
       expect(events.some((e) => e.type === 'text_delta')).toBe(true)
       expect(events.some((e) => e.type === 'loop_end')).toBe(true)
+    })
+  })
+
+  describe('cognitive memory tool integration', () => {
+    it('recalls in a later turn what an earlier turn stored through the real memory tools', async () => {
+      const toolContext = createMemoryToolContext()
+      const config: AgentLoopConfig = { maxIterations: 5, systemPrompt: 'You are CodeMind.' }
+
+      const storeProvider = createMockProvider([
+        [
+          { type: 'tool_use_start', id: 't-store', name: 'memory_store' },
+          {
+            type: 'tool_use_end',
+            id: 't-store',
+            name: 'memory_store',
+            input: { type: 'episodic', content: 'The user prefers dark mode.' },
+          },
+          {
+            type: 'message_stop',
+            stopReason: 'tool_use',
+            usage: { inputTokens: 50, outputTokens: 20 },
+          },
+        ],
+        [
+          { type: 'text_delta', text: 'Noted.' },
+          {
+            type: 'message_stop',
+            stopReason: 'end_turn',
+            usage: { inputTokens: 10, outputTokens: 5 },
+          },
+        ],
+      ])
+
+      const storeResult = await runAgentLoop(
+        storeProvider,
+        'Remember that I prefer dark mode.',
+        assembleAgentTools(),
+        toolContext,
+        config,
+        () => undefined,
+      )
+
+      const storeToolResult = storeResult.iterations[0]?.toolResults[0]
+      expect(storeToolResult?.name).toBe('memory_store')
+      expect(storeToolResult?.output).toContain('Memory stored successfully')
+
+      const recallProvider = createMockProvider([
+        [
+          { type: 'tool_use_start', id: 't-recall', name: 'memory_recall' },
+          {
+            type: 'tool_use_end',
+            id: 't-recall',
+            name: 'memory_recall',
+            input: { query: 'dark mode' },
+          },
+          {
+            type: 'message_stop',
+            stopReason: 'tool_use',
+            usage: { inputTokens: 50, outputTokens: 20 },
+          },
+        ],
+        [
+          { type: 'text_delta', text: 'You prefer dark mode.' },
+          {
+            type: 'message_stop',
+            stopReason: 'end_turn',
+            usage: { inputTokens: 10, outputTokens: 5 },
+          },
+        ],
+      ])
+
+      const recallResult = await runAgentLoop(
+        recallProvider,
+        'What theme do I prefer?',
+        assembleAgentTools(),
+        toolContext,
+        config,
+        () => undefined,
+      )
+
+      const recallToolResult = recallResult.iterations[0]?.toolResults[0]
+      expect(recallToolResult?.name).toBe('memory_recall')
+      expect(recallToolResult?.output).toContain('The user prefers dark mode.')
+    })
+
+    it('reports memory as uninitialized when no memory session is attached to the context', async () => {
+      const config: AgentLoopConfig = { maxIterations: 5, systemPrompt: 'You are CodeMind.' }
+      const provider = createMockProvider([
+        [
+          { type: 'tool_use_start', id: 't-recall', name: 'memory_recall' },
+          {
+            type: 'tool_use_end',
+            id: 't-recall',
+            name: 'memory_recall',
+            input: { query: 'anything' },
+          },
+          {
+            type: 'message_stop',
+            stopReason: 'tool_use',
+            usage: { inputTokens: 10, outputTokens: 5 },
+          },
+        ],
+        [
+          { type: 'text_delta', text: 'ok' },
+          {
+            type: 'message_stop',
+            stopReason: 'end_turn',
+            usage: { inputTokens: 10, outputTokens: 5 },
+          },
+        ],
+      ])
+
+      const result = await runAgentLoop(
+        provider,
+        'Recall something',
+        assembleAgentTools(),
+        createToolContext(),
+        config,
+        () => undefined,
+      )
+
+      expect(result.iterations[0]?.toolResults[0]?.output).toBe(
+        'Memory is not initialized for this session.',
+      )
     })
   })
 

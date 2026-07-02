@@ -13,6 +13,10 @@ vi.mock('./activation/codemind-activation.js', () => ({
   runActivatedAgent: vi.fn(),
 }))
 
+vi.mock('./memory/agent-memory-session.js', () => ({
+  initializeAgentMemorySession: vi.fn(),
+}))
+
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -21,12 +25,14 @@ import { runAgentCommand, renderSessionsList } from './cli-agent.js'
 import { resolveCodemindConfig, validateCodemindConfig } from './config/codemind-config.js'
 import { createAnthropicProvider } from './provider/anthropic-provider.js'
 import { runActivatedAgent } from './activation/codemind-activation.js'
+import { initializeAgentMemorySession } from './memory/agent-memory-session.js'
 import { SessionPersistence } from './storage/session-persistence.js'
 
 const mockResolve = vi.mocked(resolveCodemindConfig)
 const mockValidate = vi.mocked(validateCodemindConfig)
 const mockCreateProvider = vi.mocked(createAnthropicProvider)
 const mockRunAgent = vi.mocked(runActivatedAgent)
+const mockInitializeMemory = vi.mocked(initializeAgentMemorySession)
 
 function validConfig() {
   return {
@@ -133,6 +139,48 @@ describe('cli-agent', () => {
       await runAgentCommand(['fail'])
 
       expect(process.exitCode).toBe(1)
+    })
+
+    it('wires memory tools into the tool context and closes the session when the run completes', async () => {
+      mockResolve.mockReturnValue({ anthropicApiKey: 'sk-test-key' })
+      mockValidate.mockReturnValue(validConfig())
+      mockCreateProvider.mockReturnValue(mockProvider())
+      mockRunAgent.mockResolvedValue(mockAgentResult())
+
+      const recordTurn = vi.fn().mockResolvedValue(undefined)
+      const runMaintenance = vi.fn().mockReturnValue(0)
+      const close = vi.fn()
+      const tools = { marker: 'memory-tools' }
+      mockInitializeMemory.mockReturnValue({
+        tools: tools as never,
+        migrationResult: { status: 'skipped', reason: 'missing' },
+        recordTurn,
+        runMaintenance,
+        close,
+      })
+
+      await runAgentCommand(['hello'])
+
+      const config = mockRunAgent.mock.calls[0]?.[0] as { toolContext: { memoryTools?: unknown } }
+      expect(config.toolContext.memoryTools).toBe(tools)
+      expect(recordTurn).toHaveBeenCalledTimes(2)
+      expect(runMaintenance).toHaveBeenCalledOnce()
+      expect(close).toHaveBeenCalledOnce()
+    })
+
+    it('omits memoryTools from the tool context when memory initialization fails', async () => {
+      mockResolve.mockReturnValue({ anthropicApiKey: 'sk-test-key' })
+      mockValidate.mockReturnValue(validConfig())
+      mockCreateProvider.mockReturnValue(mockProvider())
+      mockRunAgent.mockResolvedValue(mockAgentResult())
+      mockInitializeMemory.mockImplementation(() => {
+        throw new Error('sqlite unavailable')
+      })
+
+      await runAgentCommand(['hello'])
+
+      const config = mockRunAgent.mock.calls[0]?.[0] as { toolContext: { memoryTools?: unknown } }
+      expect(config.toolContext.memoryTools).toBeUndefined()
     })
 
     it('handles --approved flag', async () => {

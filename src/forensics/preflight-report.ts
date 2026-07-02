@@ -28,3 +28,51 @@ export async function buildPreflightReport(
 
   return evaluatePreflightEvidence(changedFiles, plan, commands)
 }
+
+export function renderPreflightReport(report: PrReadinessReport): string {
+  const lines = [
+    'CodeMind PR Preflight',
+    '',
+    `Verdict: ${report.verdict}`,
+    `Confidence: ${report.confidence}`,
+    `Push recommendation: ${report.pushRecommendation}`,
+  ]
+
+  if (report.changedFiles.length > 0) {
+    lines.push('', 'Changed files:')
+    for (const file of report.changedFiles) {
+      lines.push(`  ${file.normalizedPath} (${file.kind}, risk=${file.riskLevel})`)
+    }
+  }
+
+  if (report.validationCommands.length > 0) {
+    lines.push('', 'Validation commands:')
+    for (const command of report.validationCommands) {
+      const reason = command.reason !== undefined ? ` — ${command.reason}` : ''
+      lines.push(`  [${command.status.toUpperCase()}] ${command.command}${reason}`)
+    }
+  }
+
+  if (report.forensicGates.length > 0) {
+    lines.push('', 'Forensic gates triggered:')
+    for (const gate of report.forensicGates) {
+      lines.push(`  - ${gate}`)
+    }
+  }
+
+  if (report.failuresPrevented.length > 0) {
+    lines.push('', 'Prevented recurring failures:')
+    for (const failureClass of report.failuresPrevented) {
+      lines.push(`  - ${failureClass}`)
+    }
+  }
+
+  if (report.remainingRisks.length > 0) {
+    lines.push('', 'Remaining risks:')
+    for (const risk of report.remainingRisks) {
+      lines.push(`  - ${risk}`)
+    }
+  }
+
+  return lines.join('\n')
+}

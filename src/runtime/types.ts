@@ -2,6 +2,7 @@ import type { RuntimeLiveReadClient } from './live-read/runtime-live-read-client
 import type { GitHubPrCreationClient } from './github-write/github-pr-creation.js'
 import type { GitHubWriteExecutorClient } from './github-write/github-write-executor.js'
 import type { PrCollaborationClient } from './github-write/pr-collaboration.js'
+import type { AgentMemoryTools } from '../memory/agent-tools.js'
 import type { EmbeddingProvider } from '../memory/embedding-provider.js'
 import type { WorkspaceManager } from '../workspace/workspace-manager.js'
 import type { SandboxFileWriter, SandboxRunner } from './sandbox/sandbox-runner.js'
@@ -49,6 +50,9 @@ export type CodemindToolName =
   | 'run_tests'
   | 'run_typecheck'
   | 'run_lint'
+  | 'memory_recall'
+  | 'memory_store'
+  | 'preflight'
 
 /** Capability categories that determine tool availability per mode. */
 export type RuntimeToolCapability =
@@ -76,6 +80,8 @@ export type RuntimeToolCapability =
   | 'GITHUB_PR_COLLABORATION'
   | 'ZFLOW_REPORT'
   | 'ZFLOW_REPORT_CATALOG'
+  | 'MEMORY_ACCESS'
+  | 'PR_PREFLIGHT'
 
 /** Typed scopes for approval tickets — each covers a distinct live write or execution surface. */
 export type RuntimeApprovalScope =
@@ -139,6 +145,7 @@ export interface RuntimeToolContext {
   readonly workspace?: WorkspaceManager
   readonly sandboxRunner?: SandboxRunner
   readonly sandboxFileWriter?: SandboxFileWriter
+  readonly memoryTools?: AgentMemoryTools
 }
 
 /** Defines a runtime tool with name, capability, and typed execute function. */
@@ -210,6 +217,9 @@ export const ALL_CODEMIND_TOOL_NAMES = [
   'run_tests',
   'run_typecheck',
   'run_lint',
+  'memory_recall',
+  'memory_store',
+  'preflight',
 ] as const satisfies readonly CodemindToolName[]
 
 type _AssertAllToolNames = CodemindToolName extends (typeof ALL_CODEMIND_TOOL_NAMES)[number]

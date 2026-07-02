@@ -2,6 +2,20 @@
 
 All notable changes to CodeMind are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Cognitive memory tools**: `memory_recall` and `memory_store` are now live runtime tools backed by the local-first cognitive memory architecture (episodic/lexical/procedural storage, retrieval, decay, and consolidation). `codemind agent` initializes a per-session memory store, migrates any legacy `.codemind/ci-failure-ledger.json` into episodic memory on first use, and runs decay/consolidation maintenance each turn.
+- **`codemind preflight [changed-file...]`**: Runs the PR preflight evidence pipeline (changed-file classification, failure-ledger matching, validation planning, sandboxed command evidence) and reports a `READY`/`NEEDS_WORK`/`BLOCKED` verdict with a push recommendation. Available as both a CLI command and a `preflight` runtime tool. Wired into CI as a fast-fail signal ahead of the full validate chain.
+- Runtime tool registry grew from 33 to 36 registered tools (`memory_recall`, `memory_store`, `preflight`).
+
+### Fixed
+
+- `RetrievalEngine`'s episodic memory search escaped SQL `LIKE` wildcards instead of stripping `%`/`_` from queries, so content containing literal underscores (e.g. `FORMAT_CHECK_FAILURE`) is now recallable by name.
+- The forensics module's unit tests (`file-classifier`, `package-manager`, `failure-ledger`, `command-evidence`) previously lived under `tests/forensics/*.test.ts`, which `vitest.config.ts`'s `src/**/*.spec.ts` include pattern never matched — these tests silently never ran in `npm test` or CI. Moved to `src/forensics/*.spec.ts` alongside every other module's tests so they now execute as part of the standard test run.
+- Renamed `src/memory/savant-memory.spec.ts` to `src/memory/cognitive-memory-architecture.spec.ts`; the "Savant" name belongs to the unrelated PR preflight engine, and the collision made the memory test suite hard to discover correctly.
+
 ## [0.1.0] - 2026-06-28
 
 ### Added

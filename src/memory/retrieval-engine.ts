@@ -45,12 +45,12 @@ export class RetrievalEngine {
         `
           SELECT id, content, timestamp, relevance_score
           FROM episodic_interactions
-          WHERE last_accessed > ? AND lower(content) LIKE lower(?)
+          WHERE last_accessed > ? AND lower(content) LIKE lower(?) ESCAPE '\\'
           ORDER BY relevance_score DESC, timestamp DESC
           LIMIT 10
         `,
       )
-      .all(now - thirtyDays, `%${this.cleanLikeQuery(query)}%`) as unknown as EpisodicRow[]
+      .all(now - thirtyDays, `%${this.escapeLikeQuery(query)}%`) as unknown as EpisodicRow[]
 
     for (const row of episodicRows) {
       const recencyScore = Math.max(0, 1 - (now - row.timestamp) / thirtyDays)
@@ -117,7 +117,8 @@ export class RetrievalEngine {
     }
   }
 
-  private cleanLikeQuery(input: string): string {
-    return input.replaceAll('%', '').replaceAll('_', '').trim()
+  /** Escapes SQL LIKE wildcards so literal "%" and "_" in the query still match verbatim. */
+  private escapeLikeQuery(input: string): string {
+    return input.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_').trim()
   }
 }

@@ -33,6 +33,9 @@ import { swarmDispatchTool } from './swarm-dispatch-tool.js'
 import { runTestsTool } from './run-tests-tool.js'
 import { runTypecheckTool } from './run-typecheck-tool.js'
 import { runLintTool } from './run-lint-tool.js'
+import { memoryRecallTool } from './memory-recall-tool.js'
+import { memoryStoreTool } from './memory-store-tool.js'
+import { preflightTool } from './preflight-tool.js'
 
 const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   readFileTool,
@@ -68,6 +71,9 @@ const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   runTestsTool,
   runTypecheckTool,
   runLintTool,
+  memoryRecallTool,
+  memoryStoreTool,
+  preflightTool,
 ]
 
 export const DYNAMICALLY_WIRED_TOOLS: readonly CodemindToolName[] = [
