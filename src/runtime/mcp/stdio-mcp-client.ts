@@ -155,7 +155,9 @@ export class StdioMcpClient {
 
     this.child.on('exit', (code, signal) => {
       if (!this.closed) {
-        this.rejectAll(new Error(`MCP server exited before request completed: code=${code}, signal=${signal}`))
+        this.rejectAll(
+          new Error(`MCP server exited before request completed: code=${code}, signal=${signal}`),
+        )
       }
     })
 
@@ -199,9 +201,7 @@ export class StdioMcpClient {
     this.nextId += 1
 
     const request: JsonRpcRequest =
-      params === undefined
-        ? { jsonrpc: '2.0', id, method }
-        : { jsonrpc: '2.0', id, method, params }
+      params === undefined ? { jsonrpc: '2.0', id, method } : { jsonrpc: '2.0', id, method, params }
 
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -226,9 +226,7 @@ export class StdioMcpClient {
     }
 
     const notification =
-      params === undefined
-        ? { jsonrpc: '2.0', method }
-        : { jsonrpc: '2.0', method, params }
+      params === undefined ? { jsonrpc: '2.0', method } : { jsonrpc: '2.0', method, params }
     this.child.stdin.write(encodeMcpMessage(notification))
   }
 
