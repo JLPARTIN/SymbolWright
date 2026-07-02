@@ -25,14 +25,16 @@ export function redactMcpText(text: string, knownSecrets: readonly string[] = []
 }
 
 export function redactMcpJson(value: unknown, knownSecrets: readonly string[] = []): string {
-  return JSON.stringify(
-    value,
-    (_key, item: unknown) => {
-      if (typeof item === 'string') {
-        return redactMcpText(item, knownSecrets)
-      }
-      return item
-    },
-    2,
+  return (
+    JSON.stringify(
+      value,
+      (_key, item: unknown) => {
+        if (typeof item === 'string') {
+          return redactMcpText(item, knownSecrets)
+        }
+        return item
+      },
+      2,
+    ) ?? 'undefined'
   )
 }
