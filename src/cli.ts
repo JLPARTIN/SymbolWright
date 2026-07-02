@@ -21,6 +21,7 @@ import { renderDoctorCommand } from './cli-doctor.js'
 import { findFixtureArg, renderFixtureCommand } from './cli-fixture-commands.js'
 import { renderGitHubWriteExecutorCommand } from './cli-github-write-executor.js'
 import { runIndexCommand } from './cli-index.js'
+import { renderMcpCommand } from './cli-mcp.js'
 import { renderMissionPacketCommand } from './cli-mission-packet.js'
 import { runPreflightCommand } from './cli-preflight.js'
 import { renderProjectContextCommand } from './cli-project-context.js'
@@ -90,6 +91,10 @@ async function main(): Promise<void> {
 
     case 'providers':
       console.log(renderProvidersCommand(rest))
+      break
+
+    case 'mcp':
+      console.log(await renderMcpCommand(rest))
       break
 
     case 'sessions': {
@@ -209,14 +214,6 @@ async function main(): Promise<void> {
       console.log(
         await renderRuntimeGitHubWriteProposal(
           requireInput('codemind github-write-proposal <json-file>'),
-        ),
-      )
-      break
-
-    case 'github-write-executor':
-      console.log(
-        await renderGitHubWriteExecutorCommand(
-          requireInput('codemind github-write-executor <json-file>'),
         ),
       )
       break
