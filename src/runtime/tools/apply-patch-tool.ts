@@ -8,6 +8,8 @@ import {
 import { renderAuditEvents } from '../audit/runtime-audit-log.js'
 import { createLocalFileWriteExecutionAuditEvent } from '../write/local-file-write-audit.js'
 import { renderLocalFileWriteDiff } from '../write/local-file-write-diff.js'
+import { checkpointBeforeWrite } from '../../checkpoint/checkpoint-tool-hook.js'
+import type { CheckpointFileSnapshot } from '../../checkpoint/checkpoint-types.js'
 
 export interface ApplyPatchToolInput {
   readonly reason: string
@@ -95,6 +97,17 @@ export const applyPatchTool: RuntimeToolDefinition = {
       context.approval,
       context.sandboxFileWriter,
     )
+
+    const writtenSnapshots: CheckpointFileSnapshot[] = result.fileResults
+      .filter((fileResult) => fileResult.outcome === 'WRITTEN' && fileResult.diff !== null)
+      .map((fileResult) => ({
+        targetPath: fileResult.gateResult.targetPath,
+        resolvedPath: fileResult.gateResult.resolvedPath,
+        existedBefore: !(fileResult.diff?.isNew ?? true),
+        originalContent: fileResult.diff?.previousContent ?? null,
+      }))
+    checkpointBeforeWrite(context, 'apply_patch', writtenSnapshots, parsed.reason)
+
     const sections: string[] = [renderPatchApplicationResult(result)]
 
     const diffs = result.fileResults

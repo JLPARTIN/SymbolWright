@@ -4,6 +4,7 @@ import path from 'node:path'
 import { resolveWorkspacePath, assertWriteApproved } from '../policy/runtime-policy.js'
 import type { RuntimeToolDefinition } from '../types.js'
 import { renderRuntimeBoundary } from '../renderers/runtime-renderers.js'
+import { checkpointBeforeWrite } from '../../checkpoint/checkpoint-tool-hook.js'
 
 export interface EditFileInput {
   readonly path: string
@@ -43,6 +44,7 @@ export async function executeEditFileTool(
   input: EditFileInput,
   cwd: string,
   assertWrite?: (cwd: string, filePath: string) => void,
+  onBeforeWrite?: (resolvedPath: string, targetPath: string, originalContent: string) => void,
 ): Promise<string> {
   const resolvedPath = resolveWorkspacePath(cwd, input.path)
   assertWrite?.(cwd, resolvedPath)
@@ -78,6 +80,7 @@ export async function executeEditFileTool(
     ? originalContent.split(input.oldText).join(input.newText)
     : originalContent.replace(input.oldText, input.newText)
 
+  onBeforeWrite?.(resolvedPath, input.path, originalContent)
   fs.writeFileSync(resolvedPath, newContent, 'utf-8')
 
   const relativePath = path.relative(cwd, resolvedPath) || path.basename(resolvedPath)
@@ -104,6 +107,14 @@ export const editFileTool: RuntimeToolDefinition = {
   capability: 'APPROVED_EDIT',
   execute: async (input, context) => {
     assertWriteApproved(context.policy, context.approval)
-    return executeEditFileTool(parseEditFileInput(input), context.cwd)
+    return executeEditFileTool(
+      parseEditFileInput(input),
+      context.cwd,
+      undefined,
+      (resolvedPath, targetPath, originalContent) =>
+        checkpointBeforeWrite(context, 'edit_file', [
+          { targetPath, resolvedPath, existedBefore: true, originalContent },
+        ]),
+    )
   },
 }
