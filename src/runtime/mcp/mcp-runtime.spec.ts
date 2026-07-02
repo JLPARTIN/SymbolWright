@@ -9,10 +9,14 @@ import { renderMcpCommand } from '../../cli-mcp.js'
 import { createRuntimePolicyForMode } from '../policy/runtime-policy.js'
 import { renderMcpToolExecution } from './mcp-runtime.js'
 
-const fixturePath = fileURLToPath(new URL('../../../fixtures/mcp/stdio-fixture-server.mjs', import.meta.url))
+const fixturePath = fileURLToPath(
+  new URL('../../../fixtures/mcp/stdio-fixture-server.mjs', import.meta.url),
+)
 const secret = 'sk-test-secret-123456'
 
-function createWorkspace(allowedTools: readonly string[] = ['echo', 'add', 'reveal_secret']): string {
+function createWorkspace(
+  allowedTools: readonly string[] = ['echo', 'add', 'reveal_secret'],
+): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-mcp-runtime-'))
   fs.mkdirSync(path.join(root, '.codemind'), { recursive: true })
   fs.writeFileSync(
@@ -42,8 +46,13 @@ describe('MCP runtime execution', () => {
     const root = createWorkspace()
 
     try {
-      await expect(renderMcpCommand(['tools', 'fixture'], root)).resolves.toContain('Allowed tools:')
-      const output = await renderMcpCommand(['call', 'fixture', 'echo', '{"message":"hello"}'], root)
+      await expect(renderMcpCommand(['tools', 'fixture'], root)).resolves.toContain(
+        'Allowed tools:',
+      )
+      const output = await renderMcpCommand(
+        ['call', 'fixture', 'echo', '{"message":"hello"}'],
+        root,
+      )
       expect(output).toContain('Outcome: EXECUTED')
       expect(output).toContain('echo:hello')
       expect(output).toContain('Runtime audit log')
