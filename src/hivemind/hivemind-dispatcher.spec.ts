@@ -17,6 +17,7 @@ function makePolicy(overrides: Partial<RuntimePolicySnapshot> = {}): RuntimePoli
   return {
     mode: 'APPROVED_EXECUTION',
     allowNetwork: true,
+    allowReadOnlyNetwork: true,
     allowShell: true,
     allowWrites: true,
     allowGitHubWrites: false,

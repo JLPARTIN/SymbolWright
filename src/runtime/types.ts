@@ -122,6 +122,13 @@ export interface RuntimeApproval {
 export interface RuntimePolicySnapshot {
   readonly mode: CodemindRuntimeMode
   readonly allowNetwork: boolean
+  /**
+   * Read-only info access — doc/package lookups, web fetch/search, repo context.
+   * True in every mode: this is the "protect from obvious abuse only" surface,
+   * not a mutation risk, so it isn't gated behind APPROVED_EXECUTION like
+   * allowNetwork (which also gates the provider/LLM invocation channel).
+   */
+  readonly allowReadOnlyNetwork: boolean
   readonly allowShell: boolean
   readonly allowWrites: boolean
   readonly allowGitHubWrites: boolean

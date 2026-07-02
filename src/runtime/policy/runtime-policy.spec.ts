@@ -7,6 +7,7 @@ import {
   assertGitHubWriteApproved,
   assertGitWriteApproved,
   assertNetworkAllowed,
+  assertReadOnlyNetworkAllowed,
   assertReadablePath,
   assertShellAllowed,
   assertShellApproved,
@@ -39,6 +40,12 @@ describe('runtime policy', () => {
       expect(policy.allowShell).toBe(false)
       expect(policy.allowWrites).toBe(false)
       expect(policy.allowGitHubWrites).toBe(false)
+    }
+  })
+
+  it('allows read-only network access (docs/package lookups) in every runtime mode', () => {
+    for (const mode of ['PLAN_ONLY', 'READ_ONLY', 'PROPOSAL_ONLY', 'APPROVED_EXECUTION'] as const) {
+      expect(createRuntimePolicyForMode(mode).allowReadOnlyNetwork).toBe(true)
     }
   })
 
@@ -125,6 +132,30 @@ describe('runtime policy', () => {
 
     expect(() => assertShellAllowed(policy)).not.toThrow()
     expect(() => assertNetworkAllowed(policy)).not.toThrow()
+  })
+})
+
+describe('assertReadOnlyNetworkAllowed', () => {
+  it('allows read-only network access by default', () => {
+    const policy = createDefaultRuntimePolicy()
+    expect(() => assertReadOnlyNetworkAllowed(policy)).not.toThrow()
+  })
+
+  it('allows read-only network access even in strict, non-mutating modes', () => {
+    for (const mode of ['PLAN_ONLY', 'READ_ONLY', 'PROPOSAL_ONLY'] as const) {
+      expect(() => assertReadOnlyNetworkAllowed(createRuntimePolicyForMode(mode))).not.toThrow()
+    }
+  })
+
+  it('blocks only when a policy explicitly disables it', () => {
+    const policy: RuntimePolicySnapshot = {
+      ...createDefaultRuntimePolicy(),
+      allowReadOnlyNetwork: false,
+    }
+
+    expect(() => assertReadOnlyNetworkAllowed(policy)).toThrow(
+      'Read-only network access is disabled by runtime policy.',
+    )
   })
 })
 
@@ -215,6 +246,11 @@ describe('assertValidPolicy', () => {
   it('rejects undefined allowWrites', () => {
     const policy = { ...createDefaultRuntimePolicy(), allowWrites: undefined }
     expect(() => assertValidPolicy(policy)).toThrow('"allowWrites" must be a boolean')
+  })
+
+  it('rejects undefined allowReadOnlyNetwork', () => {
+    const policy = { ...createDefaultRuntimePolicy(), allowReadOnlyNetwork: undefined }
+    expect(() => assertValidPolicy(policy)).toThrow('"allowReadOnlyNetwork" must be a boolean')
   })
 
   it('rejects non-boolean allowShell', () => {

@@ -12,6 +12,7 @@ import { renderLocalSelfEditResult, runLocalSelfEditWorkflow } from './local-sel
 const policy: RuntimePolicySnapshot = {
   mode: 'APPROVED_EXECUTION',
   allowNetwork: false,
+  allowReadOnlyNetwork: true,
   allowShell: true,
   allowWrites: true,
   allowGitHubWrites: false,

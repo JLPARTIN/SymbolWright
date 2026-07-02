@@ -24,6 +24,8 @@ APPROVED_EXECUTION
 
 `PLAN_ONLY`, `READ_ONLY`, and `PROPOSAL_ONLY` remain available for non-mutating planning, inspection, and proposal workflows.
 
+Governance gates *mutation*, not *information*. Read-only network access — fetching docs, package pages, and error references, or running a search — carries none of the risk that shell execution, file writes, or GitHub writes do, so it is not gated behind runtime mode the way those are. The policy snapshot exposes this as `allowReadOnlyNetwork`, which is `true` in all four runtime modes. It is distinct from `allowNetwork`, which continues to gate the provider/LLM invocation channel and mutating network use, and remains mode-dependent (`false` outside `APPROVED_EXECUTION`).
+
 ---
 
 ## 2. Runtime Modes
@@ -38,6 +40,7 @@ draft commands
 draft patches in text
 summarize risks
 identify validation needs
+read-only network access: docs/package lookups, web fetch/search, error/reference lookups
 ```
 
 Blocked:
@@ -47,7 +50,7 @@ file writes
 bash execution
 git mutation
 GitHub mutation
-network/provider execution unless explicitly enabled by a future policy
+provider/network execution (the LLM invocation channel) unless explicitly enabled by a future policy
 ```
 
 ### READ_ONLY
@@ -62,6 +65,7 @@ summarize code
 search text
 generate reports
 collect evidence
+read-only network access: docs/package lookups, web fetch/search, error/reference lookups
 ```
 
 Blocked:
@@ -87,6 +91,7 @@ prepare validation plans
 prepare PR notes
 explain risk and rollback
 produce operator-ready implementation guidance
+read-only network access: docs/package lookups, web fetch/search, error/reference lookups
 ```
 
 Blocked:

@@ -50,6 +50,7 @@ export interface ZflowResult {
 const DEFAULT_ZFLOW_POLICY: RuntimePolicySnapshot = {
   mode: 'READ_ONLY',
   allowNetwork: false,
+  allowReadOnlyNetwork: true,
   allowShell: false,
   allowWrites: false,
   allowGitHubWrites: false,

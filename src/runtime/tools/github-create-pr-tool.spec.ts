@@ -8,6 +8,7 @@ import { githubCreatePrTool } from './github-create-pr-tool.js'
 const ghWritePolicy: RuntimePolicySnapshot = {
   mode: 'APPROVED_EXECUTION',
   allowNetwork: false,
+  allowReadOnlyNetwork: true,
   allowShell: false,
   allowWrites: true,
   allowGitHubWrites: true,
@@ -18,6 +19,7 @@ const ghWritePolicy: RuntimePolicySnapshot = {
 const blockedPolicy: RuntimePolicySnapshot = {
   mode: 'READ_ONLY',
   allowNetwork: false,
+  allowReadOnlyNetwork: true,
   allowShell: false,
   allowWrites: false,
   allowGitHubWrites: false,

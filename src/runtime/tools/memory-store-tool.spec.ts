@@ -9,6 +9,7 @@ function baseContext(): RuntimeToolContext {
     policy: {
       mode: 'APPROVED_EXECUTION',
       allowNetwork: false,
+      allowReadOnlyNetwork: true,
       allowShell: true,
       allowWrites: true,
       allowGitHubWrites: false,

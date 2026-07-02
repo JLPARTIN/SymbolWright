@@ -46,6 +46,7 @@ function contextFor(
     policy: {
       mode: 'APPROVED_EXECUTION',
       allowNetwork: false,
+      allowReadOnlyNetwork: true,
       allowShell,
       allowWrites: true,
       allowGitHubWrites: false,

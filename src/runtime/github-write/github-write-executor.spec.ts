@@ -11,6 +11,7 @@ import {
 const policy: RuntimePolicySnapshot = {
   mode: 'APPROVED_EXECUTION',
   allowNetwork: false,
+  allowReadOnlyNetwork: true,
   allowShell: false,
   allowWrites: false,
   allowGitHubWrites: true,

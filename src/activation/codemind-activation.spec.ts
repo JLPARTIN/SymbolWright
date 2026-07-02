@@ -38,6 +38,7 @@ function createTestPolicy(): RuntimePolicySnapshot {
   return {
     mode: 'READ_ONLY',
     allowNetwork: false,
+    allowReadOnlyNetwork: true,
     allowShell: false,
     allowWrites: false,
     allowGitHubWrites: false,
@@ -254,6 +255,7 @@ describe('runActivatedAgent', () => {
         policy: {
           mode: 'APPROVED_EXECUTION',
           allowNetwork: false,
+          allowReadOnlyNetwork: true,
           allowShell: false,
           allowWrites: false,
           allowGitHubWrites: false,

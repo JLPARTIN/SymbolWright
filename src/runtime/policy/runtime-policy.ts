@@ -86,6 +86,7 @@ export function createRuntimePolicyForMode(
       return {
         mode,
         allowNetwork: false,
+        allowReadOnlyNetwork: true,
         allowShell: false,
         allowWrites: false,
         allowGitHubWrites: false,
@@ -95,6 +96,7 @@ export function createRuntimePolicyForMode(
       return {
         mode,
         allowNetwork: false,
+        allowReadOnlyNetwork: true,
         allowShell: false,
         allowWrites: false,
         allowGitHubWrites: false,
@@ -104,6 +106,7 @@ export function createRuntimePolicyForMode(
       return {
         mode,
         allowNetwork: false,
+        allowReadOnlyNetwork: true,
         allowShell: false,
         allowWrites: false,
         allowGitHubWrites: false,
@@ -113,6 +116,7 @@ export function createRuntimePolicyForMode(
       return {
         mode,
         allowNetwork: true,
+        allowReadOnlyNetwork: true,
         allowShell: true,
         allowWrites: true,
         allowGitHubWrites: options.hasGitHubToken ?? true,
@@ -213,6 +217,17 @@ export function assertNetworkAllowed(policy: RuntimePolicySnapshot): void {
   }
 }
 
+/**
+ * Throws if read-only info access (docs/package lookups, web fetch/search,
+ * repo context) is disabled. True in every built-in mode — this only trips
+ * for a hand-built policy that explicitly opts out.
+ */
+export function assertReadOnlyNetworkAllowed(policy: RuntimePolicySnapshot): void {
+  if (!policy.allowReadOnlyNetwork) {
+    throw new Error('Read-only network access is disabled by runtime policy.')
+  }
+}
+
 /** Validates that a policy object has correct shape and field types. */
 export function assertValidPolicy(policy: unknown): asserts policy is RuntimePolicySnapshot {
   if (typeof policy !== 'object' || policy === null) {
@@ -224,7 +239,13 @@ export function assertValidPolicy(policy: unknown): asserts policy is RuntimePol
     throw new Error(`Invalid policy mode: ${String(p['mode'])}`)
   }
 
-  for (const field of ['allowNetwork', 'allowShell', 'allowWrites', 'allowGitHubWrites'] as const) {
+  for (const field of [
+    'allowNetwork',
+    'allowReadOnlyNetwork',
+    'allowShell',
+    'allowWrites',
+    'allowGitHubWrites',
+  ] as const) {
     if (typeof p[field] !== 'boolean') {
       throw new Error(`Policy field "${field}" must be a boolean, got ${typeof p[field]}`)
     }

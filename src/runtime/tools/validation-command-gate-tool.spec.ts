@@ -12,6 +12,7 @@ import { validationCommandGateTool } from './validation-command-gate-tool.js'
 const shellPolicy: RuntimePolicySnapshot = {
   mode: 'APPROVED_EXECUTION',
   allowNetwork: false,
+  allowReadOnlyNetwork: true,
   allowShell: true,
   allowWrites: false,
   allowGitHubWrites: false,
@@ -22,6 +23,7 @@ const shellPolicy: RuntimePolicySnapshot = {
 const blockedPolicy: RuntimePolicySnapshot = {
   mode: 'READ_ONLY',
   allowNetwork: false,
+  allowReadOnlyNetwork: true,
   allowShell: false,
   allowWrites: false,
   allowGitHubWrites: false,

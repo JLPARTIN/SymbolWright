@@ -71,6 +71,7 @@ function makeToolContext(): RuntimeToolContext {
   const policy: RuntimePolicySnapshot = {
     mode: 'APPROVED_EXECUTION',
     allowNetwork: true,
+    allowReadOnlyNetwork: true,
     allowShell: false,
     allowWrites: false,
     allowGitHubWrites: false,

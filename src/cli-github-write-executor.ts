@@ -51,6 +51,7 @@ export async function renderGitHubWriteExecutorCommand(fixturePath: string): Pro
   const policy: RuntimePolicySnapshot = raw.policy ?? {
     mode: 'APPROVED_EXECUTION',
     allowNetwork: false,
+    allowReadOnlyNetwork: true,
     allowShell: false,
     allowWrites: false,
     allowGitHubWrites: true,
