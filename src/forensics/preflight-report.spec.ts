@@ -56,6 +56,84 @@ describe('buildPreflightReport', () => {
     expect(rendered).toContain('lint failed')
   })
 
+  it('includes stdout/stderr tails for failed and blocked commands but not passed ones', () => {
+    const rendered = renderPreflightReport({
+      verdict: 'NEEDS_WORK',
+      confidence: 25,
+      changedFiles: [],
+      validationCommands: [
+        {
+          script: 'typecheck',
+          command: 'npm run typecheck',
+          packageManager: 'npm',
+          status: 'failed',
+          exitCode: 1,
+          stdout: '',
+          stderr: 'error TS2322: Type mismatch',
+          durationMs: 10,
+        },
+        {
+          script: 'build',
+          command: 'npm run build',
+          packageManager: 'npm',
+          status: 'blocked',
+          exitCode: null,
+          stdout: '',
+          stderr: 'Sandbox runner unavailable',
+          durationMs: 0,
+        },
+        {
+          script: 'lint',
+          command: 'npm run lint',
+          packageManager: 'npm',
+          status: 'passed',
+          exitCode: 0,
+          stdout: 'all good',
+          stderr: '',
+          durationMs: 5,
+        },
+      ],
+      forensicGates: [],
+      failuresPrevented: [],
+      remainingRisks: ['typecheck failed'],
+      pushRecommendation: 'DO_NOT_PUSH',
+    })
+
+    expect(rendered).toContain('stderr (tail):')
+    expect(rendered).toContain('error TS2322: Type mismatch')
+    expect(rendered).toContain('Sandbox runner unavailable')
+    expect(rendered).not.toContain('all good')
+  })
+
+  it('truncates long output to the last lines with an omitted-lines marker', () => {
+    const longOutput = Array.from({ length: 40 }, (_, i) => `line ${i}`).join('\n')
+    const rendered = renderPreflightReport({
+      verdict: 'NEEDS_WORK',
+      confidence: 25,
+      changedFiles: [],
+      validationCommands: [
+        {
+          script: 'test',
+          command: 'npm run test',
+          packageManager: 'npm',
+          status: 'failed',
+          exitCode: 1,
+          stdout: longOutput,
+          stderr: '',
+          durationMs: 10,
+        },
+      ],
+      forensicGates: [],
+      failuresPrevented: [],
+      remainingRisks: ['test failed'],
+      pushRecommendation: 'DO_NOT_PUSH',
+    })
+
+    expect(rendered).toContain('earlier line(s) omitted')
+    expect(rendered).toContain('line 39')
+    expect(rendered).not.toContain('line 0\n')
+  })
+
   it('renders a minimal report with no changed files or commands', () => {
     const rendered = renderPreflightReport({
       verdict: 'READY',

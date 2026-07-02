@@ -38,7 +38,7 @@ describe('Docker sandbox configuration', () => {
 
     expect(config.dockerBinary).toBe('docker')
     expect(config.image).toBe('node:22-alpine')
-    expect(config.memory).toBe('512m')
+    expect(config.memory).toBe('2048m')
     expect(config.cpus).toBe('1')
     expect(config.network).toBe('none')
     expect(config.user).toBe('node')
@@ -105,7 +105,7 @@ describe('Docker sandbox command construction', () => {
     expect(args).toContain('--network')
     expect(args).toContain('none')
     expect(args).toContain('--memory')
-    expect(args).toContain('512m')
+    expect(args).toContain('2048m')
     expect(args).toContain('--cpus')
     expect(args).toContain('1')
     expect(args).toContain('--user')

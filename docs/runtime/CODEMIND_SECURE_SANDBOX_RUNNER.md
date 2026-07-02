@@ -23,7 +23,7 @@ The Docker runner is constructed with these default constraints:
 - `--cap-drop=ALL`
 - `--security-opt=no-new-privileges:true`
 - `--network none`
-- `--memory 512m`
+- `--memory 2048m`
 - `--cpus 1`
 - `--user node`
 - workspace mounted at `/workspace`
@@ -69,3 +69,15 @@ npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
 ```
 
 The CI workflow runs this contract test before the full test suite.
+
+## Known Limitation: Write-Needing Commands Under Bind Mounts
+
+The fixed `--user node` container user can fail with `EACCES` when a sandboxed command needs
+to write into the bind-mounted `/workspace` (for example `npm run build` writing `dist/`, or
+`vitest` writing its bundled config cache into `node_modules/.vite-temp/`), if the host
+checkout is not owned by the same UID as the container's `node` user. This was discovered when
+the `codemind preflight` command (see `CODEMIND_RUNTIME_BUILD_STATE.md`) first ran real
+`npm run build`/`npm test`/`npm run typecheck` through the sandbox in CI. Read-only or
+self-contained commands (linting, git, format checks) are unaffected. Until this is resolved,
+the CI `PR preflight` step runs as `continue-on-error: true` — it still produces a real report,
+it just does not fail the job.

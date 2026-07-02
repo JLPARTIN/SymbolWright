@@ -29,6 +29,15 @@ export async function buildPreflightReport(
   return evaluatePreflightEvidence(changedFiles, plan, commands)
 }
 
+const MAX_OUTPUT_TAIL_LINES = 25
+
+function truncateOutputTail(output: string): readonly string[] {
+  const lines = output.trimEnd().split('\n')
+  if (lines.length <= MAX_OUTPUT_TAIL_LINES) return lines
+  const omitted = lines.length - MAX_OUTPUT_TAIL_LINES
+  return [`… (${omitted} earlier line(s) omitted)`, ...lines.slice(-MAX_OUTPUT_TAIL_LINES)]
+}
+
 export function renderPreflightReport(report: PrReadinessReport): string {
   const lines = [
     'CodeMind PR Preflight',
@@ -50,6 +59,16 @@ export function renderPreflightReport(report: PrReadinessReport): string {
     for (const command of report.validationCommands) {
       const reason = command.reason !== undefined ? ` — ${command.reason}` : ''
       lines.push(`  [${command.status.toUpperCase()}] ${command.command}${reason}`)
+
+      if (command.status === 'failed' || command.status === 'blocked') {
+        for (const [label, output] of [
+          ['stdout', command.stdout],
+          ['stderr', command.stderr],
+        ] as const) {
+          if (output.trim().length === 0) continue
+          lines.push(`    ${label} (tail):`, ...truncateOutputTail(output).map((l) => `      ${l}`))
+        }
+      }
     }
   }
 
