@@ -164,7 +164,10 @@ export function loadMcpConfig(
     throw new Error(`MCP config file not found: ${path.relative(workspaceRoot, resolved)}`)
   }
 
-  return parseMcpConfigJson(fs.readFileSync(resolved, 'utf8'), path.relative(workspaceRoot, resolved))
+  return parseMcpConfigJson(
+    fs.readFileSync(resolved, 'utf8'),
+    path.relative(workspaceRoot, resolved),
+  )
 }
 
 export function findMcpServer(config: McpConfig, serverName: string): McpServerConfig {
