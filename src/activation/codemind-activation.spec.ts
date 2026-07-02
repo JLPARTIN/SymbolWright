@@ -444,6 +444,12 @@ describe('activateSubsystems GitHub wiring', () => {
 
 describe('runActivatedAgent GitHub dynamic tool wiring', () => {
   it('includes dynamic live-read tools in agent loop when token is provided', async () => {
+    // wireGitHubClients() builds a real DefaultGitHubHttpClient whenever a token is present
+    // (see codemind-activation.ts), so the github_live_read_pr call below is a genuine outbound
+    // request with a fake token. Under a network-isolated sandbox (--network none) this blocks
+    // on DNS resolution for several seconds before failing, rather than failing fast — this test
+    // only asserts the tool dispatched (not that the API call succeeded), so a longer timeout is
+    // the correct accommodation rather than mocking away the real wiring this test verifies.
     const toolCallNames: string[] = []
     const provider = createMockProvider([
       [
@@ -487,7 +493,7 @@ describe('runActivatedAgent GitHub dynamic tool wiring', () => {
     const toolResult = result.agentResult.iterations[0]?.toolResults[0]
     expect(toolResult?.name).toBe('github_live_read_pr')
     expect(toolResult?.output).not.toContain('Unknown tool')
-  })
+  }, 15000)
 
   it('does not expose live-read tools to agent when no token', async () => {
     const toolCallNames: string[] = []

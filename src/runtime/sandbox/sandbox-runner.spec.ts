@@ -131,6 +131,8 @@ describe('Docker sandbox command construction', () => {
     expect(args).toContain('1')
     expect(args).toContain('--user')
     expect(args).toContain(resolveDefaultSandboxUser())
+    expect(args).toContain('--env')
+    expect(args).toContain('HOME=/workspace')
     expect(args).toContain('/tmp/codemind-workspace:/workspace:rw')
     expect(args.slice(-2)).toEqual(['npm', 'test'])
   })
