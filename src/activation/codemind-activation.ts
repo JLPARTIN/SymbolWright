@@ -25,6 +25,9 @@ import {
 } from '../ajna/ajna-live-review.js'
 import { evaluateAjnaMergeGate, type AjnaMergeGateResult } from '../ajna/ajna-merge-gate.js'
 import { createWiredSwarmDispatchTool } from '../runtime/tools/swarm-dispatch-tool.js'
+import { SubagentDispatcher } from '../hivemind/subagent-dispatcher.js'
+import type { SubagentDispatchEvidence } from '../hivemind/subagent-dispatcher.js'
+import { createWiredSubagentRunTool } from '../runtime/tools/subagent-run-tool.js'
 import { assertValidPolicy } from '../runtime/policy/runtime-policy.js'
 import {
   createRuntimeEventBus,
@@ -57,6 +60,7 @@ export interface CodemindActivationConfig {
 export interface CodemindActivationResult {
   readonly agentResult: AgentLoopResult
   readonly swarmDispatches: readonly SwarmDispatchResult[]
+  readonly subagentDispatches: readonly SubagentDispatchEvidence[]
   readonly ajnaReviews: readonly AjnaLiveReviewResult[]
   readonly tuiState: TuiState
 }
@@ -66,6 +70,7 @@ export interface CodemindSubsystems {
   readonly provider: LLMProvider
   readonly registry: HiveMindRegistry
   readonly dispatcher: HiveMindDispatcher
+  readonly subagentDispatcher: SubagentDispatcher
   readonly systemPrompt: string
   readonly tuiState: TuiState
   readonly tools: readonly RuntimeToolDefinition[]
@@ -103,6 +108,8 @@ export function activateSubsystems(config: CodemindActivationConfig): CodemindSu
 
   const tools: readonly RuntimeToolDefinition[] = [...config.tools, ...liveReadTools]
 
+  const subagentDispatcher = new SubagentDispatcher(config.provider, toolContext, sessionId)
+
   const eventBus = createRuntimeEventBus()
   eventBus.emit({
     category: 'session_lifecycle',
@@ -117,6 +124,7 @@ export function activateSubsystems(config: CodemindActivationConfig): CodemindSu
     provider: config.provider,
     registry,
     dispatcher,
+    subagentDispatcher,
     systemPrompt,
     tuiState,
     tools,
@@ -132,6 +140,7 @@ export async function runActivatedAgent(
 ): Promise<CodemindActivationResult> {
   const subsystems = activateSubsystems(config)
   const swarmDispatches: SwarmDispatchResult[] = []
+  const subagentDispatches: SubagentDispatchEvidence[] = []
   const ajnaReviews: AjnaLiveReviewResult[] = []
   let tuiState = subsystems.tuiState
 
@@ -154,14 +163,26 @@ export async function runActivatedAgent(
     }
   }
 
-  const wiredTools = wireSwarmDispatchTool(subsystems.tools, subsystems.dispatcher, (result) => {
-    swarmDispatches.push(result)
-    updateTui({
-      type: 'swarm_complete',
-      agentId: result.agentId,
-      status: result.status === 'completed' ? 'completed' : 'failed',
-    })
-  })
+  const toolsWithSwarm = wireSwarmDispatchTool(
+    subsystems.tools,
+    subsystems.dispatcher,
+    (result) => {
+      swarmDispatches.push(result)
+      updateTui({
+        type: 'swarm_complete',
+        agentId: result.agentId,
+        status: result.status === 'completed' ? 'completed' : 'failed',
+      })
+    },
+  )
+
+  const wiredTools = wireSubagentRunTool(
+    toolsWithSwarm,
+    subsystems.subagentDispatcher,
+    (result) => {
+      subagentDispatches.push(result)
+    },
+  )
 
   const loopConfig: AgentLoopConfig = {
     maxIterations: config.maxIterations ?? 50,
@@ -190,6 +211,7 @@ export async function runActivatedAgent(
   return {
     agentResult,
     swarmDispatches,
+    subagentDispatches,
     ajnaReviews,
     tuiState,
   }
@@ -276,6 +298,15 @@ function wireSwarmDispatchTool(
 ): readonly RuntimeToolDefinition[] {
   const wired = createWiredSwarmDispatchTool(dispatcher, onResult)
   return tools.map((tool) => (tool.name === 'swarm_dispatch' ? wired : tool))
+}
+
+function wireSubagentRunTool(
+  tools: readonly RuntimeToolDefinition[],
+  dispatcher: SubagentDispatcher,
+  onResult: (result: SubagentDispatchEvidence) => void,
+): readonly RuntimeToolDefinition[] {
+  const wired = createWiredSubagentRunTool(dispatcher, onResult)
+  return tools.map((tool) => (tool.name === 'subagent_run' ? wired : tool))
 }
 
 function estimateCost(inputTokens: number, outputTokens: number): number {

@@ -56,6 +56,7 @@ export type CodemindToolName =
   | 'mcp_call'
   | 'web_fetch'
   | 'web_search'
+  | 'subagent_run'
 
 /** Capability categories that determine tool availability per mode. */
 export type RuntimeToolCapability =
@@ -239,6 +240,7 @@ export const ALL_CODEMIND_TOOL_NAMES = [
   'mcp_call',
   'web_fetch',
   'web_search',
+  'subagent_run',
 ] as const satisfies readonly CodemindToolName[]
 
 type _AssertAllToolNames = CodemindToolName extends (typeof ALL_CODEMIND_TOOL_NAMES)[number]
