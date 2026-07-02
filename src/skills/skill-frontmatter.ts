@@ -18,11 +18,13 @@ const ARRAY_FIELDS = new Set([
 ])
 
 function firstParagraph(markdown: string): string {
-  return markdown
-    .split(/\n\s*\n/u)[0]
-    ?.replace(/^#+\s*/u, '')
-    .trim()
-    .slice(0, 300) ?? ''
+  return (
+    markdown
+      .split(/\n\s*\n/u)[0]
+      ?.replace(/^#+\s*/u, '')
+      .trim()
+      .slice(0, 300) ?? ''
+  )
 }
 
 function normalizeKey(key: string): string {
@@ -173,7 +175,6 @@ function parseOptionalString(value: unknown, field: string): string | undefined 
 }
 
 function normalizeFrontmatter(raw: Readonly<Record<string, unknown>>): SkillFrontmatter {
-  const parsed: SkillFrontmatter = {}
   const name = parseOptionalString(raw['name'], 'name')
   const description = parseOptionalString(raw['description'], 'description')
   const whenToUse = parseOptionalString(raw['whenToUse'], 'when_to_use')
