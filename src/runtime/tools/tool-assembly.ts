@@ -31,6 +31,7 @@ import { zflowReportRollupTool } from './zflow-report-rollup-tool.js'
 import { zflowReportCatalogTool } from './zflow-report-catalog-tool.js'
 import { swarmDispatchTool } from './swarm-dispatch-tool.js'
 import { subagentRunTool } from './subagent-run-tool.js'
+import { skillRunTool } from './skill-run-tool.js'
 import { runTestsTool } from './run-tests-tool.js'
 import { runTypecheckTool } from './run-typecheck-tool.js'
 import { runLintTool } from './run-lint-tool.js'
@@ -73,6 +74,7 @@ const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   zflowReportCatalogTool,
   swarmDispatchTool,
   subagentRunTool,
+  skillRunTool,
   runTestsTool,
   runTypecheckTool,
   runLintTool,
