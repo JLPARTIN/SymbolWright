@@ -236,6 +236,14 @@ export const CODEMIND_CLI_COMMANDS = [
     name: 'mcp call <server.tool> [json-args]',
     description: 'Invoke a tool on a configured MCP server through the policy gate',
   },
+  {
+    name: 'web fetch <url> [--json] [--allow-private] [--mode <mode>]',
+    description: 'Fetch a public web page/API resource through the web policy gate',
+  },
+  {
+    name: 'web search "<query>" [--json] [--mode <mode>]',
+    description: 'Search the public web (default: DuckDuckGo) through the web policy gate',
+  },
 ] as const
 
 export function renderHelp(): string {

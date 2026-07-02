@@ -26,6 +26,8 @@ APPROVED_EXECUTION
 
 Governance gates *mutation*, not *information*. Read-only network access — fetching docs, package pages, and error references, or running a search — carries none of the risk that shell execution, file writes, or GitHub writes do, so it is not gated behind runtime mode the way those are. The policy snapshot exposes this as `allowReadOnlyNetwork`, which is `true` in all four runtime modes. It is distinct from `allowNetwork`, which continues to gate the provider/LLM invocation channel and mutating network use, and remains mode-dependent (`false` outside `APPROVED_EXECUTION`).
 
+The `web_fetch` and `web_search` tools build on this: they work immediately for public URLs with no allowlist or approval setup, and block only private/internal network targets and non-http(s) schemes by default — both overridable. See `docs/runtime/CODEMIND_WEB_TOOLS.md` for the full config, modes, and safety rails.
+
 ---
 
 ## 2. Runtime Modes

@@ -54,6 +54,8 @@ export type CodemindToolName =
   | 'memory_store'
   | 'preflight'
   | 'mcp_call'
+  | 'web_fetch'
+  | 'web_search'
 
 /** Capability categories that determine tool availability per mode. */
 export type RuntimeToolCapability =
@@ -84,6 +86,7 @@ export type RuntimeToolCapability =
   | 'MEMORY_ACCESS'
   | 'PR_PREFLIGHT'
   | 'MCP_TOOL'
+  | 'WEB_ACCESS'
 
 /** Typed scopes for approval tickets — each covers a distinct live write or execution surface. */
 export type RuntimeApprovalScope =
@@ -94,6 +97,7 @@ export type RuntimeApprovalScope =
   | 'command_dry_run'
   | 'shell:execute'
   | 'git:write'
+  | 'web:access'
 
 /** Exhaustive list of all approval scopes for runtime validation. */
 export const ALL_APPROVAL_SCOPES: readonly RuntimeApprovalScope[] = [
@@ -104,6 +108,7 @@ export const ALL_APPROVAL_SCOPES: readonly RuntimeApprovalScope[] = [
   'command_dry_run',
   'shell:execute',
   'git:write',
+  'web:access',
 ] as const
 
 /** Type guard: returns true if scope is a known RuntimeApprovalScope. */
@@ -230,6 +235,8 @@ export const ALL_CODEMIND_TOOL_NAMES = [
   'memory_store',
   'preflight',
   'mcp_call',
+  'web_fetch',
+  'web_search',
 ] as const satisfies readonly CodemindToolName[]
 
 type _AssertAllToolNames = CodemindToolName extends (typeof ALL_CODEMIND_TOOL_NAMES)[number]
