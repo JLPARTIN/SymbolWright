@@ -16,6 +16,11 @@ export const CODEMIND_CLI_COMMANDS = [
     description:
       'Run the direct execution coding agent with APPROVED_EXECUTION, PROPOSAL_ONLY, READ_ONLY, or PLAN_ONLY runtime mode',
   },
+  {
+    name: 'mcp list|tools|call',
+    description:
+      'List configured local stdio MCP servers, discover tools, and execute allowed MCP tools through runtime policy',
+  },
   { name: 'sessions', description: 'List saved agent sessions' },
   {
     name: 'index [dir]',
