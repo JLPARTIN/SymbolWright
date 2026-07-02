@@ -28,7 +28,7 @@ interface PendingRequest {
 }
 
 export function encodeMcpMessage(message: unknown): Buffer {
-  const body = JSON.stringify(message)
+  const body = JSON.stringify(message) ?? 'null'
   const header = `Content-Length: ${Buffer.byteLength(body, 'utf8')}\r\n\r\n`
   return Buffer.from(`${header}${body}`, 'utf8')
 }
