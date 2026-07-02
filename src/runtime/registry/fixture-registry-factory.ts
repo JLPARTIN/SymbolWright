@@ -28,6 +28,7 @@ import { prCollaborationTool } from '../tools/pr-collaboration-tool.js'
 import { applyPatchTool } from '../tools/apply-patch-tool.js'
 import { zflowReportTool } from '../tools/zflow-report-tool.js'
 import { zflowReportCatalogTool } from '../tools/zflow-report-catalog-tool.js'
+import { mcpExternalCallTool } from '../tools/mcp-external-call-tool.js'
 
 import { GitHubLiveReadPolicyWrapper } from '../live-read/github-live-read-policy-wrapper.js'
 import {
@@ -62,6 +63,7 @@ export type FixtureRegistryPreset =
   | 'local_self_edit'
   | 'zflow_report'
   | 'zflow_report_catalog'
+  | 'mcp'
 
 const READ_ONLY_TOOLS: readonly RuntimeToolDefinition[] = [
   planGoalTool,
@@ -107,6 +109,7 @@ function collectTools(
 
   if (preset === 'zflow_report') return [zflowReportTool]
   if (preset === 'zflow_report_catalog') return [zflowReportCatalogTool]
+  if (preset === 'mcp') return [mcpExternalCallTool]
 
   tools.push(...READ_ONLY_TOOLS)
   if (preset === 'read_only') return tools
