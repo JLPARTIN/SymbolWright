@@ -41,7 +41,7 @@ export function parseSubagentRunInput(input: unknown): SubagentRunToolInput {
   }
 }
 
-function renderSubagentEvidence(evidence: SubagentDispatchEvidence): string {
+export function renderSubagentEvidence(evidence: SubagentDispatchEvidence): string {
   return [
     'CodeMind subagent run',
     '',
