@@ -5,7 +5,9 @@ import { describe, expect, it } from 'vitest'
 import { StdioMcpClient } from './stdio-mcp-client.js'
 import type { McpServerConfig } from './mcp-types.js'
 
-const fixturePath = fileURLToPath(new URL('../../../fixtures/mcp/stdio-fixture-server.mjs', import.meta.url))
+const fixturePath = fileURLToPath(
+  new URL('../../../fixtures/mcp/stdio-fixture-server.mjs', import.meta.url),
+)
 
 function createFixtureServer(): McpServerConfig {
   return {
