@@ -26,6 +26,7 @@ The Docker runner is constructed with these default constraints:
 - `--memory 2048m`
 - `--cpus 1`
 - `--user <host checkout UID:GID>` (matches whatever owns the mounted workspace, not a fixed container-image user — see below)
+- `--env HOME=/workspace` (required alongside the dynamic `--user`; see below)
 - workspace mounted at `/workspace`
 
 The runtime fails closed when the sandbox runner is unavailable. There is no fallback path to host shell execution or host file writes.
@@ -82,3 +83,13 @@ the checkout on the host. Matching the host UID:GID is the standard fix for Dock
 permission mismatches and does not change `--cap-drop=ALL`, `--security-opt=no-new-privileges`,
 or `--network none`. Set `CODEMIND_SANDBOX_USER` to override explicitly (for example to pin a
 specific non-root UID:GID) if the host UID should not be trusted implicitly.
+
+Matching an arbitrary host UID has one further consequence: that UID has no corresponding
+`/etc/passwd` entry in the container image, so `os.homedir()` cannot resolve a home directory
+and falls back to `/` — which a non-root UID cannot write to. Anything that writes a
+home-relative path (`resolveStoragePaths()`'s global sessions/audit directories) failed with
+`EACCES` under a real, non-root, unmapped UID (this only surfaced in CI, since the local
+reproduction used to verify the UID fix happened to run as `root`, which can write anywhere
+regardless of `os.homedir()`). The sandbox now sets `--env HOME=/workspace` explicitly so
+`os.homedir()` resolves to the writable, bind-mounted workspace regardless of whether the
+container recognizes the UID.

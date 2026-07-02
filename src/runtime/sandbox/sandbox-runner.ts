@@ -252,6 +252,12 @@ function buildDockerWorkspaceArgs(
     config.cpus,
     '--user',
     config.user,
+    // HOME must be set explicitly: --user may pass a host UID:GID with no matching
+    // /etc/passwd entry in the container image, so os.homedir() has nothing to resolve
+    // and falls back to "/", which a non-root user can't write to. Anything that resolves
+    // a home-relative path (e.g. resolveStoragePaths()) would otherwise fail with EACCES.
+    '--env',
+    'HOME=/workspace',
     '-v',
     `${resolvedWorkspaceRoot}:/workspace:rw`,
     '-w',
