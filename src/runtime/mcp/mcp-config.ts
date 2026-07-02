@@ -1,8 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { assertReadablePath, resolveWorkspacePath } from '../policy/runtime-policy.js'
-import { createRuntimePolicyForMode } from '../policy/runtime-policy.js'
+import {
+  assertReadablePath,
+  createRuntimePolicyForMode,
+  resolveWorkspacePath,
+} from '../policy/runtime-policy.js'
 import {
   DEFAULT_MCP_CONFIG_PATH,
   DEFAULT_MCP_TIMEOUT_MS,
@@ -177,11 +180,17 @@ export function evaluateMcpToolPolicy(
   toolName: string,
 ): McpToolPolicyDecision {
   if (server.blockedTools.includes(toolName)) {
-    return { allowed: false, reason: `Tool is blocked for MCP server ${server.name}: ${toolName}` }
+    return {
+      allowed: false,
+      reason: `Tool is blocked for MCP server ${server.name}: ${toolName}`,
+    }
   }
 
   if (server.allowedTools !== undefined && !server.allowedTools.includes(toolName)) {
-    return { allowed: false, reason: `Tool is not in allowedTools for MCP server ${server.name}: ${toolName}` }
+    return {
+      allowed: false,
+      reason: `Tool is not in allowedTools for MCP server ${server.name}: ${toolName}`,
+    }
   }
 
   return { allowed: true, reason: `Tool is allowed for MCP server ${server.name}: ${toolName}` }
