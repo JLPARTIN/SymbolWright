@@ -36,6 +36,7 @@ import { runLintTool } from './run-lint-tool.js'
 import { memoryRecallTool } from './memory-recall-tool.js'
 import { memoryStoreTool } from './memory-store-tool.js'
 import { preflightTool } from './preflight-tool.js'
+import { mcpExternalCallTool } from './mcp-external-call-tool.js'
 
 const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   readFileTool,
@@ -74,6 +75,7 @@ const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   memoryRecallTool,
   memoryStoreTool,
   preflightTool,
+  mcpExternalCallTool,
 ]
 
 export const DYNAMICALLY_WIRED_TOOLS: readonly CodemindToolName[] = [
