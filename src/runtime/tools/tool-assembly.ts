@@ -37,6 +37,8 @@ import { memoryRecallTool } from './memory-recall-tool.js'
 import { memoryStoreTool } from './memory-store-tool.js'
 import { preflightTool } from './preflight-tool.js'
 import { mcpCallTool } from './mcp-call-tool.js'
+import { webFetchTool } from './web-fetch-tool.js'
+import { webSearchTool } from './web-search-tool.js'
 
 const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   readFileTool,
@@ -76,6 +78,8 @@ const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   memoryStoreTool,
   preflightTool,
   mcpCallTool,
+  webFetchTool,
+  webSearchTool,
 ]
 
 export const DYNAMICALLY_WIRED_TOOLS: readonly CodemindToolName[] = [

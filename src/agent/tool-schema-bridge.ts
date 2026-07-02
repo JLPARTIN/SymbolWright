@@ -508,6 +508,20 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       },
       required: ['server', 'tool'],
     },
+    web_fetch: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: 'Public URL to fetch (http/https only)' },
+      },
+      required: ['url'],
+    },
+    web_search: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Search query' },
+      },
+      required: ['query'],
+    },
   }
 
   const schema = schemaMap[tool.name]

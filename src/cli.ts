@@ -23,6 +23,7 @@ import { renderGitHubWriteExecutorCommand } from './cli-github-write-executor.js
 import { runIndexCommand } from './cli-index.js'
 import { renderMcpListCommand, renderMcpToolsCommand, renderMcpCallCommand } from './cli-mcp.js'
 import { renderMissionPacketCommand } from './cli-mission-packet.js'
+import { renderWebFetchCommand, renderWebSearchCommand } from './cli-web.js'
 import { runPreflightCommand } from './cli-preflight.js'
 import { renderProjectContextCommand } from './cli-project-context.js'
 import { renderProvidersCommand } from './cli-providers.js'
@@ -309,6 +310,10 @@ async function main(): Promise<void> {
       await handleMcpCommand(rest)
       break
 
+    case 'web':
+      await handleWebCommand(rest)
+      break
+
     default:
       if (NOT_YET_ACTIVE.has(command)) {
         const full = rest.length > 0 ? `${command} ${rest.join(' ')}` : command
@@ -476,6 +481,23 @@ async function handleMcpCommand(args: readonly string[]): Promise<void> {
   }
 
   const full = args.length > 0 ? `mcp ${args.join(' ')}` : 'mcp'
+  console.log(renderNotYetActive(full))
+}
+
+async function handleWebCommand(args: readonly string[]): Promise<void> {
+  const [subcommand, ...webArgs] = args
+
+  if (subcommand === 'fetch') {
+    console.log(await renderWebFetchCommand(webArgs))
+    return
+  }
+
+  if (subcommand === 'search') {
+    console.log(await renderWebSearchCommand(webArgs))
+    return
+  }
+
+  const full = args.length > 0 ? `web ${args.join(' ')}` : 'web'
   console.log(renderNotYetActive(full))
 }
 

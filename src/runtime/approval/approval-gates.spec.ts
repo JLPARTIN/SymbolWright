@@ -73,8 +73,8 @@ describe('isValidApprovalScope', () => {
     expect(isValidApprovalScope('APPLY_EDIT')).toBe(false)
   })
 
-  it('ALL_APPROVAL_SCOPES contains exactly 7 scopes', () => {
-    expect(ALL_APPROVAL_SCOPES).toHaveLength(7)
+  it('ALL_APPROVAL_SCOPES contains exactly 8 scopes', () => {
+    expect(ALL_APPROVAL_SCOPES).toHaveLength(8)
   })
 })
 
