@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  DEFAULT_SANDBOX_USER,
   DockerSandboxFileWriter,
   DockerSandboxRunner,
   buildDockerFileWriteArgs,
   buildDockerRunArgs,
   parseWorkspaceCommand,
   renderDockerSandboxConfig,
+  resolveDefaultSandboxUser,
   resolveDockerSandboxConfig,
   resolveDockerSandboxRunnerOptionsFromEnv,
 } from './sandbox-runner.js'
@@ -32,6 +34,25 @@ describe('parseWorkspaceCommand', () => {
   })
 })
 
+describe('resolveDefaultSandboxUser', () => {
+  it('matches the host UID:GID on POSIX hosts', () => {
+    expect(resolveDefaultSandboxUser()).toBe(`${process.getuid?.()}:${process.getgid?.()}`)
+  })
+
+  it('falls back to DEFAULT_SANDBOX_USER when getuid/getgid are unavailable', () => {
+    const originalGetuid = process.getuid
+    // Simulating a non-POSIX host for this test only
+    delete process.getuid
+    try {
+      expect(resolveDefaultSandboxUser()).toBe(DEFAULT_SANDBOX_USER)
+    } finally {
+      if (originalGetuid !== undefined) {
+        process.getuid = originalGetuid
+      }
+    }
+  })
+})
+
 describe('Docker sandbox configuration', () => {
   it('resolves defaults', () => {
     const config = resolveDockerSandboxConfig({})
@@ -41,7 +62,7 @@ describe('Docker sandbox configuration', () => {
     expect(config.memory).toBe('2048m')
     expect(config.cpus).toBe('1')
     expect(config.network).toBe('none')
-    expect(config.user).toBe('node')
+    expect(config.user).toBe(resolveDefaultSandboxUser())
     expect(config.timeoutMs).toBe(120_000)
     expect(config.maxOutputBytes).toBe(1024 * 1024)
   })
@@ -109,7 +130,7 @@ describe('Docker sandbox command construction', () => {
     expect(args).toContain('--cpus')
     expect(args).toContain('1')
     expect(args).toContain('--user')
-    expect(args).toContain('node')
+    expect(args).toContain(resolveDefaultSandboxUser())
     expect(args).toContain('/tmp/codemind-workspace:/workspace:rw')
     expect(args.slice(-2)).toEqual(['npm', 'test'])
   })

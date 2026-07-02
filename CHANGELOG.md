@@ -16,11 +16,8 @@ All notable changes to CodeMind are documented in this file.
 - The forensics module's unit tests (`file-classifier`, `package-manager`, `failure-ledger`, `command-evidence`) previously lived under `tests/forensics/*.test.ts`, which `vitest.config.ts`'s `src/**/*.spec.ts` include pattern never matched — these tests silently never ran in `npm test` or CI. Moved to `src/forensics/*.spec.ts` alongside every other module's tests so they now execute as part of the standard test run.
 - Renamed `src/memory/savant-memory.spec.ts` to `src/memory/cognitive-memory-architecture.spec.ts`; the "Savant" name belongs to the unrelated PR preflight engine, and the collision made the memory test suite hard to discover correctly.
 - Raised the Docker sandbox runner's default `--memory` limit from `512m` to `2048m`. The lower limit was never exercised against real write-needing validation commands before `codemind preflight` existed; `tsc`/`vitest` on this codebase's current size OOM under 512m.
+- The sandbox runner's fixed `--user node` failed with `EACCES` on write-needing commands (`npm run build`, `npm test`) under a bind-mounted workspace whenever the host checkout wasn't owned by the container's built-in `node` user. `resolveDefaultSandboxUser()` now resolves `--user` to the host process's UID:GID instead, the standard fix for Docker bind-mount permission mismatches; `--cap-drop=ALL`, `--security-opt=no-new-privileges`, and `--network none` are unchanged. `CODEMIND_SANDBOX_USER` still overrides explicitly.
 - `renderPreflightReport` now includes a truncated stdout/stderr tail for failed/blocked validation commands instead of only a status line, so preflight failures are diagnosable from CI logs.
-
-### Known Limitation
-
-- The sandbox runner's fixed `--user node` can fail with `EACCES` on write-needing commands (`npm run build`, `npm test`) under a bind-mounted workspace when the host checkout isn't owned by the container's UID. Read-only commands are unaffected. Until resolved, the CI `PR preflight` step runs `continue-on-error: true` — see `docs/runtime/CODEMIND_SECURE_SANDBOX_RUNNER.md`.
 
 ## [0.1.0] - 2026-06-28
 

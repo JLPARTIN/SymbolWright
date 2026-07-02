@@ -161,6 +161,19 @@ export function resolveDockerSandboxRunnerOptionsFromEnv(
   return options
 }
 
+/**
+ * Resolves the container user to match the host checkout's UID:GID so bind-mounted
+ * writes (e.g. `npm run build` writing `dist/`, vitest writing its config cache) don't
+ * fail with EACCES when the host owner differs from the container image's built-in user.
+ * Falls back to DEFAULT_SANDBOX_USER on non-POSIX hosts where getuid/getgid don't exist.
+ */
+export function resolveDefaultSandboxUser(): string {
+  if (typeof process.getuid === 'function' && typeof process.getgid === 'function') {
+    return `${process.getuid()}:${process.getgid()}`
+  }
+  return DEFAULT_SANDBOX_USER
+}
+
 export function resolveDockerSandboxConfig(
   options: DockerSandboxRunnerOptions = resolveDockerSandboxRunnerOptionsFromEnv(),
 ): DockerSandboxResolvedConfig {
@@ -170,7 +183,7 @@ export function resolveDockerSandboxConfig(
     memory: options.memory ?? DEFAULT_SANDBOX_MEMORY,
     cpus: options.cpus ?? DEFAULT_SANDBOX_CPUS,
     network: options.network ?? DEFAULT_SANDBOX_NETWORK,
-    user: options.user ?? DEFAULT_SANDBOX_USER,
+    user: options.user ?? resolveDefaultSandboxUser(),
     timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
     maxOutputBytes: options.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES,
   }
