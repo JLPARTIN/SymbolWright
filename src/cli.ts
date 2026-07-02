@@ -21,6 +21,7 @@ import { renderDoctorCommand } from './cli-doctor.js'
 import { findFixtureArg, renderFixtureCommand } from './cli-fixture-commands.js'
 import { renderGitHubWriteExecutorCommand } from './cli-github-write-executor.js'
 import { runIndexCommand } from './cli-index.js'
+import { renderMcpListCommand, renderMcpToolsCommand, renderMcpCallCommand } from './cli-mcp.js'
 import { renderMissionPacketCommand } from './cli-mission-packet.js'
 import { runPreflightCommand } from './cli-preflight.js'
 import { renderProjectContextCommand } from './cli-project-context.js'
@@ -304,6 +305,10 @@ async function main(): Promise<void> {
       await handleAjnaCommand(rest)
       break
 
+    case 'mcp':
+      await handleMcpCommand(rest)
+      break
+
     default:
       if (NOT_YET_ACTIVE.has(command)) {
         const full = rest.length > 0 ? `${command} ${rest.join(' ')}` : command
@@ -449,6 +454,28 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   }
 
   const full = args.length > 0 ? `ajna ${args.join(' ')}` : 'ajna'
+  console.log(renderNotYetActive(full))
+}
+
+async function handleMcpCommand(args: readonly string[]): Promise<void> {
+  const [subcommand, ...mcpArgs] = args
+
+  if (subcommand === 'list') {
+    console.log(await renderMcpListCommand(mcpArgs))
+    return
+  }
+
+  if (subcommand === 'tools') {
+    console.log(await renderMcpToolsCommand(mcpArgs))
+    return
+  }
+
+  if (subcommand === 'call') {
+    console.log(await renderMcpCallCommand(mcpArgs))
+    return
+  }
+
+  const full = args.length > 0 ? `mcp ${args.join(' ')}` : 'mcp'
   console.log(renderNotYetActive(full))
 }
 

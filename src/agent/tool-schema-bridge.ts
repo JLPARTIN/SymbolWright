@@ -495,6 +495,19 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       },
       required: ['changedFiles'],
     },
+    mcp_call: {
+      type: 'object',
+      properties: {
+        server: {
+          type: 'string',
+          description: 'Configured MCP server name from .codemind/mcp.json',
+        },
+        tool: { type: 'string', description: 'Tool name advertised by the MCP server' },
+        arguments: { type: 'object', description: 'Arguments to pass to the MCP tool' },
+        timeoutMs: { type: 'number', description: 'Per-call timeout override in milliseconds' },
+      },
+      required: ['server', 'tool'],
+    },
   }
 
   const schema = schemaMap[tool.name]
