@@ -328,6 +328,10 @@ async function main(): Promise<void> {
       await handleSubagentCommand(rest)
       break
 
+    case 'skill':
+      await handleSkillCommand(rest)
+      break
+
     default:
       if (NOT_YET_ACTIVE.has(command)) {
         const full = rest.length > 0 ? `${command} ${rest.join(' ')}` : command
@@ -551,6 +555,31 @@ async function handleSubagentCommand(args: readonly string[]): Promise<void> {
   }
 
   const full = args.length > 0 ? `subagent ${args.join(' ')}` : 'subagent'
+  console.log(renderNotYetActive(full))
+}
+
+async function handleSkillCommand(args: readonly string[]): Promise<void> {
+  const [subcommand, ...skillArgs] = args
+  const { renderSkillListCommand, renderSkillShowCommand, runSkillRunCommand } = await import(
+    './cli-skill.js'
+  )
+
+  if (subcommand === 'list') {
+    console.log(renderSkillListCommand())
+    return
+  }
+
+  if (subcommand === 'show') {
+    console.log(renderSkillShowCommand(skillArgs))
+    return
+  }
+
+  if (subcommand === 'run') {
+    console.log(await runSkillRunCommand(skillArgs))
+    return
+  }
+
+  const full = args.length > 0 ? `skill ${args.join(' ')}` : 'skill'
   console.log(renderNotYetActive(full))
 }
 
