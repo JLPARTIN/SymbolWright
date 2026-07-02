@@ -28,6 +28,7 @@ import {
 } from './cli-checkpoint.js'
 import { renderMcpListCommand, renderMcpToolsCommand, renderMcpCallCommand } from './cli-mcp.js'
 import { renderMissionPacketCommand } from './cli-mission-packet.js'
+import { renderSubagentListCommand, runSubagentRunCommand } from './cli-subagent.js'
 import { renderWebFetchCommand, renderWebSearchCommand } from './cli-web.js'
 import { runPreflightCommand } from './cli-preflight.js'
 import { renderProjectContextCommand } from './cli-project-context.js'
@@ -323,6 +324,10 @@ async function main(): Promise<void> {
       handleCheckpointCommand(rest)
       break
 
+    case 'subagent':
+      await handleSubagentCommand(rest)
+      break
+
     default:
       if (NOT_YET_ACTIVE.has(command)) {
         const full = rest.length > 0 ? `${command} ${rest.join(' ')}` : command
@@ -529,6 +534,23 @@ function handleCheckpointCommand(args: readonly string[]): void {
   }
 
   const full = args.length > 0 ? `checkpoint ${args.join(' ')}` : 'checkpoint'
+  console.log(renderNotYetActive(full))
+}
+
+async function handleSubagentCommand(args: readonly string[]): Promise<void> {
+  const [subcommand, ...subagentArgs] = args
+
+  if (subcommand === 'list') {
+    console.log(renderSubagentListCommand())
+    return
+  }
+
+  if (subcommand === 'run') {
+    console.log(await runSubagentRunCommand(subagentArgs))
+    return
+  }
+
+  const full = args.length > 0 ? `subagent ${args.join(' ')}` : 'subagent'
   console.log(renderNotYetActive(full))
 }
 

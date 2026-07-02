@@ -185,7 +185,7 @@ function parseAgentArgs(args: readonly string[]): ParsedAgentArgs {
   }
 }
 
-function createProvider(config: CodemindConfig): LLMProvider {
+export function createProvider(config: CodemindConfig): LLMProvider {
   if (config.provider !== undefined && config.provider !== 'anthropic') {
     const gatewayConfig = loadProviderGatewayConfig({
       ...process.env,

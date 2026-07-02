@@ -283,6 +283,22 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       },
       required: ['agentType', 'goal'],
     },
+    subagent_run: {
+      type: 'object',
+      properties: {
+        subagent: {
+          type: 'string',
+          description: 'Subagent name: explorer, reviewer, test-planner',
+        },
+        goal: { type: 'string', description: 'Goal for the subagent to accomplish' },
+        enableGovernedTools: {
+          type: 'boolean',
+          description:
+            'Grant this dispatch the subagent governed mutation-capable tools (off by default)',
+        },
+      },
+      required: ['subagent', 'goal'],
+    },
     run_tests: {
       type: 'object',
       properties: {},

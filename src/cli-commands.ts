@@ -256,6 +256,14 @@ export const CODEMIND_CLI_COMMANDS = [
     name: 'checkpoint restore <id> [--json]',
     description: 'Restore every file in a checkpoint to its pre-mutation state',
   },
+  {
+    name: 'subagent list',
+    description: 'List the read-only worker subagents (explorer, reviewer, test-planner)',
+  },
+  {
+    name: 'subagent run <name> "<goal>" [--enable-governed] [--json] [--mode <mode>]',
+    description: 'Dispatch an isolated read-only subagent; returns findings/evidence/risks',
+  },
 ] as const
 
 export function renderHelp(): string {

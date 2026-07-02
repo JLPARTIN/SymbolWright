@@ -72,6 +72,7 @@ function mockAgentResult(status: 'completed' | 'error' = 'completed') {
       totalUsage: { inputTokens: 10, outputTokens: 5 },
     },
     swarmDispatches: [],
+    subagentDispatches: [],
     ajnaReviews: [],
     tuiState: {} as never,
   }
