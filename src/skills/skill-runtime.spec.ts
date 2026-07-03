@@ -4,10 +4,10 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
-import type { RuntimeToolContext } from '../runtime/types.js'
-import type { SandboxRunner } from '../runtime/sandbox/sandbox-runner.js'
 import { renderSkillListCommand, renderSkillShowCommand } from '../cli-skill.js'
+import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
+import type { SandboxRunner } from '../runtime/sandbox/sandbox-runner.js'
+import type { RuntimeToolContext } from '../runtime/types.js'
 import { runSkill } from './skill-runtime.js'
 
 function tempWorkspace(): string {
@@ -18,6 +18,10 @@ function writeSkill(root: string, name: string, content: string): void {
   const skillDir = path.join(root, '.codemind', 'skills', name)
   fs.mkdirSync(skillDir, { recursive: true })
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), content)
+}
+
+function dynamicCommandLine(command: string): string {
+  return `!\`${command}\``
 }
 
 const fakeRunner: SandboxRunner = {
@@ -39,16 +43,18 @@ describe('skill runtime', () => {
       writeSkill(
         root,
         'summarize-changes',
-        `---
-description: Summarize changes
-arguments: [issue]
----
-Issue: $issue
-All: $ARGUMENTS
-First: $0
-
-!\`git status\`
-`,
+        [
+          '---',
+          'description: Summarize changes',
+          'arguments: [issue]',
+          '---',
+          'Issue: $issue',
+          'All: $ARGUMENTS',
+          'First: $0',
+          '',
+          dynamicCommandLine('git status'),
+          '',
+        ].join('\n'),
       )
 
       const context: RuntimeToolContext = {
@@ -82,13 +88,15 @@ First: $0
       writeSkill(
         root,
         'safe-summary',
-        `---
-description: Safe summary
----
-Before
-!\`git status\`
-After
-`,
+        [
+          '---',
+          'description: Safe summary',
+          '---',
+          'Before',
+          dynamicCommandLine('git status'),
+          'After',
+          '',
+        ].join('\n'),
       )
 
       const result = await runSkill({
@@ -111,13 +119,15 @@ After
       writeSkill(
         root,
         'deep-review',
-        `---
-description: Deep review
-context: fork
-agent: reviewer
----
-Review $ARGUMENTS
-`,
+        [
+          '---',
+          'description: Deep review',
+          'context: fork',
+          'agent: reviewer',
+          '---',
+          'Review $ARGUMENTS',
+          '',
+        ].join('\n'),
       )
 
       const result = await runSkill({
@@ -138,11 +148,11 @@ Review $ARGUMENTS
   it('renders skill list and show commands', () => {
     const root = tempWorkspace()
     try {
-      writeSkill(root, 'local-skill', `---
-description: Local skill
----
-Body
-`)
+      writeSkill(
+        root,
+        'local-skill',
+        ['---', 'description: Local skill', '---', 'Body', ''].join('\n'),
+      )
       expect(renderSkillListCommand(root)).toContain('local-skill')
       expect(renderSkillShowCommand(['local-skill'], root)).toContain('Description: Local skill')
     } finally {
