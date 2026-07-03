@@ -11,8 +11,10 @@ interface ParsedSkillMarkdown {
 const ARRAY_FIELDS = new Set([
   'arguments',
   'allowed-tools',
+  'allowed_tools',
   'allowedTools',
   'disallowed-tools',
+  'disallowed_tools',
   'disallowedTools',
   'paths',
 ])
@@ -63,11 +65,11 @@ function stripQuotes(value: string): string {
   return trimmed
 }
 
-function parseScalar(rawValue: string): unknown {
+function parseScalar(rawValue: string, isArrayField: boolean = false): unknown {
   const value = stripQuotes(rawValue)
   if (value === 'true') return true
   if (value === 'false') return false
-  if (value.startsWith('[') && value.endsWith(']')) {
+  if (isArrayField && value.startsWith('[') && value.endsWith(']')) {
     return value
       .slice(1, -1)
       .split(',')
@@ -116,14 +118,15 @@ function parseFrontmatterBlock(block: string): Readonly<Record<string, unknown>>
     const rawKey = keyValueMatch[1] ?? ''
     const normalizedKey = normalizeKey(rawKey)
     const value = keyValueMatch[2] ?? ''
+    const isArrayField = ARRAY_FIELDS.has(rawKey) || ARRAY_FIELDS.has(normalizedKey)
 
-    if (value.trim().length === 0 && ARRAY_FIELDS.has(rawKey)) {
+    if (value.trim().length === 0 && isArrayField) {
       raw[normalizedKey] = []
       currentListKey = normalizedKey
       continue
     }
 
-    raw[normalizedKey] = parseScalar(value)
+    raw[normalizedKey] = parseScalar(value, isArrayField)
     currentListKey = undefined
   }
 
