@@ -155,7 +155,10 @@ export function discoverSkills(cwd: string = process.cwd()): readonly SkillDefin
   return [...byName.values()].sort((a, b) => a.commandName.localeCompare(b.commandName))
 }
 
-export function getSkillByName(name: string, cwd: string = process.cwd()): SkillDefinition | undefined {
+export function getSkillByName(
+  name: string,
+  cwd: string = process.cwd(),
+): SkillDefinition | undefined {
   return discoverSkills(cwd).find((skill) => skill.commandName === name)
 }
 
