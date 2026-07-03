@@ -89,9 +89,7 @@ export async function runSkillRunCommand(
   const rawArguments = flags.positionals.slice(1).join(' ').trim()
 
   if (skillName === undefined) {
-    throw new Error(
-      'Usage: codemind skill run <name> [arguments] [--enable-governed] [--json]',
-    )
+    throw new Error('Usage: codemind skill run <name> [arguments] [--enable-governed] [--json]')
   }
 
   const policy = createRuntimePolicyForMode(flags.mode)

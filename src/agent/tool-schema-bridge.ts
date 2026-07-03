@@ -34,9 +34,7 @@ const EMPTY_SCHEMA: ToolInputSchema = { type: 'object', properties: {} }
 function isToolAllowedByMode(mode: CodemindRuntimeMode, tool: RuntimeToolDefinition): boolean {
   switch (mode) {
     case 'PLAN_ONLY':
-      return (
-        tool.capability === 'PLAN' || tool.capability === 'READ' || tool.capability === 'SKILL'
-      )
+      return tool.capability === 'PLAN' || tool.capability === 'READ' || tool.capability === 'SKILL'
     case 'READ_ONLY':
       return READ_CAPABILITIES.has(tool.capability)
     case 'PROPOSAL_ONLY':
@@ -346,7 +344,9 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
     },
     live_read_policy_handshake: {
       type: 'object',
-      properties: { path: { type: 'string', description: 'Path to the policy handshake JSON fixture' } },
+      properties: {
+        path: { type: 'string', description: 'Path to the policy handshake JSON fixture' },
+      },
       required: ['path'],
     },
     live_read_client_fixture: {

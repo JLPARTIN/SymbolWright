@@ -3,7 +3,22 @@ import { executeBashTool } from '../runtime/tools/bash-tool.js'
 import type { RenderedSkill, SkillDefinition, SkillRenderInput } from './skill-types.js'
 
 const ESCAPED_DOLLAR_SENTINEL = '\u0000CODEMIND_ESCAPED_DOLLAR\u0000'
-const REGEXP_SPECIAL_CHARACTERS = new Set(['\\', '$', '^', '*', '+', '?', '.', '(', ')', '|', '{', '}', '[', ']'])
+const REGEXP_SPECIAL_CHARACTERS = new Set([
+  '\\',
+  '$',
+  '^',
+  '*',
+  '+',
+  '?',
+  '.',
+  '(',
+  ')',
+  '|',
+  '{',
+  '}',
+  '[',
+  ']',
+])
 
 interface DynamicRenderState {
   readonly lines: readonly string[]
@@ -47,9 +62,7 @@ function substituteArguments(input: SkillRenderInput): string {
 
   return replaceUnescapedDollars(input.skill.body, (content) => {
     let rendered = content
-      .replace(/\$ARGUMENTS\[(\d+)\]/gu, (_match, index: string) =>
-        (parsedArgs[Number(index)] ?? ''),
-      )
+      .replace(/\$ARGUMENTS\[(\d+)\]/gu, (_match, index: string) => parsedArgs[Number(index)] ?? '')
       .replace(/\$(\d+)/gu, (_match, index: string) => parsedArgs[Number(index)] ?? '')
       .replace(/\$ARGUMENTS/gu, rawArguments)
       .replace(/\$\{CODEMIND_SESSION_ID\}/gu, input.sessionId)
