@@ -34,7 +34,9 @@ export function parseSkillRunInput(input: unknown): SkillRunInput {
     ...(typeof raw['enableGovernedTools'] === 'boolean'
       ? { enableGovernedTools: raw['enableGovernedTools'] }
       : {}),
-    ...(typeof raw['dynamicContext'] === 'boolean' ? { dynamicContext: raw['dynamicContext'] } : {}),
+    ...(typeof raw['dynamicContext'] === 'boolean'
+      ? { dynamicContext: raw['dynamicContext'] }
+      : {}),
   }
 }
 
