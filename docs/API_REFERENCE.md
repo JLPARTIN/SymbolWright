@@ -2,6 +2,12 @@
 
 CodeMind exposes a provider-neutral API surface so any browser, LLM, coding agent, or external client can submit missions without learning provider-specific SDKs.
 
+## Live implementation
+
+`codemind serve` starts a real HTTP server (`src/server/codemind-chat-server.ts`) implementing the chat + provider routes below, plus a browser chat UI at `/`. See [`CODEMIND_CHAT_SERVER.md`](runtime/CODEMIND_CHAT_SERVER.md) for setup, auth, and deployment notes.
+
+`/api/missions`, `/api/tools/run`, `/api/sessions/:id`, and `/api/missions/:id/events` remain contract-only in `src/api/universal-api-contract.ts` — they describe the target shape for running the full `codemind agent` mission/tool-use runtime over HTTP, which is a separate, larger phase of work not yet implemented.
+
 ## Security model
 
 External clients authenticate to CodeMind with a `CODEMIND_API_KEY`.
@@ -24,14 +30,19 @@ Provider Adapter
 
 ## Routes
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/missions` | Create a governed CodeMind mission. |
-| `POST` | `/api/chat` | Send a conversational mission turn. |
-| `POST` | `/api/tools/run` | Run a governed tool through policy, approval, audit, and redaction gates. |
-| `POST` | `/api/providers/test` | Verify provider adapter readiness without exposing provider keys to the browser. |
-| `GET` | `/api/sessions/:id` | Read a persisted mission session and audit-safe state. |
-| `GET` | `/api/missions/:id/events` | Stream mission events, tool output, terminal-safe logs, and PR readiness updates. |
+| Method | Path | Status | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/` | Live | Browser chat UI. |
+| `GET` | `/api/health` | Live | Unauthenticated liveness check. |
+| `GET` | `/api/providers` | Live | List provider catalog, redacted config, and configured/missing status. |
+| `POST` | `/api/providers/register` | Live | Register or override a provider's base URL, API key, or model at runtime — this is how you point CodeMind at any API you choose. |
+| `POST` | `/api/providers/reset` | Live | Clear a runtime provider override back to its env-configured defaults. |
+| `POST` | `/api/providers/test` | Live | Verify provider adapter readiness without exposing provider keys to the browser. |
+| `POST` | `/api/chat` | Live | Send a conversational chat turn; set `"stream": true` for a server-sent-events token stream. |
+| `POST` | `/api/missions` | Contract only | Create a governed CodeMind mission (full agent/tool-use runtime over HTTP — not yet implemented). |
+| `POST` | `/api/tools/run` | Contract only | Run a governed tool through policy, approval, audit, and redaction gates. |
+| `GET` | `/api/sessions/:id` | Contract only | Read a persisted mission session and audit-safe state. |
+| `GET` | `/api/missions/:id/events` | Contract only | Stream mission events, tool output, terminal-safe logs, and PR readiness updates. |
 
 ## Mission request shape
 

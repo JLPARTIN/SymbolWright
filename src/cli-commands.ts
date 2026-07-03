@@ -276,6 +276,11 @@ export const CODEMIND_CLI_COMMANDS = [
     name: 'skill run <name> [args] [--enable-governed] [--json]',
     description: 'Run a file-based CodeMind Skill; forked skills use the subagent runtime',
   },
+  {
+    name: 'serve [--host <host>] [--port <port>] [--cors-origin <origin>]',
+    description:
+      'Start the CodeMind Chat API + browser UI, routed through the provider gateway (requires CODEMIND_API_KEY)',
+  },
 ] as const
 
 export function renderHelp(): string {

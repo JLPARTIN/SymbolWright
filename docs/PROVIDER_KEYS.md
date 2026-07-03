@@ -34,6 +34,15 @@ Browser → CodeMind API → Provider Adapter → Provider API
 
 That keeps provider switching, audit logs, redaction, mission state, tool policy, and PR governance under CodeMind control.
 
+## Registering a provider at runtime
+
+`codemind serve` (see
+[`runtime/CODEMIND_CHAT_SERVER.md`](runtime/CODEMIND_CHAT_SERVER.md)) accepts
+`POST /api/providers/register` to set or override a provider's `baseUrl`,
+`apiKey`, and `model` while the server is running — this is how you "put an
+API from wherever you want" without redeploying. Registered keys are held in
+memory on the server only, never echoed back, and lost on restart.
+
 ## Current provider contract
 
 The canonical provider registry is `src/providers/provider-adapter-contract.ts`.

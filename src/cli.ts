@@ -58,6 +58,7 @@ import { renderRuntimeValidationPlan } from './cli-runtime-validation-plan.js'
 import { renderRuntimeWorkflow } from './cli-runtime-workflow.js'
 import { renderRuntimeWriteIntent } from './cli-runtime-write-intent.js'
 import { renderScan, scanRepo } from './cli-scan.js'
+import { runServeCommand } from './cli-serve.js'
 import { renderSkillListCommand, renderSkillShowCommand, runSkillRunCommand } from './cli-skill.js'
 import { renderSubagentListCommand, runSubagentRunCommand } from './cli-subagent.js'
 import { renderTraceStoreCommand } from './cli-trace-store.js'
@@ -301,6 +302,10 @@ async function main(): Promise<void> {
 
     case 'web':
       await handleWebCommand(rest)
+      break
+
+    case 'serve':
+      await runServeCommand(rest)
       break
 
     case 'checkpoint':
