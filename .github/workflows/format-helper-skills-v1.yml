@@ -1,0 +1,44 @@
+name: Temporary Skills v1 Format Helper
+
+on:
+  push:
+    branches:
+      - codemind/skills-v1
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: codemind/skills-v1
+          fetch-depth: 0
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Prettier
+        run: npm run format
+
+      - name: Commit formatted files
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/agent/tool-schema-bridge.ts src/cli-skill.ts src/cli.ts src/skills/skill-renderer.ts
+          git commit -m "fix(skills): apply repository prettier formatting"
+          git push origin HEAD:codemind/skills-v1
