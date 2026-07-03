@@ -1,7 +1,7 @@
 import type {
-  RuntimeToolDefinition,
-  RuntimePolicySnapshot,
   CodemindRuntimeMode,
+  RuntimePolicySnapshot,
+  RuntimeToolDefinition,
 } from '../runtime/types.js'
 import type { ProviderToolDefinition, ProviderToolInputSchema } from '../provider/provider.types.js'
 import { assertValidPolicy } from '../runtime/policy/runtime-policy.js'
@@ -34,7 +34,9 @@ const EMPTY_SCHEMA: ToolInputSchema = { type: 'object', properties: {} }
 function isToolAllowedByMode(mode: CodemindRuntimeMode, tool: RuntimeToolDefinition): boolean {
   switch (mode) {
     case 'PLAN_ONLY':
-      return tool.capability === 'PLAN' || tool.capability === 'READ' || tool.capability === 'SKILL'
+      return (
+        tool.capability === 'PLAN' || tool.capability === 'READ' || tool.capability === 'SKILL'
+      )
     case 'READ_ONLY':
       return READ_CAPABILITIES.has(tool.capability)
     case 'PROPOSAL_ONLY':
@@ -244,7 +246,10 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
     subagent_run: {
       type: 'object',
       properties: {
-        subagent: { type: 'string', description: 'Subagent name: explorer, reviewer, test-planner' },
+        subagent: {
+          type: 'string',
+          description: 'Subagent name: explorer, reviewer, test-planner',
+        },
         goal: { type: 'string', description: 'Goal for the subagent to accomplish' },
         enableGovernedTools: {
           type: 'boolean',
@@ -428,7 +433,10 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
     memory_store: {
       type: 'object',
       properties: {
-        type: { type: 'string', description: 'Memory kind to store: episodic, lexical, or procedural' },
+        type: {
+          type: 'string',
+          description: 'Memory kind to store: episodic, lexical, or procedural',
+        },
         content: { type: 'string', description: 'Content to remember' },
         metadata: { type: 'object', description: 'Optional metadata for the stored memory' },
       },
