@@ -1,10 +1,16 @@
 import { renderSubagentEvidence } from './subagent-run-tool.js'
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 import type { SubagentName } from '../../hivemind/subagent-definitions.js'
-import type { SubagentDispatcher } from '../../hivemind/subagent-dispatcher.js'
+import type {
+  SubagentDispatchEvidence,
+  SubagentDispatcher,
+} from '../../hivemind/subagent-dispatcher.js'
 import { parseSkillRunInput, renderSkillRunResult, runSkill } from '../../skills/skill-runtime.js'
 
-export function createWiredSkillRunTool(dispatcher: SubagentDispatcher): RuntimeToolDefinition {
+export function createWiredSkillRunTool(
+  dispatcher: SubagentDispatcher,
+  onResult?: (result: SubagentDispatchEvidence) => void,
+): RuntimeToolDefinition {
   return {
     name: 'skill_run',
     description:
@@ -22,6 +28,7 @@ export function createWiredSkillRunTool(dispatcher: SubagentDispatcher): Runtime
             goal: forkRequest.goal,
             enableGovernedTools: forkRequest.enableGovernedTools,
           })
+          onResult?.(evidence)
           return renderSubagentEvidence(evidence)
         },
       })
