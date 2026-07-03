@@ -1,18 +1,18 @@
 import { createProvider } from './cli-agent.js'
 import { resolveCodemindConfig, validateCodemindConfig } from './config/codemind-config.js'
+import type { SubagentName } from './hivemind/subagent-definitions.js'
 import { SubagentDispatcher } from './hivemind/subagent-dispatcher.js'
-import { renderSubagentEvidence } from './runtime/tools/subagent-run-tool.js'
 import {
   createRuntimePolicyForMode,
   DEFAULT_CODEMIND_RUNTIME_MODE,
   normalizeCodemindRuntimeMode,
 } from './runtime/policy/runtime-policy.js'
+import { renderSubagentEvidence } from './runtime/tools/subagent-run-tool.js'
 import type { CodemindRuntimeMode, RuntimeToolContext } from './runtime/types.js'
 import { discoverSkills, requireSkillByName } from './skills/skill-discovery.js'
 import { renderSkillDetails, renderSkillListing } from './skills/skill-renderer.js'
 import { renderSkillRunResult, runSkill } from './skills/skill-runtime.js'
 import type { SkillRunInput } from './skills/skill-types.js'
-import type { SubagentName } from './hivemind/subagent-definitions.js'
 
 interface ParsedSkillRunFlags {
   readonly positionals: readonly string[]
@@ -69,7 +69,10 @@ export function renderSkillListCommand(cwd: string = process.cwd()): string {
   return renderSkillListing(discoverSkills(cwd))
 }
 
-export function renderSkillShowCommand(args: readonly string[], cwd: string = process.cwd()): string {
+export function renderSkillShowCommand(
+  args: readonly string[],
+  cwd: string = process.cwd(),
+): string {
   const skillName = args[0]
   if (skillName === undefined) {
     throw new Error('Usage: codemind skill show <name>')
@@ -86,11 +89,17 @@ export async function runSkillRunCommand(
   const rawArguments = flags.positionals.slice(1).join(' ').trim()
 
   if (skillName === undefined) {
-    throw new Error('Usage: codemind skill run <name> [arguments] [--enable-governed] [--json]')
+    throw new Error(
+      'Usage: codemind skill run <name> [arguments] [--enable-governed] [--json]',
+    )
   }
 
   const policy = createRuntimePolicyForMode(flags.mode)
-  const context: RuntimeToolContext = { cwd, policy, sessionId: `cm-skill-cli-${Date.now()}` }
+  const context: RuntimeToolContext = {
+    cwd,
+    policy,
+    sessionId: `cm-skill-cli-${Date.now()}`,
+  }
   const request: SkillRunInput = {
     name: skillName,
     arguments: rawArguments,
@@ -109,7 +118,11 @@ export async function runSkillRunCommand(
         throw new Error(`Invalid CodeMind config: ${validation.errors.join('; ')}`)
       }
       const provider = createProvider(config)
-      const dispatcher = new SubagentDispatcher(provider, context, context.sessionId ?? `cm-skill-cli`)
+      const dispatcher = new SubagentDispatcher(
+        provider,
+        context,
+        context.sessionId ?? `cm-skill-cli`,
+      )
       const evidence = await dispatcher.dispatch({
         subagent: forkRequest.agent as SubagentName,
         goal: forkRequest.goal,
