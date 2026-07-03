@@ -264,6 +264,18 @@ export const CODEMIND_CLI_COMMANDS = [
     name: 'subagent run <name> "<goal>" [--enable-governed] [--json] [--mode <mode>]',
     description: 'Dispatch an isolated read-only subagent; returns findings/evidence/risks',
   },
+  {
+    name: 'skill list',
+    description: 'List bundled, project, and Claude-compatible CodeMind Skills',
+  },
+  {
+    name: 'skill show <name>',
+    description: 'Show skill frontmatter, source, allowed tools, and invocation mode',
+  },
+  {
+    name: 'skill run <name> [args] [--enable-governed] [--json]',
+    description: 'Run a file-based CodeMind Skill; forked skills use the subagent runtime',
+  },
 ] as const
 
 export function renderHelp(): string {

@@ -1,7 +1,7 @@
 import type {
-  RuntimeToolDefinition,
-  RuntimePolicySnapshot,
   CodemindRuntimeMode,
+  RuntimePolicySnapshot,
+  RuntimeToolDefinition,
 } from '../runtime/types.js'
 import type { ProviderToolDefinition, ProviderToolInputSchema } from '../provider/provider.types.js'
 import { assertValidPolicy } from '../runtime/policy/runtime-policy.js'
@@ -26,12 +26,15 @@ const READ_CAPABILITIES = new Set([
   'OPERATOR_REVIEW',
   'ZFLOW_REPORT',
   'ZFLOW_REPORT_CATALOG',
+  'SKILL',
 ])
+
+const EMPTY_SCHEMA: ToolInputSchema = { type: 'object', properties: {} }
 
 function isToolAllowedByMode(mode: CodemindRuntimeMode, tool: RuntimeToolDefinition): boolean {
   switch (mode) {
     case 'PLAN_ONLY':
-      return tool.capability === 'PLAN' || tool.capability === 'READ'
+      return tool.capability === 'PLAN' || tool.capability === 'READ' || tool.capability === 'SKILL'
     case 'READ_ONLY':
       return READ_CAPABILITIES.has(tool.capability)
     case 'PROPOSAL_ONLY':
@@ -101,9 +104,7 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
     },
     validation_plan: {
       type: 'object',
-      properties: {
-        focus: { type: 'string', description: 'Validation focus area' },
-      },
+      properties: { focus: { type: 'string', description: 'Validation focus area' } },
       required: ['focus'],
     },
     glob: {
@@ -129,7 +130,7 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
     bash: {
       type: 'object',
       properties: {
-        command: { type: 'string', description: 'Shell command to execute (must be in allowlist)' },
+        command: { type: 'string', description: 'Shell command to execute (must be allowlisted)' },
         timeoutMs: { type: 'number', description: 'Timeout in milliseconds (default 120000)' },
       },
       required: ['command'],
@@ -142,11 +143,7 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
           description:
             'Git operation: status, diff, log, branch, show, checkout_new, add, commit, push',
         },
-        args: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Additional arguments for the git command',
-        },
+        args: { type: 'array', items: { type: 'string' }, description: 'Additional git args' },
         message: { type: 'string', description: 'Commit message (for commit operation)' },
       },
       required: ['operation'],
@@ -158,10 +155,7 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
         content: { type: 'string', description: 'Content to write' },
         reason: { type: 'string', description: 'Reason for the write' },
         rollbackNote: { type: 'string', description: 'How to rollback this change' },
-        dryRun: {
-          type: 'boolean',
-          description: 'If true, only validate without writing (default true)',
-        },
+        dryRun: { type: 'boolean', description: 'If true, only validate without writing' },
       },
       required: ['targetPath', 'content', 'reason', 'rollbackNote'],
     },
@@ -170,18 +164,12 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       properties: {
         reason: { type: 'string', description: 'Reason for the patch' },
         rollbackNote: { type: 'string', description: 'How to rollback this patch' },
-        dryRun: {
-          type: 'boolean',
-          description: 'If true, only validate without applying (default true)',
-        },
+        dryRun: { type: 'boolean', description: 'If true, only validate without applying' },
         files: {
           type: 'array',
           items: {
             type: 'object',
-            properties: {
-              targetPath: { type: 'string' },
-              content: { type: 'string' },
-            },
+            properties: { targetPath: { type: 'string' }, content: { type: 'string' } },
             required: ['targetPath', 'content'],
           },
           description: 'Files to patch',
@@ -192,12 +180,9 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
     validation_command_gate: {
       type: 'object',
       properties: {
-        command: { type: 'string', description: 'Validation command to run (e.g. npm run test)' },
+        command: { type: 'string', description: 'Validation command to run' },
         reason: { type: 'string', description: 'Reason for running this command' },
-        dryRun: {
-          type: 'boolean',
-          description: 'If true, only validate without running (default true)',
-        },
+        dryRun: { type: 'boolean', description: 'If true, only validate without running' },
       },
       required: ['command', 'reason'],
     },
@@ -214,25 +199,13 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       type: 'object',
       properties: {
         id: { type: 'string', description: 'Packet identifier' },
-        proposedAction: {
-          type: 'string',
-          description:
-            'Action to review: post_pr_comment, apply_label, request_review, submit_review, create_pr, merge_pr',
-        },
+        proposedAction: { type: 'string', description: 'Action to review' },
         actionDetail: { type: 'string', description: 'Details of the proposed action' },
         nextManualStep: { type: 'string', description: 'What the operator should do next' },
-        sourceEvidence: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Evidence supporting this action',
-        },
-        risks: { type: 'array', items: { type: 'string' }, description: 'Known risks' },
-        validation: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Validation steps taken',
-        },
-        boundary: { type: 'array', items: { type: 'string' }, description: 'Boundary conditions' },
+        sourceEvidence: { type: 'array', items: { type: 'string' } },
+        risks: { type: 'array', items: { type: 'string' } },
+        validation: { type: 'array', items: { type: 'string' } },
+        boundary: { type: 'array', items: { type: 'string' } },
       },
       required: ['id', 'proposedAction', 'actionDetail', 'nextManualStep'],
     },
@@ -240,44 +213,29 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       type: 'object',
       properties: {
         id: { type: 'string', description: 'Intent identifier' },
-        target: {
-          type: 'string',
-          description:
-            'Target type: file_edit, file_create, file_delete, github_pr_comment, github_label, github_review, github_pr_create',
-        },
+        target: { type: 'string', description: 'Target type' },
         targetPath: { type: 'string', description: 'Path of the target' },
         reason: { type: 'string', description: 'Reason for the write' },
         expectedDiffSummary: { type: 'string', description: 'Expected changes summary' },
         rollbackNote: { type: 'string', description: 'How to rollback' },
-        validationPlan: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Validation steps',
-        },
+        validationPlan: { type: 'array', items: { type: 'string' } },
       },
       required: ['id', 'target', 'targetPath', 'reason', 'expectedDiffSummary', 'rollbackNote'],
     },
     ci_review: {
       type: 'object',
-      properties: {
-        focus: { type: 'string', description: 'CI review focus area' },
-      },
+      properties: { focus: { type: 'string', description: 'CI review focus area' } },
       required: ['focus'],
     },
     pr_notes: {
       type: 'object',
-      properties: {
-        context: { type: 'string', description: 'Context for PR notes generation' },
-      },
+      properties: { context: { type: 'string', description: 'Context for PR notes generation' } },
       required: ['context'],
     },
     swarm_dispatch: {
       type: 'object',
       properties: {
-        agentType: {
-          type: 'string',
-          description: 'Swarm agent type: investigator, reporter, analyzer, coder, reviewer',
-        },
+        agentType: { type: 'string', description: 'Swarm agent type' },
         goal: { type: 'string', description: 'Goal for the swarm agent to accomplish' },
         context: { type: 'string', description: 'Additional context for the agent' },
       },
@@ -293,24 +251,31 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
         goal: { type: 'string', description: 'Goal for the subagent to accomplish' },
         enableGovernedTools: {
           type: 'boolean',
-          description:
-            'Grant this dispatch the subagent governed mutation-capable tools (off by default)',
+          description: 'Grant this dispatch governed mutation-capable tools (off by default)',
         },
       },
       required: ['subagent', 'goal'],
     },
-    run_tests: {
+    skill_run: {
       type: 'object',
-      properties: {},
+      properties: {
+        name: { type: 'string', description: 'Skill command name to run' },
+        arguments: { type: 'string', description: 'Raw arguments passed to the skill' },
+        mode: { type: 'string', description: 'Override skill context: inline or fork' },
+        enableGovernedTools: {
+          type: 'boolean',
+          description: 'Allow governed tools for forked skills only when explicitly requested',
+        },
+        dynamicContext: {
+          type: 'boolean',
+          description: 'Enable SKILL.md dynamic context injection through runtime policy',
+        },
+      },
+      required: ['name'],
     },
-    run_typecheck: {
-      type: 'object',
-      properties: {},
-    },
-    run_lint: {
-      type: 'object',
-      properties: {},
-    },
+    run_tests: EMPTY_SCHEMA,
+    run_typecheck: EMPTY_SCHEMA,
+    run_lint: EMPTY_SCHEMA,
     pr_collaboration: {
       type: 'object',
       properties: {
@@ -319,10 +284,7 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
         prNumber: { type: 'number', description: 'Pull request number' },
         content: { type: 'string', description: 'Comment or label content' },
         reason: { type: 'string', description: 'Reason for the action' },
-        dryRun: {
-          type: 'boolean',
-          description: 'If true, only validate without executing (default true)',
-        },
+        dryRun: { type: 'boolean', description: 'If true, only validate without executing' },
       },
       required: ['action', 'repository', 'prNumber', 'content', 'reason'],
     },
@@ -335,21 +297,14 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
         title: { type: 'string', description: 'PR title' },
         body: { type: 'string', description: 'PR body/description' },
         reason: { type: 'string', description: 'Reason for creating the PR' },
-        dryRun: {
-          type: 'boolean',
-          description: 'If true, only validate without creating (default true)',
-        },
+        dryRun: { type: 'boolean', description: 'If true, only validate without creating' },
         files: {
           type: 'array',
           items: {
             type: 'object',
-            properties: {
-              path: { type: 'string' },
-              content: { type: 'string' },
-            },
+            properties: { path: { type: 'string' }, content: { type: 'string' } },
             required: ['path', 'content'],
           },
-          description: 'Files to include in the PR',
         },
       },
       required: ['repository', 'baseBranch', 'headBranch', 'title', 'body', 'reason', 'files'],
@@ -362,10 +317,7 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
         targetRef: { type: 'string', description: 'Target branch or ref' },
         content: { type: 'string', description: 'Content for the action' },
         reason: { type: 'string', description: 'Reason for the write' },
-        dryRun: {
-          type: 'boolean',
-          description: 'If true, only evaluate without executing (default true)',
-        },
+        dryRun: { type: 'boolean', description: 'If true, only evaluate without executing' },
       },
       required: ['action', 'repository', 'reason'],
     },
@@ -382,16 +334,12 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
     },
     github_pr_fixture_review: {
       type: 'object',
-      properties: {
-        path: { type: 'string', description: 'Path to the PR fixture JSON file' },
-      },
+      properties: { path: { type: 'string', description: 'Path to the PR fixture JSON file' } },
       required: ['path'],
     },
     github_ci_fixture_review: {
       type: 'object',
-      properties: {
-        path: { type: 'string', description: 'Path to the CI fixture JSON file' },
-      },
+      properties: { path: { type: 'string', description: 'Path to the CI fixture JSON file' } },
       required: ['path'],
     },
     live_read_policy_handshake: {
@@ -403,16 +351,14 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
     },
     live_read_client_fixture: {
       type: 'object',
-      properties: {
-        path: { type: 'string', description: 'Path to the live read client fixture JSON file' },
-      },
+      properties: { path: { type: 'string', description: 'Path to the live read fixture JSON' } },
       required: ['path'],
     },
     zflow_report: {
       type: 'object',
       properties: {
         id: { type: 'string', description: 'Report identifier' },
-        format: { type: 'string', description: 'Output format: markdown or json' },
+        format: { type: 'string', description: 'Output format' },
         result: { type: 'object', description: 'Zflow execution result' },
         readiness: { type: 'object', description: 'Zflow readiness summary' },
       },
@@ -421,58 +367,58 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
     zflow_report_rollup: {
       type: 'object',
       properties: {
-        title: { type: 'string', description: 'Rollup title' },
-        format: { type: 'string', description: 'Output format: markdown or json' },
-        catalog: { type: 'object', description: 'Zflow report catalog' },
-        generatedAt: { type: 'string', description: 'Timestamp for the rollup' },
+        title: { type: 'string' },
+        format: { type: 'string' },
+        catalog: { type: 'object' },
+        generatedAt: { type: 'string' },
       },
       required: ['title', 'format', 'catalog'],
     },
     zflow_report_catalog: {
       type: 'object',
       properties: {
-        title: { type: 'string', description: 'Catalog title' },
-        format: { type: 'string', description: 'Output format: markdown or json' },
-        reports: { type: 'array', description: 'Array of Zflow execution reports' },
-        generatedAt: { type: 'string', description: 'Timestamp for the catalog' },
+        title: { type: 'string' },
+        format: { type: 'string' },
+        reports: { type: 'array' },
+        generatedAt: { type: 'string' },
       },
       required: ['title', 'format', 'reports'],
     },
     github_live_read_pr: {
       type: 'object',
       properties: {
-        owner: { type: 'string', description: 'Repository owner' },
-        repo: { type: 'string', description: 'Repository name' },
-        prNumber: { type: 'number', description: 'Pull request number' },
+        owner: { type: 'string' },
+        repo: { type: 'string' },
+        prNumber: { type: 'number' },
       },
       required: ['owner', 'repo', 'prNumber'],
     },
     github_live_read_ci: {
       type: 'object',
       properties: {
-        owner: { type: 'string', description: 'Repository owner' },
-        repo: { type: 'string', description: 'Repository name' },
-        runId: { type: 'number', description: 'GitHub Actions workflow run ID' },
+        owner: { type: 'string' },
+        repo: { type: 'string' },
+        runId: { type: 'number' },
       },
       required: ['owner', 'repo', 'runId'],
     },
     ajna_live_read_review: {
       type: 'object',
       properties: {
-        owner: { type: 'string', description: 'Repository owner' },
-        repo: { type: 'string', description: 'Repository name' },
-        prNumber: { type: 'number', description: 'Pull request number' },
-        focus: { type: 'string', description: 'Review focus area' },
+        owner: { type: 'string' },
+        repo: { type: 'string' },
+        prNumber: { type: 'number' },
+        focus: { type: 'string' },
       },
       required: ['owner', 'repo', 'prNumber'],
     },
     ajna_live_read_merge_readiness: {
       type: 'object',
       properties: {
-        owner: { type: 'string', description: 'Repository owner' },
-        repo: { type: 'string', description: 'Repository name' },
-        prNumber: { type: 'number', description: 'Pull request number' },
-        requireCi: { type: 'boolean', description: 'Whether passing CI is required' },
+        owner: { type: 'string' },
+        repo: { type: 'string' },
+        prNumber: { type: 'number' },
+        requireCi: { type: 'boolean' },
       },
       required: ['owner', 'repo', 'prNumber'],
     },
@@ -480,11 +426,7 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       type: 'object',
       properties: {
         query: { type: 'string', description: 'Query describing what to recall from memory' },
-        changedFiles: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Changed files to pull related graph-dependency memories for',
-        },
+        changedFiles: { type: 'array', items: { type: 'string' } },
       },
       required: ['query'],
     },
@@ -503,21 +445,14 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
     preflight: {
       type: 'object',
       properties: {
-        changedFiles: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Changed file paths to evaluate before pushing',
-        },
+        changedFiles: { type: 'array', items: { type: 'string' } },
       },
       required: ['changedFiles'],
     },
     mcp_call: {
       type: 'object',
       properties: {
-        server: {
-          type: 'string',
-          description: 'Configured MCP server name from .codemind/mcp.json',
-        },
+        server: { type: 'string', description: 'Configured MCP server name' },
         tool: { type: 'string', description: 'Tool name advertised by the MCP server' },
         arguments: { type: 'object', description: 'Arguments to pass to the MCP tool' },
         timeoutMs: { type: 'number', description: 'Per-call timeout override in milliseconds' },
@@ -526,16 +461,12 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
     },
     web_fetch: {
       type: 'object',
-      properties: {
-        url: { type: 'string', description: 'Public URL to fetch (http/https only)' },
-      },
+      properties: { url: { type: 'string', description: 'Public URL to fetch (http/https only)' } },
       required: ['url'],
     },
     web_search: {
       type: 'object',
-      properties: {
-        query: { type: 'string', description: 'Search query' },
-      },
+      properties: { query: { type: 'string', description: 'Search query' } },
       required: ['query'],
     },
   }

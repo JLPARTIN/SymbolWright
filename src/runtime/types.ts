@@ -57,6 +57,7 @@ export type CodemindToolName =
   | 'web_fetch'
   | 'web_search'
   | 'subagent_run'
+  | 'skill_run'
 
 /** Capability categories that determine tool availability per mode. */
 export type RuntimeToolCapability =
@@ -88,6 +89,7 @@ export type RuntimeToolCapability =
   | 'PR_PREFLIGHT'
   | 'MCP_TOOL'
   | 'WEB_ACCESS'
+  | 'SKILL'
 
 /** Typed scopes for approval tickets — each covers a distinct live write or execution surface. */
 export type RuntimeApprovalScope =
@@ -241,6 +243,7 @@ export const ALL_CODEMIND_TOOL_NAMES = [
   'web_fetch',
   'web_search',
   'subagent_run',
+  'skill_run',
 ] as const satisfies readonly CodemindToolName[]
 
 type _AssertAllToolNames = CodemindToolName extends (typeof ALL_CODEMIND_TOOL_NAMES)[number]

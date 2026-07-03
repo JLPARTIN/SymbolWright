@@ -14,28 +14,28 @@ import { renderAjnaReviewPrGithubFixtureForFile } from './cli-ajna-review-pr-git
 import { renderAjnaReviewPrReadOnlyCollectorFixtureForFile } from './cli-ajna-review-pr-readonly-collector-fixture.js'
 import { renderAjnaReviewPrForFile } from './cli-ajna-review-pr.js'
 import { renderAjnaScanProfileForRepo } from './cli-ajna-scan-profile.js'
+import { runAgentCommand, renderSessionsList } from './cli-agent.js'
 import { renderAuditLedgerCommand } from './cli-audit-ledger.js'
 import { renderBuildLedgerCommand } from './cli-build-ledger.js'
+import {
+  renderCheckpointListCommand,
+  renderCheckpointRestoreCommand,
+  renderCheckpointShowCommand,
+} from './cli-checkpoint.js'
 import { renderHelp, renderNotYetActive, renderStatus } from './cli-commands.js'
 import { renderDoctorCommand } from './cli-doctor.js'
 import { findFixtureArg, renderFixtureCommand } from './cli-fixture-commands.js'
 import { renderGitHubWriteExecutorCommand } from './cli-github-write-executor.js'
 import { runIndexCommand } from './cli-index.js'
-import {
-  renderCheckpointListCommand,
-  renderCheckpointShowCommand,
-  renderCheckpointRestoreCommand,
-} from './cli-checkpoint.js'
-import { renderMcpListCommand, renderMcpToolsCommand, renderMcpCallCommand } from './cli-mcp.js'
+import { renderMcpCallCommand, renderMcpListCommand, renderMcpToolsCommand } from './cli-mcp.js'
 import { renderMissionPacketCommand } from './cli-mission-packet.js'
-import { renderSubagentListCommand, runSubagentRunCommand } from './cli-subagent.js'
-import { renderWebFetchCommand, renderWebSearchCommand } from './cli-web.js'
 import { runPreflightCommand } from './cli-preflight.js'
 import { renderProjectContextCommand } from './cli-project-context.js'
 import { renderProvidersCommand } from './cli-providers.js'
 import { renderReleaseReadinessCommand } from './cli-release-readiness.js'
 import { renderRepairLoopCommand } from './cli-repair-loop.js'
 import { renderRuntimeAjnaLiveRead } from './cli-runtime-ajna-live-read.js'
+import { renderRuntimeAjnaWorkflow } from './cli-runtime-ajna-workflow.js'
 import { renderRuntimeApplyPatch } from './cli-runtime-apply-patch.js'
 import { renderRuntimeCiReview } from './cli-runtime-ci-review.js'
 import { renderRuntimeGitHubLiveRead } from './cli-runtime-github-live-read.js'
@@ -57,11 +57,12 @@ import { renderRuntimeValidationCommand } from './cli-runtime-validation-command
 import { renderRuntimeValidationPlan } from './cli-runtime-validation-plan.js'
 import { renderRuntimeWorkflow } from './cli-runtime-workflow.js'
 import { renderRuntimeWriteIntent } from './cli-runtime-write-intent.js'
-import { renderRuntimeAjnaWorkflow } from './cli-runtime-ajna-workflow.js'
 import { renderScan, scanRepo } from './cli-scan.js'
+import { renderSkillListCommand, renderSkillShowCommand, runSkillRunCommand } from './cli-skill.js'
+import { renderSubagentListCommand, runSubagentRunCommand } from './cli-subagent.js'
 import { renderTraceStoreCommand } from './cli-trace-store.js'
 import { renderVersionCommand } from './cli-version.js'
-import { runAgentCommand, renderSessionsList } from './cli-agent.js'
+import { renderWebFetchCommand, renderWebSearchCommand } from './cli-web.js'
 import { runOperatorCommand } from './operator/operator-console.js'
 import { SessionPersistence } from './storage/session-persistence.js'
 import { resolveStoragePaths } from './storage/storage-paths.js'
@@ -131,25 +132,13 @@ async function main(): Promise<void> {
       console.log(await renderRuntimeProposePatch(rest.join(' ')))
       break
 
-    case 'pr-notes': {
-      const fixture = findFixtureArg(rest)
-      if (fixture !== undefined) {
-        console.log(await renderFixtureCommand('pr-notes', fixture))
-        break
-      }
-      console.log(await renderRuntimePrNotes(rest.length > 0 ? rest.join(' ') : undefined))
+    case 'pr-notes':
+      await handlePrNotesCommand(rest)
       break
-    }
 
-    case 'ci-review': {
-      const fixture = findFixtureArg(rest)
-      if (fixture !== undefined) {
-        console.log(await renderFixtureCommand('ci-review', fixture))
-        break
-      }
-      console.log(await renderRuntimeCiReview(rest.length > 0 ? rest.join(' ') : undefined))
+    case 'ci-review':
+      await handleCiReviewCommand(rest)
       break
-    }
 
     case 'ajna-live-read':
       console.log(
@@ -283,15 +272,9 @@ async function main(): Promise<void> {
       console.log(await renderRuntimeWorkflow(requireInput('codemind workflow <json-file>')))
       break
 
-    case 'runtime': {
-      const [subcommand, ...runtimeArgs] = rest
-      if (subcommand === 'run') {
-        console.log(await renderRuntimeRun(runtimeArgs))
-        break
-      }
-      console.log(renderNotYetActive(rest.length > 0 ? `runtime ${rest.join(' ')}` : 'runtime'))
+    case 'runtime':
+      await handleRuntimeCommand(rest)
       break
-    }
 
     case 'scan': {
       const dir = rest[0] ?? process.cwd()
@@ -328,16 +311,40 @@ async function main(): Promise<void> {
       await handleSubagentCommand(rest)
       break
 
+    case 'skill':
+      await handleSkillCommand(rest)
+      break
+
     default:
-      if (NOT_YET_ACTIVE.has(command)) {
-        const full = rest.length > 0 ? `${command} ${rest.join(' ')}` : command
-        console.log(renderNotYetActive(full))
-      } else {
-        console.error(`Unknown command: ${command}`)
-        console.error('Run "codemind help" for available commands.')
-        process.exit(1)
-      }
+      handleUnknownCommand(command, rest)
   }
+}
+
+async function handlePrNotesCommand(args: readonly string[]): Promise<void> {
+  const fixture = findFixtureArg(args)
+  if (fixture !== undefined) {
+    console.log(await renderFixtureCommand('pr-notes', fixture))
+    return
+  }
+  console.log(await renderRuntimePrNotes(args.length > 0 ? args.join(' ') : undefined))
+}
+
+async function handleCiReviewCommand(args: readonly string[]): Promise<void> {
+  const fixture = findFixtureArg(args)
+  if (fixture !== undefined) {
+    console.log(await renderFixtureCommand('ci-review', fixture))
+    return
+  }
+  console.log(await renderRuntimeCiReview(args.length > 0 ? args.join(' ') : undefined))
+}
+
+async function handleRuntimeCommand(args: readonly string[]): Promise<void> {
+  const [subcommand, ...runtimeArgs] = args
+  if (subcommand === 'run') {
+    console.log(await renderRuntimeRun(runtimeArgs))
+    return
+  }
+  console.log(renderNotYetActive(args.length > 0 ? `runtime ${args.join(' ')}` : 'runtime'))
 }
 
 async function handleAjnaCommand(args: readonly string[]): Promise<void> {
@@ -552,6 +559,40 @@ async function handleSubagentCommand(args: readonly string[]): Promise<void> {
 
   const full = args.length > 0 ? `subagent ${args.join(' ')}` : 'subagent'
   console.log(renderNotYetActive(full))
+}
+
+async function handleSkillCommand(args: readonly string[]): Promise<void> {
+  const [subcommand, ...skillArgs] = args
+
+  if (subcommand === 'list') {
+    console.log(renderSkillListCommand())
+    return
+  }
+
+  if (subcommand === 'show') {
+    console.log(renderSkillShowCommand(skillArgs))
+    return
+  }
+
+  if (subcommand === 'run') {
+    console.log(await runSkillRunCommand(skillArgs))
+    return
+  }
+
+  const full = args.length > 0 ? `skill ${args.join(' ')}` : 'skill'
+  console.log(renderNotYetActive(full))
+}
+
+function handleUnknownCommand(unknownCommand: string, args: readonly string[]): void {
+  if (NOT_YET_ACTIVE.has(unknownCommand)) {
+    const full = args.length > 0 ? `${unknownCommand} ${args.join(' ')}` : unknownCommand
+    console.log(renderNotYetActive(full))
+    return
+  }
+
+  console.error(`Unknown command: ${unknownCommand}`)
+  console.error('Run "codemind help" for available commands.')
+  process.exit(1)
 }
 
 function requireInput(usage: string): string {
