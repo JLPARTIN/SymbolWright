@@ -4,7 +4,12 @@ CodeMind should be callable from any LLM or coding environment that can make an 
 
 ## What's live today
 
-`codemind serve` (see [`runtime/CODEMIND_CHAT_SERVER.md`](runtime/CODEMIND_CHAT_SERVER.md)) runs a real `/api/chat` endpoint with bearer-token auth, provider registration, and SSE streaming — any HTTP-capable client (browser, script, GPT action, agent framework) can drive it today. A native MCP *server* wrapper, so MCP-compatible clients like Claude Desktop can add CodeMind as a one-click connector, is not built yet — the client pattern below describes the target shape once that lands.
+Two real integration paths exist now, covering different kinds of "any LLM":
+
+- **HTTP** — `codemind serve` (see [`runtime/CODEMIND_CHAT_SERVER.md`](runtime/CODEMIND_CHAT_SERVER.md)) runs a real `/api/chat` endpoint with bearer-token auth, provider registration, and SSE streaming. Any HTTP-capable client (browser, script, GPT action, agent framework) can drive it.
+- **MCP** — `codemind mcp-server` (see [`runtime/CODEMIND_MCP_SERVER.md`](runtime/CODEMIND_MCP_SERVER.md)) runs CodeMind as a real Model Context Protocol server over stdio. Any MCP-compatible client — Claude Desktop, Claude Code, or another agent framework — can add it as a plugin/connector and call its actual tools (`read_file`, `search_files`, and, in more permissive modes, `edit_file`, `bash`, `git`, GitHub write tools, and more).
+
+The mission/event-stream contract below (`/api/missions`, `/api/missions/:id/events`) describes a further target shape — a single "mission" abstraction spanning both transports — that isn't built yet; today, drive CodeMind through `codemind serve`'s `/api/chat` or `codemind mcp-server`'s tool calls directly.
 
 ## Client pattern
 

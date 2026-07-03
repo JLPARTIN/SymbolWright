@@ -124,6 +124,7 @@ codemind ajna review-pr-readonly-collector-fixture <json-file>
 codemind ajna github-readonly-collector-fixture <json-file>
 codemind ajna merge-readiness <json-file>
 codemind serve [--host <host>] [--port <port>] [--cors-origin <origin>]
+codemind mcp-server [--mode <mode>]
 ```
 
 ## Direct Agent Usage
@@ -194,6 +195,7 @@ validate workspace health and release readiness
 recall and store durable episodic, lexical, and procedural memory across agent turns
 run sandboxed PR preflight evidence checks and block pushes on regression
 serve a real browser chat UI + HTTP API against any registered provider (`codemind serve`, see docs/runtime/CODEMIND_CHAT_SERVER.md)
+run itself as a real MCP server so any MCP-compatible LLM client can use its tools as a plugin (`codemind mcp-server`, see docs/runtime/CODEMIND_MCP_SERVER.md)
 ```
 
 Ajna remains evidence-first:
@@ -277,6 +279,7 @@ docs/runtime/CODEMIND_RUNTIME_STATUS_DASHBOARD.md
 docs/runtime/CODEMIND_APPROVED_LOCAL_FILE_WRITES.md
 docs/runtime/CODEMIND_SANDBOX_PRODUCTION_HARDENING.md
 docs/runtime/CODEMIND_MCP_TOOL_RUNTIME.md
+docs/runtime/CODEMIND_MCP_SERVER.md
 docs/runtime/CODEMIND_WEB_TOOLS.md
 docs/runtime/CODEMIND_CHAT_SERVER.md
 docs/runtime/CODEMIND_CHECKPOINT_REWIND.md

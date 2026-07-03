@@ -237,6 +237,11 @@ export const CODEMIND_CLI_COMMANDS = [
     description: 'Invoke a tool on a configured MCP server through the policy gate',
   },
   {
+    name: 'mcp-server [--mode <mode>]',
+    description:
+      'Run CodeMind itself as an MCP server over stdio (default READ_ONLY) so any MCP-compatible LLM client can use it as a plugin',
+  },
+  {
     name: 'web fetch <url> [--json] [--allow-private] [--mode <mode>]',
     description: 'Fetch a public web page/API resource through the web policy gate',
   },
