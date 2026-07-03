@@ -2,6 +2,10 @@
 
 CodeMind should be callable from any LLM or coding environment that can make an HTTP request or follow an API contract.
 
+## What's live today
+
+`codemind serve` (see [`runtime/CODEMIND_CHAT_SERVER.md`](runtime/CODEMIND_CHAT_SERVER.md)) runs a real `/api/chat` endpoint with bearer-token auth, provider registration, and SSE streaming — any HTTP-capable client (browser, script, GPT action, agent framework) can drive it today. A native MCP *server* wrapper, so MCP-compatible clients like Claude Desktop can add CodeMind as a one-click connector, is not built yet — the client pattern below describes the target shape once that lands.
+
 ## Client pattern
 
 Give the external LLM this contract:
