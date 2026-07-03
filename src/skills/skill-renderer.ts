@@ -3,6 +3,7 @@ import { executeBashTool } from '../runtime/tools/bash-tool.js'
 import type { RenderedSkill, SkillDefinition, SkillRenderInput } from './skill-types.js'
 
 const ESCAPED_DOLLAR_SENTINEL = '\u0000CODEMIND_ESCAPED_DOLLAR\u0000'
+const REGEXP_SPECIAL_CHARACTERS = new Set(['\\', '$', '^', '*', '+', '?', '.', '(', ')', '|', '{', '}', '[', ']'])
 
 interface DynamicRenderState {
   readonly lines: readonly string[]
@@ -20,10 +21,15 @@ function parseSkillArguments(rawArguments: string): readonly string[] {
 }
 
 function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')
+  return [...value]
+    .map((character) => (REGEXP_SPECIAL_CHARACTERS.has(character) ? `\\${character}` : character))
+    .join('')
 }
 
-function replaceUnescapedDollars(content: string, replacement: (content: string) => string): string {
+function replaceUnescapedDollars(
+  content: string,
+  replacement: (content: string) => string,
+): string {
   return replacement(content.replace(/\\\$/gu, ESCAPED_DOLLAR_SENTINEL)).replace(
     new RegExp(ESCAPED_DOLLAR_SENTINEL, 'gu'),
     '$',
@@ -41,7 +47,9 @@ function substituteArguments(input: SkillRenderInput): string {
 
   return replaceUnescapedDollars(input.skill.body, (content) => {
     let rendered = content
-      .replace(/\$ARGUMENTS\[(\d+)\]/gu, (_match, index: string) => parsedArgs[Number(index)] ?? '')
+      .replace(/\$ARGUMENTS\[(\d+)\]/gu, (_match, index: string) =>
+        (parsedArgs[Number(index)] ?? ''),
+      )
       .replace(/\$(\d+)/gu, (_match, index: string) => parsedArgs[Number(index)] ?? '')
       .replace(/\$ARGUMENTS/gu, rawArguments)
       .replace(/\$\{CODEMIND_SESSION_ID\}/gu, input.sessionId)
@@ -165,7 +173,9 @@ export function renderSkillListing(skills: readonly SkillDefinition[]): string {
     'CodeMind skills',
     '',
     ...skills.map((skill) => {
-      const invocation = skill.userInvocable ? `codemind skill run ${skill.commandName}` : '(agent-only)'
+      const invocation = skill.userInvocable
+        ? `codemind skill run ${skill.commandName}`
+        : '(agent-only)'
       const auto = skill.disableModelInvocation ? 'manual' : 'auto/manual'
       return `- ${skill.commandName} [${skill.source}; ${auto}]\n  ${skill.description}\n  Invoke: ${invocation}`
     }),
@@ -188,7 +198,9 @@ export function renderSkillDetails(skill: SkillDefinition): string {
     `User invocable: ${skill.userInvocable}`,
     `Model invocation: ${skill.disableModelInvocation ? 'disabled/manual only' : 'allowed'}`,
     `Allowed tools: ${skill.allowedTools.length > 0 ? skill.allowedTools.join(', ') : '(inherits runtime)'}`,
-    `Disallowed tools: ${skill.disallowedTools.length > 0 ? skill.disallowedTools.join(', ') : '(none)'}`,
+    `Disallowed tools: ${
+      skill.disallowedTools.length > 0 ? skill.disallowedTools.join(', ') : '(none)'
+    }`,
     `Dynamic shell: ${skill.shell}`,
   ].join('\n')
 }
