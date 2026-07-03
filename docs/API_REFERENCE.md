@@ -8,6 +8,8 @@ CodeMind exposes a provider-neutral API surface so any browser, LLM, coding agen
 
 `/api/missions`, `/api/tools/run`, `/api/sessions/:id`, and `/api/missions/:id/events` remain contract-only in `src/api/universal-api-contract.ts` — they describe the target shape for running the full `codemind agent` mission/tool-use runtime over HTTP, which is a separate, larger phase of work not yet implemented.
 
+Governed tool execution *is* live today over a different transport: `codemind mcp-server` (see [`runtime/CODEMIND_MCP_SERVER.md`](runtime/CODEMIND_MCP_SERVER.md)) exposes CodeMind's real runtime tools — `read_file`, `search_files`, and in more permissive modes `edit_file`, `bash`, `git`, and more — to any MCP-compatible LLM client over stdio, gated by the same runtime-mode policy as everywhere else in CodeMind. `/api/tools/run` is the HTTP-transport equivalent of that same capability and is not yet built.
+
 ## Security model
 
 External clients authenticate to CodeMind with a `CODEMIND_API_KEY`.

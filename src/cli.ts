@@ -28,6 +28,7 @@ import { findFixtureArg, renderFixtureCommand } from './cli-fixture-commands.js'
 import { renderGitHubWriteExecutorCommand } from './cli-github-write-executor.js'
 import { runIndexCommand } from './cli-index.js'
 import { renderMcpCallCommand, renderMcpListCommand, renderMcpToolsCommand } from './cli-mcp.js'
+import { runMcpServerCommand } from './cli-mcp-server.js'
 import { renderMissionPacketCommand } from './cli-mission-packet.js'
 import { runPreflightCommand } from './cli-preflight.js'
 import { renderProjectContextCommand } from './cli-project-context.js'
@@ -298,6 +299,10 @@ async function main(): Promise<void> {
 
     case 'mcp':
       await handleMcpCommand(rest)
+      break
+
+    case 'mcp-server':
+      await runMcpServerCommand(rest)
       break
 
     case 'web':
