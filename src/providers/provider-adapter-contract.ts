@@ -8,6 +8,7 @@ export const CODEMIND_SUPPORTED_PROVIDER_IDS = [
   'openrouter',
   'github-models',
   'ollama',
+  'deepseek',
   'custom',
 ] as const
 
@@ -133,6 +134,18 @@ export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContrac
     capabilities: ['chat', 'streaming', 'local_runtime'],
     defaultBaseUrl: 'http://localhost:11434',
     operatorNotes: ['Treat local model access as a server-side runtime concern.'],
+  },
+  {
+    id: 'deepseek',
+    displayName: 'DeepSeek',
+    credentialMode: 'server_vault',
+    endpointOwnership: 'codemind_server',
+    browserSafe: false,
+    capabilities: ['chat', 'streaming', 'tool_use'],
+    defaultBaseUrl: 'https://api.deepseek.com',
+    operatorNotes: [
+      'OpenAI-compatible wire format; route through CodeMind so browsers never hold credentials.',
+    ],
   },
   {
     id: 'custom',

@@ -4,6 +4,7 @@ import type { ProviderResolvedConfig } from '../providers/provider-gateway.types
 import {
   joinStreamUrl,
   parseAnthropicSseFrame,
+  parseGeminiSseLine,
   parseOpenAiCompatibleSseLine,
   streamProviderChat,
   supportsRealtimeStreaming,
@@ -47,15 +48,33 @@ const ANTHROPIC_CONFIG: ProviderResolvedConfig = {
   capabilities: ['chat', 'streaming'],
 }
 
-describe('supportsRealtimeStreaming', () => {
-  it('reports google-gemini as not yet real-time streaming', () => {
-    expect(supportsRealtimeStreaming('google-gemini')).toBe(false)
-  })
+const GEMINI_CONFIG: ProviderResolvedConfig = {
+  id: 'google-gemini',
+  displayName: 'Google Gemini',
+  enabled: true,
+  baseUrl: 'https://generativelanguage.googleapis.com',
+  apiKey: 'gem-test',
+  defaultModel: 'gemini-1.5-flash',
+  capabilities: ['chat', 'streaming'],
+}
 
-  it('reports openai-compatible and anthropic providers as real-time streaming', () => {
+const DEEPSEEK_CONFIG: ProviderResolvedConfig = {
+  id: 'deepseek',
+  displayName: 'DeepSeek',
+  enabled: true,
+  baseUrl: 'https://api.deepseek.com',
+  apiKey: 'sk-deepseek-test',
+  defaultModel: 'deepseek-chat',
+  capabilities: ['chat', 'streaming'],
+}
+
+describe('supportsRealtimeStreaming', () => {
+  it('reports every supported provider as real-time streaming', () => {
     expect(supportsRealtimeStreaming('openai')).toBe(true)
     expect(supportsRealtimeStreaming('custom')).toBe(true)
     expect(supportsRealtimeStreaming('anthropic')).toBe(true)
+    expect(supportsRealtimeStreaming('google-gemini')).toBe(true)
+    expect(supportsRealtimeStreaming('deepseek')).toBe(true)
   })
 })
 
@@ -101,6 +120,21 @@ describe('parseAnthropicSseFrame', () => {
       parseAnthropicSseFrame('message_stop', 'data: {"delta":{"type":"text_delta","text":"hi"}}'),
     ).toBeUndefined()
     expect(parseAnthropicSseFrame(undefined, 'data: {}')).toBeUndefined()
+  })
+})
+
+describe('parseGeminiSseLine', () => {
+  it('extracts a text delta from a candidates/content/parts data line', () => {
+    const line = 'data: {"candidates":[{"content":{"parts":[{"text":"hello"}]}}]}'
+    expect(parseGeminiSseLine(line)).toBe('hello')
+  })
+
+  it('joins multiple parts and ignores non-data or malformed lines', () => {
+    const line = 'data: {"candidates":[{"content":{"parts":[{"text":"foo"},{"text":"bar"}]}}]}'
+    expect(parseGeminiSseLine(line)).toBe('foobar')
+    expect(parseGeminiSseLine('event: ping')).toBeUndefined()
+    expect(parseGeminiSseLine('data: {not json')).toBeUndefined()
+    expect(parseGeminiSseLine('data: {}')).toBeUndefined()
   })
 })
 
@@ -151,6 +185,73 @@ describe('streamProviderChat', () => {
     )
 
     expect(results.join('')).toBe('Hi there')
+  })
+
+  it('streams Gemini deltas via alt=sse and joins multi-part chunks', async () => {
+    const chunks = toChunks([
+      'data: {"candidates":[{"content":{"parts":[{"text":"Hi"}]}}]}\n\n',
+      'data: {"candidates":[{"content":{"parts":[{"text":" there"}]}}]}\n\n',
+    ])
+
+    let capturedRequest: ProviderStreamHttpRequest | undefined
+    const transport = {
+      async requestStream(request: ProviderStreamHttpRequest): Promise<ProviderStreamHttpResponse> {
+        capturedRequest = request
+        return { status: 200, body: chunks }
+      },
+    }
+
+    const results = await drain(
+      streamProviderChat(GEMINI_CONFIG, { messages: [{ role: 'user', content: 'hi' }] }, transport),
+    )
+
+    expect(results.join('')).toBe('Hi there')
+    expect(capturedRequest?.url).toBe(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?alt=sse&key=gem-test',
+    )
+  })
+
+  it('requires a Gemini API key', async () => {
+    const { apiKey: _apiKey, ...rest } = GEMINI_CONFIG
+    const configWithoutKey: ProviderResolvedConfig = rest
+    const transport = {
+      async requestStream(): Promise<ProviderStreamHttpResponse> {
+        return { status: 200, body: toChunks([]) }
+      },
+    }
+
+    await expect(
+      drain(
+        streamProviderChat(
+          configWithoutKey,
+          { messages: [{ role: 'user', content: 'hi' }] },
+          transport,
+        ),
+      ),
+    ).rejects.toThrow('API key is missing')
+  })
+
+  it('streams DeepSeek deltas through the same OpenAI-compatible path', async () => {
+    const chunks = toChunks(['data: {"choices":[{"delta":{"content":"ok"}}]}\n\ndata: [DONE]\n\n'])
+    let capturedRequest: ProviderStreamHttpRequest | undefined
+    const transport = {
+      async requestStream(request: ProviderStreamHttpRequest): Promise<ProviderStreamHttpResponse> {
+        capturedRequest = request
+        return { status: 200, body: chunks }
+      },
+    }
+
+    const results = await drain(
+      streamProviderChat(
+        DEEPSEEK_CONFIG,
+        { messages: [{ role: 'user', content: 'hi' }] },
+        transport,
+      ),
+    )
+
+    expect(results.join('')).toBe('ok')
+    expect(capturedRequest?.url).toBe('https://api.deepseek.com/chat/completions')
+    expect(capturedRequest?.headers['authorization']).toBe('Bearer sk-deepseek-test')
   })
 
   it('throws when the upstream provider returns a non-2xx status', async () => {

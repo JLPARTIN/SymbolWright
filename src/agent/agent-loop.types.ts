@@ -52,6 +52,16 @@ export interface AgentLoopResult {
   readonly totalIterations: number
   readonly totalUsage: ProviderTokenUsage
   readonly error?: string
+  /**
+   * The full message history built up over the run (prior messages, the new
+   * user turn, and every assistant/tool_result message the loop produced —
+   * including the final assistant text message on a `completed` run). Pass
+   * this back as `priorMessages` on the next call to continue the
+   * conversation with tool-call context intact. Always populated by
+   * `runAgentLoop`; optional only so existing fixtures that construct a
+   * partial `AgentLoopResult` don't need updating.
+   */
+  readonly finalMessages?: readonly ProviderMessage[]
 }
 
 export interface AgentLoopTextDeltaEvent {

@@ -202,6 +202,7 @@ export async function runAgentLoop(
         totalIterations: i + 1,
         totalUsage,
         error: errorMsg,
+        finalMessages: messages,
       }
     }
 
@@ -218,6 +219,7 @@ export async function runAgentLoop(
         usage: streamResult.usage,
       })
 
+      messages.push({ role: 'assistant', content: finalText })
       onEvent?.({ type: 'loop_end', status: 'completed', totalIterations: i + 1 })
       return {
         status: 'completed',
@@ -225,6 +227,7 @@ export async function runAgentLoop(
         iterations,
         totalIterations: i + 1,
         totalUsage,
+        finalMessages: messages,
       }
     }
 
@@ -265,5 +268,6 @@ export async function runAgentLoop(
     iterations,
     totalIterations: maxIterations,
     totalUsage,
+    finalMessages: messages,
   }
 }

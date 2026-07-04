@@ -108,6 +108,7 @@ export function renderServeBanner(server: StartedChatServer): string {
     '- POST /api/providers/reset      clear a provider override (auth required)',
     '- POST /api/providers/test       verify provider credentials (auth required)',
     '- POST /api/chat                 send a chat turn, set "stream": true for live tokens (auth required)',
+    '- POST /api/agent                run the real tool-execution agent loop (auth required)',
   ]
 
   if (server.warnings.length > 0) {

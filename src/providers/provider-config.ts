@@ -13,6 +13,7 @@ const DEFAULT_MODELS: Readonly<Record<CodemindProviderId, string>> = {
   openrouter: 'openai/gpt-4o-mini',
   'github-models': 'openai/gpt-4o-mini',
   ollama: 'llama3.1',
+  deepseek: 'deepseek-chat',
   custom: 'custom-model',
 }
 
@@ -24,6 +25,7 @@ const API_KEY_ENV: Readonly<Record<CodemindProviderId, string | undefined>> = {
   openrouter: 'OPENROUTER_API_KEY',
   'github-models': 'GITHUB_TOKEN',
   ollama: undefined,
+  deepseek: 'DEEPSEEK_API_KEY',
   custom: 'CODEMIND_OPENAI_COMPATIBLE_API_KEY',
 }
 

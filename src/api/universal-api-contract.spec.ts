@@ -58,6 +58,7 @@ describe('universal CodeMind API contract', () => {
       'openrouter',
       'github-models',
       'ollama',
+      'deepseek',
       'custom',
     ])
     expect(CODEMIND_PROVIDER_ADAPTERS.every((provider) => provider.browserSafe === false)).toBe(
