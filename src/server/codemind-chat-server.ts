@@ -33,7 +33,6 @@ import type { RuntimeToolContext } from '../runtime/types.js'
 import { renderChatUiHtml } from './chat-ui-html.js'
 import {
   AgentProviderMissingCredentialsError,
-  AgentProviderUnsupportedError,
   resolveAgentLlmProvider,
 } from './codemind-agent-provider.js'
 import { parseAgentRequestBody } from './codemind-agent-request.js'
@@ -436,10 +435,7 @@ async function handleAgent(
     const effectiveConfig = resolveAgentEffectiveConfig(env, overrideStore, parsed.providerId)
     llmProvider = resolveAgentLlmProvider(effectiveConfig)
   } catch (error) {
-    if (
-      error instanceof AgentProviderUnsupportedError ||
-      error instanceof AgentProviderMissingCredentialsError
-    ) {
+    if (error instanceof AgentProviderMissingCredentialsError) {
       sendJson(res, 400, { error: error.message })
       return
     }

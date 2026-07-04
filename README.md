@@ -10,6 +10,53 @@ CodeMind is a direct-capable coding-agent platform with optional governance and 
 
 Ajna Review Cortex is the native forensic review capability. Ajna gives CodeMind deterministic review, risk, evidence, and merge-readiness reporting when those workflows are requested or required.
 
+## Getting Started
+
+Install and build once:
+
+```bash
+npm install
+npm run build
+```
+
+Set at least one provider credential (see [`docs/PROVIDER_KEYS.md`](docs/PROVIDER_KEYS.md) for the full list — OpenAI, Anthropic, Google Gemini, Groq, OpenRouter, GitHub Models, Ollama, DeepSeek, or a custom OpenAI-compatible endpoint):
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+```
+
+Then pick how you want to use it — CodeMind runs the same way from all four surfaces below:
+
+**Terminal** — direct CLI usage:
+
+```bash
+node dist/cli.js agent --mode APPROVED_EXECUTION "fix the failing tests"
+```
+
+**Browser** — bring your own provider key, chat like Claude Code, with an "Agent mode" toggle for real file reads/edits and shell commands:
+
+```bash
+export CODEMIND_API_KEY=pick-your-own-access-key
+node dist/cli.js serve
+# open http://127.0.0.1:8787, connect with CODEMIND_API_KEY, choose or register a provider, chat
+```
+
+See [`docs/runtime/CODEMIND_CHAT_SERVER.md`](docs/runtime/CODEMIND_CHAT_SERVER.md).
+
+**Any MCP-compatible LLM client** (Claude Desktop, Claude Code, other agent frameworks) — add CodeMind as a plugin:
+
+```json
+{
+  "mcpServers": {
+    "codemind": { "command": "node", "args": ["/absolute/path/to/CodeMind/dist/cli.js", "mcp-server"] }
+  }
+}
+```
+
+Defaults to `READ_ONLY`; add `"--mode", "APPROVED_EXECUTION"` to the `args` array to allow file writes and shell commands. See [`docs/runtime/CODEMIND_MCP_SERVER.md`](docs/runtime/CODEMIND_MCP_SERVER.md).
+
+**Any other LLM, script, or agent framework over plain HTTP** — `codemind serve` also exposes `/api/chat` (streaming chat) and `/api/agent` (the full tool-execution loop) as bearer-authenticated HTTP+SSE endpoints. See [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) and [`docs/USING_CODEMIND_FROM_ANY_LLM.md`](docs/USING_CODEMIND_FROM_ANY_LLM.md).
+
 ## Current State
 
 All 20 runtime phases (A–T) are complete. The platform supports scanning, context building, direct agent execution, proposal workflows, local file writes, validation, GitHub write preparation/execution, PR review, merge-readiness, handoff generation, and audit/trace replay.

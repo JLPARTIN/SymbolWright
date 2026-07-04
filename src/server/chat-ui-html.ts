@@ -27,11 +27,16 @@ export function renderChatUiHtml(): string {
     .msg.user { background: #1c2650; align-self: flex-end; max-width: 80%; }
     .msg.assistant { background: #16203f; align-self: flex-start; max-width: 80%; border: 1px solid #2a355f; }
     .msg.error { background: #401d24; color: #ff9d9d; }
+    .msg.tool { background: #10241a; border: 1px solid #1f4a34; color: #b9e6cb; align-self: flex-start; max-width: 90%; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
     #chat-input-row { display: flex; gap: 8px; }
     #chat-input { flex: 1; resize: vertical; min-height: 44px; }
     .hint { font-size: 11px; color: #57649a; }
     .ok { color: #8ff0b7; }
     .fail { color: #ff8f8f; }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+    .checkbox-row input[type="checkbox"] { width: auto; }
+    .checkbox-row label { margin: 0; font-size: 13px; color: #cdd7ff; }
+    #agent-mode-controls { display: none; }
   </style>
 </head>
 <body>
@@ -72,6 +77,19 @@ export function renderChatUiHtml(): string {
 
     <section id="chat-section" style="display:none">
       <h2>3. Chat</h2>
+      <div class="checkbox-row">
+        <input type="checkbox" id="agent-mode-toggle" />
+        <label for="agent-mode-toggle">Agent mode &mdash; let the model read/edit files and run commands via /api/agent</label>
+      </div>
+      <div id="agent-mode-controls">
+        <label for="agent-mode-select">Runtime mode</label>
+        <select id="agent-mode-select">
+          <option value="READ_ONLY">READ_ONLY &mdash; read and search files only (default, safest)</option>
+          <option value="PROPOSAL_ONLY">PROPOSAL_ONLY &mdash; + draft patches/notes, no writes</option>
+          <option value="APPROVED_EXECUTION">APPROVED_EXECUTION &mdash; + edit files, run shell commands</option>
+        </select>
+        <div class="hint">Tool calls the model makes are shown inline below as they happen.</div>
+      </div>
       <div id="transcript"></div>
       <div id="chat-input-row">
         <textarea id="chat-input" placeholder="Message your provider... (Enter to send, Shift+Enter for newline)"></textarea>
@@ -82,7 +100,7 @@ export function renderChatUiHtml(): string {
   </main>
 
   <script>
-    const state = { codemindKey: localStorage.getItem('codemind_api_key') || '', providerId: null, messages: [] };
+    const state = { codemindKey: localStorage.getItem('codemind_api_key') || '', providerId: null, messages: [], agentMessages: [] };
 
     const el = (id) => document.getElementById(id);
 
@@ -123,6 +141,10 @@ export function renderChatUiHtml(): string {
     }
 
     el('provider-select')?.addEventListener?.('change', onProviderChange);
+
+    el('agent-mode-toggle').addEventListener('change', () => {
+      el('agent-mode-controls').style.display = el('agent-mode-toggle').checked ? 'block' : 'none';
+    });
 
     el('connect-btn').addEventListener('click', async () => {
       const key = el('codemind-key').value.trim();
@@ -190,18 +212,44 @@ export function renderChatUiHtml(): string {
       return bubble;
     }
 
-    async function sendMessage() {
-      const input = el('chat-input');
-      const text = input.value.trim();
-      if (!text) return;
-      const providerId = el('provider-select').value;
+    async function readSseFrames(response, onFrame) {
+      if (!response.ok || response.body === null) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || ('HTTP ' + response.status));
+      }
 
-      input.value = '';
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let boundary = buffer.indexOf('\\n\\n');
+        while (boundary !== -1) {
+          const frame = buffer.slice(0, boundary);
+          buffer = buffer.slice(boundary + 2);
+          boundary = buffer.indexOf('\\n\\n');
+
+          const lines = frame.split('\\n');
+          let eventType = 'message';
+          let dataLine = '';
+          for (const line of lines) {
+            if (line.startsWith('event:')) eventType = line.slice(6).trim();
+            if (line.startsWith('data:')) dataLine = line.slice(5).trim();
+          }
+          if (!dataLine) continue;
+          onFrame(eventType, JSON.parse(dataLine));
+        }
+      }
+    }
+
+    async function sendChatMessage(providerId, text) {
       state.messages.push({ role: 'user', content: text });
-      appendMessage('user', text);
       const assistantBubble = appendMessage('assistant', '');
-      el('send-btn').disabled = true;
-      setText('status-line', 'Sending...', '');
+      let assistantText = '';
 
       try {
         const model = el('model-field').value.trim();
@@ -216,58 +264,85 @@ export function renderChatUiHtml(): string {
           }),
         });
 
-        if (!response.ok || response.body === null) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error(data.error || ('HTTP ' + response.status));
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-        let assistantText = '';
-
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-
-          let boundary = buffer.indexOf('\\n\\n');
-          while (boundary !== -1) {
-            const frame = buffer.slice(0, boundary);
-            buffer = buffer.slice(boundary + 2);
-            boundary = buffer.indexOf('\\n\\n');
-
-            const lines = frame.split('\\n');
-            let eventType = 'message';
-            let dataLine = '';
-            for (const line of lines) {
-              if (line.startsWith('event:')) eventType = line.slice(6).trim();
-              if (line.startsWith('data:')) dataLine = line.slice(5).trim();
-            }
-            if (!dataLine) continue;
-            const payload = JSON.parse(dataLine);
-            if (eventType === 'error') {
-              assistantText += '\\n[error: ' + (payload.message || 'unknown error') + ']';
-              assistantBubble.textContent = assistantText;
-              assistantBubble.className = 'msg error';
-            } else if (eventType === 'done') {
-              // stream complete
-            } else if (typeof payload.delta === 'string') {
-              assistantText += payload.delta;
-              assistantBubble.textContent = assistantText;
-            }
+        await readSseFrames(response, (eventType, payload) => {
+          if (eventType === 'error') {
+            assistantText += '\\n[error: ' + (payload.message || 'unknown error') + ']';
+            assistantBubble.textContent = assistantText;
+            assistantBubble.className = 'msg error';
+          } else if (typeof payload.delta === 'string') {
+            assistantText += payload.delta;
+            assistantBubble.textContent = assistantText;
           }
-        }
+        });
 
         state.messages.push({ role: 'assistant', content: assistantText });
-        setText('status-line', '', '');
       } catch (error) {
         assistantBubble.textContent = 'Error: ' + error.message;
         assistantBubble.className = 'msg error';
-        setText('status-line', '', '');
-      } finally {
-        el('send-btn').disabled = false;
       }
+    }
+
+    async function sendAgentMessage(providerId, text) {
+      const mode = el('agent-mode-select').value;
+      const model = el('model-field').value.trim();
+      let currentBubble = null;
+
+      try {
+        const response = await fetch('/api/agent', {
+          method: 'POST',
+          headers: authHeaders({ 'content-type': 'application/json' }),
+          body: JSON.stringify({
+            providerId,
+            ...(model ? { model } : {}),
+            mode,
+            message: text,
+            stream: true,
+            ...(state.agentMessages.length > 0 ? { priorMessages: state.agentMessages } : {}),
+          }),
+        });
+
+        await readSseFrames(response, (eventType, payload) => {
+          if (eventType === 'text_delta') {
+            if (currentBubble === null) currentBubble = appendMessage('assistant', '');
+            currentBubble.textContent += payload.text;
+          } else if (eventType === 'tool_call_start') {
+            currentBubble = null;
+            appendMessage('tool', '🔧 calling ' + payload.name + '...');
+          } else if (eventType === 'tool_call_end') {
+            const output = payload.output || '';
+            const preview = output.length > 400 ? output.slice(0, 400) + '…' : output;
+            appendMessage('tool', (payload.isError ? '⚠️ ' : '✓ ') + payload.name + ' → ' + preview);
+          } else if (eventType === 'error') {
+            appendMessage('error', payload.message || 'unknown error');
+          } else if (eventType === 'result' && Array.isArray(payload.finalMessages)) {
+            state.agentMessages = payload.finalMessages;
+          }
+        });
+      } catch (error) {
+        appendMessage('error', error.message);
+      }
+    }
+
+    async function sendMessage() {
+      const input = el('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      const providerId = el('provider-select').value;
+      const agentMode = el('agent-mode-toggle').checked;
+
+      input.value = '';
+      appendMessage('user', text);
+      el('send-btn').disabled = true;
+      setText('status-line', agentMode ? 'Running agent...' : 'Sending...', '');
+
+      if (agentMode) {
+        await sendAgentMessage(providerId, text);
+      } else {
+        await sendChatMessage(providerId, text);
+      }
+
+      setText('status-line', '', '');
+      el('send-btn').disabled = false;
     }
 
     el('send-btn').addEventListener('click', sendMessage);
