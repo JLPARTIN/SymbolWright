@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import type { ProviderResolvedConfig } from '../providers/provider-gateway.types.js'
 import {
   AgentProviderMissingCredentialsError,
-  AgentProviderUnsupportedError,
   resolveAgentLlmProvider,
 } from './codemind-agent-provider.js'
 
@@ -21,10 +20,25 @@ function config(overrides: Partial<ProviderResolvedConfig> = {}): ProviderResolv
 }
 
 describe('resolveAgentLlmProvider', () => {
-  it('refuses google-gemini with a clear "not yet supported" error', () => {
-    expect(() =>
-      resolveAgentLlmProvider(config({ id: 'google-gemini', displayName: 'Google Gemini' })),
-    ).toThrow(AgentProviderUnsupportedError)
+  it('builds a real google-gemini LLMProvider', () => {
+    const provider = resolveAgentLlmProvider(
+      config({
+        id: 'google-gemini',
+        displayName: 'Google Gemini',
+        baseUrl: 'https://generativelanguage.googleapis.com',
+      }),
+    )
+    expect(provider.providerId).toBe('google-gemini')
+  })
+
+  it('requires a google-gemini API key', () => {
+    const { apiKey: _apiKey, ...rest } = config({
+      id: 'google-gemini',
+      displayName: 'Google Gemini',
+    })
+    expect(() => resolveAgentLlmProvider(rest as ProviderResolvedConfig)).toThrow(
+      AgentProviderMissingCredentialsError,
+    )
   })
 
   it('builds a real anthropic LLMProvider', () => {

@@ -67,7 +67,7 @@ CodeMind can route through:
 - DeepSeek
 - custom providers
 
-Real tool-execution over `/api/agent` and `mcp-server` is available for Anthropic and the whole OpenAI-compatible family above (OpenAI, Groq, OpenRouter, GitHub Models, Ollama, DeepSeek, custom); Google Gemini currently supports plain streaming chat only (`/api/chat`), not the tool-calling agent loop.
+Real tool-execution over `/api/agent` is available for every provider above: Anthropic (native `tool_use`), the whole OpenAI-compatible family (OpenAI, Groq, OpenRouter, GitHub Models, Ollama, DeepSeek, custom — one shared `tools`/`tool_calls` wire format), and Google Gemini (`functionDeclarations`/`functionCall`, implemented separately in `src/provider/gemini-llm-provider.ts`).
 
 ## Non-negotiable boundary
 

@@ -113,13 +113,15 @@ explicitly asks for more via `mode`.
 
 **Provider support**: running the tool-execution loop requires a provider
 implementation that speaks that vendor's function-calling wire format, not
-just plain chat completions. That's implemented for `anthropic` (native
-`tool_use`) and the whole OpenAI-compatible family (`openai`, `groq`,
+just plain chat completions. Every supported provider has one: `anthropic`
+(native `tool_use`), the whole OpenAI-compatible family (`openai`, `groq`,
 `openrouter`, `github-models`, `ollama`, `deepseek`, `custom` — they share
-one `tools`/`tool_calls` format). `google-gemini` uses a third, distinct
-function-calling shape (`functionDeclarations`/`functionCall`) that isn't
-wired up yet — `/api/agent` returns a clear `400` for `google-gemini`
-telling you to use `/api/chat` instead.
+one `tools`/`tool_calls` format), and `google-gemini`
+(`functionDeclarations`/`functionCall` — a third, distinct shape,
+implemented separately in `src/provider/gemini-llm-provider.ts`). Unlike
+OpenAI's incremental per-token tool-call argument streaming, Gemini emits
+each function call as one complete part as soon as the model decides to
+call it, so there's no partial-JSON accumulation on that path.
 
 **Streaming** (`stream: true`, the default) emits one SSE frame per agent
 event — `iteration_start`, `text_delta`, `tool_call_start`, `tool_call_end`,
@@ -133,6 +135,16 @@ message history (including tool_use/tool_result content blocks) built up by
 that run. Pass it back as `priorMessages` on your next `/api/agent` call to
 continue the same conversation with tool-call context intact — the server
 is otherwise stateless between calls.
+
+### From the browser
+
+The `/` chat page has an **Agent mode** checkbox under the chat box. Turning
+it on reveals a runtime-mode selector (defaults to `READ_ONLY`) and switches
+the Send button to call `/api/agent` instead of `/api/chat`: tool calls the
+model makes render inline as their own transcript entries (`🔧 calling
+read_file...`, then `✓ read_file → <output preview>`), and the page keeps
+the returned `finalMessages` in memory so the conversation continues with
+full tool-call context across turns in that browser session.
 
 ## What this is not (yet)
 

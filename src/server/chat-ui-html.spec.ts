@@ -13,6 +13,20 @@ describe('renderChatUiHtml', () => {
     expect(html).toContain('/api/chat')
   })
 
+  it('wires an Agent mode toggle to /api/agent with a runtime-mode selector', () => {
+    const html = renderChatUiHtml()
+
+    expect(html).toContain('agent-mode-toggle')
+    expect(html).toContain('/api/agent')
+    expect(html).toContain('agent-mode-select')
+    expect(html).toContain('READ_ONLY')
+    expect(html).toContain('PROPOSAL_ONLY')
+    expect(html).toContain('APPROVED_EXECUTION')
+    expect(html).toContain('tool_call_start')
+    expect(html).toContain('tool_call_end')
+    expect(html).toContain('finalMessages')
+  })
+
   it('renders assistant and user text with textContent, not innerHTML, to avoid XSS', () => {
     const html = renderChatUiHtml()
 

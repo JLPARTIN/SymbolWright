@@ -57,6 +57,48 @@ function startFakeOpenAiCompatibleServer(): Promise<{
   })
 }
 
+/**
+ * A real Gemini-compatible HTTP server scripting the same two-turn
+ * tool-calling conversation as the OpenAI fake above, but in Gemini's wire
+ * format (candidates/content/parts with functionCall, no incremental
+ * argument streaming).
+ */
+function startFakeGeminiServer(): Promise<{
+  url: string
+  server: Server
+  callCount: () => number
+}> {
+  let calls = 0
+  const server = createServer((req, res) => {
+    calls += 1
+    const thisCall = calls
+    let body = ''
+    req.on('data', (chunk) => (body += chunk))
+    req.on('end', () => {
+      res.writeHead(200, { 'content-type': 'text/event-stream' })
+      if (thisCall === 1) {
+        res.write(
+          'data: {"candidates":[{"content":{"parts":[{"functionCall":{"id":"call_1","name":"read_file","args":{"path":"package.json"}}}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":5}}\n\n',
+        )
+      } else {
+        res.write(
+          'data: {"candidates":[{"content":{"parts":[{"text":"The package is named codemind."}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":20,"candidatesTokenCount":8}}\n\n',
+        )
+      }
+      res.end()
+      void body
+    })
+  })
+
+  return new Promise((resolve) => {
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address()
+      const port = typeof address === 'object' && address !== null ? address.port : 0
+      resolve({ url: `http://127.0.0.1:${port}`, server, callCount: () => calls })
+    })
+  })
+}
+
 let chatServer: StartedChatServer | undefined
 let fakeUpstream: Server | undefined
 
@@ -170,18 +212,45 @@ describe('POST /api/agent', () => {
     expect(text).toContain('"finalText":"The package is named codemind."')
   })
 
-  it('rejects google-gemini with a clear 400 before attempting any provider call', async () => {
+  it('runs a real tool-use loop against google-gemini end to end', async () => {
+    const fake = await startFakeGeminiServer()
+    fakeUpstream = fake.server
+
     chatServer = await startChatServer({ apiKey: API_KEY, host: '127.0.0.1', port: 0, env: {} })
+
+    const registerResponse = await fetch(`${chatServer.url}/api/providers/register`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({
+        providerId: 'google-gemini',
+        baseUrl: fake.url,
+        apiKey: 'gem-fake',
+        model: 'fake-gemini-model',
+      }),
+    })
+    expect(registerResponse.status).toBe(200)
 
     const response = await fetch(`${chatServer.url}/api/agent`, {
       method: 'POST',
       headers: { ...auth(), 'content-type': 'application/json' },
-      body: JSON.stringify({ providerId: 'google-gemini', message: 'hi' }),
+      body: JSON.stringify({
+        providerId: 'google-gemini',
+        mode: 'READ_ONLY',
+        message: 'What is this package named? Read package.json to find out.',
+        stream: false,
+      }),
     })
 
-    expect(response.status).toBe(400)
-    const body = (await response.json()) as { error: string }
-    expect(body.error).toContain('does not yet support the tool-execution agent loop')
+    expect(response.status).toBe(200)
+    const result = (await response.json()) as {
+      status: string
+      finalText: string
+      iterations: readonly { toolCalls: readonly { name: string }[] }[]
+    }
+    expect(result.status).toBe('completed')
+    expect(result.finalText).toBe('The package is named codemind.')
+    expect(result.iterations[0]?.toolCalls[0]?.name).toBe('read_file')
+    expect(fake.callCount()).toBe(2)
   })
 
   it('rejects a missing message with 400', async () => {
