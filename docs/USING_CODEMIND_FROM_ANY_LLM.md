@@ -6,7 +6,7 @@ CodeMind should be callable from any LLM or coding environment that can make an 
 
 Two real integration paths exist now, covering different kinds of "any LLM":
 
-- **HTTP** — `codemind serve` (see [`runtime/CODEMIND_CHAT_SERVER.md`](runtime/CODEMIND_CHAT_SERVER.md)) runs a real `/api/chat` endpoint with bearer-token auth, provider registration, and SSE streaming. Any HTTP-capable client (browser, script, GPT action, agent framework) can drive it.
+- **HTTP** — `codemind serve` (see [`runtime/CODEMIND_CHAT_SERVER.md`](runtime/CODEMIND_CHAT_SERVER.md)) runs a real `/api/chat` endpoint (plain streaming chat) and a real `/api/agent` endpoint (the full tool-execution loop — read/search/edit files, run commands, mode-gated), both with bearer-token auth and provider registration. Any HTTP-capable client (browser, script, GPT action, agent framework) can drive them.
 - **MCP** — `codemind mcp-server` (see [`runtime/CODEMIND_MCP_SERVER.md`](runtime/CODEMIND_MCP_SERVER.md)) runs CodeMind as a real Model Context Protocol server over stdio. Any MCP-compatible client — Claude Desktop, Claude Code, or another agent framework — can add it as a plugin/connector and call its actual tools (`read_file`, `search_files`, and, in more permissive modes, `edit_file`, `bash`, `git`, GitHub write tools, and more).
 
 The mission/event-stream contract below (`/api/missions`, `/api/missions/:id/events`) describes a further target shape — a single "mission" abstraction spanning both transports — that isn't built yet; today, drive CodeMind through `codemind serve`'s `/api/chat` or `codemind mcp-server`'s tool calls directly.
@@ -64,7 +64,10 @@ CodeMind can route through:
 - OpenRouter
 - GitHub Models
 - Ollama
+- DeepSeek
 - custom providers
+
+Real tool-execution over `/api/agent` and `mcp-server` is available for Anthropic and the whole OpenAI-compatible family above (OpenAI, Groq, OpenRouter, GitHub Models, Ollama, DeepSeek, custom); Google Gemini currently supports plain streaming chat only (`/api/chat`), not the tool-calling agent loop.
 
 ## Non-negotiable boundary
 

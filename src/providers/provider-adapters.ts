@@ -384,6 +384,7 @@ export const PROVIDER_GATEWAY_ADAPTERS: readonly ProviderGatewayAdapter[] = [
   createOpenAiCompatibleAdapter('openrouter', 'OpenRouter', true),
   createOpenAiCompatibleAdapter('github-models', 'GitHub Models', true),
   createOpenAiCompatibleAdapter('ollama', 'Ollama', false),
+  createOpenAiCompatibleAdapter('deepseek', 'DeepSeek', true),
   createOpenAiCompatibleAdapter('custom', 'Custom provider', false),
 ]
 

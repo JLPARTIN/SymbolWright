@@ -195,6 +195,7 @@ validate workspace health and release readiness
 recall and store durable episodic, lexical, and procedural memory across agent turns
 run sandboxed PR preflight evidence checks and block pushes on regression
 serve a real browser chat UI + HTTP API against any registered provider (`codemind serve`, see docs/runtime/CODEMIND_CHAT_SERVER.md)
+run the real tool-execution agent loop over HTTP for Anthropic and any OpenAI-compatible provider, mode-gated (`POST /api/agent` on `codemind serve`)
 run itself as a real MCP server so any MCP-compatible LLM client can use its tools as a plugin (`codemind mcp-server`, see docs/runtime/CODEMIND_MCP_SERVER.md)
 ```
 

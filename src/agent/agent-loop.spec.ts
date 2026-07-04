@@ -107,6 +107,10 @@ describe('agent-loop', () => {
       expect(result.iterations).toHaveLength(1)
       expect(result.totalUsage.inputTokens).toBe(100)
       expect(result.totalUsage.outputTokens).toBe(50)
+      expect(result.finalMessages).toEqual([
+        { role: 'user', content: 'What can you do?' },
+        { role: 'assistant', content: 'Hello, I can help!' },
+      ])
     })
 
     it('executes tool and returns final text', async () => {
@@ -131,6 +135,58 @@ describe('agent-loop', () => {
       expect(result.iterations[0]?.toolCalls).toHaveLength(1)
       expect(result.iterations[0]?.toolResults).toHaveLength(1)
       expect(result.iterations[0]?.toolResults[0]?.isError).toBe(false)
+      expect(result.finalMessages).toEqual([
+        { role: 'user', content: 'Read test.ts' },
+        {
+          role: 'assistant',
+          content: [
+            { type: 'tool_use', id: 't-1', name: 'read_file', input: { path: '/test.ts' } },
+          ],
+        },
+        {
+          role: 'tool_result',
+          content: [
+            { type: 'tool_result', toolUseId: 't-1', content: 'export function test() {}' },
+          ],
+        },
+        { role: 'assistant', content: 'The file contains test code.' },
+      ])
+    })
+
+    it('lets a follow-up call resume the conversation via finalMessages as priorMessages', async () => {
+      const provider = makeMockProvider([
+        makeToolUseResponse('t-1', 'read_file', { path: '/test.ts' }),
+        makeTextResponse('The file contains test code.'),
+        makeTextResponse('It also has a test() function.'),
+      ])
+      const tools = [makeTool('read_file', 'export function test() {}')]
+
+      const first = await runAgentLoop(
+        provider,
+        'Read test.ts',
+        tools,
+        makeToolContext(),
+        makeConfig(),
+      )
+      expect(first.status).toBe('completed')
+      expect(first.finalMessages).toBeDefined()
+
+      const second = await runAgentLoop(
+        provider,
+        'Tell me more.',
+        tools,
+        makeToolContext(),
+        makeConfig({ priorMessages: first.finalMessages ?? [] }),
+      )
+
+      expect(second.status).toBe('completed')
+      expect(second.finalText).toBe('It also has a test() function.')
+      expect(second.finalMessages?.[0]).toEqual({ role: 'user', content: 'Read test.ts' })
+      expect(second.finalMessages?.at(-2)).toEqual({ role: 'user', content: 'Tell me more.' })
+      expect(second.finalMessages?.at(-1)).toEqual({
+        role: 'assistant',
+        content: 'It also has a test() function.',
+      })
     })
 
     it('handles tool execution error', async () => {

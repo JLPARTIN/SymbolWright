@@ -8,7 +8,7 @@ CodeMind uses two different key classes.
 
 ## 2. Provider credentials
 
-Provider credentials are keys for OpenAI, Anthropic, Gemini, Groq, OpenRouter, GitHub Models, Ollama, or custom providers.
+Provider credentials are keys for OpenAI, Anthropic, Gemini, Groq, OpenRouter, GitHub Models, Ollama, DeepSeek (`DEEPSEEK_API_KEY`), or custom providers.
 
 These keys must not live in the browser. They must be handled in one of these server-side modes:
 

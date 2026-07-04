@@ -30,6 +30,8 @@ const REALTIME_STREAMING_PROVIDERS = new Set<CodemindProviderId>([
   'ollama',
   'custom',
   'anthropic',
+  'google-gemini',
+  'deepseek',
 ])
 
 export function supportsRealtimeStreaming(providerId: CodemindProviderId): boolean {
@@ -183,6 +185,104 @@ function buildAnthropicStreamRequest(
   }
 }
 
+/** Parses one Gemini SSE `data: {...}` line into a text delta, if any. */
+export function parseGeminiSseLine(line: string): string | undefined {
+  if (!line.startsWith('data:')) {
+    return undefined
+  }
+  const payload = line.slice('data:'.length).trim()
+  if (payload.length === 0) {
+    return undefined
+  }
+
+  try {
+    const parsed = JSON.parse(payload) as {
+      readonly candidates?: readonly {
+        readonly content?: { readonly parts?: readonly { readonly text?: string }[] }
+      }[]
+    }
+    const parts = parsed.candidates?.[0]?.content?.parts ?? []
+    const text = parts
+      .map((part) => part.text)
+      .filter((text): text is string => text !== undefined)
+      .join('')
+    return text.length > 0 ? text : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function buildGeminiStreamRequest(
+  request: ProviderGatewayRequest,
+  config: ProviderResolvedConfig,
+  model: string,
+): ProviderStreamHttpRequest {
+  if (config.apiKey === undefined) {
+    throw new ProviderGatewayError(
+      'MISSING_CREDENTIALS',
+      `${config.displayName} API key is missing`,
+      { providerId: config.id },
+    )
+  }
+
+  const systemMessages = normalizeStreamMessages(request)
+    .filter((message) => message.role === 'system')
+    .map((message) => message.content)
+  const conversation = normalizeStreamMessages(request).filter(
+    (message) => message.role !== 'system',
+  )
+
+  const body: Record<string, unknown> = {
+    contents: conversation.map((message) => ({
+      role: message.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: message.content }],
+    })),
+  }
+
+  if (systemMessages.length > 0) {
+    body['systemInstruction'] = { parts: systemMessages.map((text) => ({ text })) }
+  }
+  if (request.temperature !== undefined || request.maxTokens !== undefined) {
+    body['generationConfig'] = {
+      ...(request.temperature === undefined ? {} : { temperature: request.temperature }),
+      ...(request.maxTokens === undefined ? {} : { maxOutputTokens: request.maxTokens }),
+    }
+  }
+
+  return {
+    method: 'POST',
+    url: `${joinStreamUrl(
+      config.baseUrl,
+      `/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent`,
+    )}?alt=sse&key=${encodeURIComponent(config.apiKey)}`,
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  }
+}
+
+async function* streamGemini(
+  config: ProviderResolvedConfig,
+  request: ProviderGatewayRequest,
+  transport: ProviderStreamTransport,
+): AsyncGenerator<string> {
+  const model = requireStreamModel(request, config)
+  const httpRequest = buildGeminiStreamRequest(request, config, model)
+  const response = await transport.requestStream(httpRequest)
+  if (response.status < 200 || response.status >= 300) {
+    throw new ProviderGatewayError('HTTP_ERROR', `google-gemini returned HTTP ${response.status}`, {
+      providerId: config.id,
+      status: response.status,
+    })
+  }
+
+  for await (const line of readLines(response.body)) {
+    const delta = parseGeminiSseLine(line)
+    if (delta !== undefined && delta.length > 0) {
+      yield delta
+    }
+  }
+}
+
 function requireStreamModel(
   request: ProviderGatewayRequest,
   config: ProviderResolvedConfig,
@@ -256,6 +356,9 @@ export function streamProviderChat(
 ): AsyncGenerator<string> {
   if (config.id === 'anthropic') {
     return streamAnthropic(config, request, transport)
+  }
+  if (config.id === 'google-gemini') {
+    return streamGemini(config, request, transport)
   }
   return streamOpenAiCompatible(config, request, transport)
 }

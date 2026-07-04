@@ -6,9 +6,9 @@ CodeMind exposes a provider-neutral API surface so any browser, LLM, coding agen
 
 `codemind serve` starts a real HTTP server (`src/server/codemind-chat-server.ts`) implementing the chat + provider routes below, plus a browser chat UI at `/`. See [`CODEMIND_CHAT_SERVER.md`](runtime/CODEMIND_CHAT_SERVER.md) for setup, auth, and deployment notes.
 
-`/api/missions`, `/api/tools/run`, `/api/sessions/:id`, and `/api/missions/:id/events` remain contract-only in `src/api/universal-api-contract.ts` — they describe the target shape for running the full `codemind agent` mission/tool-use runtime over HTTP, which is a separate, larger phase of work not yet implemented.
+Governed tool execution is live today over two transports: `POST /api/agent` (HTTP+SSE, this server) runs the real `codemind agent` tool-execution loop; `codemind mcp-server` (see [`runtime/CODEMIND_MCP_SERVER.md`](runtime/CODEMIND_MCP_SERVER.md)) exposes the same tool registry to any MCP-compatible LLM client over stdio. Both are gated by the same runtime-mode policy as everywhere else in CodeMind.
 
-Governed tool execution *is* live today over a different transport: `codemind mcp-server` (see [`runtime/CODEMIND_MCP_SERVER.md`](runtime/CODEMIND_MCP_SERVER.md)) exposes CodeMind's real runtime tools — `read_file`, `search_files`, and in more permissive modes `edit_file`, `bash`, `git`, and more — to any MCP-compatible LLM client over stdio, gated by the same runtime-mode policy as everywhere else in CodeMind. `/api/tools/run` is the HTTP-transport equivalent of that same capability and is not yet built.
+`/api/missions`, `/api/tools/run`, `/api/sessions/:id`, and `/api/missions/:id/events` remain contract-only in `src/api/universal-api-contract.ts` — they describe a further target shape (persisted sessions, a single tool-call-at-a-time HTTP primitive, PR/audit integration) that `/api/agent` doesn't cover yet.
 
 ## Security model
 
@@ -18,7 +18,7 @@ Provider credentials stay behind CodeMind:
 
 - long-lived provider keys are stored in the server-side provider vault;
 - request-scoped keys are accepted only by the server runtime;
-- browser clients never call OpenAI, Anthropic, Gemini, Groq, OpenRouter, GitHub Models, Ollama, or custom providers directly.
+- browser clients never call OpenAI, Anthropic, Gemini, Groq, OpenRouter, GitHub Models, Ollama, DeepSeek, or custom providers directly.
 
 ```txt
 Browser / ChatGPT / Claude / Gemini / Cursor / Cline / Codex
@@ -41,6 +41,7 @@ Provider Adapter
 | `POST` | `/api/providers/reset` | Live | Clear a runtime provider override back to its env-configured defaults. |
 | `POST` | `/api/providers/test` | Live | Verify provider adapter readiness without exposing provider keys to the browser. |
 | `POST` | `/api/chat` | Live | Send a conversational chat turn; set `"stream": true` for a server-sent-events token stream. |
+| `POST` | `/api/agent` | Live | Run the real tool-execution agent loop (read/search/edit files, run commands, etc., mode-gated); set `"stream": true` (default) for a live SSE event stream. |
 | `POST` | `/api/missions` | Contract only | Create a governed CodeMind mission (full agent/tool-use runtime over HTTP — not yet implemented). |
 | `POST` | `/api/tools/run` | Contract only | Run a governed tool through policy, approval, audit, and redaction gates. |
 | `GET` | `/api/sessions/:id` | Contract only | Read a persisted mission session and audit-safe state. |
@@ -78,6 +79,7 @@ Supported provider values:
 - `openrouter`
 - `github-models`
 - `ollama`
+- `deepseek`
 - `custom`
 
 ## Contract source of truth

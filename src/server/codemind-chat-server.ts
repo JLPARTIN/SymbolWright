@@ -25,7 +25,18 @@ import {
   ProviderRuntimeOverrideStore,
   ProviderRuntimeOverrideValidationError,
 } from '../providers/provider-runtime-overrides.js'
+import { runAgentLoop } from '../agent/agent-loop.js'
+import type { AgentLoopConfig, AgentLoopEvent } from '../agent/agent-loop.types.js'
+import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
+import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
+import type { RuntimeToolContext } from '../runtime/types.js'
 import { renderChatUiHtml } from './chat-ui-html.js'
+import {
+  AgentProviderMissingCredentialsError,
+  AgentProviderUnsupportedError,
+  resolveAgentLlmProvider,
+} from './codemind-agent-provider.js'
+import { parseAgentRequestBody } from './codemind-agent-request.js'
 import {
   ChatRequestValidationError,
   parseChatRequestBody,
@@ -39,6 +50,9 @@ import {
   type ProviderStreamTransport,
 } from './provider-chat-stream.js'
 import { FixedWindowRateLimiter, type RateLimiter } from './rate-limiter.js'
+
+const DEFAULT_AGENT_SYSTEM_PROMPT =
+  'You are CodeMind, a direct-capable coding agent. Use the available tools to accomplish the request.'
 
 const MAX_BODY_BYTES = 256 * 1024
 const DEFAULT_RATE_LIMIT_PER_MINUTE = 60
@@ -278,6 +292,11 @@ export function createChatServerRequestListener(
         return
       }
 
+      if (req.method === 'POST' && url.pathname === '/api/agent') {
+        await handleAgent(req, res, env, overrideStore)
+        return
+      }
+
       sendJson(res, 404, { error: 'not_found' })
     } catch (error) {
       if (
@@ -384,6 +403,92 @@ async function handleChat(
     res.write(
       `event: error\ndata: ${JSON.stringify({ code: normalized.code, message: normalized.message })}\n\n`,
     )
+  } finally {
+    res.end()
+  }
+}
+
+function resolveAgentEffectiveConfig(
+  env: ProviderGatewayEnv,
+  overrideStore: ProviderRuntimeOverrideStore,
+  providerId: CodemindProviderId,
+) {
+  const config = applyProviderRuntimeOverrides(
+    loadProviderGatewayConfig(env),
+    overrideStore.snapshot(),
+  ).providers[providerId]
+  if (config === undefined) {
+    throw new ChatRequestValidationError(`Unknown provider: ${providerId}`)
+  }
+  return config
+}
+
+async function handleAgent(
+  req: IncomingMessage,
+  res: ServerResponse,
+  env: ProviderGatewayEnv,
+  overrideStore: ProviderRuntimeOverrideStore,
+): Promise<void> {
+  const parsed = parseAgentRequestBody(await readJsonBody(req))
+
+  let llmProvider: ReturnType<typeof resolveAgentLlmProvider>
+  try {
+    const effectiveConfig = resolveAgentEffectiveConfig(env, overrideStore, parsed.providerId)
+    llmProvider = resolveAgentLlmProvider(effectiveConfig)
+  } catch (error) {
+    if (
+      error instanceof AgentProviderUnsupportedError ||
+      error instanceof AgentProviderMissingCredentialsError
+    ) {
+      sendJson(res, 400, { error: error.message })
+      return
+    }
+    throw error
+  }
+
+  const policy = createRuntimePolicyForMode(parsed.mode, {
+    hasGitHubToken: env['GITHUB_TOKEN'] !== undefined,
+  })
+  const toolContext: RuntimeToolContext = { cwd: process.cwd(), policy }
+  const tools = assembleAgentTools()
+
+  const agentConfig: AgentLoopConfig = {
+    maxIterations: parsed.maxIterations,
+    systemPrompt: parsed.systemPrompt ?? DEFAULT_AGENT_SYSTEM_PROMPT,
+    ...(parsed.model === undefined ? {} : { model: parsed.model }),
+    ...(parsed.maxTokens === undefined ? {} : { maxTokens: parsed.maxTokens }),
+    ...(parsed.temperature === undefined ? {} : { temperature: parsed.temperature }),
+    ...(parsed.priorMessages === undefined ? {} : { priorMessages: parsed.priorMessages }),
+  }
+
+  if (!parsed.stream) {
+    const result = await runAgentLoop(llmProvider, parsed.message, tools, toolContext, agentConfig)
+    sendJson(res, 200, result)
+    return
+  }
+
+  res.writeHead(200, {
+    'content-type': 'text/event-stream; charset=utf-8',
+    'cache-control': 'no-cache, no-transform',
+    connection: 'keep-alive',
+  })
+
+  try {
+    const result = await runAgentLoop(
+      llmProvider,
+      parsed.message,
+      tools,
+      toolContext,
+      agentConfig,
+      (event: AgentLoopEvent) => {
+        res.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
+      },
+    )
+    res.write(`event: result\ndata: ${JSON.stringify(result)}\n\n`)
+    res.write('event: done\ndata: {}\n\n')
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    res.write(`event: error\ndata: ${JSON.stringify({ message })}\n\n`)
   } finally {
     res.end()
   }
