@@ -38,7 +38,9 @@
     "audit": "npm audit --omit=dev --audit-level=high",
     "doctor": "node dist/cli.js doctor",
     "release-readiness": "node dist/cli.js release-readiness",
-    "build-ledger": "node dist/cli.js build-ledger"
+    "build-ledger": "node dist/cli.js build-ledger",
+    "dev": "npm run dev:web",
+    "dev:web": "npm run build && node dist/web/server.js"
   },
   "keywords": [
     "codemind",
