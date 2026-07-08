@@ -38,4 +38,17 @@ describe('release workflow proof gates', () => {
     expect(deploy).toContain('docker/build-push-action')
     expect(deploy).toContain('push: true')
   })
+
+  it('normalizes GHCR image names before Docker metadata is generated', () => {
+    const deploy = readWorkflow('.github/workflows/deploy.yml')
+
+    expect(deploy).toContain('id: image')
+    expect(deploy).toContain('name=${GITHUB_REPOSITORY,,}')
+    expect(deploy).toContain('>> "$GITHUB_OUTPUT"')
+    expect(deploy).toContain('images: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}')
+    expect(deploy).not.toContain('IMAGE_NAME: ${{ github.repository }}')
+    expect(deploy.indexOf('Normalize GHCR image name')).toBeLessThan(
+      deploy.indexOf('Extract metadata'),
+    )
+  })
 })
