@@ -33,15 +33,15 @@ Then pick how you want to use it — CodeMind runs the same way from all four su
 node dist/cli.js agent --mode APPROVED_EXECUTION "fix the failing tests"
 ```
 
-**Browser** — bring your own provider key, chat like Claude Code, with an "Agent mode" toggle for real file reads/edits and shell commands:
+**Browser** — chat like Claude Code, with an "Agent mode" toggle for real file reads/edits and shell commands. No provider key required to get started — pick **Browser-only mode** in the UI for local diagnostics only, or **API-backed mode** to bring your own provider key:
 
 ```bash
 export CODEMIND_API_KEY=pick-your-own-access-key
-node dist/cli.js serve
-# open http://127.0.0.1:8787, connect with CODEMIND_API_KEY, choose or register a provider, chat
+npm run serve
+# open http://127.0.0.1:8787, connect with CODEMIND_API_KEY, choose Browser-only or API-backed mode
 ```
 
-See [`docs/runtime/CODEMIND_CHAT_SERVER.md`](docs/runtime/CODEMIND_CHAT_SERVER.md).
+See [`docs/runtime/CODEMIND_CHAT_SERVER.md`](docs/runtime/CODEMIND_CHAT_SERVER.md). Running in GitHub Codespaces? Full copy-paste setup, port-forwarding, and troubleshooting steps are in [`docs/codespaces.md`](docs/codespaces.md).
 
 **Any MCP-compatible LLM client** (Claude Desktop, Claude Code, other agent frameworks) — add CodeMind as a plugin:
 

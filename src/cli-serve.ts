@@ -103,6 +103,7 @@ export function renderServeBanner(server: StartedChatServer): string {
     'Routes:',
     '- GET  /                      chat UI',
     '- GET  /api/health            public health check',
+    '- GET  /api/local-status      browser-only mode: local doctor/release-readiness diagnostics (auth required)',
     '- GET  /api/providers         list configured providers (auth required)',
     '- POST /api/providers/register  register or override a provider (auth required)',
     '- POST /api/providers/reset      clear a provider override (auth required)',

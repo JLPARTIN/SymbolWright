@@ -275,3 +275,24 @@ describe('codemind chat server routes', () => {
     expect(response.status).toBe(404)
   })
 })
+
+describe('browser-only mode: /api/local-status', () => {
+  it('rejects unauthenticated requests', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/local-status`)
+    expect(response.status).toBe(401)
+  })
+
+  it('returns the injected local diagnostics view for an authenticated caller with no provider required', async () => {
+    const fakeStatus = {
+      overallState: 'pass' as const,
+      generatedAt: '2026-01-01T00:00:00.000Z',
+      cards: [{ label: 'Doctor health', value: 'HEALTHY', state: 'pass' as const }],
+      scripts: [],
+    }
+    const server = await launch({ localStatusProvider: async () => fakeStatus })
+    const response = await fetch(`${server.url}/api/local-status`, { headers: auth() })
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual(fakeStatus)
+  })
+})

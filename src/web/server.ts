@@ -1,13 +1,12 @@
 /* v8 ignore file -- exercised manually through Codespaces forwarded-port preview. */
 
-import { spawn } from 'node:child_process'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 
-import { buildRuntimeStatusView, type ScriptOutput } from './status.js'
+import { collectStatus } from './status-runner.js'
 
 const host = process.env['HOST'] || '0.0.0.0'
 const port = Number.parseInt(process.env['PORT'] || '3005', 10)
-const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
+const chatPort = Number.parseInt(process.env['CODEMIND_CHAT_PORT'] || '8787', 10)
 
 function escapeHtml(value: string): string {
   return value
@@ -18,55 +17,15 @@ function escapeHtml(value: string): string {
     .replaceAll("'", '&#39;')
 }
 
-function runScript(name: string, script: string): Promise<ScriptOutput> {
-  const startedAt = Date.now()
+function resolveChatUrl(): string {
+  const codespaceName = process.env['CODESPACE_NAME']
+  const forwardingDomain = process.env['GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN']
 
-  return new Promise((resolve) => {
-    const child = spawn(npmCommand, ['run', script, '--silent'], {
-      cwd: process.cwd(),
-      env: {
-        ...process.env,
-        CI: '1',
-      },
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
+  if (codespaceName !== undefined && forwardingDomain !== undefined) {
+    return `https://${codespaceName}-${chatPort}.${forwardingDomain}`
+  }
 
-    let output = ''
-    let timedOut = false
-
-    const timeout = setTimeout(() => {
-      timedOut = true
-      child.kill('SIGTERM')
-    }, 120_000)
-
-    child.stdout.on('data', (chunk: Buffer) => {
-      output += chunk.toString()
-    })
-
-    child.stderr.on('data', (chunk: Buffer) => {
-      output += chunk.toString()
-    })
-
-    child.on('close', (code) => {
-      clearTimeout(timeout)
-
-      resolve({
-        name,
-        exitCode: timedOut ? 124 : (code ?? 1),
-        output: output.slice(-30_000),
-        durationMs: Date.now() - startedAt,
-      })
-    })
-  })
-}
-
-async function collectStatus() {
-  const [doctor, releaseReadiness] = await Promise.all([
-    runScript('doctor', 'doctor'),
-    runScript('release-readiness', 'release-readiness'),
-  ])
-
-  return buildRuntimeStatusView(doctor, releaseReadiness)
+  return `http://localhost:${chatPort}`
 }
 
 function sendJson(response: ServerResponse, value: unknown): void {
@@ -174,9 +133,28 @@ function sendHtml(response: ServerResponse): void {
       cursor: pointer;
     }
 
+    a.button {
+      display: inline-block;
+      text-decoration: none;
+    }
+
+    button.secondary, a.button.secondary {
+      background: #232c50;
+      color: #dbe6ff;
+    }
+
     pre {
       white-space: pre-wrap;
       overflow-wrap: anywhere;
+      color: #dbe6ff;
+    }
+
+    ol {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    code {
       color: #dbe6ff;
     }
   </style>
@@ -184,10 +162,21 @@ function sendHtml(response: ServerResponse): void {
 <body>
   <main>
     <header>
-      <h1>CodeMind Runtime Preview</h1>
-      <p class="muted">Live Codespaces browser preview backed by <code>npm run doctor</code> and <code>npm run release-readiness</code>.</p>
+      <h1>CodeMind &mdash; Get Started</h1>
+      <p class="muted">This dashboard is <strong>browser-only mode</strong>: it shows real, local, deterministic diagnostics (<code>npm run doctor</code> + <code>npm run release-readiness</code>). No provider API key is required for anything on this page.</p>
+      <p class="muted">Current mode: <strong>Browser-only</strong> &mdash; no AI provider is connected here.</p>
       <button onclick="loadStatus()">Refresh live status</button>
     </header>
+
+    <section>
+      <h2>Want AI chat / agent mode too?</h2>
+      <p class="muted">That is a separate opt-in server so no provider secrets are required just to preview this dashboard. Start it once:</p>
+      <pre>export CODEMIND_API_KEY=$(openssl rand -hex 16)
+npm run serve</pre>
+      <p class="muted">Then open the chat UI, pick <strong>Browser-only mode</strong> to continue with no provider key, or <strong>API-backed mode</strong> to add a provider key:</p>
+      <a class="button" href="${escapeHtml(resolveChatUrl())}" target="_blank" rel="noopener">Open CodeMind Chat &rarr;</a>
+      <p class="muted" style="font-size:12px;margin-top:10px;">If that link fails to load, the chat server (port ${String(chatPort)}) is not running yet &mdash; run the command above in a second terminal, then use the Codespaces "Ports" tab to make port ${String(chatPort)} visible.</p>
+    </section>
 
     <section id="status" class="muted">Loading CodeMind runtime status...</section>
   </main>
