@@ -40,7 +40,8 @@
     "release-readiness": "node dist/cli.js release-readiness",
     "build-ledger": "node dist/cli.js build-ledger",
     "dev": "npm run dev:web",
-    "dev:web": "npm run build && node dist/web/server.js"
+    "dev:web": "npm run build && node dist/web/server.js",
+    "serve": "npm run build && node dist/cli.js serve"
   },
   "keywords": [
     "codemind",

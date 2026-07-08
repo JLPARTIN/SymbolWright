@@ -30,6 +30,8 @@ import type { AgentLoopConfig, AgentLoopEvent } from '../agent/agent-loop.types.
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
 import type { RuntimeToolContext } from '../runtime/types.js'
+import { collectStatus } from '../web/status-runner.js'
+import type { RuntimeStatusView } from '../web/status.js'
 import { renderChatUiHtml } from './chat-ui-html.js'
 import {
   AgentProviderMissingCredentialsError,
@@ -70,6 +72,7 @@ export interface ChatServerOptions {
   readonly transport?: ProviderHttpTransport
   readonly streamTransport?: ProviderStreamTransport
   readonly rateLimiter?: RateLimiter
+  readonly localStatusProvider?: () => Promise<RuntimeStatusView>
 }
 
 export interface StartedChatServer {
@@ -209,6 +212,7 @@ export function createChatServerRequestListener(
   const rateLimiter =
     options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_RATE_LIMIT_PER_MINUTE, 60_000)
   const env = options.env ?? process.env
+  const localStatusProvider = options.localStatusProvider ?? collectStatus
 
   return (req, res) => {
     void handleRequest(req, res)
@@ -252,6 +256,11 @@ export function createChatServerRequestListener(
     }
 
     try {
+      if (req.method === 'GET' && url.pathname === '/api/local-status') {
+        sendJson(res, 200, await localStatusProvider())
+        return
+      }
+
       if (req.method === 'GET' && url.pathname === '/api/providers') {
         const gateway = buildEffectiveGateway(env, overrideStore, options.transport)
         sendJson(res, 200, {
