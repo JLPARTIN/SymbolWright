@@ -1,7 +1,9 @@
 /* v8 ignore file -- exercised manually through Codespaces forwarded-port preview. */
 
 import { Buffer } from 'node:buffer'
+import { readFile } from 'node:fs/promises'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
+import { join } from 'node:path'
 
 import {
   createWorkspaceCodeIntelligenceBridgeResponse,
@@ -12,6 +14,7 @@ import {
   CODE_RUNNER_DEFINITIONS,
   UNIVERSAL_LANGUAGE_REGISTRY,
 } from '../workspace/language-registry.js'
+import { isSqlBrowserVendorAsset } from '../workspace/sql-browser-runner.js'
 import { renderUniversalWorkspaceHtml } from '../workspace/universal-editor-html.js'
 import { collectStatus } from './status-runner.js'
 
@@ -309,6 +312,31 @@ async function handleWorkspaceIntelligence(
   }
 }
 
+async function handleSqlVendorAsset(assetName: string, response: ServerResponse): Promise<void> {
+  if (!isSqlBrowserVendorAsset(assetName)) {
+    response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' })
+    response.end(`Not found: ${escapeHtml(assetName)}`)
+    return
+  }
+
+  try {
+    const assetPath = join(process.cwd(), 'node_modules', 'sql.js', 'dist', assetName)
+    const content = await readFile(assetPath)
+    response.writeHead(200, {
+      'content-type': assetName.endsWith('.wasm') ? 'application/wasm' : 'text/javascript; charset=utf-8',
+      'cache-control': 'no-store',
+    })
+    response.end(content)
+  } catch (error: unknown) {
+    response.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' })
+    response.end(
+      `Unable to load sql.js vendor asset ${escapeHtml(assetName)}: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    )
+  }
+}
+
 async function handleRequest(request: IncomingMessage, response: ServerResponse): Promise<void> {
   const url = request.url || '/'
 
@@ -343,6 +371,11 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
 
   if (url === '/api/workspace/intelligence') {
     await handleWorkspaceIntelligence(request, response)
+    return
+  }
+
+  if (url.startsWith('/vendor/')) {
+    await handleSqlVendorAsset(url.slice('/vendor/'.length), response)
     return
   }
 
