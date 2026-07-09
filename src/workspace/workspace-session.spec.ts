@@ -77,7 +77,9 @@ describe('workspace session model', () => {
   })
 
   it('rejects invalid imports instead of silently creating broken sessions', () => {
-    expect(() => parseWorkspaceSessionJson('{}')).toThrow('Unsupported workspace session schema version')
+    expect(() => parseWorkspaceSessionJson('{}')).toThrow(
+      'Unsupported workspace session schema version',
+    )
     expect(() =>
       parseWorkspaceSessionJson(
         JSON.stringify({
