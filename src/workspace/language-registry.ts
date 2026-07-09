@@ -53,6 +53,13 @@ type LanguageSeed = {
   notes?: string
 }
 
+type ExecutableLanguageSeed = LanguageSeed & {
+  capability: Extract<CodeLanguageCapability, 'browser-run' | 'server-run' | 'preview-only'>
+  runnerId: CodeRunnerId
+  safetyRestrictions: string[]
+  testCoverage: string
+}
+
 export const CODE_RUNNER_DEFINITIONS: readonly CodeRunnerDefinition[] = [
   {
     id: 'browser-javascript',
@@ -91,19 +98,36 @@ export const CODE_RUNNER_DEFINITIONS: readonly CodeRunnerDefinition[] = [
   },
 ]
 
-function defineLanguage(language: CodeLanguageDefinition): CodeLanguageDefinition {
-  return language
-}
-
-function withOptionalNotes<T extends Omit<CodeLanguageDefinition, 'notes'>>(
-  language: T,
+function withNotes(
+  language: Omit<CodeLanguageDefinition, 'notes'>,
   notes: string | undefined,
 ): CodeLanguageDefinition {
   return notes === undefined ? language : { ...language, notes }
 }
 
+function executable(seed: ExecutableLanguageSeed): CodeLanguageDefinition {
+  return withNotes(
+    {
+      id: seed.id,
+      label: seed.label,
+      editorLanguageId: seed.editorLanguageId ?? seed.id,
+      extensions: seed.extensions,
+      capability: seed.capability,
+      runnerId: seed.runnerId,
+      formatter: 'not-configured',
+      linter: 'not-configured',
+      autocomplete: 'syntax-highlighted',
+      syntax: 'native',
+      safetyRestrictions: seed.safetyRestrictions,
+      testCoverage: seed.testCoverage,
+      defaultSnippet: seed.defaultSnippet,
+    },
+    seed.notes,
+  )
+}
+
 function editOnly(seed: LanguageSeed): CodeLanguageDefinition {
-  return withOptionalNotes(
+  return withNotes(
     {
       id: seed.id,
       label: seed.label,
@@ -123,7 +147,7 @@ function editOnly(seed: LanguageSeed): CodeLanguageDefinition {
 }
 
 function dataViewer(seed: LanguageSeed): CodeLanguageDefinition {
-  return withOptionalNotes(
+  return withNotes(
     {
       id: seed.id,
       label: seed.label,
@@ -142,65 +166,55 @@ function dataViewer(seed: LanguageSeed): CodeLanguageDefinition {
   )
 }
 
-export const UNIVERSAL_LANGUAGE_REGISTRY: readonly CodeLanguageDefinition[] = [
-  defineLanguage({
+const EXECUTABLE_LANGUAGE_SEEDS: readonly ExecutableLanguageSeed[] = [
+  {
     id: 'javascript',
     label: 'JavaScript',
     editorLanguageId: 'javascript',
     extensions: ['.js', '.mjs', '.cjs'],
     capability: 'browser-run',
     runnerId: 'browser-javascript',
-    formatter: 'not-configured',
-    linter: 'not-configured',
-    autocomplete: 'syntax-highlighted',
-    syntax: 'native',
     safetyRestrictions: ['Browser Worker only; no filesystem access; network wrapper disabled.'],
     testCoverage: 'registry-browser-runner',
     defaultSnippet:
       "function greet(name) {\n  return `Hello, ${name}!`\n}\n\nconsole.log(greet('CodeMind'))",
-  }),
-  defineLanguage({
+  },
+  {
     id: 'typescript',
     label: 'TypeScript',
     editorLanguageId: 'typescript',
     extensions: ['.ts', '.tsx'],
     capability: 'server-run',
     runnerId: 'server-typescript-node',
-    formatter: 'not-configured',
-    linter: 'not-configured',
-    autocomplete: 'syntax-highlighted',
-    syntax: 'native',
     safetyRestrictions: [
       'Server vm only; no require/process/fetch/Buffer; timeout and output caps enforced.',
     ],
     testCoverage: 'registry-server-runner',
     defaultSnippet:
       "type User = { name: string }\n\nfunction greet(user: User): string {\n  return `Hello, ${user.name}!`\n}\n\nconsole.log(greet({ name: 'CodeMind' }))",
-  }),
-  defineLanguage({
+  },
+  {
     id: 'html',
     label: 'HTML/CSS',
     editorLanguageId: 'html',
     extensions: ['.html', '.htm'],
     capability: 'preview-only',
     runnerId: 'html-preview',
-    formatter: 'not-configured',
-    linter: 'not-configured',
-    autocomplete: 'syntax-highlighted',
-    syntax: 'native',
     safetyRestrictions: ['Sandboxed iframe preview only; no shell execution claim.'],
     testCoverage: 'registry-preview-runner',
     defaultSnippet:
       '<main>\n  <h1>Hello from CodeMind</h1>\n  <p>This is a sandboxed HTML preview.</p>\n</main>\n<style>\n  body { font-family: system-ui, sans-serif; padding: 2rem; }\n</style>',
-  }),
-  editOnly({
+  },
+]
+
+const EDIT_ONLY_LANGUAGE_SEEDS: readonly LanguageSeed[] = [
+  {
     id: 'css',
     label: 'CSS',
     extensions: ['.css'],
-    defaultSnippet:
-      ':root { color-scheme: dark; }\nbody { font-family: system-ui, sans-serif; }',
-  }),
-  editOnly({
+    defaultSnippet: ':root { color-scheme: dark; }\nbody { font-family: system-ui, sans-serif; }',
+  },
+  {
     id: 'python',
     label: 'Python',
     extensions: ['.py'],
@@ -208,183 +222,150 @@ export const UNIVERSAL_LANGUAGE_REGISTRY: readonly CodeLanguageDefinition[] = [
       'def greet(name: str) -> str:\n    return f"Hello, {name}!"\n\nprint(greet("CodeMind"))',
     notes:
       'Execution requires a real configured Python sandbox runner such as Pyodide or a server sandbox.',
-  }),
-  editOnly({
+  },
+  {
     id: 'ruby',
     label: 'Ruby',
     extensions: ['.rb'],
-    defaultSnippet:
-      'def greet(name)\n  "Hello, #{name}!"\nend\n\nputs greet("CodeMind")',
-  }),
-  editOnly({
+    defaultSnippet: 'def greet(name)\n  "Hello, #{name}!"\nend\n\nputs greet("CodeMind")',
+  },
+  {
     id: 'r',
     label: 'R',
     extensions: ['.r', '.R'],
-    defaultSnippet:
-      "greet <- function(name) { paste('Hello,', name) }\nprint(greet('CodeMind'))",
-  }),
-  editOnly({
+    defaultSnippet: "greet <- function(name) { paste('Hello,', name) }\nprint(greet('CodeMind'))",
+  },
+  {
     id: 'sql',
     label: 'SQL',
     extensions: ['.sql'],
     defaultSnippet: 'SELECT id, name\nFROM users\nWHERE active = TRUE\nORDER BY name;',
     notes: 'Add and test a real in-browser SQL engine before marking SQL executable.',
-  }),
-  dataViewer({
-    id: 'json',
-    label: 'JSON',
-    extensions: ['.json'],
-    defaultSnippet:
-      '{\n  "name": "CodeMind",\n  "languages": ["JavaScript", "TypeScript", "Python"]\n}',
-  }),
-  dataViewer({
-    id: 'yaml',
-    label: 'YAML',
-    extensions: ['.yaml', '.yml'],
-    defaultSnippet: 'name: CodeMind\nlanguages:\n  - JavaScript\n  - TypeScript\n  - Python',
-  }),
-  dataViewer({
-    id: 'markdown',
-    label: 'Markdown',
-    extensions: ['.md', '.mdx'],
-    defaultSnippet: '# CodeMind Notes\n\n- Edit safely\n- Run only languages with real runners',
-  }),
-  editOnly({
+  },
+  {
     id: 'shell',
     label: 'Shell',
     extensions: ['.sh', '.bash', '.zsh'],
     defaultSnippet: '#!/usr/bin/env bash\nset -euo pipefail\n\necho "Hello from CodeMind"',
-  }),
-  editOnly({
+  },
+  {
     id: 'java',
     label: 'Java',
     extensions: ['.java'],
     defaultSnippet:
       'class Main {\n  public static void main(String[] args) {\n    System.out.println("Hello from CodeMind");\n  }\n}',
-  }),
-  editOnly({
+  },
+  {
     id: 'go',
     label: 'Go',
     extensions: ['.go'],
     defaultSnippet:
       'package main\n\nimport "fmt"\n\nfunc main() {\n  fmt.Println("Hello from CodeMind")\n}',
-  }),
-  editOnly({
+  },
+  {
     id: 'rust',
     label: 'Rust',
     extensions: ['.rs'],
     defaultSnippet: 'fn main() {\n    println!("Hello from CodeMind");\n}',
-  }),
-  editOnly({
+  },
+  {
     id: 'cpp',
     label: 'C++',
     editorLanguageId: 'cpp',
     extensions: ['.cpp', '.cc', '.cxx', '.hpp'],
     defaultSnippet:
       '#include <iostream>\n\nint main() {\n  std::cout << "Hello from CodeMind" << std::endl;\n  return 0;\n}',
-  }),
-  editOnly({
+  },
+  {
     id: 'c',
     label: 'C',
     extensions: ['.c', '.h'],
     defaultSnippet:
       '#include <stdio.h>\n\nint main(void) {\n  printf("Hello from CodeMind\\n");\n  return 0;\n}',
-  }),
-  editOnly({
+  },
+  {
     id: 'csharp',
     label: 'C#',
     editorLanguageId: 'csharp',
     extensions: ['.cs'],
     defaultSnippet: 'using System;\n\nConsole.WriteLine("Hello from CodeMind");',
-  }),
-  editOnly({
+  },
+  {
     id: 'php',
     label: 'PHP',
     extensions: ['.php'],
     defaultSnippet: '<?php\necho "Hello from CodeMind\\n";',
-  }),
-  editOnly({
+  },
+  {
     id: 'kotlin',
     label: 'Kotlin',
     extensions: ['.kt', '.kts'],
     defaultSnippet: 'fun main() {\n    println("Hello from CodeMind")\n}',
-  }),
-  editOnly({
+  },
+  {
     id: 'swift',
     label: 'Swift',
     extensions: ['.swift'],
     defaultSnippet: 'print("Hello from CodeMind")',
-  }),
-  editOnly({
+  },
+  {
     id: 'dart',
     label: 'Dart',
     extensions: ['.dart'],
     defaultSnippet: "void main() {\n  print('Hello from CodeMind');\n}",
-  }),
-  editOnly({
+  },
+  {
     id: 'lua',
     label: 'Lua',
     extensions: ['.lua'],
     defaultSnippet: "print('Hello from CodeMind')",
-  }),
-  editOnly({
+  },
+  {
     id: 'perl',
     label: 'Perl',
     extensions: ['.pl', '.pm'],
     defaultSnippet: 'use strict;\nuse warnings;\n\nprint "Hello from CodeMind\\n";',
-  }),
-  editOnly({
+  },
+  {
     id: 'scala',
     label: 'Scala',
     extensions: ['.scala', '.sc'],
     defaultSnippet: 'object Main extends App {\n  println("Hello from CodeMind")\n}',
-  }),
-  editOnly({
+  },
+  {
     id: 'haskell',
     label: 'Haskell',
     extensions: ['.hs'],
     defaultSnippet: 'main :: IO ()\nmain = putStrLn "Hello from CodeMind"',
-  }),
-  editOnly({
+  },
+  {
     id: 'ocaml',
     label: 'OCaml',
     extensions: ['.ml', '.mli'],
     defaultSnippet: 'print_endline "Hello from CodeMind"',
-  }),
-  editOnly({
+  },
+  {
     id: 'fortran',
     label: 'Fortran',
     extensions: ['.f90', '.f95', '.f03', '.f08', '.for'],
     defaultSnippet: 'program hello\n  print *, "Hello from CodeMind"\nend program hello',
-  }),
-  dataViewer({
-    id: 'xml',
-    label: 'XML',
-    extensions: ['.xml', '.svg'],
-    defaultSnippet: '<codemind>\n  <mode>workspace</mode>\n</codemind>',
-  }),
-  dataViewer({
-    id: 'toml',
-    label: 'TOML',
-    extensions: ['.toml'],
-    defaultSnippet: '[codemind]\nmode = "workspace"',
-  }),
-  editOnly({
+  },
+  {
     id: 'dockerfile',
     label: 'Dockerfile',
     editorLanguageId: 'dockerfile',
     extensions: ['Dockerfile', '.dockerfile'],
     defaultSnippet:
       'FROM node:22-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm ci --omit=dev',
-  }),
-  editOnly({
+  },
+  {
     id: 'powershell',
     label: 'PowerShell',
     editorLanguageId: 'powershell',
     extensions: ['.ps1', '.psm1'],
     defaultSnippet: 'Write-Output "Hello from CodeMind"',
-  }),
-  editOnly({
+  },
+  {
     id: 'zig',
     label: 'Zig',
     extensions: ['.zig'],
@@ -392,7 +373,47 @@ export const UNIVERSAL_LANGUAGE_REGISTRY: readonly CodeLanguageDefinition[] = [
       'const std = @import("std");\n\npub fn main() void {\n    std.debug.print("Hello from CodeMind\\n", .{});\n}',
     notes:
       'Editor metadata only; Monaco may treat this as plain text until a syntax mode is added.',
-  }),
+  },
+]
+
+const DATA_VIEWER_LANGUAGE_SEEDS: readonly LanguageSeed[] = [
+  {
+    id: 'json',
+    label: 'JSON',
+    extensions: ['.json'],
+    defaultSnippet:
+      '{\n  "name": "CodeMind",\n  "languages": ["JavaScript", "TypeScript", "Python"]\n}',
+  },
+  {
+    id: 'yaml',
+    label: 'YAML',
+    extensions: ['.yaml', '.yml'],
+    defaultSnippet: 'name: CodeMind\nlanguages:\n  - JavaScript\n  - TypeScript\n  - Python',
+  },
+  {
+    id: 'markdown',
+    label: 'Markdown',
+    extensions: ['.md', '.mdx'],
+    defaultSnippet: '# CodeMind Notes\n\n- Edit safely\n- Run only languages with real runners',
+  },
+  {
+    id: 'xml',
+    label: 'XML',
+    extensions: ['.xml', '.svg'],
+    defaultSnippet: '<codemind>\n  <mode>workspace</mode>\n</codemind>',
+  },
+  {
+    id: 'toml',
+    label: 'TOML',
+    extensions: ['.toml'],
+    defaultSnippet: '[codemind]\nmode = "workspace"',
+  },
+]
+
+export const UNIVERSAL_LANGUAGE_REGISTRY: readonly CodeLanguageDefinition[] = [
+  ...EXECUTABLE_LANGUAGE_SEEDS.map((seed) => executable(seed)),
+  ...EDIT_ONLY_LANGUAGE_SEEDS.map((seed) => editOnly(seed)),
+  ...DATA_VIEWER_LANGUAGE_SEEDS.map((seed) => dataViewer(seed)),
 ]
 
 const runnerIds = new Set<CodeRunnerId>(CODE_RUNNER_DEFINITIONS.map((runner) => runner.id))
