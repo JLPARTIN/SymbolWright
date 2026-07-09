@@ -22,9 +22,11 @@ describe('real sql.js runtime smoke tests', () => {
     const db = new runtime.Database()
 
     try {
-      const result = db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, active INTEGER);
-INSERT INTO users (name, active) VALUES ('Ada', 1), ('Linus', 0), ('Grace', 1);
-SELECT name FROM users WHERE active = 1 ORDER BY name;`)
+      const result = db.exec(`
+        CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, active INTEGER);
+        INSERT INTO users (name, active) VALUES ('Ada', 1), ('Linus', 0), ('Grace', 1);
+        SELECT name FROM users WHERE active = 1 ORDER BY name;
+      `)
 
       expect(result).toHaveLength(1)
       expect(result[0]?.columns).toEqual(['name'])
