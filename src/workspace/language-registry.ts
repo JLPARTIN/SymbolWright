@@ -1,4 +1,9 @@
 import {
+  PYODIDE_BROWSER_RUNNER_ID,
+  PYODIDE_BROWSER_RUNNER_SAFETY,
+  PYODIDE_BROWSER_STARTER_SNIPPET,
+} from './pyodide-browser-runner.js'
+import {
   SQL_BROWSER_RUNNER_ID,
   SQL_BROWSER_RUNNER_SAFETY,
   SQL_BROWSER_STARTER_SNIPPET,
@@ -20,6 +25,7 @@ export const CODE_RUNNER_IDS = [
   'server-typescript-node',
   'html-preview',
   SQL_BROWSER_RUNNER_ID,
+  PYODIDE_BROWSER_RUNNER_ID,
 ] as const
 export type CodeRunnerId = (typeof CODE_RUNNER_IDS)[number]
 
@@ -109,6 +115,14 @@ export const CODE_RUNNER_DEFINITIONS: readonly CodeRunnerDefinition[] = [
     capability: 'browser-run',
     safetyRestrictions: [...SQL_BROWSER_RUNNER_SAFETY],
     notes: 'Uses the installed sql.js package served from this CodeMind web server.',
+  },
+  {
+    id: PYODIDE_BROWSER_RUNNER_ID,
+    label: 'Browser Pyodide Python Worker',
+    capability: 'browser-run',
+    safetyRestrictions: [...PYODIDE_BROWSER_RUNNER_SAFETY],
+    notes:
+      'Loads the Pyodide browser runtime in a Worker; no CodeMind server-side Python execution is exposed.',
   },
 ]
 
@@ -231,6 +245,19 @@ const EXECUTABLE_LANGUAGE_SEEDS: readonly ExecutableLanguageSeed[] = [
     defaultSnippet: SQL_BROWSER_STARTER_SNIPPET,
     notes: 'Runs SQLite-compatible SQL through sql.js in a browser Worker.',
   },
+  {
+    id: 'python',
+    label: 'Python',
+    editorLanguageId: 'python',
+    extensions: ['.py'],
+    capability: 'browser-run',
+    runnerId: PYODIDE_BROWSER_RUNNER_ID,
+    safetyRestrictions: [...PYODIDE_BROWSER_RUNNER_SAFETY],
+    testCoverage: 'registry-pyodide-browser-runner',
+    defaultSnippet: PYODIDE_BROWSER_STARTER_SNIPPET,
+    notes:
+      'Runs Python through Pyodide in a browser Worker. First run must fetch Pyodide browser assets.',
+  },
 ]
 
 const EDIT_ONLY_LANGUAGE_SEEDS: readonly LanguageSeed[] = [
@@ -239,15 +266,6 @@ const EDIT_ONLY_LANGUAGE_SEEDS: readonly LanguageSeed[] = [
     label: 'CSS',
     extensions: ['.css'],
     defaultSnippet: ':root { color-scheme: dark; }\nbody { font-family: system-ui, sans-serif; }',
-  },
-  {
-    id: 'python',
-    label: 'Python',
-    extensions: ['.py'],
-    defaultSnippet:
-      'def greet(name: str) -> str:\n    return f"Hello, {name}!"\n\nprint(greet("CodeMind"))',
-    notes:
-      'Execution requires a real configured Python sandbox runner such as Pyodide or a server sandbox.',
   },
   {
     id: 'ruby',
