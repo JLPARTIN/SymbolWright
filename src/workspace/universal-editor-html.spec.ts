@@ -23,6 +23,20 @@ describe('universal editor html', () => {
     expect(html).toContain('extension-indicator')
   })
 
+  it('renders multi-file session controls and local persistence wiring', () => {
+    const html = renderUniversalWorkspaceHtml()
+
+    expect(html).toContain('session-name')
+    expect(html).toContain('file-tabs')
+    expect(html).toContain('new-file-button')
+    expect(html).toContain('rename-file-button')
+    expect(html).toContain('delete-file-button')
+    expect(html).toContain('export-session-button')
+    expect(html).toContain('import-session-json')
+    expect(html).toContain('codemind.workspace.session.v1')
+    expect(html).toContain('window.localStorage.setItem')
+  })
+
   it('embeds only registered runner ids in the client payload', () => {
     const payload = createUniversalWorkspacePayload()
     const runnerIds = new Set(payload.runners.map((runner) => runner.id))
@@ -38,6 +52,14 @@ describe('universal editor html', () => {
     const payload = createUniversalWorkspacePayload({ chatUrl: 'http://localhost:8787' })
 
     expect(payload.chatUrl).toBe('http://localhost:8787')
+  })
+
+  it('embeds a default workspace session in the payload', () => {
+    const payload = createUniversalWorkspacePayload()
+
+    expect(payload.defaultSession.schemaVersion).toBe(1)
+    expect(payload.defaultSession.files).toHaveLength(1)
+    expect(payload.defaultSession.activeFileId).toBe(payload.defaultSession.files[0]?.id)
   })
 
   it('embeds the sql.js worker source and SQL runner limits in the payload', () => {
