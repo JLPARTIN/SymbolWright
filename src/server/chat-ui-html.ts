@@ -49,7 +49,7 @@ export function renderChatUiHtml(): string {
 <body>
   <main>
     <h1>CodeMind Chat</h1>
-    <p class="sub">Bring your own provider API key, or stay in browser-only mode with no key at all. CodeMind routes provider requests through its provider gateway &mdash; your provider key never leaves the server.</p>
+    <p class="sub">Bring your own provider API key, stay in browser-only mode with no key at all, or open a structured draft from the Universal Workspace. CodeMind routes provider requests through its provider gateway &mdash; your provider key never leaves the server.</p>
     <p id="mode-status" class="sub"><strong>Current mode:</strong> not connected yet</p>
 
     <section id="connect-section" style="display:block">
@@ -352,13 +352,13 @@ export function renderChatUiHtml(): string {
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
 
-        let boundary = buffer.indexOf('\\n\\n');
+        let boundary = buffer.indexOf('\n\n');
         while (boundary !== -1) {
           const frame = buffer.slice(0, boundary);
           buffer = buffer.slice(boundary + 2);
-          boundary = buffer.indexOf('\\n\\n');
+          boundary = buffer.indexOf('\n\n');
 
-          const lines = frame.split('\\n');
+          const lines = frame.split('\n');
           let eventType = 'message';
           let dataLine = '';
           for (const line of lines) {
@@ -391,7 +391,7 @@ export function renderChatUiHtml(): string {
 
         await readSseFrames(response, (eventType, payload) => {
           if (eventType === 'error') {
-            assistantText += '\\n[error: ' + (payload.message || 'unknown error') + ']';
+            assistantText += '\n[error: ' + (payload.message || 'unknown error') + ']';
             assistantBubble.textContent = assistantText;
             assistantBubble.className = 'msg error';
           } else if (typeof payload.delta === 'string') {
@@ -470,6 +470,26 @@ export function renderChatUiHtml(): string {
       el('send-btn').disabled = false;
     }
 
+    function applyWorkspaceDraftFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const draft = params.get('draft');
+      const agentMode = params.get('agentMode');
+
+      if (draft === null || draft.trim().length === 0) {
+        return;
+      }
+
+      el('chat-input').value = draft;
+      appendMessage('tool', 'Workspace code-intelligence draft loaded. Connect and choose API-backed mode to send it.');
+      setText('connect-status', 'Workspace draft loaded. Connect with CODEMIND_API_KEY, then use API-backed mode to send it.', 'ok');
+
+      if (agentMode === 'READ_ONLY' || agentMode === 'PROPOSAL_ONLY' || agentMode === 'APPROVED_EXECUTION') {
+        el('agent-mode-toggle').checked = true;
+        el('agent-mode-select').value = agentMode;
+        el('agent-mode-controls').style.display = 'block';
+      }
+    }
+
     el('send-btn').addEventListener('click', sendMessage);
     el('chat-input').addEventListener('keydown', (event) => {
       if (event.key === 'Enter' && !event.shiftKey) {
@@ -477,6 +497,8 @@ export function renderChatUiHtml(): string {
         sendMessage();
       }
     });
+
+    applyWorkspaceDraftFromUrl();
 
     if (state.codemindKey) {
       el('codemind-key').value = state.codemindKey;
