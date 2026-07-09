@@ -58,7 +58,8 @@ export const CODEMIND_WORKSPACE_I18N: Record<WorkspaceLocale, WorkspaceTranslati
   },
   es: {
     title: 'Espacio de trabajo políglota universal',
-    subtitle: 'Edita, inspecciona, previsualiza y ejecuta solo los lenguajes con runners reales registrados.',
+    subtitle:
+      'Edita, inspecciona, previsualiza y ejecuta solo los lenguajes con runners reales registrados.',
     languageLabel: 'Lenguaje de programación',
     localeLabel: 'Idioma de la interfaz',
     runButton: 'Ejecutar',
