@@ -93,8 +93,10 @@ export function createWorkspaceCodeIntelligenceBridgeResponse(
     code: request.code,
   }
 
-  if (request.sourceLanguageId !== undefined) planRequest.sourceLanguageId = request.sourceLanguageId
-  if (request.targetLanguageId !== undefined) planRequest.targetLanguageId = request.targetLanguageId
+  if (request.sourceLanguageId !== undefined)
+    planRequest.sourceLanguageId = request.sourceLanguageId
+  if (request.targetLanguageId !== undefined)
+    planRequest.targetLanguageId = request.targetLanguageId
   if (request.selectedLanguageId !== undefined) {
     planRequest.selectedLanguageId = request.selectedLanguageId
   }
