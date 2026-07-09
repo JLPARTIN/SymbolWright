@@ -76,4 +76,51 @@ console.log(value)`,
     expect(result.status).toBe('unsupported')
     expect(result.errors.join('\n')).toContain('edit-only')
   })
+
+  it('returns unsupported for an unknown language id without a runner', async () => {
+    const result = await runServerCode({
+      languageId: 'brainfuck',
+      code: '++++',
+    })
+
+    expect(result.ok).toBe(false)
+    expect(result.status).toBe('unsupported')
+    expect(result.capability).toBe('not-yet-supported')
+    expect(result.errors.join('\n')).toContain('Unsupported language id')
+  })
+
+  it('rejects oversized code before creating a runtime execution result', async () => {
+    const result = await runServerCode({
+      languageId: 'typescript',
+      code: `console.log('${'x'.repeat(65_000)}')`,
+    })
+
+    expect(result.ok).toBe(false)
+    expect(result.status).toBe('unsupported')
+    expect(result.errors.join('\n')).toContain('Code input is too large')
+  })
+
+  it('truncates large output through the configured output cap', async () => {
+    const result = await runServerCode({
+      languageId: 'typescript',
+      code: `console.log('${'x'.repeat(2_000)}')`,
+      maxOutputBytes: 1_024,
+    })
+
+    expect(result.ok).toBe(true)
+    expect(result.status).toBe('success')
+    expect(result.output).toContain('[output truncated at 1024 bytes]')
+  })
+
+  it('falls back to string conversion for circular console values', async () => {
+    const result = await runServerCode({
+      languageId: 'typescript',
+      code: `const value: Record<string, unknown> = {}
+value['self'] = value
+console.log(value)`,
+    })
+
+    expect(result.ok).toBe(true)
+    expect(result.output).toContain('[object Object]')
+  })
 })
