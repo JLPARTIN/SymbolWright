@@ -6,6 +6,11 @@ import {
   getDefaultWorkspaceLanguageId,
   isExecutableCapability,
 } from './language-registry.js'
+import {
+  SQL_BROWSER_RUNNER_ID,
+  SQL_BROWSER_RUNNER_LIMITS,
+  buildSqlJsWorkerSource,
+} from './sql-browser-runner.js'
 import type { CodeLanguageDefinition } from './language-registry.js'
 
 export type UniversalWorkspaceClientPayload = {
@@ -15,6 +20,8 @@ export type UniversalWorkspaceClientPayload = {
   locales: typeof CODEMIND_WORKSPACE_LOCALES
   translations: typeof CODEMIND_WORKSPACE_I18N
   chatUrl: string
+  sqlWorkerSource: string
+  sqlLimits: typeof SQL_BROWSER_RUNNER_LIMITS
 }
 
 export type UniversalWorkspaceRenderOptions = {
@@ -31,6 +38,8 @@ export function createUniversalWorkspacePayload(
     locales: CODEMIND_WORKSPACE_LOCALES,
     translations: CODEMIND_WORKSPACE_I18N,
     chatUrl: options.chatUrl ?? '#',
+    sqlWorkerSource: buildSqlJsWorkerSource(),
+    sqlLimits: SQL_BROWSER_RUNNER_LIMITS,
   }
 }
 
@@ -76,6 +85,9 @@ export function renderUniversalWorkspaceHtml(
     button:disabled { opacity:0.48; cursor:not-allowed; }
     pre { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; font: 13px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
     iframe { width:100%; min-height:360px; border:1px solid #2a355f; border-radius:12px; background:white; }
+    table { width:100%; border-collapse: collapse; margin-top:10px; font-size: 13px; }
+    th, td { border:1px solid #2a355f; padding:6px 8px; text-align:left; vertical-align:top; }
+    th { background:#0c1226; color:#dbe6ff; }
     .muted { color:var(--muted); }
     .grid { display:grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr); gap:14px; }
     .controls { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px; }
@@ -145,6 +157,7 @@ export function renderUniversalWorkspaceHtml(
   <script>
     const payload = JSON.parse(document.getElementById('workspace-data').textContent);
     const state = { languageId: payload.defaultLanguageId, locale: 'en', lastIntelligenceDraft: null };
+    const SQL_RUNNER_ID = '${SQL_BROWSER_RUNNER_ID}';
     const el = (id) => document.getElementById(id);
     const languageSelect = el('language-select');
     const targetLanguageSelect = el('target-language-select');
@@ -208,6 +221,7 @@ export function renderUniversalWorkspaceHtml(
       diagnosticsPanel.textContent = language.safetyRestrictions.concat(language.notes ? [language.notes] : []).join('\n');
       if (!canRun(language)) { errorsPanel.textContent = t('disabledExecution'); return; }
       if (language.runnerId === 'browser-javascript') { await runJavaScriptInWorker(editor.value); return; }
+      if (language.runnerId === SQL_RUNNER_ID) { await runSqlInWorker(editor.value); return; }
       if (language.runnerId === 'html-preview') {
         previewPanel.style.display = 'block';
         const iframe = document.createElement('iframe');
@@ -278,6 +292,74 @@ export function renderUniversalWorkspaceHtml(
           worker.terminate();
           resolve();
         };
+      });
+    }
+
+    function runSqlInWorker(code) {
+      return new Promise((resolve) => {
+        outputPanel.textContent = 'Running SQL through sql.js...';
+        const blob = new Blob([payload.sqlWorkerSource], { type: 'text/javascript' });
+        const url = URL.createObjectURL(blob);
+        const worker = new Worker(url);
+        const timer = window.setTimeout(() => {
+          worker.terminate();
+          URL.revokeObjectURL(url);
+          outputPanel.textContent = '';
+          errorsPanel.textContent = 'SQL execution timed out after ' + payload.sqlLimits.timeoutMs + 'ms.';
+          resolve();
+        }, payload.sqlLimits.timeoutMs);
+        worker.onmessage = (event) => {
+          window.clearTimeout(timer);
+          URL.revokeObjectURL(url);
+          worker.terminate();
+          const result = event.data;
+          outputPanel.textContent = result.output || '';
+          errorsPanel.textContent = (result.errors || []).join('\n');
+          renderSqlResultSets(result.resultSets || []);
+          resolve();
+        };
+        worker.onerror = (event) => {
+          window.clearTimeout(timer);
+          URL.revokeObjectURL(url);
+          worker.terminate();
+          outputPanel.textContent = '';
+          errorsPanel.textContent = event.message || 'SQL worker error';
+          resolve();
+        };
+        worker.postMessage({ code });
+      });
+    }
+
+    function renderSqlResultSets(resultSets) {
+      previewPanel.innerHTML = '';
+      previewPanel.style.display = resultSets.length === 0 ? 'none' : 'block';
+      resultSets.forEach((set, setIndex) => {
+        const title = document.createElement('p');
+        title.className = 'muted';
+        title.textContent = 'Result set ' + (setIndex + 1) + (set.truncatedRows ? ' (truncated)' : '');
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        set.columns.forEach((column) => {
+          const th = document.createElement('th');
+          th.textContent = column;
+          headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        set.values.forEach((row) => {
+          const tr = document.createElement('tr');
+          row.forEach((cell) => {
+            const td = document.createElement('td');
+            td.textContent = cell === null || cell === undefined ? 'NULL' : String(cell);
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        previewPanel.appendChild(title);
+        previewPanel.appendChild(table);
       });
     }
 
