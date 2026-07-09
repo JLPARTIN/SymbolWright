@@ -42,7 +42,12 @@ const PYODIDE_BASE_URL = '${baseUrl}';
 
 function limitText(value) {
   if (value.length <= LIMITS.maxOutputChars) return value;
-  return value.slice(0, LIMITS.maxOutputChars) + '\\n[output truncated at ' + LIMITS.maxOutputChars + ' characters]';
+  return (
+    value.slice(0, LIMITS.maxOutputChars) +
+    '\\n[output truncated at ' +
+    LIMITS.maxOutputChars +
+    ' characters]'
+  );
 }
 
 async function loadRuntime() {
@@ -83,8 +88,16 @@ self.onmessage = async (event) => {
 
   try {
     const runtime = await loadRuntime();
-    runtime.setStdout({ batched: (text) => { stdout += text + '\\n'; } });
-    runtime.setStderr({ batched: (text) => { stderr += text + '\\n'; } });
+    runtime.setStdout({
+      batched: (text) => {
+        stdout += text + '\\n';
+      },
+    });
+    runtime.setStderr({
+      batched: (text) => {
+        stderr += text + '\\n';
+      },
+    });
     await runtime.runPythonAsync(code);
     self.postMessage({
       ok: true,
