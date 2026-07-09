@@ -45,4 +45,34 @@ describe('cross-language equivalence harness', () => {
     expect(result.status).toBe('FAIL')
     expect(result.findings.join('\n')).toContain('mixed')
   })
+
+  it('returns UNVERIFIED for unknown example ids', () => {
+    const result = evaluateEquivalenceOutputs('missing-example', [])
+
+    expect(result.status).toBe('UNVERIFIED')
+    expect(result.findings).toEqual(['Unknown equivalence example: missing-example'])
+  })
+
+  it('fails when an expected test output is missing', () => {
+    const result = evaluateEquivalenceOutputs('factorial-js-to-ts', [
+      { testName: 'zero', actual: 1 },
+      { testName: 'one', actual: 1 },
+    ])
+
+    expect(result.status).toBe('FAIL')
+    expect(result.findings.join('\n')).toContain('five: missing observed output')
+  })
+
+  it('canonicalizes nested object keys before comparing expected and observed outputs', () => {
+    const result = evaluateEquivalenceOutputs('json-transform-js-to-ts', [
+      { testName: 'mixed users', actual: ['Ada', 'Zoe'] },
+    ])
+    const objectResult = evaluateEquivalenceOutputs('sort-numbers-js-to-ts', [
+      { testName: 'mixed', actual: [-2, 1, 4, 10] },
+      { testName: 'duplicates', actual: [1, 3, 3] },
+    ])
+
+    expect(result.status).toBe('PASS')
+    expect(objectResult.status).toBe('PASS')
+  })
 })
