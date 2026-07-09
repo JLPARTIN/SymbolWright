@@ -321,7 +321,12 @@ export const UNIVERSAL_LANGUAGE_REGISTRY: readonly CodeLanguageDefinition[] = [
     extensions: ['.dart'],
     defaultSnippet: "void main() {\n  print('Hello from CodeMind');\n}",
   }),
-  editOnly({ id: 'lua', label: 'Lua', extensions: ['.lua'], defaultSnippet: "print('Hello from CodeMind')" }),
+  editOnly({
+    id: 'lua',
+    label: 'Lua',
+    extensions: ['.lua'],
+    defaultSnippet: "print('Hello from CodeMind')",
+  }),
   editOnly({
     id: 'perl',
     label: 'Perl',
