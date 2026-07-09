@@ -93,6 +93,31 @@ The code-intelligence router uses a structured translation flow:
 
 CodeMind must never present translated code as proven equivalent unless tests actually run.
 
+## Workspace-to-chat intelligence bridge
+
+The workspace now exposes a real bridge endpoint:
+
+```txt
+POST /api/workspace/intelligence
+```
+
+The endpoint accepts the selected code, source language, optional target language, diagnostics, output, errors, task kind, and verification status. It returns:
+
+- the structured code-intelligence task plan;
+- a chat-ready prompt containing the selected code and workspace context;
+- the suggested agent mode, either `READ_ONLY` or `PROPOSAL_ONLY`;
+- a draft message payload that can be opened in the existing CodeMind Chat UI.
+
+The bridge does not call a provider by itself. It prepares the prompt and hands it to the real chat/agent surface, where the operator still connects with `CODEMIND_API_KEY`, chooses browser-only or API-backed mode, and decides whether to send the draft through `/api/chat` or `/api/agent`.
+
+The CodeMind Chat UI accepts workspace drafts through query parameters:
+
+```txt
+?draft=<encoded prompt>&agentMode=READ_ONLY
+```
+
+This keeps provider secrets out of the workspace page and avoids creating a second fake chat system.
+
 ## Cross-language equivalence harness
 
 The starter equivalence harness includes deterministic examples for:
@@ -131,6 +156,15 @@ Open the forwarded port for `3005`, then use:
 ```
 
 The dashboard also links directly to **Open Universal Workspace**.
+
+To use workspace drafts in chat, also start the chat server in another terminal:
+
+```bash
+export CODEMIND_API_KEY=$(openssl rand -hex 16)
+npm run serve
+```
+
+Then choose a code-intelligence task in `/workspace` and use **Open draft in CodeMind Chat**.
 
 ## Troubleshooting: Run button disabled
 
