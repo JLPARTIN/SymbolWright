@@ -67,11 +67,12 @@ describe('UNIVERSAL_LANGUAGE_REGISTRY', () => {
     const editOnlyIds = listEditOnlyLanguages().map((language) => language.id)
 
     expect(editOnlyIds).toEqual(
-      expect.arrayContaining(['python', 'ruby', 'r', 'java', 'go', 'rust', 'cpp', 'csharp']),
+      expect.arrayContaining(['ruby', 'r', 'java', 'go', 'rust', 'cpp', 'csharp']),
     )
     expect(editOnlyIds).not.toContain('sql')
+    expect(editOnlyIds).not.toContain('python')
 
-    for (const id of ['python', 'ruby', 'r', 'java', 'go', 'rust', 'cpp', 'csharp']) {
+    for (const id of ['ruby', 'r', 'java', 'go', 'rust', 'cpp', 'csharp']) {
       expect(findLanguageDefinition(id)?.runnerId).toBeUndefined()
     }
   })
@@ -84,12 +85,21 @@ describe('UNIVERSAL_LANGUAGE_REGISTRY', () => {
     expect(sql?.safetyRestrictions.join('\n')).toContain('sql.js')
   })
 
+  it('marks Python executable only because the Pyodide browser runner is registered', () => {
+    const python = findLanguageDefinition('python')
+
+    expect(python?.capability).toBe('browser-run')
+    expect(python?.runnerId).toBe('browser-pyodide')
+    expect(python?.safetyRestrictions.join('\n')).toContain('Pyodide')
+  })
+
   it('surfaces only true runnable/previewable languages as executable', () => {
     expect(listExecutableLanguages().map((language) => language.id)).toEqual([
       'javascript',
       'typescript',
       'html',
       'sql',
+      'python',
     ])
   })
 
