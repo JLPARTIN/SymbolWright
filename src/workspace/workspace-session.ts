@@ -101,7 +101,12 @@ export function createWorkspaceFile(
 export function updateWorkspaceFile(
   session: WorkspaceSession,
   fileId: string,
-  patch: Partial<Pick<WorkspaceSessionFile, 'name' | 'languageId' | 'code' | 'output' | 'errors' | 'diagnostics' | 'dirty'>>,
+  patch: Partial<
+    Pick<
+      WorkspaceSessionFile,
+      'name' | 'languageId' | 'code' | 'output' | 'errors' | 'diagnostics' | 'dirty'
+    >
+  >,
   now = new Date(),
 ): WorkspaceSession {
   const timestamp = now.toISOString()
@@ -237,7 +242,8 @@ function assertWorkspaceSession(value: unknown): asserts value is WorkspaceSessi
     throw new Error('Workspace session requires a non-empty name.')
   }
 
-  if (typeof value['activeFileId'] !== 'string' || value['activeFileId'].trim().length === 0) {
+  const activeFileId = value['activeFileId']
+  if (typeof activeFileId !== 'string' || activeFileId.trim().length === 0) {
     throw new Error('Workspace session requires an active file id.')
   }
 
@@ -254,8 +260,8 @@ function assertWorkspaceSession(value: unknown): asserts value is WorkspaceSessi
     ids.add(file.id)
   }
 
-  if (!ids.has(value['activeFileId'])) {
-    throw new Error(`Workspace active file is missing: ${value['activeFileId']}`)
+  if (!ids.has(activeFileId)) {
+    throw new Error(`Workspace active file is missing: ${activeFileId}`)
   }
 }
 
@@ -264,11 +270,13 @@ function assertWorkspaceSessionFile(value: unknown): asserts value is WorkspaceS
     throw new Error('Workspace file must be an object.')
   }
 
-  for (const key of ['id', 'name', 'languageId', 'code', 'output', 'errors', 'diagnostics']) {
-    if (typeof value[key] !== 'string') {
-      throw new Error(`Workspace file requires string field: ${key}`)
-    }
-  }
+  assertStringField(value, 'id')
+  assertStringField(value, 'name')
+  assertStringField(value, 'languageId')
+  assertStringField(value, 'code')
+  assertStringField(value, 'output')
+  assertStringField(value, 'errors')
+  assertStringField(value, 'diagnostics')
 
   if (typeof value['dirty'] !== 'boolean') {
     throw new Error('Workspace file requires boolean dirty field.')
@@ -276,6 +284,18 @@ function assertWorkspaceSessionFile(value: unknown): asserts value is WorkspaceS
 
   if (findLanguageDefinition(value['languageId']) === undefined) {
     throw new Error(`Workspace file references unknown language: ${value['languageId']}`)
+  }
+}
+
+function assertStringField(
+  value: Record<string, unknown>,
+  key: keyof Pick<
+    WorkspaceSessionFile,
+    'id' | 'name' | 'languageId' | 'code' | 'output' | 'errors' | 'diagnostics'
+  >,
+): asserts value is Record<typeof key, string> {
+  if (typeof value[key] !== 'string') {
+    throw new Error(`Workspace file requires string field: ${key}`)
   }
 }
 
