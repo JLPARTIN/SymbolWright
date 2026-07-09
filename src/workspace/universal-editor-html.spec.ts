@@ -48,15 +48,26 @@ describe('universal editor html', () => {
     expect(payload.sqlLimits.timeoutMs).toBe(2_000)
   })
 
+  it('embeds the Pyodide worker source and Python runner limits in the payload', () => {
+    const payload = createUniversalWorkspacePayload()
+
+    expect(payload.pyodideWorkerSource).toContain('loadPyodide')
+    expect(payload.pyodideWorkerSource).toContain('runPythonAsync(code)')
+    expect(payload.pyodideLimits.timeoutMs).toBe(8_000)
+  })
+
   it('shows the exact honest disabled state for edit-only languages', () => {
-    expect(renderWorkspaceDisabledExecutionMessage('python')).toBe(
+    expect(renderWorkspaceDisabledExecutionMessage('ruby')).toBe(
       'This language currently supports editing, syntax highlighting, and AI assistance. Execution requires a configured sandbox runner.',
     )
   })
 
-  it('shows SQL as executable through the sql.js runner', () => {
+  it('shows SQL and Python as executable through their real browser runners', () => {
     expect(renderWorkspaceDisabledExecutionMessage('sql')).toBe(
       'SQL is executable through runner browser-sqljs.',
+    )
+    expect(renderWorkspaceDisabledExecutionMessage('python')).toBe(
+      'Python is executable through runner browser-pyodide.',
     )
   })
 
@@ -87,5 +98,14 @@ describe('universal editor html', () => {
     expect(html).toContain('renderSqlResultSets')
     expect(html).toContain('SQL execution timed out')
     expect(html).toContain("document.createElement('table')")
+  })
+
+  it('wires Python Run to the browser Pyodide worker', () => {
+    const html = renderUniversalWorkspaceHtml()
+
+    expect(html).toContain("const PYODIDE_RUNNER_ID = 'browser-pyodide'")
+    expect(html).toContain('runPythonInPyodideWorker(editor.value)')
+    expect(html).toContain('Loading Pyodide and running Python')
+    expect(html).toContain('Python execution timed out')
   })
 })

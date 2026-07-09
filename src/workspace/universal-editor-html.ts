@@ -7,6 +7,11 @@ import {
   isExecutableCapability,
 } from './language-registry.js'
 import {
+  PYODIDE_BROWSER_RUNNER_ID,
+  PYODIDE_BROWSER_RUNNER_LIMITS,
+  buildPyodideWorkerSource,
+} from './pyodide-browser-runner.js'
+import {
   SQL_BROWSER_RUNNER_ID,
   SQL_BROWSER_RUNNER_LIMITS,
   buildSqlJsWorkerSource,
@@ -22,6 +27,8 @@ export type UniversalWorkspaceClientPayload = {
   chatUrl: string
   sqlWorkerSource: string
   sqlLimits: typeof SQL_BROWSER_RUNNER_LIMITS
+  pyodideWorkerSource: string
+  pyodideLimits: typeof PYODIDE_BROWSER_RUNNER_LIMITS
 }
 
 export type UniversalWorkspaceRenderOptions = {
@@ -40,6 +47,8 @@ export function createUniversalWorkspacePayload(
     chatUrl: options.chatUrl ?? '#',
     sqlWorkerSource: buildSqlJsWorkerSource(),
     sqlLimits: SQL_BROWSER_RUNNER_LIMITS,
+    pyodideWorkerSource: buildPyodideWorkerSource(),
+    pyodideLimits: PYODIDE_BROWSER_RUNNER_LIMITS,
   }
 }
 
@@ -158,6 +167,7 @@ export function renderUniversalWorkspaceHtml(
     const payload = JSON.parse(document.getElementById('workspace-data').textContent);
     const state = { languageId: payload.defaultLanguageId, locale: 'en', lastIntelligenceDraft: null };
     const SQL_RUNNER_ID = '${SQL_BROWSER_RUNNER_ID}';
+    const PYODIDE_RUNNER_ID = '${PYODIDE_BROWSER_RUNNER_ID}';
     const el = (id) => document.getElementById(id);
     const languageSelect = el('language-select');
     const targetLanguageSelect = el('target-language-select');
@@ -222,6 +232,7 @@ export function renderUniversalWorkspaceHtml(
       if (!canRun(language)) { errorsPanel.textContent = t('disabledExecution'); return; }
       if (language.runnerId === 'browser-javascript') { await runJavaScriptInWorker(editor.value); return; }
       if (language.runnerId === SQL_RUNNER_ID) { await runSqlInWorker(editor.value); return; }
+      if (language.runnerId === PYODIDE_RUNNER_ID) { await runPythonInPyodideWorker(editor.value); return; }
       if (language.runnerId === 'html-preview') {
         previewPanel.style.display = 'block';
         const iframe = document.createElement('iframe');
@@ -267,47 +278,31 @@ export function renderUniversalWorkspaceHtml(
     }
 
     function runJavaScriptInWorker(code) {
-      return new Promise((resolve) => {
-        const blob = new Blob([workerSource(code)], { type: 'text/javascript' });
-        const url = URL.createObjectURL(blob);
-        const worker = new Worker(url);
-        const timer = window.setTimeout(() => {
-          worker.terminate();
-          URL.revokeObjectURL(url);
-          errorsPanel.textContent = 'JavaScript execution timed out.';
-          resolve();
-        }, 1500);
-        worker.onmessage = (event) => {
-          window.clearTimeout(timer);
-          URL.revokeObjectURL(url);
-          outputPanel.textContent = event.data.output || '';
-          errorsPanel.textContent = (event.data.errors || []).join('\n');
-          worker.terminate();
-          resolve();
-        };
-        worker.onerror = (event) => {
-          window.clearTimeout(timer);
-          URL.revokeObjectURL(url);
-          errorsPanel.textContent = event.message || 'JavaScript worker error';
-          worker.terminate();
-          resolve();
-        };
-      });
+      return runGenericWorker(workerSource(code), {}, 1500, 'JavaScript execution timed out.');
     }
 
     function runSqlInWorker(code) {
+      outputPanel.textContent = 'Running SQL through sql.js...';
+      return runGenericWorker(payload.sqlWorkerSource, { code }, payload.sqlLimits.timeoutMs, 'SQL execution timed out after ' + payload.sqlLimits.timeoutMs + 'ms.', renderSqlResultSets);
+    }
+
+    function runPythonInPyodideWorker(code) {
+      outputPanel.textContent = 'Loading Pyodide and running Python...';
+      return runGenericWorker(payload.pyodideWorkerSource, { code }, payload.pyodideLimits.timeoutMs, 'Python execution timed out after ' + payload.pyodideLimits.timeoutMs + 'ms.');
+    }
+
+    function runGenericWorker(source, message, timeoutMs, timeoutMessage, onResult) {
       return new Promise((resolve) => {
-        outputPanel.textContent = 'Running SQL through sql.js...';
-        const blob = new Blob([payload.sqlWorkerSource], { type: 'text/javascript' });
+        const blob = new Blob([source], { type: 'text/javascript' });
         const url = URL.createObjectURL(blob);
         const worker = new Worker(url);
         const timer = window.setTimeout(() => {
           worker.terminate();
           URL.revokeObjectURL(url);
           outputPanel.textContent = '';
-          errorsPanel.textContent = 'SQL execution timed out after ' + payload.sqlLimits.timeoutMs + 'ms.';
+          errorsPanel.textContent = timeoutMessage;
           resolve();
-        }, payload.sqlLimits.timeoutMs);
+        }, timeoutMs);
         worker.onmessage = (event) => {
           window.clearTimeout(timer);
           URL.revokeObjectURL(url);
@@ -315,7 +310,7 @@ export function renderUniversalWorkspaceHtml(
           const result = event.data;
           outputPanel.textContent = result.output || '';
           errorsPanel.textContent = (result.errors || []).join('\n');
-          renderSqlResultSets(result.resultSets || []);
+          if (typeof onResult === 'function') onResult(result.resultSets || []);
           resolve();
         };
         worker.onerror = (event) => {
@@ -323,10 +318,10 @@ export function renderUniversalWorkspaceHtml(
           URL.revokeObjectURL(url);
           worker.terminate();
           outputPanel.textContent = '';
-          errorsPanel.textContent = event.message || 'SQL worker error';
+          errorsPanel.textContent = event.message || 'Worker error';
           resolve();
         };
-        worker.postMessage({ code });
+        if (Object.keys(message).length > 0) worker.postMessage(message);
       });
     }
 

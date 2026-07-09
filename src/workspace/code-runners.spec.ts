@@ -66,7 +66,7 @@ console.log(value)`,
     expect(result.status).toBe('timeout')
   })
 
-  it('does not run edit-only languages through the server runner', async () => {
+  it('does not route browser-only Python through the server runner', async () => {
     const result = await runServerCode({
       languageId: 'python',
       code: "print('nope')",
@@ -74,7 +74,7 @@ console.log(value)`,
 
     expect(result.ok).toBe(false)
     expect(result.status).toBe('unsupported')
-    expect(result.errors.join('\n')).toContain('edit-only')
+    expect(result.errors.join('\n')).toContain('not handled by the server runner')
   })
 
   it('returns unsupported for an unknown language id without a runner', async () => {
