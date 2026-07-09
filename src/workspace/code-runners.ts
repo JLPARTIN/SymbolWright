@@ -53,9 +53,9 @@ const XMLHttpRequest = undefined;
 const importScripts = undefined;
 try {
 ${code}
-  postMessage({ ok: true, output: __logs.join('\\n'), errors: [] });
+  postMessage({ ok: true, output: __logs.join('\n'), errors: [] });
 } catch (error) {
-  postMessage({ ok: false, output: __logs.join('\\n'), errors: [error && error.stack ? error.stack : String(error)] });
+  postMessage({ ok: false, output: __logs.join('\n'), errors: [error && error.stack ? error.stack : String(error)] });
 }
 `
 }
@@ -297,7 +297,7 @@ function formatConsoleValue(value: unknown): string {
 
   try {
     return JSON.stringify(value)
-  } catch (_error: unknown) {
+  } catch {
     return String(value)
   }
 }
