@@ -287,7 +287,16 @@ function assertWorkspaceSessionFile(value: unknown): asserts value is WorkspaceS
     throw new Error(`Workspace file references unknown language: ${languageId}`)
   }
 
-  Object.assign(value, { id, name, languageId, code, output, errors, diagnostics, dirty })
+  Object.assign(value, {
+    id,
+    name,
+    languageId,
+    code,
+    output,
+    errors,
+    diagnostics,
+    dirty,
+  })
 }
 
 function expectStringField(value: Record<string, unknown>, key: string): string {
