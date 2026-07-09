@@ -86,4 +86,14 @@ describe('renderChatUiHtml', () => {
     expect(html).toContain('local storage')
     expect(html).toContain('shared or public computer')
   })
+
+  it('accepts workspace code-intelligence drafts from query parameters', () => {
+    const html = renderChatUiHtml()
+
+    expect(html).toContain('applyWorkspaceDraftFromUrl')
+    expect(html).toContain("params.get('draft')")
+    expect(html).toContain("params.get('agentMode')")
+    expect(html).toContain('Workspace code-intelligence draft loaded')
+    expect(html).toContain("el('agent-mode-toggle').checked = true")
+  })
 })

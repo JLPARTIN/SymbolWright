@@ -11,6 +11,7 @@ describe('universal editor html', () => {
     const html = renderUniversalWorkspaceHtml()
 
     expect(html).toContain('language-select')
+    expect(html).toContain('target-language-select')
     expect(html).toContain('code-editor')
     expect(html).toContain('run-button')
     expect(html).toContain('copy-code-button')
@@ -33,6 +34,12 @@ describe('universal editor html', () => {
     }
   })
 
+  it('includes the configured chat URL in the workspace payload', () => {
+    const payload = createUniversalWorkspacePayload({ chatUrl: 'http://localhost:8787' })
+
+    expect(payload.chatUrl).toBe('http://localhost:8787')
+  })
+
   it('shows the exact honest disabled state for edit-only languages', () => {
     expect(renderWorkspaceDisabledExecutionMessage('python')).toBe(
       'This language currently supports editing, syntax highlighting, and AI assistance. Execution requires a configured sandbox runner.',
@@ -45,5 +52,16 @@ describe('universal editor html', () => {
     expect(html).toContain('locale-select')
     expect(html).toContain('Espacio de trabajo políglota universal')
     expect(html).toContain('Universal Polyglot Workspace')
+  })
+
+  it('wires code-intelligence buttons to the real workspace bridge endpoint and chat draft link', () => {
+    const html = renderUniversalWorkspaceHtml({ chatUrl: 'http://localhost:8787' })
+
+    expect(html).toContain('/api/workspace/intelligence')
+    expect(html).toContain('chat-draft-link')
+    expect(html).toContain('result.chatDraft.message')
+    expect(html).toContain('agentMode')
+    expect(html).toContain('targetLanguageId')
+    expect(html).toContain('suggestedAgentMode')
   })
 })
