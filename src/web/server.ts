@@ -3,6 +3,10 @@
 import { Buffer } from 'node:buffer'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 
+import {
+  createWorkspaceCodeIntelligenceBridgeResponse,
+  parseWorkspaceCodeIntelligenceRequest,
+} from '../workspace/code-intelligence-bridge.js'
 import { runServerCode, type CodeRunRequest } from '../workspace/code-runners.js'
 import {
   CODE_RUNNER_DEFINITIONS,
@@ -49,7 +53,7 @@ function sendWorkspaceHtml(response: ServerResponse): void {
     'content-type': 'text/html; charset=utf-8',
     'cache-control': 'no-store',
   })
-  response.end(renderUniversalWorkspaceHtml())
+  response.end(renderUniversalWorkspaceHtml({ chatUrl: resolveChatUrl() }))
 }
 
 function sendHtml(response: ServerResponse): void {
@@ -280,6 +284,31 @@ async function handleWorkspaceRun(
   }
 }
 
+async function handleWorkspaceIntelligence(
+  request: IncomingMessage,
+  response: ServerResponse,
+): Promise<void> {
+  if (request.method !== 'POST') {
+    sendJson(response, { ok: false, error: 'Method not allowed. Use POST.' }, 405)
+    return
+  }
+
+  try {
+    const body = await readJsonBody(request)
+    const bridgeRequest = parseWorkspaceCodeIntelligenceRequest(body)
+    sendJson(response, createWorkspaceCodeIntelligenceBridgeResponse(bridgeRequest))
+  } catch (error: unknown) {
+    sendJson(
+      response,
+      {
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      400,
+    )
+  }
+}
+
 async function handleRequest(request: IncomingMessage, response: ServerResponse): Promise<void> {
   const url = request.url || '/'
 
@@ -302,12 +331,18 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
     sendJson(response, {
       languages: UNIVERSAL_LANGUAGE_REGISTRY,
       runners: CODE_RUNNER_DEFINITIONS,
+      chatUrl: resolveChatUrl(),
     })
     return
   }
 
   if (url === '/api/workspace/run') {
     await handleWorkspaceRun(request, response)
+    return
+  }
+
+  if (url === '/api/workspace/intelligence') {
+    await handleWorkspaceIntelligence(request, response)
     return
   }
 
