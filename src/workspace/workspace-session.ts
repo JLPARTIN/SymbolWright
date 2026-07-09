@@ -169,7 +169,7 @@ export function removeWorkspaceFile(
 
   return {
     ...session,
-    activeFileId: session.activeFileId === fileId ? files[0]?.id ?? '' : session.activeFileId,
+    activeFileId: session.activeFileId === fileId ? (files[0]?.id ?? '') : session.activeFileId,
     files,
     updatedAt: now.toISOString(),
   }

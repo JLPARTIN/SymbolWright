@@ -104,6 +104,8 @@ describe('workspace session model', () => {
 
     expect(() => addWorkspaceFile(session, duplicate, now)).toThrow('already exists')
     expect(() => setActiveWorkspaceFile(session, 'missing', now)).toThrow('not found')
-    expect(() => removeWorkspaceFile(session, 'file-main', now)).toThrow('must keep at least one file')
+    expect(() => removeWorkspaceFile(session, 'file-main', now)).toThrow(
+      'must keep at least one file',
+    )
   })
 })
