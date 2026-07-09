@@ -169,10 +169,10 @@ function activeNames(users: User[]): string[] {
     sourceLanguageId: 'javascript',
     targetLanguageId: 'typescript',
     sourceImplementation: `function normalizeText(value) {
-  return value.trim().replace(/\s+/g, ' ').toLowerCase()
+  return value.trim().replace(/\\s+/g, ' ').toLowerCase()
 }`,
     targetImplementation: `function normalizeText(value: string): string {
-  return value.trim().replace(/\s+/g, ' ').toLowerCase()
+  return value.trim().replace(/\\s+/g, ' ').toLowerCase()
 }`,
     tests: [
       {
