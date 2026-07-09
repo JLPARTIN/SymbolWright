@@ -67,12 +67,21 @@ describe('UNIVERSAL_LANGUAGE_REGISTRY', () => {
     const editOnlyIds = listEditOnlyLanguages().map((language) => language.id)
 
     expect(editOnlyIds).toEqual(
-      expect.arrayContaining(['python', 'ruby', 'r', 'sql', 'java', 'go', 'rust', 'cpp', 'csharp']),
+      expect.arrayContaining(['python', 'ruby', 'r', 'java', 'go', 'rust', 'cpp', 'csharp']),
     )
+    expect(editOnlyIds).not.toContain('sql')
 
     for (const id of ['python', 'ruby', 'r', 'java', 'go', 'rust', 'cpp', 'csharp']) {
       expect(findLanguageDefinition(id)?.runnerId).toBeUndefined()
     }
+  })
+
+  it('marks SQL executable only because the sql.js browser runner is registered', () => {
+    const sql = findLanguageDefinition('sql')
+
+    expect(sql?.capability).toBe('browser-run')
+    expect(sql?.runnerId).toBe('browser-sqljs')
+    expect(sql?.safetyRestrictions.join('\n')).toContain('sql.js')
   })
 
   it('surfaces only true runnable/previewable languages as executable', () => {
@@ -80,6 +89,7 @@ describe('UNIVERSAL_LANGUAGE_REGISTRY', () => {
       'javascript',
       'typescript',
       'html',
+      'sql',
     ])
   })
 
