@@ -270,33 +270,34 @@ function assertWorkspaceSessionFile(value: unknown): asserts value is WorkspaceS
     throw new Error('Workspace file must be an object.')
   }
 
-  assertStringField(value, 'id')
-  assertStringField(value, 'name')
-  assertStringField(value, 'languageId')
-  assertStringField(value, 'code')
-  assertStringField(value, 'output')
-  assertStringField(value, 'errors')
-  assertStringField(value, 'diagnostics')
+  const id = expectStringField(value, 'id')
+  const name = expectStringField(value, 'name')
+  const languageId = expectStringField(value, 'languageId')
+  const code = expectStringField(value, 'code')
+  const output = expectStringField(value, 'output')
+  const errors = expectStringField(value, 'errors')
+  const diagnostics = expectStringField(value, 'diagnostics')
+  const dirty = value['dirty']
 
-  if (typeof value['dirty'] !== 'boolean') {
+  if (typeof dirty !== 'boolean') {
     throw new Error('Workspace file requires boolean dirty field.')
   }
 
-  if (findLanguageDefinition(value['languageId']) === undefined) {
-    throw new Error(`Workspace file references unknown language: ${value['languageId']}`)
+  if (findLanguageDefinition(languageId) === undefined) {
+    throw new Error(`Workspace file references unknown language: ${languageId}`)
   }
+
+  Object.assign(value, { id, name, languageId, code, output, errors, diagnostics, dirty })
 }
 
-function assertStringField(
-  value: Record<string, unknown>,
-  key: keyof Pick<
-    WorkspaceSessionFile,
-    'id' | 'name' | 'languageId' | 'code' | 'output' | 'errors' | 'diagnostics'
-  >,
-): asserts value is Record<typeof key, string> {
-  if (typeof value[key] !== 'string') {
+function expectStringField(value: Record<string, unknown>, key: string): string {
+  const field = value[key]
+
+  if (typeof field !== 'string') {
     throw new Error(`Workspace file requires string field: ${key}`)
   }
+
+  return field
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
