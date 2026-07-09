@@ -13,6 +13,7 @@ This workspace separates three different meanings of “multilingual”:
 | JavaScript | `browser-run` | Browser JavaScript Worker |
 | TypeScript | `server-run` | Guarded TypeScript Node VM |
 | SQL | `browser-run` | Browser sql.js SQLite Worker |
+| Python | `browser-run` | Browser Pyodide Python Worker |
 | HTML/CSS | `preview-only` | Sandboxed HTML Preview |
 | JSON | `data-viewer` | none |
 | YAML | `data-viewer` | none |
@@ -20,7 +21,6 @@ This workspace separates three different meanings of “multilingual”:
 | XML | `data-viewer` | none |
 | TOML | `data-viewer` | none |
 | CSS | `edit-only` | none |
-| Python | `edit-only` | none |
 | Ruby | `edit-only` | none |
 | R | `edit-only` | none |
 | Shell | `edit-only` | none |
@@ -50,7 +50,7 @@ The Run/Preview button is enabled only when the selected language has a register
 
 > This language currently supports editing, syntax highlighting, and AI assistance. Execution requires a configured sandbox runner.
 
-That means Python, Ruby, R, Java, Go, Rust, C++, C#, and the other compiled/interpreted languages are intentionally not presented as runnable until a real runner is installed, wired, and tested.
+That means Ruby, R, Java, Go, Rust, C++, C#, and the other compiled/interpreted languages are intentionally not presented as runnable until a real runner is installed, wired, and tested.
 
 ## Browser runner limitations
 
@@ -64,6 +64,8 @@ SQL runs through the installed `sql.js` package in a browser Worker. The web ser
 ```
 
 The SQL runner creates a fresh in-memory SQLite database for each run. It does not expose persistent filesystem access. The Worker is terminated after the configured timeout, and result rows/cell sizes are capped before rendering. SQL output is rendered as a table in the workspace preview panel.
+
+Python runs through Pyodide in a browser Worker. The Worker downloads the Pyodide browser runtime from the configured Pyodide distribution URL on first use, captures stdout/stderr, runs code through `runPythonAsync`, caps output, and is terminated if it exceeds the configured timeout. CodeMind does not expose server-side Python execution in this runner.
 
 HTML/CSS renders through a sandboxed iframe preview. It is a visual preview, not command execution.
 
