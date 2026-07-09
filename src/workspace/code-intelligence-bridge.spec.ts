@@ -33,9 +33,7 @@ describe('workspace code intelligence chat bridge', () => {
     expect(() => parseWorkspaceCodeIntelligenceRequest({ kind: 'nope', code: '' })).toThrow(
       'Unsupported code-intelligence task kind',
     )
-    expect(() => parseWorkspaceCodeIntelligenceRequest({ kind: 'review' })).toThrow(
-      'requires code',
-    )
+    expect(() => parseWorkspaceCodeIntelligenceRequest({ kind: 'review' })).toThrow('requires code')
   })
 
   it('caps oversized code and long context fields', () => {
