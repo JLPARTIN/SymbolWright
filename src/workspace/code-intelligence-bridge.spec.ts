@@ -90,14 +90,14 @@ describe('workspace code intelligence chat bridge', () => {
         kind: 'explain',
         sourceLanguageId: 'python',
         code: 'print("hi")',
-        diagnostics: 'No Python sandbox runner is installed.',
-        errors: 'Execution disabled.',
+        diagnostics: 'Pyodide browser runtime is configured but has not run yet.',
+        errors: 'No execution evidence yet.',
       },
       plan,
     )
 
-    expect(prompt).toContain('Runner: none')
-    expect(prompt).toContain('No Python sandbox runner is installed.')
+    expect(prompt).toContain('Runner: browser-pyodide')
+    expect(prompt).toContain('Pyodide browser runtime is configured')
     expect(prompt).toContain('## Last run errors')
     expect(prompt).toContain('```python')
   })
