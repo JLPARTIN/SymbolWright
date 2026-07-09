@@ -57,12 +57,24 @@ self.onmessage = async (event) => {
   const code = event.data && typeof event.data.code === 'string' ? event.data.code : '';
 
   if (code.trim().length === 0) {
-    self.postMessage({ ok: false, status: 'syntax-error', output: '', errors: ['Python input is empty.'], durationMs: Date.now() - startedAt });
+    self.postMessage({
+      ok: false,
+      status: 'syntax-error',
+      output: '',
+      errors: ['Python input is empty.'],
+      durationMs: Date.now() - startedAt,
+    });
     return;
   }
 
   if (code.length > LIMITS.maxPythonChars) {
-    self.postMessage({ ok: false, status: 'runtime-error', output: '', errors: ['Python input exceeds ' + LIMITS.maxPythonChars + ' characters.'], durationMs: Date.now() - startedAt });
+    self.postMessage({
+      ok: false,
+      status: 'runtime-error',
+      output: '',
+      errors: ['Python input exceeds ' + LIMITS.maxPythonChars + ' characters.'],
+      durationMs: Date.now() - startedAt,
+    });
     return;
   }
 
@@ -96,7 +108,9 @@ self.onmessage = async (event) => {
 `
 }
 
-export function createPyodideResultSummary(result: Pick<PyodideBrowserRunResult, 'ok' | 'status'>): string {
+export function createPyodideResultSummary(
+  result: Pick<PyodideBrowserRunResult, 'ok' | 'status'>,
+): string {
   return result.ok
     ? `Python executed successfully through ${PYODIDE_BROWSER_RUNNER_ID}.`
     : `Python execution failed with status ${result.status}.`
