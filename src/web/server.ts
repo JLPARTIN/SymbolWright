@@ -323,7 +323,9 @@ async function handleSqlVendorAsset(assetName: string, response: ServerResponse)
     const assetPath = join(process.cwd(), 'node_modules', 'sql.js', 'dist', assetName)
     const content = await readFile(assetPath)
     response.writeHead(200, {
-      'content-type': assetName.endsWith('.wasm') ? 'application/wasm' : 'text/javascript; charset=utf-8',
+      'content-type': assetName.endsWith('.wasm')
+        ? 'application/wasm'
+        : 'text/javascript; charset=utf-8',
       'cache-control': 'no-store',
     })
     response.end(content)
