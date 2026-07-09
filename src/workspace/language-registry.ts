@@ -1,3 +1,9 @@
+import {
+  SQL_BROWSER_RUNNER_ID,
+  SQL_BROWSER_RUNNER_SAFETY,
+  SQL_BROWSER_STARTER_SNIPPET,
+} from './sql-browser-runner.js'
+
 export const CODE_LANGUAGE_CAPABILITIES = [
   'browser-run',
   'server-run',
@@ -13,6 +19,7 @@ export const CODE_RUNNER_IDS = [
   'browser-javascript',
   'server-typescript-node',
   'html-preview',
+  SQL_BROWSER_RUNNER_ID,
 ] as const
 export type CodeRunnerId = (typeof CODE_RUNNER_IDS)[number]
 
@@ -95,6 +102,13 @@ export const CODE_RUNNER_DEFINITIONS: readonly CodeRunnerDefinition[] = [
       'Used only for HTML/CSS visual preview.',
     ],
     notes: 'Preview is visual rendering only; it is not a shell or compiled runtime.',
+  },
+  {
+    id: SQL_BROWSER_RUNNER_ID,
+    label: 'Browser sql.js SQLite Worker',
+    capability: 'browser-run',
+    safetyRestrictions: [...SQL_BROWSER_RUNNER_SAFETY],
+    notes: 'Uses the installed sql.js package served from this CodeMind web server.',
   },
 ]
 
@@ -205,6 +219,18 @@ const EXECUTABLE_LANGUAGE_SEEDS: readonly ExecutableLanguageSeed[] = [
     defaultSnippet:
       '<main>\n  <h1>Hello from CodeMind</h1>\n  <p>This is a sandboxed HTML preview.</p>\n</main>\n<style>\n  body { font-family: system-ui, sans-serif; padding: 2rem; }\n</style>',
   },
+  {
+    id: 'sql',
+    label: 'SQL',
+    editorLanguageId: 'sql',
+    extensions: ['.sql'],
+    capability: 'browser-run',
+    runnerId: SQL_BROWSER_RUNNER_ID,
+    safetyRestrictions: [...SQL_BROWSER_RUNNER_SAFETY],
+    testCoverage: 'registry-sqljs-browser-runner',
+    defaultSnippet: SQL_BROWSER_STARTER_SNIPPET,
+    notes: 'Runs SQLite-compatible SQL through sql.js in a browser Worker.',
+  },
 ]
 
 const EDIT_ONLY_LANGUAGE_SEEDS: readonly LanguageSeed[] = [
@@ -234,13 +260,6 @@ const EDIT_ONLY_LANGUAGE_SEEDS: readonly LanguageSeed[] = [
     label: 'R',
     extensions: ['.r', '.R'],
     defaultSnippet: "greet <- function(name) { paste('Hello,', name) }\nprint(greet('CodeMind'))",
-  },
-  {
-    id: 'sql',
-    label: 'SQL',
-    extensions: ['.sql'],
-    defaultSnippet: 'SELECT id, name\nFROM users\nWHERE active = TRUE\nORDER BY name;',
-    notes: 'Add and test a real in-browser SQL engine before marking SQL executable.',
   },
   {
     id: 'shell',
