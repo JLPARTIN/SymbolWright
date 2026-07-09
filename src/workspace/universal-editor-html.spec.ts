@@ -86,6 +86,6 @@ describe('universal editor html', () => {
     expect(html).toContain('runSqlInWorker(editor.value)')
     expect(html).toContain('renderSqlResultSets')
     expect(html).toContain('SQL execution timed out')
-    expect(html).toContain('document.createElement(\'table\')')
+    expect(html).toContain("document.createElement('table')")
   })
 })
