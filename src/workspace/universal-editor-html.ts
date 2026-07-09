@@ -16,6 +16,7 @@ import {
   SQL_BROWSER_RUNNER_LIMITS,
   buildSqlJsWorkerSource,
 } from './sql-browser-runner.js'
+import { createDefaultWorkspaceSession, type WorkspaceSession } from './workspace-session.js'
 import type { CodeLanguageDefinition } from './language-registry.js'
 
 export type UniversalWorkspaceClientPayload = {
@@ -29,6 +30,7 @@ export type UniversalWorkspaceClientPayload = {
   sqlLimits: typeof SQL_BROWSER_RUNNER_LIMITS
   pyodideWorkerSource: string
   pyodideLimits: typeof PYODIDE_BROWSER_RUNNER_LIMITS
+  defaultSession: WorkspaceSession
 }
 
 export type UniversalWorkspaceRenderOptions = {
@@ -49,6 +51,7 @@ export function createUniversalWorkspacePayload(
     sqlLimits: SQL_BROWSER_RUNNER_LIMITS,
     pyodideWorkerSource: buildPyodideWorkerSource(),
     pyodideLimits: PYODIDE_BROWSER_RUNNER_LIMITS,
+    defaultSession: createDefaultWorkspaceSession(),
   }
 }
 
@@ -86,11 +89,13 @@ export function renderUniversalWorkspaceHtml(
     h1 { margin: 0 0 8px; font-size: clamp(28px, 5vw, 44px); }
     h2 { margin: 0 0 10px; font-size: 18px; }
     label { display:block; color: var(--muted); font-size: 13px; margin-bottom: 6px; }
-    select, textarea { width:100%; border:1px solid #2a355f; border-radius:12px; background:#080c18; color:var(--ink); padding:10px; font: 14px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-    select { font-family: inherit; }
+    input, select, textarea { width:100%; border:1px solid #2a355f; border-radius:12px; background:#080c18; color:var(--ink); padding:10px; font: 14px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    input, select { font-family: inherit; }
     textarea { min-height: 440px; resize: vertical; line-height: 1.5; tab-size: 2; }
     button, a.button { border:0; border-radius:12px; padding:10px 14px; margin: 8px 8px 0 0; background:var(--accent); color:white; font-weight:700; cursor:pointer; text-decoration:none; display:inline-block; }
     button.secondary, a.button { background:#232c50; color:#dbe6ff; }
+    button.file-tab { background:#0c1226; border:1px solid #2a355f; max-width: 240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    button.file-tab.active { outline:2px solid var(--accent); }
     button:disabled { opacity:0.48; cursor:not-allowed; }
     pre { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; font: 13px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
     iframe { width:100%; min-height:360px; border:1px solid #2a355f; border-radius:12px; background:white; }
@@ -99,13 +104,16 @@ export function renderUniversalWorkspaceHtml(
     th { background:#0c1226; color:#dbe6ff; }
     .muted { color:var(--muted); }
     .grid { display:grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr); gap:14px; }
-    .controls { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px; }
+    .controls, .session-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px; }
     .meta { display:grid; grid-template-columns: repeat(auto-fit, minmax(170px,1fr)); gap:10px; margin: 12px 0; }
     .meta-card { background:#0c1226; border:1px solid #2a355f; border-radius:12px; padding:10px; }
     .meta-card span { display:block; color:var(--muted); font-size:12px; }
     .task-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:8px; }
     .task-grid button { width:100%; margin:0; }
-    #chat-draft-link { display:none; }
+    .file-tabs { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+    .session-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    #chat-draft-link, #import-session-json { display:none; }
+    #import-session-json { min-height:150px; margin-top:10px; }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -121,6 +129,23 @@ export function renderUniversalWorkspaceHtml(
       <div><label for="language-select" data-i18n="languageLabel">Programming language</label><select id="language-select"></select></div>
       <div><label for="target-language-select">Target language for translation</label><select id="target-language-select"></select></div>
       <div><label for="locale-select" data-i18n="localeLabel">UI language</label><select id="locale-select"></select></div>
+    </section>
+
+    <section aria-label="workspace session controls">
+      <div class="session-grid">
+        <div><label for="session-name">Session name</label><input id="session-name" type="text" /></div>
+        <div><label>Persistence</label><p class="muted" id="session-status">Autosaved locally in this browser.</p></div>
+      </div>
+      <div id="file-tabs" class="file-tabs" aria-label="Workspace file tabs"></div>
+      <div class="session-actions">
+        <button id="new-file-button" class="secondary">New file</button>
+        <button id="rename-file-button" class="secondary">Rename file</button>
+        <button id="delete-file-button" class="secondary">Delete file</button>
+        <button id="export-session-button" class="secondary">Export session JSON</button>
+        <button id="show-import-session-button" class="secondary">Import session JSON</button>
+        <button id="load-import-session-button" class="secondary">Load import JSON</button>
+      </div>
+      <textarea id="import-session-json" aria-label="Paste workspace session JSON"></textarea>
     </section>
 
     <div class="grid">
@@ -165,7 +190,8 @@ export function renderUniversalWorkspaceHtml(
   <script id="workspace-data" type="application/json">${safeJson(payload)}</script>
   <script>
     const payload = JSON.parse(document.getElementById('workspace-data').textContent);
-    const state = { languageId: payload.defaultLanguageId, locale: 'en', lastIntelligenceDraft: null };
+    const SESSION_STORAGE_KEY = 'codemind.workspace.session.v1';
+    const state = { locale: 'en', lastIntelligenceDraft: null };
     const SQL_RUNNER_ID = '${SQL_BROWSER_RUNNER_ID}';
     const PYODIDE_RUNNER_ID = '${PYODIDE_BROWSER_RUNNER_ID}';
     const el = (id) => document.getElementById(id);
@@ -178,20 +204,193 @@ export function renderUniversalWorkspaceHtml(
     const errorsPanel = el('errors-panel');
     const diagnosticsPanel = el('diagnostics-panel');
     const previewPanel = el('preview-panel');
+    const fileTabs = el('file-tabs');
+    const sessionNameInput = el('session-name');
+    const sessionStatus = el('session-status');
+    const importSessionJson = el('import-session-json');
+    let workspaceSession = loadStoredSession();
 
     function t(key) { return payload.translations[state.locale][key] || payload.translations.en[key] || key; }
-    function currentLanguage() { return payload.languages.find((language) => language.id === state.languageId) || payload.languages[0]; }
-    function targetLanguage() { return payload.languages.find((language) => language.id === targetLanguageSelect.value) || payload.languages.find((language) => language.id === 'typescript') || payload.languages[0]; }
+    function languageById(languageId) { return payload.languages.find((language) => language.id === languageId) || payload.languages[0]; }
+    function currentFile() { return workspaceSession.files.find((file) => file.id === workspaceSession.activeFileId) || workspaceSession.files[0]; }
+    function currentLanguage() { return languageById(currentFile().languageId); }
+    function targetLanguage() { return languageById(targetLanguageSelect.value || 'typescript'); }
     function hasRealRunner(language) { return Boolean(language.runnerId && payload.runners.some((runner) => runner.id === language.runnerId)); }
     function canRun(language) { return hasRealRunner(language) && ['browser-run', 'server-run', 'preview-only'].includes(language.capability); }
     function escapeHtml(value) { return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;'); }
+
+    function loadStoredSession() {
+      try {
+        const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
+        if (raw) return normalizeSession(JSON.parse(raw));
+      } catch (_error) {
+        window.localStorage.removeItem(SESSION_STORAGE_KEY);
+      }
+      return normalizeSession(payload.defaultSession);
+    }
+
+    function normalizeSession(session) {
+      if (!session || session.schemaVersion !== 1 || !Array.isArray(session.files) || session.files.length === 0) return structuredClone(payload.defaultSession);
+      const files = session.files.filter((file) => file && typeof file.id === 'string' && languageById(file.languageId));
+      if (files.length === 0) return structuredClone(payload.defaultSession);
+      const activeFileId = files.some((file) => file.id === session.activeFileId) ? session.activeFileId : files[0].id;
+      return {
+        schemaVersion: 1,
+        id: typeof session.id === 'string' ? session.id : 'local-session',
+        name: typeof session.name === 'string' ? session.name : 'CodeMind Workspace Session',
+        activeFileId,
+        files: files.map((file) => ({
+          id: file.id,
+          name: typeof file.name === 'string' ? file.name : 'untitled.txt',
+          languageId: languageById(file.languageId).id,
+          code: typeof file.code === 'string' ? file.code : languageById(file.languageId).defaultSnippet,
+          output: typeof file.output === 'string' ? file.output : '',
+          errors: typeof file.errors === 'string' ? file.errors : '',
+          diagnostics: typeof file.diagnostics === 'string' ? file.diagnostics : '',
+          dirty: Boolean(file.dirty),
+          createdAt: typeof file.createdAt === 'string' ? file.createdAt : new Date().toISOString(),
+          updatedAt: typeof file.updatedAt === 'string' ? file.updatedAt : new Date().toISOString(),
+        })),
+        createdAt: typeof session.createdAt === 'string' ? session.createdAt : new Date().toISOString(),
+        updatedAt: typeof session.updatedAt === 'string' ? session.updatedAt : new Date().toISOString(),
+      };
+    }
+
+    function persistSession() {
+      workspaceSession.updatedAt = new Date().toISOString();
+      window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(workspaceSession, null, 2));
+      sessionStatus.textContent = 'Autosaved locally at ' + new Date().toLocaleTimeString();
+    }
+
+    function saveCurrentFileState(markDirty) {
+      const file = currentFile();
+      if (!file) return;
+      file.languageId = languageSelect.value || file.languageId;
+      file.code = editor.value;
+      file.output = outputPanel.textContent;
+      file.errors = errorsPanel.textContent;
+      file.diagnostics = diagnosticsPanel.textContent;
+      file.dirty = markDirty === true ? true : file.dirty;
+      file.updatedAt = new Date().toISOString();
+      persistSession();
+      renderFileTabs();
+    }
+
+    function renderFileTabs() {
+      fileTabs.innerHTML = '';
+      workspaceSession.files.forEach((file) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'file-tab' + (file.id === workspaceSession.activeFileId ? ' active' : '');
+        button.textContent = (file.dirty ? '● ' : '') + file.name;
+        button.title = file.languageId + ' · ' + file.name;
+        button.addEventListener('click', () => selectFile(file.id));
+        fileTabs.appendChild(button);
+      });
+    }
+
+    function loadActiveFileIntoEditor() {
+      const file = currentFile();
+      const language = languageById(file.languageId);
+      sessionNameInput.value = workspaceSession.name;
+      languageSelect.value = language.id;
+      editor.value = file.code;
+      outputPanel.textContent = file.output;
+      errorsPanel.textContent = file.errors;
+      diagnosticsPanel.textContent = file.diagnostics || language.safetyRestrictions.concat(language.notes ? [language.notes] : []).join('\n');
+      previewPanel.innerHTML = '';
+      previewPanel.style.display = 'none';
+      updateLanguageView(false);
+      renderFileTabs();
+    }
+
+    function selectFile(fileId) {
+      if (fileId === workspaceSession.activeFileId) return;
+      saveCurrentFileState(false);
+      workspaceSession.activeFileId = fileId;
+      persistSession();
+      loadActiveFileIntoEditor();
+    }
+
+    function createClientFile(languageId) {
+      const language = languageById(languageId);
+      const now = new Date().toISOString();
+      const id = 'file-' + Date.now().toString(36);
+      return {
+        id,
+        name: 'untitled' + (language.extensions[0] || '.txt'),
+        languageId: language.id,
+        code: language.defaultSnippet,
+        output: '',
+        errors: '',
+        diagnostics: language.safetyRestrictions.concat(language.notes ? [language.notes] : []).join('\n'),
+        dirty: false,
+        createdAt: now,
+        updatedAt: now,
+      };
+    }
+
+    function addFile() {
+      saveCurrentFileState(false);
+      const file = createClientFile(languageSelect.value || payload.defaultLanguageId);
+      workspaceSession.files.push(file);
+      workspaceSession.activeFileId = file.id;
+      persistSession();
+      loadActiveFileIntoEditor();
+    }
+
+    function renameFile() {
+      const file = currentFile();
+      const nextName = window.prompt('Rename file', file.name);
+      if (!nextName || nextName.trim().length === 0) return;
+      file.name = nextName.trim();
+      file.dirty = true;
+      persistSession();
+      renderFileTabs();
+    }
+
+    function deleteFile() {
+      if (workspaceSession.files.length <= 1) {
+        window.alert('A workspace session must keep at least one file.');
+        return;
+      }
+      const file = currentFile();
+      if (!window.confirm('Delete ' + file.name + '?')) return;
+      workspaceSession.files = workspaceSession.files.filter((candidate) => candidate.id !== file.id);
+      workspaceSession.activeFileId = workspaceSession.files[0].id;
+      persistSession();
+      loadActiveFileIntoEditor();
+    }
+
+    function exportSession() {
+      saveCurrentFileState(false);
+      const payloadText = JSON.stringify({ exportedAt: new Date().toISOString(), session: workspaceSession }, null, 2) + '\n';
+      const blob = new Blob([payloadText], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = workspaceSession.name.replace(/[^a-z0-9_.-]+/gi, '-').toLowerCase() + '.codemind-session.json';
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importSession() {
+      try {
+        const parsed = JSON.parse(importSessionJson.value);
+        workspaceSession = normalizeSession(parsed.session || parsed);
+        persistSession();
+        importSessionJson.style.display = 'none';
+        loadActiveFileIntoEditor();
+      } catch (error) {
+        sessionStatus.textContent = 'Import failed: ' + (error.message || String(error));
+      }
+    }
 
     function renderOptions() {
       const options = payload.languages.map((language) => '<option value="' + escapeHtml(language.id) + '">' + escapeHtml(language.label + ' — ' + language.capability) + '</option>').join('');
       languageSelect.innerHTML = options;
       targetLanguageSelect.innerHTML = options;
       localeSelect.innerHTML = payload.locales.map((locale) => '<option value="' + escapeHtml(locale) + '">' + escapeHtml(locale.toUpperCase()) + '</option>').join('');
-      languageSelect.value = state.languageId;
       targetLanguageSelect.value = payload.languages.some((language) => language.id === 'typescript') ? 'typescript' : payload.defaultLanguageId;
       localeSelect.value = state.locale;
     }
@@ -207,15 +406,24 @@ export function renderUniversalWorkspaceHtml(
     }
 
     function updateLanguageView(resetCode) {
-      const language = currentLanguage();
-      if (resetCode) editor.value = language.defaultSnippet;
+      const file = currentFile();
+      const language = languageById(languageSelect.value || file.languageId);
+      if (resetCode) {
+        editor.value = language.defaultSnippet;
+        outputPanel.textContent = '';
+        errorsPanel.textContent = '';
+        diagnosticsPanel.textContent = language.safetyRestrictions.concat(language.notes ? [language.notes] : []).join('\n');
+        file.dirty = true;
+      }
+      file.languageId = language.id;
       el('extension-indicator').textContent = language.extensions.join(', ');
       el('capability-indicator').textContent = language.capability;
       el('runner-indicator').textContent = language.runnerId || 'none';
-      diagnosticsPanel.textContent = language.safetyRestrictions.concat(language.notes ? [language.notes] : []).join('\n');
       runButton.disabled = !canRun(language);
       updateRunButtonLabel();
       el('disabled-state').textContent = canRun(language) ? '' : t('disabledExecution');
+      persistSession();
+      renderFileTabs();
     }
 
     function clearPanels() {
@@ -223,16 +431,17 @@ export function renderUniversalWorkspaceHtml(
       errorsPanel.textContent = '';
       previewPanel.innerHTML = '';
       previewPanel.style.display = 'none';
+      saveCurrentFileState(true);
     }
 
     async function runSelectedCode() {
       const language = currentLanguage();
       clearPanels();
       diagnosticsPanel.textContent = language.safetyRestrictions.concat(language.notes ? [language.notes] : []).join('\n');
-      if (!canRun(language)) { errorsPanel.textContent = t('disabledExecution'); return; }
-      if (language.runnerId === 'browser-javascript') { await runJavaScriptInWorker(editor.value); return; }
-      if (language.runnerId === SQL_RUNNER_ID) { await runSqlInWorker(editor.value); return; }
-      if (language.runnerId === PYODIDE_RUNNER_ID) { await runPythonInPyodideWorker(editor.value); return; }
+      if (!canRun(language)) { errorsPanel.textContent = t('disabledExecution'); saveCurrentFileState(false); return; }
+      if (language.runnerId === 'browser-javascript') { await runJavaScriptInWorker(editor.value); saveCurrentFileState(false); return; }
+      if (language.runnerId === SQL_RUNNER_ID) { await runSqlInWorker(editor.value); saveCurrentFileState(false); return; }
+      if (language.runnerId === PYODIDE_RUNNER_ID) { await runPythonInPyodideWorker(editor.value); saveCurrentFileState(false); return; }
       if (language.runnerId === 'html-preview') {
         previewPanel.style.display = 'block';
         const iframe = document.createElement('iframe');
@@ -240,6 +449,7 @@ export function renderUniversalWorkspaceHtml(
         iframe.srcdoc = editor.value;
         previewPanel.appendChild(iframe);
         outputPanel.textContent = 'HTML preview rendered in sandboxed iframe.';
+        saveCurrentFileState(false);
         return;
       }
       const response = await fetch('/api/workspace/run', {
@@ -251,6 +461,7 @@ export function renderUniversalWorkspaceHtml(
       outputPanel.textContent = result.output || '';
       errorsPanel.textContent = (result.errors || []).join('\n');
       diagnosticsPanel.textContent = (result.diagnostics || []).join('\n');
+      saveCurrentFileState(false);
     }
 
     function workerSource(code) {
@@ -359,6 +570,7 @@ export function renderUniversalWorkspaceHtml(
     }
 
     async function showAiTask(task) {
+      saveCurrentFileState(false);
       const language = currentLanguage();
       const target = targetLanguage();
       el('chat-draft-status').textContent = 'Preparing CodeMind chat draft...';
@@ -390,22 +602,32 @@ export function renderUniversalWorkspaceHtml(
         draftUrl.searchParams.set('agentMode', result.suggestedAgentMode);
         el('chat-draft-link').href = draftUrl.toString();
         el('chat-draft-link').style.display = 'inline-block';
+        saveCurrentFileState(false);
       } catch (error) {
         el('chat-draft-status').textContent = 'Failed to prepare chat draft: ' + (error.message || String(error));
       }
     }
 
-    languageSelect.addEventListener('change', () => { state.languageId = languageSelect.value; updateLanguageView(true); clearPanels(); });
+    sessionNameInput.addEventListener('input', () => { workspaceSession.name = sessionNameInput.value || 'CodeMind Workspace Session'; persistSession(); });
+    editor.addEventListener('input', () => saveCurrentFileState(true));
+    languageSelect.addEventListener('change', () => { updateLanguageView(true); clearPanels(); });
     localeSelect.addEventListener('change', () => { state.locale = localeSelect.value; applyTranslations(); updateLanguageView(false); });
-    runButton.addEventListener('click', () => { runSelectedCode().catch((error) => { errorsPanel.textContent = error && error.stack ? error.stack : String(error); }); });
+    runButton.addEventListener('click', () => { runSelectedCode().catch((error) => { errorsPanel.textContent = error && error.stack ? error.stack : String(error); saveCurrentFileState(false); }); });
     el('copy-code-button').addEventListener('click', () => navigator.clipboard.writeText(editor.value));
     el('reset-example-button').addEventListener('click', () => updateLanguageView(true));
     el('clear-output-button').addEventListener('click', clearPanels);
+    el('new-file-button').addEventListener('click', addFile);
+    el('rename-file-button').addEventListener('click', renameFile);
+    el('delete-file-button').addEventListener('click', deleteFile);
+    el('export-session-button').addEventListener('click', exportSession);
+    el('show-import-session-button').addEventListener('click', () => { importSessionJson.style.display = importSessionJson.style.display === 'block' ? 'none' : 'block'; });
+    el('load-import-session-button').addEventListener('click', importSession);
     document.querySelectorAll('[data-task]').forEach((button) => button.addEventListener('click', () => { showAiTask(button.getAttribute('data-task')).catch((error) => { el('chat-draft-status').textContent = error.message || String(error); }); }));
 
     renderOptions();
     applyTranslations();
-    updateLanguageView(true);
+    loadActiveFileIntoEditor();
+    persistSession();
   </script>
 </body>
 </html>`
