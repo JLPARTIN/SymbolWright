@@ -40,9 +40,23 @@ describe('universal editor html', () => {
     expect(payload.chatUrl).toBe('http://localhost:8787')
   })
 
+  it('embeds the sql.js worker source and SQL runner limits in the payload', () => {
+    const payload = createUniversalWorkspacePayload()
+
+    expect(payload.sqlWorkerSource).toContain("importScripts('/vendor/sql-wasm.js')")
+    expect(payload.sqlWorkerSource).toContain('db.exec(code)')
+    expect(payload.sqlLimits.timeoutMs).toBe(2_000)
+  })
+
   it('shows the exact honest disabled state for edit-only languages', () => {
     expect(renderWorkspaceDisabledExecutionMessage('python')).toBe(
       'This language currently supports editing, syntax highlighting, and AI assistance. Execution requires a configured sandbox runner.',
+    )
+  })
+
+  it('shows SQL as executable through the sql.js runner', () => {
+    expect(renderWorkspaceDisabledExecutionMessage('sql')).toBe(
+      'SQL is executable through runner browser-sqljs.',
     )
   })
 
@@ -63,5 +77,15 @@ describe('universal editor html', () => {
     expect(html).toContain('agentMode')
     expect(html).toContain('targetLanguageId')
     expect(html).toContain('suggestedAgentMode')
+  })
+
+  it('wires SQL Run to the browser sql.js worker and table renderer', () => {
+    const html = renderUniversalWorkspaceHtml()
+
+    expect(html).toContain("const SQL_RUNNER_ID = 'browser-sqljs'")
+    expect(html).toContain('runSqlInWorker(editor.value)')
+    expect(html).toContain('renderSqlResultSets')
+    expect(html).toContain('SQL execution timed out')
+    expect(html).toContain('document.createElement(\'table\')')
   })
 })
