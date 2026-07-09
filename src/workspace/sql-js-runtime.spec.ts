@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
+import { dirname, join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
@@ -8,7 +9,8 @@ import type { SqlJsStatic } from 'sql.js'
 const require = createRequire(import.meta.url)
 
 async function loadSqlJsRuntime(): Promise<SqlJsStatic> {
-  const wasmBinary = readFileSync(require.resolve('sql.js/dist/sql-wasm.wasm'))
+  const sqlJsEntry = require.resolve('sql.js')
+  const wasmBinary = readFileSync(join(dirname(sqlJsEntry), 'sql-wasm.wasm'))
   const { default: initSqlJs } = await import('sql.js')
 
   return initSqlJs({ wasmBinary })
