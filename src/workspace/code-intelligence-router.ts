@@ -87,11 +87,18 @@ export function createCodeIntelligenceTaskPlan(
 export function detectSourceLanguageId(code: string): string {
   const trimmed = code.trim()
 
-  if (/^\s*<!doctype html/i.test(trimmed) || /<html[\s>]/i.test(trimmed) || /<style[\s>]/i.test(trimmed)) {
+  if (
+    /^\s*<!doctype html/i.test(trimmed) ||
+    /<html[\s>]/i.test(trimmed) ||
+    /<style[\s>]/i.test(trimmed)
+  ) {
     return 'html'
   }
 
-  if (/^\s*(type|interface)\s+[A-Z_a-z]/m.test(trimmed) || /:\s*(string|number|boolean)\b/.test(trimmed)) {
+  if (
+    /^\s*(type|interface)\s+[A-Z_a-z]/m.test(trimmed) ||
+    /:\s*(string|number|boolean)\b/.test(trimmed)
+  ) {
     return 'typescript'
   }
 
@@ -149,7 +156,9 @@ function resolveTargetLanguage(
   return findLanguageDefinition(targetId)
 }
 
-function resolveDefaultTranslationTarget(sourceLanguage: CodeLanguageDefinition): CodeLanguageDefinition {
+function resolveDefaultTranslationTarget(
+  sourceLanguage: CodeLanguageDefinition,
+): CodeLanguageDefinition {
   const fallbackId = sourceLanguage.id === 'typescript' ? 'javascript' : 'typescript'
   const language = findLanguageDefinition(fallbackId)
 
