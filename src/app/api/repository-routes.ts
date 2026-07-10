@@ -401,8 +401,14 @@ export async function handleRepositoryCommit(
     ? files.filter((entry): entry is string => typeof entry === 'string')
     : undefined
 
+  // `.codemind/` is CodeMind's own checkpoint/session state, not user content --
+  // exclude it from the default "stage everything" sweep regardless of whether
+  // the target repository's own .gitignore happens to cover it, so committing
+  // from this view can never accidentally check in checkpoint snapshots.
   const addArgs =
-    fileList !== undefined && fileList.length > 0 ? ['add', '--', ...fileList] : ['add', '-A']
+    fileList !== undefined && fileList.length > 0
+      ? ['add', '--', ...fileList]
+      : ['add', '-A', '--', '.', ':!.codemind']
   const addResult = await runGitCommand(addArgs, context.cwd)
   if (addResult.exitCode !== 0) {
     sendJson(res, 500, { error: addResult.stderr || 'git add failed' })
@@ -687,6 +693,9 @@ async function resolvePrFiles(
 
   for (const entry of entries) {
     if (entry.indexStatus === 'D' || entry.worktreeStatus === 'D') continue
+    // Same reasoning as the commit route: never auto-include CodeMind's own
+    // checkpoint/session state in a PR built from "everything that changed".
+    if (entry.path === '.codemind' || entry.path.startsWith('.codemind/')) continue
     try {
       const resolved = resolveWorkspacePath(context.cwd, entry.path)
       assertReadablePath(context.policy, context.cwd, resolved)

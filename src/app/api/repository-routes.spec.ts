@@ -351,6 +351,31 @@ describe('POST /api/repository/commit', () => {
     })
     expect(response.status).toBe(400)
   })
+
+  it('never sweeps CodeMind checkpoint state (.codemind/) into a commit made with files omitted', async () => {
+    // A prior write through PUT /api/repository/file creates .codemind/checkpoints/... --
+    // "commit everything" must not check that internal state into the user's real history.
+    const putResponse = await fetch(`${(await launch()).url}/api/repository/file`, {
+      method: 'PUT',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ path: 'a.ts', content: 'const a = 1\n' }),
+    })
+    expect(putResponse.status).toBe(200)
+
+    const response = await fetch(`${started?.url}/api/repository/commit`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'add a.ts' }),
+    })
+    expect(response.status).toBe(200)
+
+    const show = await runGitCommand(['show', '--stat', 'HEAD'], cwd)
+    expect(show.stdout).toContain('a.ts')
+    expect(show.stdout).not.toContain('.codemind')
+
+    const status = await runGitCommand(['status', '--porcelain=v1'], cwd)
+    expect(status.stdout).toContain('.codemind')
+  })
 })
 
 describe('POST /api/repository/checkpoints/:id/restore', () => {
@@ -600,6 +625,46 @@ describe('POST /api/repository/pull-request', () => {
     expect(commitOp?.type).toBe('commitFiles')
     if (commitOp?.type === 'commitFiles') {
       expect(commitOp.files).toEqual([{ path: 'a.ts', content: 'const a = 2\n' }])
+    }
+  })
+
+  it('never auto-includes CodeMind checkpoint state (.codemind/) when deriving PR files from git status', async () => {
+    const fakeClient = new FakeGitHubPrCreationClient()
+    started = await startChatServer({
+      apiKey: API_KEY,
+      host: '127.0.0.1',
+      port: 0,
+      env: { GITHUB_TOKEN: 'fake-value-for-policy' },
+      cwd,
+      rateLimiter: new UnlimitedRateLimiter(),
+      githubPrCreationClient: fakeClient,
+    })
+
+    // A prior write creates .codemind/checkpoints/... as untracked content.
+    const putResponse = await fetch(`${started.url}/api/repository/file`, {
+      method: 'PUT',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ path: 'a.ts', content: 'const a = 1\n' }),
+    })
+    expect(putResponse.status).toBe(200)
+
+    const response = await fetch(`${started.url}/api/repository/pull-request`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({
+        confirm: true,
+        repository: 'acme/widgets',
+        baseBranch: 'main',
+        headBranch: 'feature/no-checkpoint-leak',
+        title: 'Add a.ts',
+      }),
+    })
+    expect(response.status).toBe(200)
+
+    const commitOp = fakeClient.operations.find((op) => op.type === 'commitFiles')
+    expect(commitOp?.type).toBe('commitFiles')
+    if (commitOp?.type === 'commitFiles') {
+      expect(commitOp.files.some((file) => file.path.startsWith('.codemind'))).toBe(false)
     }
   })
 
