@@ -72,18 +72,9 @@ export function renderWorkspaceDisabledExecutionMessage(languageId: string): str
   return 'This language currently supports editing, syntax highlighting, and AI assistance. Execution requires a configured sandbox runner.'
 }
 
-export function renderUniversalWorkspaceHtml(
-  options: UniversalWorkspaceRenderOptions = {},
-): string {
-  const payload = createUniversalWorkspacePayload(options)
-
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CodeMind Universal Polyglot Workspace</title>
-  <style>
+/** Standalone `<style>` tag for the Universal Workspace body markup. */
+export function renderWorkspaceStyles(): string {
+  return `<style>
     :root { color-scheme: dark; --bg:#080c16; --panel:#111a2f; --ink:#e8eefc; --muted:#9da9c2; --accent:#4b74ff; }
     * { box-sizing: border-box; }
     body { margin:0; background:var(--bg); color:var(--ink); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; padding:20px; }
@@ -118,14 +109,27 @@ export function renderUniversalWorkspaceHtml(
     #chat-draft-link, #import-session-json, #import-project-bundle-json { display:none; }
     #import-session-json, #import-project-bundle-json { min-height:150px; margin-top:10px; }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-  </style>
-</head>
-<body>
-  <main>
-    <header>
+  </style>`
+}
+
+/**
+ * The Universal Workspace's inner `<header>`/`<section>` markup, without an
+ * outer `<main>`/`<html>` wrapper, so it can be embedded directly inside the
+ * unified app shell's `workspace` view as well as the standalone
+ * `renderUniversalWorkspaceHtml()` document below.
+ */
+export function renderWorkspaceBodyMarkup(
+  options: { readonly backLinkHref?: string } = {},
+): string {
+  const backLink =
+    options.backLinkHref === undefined
+      ? ''
+      : `<p class="muted"><a href="${options.backLinkHref}" style="color:#dbe6ff">← Back to runtime dashboard</a></p>`
+
+  return `<header>
       <h1 data-i18n="title">Universal Polyglot Workspace</h1>
       <p class="muted" data-i18n="subtitle">Edit, inspect, preview, and run only the languages with real registered runners.</p>
-      <p class="muted"><a href="/" style="color:#dbe6ff">← Back to runtime dashboard</a></p>
+      ${backLink}
     </header>
 
     <section class="controls" aria-label="workspace controls">
@@ -192,11 +196,41 @@ export function renderUniversalWorkspaceHtml(
           <p id="chat-draft-status" class="muted"></p>
         </section>
       </div>
-    </div>
+    </div>`
+}
+
+/**
+ * `<script>` tags wiring the payload data and client behavior for the
+ * workspace body markup above. The client script body is wrapped in an
+ * IIFE — classic (non-module) `<script>` tags in the same document share
+ * one top-level lexical scope, so an unwrapped `const state`/`const el`
+ * here would collide with the Agent view's own `const state`/`const el`
+ * once both views are embedded together in the unified app shell.
+ */
+export function renderWorkspaceScripts(payload: UniversalWorkspaceClientPayload): string {
+  return `<script id="workspace-data" type="application/json">${safeJson(payload)}</script>
+  <script>(function () {${buildWorkspaceClientScript({ sqlRunnerId: SQL_BROWSER_RUNNER_ID, pyodideRunnerId: PYODIDE_BROWSER_RUNNER_ID })}})();</script>`
+}
+
+export function renderUniversalWorkspaceHtml(
+  options: UniversalWorkspaceRenderOptions = {},
+): string {
+  const payload = createUniversalWorkspacePayload(options)
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CodeMind Universal Polyglot Workspace</title>
+  ${renderWorkspaceStyles()}
+</head>
+<body>
+  <main>
+    ${renderWorkspaceBodyMarkup({ backLinkHref: '/' })}
   </main>
 
-  <script id="workspace-data" type="application/json">${safeJson(payload)}</script>
-  <script>${buildWorkspaceClientScript({ sqlRunnerId: SQL_BROWSER_RUNNER_ID, pyodideRunnerId: PYODIDE_BROWSER_RUNNER_ID })}</script>
+  ${renderWorkspaceScripts(payload)}
 </body>
 </html>`
 }

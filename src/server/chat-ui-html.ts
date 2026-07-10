@@ -1,13 +1,8 @@
 import { buildChatTranscriptClientScript } from './chat-transcript-client-script.js'
 
-export function renderChatUiHtml(): string {
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CodeMind Chat</title>
-  <style>
+/** Standalone `<style>` tag for the CodeMind Chat body markup. */
+export function renderChatStyles(): string {
+  return `<style>
     :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
     body { margin: 0; background: #0b1020; color: #e8ecff; }
     main { max-width: 880px; margin: 0 auto; padding: 24px 16px 80px; }
@@ -46,11 +41,16 @@ export function renderChatUiHtml(): string {
     .local-status-card { border: 1px solid #2a355f; border-radius: 10px; padding: 10px; background: #0c1226; }
     .local-status-card .label { font-size: 11px; color: #8ea0d7; margin-bottom: 4px; }
     .local-status-card .value { font-size: 14px; font-weight: 700; }
-  </style>
-</head>
-<body>
-  <main>
-    <h1>CodeMind Chat</h1>
+  </style>`
+}
+
+/**
+ * The CodeMind Chat's inner markup, without an outer `<main>`/`<html>`
+ * wrapper, so it can be embedded directly inside the unified app shell's
+ * `agent` view as well as the standalone `renderChatUiHtml()` document below.
+ */
+export function renderChatBodyMarkup(): string {
+  return `<h1>CodeMind Chat</h1>
     <p class="sub">Bring your own provider API key, stay in browser-only mode with no key at all, or open a structured draft from the Universal Workspace. CodeMind routes provider requests through its provider gateway &mdash; your provider key never leaves the server.</p>
     <p id="mode-status" class="sub"><strong>Current mode:</strong> not connected yet</p>
 
@@ -122,10 +122,36 @@ export function renderChatUiHtml(): string {
         <button id="send-btn">Send</button>
       </div>
       <div id="status-line"></div>
-    </section>
+    </section>`
+}
+
+/**
+ * `<script>` tag wiring the client behavior for the chat body markup above.
+ * Wrapped in an IIFE for the same reason as `renderWorkspaceScripts` in
+ * `universal-editor-html.ts` — classic `<script>` tags share one top-level
+ * lexical scope, so this view's own `const state`/`const el` must not leak
+ * into (or collide with) the Workspace view's when both are embedded
+ * together in the unified app shell.
+ */
+export function renderChatScripts(): string {
+  return `<script>(function () {${buildChatTranscriptClientScript()}})();</script>`
+}
+
+export function renderChatUiHtml(): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CodeMind Chat</title>
+  ${renderChatStyles()}
+</head>
+<body>
+  <main>
+    ${renderChatBodyMarkup()}
   </main>
 
-  <script>${buildChatTranscriptClientScript()}</script>
+  ${renderChatScripts()}
 </body>
 </html>`
 }
