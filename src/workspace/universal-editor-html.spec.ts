@@ -37,6 +37,17 @@ describe('universal editor html', () => {
     expect(html).toContain('window.localStorage.setItem')
   })
 
+  it('renders project bundle import/export controls and safety copy', () => {
+    const html = renderUniversalWorkspaceHtml()
+
+    expect(html).toContain('export-project-bundle-button')
+    expect(html).toContain('show-import-project-bundle-button')
+    expect(html).toContain('load-project-bundle-button')
+    expect(html).toContain('import-project-bundle-json')
+    expect(html).toContain('Project bundles are browser-local JSON project structures')
+    expect(html).toContain('codemind.workspace.project-bundle')
+  })
+
   it('embeds only registered runner ids in the client payload', () => {
     const payload = createUniversalWorkspacePayload()
     const runnerIds = new Set(payload.runners.map((runner) => runner.id))
@@ -54,12 +65,13 @@ describe('universal editor html', () => {
     expect(payload.chatUrl).toBe('http://localhost:8787')
   })
 
-  it('embeds a default workspace session in the payload', () => {
+  it('embeds a default workspace session and project bundle kind in the payload', () => {
     const payload = createUniversalWorkspacePayload()
 
     expect(payload.defaultSession.schemaVersion).toBe(1)
     expect(payload.defaultSession.files).toHaveLength(1)
     expect(payload.defaultSession.activeFileId).toBe(payload.defaultSession.files[0]?.id)
+    expect(payload.projectBundleKind).toBe('codemind.workspace.project-bundle')
   })
 
   it('embeds the sql.js worker source and SQL runner limits in the payload', () => {
@@ -129,5 +141,17 @@ describe('universal editor html', () => {
     expect(html).toContain('runPythonInPyodideWorker(editor.value)')
     expect(html).toContain('Loading Pyodide and running Python')
     expect(html).toContain('Python execution timed out')
+  })
+
+  it('wires project bundle export/import functions in the client script', () => {
+    const html = renderUniversalWorkspaceHtml()
+
+    expect(html).toContain('function exportProjectBundle')
+    expect(html).toContain('function importProjectBundle')
+    expect(html).toContain('detectLanguageIdByProjectPath')
+    expect(html).toContain('does not write to a Git repository')
+    expect(html).toContain(
+      "el('export-project-bundle-button').addEventListener('click', exportProjectBundle)",
+    )
   })
 })

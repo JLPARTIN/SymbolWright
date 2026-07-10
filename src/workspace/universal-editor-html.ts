@@ -31,6 +31,7 @@ export type UniversalWorkspaceClientPayload = {
   pyodideWorkerSource: string
   pyodideLimits: typeof PYODIDE_BROWSER_RUNNER_LIMITS
   defaultSession: WorkspaceSession
+  projectBundleKind: 'codemind.workspace.project-bundle'
 }
 
 export type UniversalWorkspaceRenderOptions = {
@@ -52,6 +53,7 @@ export function createUniversalWorkspacePayload(
     pyodideWorkerSource: buildPyodideWorkerSource(),
     pyodideLimits: PYODIDE_BROWSER_RUNNER_LIMITS,
     defaultSession: createDefaultWorkspaceSession(),
+    projectBundleKind: 'codemind.workspace.project-bundle',
   }
 }
 
@@ -112,8 +114,8 @@ export function renderUniversalWorkspaceHtml(
     .task-grid button { width:100%; margin:0; }
     .file-tabs { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
     .session-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-    #chat-draft-link, #import-session-json { display:none; }
-    #import-session-json { min-height:150px; margin-top:10px; }
+    #chat-draft-link, #import-session-json, #import-project-bundle-json { display:none; }
+    #import-session-json, #import-project-bundle-json { min-height:150px; margin-top:10px; }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -144,8 +146,13 @@ export function renderUniversalWorkspaceHtml(
         <button id="export-session-button" class="secondary">Export session JSON</button>
         <button id="show-import-session-button" class="secondary">Import session JSON</button>
         <button id="load-import-session-button" class="secondary">Load import JSON</button>
+        <button id="export-project-bundle-button" class="secondary">Export project bundle JSON</button>
+        <button id="show-import-project-bundle-button" class="secondary">Import project bundle JSON</button>
+        <button id="load-project-bundle-button" class="secondary">Load project bundle</button>
       </div>
+      <p class="muted">Project bundles are browser-local JSON project structures. They do not write files to a Git repository.</p>
       <textarea id="import-session-json" aria-label="Paste workspace session JSON"></textarea>
+      <textarea id="import-project-bundle-json" aria-label="Paste workspace project bundle JSON"></textarea>
     </section>
 
     <div class="grid">
@@ -208,6 +215,7 @@ export function renderUniversalWorkspaceHtml(
     const sessionNameInput = el('session-name');
     const sessionStatus = el('session-status');
     const importSessionJson = el('import-session-json');
+    const importProjectBundleJson = el('import-project-bundle-json');
     let workspaceSession = loadStoredSession();
 
     function t(key) { return payload.translations[state.locale][key] || payload.translations.en[key] || key; }
@@ -218,6 +226,7 @@ export function renderUniversalWorkspaceHtml(
     function hasRealRunner(language) { return Boolean(language.runnerId && payload.runners.some((runner) => runner.id === language.runnerId)); }
     function canRun(language) { return hasRealRunner(language) && ['browser-run', 'server-run', 'preview-only'].includes(language.capability); }
     function escapeHtml(value) { return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;'); }
+    function slugify(value) { const slug = String(value).toLowerCase().replace(/[^a-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, ''); return slug || 'codemind-workspace'; }
 
     function loadStoredSession() {
       try {
@@ -312,15 +321,15 @@ export function renderUniversalWorkspaceHtml(
       loadActiveFileIntoEditor();
     }
 
-    function createClientFile(languageId) {
+    function createClientFile(languageId, name, code) {
       const language = languageById(languageId);
       const now = new Date().toISOString();
-      const id = 'file-' + Date.now().toString(36);
+      const id = 'file-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
       return {
         id,
-        name: 'untitled' + (language.extensions[0] || '.txt'),
+        name: name || 'untitled' + (language.extensions[0] || '.txt'),
         languageId: language.id,
-        code: language.defaultSnippet,
+        code: typeof code === 'string' ? code : language.defaultSnippet,
         output: '',
         errors: '',
         diagnostics: language.safetyRestrictions.concat(language.notes ? [language.notes] : []).join('\n'),
@@ -362,16 +371,22 @@ export function renderUniversalWorkspaceHtml(
       loadActiveFileIntoEditor();
     }
 
-    function exportSession() {
-      saveCurrentFileState(false);
-      const payloadText = JSON.stringify({ exportedAt: new Date().toISOString(), session: workspaceSession }, null, 2) + '\n';
-      const blob = new Blob([payloadText], { type: 'application/json' });
+    function downloadJsonFile(fileName, value) {
+      const blob = new Blob([JSON.stringify(value, null, 2) + '\n'], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = workspaceSession.name.replace(/[^a-z0-9_.-]+/gi, '-').toLowerCase() + '.codemind-session.json';
+      link.download = fileName;
       link.click();
       URL.revokeObjectURL(url);
+    }
+
+    function exportSession() {
+      saveCurrentFileState(false);
+      downloadJsonFile(slugify(workspaceSession.name) + '.codemind-session.json', {
+        exportedAt: new Date().toISOString(),
+        session: workspaceSession,
+      });
     }
 
     function importSession() {
@@ -383,6 +398,88 @@ export function renderUniversalWorkspaceHtml(
         loadActiveFileIntoEditor();
       } catch (error) {
         sessionStatus.textContent = 'Import failed: ' + (error.message || String(error));
+      }
+    }
+
+    function detectLanguageIdByProjectPath(path) {
+      const normalized = String(path).toLowerCase();
+      const fileName = normalized.split('/').pop() || normalized;
+      const match = payload.languages.find((language) => language.extensions.some((extension) => {
+        const ext = String(extension).toLowerCase();
+        return ext.startsWith('.') ? fileName.endsWith(ext) : fileName === ext || normalized.endsWith('/' + ext);
+      }));
+      return match ? match.id : 'markdown';
+    }
+
+    function safeProjectPath(path) {
+      const value = String(path || '').trim().replaceAll('\\\\', '/').replace(/^\\/+/, '');
+      if (!value || value.includes('..') || value.includes('\\\\')) throw new Error('Unsafe project bundle file path: ' + path);
+      return value;
+    }
+
+    function exportProjectBundle() {
+      saveCurrentFileState(false);
+      const seen = new Set();
+      const files = workspaceSession.files.map((file, index) => {
+        let path = safeProjectPath(file.name);
+        if (seen.has(path)) {
+          const dot = path.lastIndexOf('.');
+          path = dot > 0 ? path.slice(0, dot) + '-' + (index + 1) + path.slice(dot) : path + '-' + (index + 1);
+        }
+        seen.add(path);
+        return { path, content: file.code };
+      });
+      const manifestFiles = files.map((file, index) => ({
+        path: file.path,
+        languageId: workspaceSession.files[index].languageId || detectLanguageIdByProjectPath(file.path),
+        sizeBytes: new TextEncoder().encode(file.content).byteLength,
+      }));
+      const bundle = {
+        kind: payload.projectBundleKind,
+        schemaVersion: 1,
+        manifest: {
+          schemaVersion: 1,
+          projectId: workspaceSession.id,
+          name: workspaceSession.name,
+          exportedAt: new Date().toISOString(),
+          files: manifestFiles,
+          safetyWarnings: [
+            'This bundle is browser-local import/export data; importing it does not write to a Git repository.',
+            'Review file names and code before running snippets or sending them to an AI provider.',
+            'Executable capability still depends on CodeMind language registry runner support.',
+          ],
+        },
+        files,
+      };
+      downloadJsonFile(slugify(workspaceSession.name) + '.codemind-project.json', bundle);
+    }
+
+    function importProjectBundle() {
+      try {
+        const parsed = JSON.parse(importProjectBundleJson.value);
+        if (!parsed || parsed.kind !== payload.projectBundleKind || parsed.schemaVersion !== 1) throw new Error('Unsupported project bundle.');
+        if (!parsed.manifest || !Array.isArray(parsed.manifest.files) || !Array.isArray(parsed.files) || parsed.files.length === 0) throw new Error('Project bundle requires manifest files and bundle files.');
+        const now = new Date().toISOString();
+        const files = parsed.files.map((bundleFile, index) => {
+          const path = safeProjectPath(bundleFile.path);
+          const manifestFile = parsed.manifest.files.find((file) => file.path === path) || {};
+          const languageId = languageById(manifestFile.languageId || detectLanguageIdByProjectPath(path)).id;
+          return createClientFile(languageId, path, typeof bundleFile.content === 'string' ? bundleFile.content : '');
+        });
+        workspaceSession = {
+          schemaVersion: 1,
+          id: 'project-' + slugify(parsed.manifest.projectId || parsed.manifest.name || 'workspace-project'),
+          name: typeof parsed.manifest.name === 'string' ? parsed.manifest.name : 'Imported Project Bundle',
+          activeFileId: files[0].id,
+          files: files.map((file) => ({ ...file, createdAt: now, updatedAt: now })),
+          createdAt: now,
+          updatedAt: now,
+        };
+        persistSession();
+        importProjectBundleJson.style.display = 'none';
+        loadActiveFileIntoEditor();
+      } catch (error) {
+        sessionStatus.textContent = 'Project import failed: ' + (error.message || String(error));
       }
     }
 
@@ -622,6 +719,9 @@ export function renderUniversalWorkspaceHtml(
     el('export-session-button').addEventListener('click', exportSession);
     el('show-import-session-button').addEventListener('click', () => { importSessionJson.style.display = importSessionJson.style.display === 'block' ? 'none' : 'block'; });
     el('load-import-session-button').addEventListener('click', importSession);
+    el('export-project-bundle-button').addEventListener('click', exportProjectBundle);
+    el('show-import-project-bundle-button').addEventListener('click', () => { importProjectBundleJson.style.display = importProjectBundleJson.style.display === 'block' ? 'none' : 'block'; });
+    el('load-project-bundle-button').addEventListener('click', importProjectBundle);
     document.querySelectorAll('[data-task]').forEach((button) => button.addEventListener('click', () => { showAiTask(button.getAttribute('data-task')).catch((error) => { el('chat-draft-status').textContent = error.message || String(error); }); }));
 
     renderOptions();
