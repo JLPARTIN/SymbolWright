@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { createDefaultWorkspaceSession, createWorkspaceFile, addWorkspaceFile } from './workspace-session.js'
+import {
+  addWorkspaceFile,
+  createDefaultWorkspaceSession,
+  createWorkspaceFile,
+} from './workspace-session.js'
 import {
   createWorkspaceProjectBundleFromSession,
   createWorkspaceSessionFromProjectBundle,
@@ -32,7 +36,10 @@ describe('workspace project bundle model', () => {
     expect(bundle.kind).toBe('codemind.workspace.project-bundle')
     expect(bundle.schemaVersion).toBe(1)
     expect(bundle.manifest.name).toBe('CodeMind Workspace Session')
-    expect(bundle.manifest.files.map((file) => file.path)).toEqual(['main.js', 'queries/report.sql'])
+    expect(bundle.manifest.files.map((file) => file.path)).toEqual([
+      'main.js',
+      'queries/report.sql',
+    ])
     expect(bundle.manifest.files.map((file) => file.languageId)).toEqual(['javascript', 'sql'])
     expect(bundle.manifest.safetyWarnings.join('\n')).toContain('does not write to a Git repository')
     expect(bundle.files[1]?.content).toContain('CREATE TABLE users')
@@ -41,7 +48,10 @@ describe('workspace project bundle model', () => {
   it('deduplicates exported file paths without losing content', () => {
     const session = addWorkspaceFile(
       createDefaultWorkspaceSession(now),
-      createWorkspaceFile({ id: 'file-js-2', languageId: 'javascript', name: 'main.js', code: 'console.log(2)' }, now),
+      createWorkspaceFile(
+        { id: 'file-js-2', languageId: 'javascript', name: 'main.js', code: 'console.log(2)' },
+        now,
+      ),
       now,
     )
     const bundle = createWorkspaceProjectBundleFromSession(session, now)
