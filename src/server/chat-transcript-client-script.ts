@@ -376,7 +376,16 @@ export function buildChatTranscriptClientScript(): string {
       }
     });
 
-    applyWorkspaceDraftFromUrl();
+    // Inside the unified app shell, window.registerRouterViewInit (a plain
+    // top-level function declaration, so it lands on window in sloppy-mode
+    // global scope) is defined by client-router.ts, and
+    // workspace-agent-bridge.ts owns parsing ?draft=/&agentMode= centrally
+    // so it can also switch to the Agent tab. Standalone (this script's own
+    // renderChatUiHtml() page), no such router exists, so this page handles
+    // the query params itself as it always has.
+    if (typeof window.registerRouterViewInit !== 'function') {
+      applyWorkspaceDraftFromUrl();
+    }
 
     if (state.codemindKey) {
       el('codemind-key').value = state.codemindKey;

@@ -12,6 +12,7 @@ import { renderNavShellHtml } from '../views/nav-shell-view.js'
 import { renderRepositoryPlaceholderViewHtml } from '../views/future-feature-view.js'
 import { buildSettingsViewClientScript, renderSettingsViewHtml } from '../views/settings-view.js'
 import { renderWorkspaceViewHtml } from '../views/workspace-view.js'
+import { buildWorkspaceAgentBridgeScript } from './workspace-agent-bridge.js'
 
 const APP_SHELL_STYLES = `<style>
   :root { color-scheme: dark; --bg:#080c16; --panel:#111a2f; --ink:#e8eefc; --muted:#9da9c2; --accent:#4b74ff; }
@@ -81,6 +82,7 @@ export function renderAppShellHtml(): string {
     ${buildMemoryViewClientScript()}
     ${buildCheckpointsViewClientScript()}
     ${buildSettingsViewClientScript()}
+    ${buildWorkspaceAgentBridgeScript()}
 
     renderRoute();
   </script>
