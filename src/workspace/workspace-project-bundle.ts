@@ -280,7 +280,10 @@ function uniquePath(path: string, existing: Set<string>, index: number): string 
 }
 
 function slugify(value: string): string {
-  const slug = value.toLowerCase().replace(/[^a-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '')
+  const slug = value
+    .toLowerCase()
+    .replace(/[^a-z0-9_.-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
   return slug.length === 0 ? 'workspace-project' : slug
 }
 
