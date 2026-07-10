@@ -33,7 +33,7 @@ Then pick how you want to use it — CodeMind runs the same way from all four su
 node dist/cli.js agent --mode APPROVED_EXECUTION "fix the failing tests"
 ```
 
-**Browser** — chat like Claude Code, with an "Agent mode" toggle for real file reads/edits and shell commands. No provider key required to get started — pick **Browser-only mode** in the UI for local diagnostics only, or **API-backed mode** to bring your own provider key:
+**Browser** — one app, one port: a Dashboard, the Universal Polyglot Workspace editor, and a chat/Agent tab with an "Agent mode" toggle for real file reads/edits and shell commands, all as tabs in the same page. No provider key required to get started — pick **Browser-only mode** in the Agent tab for local diagnostics only, or **API-backed mode** to bring your own provider key. Editing code in the Workspace tab and picking an AI task (explain, review, translate, ...) switches straight to the Agent tab with the draft pre-filled — no separate page or port:
 
 ```bash
 export CODEMIND_API_KEY=pick-your-own-access-key

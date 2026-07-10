@@ -27,6 +27,13 @@ import {
 } from '../providers/provider-runtime-overrides.js'
 import { runAgentLoop } from '../agent/agent-loop.js'
 import type { AgentLoopConfig, AgentLoopEvent } from '../agent/agent-loop.types.js'
+import {
+  handleCheckpointDetail,
+  handleCheckpointsList,
+  handleMemoryProcedural,
+  handleMemoryRecent,
+  handleToolsRegistry,
+} from '../app/api/readonly-registry-routes.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
 import type { RuntimeToolContext } from '../runtime/types.js'
@@ -73,6 +80,7 @@ export interface ChatServerOptions {
   readonly streamTransport?: ProviderStreamTransport
   readonly rateLimiter?: RateLimiter
   readonly localStatusProvider?: () => Promise<RuntimeStatusView>
+  readonly cwd?: string
 }
 
 export interface StartedChatServer {
@@ -213,6 +221,10 @@ export function createChatServerRequestListener(
     options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_RATE_LIMIT_PER_MINUTE, 60_000)
   const env = options.env ?? process.env
   const localStatusProvider = options.localStatusProvider ?? collectStatus
+  const registryContext = {
+    cwd: options.cwd ?? process.cwd(),
+    hasGitHubToken: env['GITHUB_TOKEN'] !== undefined,
+  }
 
   return (req, res) => {
     void handleRequest(req, res)
@@ -302,6 +314,31 @@ export function createChatServerRequestListener(
 
       if (req.method === 'POST' && url.pathname === '/api/agent') {
         await handleAgent(req, res, env, overrideStore)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/tools') {
+        handleToolsRegistry(res)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/memory/recent') {
+        handleMemoryRecent(req, res, registryContext)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/memory/procedural') {
+        handleMemoryProcedural(res, registryContext)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/checkpoints') {
+        handleCheckpointsList(req, res, registryContext)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname.startsWith('/api/checkpoints/')) {
+        handleCheckpointDetail(url.pathname.slice('/api/checkpoints/'.length), res, registryContext)
         return
       }
 

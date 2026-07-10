@@ -1,0 +1,33 @@
+export interface AppNavEntry {
+  readonly id: string
+  readonly label: string
+}
+
+export const APP_NAV_ENTRIES: readonly AppNavEntry[] = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'workspace', label: 'Workspace' },
+  { id: 'agent', label: 'Agent' },
+  { id: 'tools', label: 'Tools' },
+  { id: 'memory', label: 'Memory' },
+  { id: 'checkpoints', label: 'Checkpoints' },
+  { id: 'settings', label: 'Settings' },
+]
+
+/**
+ * The persistent nav shown on every view. Includes a disabled placeholder
+ * for repository-lifecycle features that don't exist yet (Large PR Bundle 2)
+ * — labeled honestly as "planned", not rendered as a working control, per
+ * the audit's rule against implying functionality that doesn't exist.
+ */
+export function renderNavShellHtml(): string {
+  const items = APP_NAV_ENTRIES.map(
+    (entry) =>
+      `<button type="button" class="nav-item" data-nav="${entry.id}" onclick="navigateTo('${entry.id}')">${entry.label}</button>`,
+  ).join('')
+
+  const repositoryItem =
+    `<button type="button" class="nav-item" data-nav="repository" onclick="navigateTo('repository')">` +
+    `Repository <span class="nav-item-badge">planned</span></button>`
+
+  return `<nav class="app-nav" aria-label="CodeMind navigation">${items}${repositoryItem}</nav>`
+}

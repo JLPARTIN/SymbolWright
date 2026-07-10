@@ -127,7 +127,7 @@ describe('universal editor html', () => {
   it('wires SQL Run to the browser sql.js worker and table renderer', () => {
     const html = renderUniversalWorkspaceHtml()
 
-    expect(html).toContain("const SQL_RUNNER_ID = 'browser-sqljs'")
+    expect(html).toContain('const SQL_RUNNER_ID = "browser-sqljs"')
     expect(html).toContain('runSqlInWorker(editor.value)')
     expect(html).toContain('renderSqlResultSets')
     expect(html).toContain('SQL execution timed out')
@@ -137,7 +137,7 @@ describe('universal editor html', () => {
   it('wires Python Run to the browser Pyodide worker', () => {
     const html = renderUniversalWorkspaceHtml()
 
-    expect(html).toContain("const PYODIDE_RUNNER_ID = 'browser-pyodide'")
+    expect(html).toContain('const PYODIDE_RUNNER_ID = "browser-pyodide"')
     expect(html).toContain('runPythonInPyodideWorker(editor.value)')
     expect(html).toContain('Loading Pyodide and running Python')
     expect(html).toContain('Python execution timed out')

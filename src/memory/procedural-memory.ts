@@ -27,6 +27,11 @@ export class ProceduralMemory {
     return [...this.data.user_preferences, ...this.data.repo_conventions]
   }
 
+  /** Read-only per-category view, for browsing rather than prompt-building. */
+  public getSchema(): ProceduralSchema {
+    return { ...this.data }
+  }
+
   public addRule(category: ProceduralCategory, rule: string): void {
     const current = [...this.data[category]]
     if (current.includes(rule)) return
