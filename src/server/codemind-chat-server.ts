@@ -35,9 +35,13 @@ import {
   handleToolsRegistry,
 } from '../app/api/readonly-registry-routes.js'
 import {
+  handleRepositoryBranchCreate,
   handleRepositoryBranches,
+  handleRepositoryCheckpointRestore,
+  handleRepositoryCommit,
   handleRepositoryDiff,
   handleRepositoryFileRead,
+  handleRepositoryFileWrite,
   handleRepositoryStatus,
   handleRepositoryTree,
 } from '../app/api/repository-routes.js'
@@ -154,7 +158,7 @@ function applyCors(res: ServerResponse, corsOrigin: string | undefined): void {
   }
   res.setHeader('access-control-allow-origin', corsOrigin)
   res.setHeader('access-control-allow-headers', 'authorization, content-type')
-  res.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS')
+  res.setHeader('access-control-allow-methods', 'GET, POST, PUT, OPTIONS')
 }
 
 async function readJsonBody(req: IncomingMessage): Promise<unknown> {
@@ -377,6 +381,34 @@ export function createChatServerRequestListener(
 
       if (req.method === 'GET' && url.pathname === '/api/repository/branches') {
         await handleRepositoryBranches(res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'PUT' && url.pathname === '/api/repository/file') {
+        await handleRepositoryFileWrite(req, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'POST' && url.pathname === '/api/repository/branches') {
+        await handleRepositoryBranchCreate(req, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'POST' && url.pathname === '/api/repository/commit') {
+        await handleRepositoryCommit(req, res, repositoryContext)
+        return
+      }
+
+      if (
+        req.method === 'POST' &&
+        url.pathname.startsWith('/api/repository/checkpoints/') &&
+        url.pathname.endsWith('/restore')
+      ) {
+        const checkpointId = url.pathname.slice(
+          '/api/repository/checkpoints/'.length,
+          -'/restore'.length,
+        )
+        handleRepositoryCheckpointRestore(checkpointId, res, repositoryContext)
         return
       }
 
