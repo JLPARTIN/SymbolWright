@@ -34,6 +34,13 @@ import {
   handleMemoryRecent,
   handleToolsRegistry,
 } from '../app/api/readonly-registry-routes.js'
+import {
+  handleRepositoryBranches,
+  handleRepositoryDiff,
+  handleRepositoryFileRead,
+  handleRepositoryStatus,
+  handleRepositoryTree,
+} from '../app/api/repository-routes.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
 import type { RuntimeToolContext } from '../runtime/types.js'
@@ -225,6 +232,12 @@ export function createChatServerRequestListener(
     cwd: options.cwd ?? process.cwd(),
     hasGitHubToken: env['GITHUB_TOKEN'] !== undefined,
   }
+  const repositoryContext = {
+    cwd: registryContext.cwd,
+    policy: createRuntimePolicyForMode('APPROVED_EXECUTION', {
+      hasGitHubToken: registryContext.hasGitHubToken,
+    }),
+  }
 
   return (req, res) => {
     void handleRequest(req, res)
@@ -339,6 +352,31 @@ export function createChatServerRequestListener(
 
       if (req.method === 'GET' && url.pathname.startsWith('/api/checkpoints/')) {
         handleCheckpointDetail(url.pathname.slice('/api/checkpoints/'.length), res, registryContext)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/repository/tree') {
+        handleRepositoryTree(req, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/repository/file') {
+        handleRepositoryFileRead(req, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/repository/status') {
+        await handleRepositoryStatus(res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/repository/diff') {
+        await handleRepositoryDiff(req, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/repository/branches') {
+        await handleRepositoryBranches(res, repositoryContext)
         return
       }
 
