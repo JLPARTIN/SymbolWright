@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createCheckpoint, listCheckpoints } from '../../checkpoint/checkpoint-service.js'
 import { FakeGitHubPrCreationClient } from '../../runtime/github-write/fake-github-pr-creation-client.js'
@@ -9,6 +9,12 @@ import { runGitCommand } from '../../runtime/git/git-command-runner.js'
 import { startChatServer, type StartedChatServer } from '../../server/codemind-chat-server.js'
 import { UnlimitedRateLimiter } from '../../server/rate-limiter.js'
 import { parseGitHubRemoteUrl } from './repository-routes.js'
+
+// Many tests here spawn several real `git` subprocesses per test (init,
+// commit, branch, push against a real bare "remote", etc.); under coverage
+// instrumentation and parallel test-file execution that can legitimately
+// exceed vitest's default 5000ms, independent of any logic bug.
+vi.setConfig({ testTimeout: 20_000 })
 
 const API_KEY = 'test-codemind-key'
 
@@ -694,5 +700,296 @@ describe('POST /api/repository/pull-request', () => {
     })
     expect(response.status).toBe(403)
     expect(fakeClient.operations).toEqual([])
+  })
+})
+
+describe('malformed request bodies', () => {
+  it('PUT /api/repository/file rejects invalid JSON', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/file`, {
+      method: 'PUT',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: 'not json',
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('POST /api/repository/branches rejects invalid JSON', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/branches`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: 'not json',
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('POST /api/repository/commit rejects invalid JSON', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/commit`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: 'not json',
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('POST /api/repository/push rejects invalid JSON', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/push`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: 'not json',
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('POST /api/repository/pull-request rejects invalid JSON', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/pull-request`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: 'not json',
+    })
+    expect(response.status).toBe(400)
+  })
+})
+
+describe('additional validation and error paths', () => {
+  it('GET /api/repository/tree rejects a dir that resolves to a file, not a directory', async () => {
+    writeFileSync(join(cwd, 'a.ts'), 'x')
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/tree?dir=a.ts`, { headers: auth() })
+    expect(response.status).toBe(400)
+  })
+
+  it('GET /api/repository/file rejects a path outside the workspace', async () => {
+    const server = await launch()
+    const response = await fetch(
+      `${server.url}/api/repository/file?path=${encodeURIComponent('../../etc/passwd')}`,
+      { headers: auth() },
+    )
+    expect(response.status).toBe(400)
+  })
+
+  it('GET /api/repository/diff rejects a path outside the workspace', async () => {
+    const server = await launch()
+    const response = await fetch(
+      `${server.url}/api/repository/diff?path=${encodeURIComponent('../../etc/passwd')}`,
+      { headers: auth() },
+    )
+    expect(response.status).toBe(400)
+  })
+
+  it('PUT /api/repository/file rejects writing to a path that is a directory', async () => {
+    mkdirSync(join(cwd, 'src'))
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/file`, {
+      method: 'PUT',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ path: 'src', content: 'x' }),
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('POST /api/repository/branches requires name', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/branches`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('POST /api/repository/branches returns 400 when the branch already exists', async () => {
+    writeFileSync(join(cwd, 'a.ts'), 'x')
+    await runGitCommand(['add', 'a.ts'], cwd)
+    await runGitCommand(['commit', '-m', 'init'], cwd)
+    await runGitCommand(['branch', 'existing'], cwd)
+
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/branches`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'existing' }),
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('POST /api/repository/commit requires message', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/commit`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('POST /api/repository/push returns 400 for a detached HEAD', async () => {
+    writeFileSync(join(cwd, 'a.ts'), 'x')
+    await runGitCommand(['add', 'a.ts'], cwd)
+    await runGitCommand(['commit', '-m', 'init'], cwd)
+    const rev = await runGitCommand(['rev-parse', 'HEAD'], cwd)
+    await runGitCommand(['checkout', rev.stdout.trim()], cwd)
+
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/push`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true }),
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('POST /api/repository/push blocks an explicit push to a protected branch name even from a different current branch', async () => {
+    await runGitCommand(['checkout', '-b', 'main'], cwd)
+    writeFileSync(join(cwd, 'a.ts'), 'x')
+    await runGitCommand(['add', 'a.ts'], cwd)
+    await runGitCommand(['commit', '-m', 'init'], cwd)
+    await runGitCommand(['checkout', '-b', 'feature/x'], cwd)
+
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/push`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true, branch: 'main' }),
+    })
+    expect(response.status).toBe(403)
+  })
+
+  it('POST /api/repository/push returns 502 when the remote push itself fails', async () => {
+    await runGitCommand(['checkout', '-b', 'main'], cwd)
+    writeFileSync(join(cwd, 'a.ts'), 'x')
+    await runGitCommand(['add', 'a.ts'], cwd)
+    await runGitCommand(['commit', '-m', 'init'], cwd)
+    await runGitCommand(['checkout', '-b', 'feature/no-remote'], cwd)
+    // No "origin" remote configured -- the push itself will fail.
+
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/push`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true }),
+    })
+    expect(response.status).toBe(502)
+  })
+
+  it('POST /api/repository/pull-request requires baseBranch, headBranch, and title', async () => {
+    const fakeClient = new FakeGitHubPrCreationClient()
+    started = await startChatServer({
+      apiKey: API_KEY,
+      host: '127.0.0.1',
+      port: 0,
+      env: { GITHUB_TOKEN: 'fake-value-for-policy' },
+      cwd,
+      rateLimiter: new UnlimitedRateLimiter(),
+      githubPrCreationClient: fakeClient,
+    })
+
+    const missingBase = await fetch(`${started.url}/api/repository/pull-request`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true, headBranch: 'x', title: 'x' }),
+    })
+    expect(missingBase.status).toBe(400)
+
+    const missingHead = await fetch(`${started.url}/api/repository/pull-request`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true, baseBranch: 'main', title: 'x' }),
+    })
+    expect(missingHead.status).toBe(400)
+
+    const missingTitle = await fetch(`${started.url}/api/repository/pull-request`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true, baseBranch: 'main', headBranch: 'x' }),
+    })
+    expect(missingTitle.status).toBe(400)
+
+    expect(fakeClient.operations).toEqual([])
+  })
+
+  it('POST /api/repository/pull-request returns 400 when no repository can be determined', async () => {
+    const fakeClient = new FakeGitHubPrCreationClient()
+    started = await startChatServer({
+      apiKey: API_KEY,
+      host: '127.0.0.1',
+      port: 0,
+      env: { GITHUB_TOKEN: 'fake-value-for-policy' },
+      cwd,
+      rateLimiter: new UnlimitedRateLimiter(),
+      githubPrCreationClient: fakeClient,
+    })
+    // No "origin" remote configured, and no explicit "repository" in the body.
+
+    const response = await fetch(`${started.url}/api/repository/pull-request`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true, baseBranch: 'main', headBranch: 'x', title: 'x' }),
+    })
+    expect(response.status).toBe(400)
+    const body = (await response.json()) as { error: string }
+    expect(body.error).toContain('repository')
+  })
+
+  it('POST /api/repository/pull-request returns 400 when there are no changed files to include', async () => {
+    const fakeClient = new FakeGitHubPrCreationClient()
+    started = await startChatServer({
+      apiKey: API_KEY,
+      host: '127.0.0.1',
+      port: 0,
+      env: { GITHUB_TOKEN: 'fake-value-for-policy' },
+      cwd,
+      rateLimiter: new UnlimitedRateLimiter(),
+      githubPrCreationClient: fakeClient,
+    })
+
+    const response = await fetch(`${started.url}/api/repository/pull-request`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({
+        confirm: true,
+        repository: 'acme/widgets',
+        baseBranch: 'main',
+        headBranch: 'feature/empty',
+        title: 'Nothing to see here',
+      }),
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('POST /api/repository/pull-request accepts explicit files without touching git status', async () => {
+    const fakeClient = new FakeGitHubPrCreationClient()
+    started = await startChatServer({
+      apiKey: API_KEY,
+      host: '127.0.0.1',
+      port: 0,
+      env: { GITHUB_TOKEN: 'fake-value-for-policy' },
+      cwd,
+      rateLimiter: new UnlimitedRateLimiter(),
+      githubPrCreationClient: fakeClient,
+    })
+
+    const response = await fetch(`${started.url}/api/repository/pull-request`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({
+        confirm: true,
+        repository: 'acme/widgets',
+        baseBranch: 'main',
+        headBranch: 'feature/explicit-files',
+        title: 'Explicit files',
+        files: [{ path: 'explicit.ts', content: 'export const x = 1\n' }, { path: 'bad-entry' }],
+      }),
+    })
+    expect(response.status).toBe(200)
+    const commitOp = fakeClient.operations.find((op) => op.type === 'commitFiles')
+    expect(commitOp?.type).toBe('commitFiles')
+    if (commitOp?.type === 'commitFiles') {
+      expect(commitOp.files).toEqual([{ path: 'explicit.ts', content: 'export const x = 1\n' }])
+    }
   })
 })

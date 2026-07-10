@@ -465,7 +465,7 @@ export function handleRepositoryCheckpointRestore(
 export function parseGitHubRemoteUrl(remoteUrl: string): string | undefined {
   const trimmed = remoteUrl.trim().replace(/\.git$/, '')
   const sshMatch = /^git@github\.com:([^/]+)\/(.+)$/.exec(trimmed)
-  if (sshMatch !== undefined && sshMatch !== null) {
+  if (sshMatch !== null) {
     return `${sshMatch[1]}/${sshMatch[2]}`
   }
   const httpsMatch = /^https?:\/\/(?:[^/@]+@)?github\.com\/([^/]+)\/(.+)$/.exec(trimmed)
