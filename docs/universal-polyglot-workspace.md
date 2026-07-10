@@ -220,25 +220,18 @@ npm run lint
 npm test
 npm run build
 
-npm run dev
-```
-
-Open the forwarded port for `3005`, then use:
-
-```txt
-/workspace
-```
-
-The dashboard also links directly to **Open Universal Workspace**.
-
-To use workspace drafts in chat, also start the chat server in another terminal:
-
-```bash
 export CODEMIND_API_KEY=$(openssl rand -hex 16)
 npm run serve
 ```
 
-Then choose a code-intelligence task in `/workspace` and use **Open draft in CodeMind Chat**.
+Open the forwarded port for `8787`, then use the **Workspace** tab in the
+nav (or visit `/#/workspace` / `/workspace`, which redirects there). The
+Workspace and Agent are tabs in the same page now, not separate
+dashboard/chat servers on separate ports.
+
+Choose a code-intelligence task in the Workspace tab and it switches
+straight to the **Agent** tab with the draft pre-filled, in the same page
+&mdash; no separate chat server to start, no new tab to open.
 
 ## Troubleshooting: Run button disabled
 

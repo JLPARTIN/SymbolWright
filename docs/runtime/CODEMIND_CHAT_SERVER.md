@@ -1,11 +1,15 @@
-# CodeMind Chat Server (`codemind serve`)
+# CodeMind Chat/Agent API (`codemind serve`)
 
-A real HTTP server and browser chat UI, backed by the provider gateway
+A real HTTP server backed by the provider gateway
 (`src/providers/provider-gateway.ts`). This is the "bring your own API key,
 use it from a browser" surface: pick any of the preset providers or register
-a fully custom OpenAI-compatible endpoint, then chat from `/` like any other
-LLM web client. Provider credentials stay on the server; the browser only
-ever holds the `CODEMIND_API_KEY`.
+a fully custom OpenAI-compatible endpoint, then chat from the **Agent** tab
+of the unified app shell (`/`, then `#/agent`) like any other LLM web
+client. Provider credentials stay on the server; the browser only ever
+holds the `CODEMIND_API_KEY`. `codemind serve` starts one process on one
+port serving this API alongside the Dashboard, Workspace, Tools, Memory,
+and Checkpoints tabs — see [`../codespaces.md`](../codespaces.md) for the
+full app.
 
 ```txt
 Browser  →  CodeMind Chat API (auth: CODEMIND_API_KEY)  →  Provider Gateway  →  Provider API

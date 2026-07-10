@@ -4,7 +4,7 @@ CodeMind exposes a provider-neutral API surface so any browser, LLM, coding agen
 
 ## Live implementation
 
-`codemind serve` starts a real HTTP server (`src/server/codemind-chat-server.ts`) implementing the chat + provider routes below, plus a browser chat UI at `/`. See [`CODEMIND_CHAT_SERVER.md`](runtime/CODEMIND_CHAT_SERVER.md) for setup, auth, and deployment notes.
+`codemind serve` starts one real HTTP server on one port (`src/app/server/unified-server.ts`) implementing the chat + provider routes below, plus the unified app shell at `/` (Dashboard, Workspace, Agent, Tools, Memory, Checkpoints, Settings — all one page, hash-routed). See [`CODEMIND_CHAT_SERVER.md`](runtime/CODEMIND_CHAT_SERVER.md) for setup, auth, and deployment notes.
 
 Governed tool execution is live today over two transports: `POST /api/agent` (HTTP+SSE, this server) runs the real `codemind agent` tool-execution loop; `codemind mcp-server` (see [`runtime/CODEMIND_MCP_SERVER.md`](runtime/CODEMIND_MCP_SERVER.md)) exposes the same tool registry to any MCP-compatible LLM client over stdio. Both are gated by the same runtime-mode policy as everywhere else in CodeMind.
 
@@ -32,20 +32,30 @@ Provider Adapter
 
 ## Routes
 
-| Method | Path | Status | Purpose |
-| --- | --- | --- | --- |
-| `GET` | `/` | Live | Browser chat UI. |
-| `GET` | `/api/health` | Live | Unauthenticated liveness check. |
-| `GET` | `/api/providers` | Live | List provider catalog, redacted config, and configured/missing status. |
-| `POST` | `/api/providers/register` | Live | Register or override a provider's base URL, API key, or model at runtime — this is how you point CodeMind at any API you choose. |
-| `POST` | `/api/providers/reset` | Live | Clear a runtime provider override back to its env-configured defaults. |
-| `POST` | `/api/providers/test` | Live | Verify provider adapter readiness without exposing provider keys to the browser. |
-| `POST` | `/api/chat` | Live | Send a conversational chat turn; set `"stream": true` for a server-sent-events token stream. |
-| `POST` | `/api/agent` | Live | Run the real tool-execution agent loop (read/search/edit files, run commands, etc., mode-gated); set `"stream": true` (default) for a live SSE event stream. |
-| `POST` | `/api/missions` | Contract only | Create a governed CodeMind mission (full agent/tool-use runtime over HTTP — not yet implemented). |
-| `POST` | `/api/tools/run` | Contract only | Run a governed tool through policy, approval, audit, and redaction gates. |
-| `GET` | `/api/sessions/:id` | Contract only | Read a persisted mission session and audit-safe state. |
-| `GET` | `/api/missions/:id/events` | Contract only | Stream mission events, tool output, terminal-safe logs, and PR readiness updates. |
+| Method | Path | Auth | Status | Purpose |
+| --- | --- | --- | --- | --- |
+| `GET` | `/` | No | Live | Unified app shell — Dashboard, Workspace, Agent, Tools, Memory, Checkpoints, Settings as tabs in one page. |
+| `GET` | `/workspace` | No | Live | Redirects (302) to `/#/workspace` — bookmark compatibility with the pre-unification standalone route. |
+| `GET` | `/api/health` | No | Live | Unauthenticated liveness check. |
+| `GET` | `/api/status` | Yes | Live | Runtime status cards (doctor/release-readiness/runtime-phase/tool-registry state). |
+| `GET` | `/api/workspace/languages` | No | Live | Universal Workspace language/runner registry. |
+| `POST` | `/api/workspace/run` | No | Live | Run code through a server-side runner (e.g. TypeScript). |
+| `POST` | `/api/workspace/intelligence` | No | Live | Prepare a code-intelligence draft (generate/explain/translate/review/tests/drift) for the Agent tab. |
+| `GET` | `/api/providers` | Yes | Live | List provider catalog, redacted config, and configured/missing status. |
+| `POST` | `/api/providers/register` | Yes | Live | Register or override a provider's base URL, API key, or model at runtime — this is how you point CodeMind at any API you choose. |
+| `POST` | `/api/providers/reset` | Yes | Live | Clear a runtime provider override back to its env-configured defaults. |
+| `POST` | `/api/providers/test` | Yes | Live | Verify provider adapter readiness without exposing provider keys to the browser. |
+| `POST` | `/api/chat` | Yes | Live | Send a conversational chat turn; set `"stream": true` for a server-sent-events token stream. |
+| `POST` | `/api/agent` | Yes | Live | Run the real tool-execution agent loop (read/search/edit files, run commands, etc., mode-gated); set `"stream": true` (default) for a live SSE event stream. |
+| `GET` | `/api/tools` | Yes | Live | The real tool registry: statically-assembled tools with per-mode reachability, plus the separately-listed dynamically-wired tools. |
+| `GET` | `/api/memory/recent` | Yes | Live | Recent episodic memory interactions (read-only). |
+| `GET` | `/api/memory/procedural` | Yes | Live | Procedural memory rules by category (read-only). |
+| `GET` | `/api/checkpoints` | Yes | Live | Checkpoints created before mutating file writes (read-only; restore stays CLI-only: `codemind checkpoint restore`). |
+| `GET` | `/api/checkpoints/:id` | Yes | Live | One checkpoint's full metadata by id. |
+| `POST` | `/api/missions` | Yes | Contract only | Create a governed CodeMind mission (full agent/tool-use runtime over HTTP — not yet implemented). |
+| `POST` | `/api/tools/run` | Yes | Contract only | Run a governed tool through policy, approval, audit, and redaction gates. |
+| `GET` | `/api/sessions/:id` | Yes | Contract only | Read a persisted mission session and audit-safe state. |
+| `GET` | `/api/missions/:id/events` | Yes | Contract only | Stream mission events, tool output, terminal-safe logs, and PR readiness updates. |
 
 ## Mission request shape
 
