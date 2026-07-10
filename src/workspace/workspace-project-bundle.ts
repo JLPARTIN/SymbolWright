@@ -125,7 +125,9 @@ export function createWorkspaceSessionFromProjectBundle(
       code: bundleFile.content,
       output: '',
       errors: '',
-      diagnostics: language.safetyRestrictions.concat(language.notes ? [language.notes] : []).join('\n'),
+      diagnostics: language.safetyRestrictions
+        .concat(language.notes ? [language.notes] : [])
+        .join('\n'),
       dirty: false,
       createdAt: timestamp,
       updatedAt: timestamp,

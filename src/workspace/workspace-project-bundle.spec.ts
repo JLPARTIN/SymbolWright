@@ -41,7 +41,9 @@ describe('workspace project bundle model', () => {
       'queries/report.sql',
     ])
     expect(bundle.manifest.files.map((file) => file.languageId)).toEqual(['javascript', 'sql'])
-    expect(bundle.manifest.safetyWarnings.join('\n')).toContain('does not write to a Git repository')
+    expect(bundle.manifest.safetyWarnings.join('\n')).toContain(
+      'does not write to a Git repository',
+    )
     expect(bundle.files[1]?.content).toContain('CREATE TABLE users')
   })
 
