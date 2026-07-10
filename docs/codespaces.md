@@ -5,8 +5,8 @@ by the npm scripts in `package.json`:
 
 | Server | Command | Port | What it is |
 | --- | --- | --- | --- |
-| Runtime preview / Get Started dashboard | `npm run dev` | `3005` | Real, local, deterministic diagnostics (`npm run doctor` + `npm run release-readiness`). No provider API key needed. Links you to the chat server below. |
-| Chat + agent server | `npm run serve` | `8787` | The interactive browser chat UI (`codemind serve`). Lets you pick **Browser-only mode** (no provider key, local diagnostics only) or **API-backed mode** (bring your own provider key, real chat + agent tool execution). |
+| Runtime preview / Get Started dashboard | `npm run dev` | `3005` | Real, local, deterministic diagnostics (`npm run doctor` + `npm run release-readiness`) at `/`, plus the Universal Polyglot Workspace at `/workspace` (multi-file local sessions, JS/TS/SQL/Python runners, project bundle import/export). No provider API key needed for either. Links you to the chat server below. |
+| Chat + agent server | `npm run serve` | `8787` | The interactive browser chat UI (`codemind serve`). Lets you pick **Browser-only mode** (no provider key, local diagnostics only) or **API-backed mode** (bring your own provider key, real chat + Agent mode with `APPROVED_EXECUTION` file writes and shell commands). |
 
 They are kept as two processes on purpose: the dashboard never needs any
 secret, so you can preview it with zero setup, while the chat server only
@@ -36,7 +36,40 @@ npm test --if-present
 npm run build --if-present
 ```
 
-## 3. Start the servers
+## 3. Fastest path to full access (one terminal)
+
+If you already have a provider credential and just want everything working
+&mdash; chat, Agent mode (`APPROVED_EXECUTION`: real file edits + shell
+commands), and the dashboard &mdash; run all of this in one terminal before
+starting the server, then open the forwarded port:
+
+```bash
+set -euo pipefail
+
+export CODEMIND_API_KEY=$(openssl rand -hex 16)
+export ANTHROPIC_API_KEY=sk-ant-...   # or any provider from docs/PROVIDER_KEYS.md
+
+echo "CodeMind access key (paste this into the browser): $CODEMIND_API_KEY"
+npm run serve
+```
+
+Then, on the forwarded/localhost port `8787`:
+
+1. Paste the printed `CODEMIND_API_KEY` into "CodeMind access key" and
+   connect (or press Enter).
+2. Click **API-backed mode**, pick your provider (it already shows
+   **configured** since the env var was set before `npm run serve` started),
+   and click **Test connection** to confirm **Active**.
+3. Check **Agent mode**, set the runtime-mode dropdown to
+   `APPROVED_EXECUTION`, and send a message &mdash; this is full access:
+   the model can read/edit files and run shell commands in this workspace,
+   shown inline as tool calls happen.
+
+Environment variables only apply to processes started *after* you export
+them in that shell &mdash; if you add a provider key later, stop this
+process (`Ctrl+C`) and re-run `npm run serve` in the same terminal.
+
+## 3b. Two-terminal setup (dashboard + chat separately)
 
 **Terminal 1 — Get Started dashboard (no API key required):**
 
@@ -74,7 +107,7 @@ Open port `8787`. In the browser:
    Enter in the provider API key field). The UI reports **active** or
    **invalid config** immediately — it never silently accepts a bad key.
 
-## 4. Opening a forwarded port in Codespaces
+## 4. Opening a forwarded port in Codespaces (localhost too)
 
 - Open the **Ports** tab (bottom panel, next to Terminal).
 - Find port `3005` (dashboard) or `8787` (chat), right-click it, and set
@@ -107,3 +140,25 @@ You can also run either server on a different port:
 PORT=3006 npm run dev
 CODEMIND_CHAT_PORT=8788 npm run serve
 ```
+
+## 6. MCP server for Claude Desktop / Claude Code (no port, no browser)
+
+`codemind mcp-server` is a separate integration path: it speaks MCP
+(JSON-RPC) over **stdio**, not HTTP, so there is no port to forward — your
+MCP-compatible client (Claude Desktop, Claude Code, another agent
+framework) launches the process itself. Point it at the built CLI:
+
+```json
+{
+  "mcpServers": {
+    "codemind": { "command": "node", "args": ["/absolute/path/to/CodeMind/dist/cli.js", "mcp-server"] }
+  }
+}
+```
+
+Defaults to `READ_ONLY` (15 read-only tools: `read_file`, `list_files`,
+`search_files`, `grep`, `glob`, plus reporting/skill tools). Add
+`"--mode", "APPROVED_EXECUTION"` to `args` for the full 41-tool surface
+(file writes, `bash`, `git`, GitHub write tools, validation runners, web
+tools). See [`docs/runtime/CODEMIND_MCP_SERVER.md`](runtime/CODEMIND_MCP_SERVER.md)
+for the full tool list and protocol details.
