@@ -1,9 +1,6 @@
+import { startUnifiedServer } from './app/server/unified-server.js'
+import type { StartedUnifiedServer, UnifiedServerOptions } from './app/server/route-types.js'
 import type { ProviderGatewayEnv } from './providers/provider-config.js'
-import {
-  startChatServer,
-  type ChatServerOptions,
-  type StartedChatServer,
-} from './server/codemind-chat-server.js'
 
 const DEFAULT_HOST = '127.0.0.1'
 const DEFAULT_PORT = 8787
@@ -75,7 +72,7 @@ function readEnv(env: ProviderGatewayEnv, key: string): string | undefined {
 export function resolveChatServerOptions(
   args: ServeCommandArgs,
   env: ProviderGatewayEnv,
-): ChatServerOptions {
+): UnifiedServerOptions {
   const apiKey = readEnv(env, 'CODEMIND_API_KEY') ?? ''
   const host = args.host ?? readEnv(env, 'CODEMIND_CHAT_HOST') ?? DEFAULT_HOST
   const portFromEnv = readEnv(env, 'CODEMIND_CHAT_PORT')
@@ -94,22 +91,32 @@ export function resolveChatServerOptions(
   }
 }
 
-export function renderServeBanner(server: StartedChatServer): string {
+export function renderServeBanner(server: StartedUnifiedServer): string {
   const lines = [
-    'CodeMind Chat Server',
+    'CodeMind',
     '',
     `Listening: ${server.url}`,
     '',
     'Routes:',
-    '- GET  /                      chat UI',
-    '- GET  /api/health            public health check',
-    '- GET  /api/local-status      browser-only mode: local doctor/release-readiness diagnostics (auth required)',
-    '- GET  /api/providers         list configured providers (auth required)',
-    '- POST /api/providers/register  register or override a provider (auth required)',
-    '- POST /api/providers/reset      clear a provider override (auth required)',
-    '- POST /api/providers/test       verify provider credentials (auth required)',
-    '- POST /api/chat                 send a chat turn, set "stream": true for live tokens (auth required)',
-    '- POST /api/agent                run the real tool-execution agent loop (auth required)',
+    '- GET  /                          unified app shell (dashboard, workspace, agent, tools, memory, checkpoints, settings)',
+    '- GET  /workspace                 redirects to /#/workspace (bookmark compatibility)',
+    '- GET  /api/health                public health check',
+    '- GET  /api/status                runtime status (auth required)',
+    '- GET  /api/workspace/languages   Universal Workspace language/runner registry',
+    '- POST /api/workspace/run         run code through a server-side runner',
+    '- POST /api/workspace/intelligence  prepare a code-intelligence draft for the Agent view',
+    '- GET  /api/local-status          browser-only mode: local doctor/release-readiness diagnostics (auth required)',
+    '- GET  /api/providers             list configured providers (auth required)',
+    '- POST /api/providers/register    register or override a provider (auth required)',
+    '- POST /api/providers/reset       clear a provider override (auth required)',
+    '- POST /api/providers/test        verify provider credentials (auth required)',
+    '- POST /api/chat                  send a chat turn, set "stream": true for live tokens (auth required)',
+    '- POST /api/agent                 run the real tool-execution agent loop (auth required)',
+    '- GET  /api/tools                 tool registry, static + dynamically-wired (auth required)',
+    '- GET  /api/memory/recent         recent episodic memory (auth required)',
+    '- GET  /api/memory/procedural     procedural memory rules (auth required)',
+    '- GET  /api/checkpoints           checkpoints created before mutating writes (auth required)',
+    '- GET  /api/checkpoints/:id       one checkpoint by id (auth required)',
   ]
 
   if (server.warnings.length > 0) {
@@ -124,7 +131,7 @@ export async function runServeCommand(
   env: ProviderGatewayEnv = process.env,
 ): Promise<void> {
   const options = resolveChatServerOptions(parseServeArgs(args), env)
-  const server = await startChatServer(options)
+  const server = await startUnifiedServer(options)
   console.log(renderServeBanner(server))
   await new Promise<never>(() => undefined)
 }

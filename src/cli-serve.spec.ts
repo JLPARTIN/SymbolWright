@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
+import type { StartedUnifiedServer } from './app/server/route-types.js'
 import { parseServeArgs, renderServeBanner, resolveChatServerOptions } from './cli-serve.js'
 import { ChatServerConfigError, assertChatServerCanStart } from './server/codemind-chat-server.js'
-import type { StartedChatServer } from './server/codemind-chat-server.js'
 
 describe('parseServeArgs', () => {
   it('returns no overrides when no flags are given', () => {
@@ -75,8 +75,8 @@ describe('resolveChatServerOptions', () => {
 
 describe('renderServeBanner', () => {
   it('lists the served routes and the listening url', () => {
-    const server: StartedChatServer = {
-      server: {} as StartedChatServer['server'],
+    const server: StartedUnifiedServer = {
+      server: {} as StartedUnifiedServer['server'],
       url: 'http://127.0.0.1:8787',
       host: '127.0.0.1',
       port: 8787,
@@ -89,8 +89,8 @@ describe('renderServeBanner', () => {
   })
 
   it('surfaces startup warnings', () => {
-    const server: StartedChatServer = {
-      server: {} as StartedChatServer['server'],
+    const server: StartedUnifiedServer = {
+      server: {} as StartedUnifiedServer['server'],
       url: 'http://0.0.0.0:8787',
       host: '0.0.0.0',
       port: 8787,
