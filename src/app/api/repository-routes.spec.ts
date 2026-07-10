@@ -4,9 +4,11 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { createCheckpoint, listCheckpoints } from '../../checkpoint/checkpoint-service.js'
+import { FakeGitHubPrCreationClient } from '../../runtime/github-write/fake-github-pr-creation-client.js'
 import { runGitCommand } from '../../runtime/git/git-command-runner.js'
 import { startChatServer, type StartedChatServer } from '../../server/codemind-chat-server.js'
 import { UnlimitedRateLimiter } from '../../server/rate-limiter.js'
+import { parseGitHubRemoteUrl } from './repository-routes.js'
 
 const API_KEY = 'test-codemind-key'
 
@@ -402,5 +404,230 @@ describe('POST /api/repository/checkpoints/:id/restore', () => {
       },
     )
     expect(response.status).toBe(404)
+  })
+})
+
+describe('parseGitHubRemoteUrl', () => {
+  it('parses an SSH remote URL', () => {
+    expect(parseGitHubRemoteUrl('git@github.com:JLPARTIN/CodeMind.git')).toBe('JLPARTIN/CodeMind')
+  })
+
+  it('parses an HTTPS remote URL', () => {
+    expect(parseGitHubRemoteUrl('https://github.com/JLPARTIN/CodeMind.git')).toBe(
+      'JLPARTIN/CodeMind',
+    )
+  })
+
+  it('parses an HTTPS remote URL without the .git suffix', () => {
+    expect(parseGitHubRemoteUrl('https://github.com/JLPARTIN/CodeMind')).toBe('JLPARTIN/CodeMind')
+  })
+
+  it('returns undefined for a non-GitHub remote', () => {
+    expect(parseGitHubRemoteUrl('https://gitlab.com/owner/repo.git')).toBeUndefined()
+  })
+})
+
+describe('POST /api/repository/push', () => {
+  let remoteDir: string
+
+  beforeEach(async () => {
+    remoteDir = mkdtempSync(join(tmpdir(), 'codemind-repository-push-remote-'))
+    await runGitCommand(['init', '--bare'], remoteDir)
+  })
+
+  afterEach(() => {
+    rmSync(remoteDir, { recursive: true, force: true })
+  })
+
+  it('requires authentication', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/push`, { method: 'POST' })
+    expect(response.status).toBe(401)
+  })
+
+  it('requires confirm: true', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/push`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('blocks pushing directly from a protected branch like main', async () => {
+    await runGitCommand(['checkout', '-b', 'main'], cwd)
+    writeFileSync(join(cwd, 'a.ts'), 'const a = 1\n')
+    await runGitCommand(['add', 'a.ts'], cwd)
+    await runGitCommand(['commit', '-m', 'init'], cwd)
+    await runGitCommand(['remote', 'add', 'origin', remoteDir], cwd)
+
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/push`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true }),
+    })
+    expect(response.status).toBe(403)
+  })
+
+  it('pushes a feature branch to a real remote and sets upstream', async () => {
+    await runGitCommand(['checkout', '-b', 'main'], cwd)
+    writeFileSync(join(cwd, 'a.ts'), 'const a = 1\n')
+    await runGitCommand(['add', 'a.ts'], cwd)
+    await runGitCommand(['commit', '-m', 'init'], cwd)
+    await runGitCommand(['remote', 'add', 'origin', remoteDir], cwd)
+    await runGitCommand(['checkout', '-b', 'feature/push-test'], cwd)
+
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/push`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true, setUpstream: true }),
+    })
+    expect(response.status).toBe(200)
+
+    const remoteBranches = await runGitCommand(['branch', '--list'], remoteDir)
+    expect(remoteBranches.stdout).toContain('feature/push-test')
+  })
+
+  it('never exposes a force-push option -- only remote/branch/setUpstream are accepted', async () => {
+    await runGitCommand(['checkout', '-b', 'main'], cwd)
+    writeFileSync(join(cwd, 'a.ts'), 'const a = 1\n')
+    await runGitCommand(['add', 'a.ts'], cwd)
+    await runGitCommand(['commit', '-m', 'init'], cwd)
+    await runGitCommand(['remote', 'add', 'origin', remoteDir], cwd)
+    await runGitCommand(['checkout', '-b', 'feature/no-force'], cwd)
+
+    const server = await launch()
+    // A client-supplied "force" field is simply ignored -- the route never
+    // forwards arbitrary flags to `git push`, only remote/branch/setUpstream.
+    const response = await fetch(`${server.url}/api/repository/push`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true, force: true }),
+    })
+    expect(response.status).toBe(200)
+
+    const remoteBranches = await runGitCommand(['branch', '--list'], remoteDir)
+    expect(remoteBranches.stdout).toContain('feature/no-force')
+  })
+})
+
+describe('POST /api/repository/pull-request', () => {
+  it('requires authentication', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/pull-request`, { method: 'POST' })
+    expect(response.status).toBe(401)
+  })
+
+  it('returns a clear error when no GitHub client/token is configured', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/pull-request`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({
+        confirm: true,
+        baseBranch: 'main',
+        headBranch: 'feature/x',
+        title: 'Add feature',
+      }),
+    })
+    expect(response.status).toBe(400)
+    const body = (await response.json()) as { error: string }
+    expect(body.error).toContain('GITHUB_TOKEN')
+  })
+
+  it('requires confirm: true', async () => {
+    const fakeClient = new FakeGitHubPrCreationClient()
+    started = await startChatServer({
+      apiKey: API_KEY,
+      host: '127.0.0.1',
+      port: 0,
+      env: {},
+      cwd,
+      rateLimiter: new UnlimitedRateLimiter(),
+      githubPrCreationClient: fakeClient,
+    })
+
+    const response = await fetch(`${started.url}/api/repository/pull-request`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ baseBranch: 'main', headBranch: 'feature/x', title: 'x' }),
+    })
+    expect(response.status).toBe(400)
+    expect(fakeClient.operations).toEqual([])
+  })
+
+  it('creates a real draft PR via the injected client, auto-deriving changed files from git status', async () => {
+    writeFileSync(join(cwd, 'a.ts'), 'const a = 1\n')
+    await runGitCommand(['add', 'a.ts'], cwd)
+    await runGitCommand(['commit', '-m', 'init'], cwd)
+    writeFileSync(join(cwd, 'a.ts'), 'const a = 2\n')
+
+    const fakeClient = new FakeGitHubPrCreationClient()
+    started = await startChatServer({
+      apiKey: API_KEY,
+      host: '127.0.0.1',
+      port: 0,
+      // GITHUB_TOKEN drives repositoryContext.policy.allowGitHubWrites in
+      // codemind-chat-server.ts; the actual REST calls go through the
+      // injected fakeClient below, not a real GitHub client.
+      env: { GITHUB_TOKEN: 'fake-value-for-policy' },
+      cwd,
+      rateLimiter: new UnlimitedRateLimiter(),
+      githubPrCreationClient: fakeClient,
+    })
+
+    const response = await fetch(`${started.url}/api/repository/pull-request`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({
+        confirm: true,
+        repository: 'acme/widgets',
+        baseBranch: 'main',
+        headBranch: 'feature/from-repo-view',
+        title: 'Update a.ts',
+        body: 'via Repository tab',
+      }),
+    })
+    expect(response.status).toBe(200)
+    const result = (await response.json()) as { outcome: string; pullRequestUrl: string | null }
+    expect(result.outcome).toBe('CREATED')
+    expect(result.pullRequestUrl).toContain('acme/widgets')
+
+    const commitOp = fakeClient.operations.find((op) => op.type === 'commitFiles')
+    expect(commitOp?.type).toBe('commitFiles')
+    if (commitOp?.type === 'commitFiles') {
+      expect(commitOp.files).toEqual([{ path: 'a.ts', content: 'const a = 2\n' }])
+    }
+  })
+
+  it('blocks creating a PR whose head branch is main', async () => {
+    const fakeClient = new FakeGitHubPrCreationClient()
+    started = await startChatServer({
+      apiKey: API_KEY,
+      host: '127.0.0.1',
+      port: 0,
+      env: { GITHUB_TOKEN: 'fake-value-for-policy' },
+      cwd,
+      rateLimiter: new UnlimitedRateLimiter(),
+      githubPrCreationClient: fakeClient,
+    })
+    writeFileSync(join(cwd, 'a.ts'), 'const a = 1\n')
+
+    const response = await fetch(`${started.url}/api/repository/pull-request`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({
+        confirm: true,
+        repository: 'acme/widgets',
+        baseBranch: 'main',
+        headBranch: 'main',
+        title: 'x',
+      }),
+    })
+    expect(response.status).toBe(403)
+    expect(fakeClient.operations).toEqual([])
   })
 })

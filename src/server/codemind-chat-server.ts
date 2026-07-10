@@ -42,9 +42,12 @@ import {
   handleRepositoryDiff,
   handleRepositoryFileRead,
   handleRepositoryFileWrite,
+  handleRepositoryPullRequestCreate,
+  handleRepositoryPush,
   handleRepositoryStatus,
   handleRepositoryTree,
 } from '../app/api/repository-routes.js'
+import type { GitHubPrCreationClient } from '../runtime/github-write/github-pr-creation.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
 import type { RuntimeToolContext } from '../runtime/types.js'
@@ -92,6 +95,8 @@ export interface ChatServerOptions {
   readonly rateLimiter?: RateLimiter
   readonly localStatusProvider?: () => Promise<RuntimeStatusView>
   readonly cwd?: string
+  /** Test seam: inject a fake GitHubPrCreationClient for the Repository PR-creation route instead of constructing the real REST client. */
+  readonly githubPrCreationClient?: GitHubPrCreationClient
 }
 
 export interface StartedChatServer {
@@ -241,6 +246,10 @@ export function createChatServerRequestListener(
     policy: createRuntimePolicyForMode('APPROVED_EXECUTION', {
       hasGitHubToken: registryContext.hasGitHubToken,
     }),
+    ...(env['GITHUB_TOKEN'] !== undefined ? { githubToken: env['GITHUB_TOKEN'] } : {}),
+    ...(options.githubPrCreationClient !== undefined
+      ? { githubPrCreationClient: options.githubPrCreationClient }
+      : {}),
   }
 
   return (req, res) => {
@@ -409,6 +418,16 @@ export function createChatServerRequestListener(
           -'/restore'.length,
         )
         handleRepositoryCheckpointRestore(checkpointId, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'POST' && url.pathname === '/api/repository/push') {
+        await handleRepositoryPush(req, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'POST' && url.pathname === '/api/repository/pull-request') {
+        await handleRepositoryPullRequestCreate(req, res, repositoryContext)
         return
       }
 

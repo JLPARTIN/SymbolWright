@@ -39,7 +39,8 @@ export interface GitToolResult {
   readonly blockReasons: readonly string[]
 }
 
-const BLOCKED_REFS = ['main', 'master', 'production', 'release']
+/** Exported so callers outside this module (e.g. the Repository push route) can apply the same protected-ref check to a current-branch lookup, not just to explicit git args. */
+export const BLOCKED_REFS = ['main', 'master', 'production', 'release']
 
 function validatePushArgs(args: readonly string[] | undefined): readonly string[] {
   const reasons: string[] = []

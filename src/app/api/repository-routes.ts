@@ -8,15 +8,29 @@ import {
 } from '../../checkpoint/checkpoint-tool-hook.js'
 import { getCheckpoint, restoreCheckpoint } from '../../checkpoint/checkpoint-service.js'
 import { sha256Hex } from '../../checkpoint/checkpoint-hash.js'
-import { evaluateGitToolRequest } from '../../runtime/tools/git-tool.js'
+import { DefaultGitHubHttpClient } from '../../runtime/live-read/github-http-client.js'
+import { DefaultGitHubPrCreationClient } from '../../runtime/github-write/default-github-pr-creation-client.js'
+import {
+  executeGitHubPrCreation,
+  type GitHubPrCreationClient,
+  type GitHubPrCreationFile,
+} from '../../runtime/github-write/github-pr-creation.js'
+import { BLOCKED_REFS, evaluateGitToolRequest } from '../../runtime/tools/git-tool.js'
 import { runGitCommand } from '../../runtime/git/git-command-runner.js'
 import { parseGitPorcelainStatus, summarizeGitStatus } from '../../runtime/git/git-status-parser.js'
 import { assertReadablePath, resolveWorkspacePath } from '../../runtime/policy/runtime-policy.js'
-import type { RuntimePolicySnapshot, RuntimeToolContext } from '../../runtime/types.js'
+import type {
+  RuntimeApproval,
+  RuntimePolicySnapshot,
+  RuntimeToolContext,
+} from '../../runtime/types.js'
 
 export interface RepositoryRouteContext {
   readonly cwd: string
   readonly policy: RuntimePolicySnapshot
+  readonly githubToken?: string
+  /** Test seam: inject a fake GitHubPrCreationClient instead of constructing the real REST client from githubToken. */
+  readonly githubPrCreationClient?: GitHubPrCreationClient
 }
 
 const MAX_REPOSITORY_REQUEST_BYTES = 4 * 1024 * 1024
@@ -439,4 +453,249 @@ export function handleRepositoryCheckpointRestore(
           : 409
 
   sendJson(res, statusCode, evidence)
+}
+
+/** Parses `git@github.com:owner/repo.git` or `https://github.com/owner/repo.git` (or `.../owner/repo`) into `owner/repo`. Returns undefined for anything else (e.g. a non-GitHub remote). */
+export function parseGitHubRemoteUrl(remoteUrl: string): string | undefined {
+  const trimmed = remoteUrl.trim().replace(/\.git$/, '')
+  const sshMatch = /^git@github\.com:([^/]+)\/(.+)$/.exec(trimmed)
+  if (sshMatch !== undefined && sshMatch !== null) {
+    return `${sshMatch[1]}/${sshMatch[2]}`
+  }
+  const httpsMatch = /^https?:\/\/(?:[^/@]+@)?github\.com\/([^/]+)\/(.+)$/.exec(trimmed)
+  if (httpsMatch !== null) {
+    return `${httpsMatch[1]}/${httpsMatch[2]}`
+  }
+  return undefined
+}
+
+async function detectGitHubRepository(cwd: string): Promise<string | undefined> {
+  const result = await runGitCommand(['remote', 'get-url', 'origin'], cwd)
+  if (result.exitCode !== 0) return undefined
+  return parseGitHubRemoteUrl(result.stdout)
+}
+
+/**
+ * `POST /api/repository/push` -- pushes the current branch. Requires
+ * `confirm: true` in the body (a real human decision, not a default) and is
+ * blocked on the same protected-ref/force-flag conditions the `git` runtime
+ * tool already enforces (`evaluateGitToolRequest`), plus an extra check
+ * git-tool.ts's own gate doesn't cover: pushing while directly checked out
+ * on a protected branch with no explicit ref args (e.g. bare `git push`
+ * while on `main`) isn't caught by the args-based force/ref check alone.
+ */
+export async function handleRepositoryPush(
+  req: IncomingMessage,
+  res: ServerResponse,
+  context: RepositoryRouteContext,
+): Promise<void> {
+  if (!context.policy.allowWrites) {
+    sendJson(res, 403, { error: 'Write actions are disabled by runtime policy.' })
+    return
+  }
+
+  let body: unknown
+  try {
+    body = await readJsonBody(req)
+  } catch (error) {
+    sendJson(res, 400, { error: error instanceof Error ? error.message : String(error) })
+    return
+  }
+
+  const record = typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {}
+  if (record['confirm'] !== true) {
+    sendJson(res, 400, { error: 'confirm: true is required to push.' })
+    return
+  }
+
+  const remote = typeof record['remote'] === 'string' ? record['remote'] : 'origin'
+  const setUpstream = record['setUpstream'] === true
+
+  const currentBranchResult = await runGitCommand(['branch', '--show-current'], context.cwd)
+  const currentBranch = currentBranchResult.stdout.trim()
+
+  if (currentBranch.length === 0) {
+    sendJson(res, 400, { error: 'Not on a branch (detached HEAD?) -- cannot push.' })
+    return
+  }
+
+  if (BLOCKED_REFS.includes(currentBranch)) {
+    sendJson(res, 403, { error: `Cannot push directly from protected branch "${currentBranch}".` })
+    return
+  }
+
+  const branch = typeof record['branch'] === 'string' ? record['branch'] : currentBranch
+  const pushArgs = [remote, branch]
+  const gate = evaluateGitToolRequest({ operation: 'push', args: pushArgs }, context.policy)
+  if (!gate.allowed) {
+    sendJson(res, 403, { error: gate.blockReasons.join(' ') })
+    return
+  }
+
+  const args = setUpstream ? ['push', '-u', remote, branch] : ['push', remote, branch]
+  const result = await runGitCommand(args, context.cwd, 120_000)
+  if (result.exitCode !== 0) {
+    sendJson(res, 502, { error: result.stderr || 'git push failed' })
+    return
+  }
+
+  sendJson(res, 200, { remote, branch, output: result.stdout || result.stderr })
+}
+
+/**
+ * `POST /api/repository/pull-request` -- creates a real draft PR through
+ * the GitHub API (branch + commit + PR, entirely via REST -- no local
+ * `git push`/credentials required), reusing the same
+ * executeGitHubPrCreation/DefaultGitHubPrCreationClient the
+ * github_create_pr runtime tool uses for LLM-driven PR creation. Requires
+ * `confirm: true`. If no GITHUB_TOKEN is configured on the server, this
+ * returns a clear error explaining that -- it does not fall back to a fake
+ * client and report success.
+ */
+export async function handleRepositoryPullRequestCreate(
+  req: IncomingMessage,
+  res: ServerResponse,
+  context: RepositoryRouteContext,
+): Promise<void> {
+  // In this route's wiring, context.policy.allowGitHubWrites is always exactly
+  // "GITHUB_TOKEN is set" (see repositoryContext in codemind-chat-server.ts),
+  // so checking token/client presence first gives a strictly more actionable
+  // message than the generic policy-disabled error would.
+  if (
+    context.githubPrCreationClient === undefined &&
+    (context.githubToken === undefined || context.githubToken.trim().length === 0)
+  ) {
+    sendJson(res, 400, {
+      error:
+        'GitHub PR creation requires GITHUB_TOKEN to be configured on the server. Set it and restart codemind serve.',
+    })
+    return
+  }
+
+  if (!context.policy.allowGitHubWrites && context.githubPrCreationClient === undefined) {
+    sendJson(res, 403, { error: 'GitHub writes are disabled by runtime policy.' })
+    return
+  }
+
+  let body: unknown
+  try {
+    body = await readJsonBody(req)
+  } catch (error) {
+    sendJson(res, 400, { error: error instanceof Error ? error.message : String(error) })
+    return
+  }
+
+  const record = typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {}
+  if (record['confirm'] !== true) {
+    sendJson(res, 400, { error: 'confirm: true is required to create a pull request.' })
+    return
+  }
+
+  const baseBranch = record['baseBranch']
+  const headBranch = record['headBranch']
+  const title = record['title']
+  const prBody = typeof record['body'] === 'string' ? record['body'] : ''
+  const reason = typeof record['reason'] === 'string' ? record['reason'] : title
+
+  if (typeof baseBranch !== 'string' || baseBranch.trim().length === 0) {
+    sendJson(res, 400, { error: 'baseBranch is required' })
+    return
+  }
+  if (typeof headBranch !== 'string' || headBranch.trim().length === 0) {
+    sendJson(res, 400, { error: 'headBranch is required' })
+    return
+  }
+  if (typeof title !== 'string' || title.trim().length === 0) {
+    sendJson(res, 400, { error: 'title is required' })
+    return
+  }
+  if (typeof reason !== 'string' || reason.trim().length === 0) {
+    sendJson(res, 400, { error: 'reason is required' })
+    return
+  }
+
+  const repository =
+    typeof record['repository'] === 'string' && record['repository'].trim().length > 0
+      ? record['repository']
+      : await detectGitHubRepository(context.cwd)
+
+  if (repository === undefined) {
+    sendJson(res, 400, {
+      error:
+        'Could not determine the GitHub repository (owner/repo). Pass "repository" explicitly, or configure an "origin" remote pointing at github.com.',
+    })
+    return
+  }
+
+  const files = await resolvePrFiles(record['files'], context)
+  if (files.length === 0) {
+    sendJson(res, 400, { error: 'No changed files to include in the pull request.' })
+    return
+  }
+
+  const client: GitHubPrCreationClient =
+    context.githubPrCreationClient ??
+    new DefaultGitHubPrCreationClient(
+      new DefaultGitHubHttpClient({ token: context.githubToken ?? '' }),
+    )
+
+  const approval: RuntimeApproval = {
+    ticketId: `repository-view-${Date.now()}`,
+    approvedBy: 'repository-view-operator',
+    scopes: ['github:write'],
+  }
+
+  const result = await executeGitHubPrCreation(
+    {
+      repository,
+      baseBranch,
+      headBranch,
+      title,
+      body: prBody,
+      files,
+      reason,
+      dryRun: false,
+    },
+    context.policy,
+    approval,
+    client,
+  )
+
+  const statusCode = result.outcome === 'CREATED' ? 200 : result.outcome === 'BLOCKED' ? 403 : 200
+  sendJson(res, statusCode, result)
+}
+
+/** Resolves the files to include in a PR: explicit `files` from the request body, or every changed tracked/untracked file from git status, read fresh from disk. */
+async function resolvePrFiles(
+  requestedFiles: unknown,
+  context: RepositoryRouteContext,
+): Promise<GitHubPrCreationFile[]> {
+  if (Array.isArray(requestedFiles) && requestedFiles.length > 0) {
+    return requestedFiles
+      .filter(
+        (entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null,
+      )
+      .filter((entry) => typeof entry['path'] === 'string' && typeof entry['content'] === 'string')
+      .map((entry) => ({ path: entry['path'] as string, content: entry['content'] as string }))
+  }
+
+  const statusResult = await runGitCommand(['status', '--porcelain=v1'], context.cwd)
+  if (statusResult.exitCode !== 0) return []
+
+  const entries = parseGitPorcelainStatus(statusResult.stdout)
+  const files: GitHubPrCreationFile[] = []
+
+  for (const entry of entries) {
+    if (entry.indexStatus === 'D' || entry.worktreeStatus === 'D') continue
+    try {
+      const resolved = resolveWorkspacePath(context.cwd, entry.path)
+      assertReadablePath(context.policy, context.cwd, resolved)
+      if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) continue
+      files.push({ path: entry.path, content: fs.readFileSync(resolved, 'utf-8') })
+    } catch {
+      continue
+    }
+  }
+
+  return files
 }
