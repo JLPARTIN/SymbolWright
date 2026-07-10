@@ -150,6 +150,8 @@ describe('universal editor html', () => {
     expect(html).toContain('function importProjectBundle')
     expect(html).toContain('detectLanguageIdByProjectPath')
     expect(html).toContain('does not write to a Git repository')
-    expect(html).toContain("el('export-project-bundle-button').addEventListener('click', exportProjectBundle)")
+    expect(html).toContain(
+      "el('export-project-bundle-button').addEventListener('click', exportProjectBundle)",
+    )
   })
 })
