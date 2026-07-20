@@ -11,11 +11,11 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   bundle3-autofix:
-    name: Apply Bundle 3 repairs
+    name: Prepare Bundle 3 repairs
     if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'codemind/bundle3-persistent-missions'
     runs-on: ubuntu-24.04
     steps:
@@ -94,17 +94,23 @@ jobs:
             npx prettier --write "${files[@]}"
           fi
 
-      - name: Commit repairs when needed
+      - name: Package repair files and patch
         run: |
-          if git diff --quiet; then
-            echo "No Bundle 3 autofix changes required."
-            exit 0
-          fi
-          git config user.name "CodeMind CI"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A
-          git commit -m "fix(bundle3): repair lint and format contracts"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          mkdir -p /tmp/bundle3-autofix/files
+          git diff --name-only > /tmp/bundle3-autofix/changed-files.txt
+          git diff --binary > /tmp/bundle3-autofix/bundle3-autofix.patch
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            mkdir -p "/tmp/bundle3-autofix/files/$(dirname "$file")"
+            cp "$file" "/tmp/bundle3-autofix/files/$file"
+          done < /tmp/bundle3-autofix/changed-files.txt
+
+      - name: Upload repair artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle3-autofix-files
+          path: /tmp/bundle3-autofix
+          if-no-files-found: error
 
   validate:
     name: Validate CodeMind
