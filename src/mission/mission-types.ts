@@ -17,48 +17,48 @@ export interface PersistedAgentDraft {
 export interface PersistedOpenFile {
   readonly path: string
   readonly openedAt: string
-  readonly contentHash?: string
-  readonly exists?: boolean
+  readonly contentHash?: string | undefined
+  readonly exists?: boolean | undefined
 }
 
 export interface MissionToolCallEvidence {
   readonly id: string
   readonly toolName: string
   readonly startedAt: string
-  readonly completedAt?: string
+  readonly completedAt?: string | undefined
   readonly status: 'running' | 'passed' | 'failed' | 'blocked' | 'interrupted'
   readonly summary: string
-  readonly outputExcerpt?: string
-  readonly outputHash?: string
-  readonly durationMs?: number
+  readonly outputExcerpt?: string | undefined
+  readonly outputHash?: string | undefined
+  readonly durationMs?: number | undefined
 }
 
 export interface MissionValidationEvidence {
   readonly id: string
   readonly command: string
   readonly startedAt: string
-  readonly completedAt?: string
-  readonly exitCode?: number
+  readonly completedAt?: string | undefined
+  readonly exitCode?: number | undefined
   readonly status: 'running' | 'passed' | 'failed' | 'blocked' | 'interrupted'
   readonly summary: string
-  readonly outputExcerpt?: string
-  readonly outputHash?: string
+  readonly outputExcerpt?: string | undefined
+  readonly outputHash?: string | undefined
 }
 
 export interface MissionWebEvidence {
   readonly id: string
   readonly timestamp: string
-  readonly url?: string
-  readonly method?: string
-  readonly status?: number
+  readonly url?: string | undefined
+  readonly method?: string | undefined
+  readonly status?: number | undefined
   readonly summary: string
 }
 
 export interface MissionMcpEvidence {
   readonly id: string
   readonly timestamp: string
-  readonly serverName?: string
-  readonly toolName?: string
+  readonly serverName?: string | undefined
+  readonly toolName?: string | undefined
   readonly status: 'passed' | 'failed' | 'blocked' | 'interrupted'
   readonly summary: string
 }
@@ -73,7 +73,7 @@ export interface MissionSubagentEvidence {
 export interface MissionSkillEvidence {
   readonly id: string
   readonly timestamp: string
-  readonly skillName?: string
+  readonly skillName?: string | undefined
   readonly status: 'running' | 'passed' | 'failed' | 'interrupted'
   readonly summary: string
 }
@@ -82,8 +82,8 @@ export interface MissionCheckpointReference {
   readonly checkpointId: string
   readonly createdAt: string
   readonly paths: readonly string[]
-  readonly triggeringToolCallId?: string
-  readonly label?: string
+  readonly triggeringToolCallId?: string | undefined
+  readonly label?: string | undefined
 }
 
 export interface MissionMemoryReference {
@@ -96,7 +96,7 @@ export interface MissionMemoryReference {
 
 export interface MissionImportedSource {
   readonly importedAt: string
-  readonly exportedAt?: string
+  readonly exportedAt?: string | undefined
   readonly originalMissionId: string
 }
 
@@ -112,27 +112,27 @@ export interface CodeMindMission {
   readonly lastOpenedAt: string
   readonly repository: {
     readonly rootPath: string
-    readonly repositoryName?: string
-    readonly remoteUrl?: string
-    readonly branch?: string
-    readonly baseSha?: string
-    readonly headSha?: string
+    readonly repositoryName?: string | undefined
+    readonly remoteUrl?: string | undefined
+    readonly branch?: string | undefined
+    readonly baseSha?: string | undefined
+    readonly headSha?: string | undefined
     readonly modifiedPaths: readonly string[]
   }
   readonly agent: {
     readonly runtimeMode: CodemindRuntimeMode
-    readonly activeProviderId?: string
-    readonly model?: string
+    readonly activeProviderId?: string | undefined
+    readonly model?: string | undefined
     readonly messages: readonly PersistedAgentMessage[]
-    readonly pendingDraft?: PersistedAgentDraft
+    readonly pendingDraft?: PersistedAgentDraft | undefined
   }
   readonly workspace: {
     readonly kind: 'repository' | 'scratch'
     readonly openFiles: readonly PersistedOpenFile[]
-    readonly activeFilePath?: string
-    readonly selectedDiffPath?: string
+    readonly activeFilePath?: string | undefined
+    readonly selectedDiffPath?: string | undefined
     readonly scratchAttached: boolean
-    readonly scratchState?: Record<string, unknown>
+    readonly scratchState?: Record<string, unknown> | undefined
   }
   readonly evidence: {
     readonly toolCalls: readonly MissionToolCallEvidence[]
@@ -151,8 +151,8 @@ export interface CodeMindMission {
     readonly pullRequestUrls: readonly string[]
   }
   readonly labels: readonly string[]
-  readonly notes?: string
-  readonly importedFrom?: MissionImportedSource
+  readonly notes?: string | undefined
+  readonly importedFrom?: MissionImportedSource | undefined
 }
 
 export interface MissionEvent {
@@ -161,7 +161,7 @@ export interface MissionEvent {
   readonly type: string
   readonly timestamp: string
   readonly summary: string
-  readonly payload?: Record<string, unknown>
+  readonly payload?: Record<string, unknown> | undefined
 }
 
 export interface MissionListSummary {
@@ -172,20 +172,20 @@ export interface MissionListSummary {
   readonly status: MissionStatus
   readonly updatedAt: string
   readonly lastOpenedAt: string
-  readonly repositoryName?: string
+  readonly repositoryName?: string | undefined
   readonly repositoryRoot: string
-  readonly branch?: string
-  readonly validationState?: MissionValidationEvidence['status']
+  readonly branch?: string | undefined
+  readonly validationState?: MissionValidationEvidence['status'] | undefined
   readonly changedFileCount: number
-  readonly pullRequestUrl?: string
+  readonly pullRequestUrl?: string | undefined
   readonly labels: readonly string[]
 }
 
 export interface MissionStoreWarning {
   readonly code: 'CORRUPT_RECORD' | 'INDEX_RECOVERED' | 'STALE_TEMP_RECOVERED' | 'MISSING_REPOSITORY'
   readonly message: string
-  readonly missionId?: string
-  readonly path?: string
+  readonly missionId?: string | undefined
+  readonly path?: string | undefined
 }
 
 export interface MissionListResult {
@@ -198,11 +198,11 @@ export interface MissionListResult {
 
 export interface MissionRepositoryReconciliation {
   readonly repositoryAvailable: boolean
-  readonly recordedBranch?: string
-  readonly currentBranch?: string
-  readonly recordedHeadSha?: string
-  readonly currentHeadSha?: string
-  readonly branchExists?: boolean
+  readonly recordedBranch?: string | undefined
+  readonly currentBranch?: string | undefined
+  readonly recordedHeadSha?: string | undefined
+  readonly currentHeadSha?: string | undefined
+  readonly branchExists?: boolean | undefined
   readonly hasDrift: boolean
   readonly warnings: readonly string[]
 }
