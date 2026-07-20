@@ -180,7 +180,7 @@ describe('mission branch coverage contracts', () => {
         startedAt: '2026-07-20T12:00:00.000Z',
         status,
         summary: `Validation ${status}`,
-        outputExcerpt: status === 'failed' ? 'failed output' : undefined,
+        ...(status === 'failed' ? { outputExcerpt: 'failed output' } : {}),
       })
     }
     service.recordCommit(created.id, 'commit-sha', 'Commit created')
@@ -213,9 +213,9 @@ describe('mission branch coverage contracts', () => {
 
     const completed = service.complete(mission.id, mission.revision)
     expect(() => service.abandon(mission.id, completed.revision)).toThrow(MissionStateConflictError)
-    expect(() => service.patch(mission.id, completed.revision - 1, { name: 'stale' } as never)).toThrow(
-      MissionRevisionConflictError,
-    )
+    expect(() =>
+      service.patch(mission.id, { revision: completed.revision - 1, name: 'stale' }),
+    ).toThrow(MissionRevisionConflictError)
 
     const branchMission = await createMission()
     const originalBranch = (await runGitCommand(['branch', '--show-current'], repo)).stdout.trim()
@@ -317,7 +317,13 @@ describe('mission branch coverage contracts', () => {
       { name: '', objective: 'x', workspaceKind: 'repository', repositoryPath: 'repo' },
       { name: 'x', objective: '', workspaceKind: 'repository', repositoryPath: 'repo' },
       { name: 'x', objective: 'y', workspaceKind: 'wrong', repositoryPath: 'repo' },
-      { name: 'x', objective: 'y', workspaceKind: 'repository', repositoryPath: 'repo', runtimeMode: 'BAD' },
+      {
+        name: 'x',
+        objective: 'y',
+        workspaceKind: 'repository',
+        repositoryPath: 'repo',
+        runtimeMode: 'BAD',
+      },
       { name: 'x', objective: 'y', workspaceKind: 'repository', repositoryPath: 'repo', labels: 'bad' },
       { name: 'x', objective: 'y', workspaceKind: 'repository', repositoryPath: 'repo', labels: [''] },
     ]) {
@@ -349,9 +355,24 @@ describe('mission branch coverage contracts', () => {
       createMissionEvent({ missionId, type: 'agent.message.user', summary: 'agent' }),
       createMissionEvent({ missionId, type: 'workspace.file.opened', summary: 'file' }),
       createMissionEvent({ missionId, type: 'workspace.diff.viewed', summary: 'diff' }),
-      createMissionEvent({ missionId, type: 'agent.tool.started', summary: 'tool', payload: { toolCallId: 'tool-a' } }),
-      createMissionEvent({ missionId, type: 'validation.started', summary: 'validation', payload: { validationId: 'validation-a' } }),
-      createMissionEvent({ missionId, type: 'validation.blocked', summary: 'blocked', payload: { validationId: 'validation-a' } }),
+      createMissionEvent({
+        missionId,
+        type: 'agent.tool.started',
+        summary: 'tool',
+        payload: { toolCallId: 'tool-a' },
+      }),
+      createMissionEvent({
+        missionId,
+        type: 'validation.started',
+        summary: 'validation',
+        payload: { validationId: 'validation-a' },
+      }),
+      createMissionEvent({
+        missionId,
+        type: 'validation.blocked',
+        summary: 'blocked',
+        payload: { validationId: 'validation-a' },
+      }),
       createMissionEvent({ missionId, type: 'git.branch.changed', summary: 'git' }),
       createMissionEvent({ missionId, type: 'github.pr.created', summary: 'github' }),
       createMissionEvent({ missionId, type: 'checkpoint.created', summary: 'checkpoint' }),
