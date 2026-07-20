@@ -144,10 +144,7 @@ describe('workspace project bundle model', () => {
       { ...bundle, manifest: { ...bundle.manifest, projectId: '' } },
       'project id',
     )
-    expectInvalidBundle(
-      { ...bundle, manifest: { ...bundle.manifest, name: '' } },
-      'project name',
-    )
+    expectInvalidBundle({ ...bundle, manifest: { ...bundle.manifest, name: '' } }, 'project name')
     expectInvalidBundle({ ...bundle, files: [] }, 'at least one file')
     expectInvalidBundle(
       { ...bundle, manifest: { ...bundle.manifest, files: [] } },

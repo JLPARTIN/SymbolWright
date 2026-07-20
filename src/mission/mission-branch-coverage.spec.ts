@@ -147,7 +147,12 @@ describe('mission branch coverage contracts', () => {
     expect(cleared.workspace.activeFilePath).toBeUndefined()
     expect(cleared.notes).toBeUndefined()
 
-    service.recordAgentUserMessage(created.id, 'Use Bearer abcdefghijklmnop safely', 'READ_ONLY', 'google')
+    service.recordAgentUserMessage(
+      created.id,
+      'Use Bearer abcdefghijklmnop safely',
+      'READ_ONLY',
+      'google',
+    )
     service.recordAgentResult(created.id, undefined, 'Assistant text', 'ok')
     service.recordAgentResult(created.id, undefined, 'Failure text', 'error')
     service.recordToolStarted(created.id, 'tool-1', 'memory_recall')
@@ -324,8 +329,20 @@ describe('mission branch coverage contracts', () => {
         repositoryPath: 'repo',
         runtimeMode: 'BAD',
       },
-      { name: 'x', objective: 'y', workspaceKind: 'repository', repositoryPath: 'repo', labels: 'bad' },
-      { name: 'x', objective: 'y', workspaceKind: 'repository', repositoryPath: 'repo', labels: [''] },
+      {
+        name: 'x',
+        objective: 'y',
+        workspaceKind: 'repository',
+        repositoryPath: 'repo',
+        labels: 'bad',
+      },
+      {
+        name: 'x',
+        objective: 'y',
+        workspaceKind: 'repository',
+        repositoryPath: 'repo',
+        labels: [''],
+      },
     ]) {
       expectValidationError(() => parseCreateMissionInput(raw))
     }
@@ -343,7 +360,9 @@ describe('mission branch coverage contracts', () => {
 
     expect(isMissionStatus('FAILED')).toBe(true)
     expect(isMissionStatus('DONE')).toBe(false)
-    expect(() => assertCodeMindMission({ ...mission, status: 'BAD' })).toThrow(MissionValidationError)
+    expect(() => assertCodeMindMission({ ...mission, status: 'BAD' })).toThrow(
+      MissionValidationError,
+    )
     expect(() => assertCodeMindMission({ ...mission, createdAt: 'not-a-date' })).toThrow(
       MissionValidationError,
     )
@@ -426,8 +445,6 @@ describe('mission branch coverage contracts', () => {
     )
     expect(sanitizeMissionPayload(undefined)).toBeUndefined()
     expect(sanitizeMissionPayload('plain text')).toEqual({ value: 'plain text' })
-    expect(sanitizeMissionPayload({ huge: 'x'.repeat(30_000) }, {}, 1024)?.['truncated']).toBe(
-      true,
-    )
+    expect(sanitizeMissionPayload({ huge: 'x'.repeat(30_000) }, {}, 1024)?.['truncated']).toBe(true)
   })
 })
