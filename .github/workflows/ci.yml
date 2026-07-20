@@ -56,10 +56,42 @@ jobs:
           exit 1
 
       - name: Lint
-        run: npm run lint
+        id: lint
+        continue-on-error: true
+        run: npm run lint > /tmp/codemind-lint.log 2>&1
+
+      - name: Upload lint diagnostics
+        if: steps.lint.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle3-lint-diagnostics
+          path: /tmp/codemind-lint.log
+          if-no-files-found: error
+
+      - name: Enforce lint result
+        if: steps.lint.outcome == 'failure'
+        run: |
+          cat /tmp/codemind-lint.log
+          exit 1
 
       - name: Format check
-        run: npm run format:check
+        id: format
+        continue-on-error: true
+        run: npm run format:check > /tmp/codemind-format.log 2>&1
+
+      - name: Upload format diagnostics
+        if: steps.format.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle3-format-diagnostics
+          path: /tmp/codemind-format.log
+          if-no-files-found: error
+
+      - name: Enforce format result
+        if: steps.format.outcome == 'failure'
+        run: |
+          cat /tmp/codemind-format.log
+          exit 1
 
       - name: Sandbox runner contract tests
         run: npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
