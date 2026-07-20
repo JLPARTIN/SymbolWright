@@ -7,6 +7,7 @@ import {
   renderAelibWebResponse,
   renderWorkspaceWebHtml,
   renderWorkspaceWebResponse,
+  startWorkspaceWebServer,
 } from './workspace-web-app.js'
 
 const WORKSPACE: WorkspaceState = {
@@ -58,8 +59,9 @@ describe('workspace web app', () => {
     ).toBe(true)
   })
 
-  it('renders health, provider, and AELIB API responses', async () => {
+  it('renders root, health, provider, and AELIB API responses', async () => {
     const snapshot = buildWorkspaceWebSnapshot(WORKSPACE)
+    const root = renderWorkspaceWebResponse('/', () => snapshot)
     const health = renderWorkspaceWebResponse('/api/health', () => snapshot)
     const providers = renderWorkspaceWebResponse('/api/providers', () => snapshot)
     const aelib = await renderAelibWebResponse(async () => AELIB_STATUS)
@@ -71,6 +73,10 @@ describe('workspace web app', () => {
         readonly primary: { readonly displayName: string; readonly rootPath: string }
       }
     }
+
+    expect(root.statusCode).toBe(200)
+    expect(root.contentType).toContain('text/html')
+    expect(root.body).toContain('<!doctype html>')
 
     expect(health.statusCode).toBe(200)
     expect(health.contentType).toContain('application/json')
@@ -95,5 +101,38 @@ describe('workspace web app', () => {
 
     expect(response.statusCode).toBe(404)
     expect(response.body).toContain('Not found')
+  })
+
+  it('serves the same routes through the real request handler and dynamic port server', async () => {
+    const snapshot = buildWorkspaceWebSnapshot(WORKSPACE)
+    const started = await startWorkspaceWebServer({
+      host: '127.0.0.1',
+      port: 0,
+      snapshotFactory: () => snapshot,
+      aelibStatusFactory: async () => AELIB_STATUS,
+    })
+
+    try {
+      expect(started.port).not.toBe(0)
+      const root = await fetch(`${started.url}/`)
+      const health = await fetch(`${started.url}/api/health`)
+      const providers = await fetch(`${started.url}/api/providers`)
+      const aelib = await fetch(`${started.url}/api/aelib`)
+      const missing = await fetch(`${started.url}/missing`)
+
+      expect(root.status).toBe(200)
+      expect(await root.text()).toContain('CodeMind Workspace')
+      expect((await health.json()).workspace.primary.displayName).toBe('project')
+      expect((await providers.json()).statuses.length).toBeGreaterThan(0)
+      expect((await aelib.json()).state).toBe('NOT_CONFIGURED')
+      expect(missing.status).toBe(404)
+    } finally {
+      await new Promise<void>((resolve, reject) => {
+        started.server.close((error) => {
+          if (error) reject(error)
+          else resolve()
+        })
+      })
+    }
   })
 })
