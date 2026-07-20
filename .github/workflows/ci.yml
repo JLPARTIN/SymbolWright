@@ -14,104 +14,6 @@ permissions:
   contents: read
 
 jobs:
-  bundle3-autofix:
-    name: Prepare Bundle 3 repairs
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'codemind/bundle3-persistent-missions'
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout PR head branch
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.ref }}
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Apply deterministic source repairs
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path('src/app/api/mission-routes.ts')
-          text = path.read_text(encoding='utf-8')
-          text = text.replace(
-              "import {\n  MissionNotFoundError,\n  MissionRevisionConflictError,\n  MissionService,\n  MissionStateConflictError,\n} from '../../mission/mission-service.js'",
-              "import {\n  MissionNotFoundError,\n  MissionRevisionConflictError,\n  MissionStateConflictError,\n} from '../../mission/mission-service.js'\nimport type { MissionService } from '../../mission/mission-service.js'",
-          )
-          path.write_text(text, encoding='utf-8')
-
-          path = Path('src/app/shell/repository-mission-bridge.ts')
-          text = path.read_text(encoding='utf-8')
-          text = text.replace(
-              "        if (method === 'POST' && /\\/api\\/repository\\/checkpoints\\/[^/]+\\/restore/.test(String(urlValue)) && response.status === 200) {\n          const match = /\\/api\\/repository\\/checkpoints\\/([^/]+)\\/restore/.exec(String(urlValue));\n          if (match && match[1]) await window.codemindRecordMissionEvent({ kind: 'checkpoint-restored', checkpointId: decodeURIComponent(match[1]) });\n        }",
-              "        const restorePrefix = '/api/repository/checkpoints/';\n        const restoreSuffix = '/restore';\n        if (method === 'POST' && String(urlValue).startsWith(restorePrefix) && String(urlValue).endsWith(restoreSuffix) && response.status === 200) {\n          const checkpointId = String(urlValue).slice(restorePrefix.length, -restoreSuffix.length);\n          if (checkpointId) await window.codemindRecordMissionEvent({ kind: 'checkpoint-restored', checkpointId: decodeURIComponent(checkpointId) });\n        }",
-          )
-          path.write_text(text, encoding='utf-8')
-
-          path = Path('src/server/codemind-chat-server.ts')
-          text = path.read_text(encoding='utf-8')
-          text = text.replace(
-              "  MissionNotFoundError,\n  MissionService,\n  MissionStateConflictError,\n",
-              "  MissionNotFoundError,\n  MissionService,\n",
-          )
-          path.write_text(text, encoding='utf-8')
-
-          path = Path('src/app/shell/workspace-agent-bridge.ts')
-          text = path.read_text(encoding='utf-8')
-          marker = "    ${buildRepositoryMissionBridgeScript()}"
-          insertion = """    window.codemindGetScratchMissionState = function () {
-      const raw = localStorage.getItem('codemind.workspace.session.v1');
-      if (!raw) return {};
-      try { return JSON.parse(raw); }
-      catch (_) { return {}; }
-    };
-
-"""
-          if insertion not in text:
-              text = text.replace(marker, insertion + marker)
-          path.write_text(text, encoding='utf-8')
-
-          path = Path('src/mission/mission-service.ts')
-          text = path.read_text(encoding='utf-8')
-          text = text.replace(
-              "    const terminal = evidence.status === 'passed' ? 'completed' : evidence.status\n",
-              "    const terminal =\n      evidence.status === 'running'\n        ? 'started'\n        : evidence.status === 'passed'\n          ? 'completed'\n          : evidence.status\n",
-          )
-          path.write_text(text, encoding='utf-8')
-          PY
-
-      - name: Format all changed source and documentation
-        run: |
-          mapfile -t files < <(git diff --name-only origin/main...HEAD | grep -E '\.(ts|md|json|ya?ml)$' || true)
-          if [ "${#files[@]}" -gt 0 ]; then
-            npx prettier --write "${files[@]}"
-          fi
-
-      - name: Package repair files and patch
-        run: |
-          mkdir -p /tmp/bundle3-autofix/files
-          git diff --name-only > /tmp/bundle3-autofix/changed-files.txt
-          git diff --binary > /tmp/bundle3-autofix/bundle3-autofix.patch
-          while IFS= read -r file; do
-            [ -n "$file" ] || continue
-            mkdir -p "/tmp/bundle3-autofix/files/$(dirname "$file")"
-            cp "$file" "/tmp/bundle3-autofix/files/$file"
-          done < /tmp/bundle3-autofix/changed-files.txt
-
-      - name: Upload repair artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: bundle3-autofix-files
-          path: /tmp/bundle3-autofix
-          if-no-files-found: error
-
   validate:
     name: Validate CodeMind
     runs-on: ubuntu-24.04
@@ -135,61 +37,13 @@ jobs:
         run: npm run audit
 
       - name: Typecheck
-        id: typecheck
-        continue-on-error: true
-        run: npm run typecheck > /tmp/codemind-typecheck.log 2>&1
-
-      - name: Upload typecheck diagnostics
-        if: steps.typecheck.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: bundle3-typecheck-diagnostics
-          path: /tmp/codemind-typecheck.log
-          if-no-files-found: error
-
-      - name: Enforce typecheck result
-        if: steps.typecheck.outcome == 'failure'
-        run: |
-          cat /tmp/codemind-typecheck.log
-          exit 1
+        run: npm run typecheck
 
       - name: Lint
-        id: lint
-        continue-on-error: true
-        run: npm run lint > /tmp/codemind-lint.log 2>&1
-
-      - name: Upload lint diagnostics
-        if: steps.lint.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: bundle3-lint-diagnostics
-          path: /tmp/codemind-lint.log
-          if-no-files-found: error
-
-      - name: Enforce lint result
-        if: steps.lint.outcome == 'failure'
-        run: |
-          cat /tmp/codemind-lint.log
-          exit 1
+        run: npm run lint
 
       - name: Format check
-        id: format
-        continue-on-error: true
-        run: npm run format:check > /tmp/codemind-format.log 2>&1
-
-      - name: Upload format diagnostics
-        if: steps.format.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: bundle3-format-diagnostics
-          path: /tmp/codemind-format.log
-          if-no-files-found: error
-
-      - name: Enforce format result
-        if: steps.format.outcome == 'failure'
-        run: |
-          cat /tmp/codemind-format.log
-          exit 1
+        run: npm run format:check
 
       - name: Sandbox runner contract tests
         run: npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
