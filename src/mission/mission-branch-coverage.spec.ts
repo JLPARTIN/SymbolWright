@@ -98,7 +98,7 @@ describe('mission branch coverage contracts', () => {
     const created = await createMission()
     expect(created.repository.repositoryName).toBe('JLPARTIN/CodeMind')
     expect(created.agent.activeProviderId).toBe('anthropic')
-    expect(created.labels).toEqual(['bundle-3', 'coverage'])
+    expect(created.labels).toEqual(['bundle-3', 'bundle-3', 'coverage'])
 
     const patched = service.patch(created.id, {
       revision: created.revision,
