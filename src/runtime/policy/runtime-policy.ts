@@ -5,6 +5,7 @@ import type { CodemindRuntimeMode, RuntimePolicySnapshot } from '../types.js'
 /** Paths blocked from read/write access by default policy. */
 export const DEFAULT_RUNTIME_PROTECTED_PATHS = [
   '.git',
+  '.codemind',
   '.env',
   '.env.local',
   'node_modules',
@@ -15,6 +16,7 @@ export const DEFAULT_RUNTIME_PROTECTED_PATHS = [
 /** Directories excluded from file-listing to reduce noise. */
 export const DEFAULT_RUNTIME_NOISY_DIRS = [
   '.git',
+  '.codemind',
   'node_modules',
   'dist',
   'coverage',
@@ -200,7 +202,7 @@ export function assertGitWriteApproved(policy: RuntimePolicySnapshot, _approval?
   }
 }
 
-/** Throws only when GitHub writes are disabled by policy. Approval tickets are not required. */
+/** Throws only when GitHub writes are disabled by policy. */
 export function assertGitHubWriteApproved(
   policy: RuntimePolicySnapshot,
   _approval?: unknown,
@@ -224,7 +226,7 @@ export function assertNetworkAllowed(policy: RuntimePolicySnapshot): void {
  */
 export function assertReadOnlyNetworkAllowed(policy: RuntimePolicySnapshot): void {
   if (!policy.allowReadOnlyNetwork) {
-    throw new Error('Read-only network access is disabled by runtime policy.')
+    throw new Error('Read-only network access is disabled by policy.')
   }
 }
 
