@@ -9,9 +9,14 @@ import { buildDashboardClientScript, renderDashboardViewHtml } from '../views/da
 import { buildMemoryViewClientScript, renderMemoryViewHtml } from '../views/memory-view.js'
 import { renderAgentViewHtml } from '../views/agent-view.js'
 import { renderNavShellHtml } from '../views/nav-shell-view.js'
-import { renderRepositoryPlaceholderViewHtml } from '../views/future-feature-view.js'
+import {
+  buildRepositoryViewClientScript,
+  renderRepositoryViewHtml,
+} from '../views/repository-view.js'
 import { buildSettingsViewClientScript, renderSettingsViewHtml } from '../views/settings-view.js'
 import { renderWorkspaceViewHtml } from '../views/workspace-view.js'
+import { renderWorkspaceStyles } from '../../workspace/universal-editor-html.js'
+import { renderChatStyles } from '../../server/chat-ui-html.js'
 import { buildWorkspaceAgentBridgeScript } from './workspace-agent-bridge.js'
 
 const APP_SHELL_STYLES = `<style>
@@ -22,7 +27,6 @@ const APP_SHELL_STYLES = `<style>
   .app-nav { display: flex; flex-direction: column; gap: 4px; width: 200px; flex-shrink: 0; background: var(--panel); border-right: 1px solid #283759; padding: 16px 10px; }
   .app-nav .nav-item { text-align: left; background: transparent; border: 0; border-radius: 10px; padding: 10px 12px; color: var(--muted); font-weight: 600; cursor: pointer; }
   .app-nav .nav-item.active { background: var(--accent); color: white; }
-  .app-nav .nav-item-badge { font-size: 10px; text-transform: uppercase; opacity: 0.75; margin-left: 6px; }
   .app-main { flex: 1; min-width: 0; padding: 20px; }
   .app-view { max-width: 1280px; margin: 0 auto; }
   .muted { color: var(--muted); }
@@ -36,8 +40,24 @@ const APP_SHELL_STYLES = `<style>
   input, textarea, select { font-family: inherit; }
   .tool-mode-badge { display: inline-block; padding: 2px 6px; border-radius: 6px; background: #232c50; color: #8ea0d7; font-size: 11px; margin-right: 4px; }
   .tool-mode-badge.ok { background: #143323; color: #8ff0b7; }
-  .planned-badge { display: inline-block; padding: 4px 10px; border-radius: 8px; background: #3a3350; color: #d7c6ff; font-size: 12px; font-weight: 700; }
   code { color: #dbe6ff; }
+  .repo-layout { display: grid; grid-template-columns: minmax(180px, 220px) minmax(0, 1.4fr) minmax(220px, 0.9fr); gap: 12px; align-items: start; }
+  .repo-branch-row { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  .repo-tree { max-height: 60vh; overflow-y: auto; }
+  .repo-tree-list { list-style: none; margin: 0; padding-left: 12px; }
+  .repo-tree-panel > .repo-tree > .repo-tree-list { padding-left: 0; }
+  .repo-tree-entry { display: block; width: 100%; text-align: left; background: transparent; color: var(--ink); border-radius: 6px; padding: 3px 6px; margin: 0; font-weight: 400; }
+  .repo-tree-entry.file { color: #cdd7ff; }
+  .repo-editor-panel .repo-editor { width: 100%; min-height: 420px; box-sizing: border-box; background: #080c18; color: var(--ink); border: 1px solid #2a355f; border-radius: 10px; padding: 10px; font: 13px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  .repo-changes-panel input, .repo-changes-panel textarea { width: 100%; box-sizing: border-box; background: #080c18; color: var(--ink); border: 1px solid #2a355f; border-radius: 8px; padding: 8px; margin-bottom: 6px; }
+  .repo-change-list { list-style: none; margin: 4px 0 10px; padding: 0; }
+  .repo-change-entry { display: block; width: 100%; text-align: left; background: #0c1226; color: #cdd7ff; font-weight: 400; margin: 2px 0; }
+  .repo-diff { background: #080c18; border: 1px solid #2a355f; border-radius: 10px; padding: 10px; max-height: 260px; overflow: auto; white-space: pre-wrap; font-size: 12px; }
+  .repo-changes-panel .row { display: flex; gap: 8px; }
+  .repo-changes-panel .row > div { flex: 1; }
+  @media (max-width: 900px) {
+    .repo-layout { grid-template-columns: 1fr; }
+  }
   @media (max-width: 760px) {
     .app-shell { flex-direction: column; }
     .app-nav { width: 100%; flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid #283759; }
@@ -57,6 +77,8 @@ export function renderAppShellHtml(): string {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CodeMind</title>
+  ${renderWorkspaceStyles()}
+  ${renderChatStyles()}
   ${APP_SHELL_STYLES}
 </head>
 <body>
@@ -65,12 +87,12 @@ export function renderAppShellHtml(): string {
     <main class="app-main" id="app-root">
       ${renderDashboardViewHtml()}
       ${renderWorkspaceViewHtml()}
+      ${renderRepositoryViewHtml()}
       ${renderAgentViewHtml()}
       ${renderToolsViewHtml()}
       ${renderMemoryViewHtml()}
       ${renderCheckpointsViewHtml()}
       ${renderSettingsViewHtml()}
-      ${renderRepositoryPlaceholderViewHtml()}
     </main>
   </div>
 
@@ -82,6 +104,7 @@ export function renderAppShellHtml(): string {
     ${buildMemoryViewClientScript()}
     ${buildCheckpointsViewClientScript()}
     ${buildSettingsViewClientScript()}
+    (function () {${buildRepositoryViewClientScript()}})();
     ${buildWorkspaceAgentBridgeScript()}
 
     renderRoute();

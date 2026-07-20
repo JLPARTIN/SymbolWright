@@ -58,7 +58,7 @@ describe('Docker sandbox configuration', () => {
     const config = resolveDockerSandboxConfig({})
 
     expect(config.dockerBinary).toBe('docker')
-    expect(config.image).toBe('node:22-alpine')
+    expect(config.image).toBe('node:22-bookworm')
     expect(config.memory).toBe('2048m')
     expect(config.cpus).toBe('1')
     expect(config.network).toBe('none')

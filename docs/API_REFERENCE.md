@@ -50,8 +50,19 @@ Provider Adapter
 | `GET` | `/api/tools` | Yes | Live | The real tool registry: statically-assembled tools with per-mode reachability, plus the separately-listed dynamically-wired tools. |
 | `GET` | `/api/memory/recent` | Yes | Live | Recent episodic memory interactions (read-only). |
 | `GET` | `/api/memory/procedural` | Yes | Live | Procedural memory rules by category (read-only). |
-| `GET` | `/api/checkpoints` | Yes | Live | Checkpoints created before mutating file writes (read-only; restore stays CLI-only: `codemind checkpoint restore`). |
+| `GET` | `/api/checkpoints` | Yes | Live | Checkpoints created before mutating file writes. |
 | `GET` | `/api/checkpoints/:id` | Yes | Live | One checkpoint's full metadata by id. |
+| `GET` | `/api/repository/tree` | Yes | Live | One directory level of the real checked-out working tree (`?dir=`, default root). |
+| `GET` | `/api/repository/file` | Yes | Live | Real file content plus a `contentHash` for optimistic-concurrency conflict detection on save (`?path=`). |
+| `PUT` | `/api/repository/file` | Yes | Live | Write a real file through the checkpoint-bound guarded write path. `baseContentHash` triggers a 409 with the current on-disk content if the file changed since it was loaded. |
+| `GET` | `/api/repository/status` | Yes | Live | Structured git status (staged/unstaged/untracked/conflicted) plus the current branch. |
+| `GET` | `/api/repository/diff` | Yes | Live | Raw unified diff for one file or the whole tree (`?path=&staged=`). |
+| `GET` | `/api/repository/branches` | Yes | Live | Local branches plus which one is current. |
+| `POST` | `/api/repository/branches` | Yes | Live | Create and switch to a new branch (`{ name }`); blocked on protected refs (`main`/`master`/`production`/`release`). |
+| `POST` | `/api/repository/commit` | Yes | Live | Stage the given `files` (or everything, excluding `.codemind/`, when omitted) and commit with `message`. |
+| `POST` | `/api/repository/checkpoints/:id/restore` | Yes | Live | Restore a checkpoint's snapshotted files back into the real working tree (hash-verified per file). |
+| `POST` | `/api/repository/push` | Yes | Live | Push the current branch. Requires `{ confirm: true }`; blocked on protected branches and force pushes (no force option is exposed to the client at all). |
+| `POST` | `/api/repository/pull-request` | Yes | Live | Create a real draft PR via the GitHub API (branch + commit + PR, no local push needed). Requires `{ confirm: true }` and `GITHUB_TOKEN`. |
 | `POST` | `/api/missions` | Yes | Contract only | Create a governed CodeMind mission (full agent/tool-use runtime over HTTP — not yet implemented). |
 | `POST` | `/api/tools/run` | Yes | Contract only | Run a governed tool through policy, approval, audit, and redaction gates. |
 | `GET` | `/api/sessions/:id` | Yes | Contract only | Read a persisted mission session and audit-safe state. |

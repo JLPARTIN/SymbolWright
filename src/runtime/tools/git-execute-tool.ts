@@ -1,5 +1,4 @@
-import { spawn } from 'node:child_process'
-
+import { runGitCommand } from '../git/git-command-runner.js'
 import type { RuntimeToolDefinition, RuntimeToolContext } from '../types.js'
 import {
   evaluateGitToolRequest,
@@ -63,42 +62,6 @@ function buildGitArgs(input: GitToolInput): string[] {
   return args
 }
 
-function executeGit(
-  args: string[],
-  cwd: string,
-  timeoutMs: number,
-): Promise<{ stdout: string; stderr: string; exitCode: number | null }> {
-  return new Promise((resolve) => {
-    const child = spawn('git', args, {
-      cwd,
-      timeout: timeoutMs,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
-
-    const stdoutChunks: Buffer[] = []
-    const stderrChunks: Buffer[] = []
-
-    child.stdout.on('data', (chunk: Buffer) => stdoutChunks.push(chunk))
-    child.stderr.on('data', (chunk: Buffer) => stderrChunks.push(chunk))
-
-    child.on('close', (code) => {
-      resolve({
-        stdout: Buffer.concat(stdoutChunks).toString('utf-8'),
-        stderr: Buffer.concat(stderrChunks).toString('utf-8'),
-        exitCode: code,
-      })
-    })
-
-    child.on('error', (err) => {
-      resolve({
-        stdout: '',
-        stderr: err.message,
-        exitCode: 1,
-      })
-    })
-  })
-}
-
 export async function executeGitTool(input: unknown, context: RuntimeToolContext): Promise<string> {
   const parsed = parseGitExecuteInput(input)
   const policyResult = evaluateGitToolRequest(parsed, context.policy)
@@ -108,7 +71,7 @@ export async function executeGitTool(input: unknown, context: RuntimeToolContext
   }
 
   const args = buildGitArgs(parsed)
-  const result = await executeGit(args, context.cwd, 60_000)
+  const result = await runGitCommand(args, context.cwd, 60_000)
 
   const lines = [
     `Git operation: ${parsed.operation}`,

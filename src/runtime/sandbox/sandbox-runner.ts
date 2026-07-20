@@ -87,7 +87,8 @@ export interface DockerSandboxResolvedConfig {
 
 const ALLOWED_BINARIES = new Set<SandboxCommandBinary>(['git', 'npm', 'npx', 'node', 'prettier'])
 const SHELL_META_PATTERN = /[;&|`$<>\n\r]/
-export const DEFAULT_DOCKER_IMAGE = 'node:22-alpine'
+// Preflight npm scripts include real Git integration tests; Alpine Node images omit Git.
+export const DEFAULT_DOCKER_IMAGE = 'node:22-bookworm'
 export const DEFAULT_SANDBOX_MEMORY = '2048m'
 export const DEFAULT_SANDBOX_CPUS = '1'
 export const DEFAULT_SANDBOX_NETWORK = 'none' as const

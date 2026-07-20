@@ -19,11 +19,12 @@ describe('renderAppShellHtml', () => {
     }
   })
 
-  it('renders a persistent nav with a data-nav entry per primary view', () => {
+  it('renders a persistent nav with a data-nav entry per primary view, including the real Repository tab', () => {
     const html = renderAppShellHtml()
     for (const viewId of [
       'dashboard',
       'workspace',
+      'repository',
       'agent',
       'tools',
       'memory',
@@ -34,10 +35,14 @@ describe('renderAppShellHtml', () => {
     }
   })
 
-  it('labels the repository placeholder as planned rather than a working control', () => {
+  it('wires the Repository view to the real repository API routes, not a placeholder', () => {
     const html = renderAppShellHtml()
-    expect(html).toContain('planned-badge')
-    expect(html).toContain('Large PR Bundle 2')
+    expect(html).toContain("registerRouterViewInit('repository'")
+    expect(html).toContain('/api/repository/tree')
+    expect(html).toContain('/api/repository/file')
+    expect(html).toContain('/api/repository/push')
+    expect(html).toContain('/api/repository/pull-request')
+    expect(html).not.toContain('planned-badge')
   })
 
   it('boots the router once after all view scripts are inlined', () => {

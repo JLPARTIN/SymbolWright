@@ -34,6 +34,20 @@ import {
   handleMemoryRecent,
   handleToolsRegistry,
 } from '../app/api/readonly-registry-routes.js'
+import {
+  handleRepositoryBranchCreate,
+  handleRepositoryBranches,
+  handleRepositoryCheckpointRestore,
+  handleRepositoryCommit,
+  handleRepositoryDiff,
+  handleRepositoryFileRead,
+  handleRepositoryFileWrite,
+  handleRepositoryPullRequestCreate,
+  handleRepositoryPush,
+  handleRepositoryStatus,
+  handleRepositoryTree,
+} from '../app/api/repository-routes.js'
+import type { GitHubPrCreationClient } from '../runtime/github-write/github-pr-creation.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
 import type { RuntimeToolContext } from '../runtime/types.js'
@@ -81,6 +95,8 @@ export interface ChatServerOptions {
   readonly rateLimiter?: RateLimiter
   readonly localStatusProvider?: () => Promise<RuntimeStatusView>
   readonly cwd?: string
+  /** Test seam: inject a fake GitHubPrCreationClient for the Repository PR-creation route instead of constructing the real REST client. */
+  readonly githubPrCreationClient?: GitHubPrCreationClient
 }
 
 export interface StartedChatServer {
@@ -147,7 +163,7 @@ function applyCors(res: ServerResponse, corsOrigin: string | undefined): void {
   }
   res.setHeader('access-control-allow-origin', corsOrigin)
   res.setHeader('access-control-allow-headers', 'authorization, content-type')
-  res.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS')
+  res.setHeader('access-control-allow-methods', 'GET, POST, PUT, OPTIONS')
 }
 
 async function readJsonBody(req: IncomingMessage): Promise<unknown> {
@@ -224,6 +240,16 @@ export function createChatServerRequestListener(
   const registryContext = {
     cwd: options.cwd ?? process.cwd(),
     hasGitHubToken: env['GITHUB_TOKEN'] !== undefined,
+  }
+  const repositoryContext = {
+    cwd: registryContext.cwd,
+    policy: createRuntimePolicyForMode('APPROVED_EXECUTION', {
+      hasGitHubToken: registryContext.hasGitHubToken,
+    }),
+    ...(env['GITHUB_TOKEN'] !== undefined ? { githubToken: env['GITHUB_TOKEN'] } : {}),
+    ...(options.githubPrCreationClient !== undefined
+      ? { githubPrCreationClient: options.githubPrCreationClient }
+      : {}),
   }
 
   return (req, res) => {
@@ -339,6 +365,69 @@ export function createChatServerRequestListener(
 
       if (req.method === 'GET' && url.pathname.startsWith('/api/checkpoints/')) {
         handleCheckpointDetail(url.pathname.slice('/api/checkpoints/'.length), res, registryContext)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/repository/tree') {
+        handleRepositoryTree(req, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/repository/file') {
+        handleRepositoryFileRead(req, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/repository/status') {
+        await handleRepositoryStatus(res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/repository/diff') {
+        await handleRepositoryDiff(req, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/repository/branches') {
+        await handleRepositoryBranches(res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'PUT' && url.pathname === '/api/repository/file') {
+        await handleRepositoryFileWrite(req, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'POST' && url.pathname === '/api/repository/branches') {
+        await handleRepositoryBranchCreate(req, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'POST' && url.pathname === '/api/repository/commit') {
+        await handleRepositoryCommit(req, res, repositoryContext)
+        return
+      }
+
+      if (
+        req.method === 'POST' &&
+        url.pathname.startsWith('/api/repository/checkpoints/') &&
+        url.pathname.endsWith('/restore')
+      ) {
+        const checkpointId = url.pathname.slice(
+          '/api/repository/checkpoints/'.length,
+          -'/restore'.length,
+        )
+        handleRepositoryCheckpointRestore(checkpointId, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'POST' && url.pathname === '/api/repository/push') {
+        await handleRepositoryPush(req, res, repositoryContext)
+        return
+      }
+
+      if (req.method === 'POST' && url.pathname === '/api/repository/pull-request') {
+        await handleRepositoryPullRequestCreate(req, res, repositoryContext)
         return
       }
 

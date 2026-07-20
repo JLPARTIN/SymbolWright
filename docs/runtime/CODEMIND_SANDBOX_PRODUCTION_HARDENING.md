@@ -15,7 +15,7 @@ Sandboxed commands use parameterized Docker execution with:
 --user node
 -v <workspace>:/workspace:rw
 -w /workspace
-node:22-alpine
+node:22-bookworm
 ```
 
 Workspace writes use a parameterized Node script inside the same Docker boundary. The write script resolves `/workspace`, creates parent directories, blocks path escape, and writes with file mode `0o600`.
@@ -24,11 +24,13 @@ Workspace writes use a parameterized Node script inside the same Docker boundary
 
 The default sandbox configuration works in Codespaces and GitHub-hosted Ubuntu runners that have Docker available.
 
+The Debian-based default is intentional: preflight validation runs npm test suites that may spawn real Git subprocesses, while Alpine Node images do not include Git.
+
 Optional environment variables:
 
 ```bash
 CODEMIND_SANDBOX_DOCKER_BINARY=docker
-CODEMIND_SANDBOX_IMAGE=node:22-alpine
+CODEMIND_SANDBOX_IMAGE=node:22-bookworm
 CODEMIND_SANDBOX_MEMORY=2048m
 CODEMIND_SANDBOX_CPUS=1
 CODEMIND_SANDBOX_NETWORK=none
@@ -79,7 +81,7 @@ Check Docker directly:
 
 ```bash
 docker version
-docker run --rm --network none node:22-alpine node --version
+docker run --rm --network none node:22-bookworm node --version
 ```
 
 Common failures:
@@ -87,7 +89,7 @@ Common failures:
 ```text
 Docker command missing       install/start Docker or set CODEMIND_SANDBOX_DOCKER_BINARY
 Docker daemon unavailable    start Docker or restart Codespaces
-Image missing                docker pull node:22-alpine
+Image missing                docker pull node:22-bookworm
 Permission denied            verify workspace mount permissions and user setting
 Output limit exceeded        raise CODEMIND_SANDBOX_MAX_OUTPUT_BYTES for trusted validation runs
 Timeout exceeded             raise CODEMIND_SANDBOX_TIMEOUT_MS for trusted validation runs

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 
 import { AgentMemoryTools } from './agent-tools.js'
 import { ConsolidationEngine } from './consolidation-engine.js'
@@ -234,11 +234,8 @@ describe('CodeMind Cognitive Memory Architecture', () => {
   })
 
   it('uses isolated temp paths only', () => {
-    const realCodemindPath = resolve(process.cwd(), '.codemind')
-    if (existsSync(realCodemindPath)) {
-      expect(existsSync(join(realCodemindPath, 'memory', 'codemind.db'))).toBe(false)
-    }
-
+    expect(dbPath).toBe(join(tempDir, 'codemind.db'))
+    expect(proceduresPath).toBe(join(tempDir, 'procedures.yaml'))
     expect(dbPath.startsWith(tmpdir())).toBe(true)
     expect(proceduresPath.startsWith(tmpdir())).toBe(true)
   })

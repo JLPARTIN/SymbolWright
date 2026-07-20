@@ -156,14 +156,28 @@ describe('executeGitTool', () => {
     expect(output).toContain('Command: git commit -m test commit')
   })
 
-  it('handles checkout_new operation', async () => {
-    const ctx = makeApprovedContext()
-    const output = await executeGitTool(
-      { operation: 'checkout_new', args: ['test-branch-' + Date.now()] },
-      ctx,
-    )
+  it('handles checkout_new operation without mutating the caller repository', async () => {
+    const workspace = makeGitWorkspace()
+    try {
+      const branchName = 'test-branch-' + Date.now()
+      const ctx: RuntimeToolContext = {
+        ...makeApprovedContext(),
+        cwd: workspace,
+      }
 
-    expect(output).toContain('Git operation: checkout_new')
-    expect(output).toContain('Command: git checkout -b')
+      const output = await executeGitTool({ operation: 'checkout_new', args: [branchName] }, ctx)
+
+      expect(output).toContain('Git operation: checkout_new')
+      expect(output).toContain('Command: git checkout -b')
+
+      const currentBranch = spawnSync('git', ['branch', '--show-current'], {
+        cwd: workspace,
+        encoding: 'utf-8',
+      })
+      expect(currentBranch.status).toBe(0)
+      expect(currentBranch.stdout.trim()).toBe(branchName)
+    } finally {
+      fs.rmSync(workspace, { recursive: true, force: true })
+    }
   })
 })

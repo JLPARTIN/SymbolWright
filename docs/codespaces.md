@@ -2,14 +2,17 @@
 
 CodeMind ships as **one server, one port**, started by `npm run serve`
 (`codemind serve` under the hood). It serves a single application shell with
-persistent navigation across a Dashboard, the Universal Polyglot Workspace,
-an embedded Agent chat/tool-execution panel, and read-only Tools/Memory/
-Checkpoints browsers — no separate dashboard process and no separate chat
-server to juggle.
+persistent navigation across a Dashboard, the Universal Polyglot Workspace
+(browser-local scratch editor), a real **Repository** tab (browses and edits
+the actual checked-out working tree, with git status/diffs, branches,
+commits, push, and PR creation — see
+[`repository-workspace.md`](repository-workspace.md)), an embedded Agent
+chat/tool-execution panel, and Tools/Memory/Checkpoints browsers — no
+separate dashboard process and no separate chat server to juggle.
 
 | Command | Port | What it is |
 | --- | --- | --- |
-| `npm run serve` (or `npm run dev`) | `8787` | The unified CodeMind app: Dashboard, Workspace, Agent, Tools, Memory, Checkpoints, and Settings, all as tabs in one page. Requires `CODEMIND_API_KEY` to start (see below) — the workspace editor and code-run/code-intelligence routes work without a key, everything else (status, providers, chat, agent, tools, memory, checkpoints) requires it. |
+| `npm run serve` (or `npm run dev`) | `8787` | The unified CodeMind app: Dashboard, Workspace, Repository, Agent, Tools, Memory, Checkpoints, and Settings, all as tabs in one page. Requires `CODEMIND_API_KEY` to start (see below) — the Workspace editor and code-run/code-intelligence routes work without a key, everything else (status, providers, chat, agent, tools, memory, checkpoints, repository) requires it. |
 
 ## 1. Install and build
 
