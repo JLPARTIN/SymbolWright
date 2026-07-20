@@ -26,7 +26,13 @@ import {
   ProviderRuntimeOverrideValidationError,
 } from '../providers/provider-runtime-overrides.js'
 import { runAgentLoop } from '../agent/agent-loop.js'
-import type { AgentLoopConfig, AgentLoopEvent } from '../agent/agent-loop.types.js'
+import type {
+  AgentLoopConfig,
+  AgentLoopEvent,
+  AgentLoopResult,
+} from '../agent/agent-loop.types.js'
+import { getCheckpoint, listCheckpoints } from '../checkpoint/checkpoint-service.js'
+import { handleMissionRoute } from '../app/api/mission-routes.js'
 import {
   handleCheckpointDetail,
   handleCheckpointsList,
@@ -47,6 +53,12 @@ import {
   handleRepositoryStatus,
   handleRepositoryTree,
 } from '../app/api/repository-routes.js'
+import {
+  MissionNotFoundError,
+  MissionService,
+  MissionStateConflictError,
+} from '../mission/mission-service.js'
+import type { CodeMindMission } from '../mission/mission-types.js'
 import type { GitHubPrCreationClient } from '../runtime/github-write/github-pr-creation.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
@@ -95,6 +107,8 @@ export interface ChatServerOptions {
   readonly rateLimiter?: RateLimiter
   readonly localStatusProvider?: () => Promise<RuntimeStatusView>
   readonly cwd?: string
+  /** Test seam for deterministic mission storage/lifecycle behavior. */
+  readonly missionService?: MissionService
   /** Test seam: inject a fake GitHubPrCreationClient for the Repository PR-creation route instead of constructing the real REST client. */
   readonly githubPrCreationClient?: GitHubPrCreationClient
 }
@@ -163,7 +177,7 @@ function applyCors(res: ServerResponse, corsOrigin: string | undefined): void {
   }
   res.setHeader('access-control-allow-origin', corsOrigin)
   res.setHeader('access-control-allow-headers', 'authorization, content-type')
-  res.setHeader('access-control-allow-methods', 'GET, POST, PUT, OPTIONS')
+  res.setHeader('access-control-allow-methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
 }
 
 async function readJsonBody(req: IncomingMessage): Promise<unknown> {
@@ -237,8 +251,10 @@ export function createChatServerRequestListener(
     options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_RATE_LIMIT_PER_MINUTE, 60_000)
   const env = options.env ?? process.env
   const localStatusProvider = options.localStatusProvider ?? collectStatus
+  const cwd = options.cwd ?? process.cwd()
+  const missionService = options.missionService ?? new MissionService({ workspaceRoot: cwd, env })
   const registryContext = {
-    cwd: options.cwd ?? process.cwd(),
+    cwd,
     hasGitHubToken: env['GITHUB_TOKEN'] !== undefined,
   }
   const repositoryContext = {
@@ -251,6 +267,7 @@ export function createChatServerRequestListener(
       ? { githubPrCreationClient: options.githubPrCreationClient }
       : {}),
   }
+  const missionContext = { service: missionService, cwd }
 
   return (req, res) => {
     void handleRequest(req, res)
@@ -294,6 +311,10 @@ export function createChatServerRequestListener(
     }
 
     try {
+      if (await handleMissionRoute(req, res, url, missionContext)) {
+        return
+      }
+
       if (req.method === 'GET' && url.pathname === '/api/local-status') {
         sendJson(res, 200, await localStatusProvider())
         return
@@ -339,7 +360,7 @@ export function createChatServerRequestListener(
       }
 
       if (req.method === 'POST' && url.pathname === '/api/agent') {
-        await handleAgent(req, res, env, overrideStore)
+        await handleAgent(req, res, env, overrideStore, missionService, cwd)
         return
       }
 
@@ -557,13 +578,56 @@ function resolveAgentEffectiveConfig(
   return config
 }
 
+function appendNewCheckpointReferences(
+  missionService: MissionService,
+  missionId: string,
+  workspaceRoot: string,
+  beforeIds: ReadonlySet<string>,
+  warnings: string[],
+): void {
+  try {
+    for (const summary of listCheckpoints(workspaceRoot, missionId)) {
+      if (beforeIds.has(summary.checkpointId)) continue
+      const metadata = getCheckpoint(workspaceRoot, summary.checkpointId)
+      if (metadata === undefined) continue
+      missionService.attachCheckpoint(missionId, {
+        checkpointId: metadata.checkpointId,
+        createdAt: metadata.createdAt,
+        paths: metadata.files.map((file) => file.targetPath),
+      })
+    }
+  } catch (error) {
+    warnings.push(`Checkpoint linkage was not saved: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}
+
 async function handleAgent(
   req: IncomingMessage,
   res: ServerResponse,
   env: ProviderGatewayEnv,
   overrideStore: ProviderRuntimeOverrideStore,
+  missionService: MissionService,
+  defaultCwd: string,
 ): Promise<void> {
   const parsed = parseAgentRequestBody(await readJsonBody(req))
+  let mission: CodeMindMission | undefined
+  if (parsed.missionId !== undefined) {
+    try {
+      mission = missionService.get(parsed.missionId)
+    } catch (error) {
+      if (error instanceof MissionNotFoundError) {
+        sendJson(res, 404, { error: error.message })
+        return
+      }
+      throw error
+    }
+    if (mission.status !== 'ACTIVE') {
+      sendJson(res, 409, {
+        error: `Mission ${mission.id} is ${mission.status}. Resume or explicitly reopen it before sending agent work.`,
+      })
+      return
+    }
+  }
 
   let llmProvider: ReturnType<typeof resolveAgentLlmProvider>
   try {
@@ -580,21 +644,113 @@ async function handleAgent(
   const policy = createRuntimePolicyForMode(parsed.mode, {
     hasGitHubToken: env['GITHUB_TOKEN'] !== undefined,
   })
-  const toolContext: RuntimeToolContext = { cwd: process.cwd(), policy }
+  const toolCwd = mission?.repository.rootPath ?? defaultCwd
+  const toolContext: RuntimeToolContext = {
+    cwd: toolCwd,
+    policy,
+    ...(mission === undefined ? {} : { sessionId: mission.id }),
+  }
   const tools = assembleAgentTools()
-
+  const priorMessages = parsed.priorMessages ?? mission?.agent.messages
   const agentConfig: AgentLoopConfig = {
     maxIterations: parsed.maxIterations,
     systemPrompt: parsed.systemPrompt ?? DEFAULT_AGENT_SYSTEM_PROMPT,
     ...(parsed.model === undefined ? {} : { model: parsed.model }),
     ...(parsed.maxTokens === undefined ? {} : { maxTokens: parsed.maxTokens }),
     ...(parsed.temperature === undefined ? {} : { temperature: parsed.temperature }),
-    ...(parsed.priorMessages === undefined ? {} : { priorMessages: parsed.priorMessages }),
+    ...(priorMessages === undefined ? {} : { priorMessages }),
+  }
+
+  const missionWarnings: string[] = []
+  const beforeCheckpointIds = new Set(
+    mission === undefined
+      ? []
+      : listCheckpoints(toolCwd, mission.id).map((checkpoint) => checkpoint.checkpointId),
+  )
+  const persist = (operation: () => void, label: string): void => {
+    if (mission === undefined) return
+    try {
+      operation()
+    } catch (error) {
+      missionWarnings.push(`${label}: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  if (mission !== undefined) {
+    persist(
+      () =>
+        missionService.recordAgentUserMessage(
+          mission.id,
+          parsed.message,
+          parsed.mode,
+          parsed.providerId,
+          parsed.model,
+        ),
+      'User message was not persisted',
+    )
+  }
+
+  const onAgentEvent = (event: AgentLoopEvent): void => {
+    if (mission !== undefined) {
+      if (event.type === 'tool_call_start') {
+        persist(
+          () => missionService.recordToolStarted(mission.id, event.id, event.name),
+          `Tool start ${event.name} was not persisted`,
+        )
+      }
+      if (event.type === 'tool_call_end') {
+        persist(
+          () =>
+            missionService.recordToolCompleted(
+              mission.id,
+              event.id,
+              event.name,
+              event.output,
+              event.isError,
+              event.durationMs,
+            ),
+          `Tool result ${event.name} was not persisted`,
+        )
+      }
+    }
+  }
+
+  const persistResult = (result: AgentLoopResult): void => {
+    if (mission === undefined) return
+    persist(
+      () =>
+        missionService.recordAgentResult(
+          mission.id,
+          result.finalMessages,
+          result.finalText,
+          result.status,
+        ),
+      'Assistant result was not persisted',
+    )
+    appendNewCheckpointReferences(
+      missionService,
+      mission.id,
+      toolCwd,
+      beforeCheckpointIds,
+      missionWarnings,
+    )
   }
 
   if (!parsed.stream) {
-    const result = await runAgentLoop(llmProvider, parsed.message, tools, toolContext, agentConfig)
-    sendJson(res, 200, result)
+    const result = await runAgentLoop(
+      llmProvider,
+      parsed.message,
+      tools,
+      toolContext,
+      agentConfig,
+      onAgentEvent,
+    )
+    persistResult(result)
+    sendJson(res, 200, {
+      ...result,
+      ...(mission === undefined ? {} : { missionId: mission.id }),
+      ...(missionWarnings.length === 0 ? {} : { missionWarnings }),
+    })
     return
   }
 
@@ -612,14 +768,51 @@ async function handleAgent(
       toolContext,
       agentConfig,
       (event: AgentLoopEvent) => {
+        onAgentEvent(event)
         res.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
       },
     )
+    persistResult(result)
     res.write(`event: result\ndata: ${JSON.stringify(result)}\n\n`)
+    if (mission !== undefined) {
+      let currentRevision: number | undefined
+      try {
+        currentRevision = missionService.get(mission.id).revision
+      } catch {
+        currentRevision = undefined
+      }
+      res.write(
+        `event: mission_saved\ndata: ${JSON.stringify({
+          missionId: mission.id,
+          ...(currentRevision === undefined ? {} : { revision: currentRevision }),
+          warnings: missionWarnings,
+        })}\n\n`,
+      )
+    }
     res.write('event: done\ndata: {}\n\n')
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
+    if (mission !== undefined) {
+      persist(
+        () =>
+          missionService.appendEvent(
+            mission.id,
+            'agent.turn.failed',
+            'Agent turn failed before a final result was produced.',
+            { message },
+          ),
+        'Agent failure event was not persisted',
+      )
+    }
     res.write(`event: error\ndata: ${JSON.stringify({ message })}\n\n`)
+    if (missionWarnings.length > 0) {
+      res.write(
+        `event: mission_saved\ndata: ${JSON.stringify({
+          missionId: mission?.id,
+          warnings: missionWarnings,
+        })}\n\n`,
+      )
+    }
   } finally {
     res.end()
   }
