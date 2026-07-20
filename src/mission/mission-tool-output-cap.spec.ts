@@ -18,12 +18,21 @@ describe('mission tool output boundary', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const mission = await service.create({
-      name: 'Tool output', objective: 'Bound it', workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Tool output',
+      objective: 'Bound it',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     service.recordToolStarted(mission.id, 'tool-1', 'bash')
     service.recordToolCompleted(
-      mission.id, 'tool-1', 'bash',
-      'ghp_abcdefghijklmnopqrstuvwxyz123456\n' + 'x'.repeat(20_000), false, 10,
+      mission.id,
+      'tool-1',
+      'bash',
+      'ghp_abcdefghijklmnopqrstuvwxyz123456\n' + 'x'.repeat(20_000),
+      false,
+      10,
     )
     const evidence = service.get(mission.id).evidence.toolCalls[0]
     expect(evidence?.outputExcerpt?.length).toBeLessThan(5_000)

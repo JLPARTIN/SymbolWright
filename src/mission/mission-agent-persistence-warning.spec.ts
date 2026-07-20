@@ -8,11 +8,13 @@ describe('mission persistence failure boundary', () => {
     vi.spyOn(service.getStore(), 'writeMission').mockImplementation(() => {
       throw new Error('disk unavailable')
     })
-    expect(() => service.recordAgentResult(
-      'mission_11111111-1111-4111-8111-111111111111',
-      [],
-      'answer remains available to the active response',
-      'completed',
-    )).toThrow()
+    expect(() =>
+      service.recordAgentResult(
+        'mission_11111111-1111-4111-8111-111111111111',
+        [],
+        'answer remains available to the active response',
+        'completed',
+      ),
+    ).toThrow()
   })
 })

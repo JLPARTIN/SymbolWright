@@ -18,10 +18,19 @@ describe('mission provider safety', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const mission = await service.create({
-      name: 'Provider', objective: 'No key persistence', workspaceKind: 'repository', repositoryPath: '.',
-      runtimeMode: 'READ_ONLY', activeProviderId: 'anthropic', model: 'claude-test', labels: [],
+      name: 'Provider',
+      objective: 'No key persistence',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      activeProviderId: 'anthropic',
+      model: 'claude-test',
+      labels: [],
     })
-    const persisted = readFileSync(join(root, '.codemind', 'missions', mission.id, 'mission.json'), 'utf8')
+    const persisted = readFileSync(
+      join(root, '.codemind', 'missions', mission.id, 'mission.json'),
+      'utf8',
+    )
     expect(persisted).toContain('anthropic')
     expect(persisted).toContain('claude-test')
     expect(persisted).not.toContain('sk-ant-secret-value')

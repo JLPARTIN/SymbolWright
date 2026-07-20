@@ -173,7 +173,9 @@ export function parseAgentRequestBody(raw: unknown): ParsedAgentRequest {
     missionId !== undefined &&
     (typeof missionId !== 'string' || missionId.trim().length === 0 || missionId.length > 200)
   ) {
-    throw new ChatRequestValidationError('missionId must be a non-empty string of at most 200 characters')
+    throw new ChatRequestValidationError(
+      'missionId must be a non-empty string of at most 200 characters',
+    )
   }
   if (temperature !== undefined && typeof temperature !== 'number') {
     throw new ChatRequestValidationError('temperature must be a number')

@@ -26,11 +26,7 @@ import {
   ProviderRuntimeOverrideValidationError,
 } from '../providers/provider-runtime-overrides.js'
 import { runAgentLoop } from '../agent/agent-loop.js'
-import type {
-  AgentLoopConfig,
-  AgentLoopEvent,
-  AgentLoopResult,
-} from '../agent/agent-loop.types.js'
+import type { AgentLoopConfig, AgentLoopEvent, AgentLoopResult } from '../agent/agent-loop.types.js'
 import { getCheckpoint, listCheckpoints } from '../checkpoint/checkpoint-service.js'
 import { handleMissionRoute } from '../app/api/mission-routes.js'
 import {
@@ -53,11 +49,7 @@ import {
   handleRepositoryStatus,
   handleRepositoryTree,
 } from '../app/api/repository-routes.js'
-import {
-  MissionNotFoundError,
-  MissionService,
-  MissionStateConflictError,
-} from '../mission/mission-service.js'
+import { MissionNotFoundError, MissionService } from '../mission/mission-service.js'
 import type { CodeMindMission } from '../mission/mission-types.js'
 import type { GitHubPrCreationClient } from '../runtime/github-write/github-pr-creation.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
@@ -597,7 +589,9 @@ function appendNewCheckpointReferences(
       })
     }
   } catch (error) {
-    warnings.push(`Checkpoint linkage was not saved: ${error instanceof Error ? error.message : String(error)}`)
+    warnings.push(
+      `Checkpoint linkage was not saved: ${error instanceof Error ? error.message : String(error)}`,
+    )
   }
 }
 

@@ -6,10 +6,12 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { MissionService } from './mission-service.js'
 
 function readAllFiles(root: string): string {
-  return readdirSync(root).map((name) => {
-    const target = join(root, name)
-    return statSync(target).isDirectory() ? readAllFiles(target) : readFileSync(target, 'utf8')
-  }).join('\n')
+  return readdirSync(root)
+    .map((name) => {
+      const target = join(root, name)
+      return statSync(target).isDirectory() ? readAllFiles(target) : readFileSync(target, 'utf8')
+    })
+    .join('\n')
 }
 
 describe('mission directory secret proof', () => {
@@ -32,9 +34,14 @@ describe('mission directory secret proof', () => {
     const mission = await service.create({
       name: 'Secret proof',
       objective: 'Authorization: Bearer codemind-local-secret-value',
-      workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY',
-      activeProviderId: 'openai', model: 'safe-model', labels: [],
-      notes: 'Cookie: session=sk-openai-super-secret-value https://example.test/?token=ghp_abcdefghijklmnopqrstuvwxyz123456 -----BEGIN PRIVATE KEY----- hidden -----END PRIVATE KEY-----',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      activeProviderId: 'openai',
+      model: 'safe-model',
+      labels: [],
+      notes:
+        'Cookie: session=sk-openai-super-secret-value https://example.test/?token=ghp_abcdefghijklmnopqrstuvwxyz123456 -----BEGIN PRIVATE KEY----- hidden -----END PRIVATE KEY-----',
     })
     service.appendEvent(mission.id, 'mcp.call.completed', 'MCP completed', {
       environment: { OPENAI_API_KEY: secrets.OPENAI_API_KEY },

@@ -135,10 +135,10 @@ The internal `/record` contract accepts only known structured repository and val
 
 ## Difference between related systems
 
-| System | Source of truth | Mission relationship |
-| --- | --- | --- |
-| Mission | Objective and resumable coordination state | Owns structured lifecycle, conversation, event timeline, and references |
-| Repository | Real working-tree files and Git state | Mission stores paths, hashes, branch/HEAD, commits, and PR URLs |
-| Checkpoint | Existing pre-write file snapshots | Mission links checkpoint IDs and labels; it does not copy snapshots |
-| Cognitive memory | Existing SQLite/YAML memory stores | Mission links stable entry IDs and summaries; it does not copy memories |
-| Scratch Workspace | Browser localStorage session | Remains local-only unless explicitly attached |
+| System            | Source of truth                            | Mission relationship                                                    |
+| ----------------- | ------------------------------------------ | ----------------------------------------------------------------------- |
+| Mission           | Objective and resumable coordination state | Owns structured lifecycle, conversation, event timeline, and references |
+| Repository        | Real working-tree files and Git state      | Mission stores paths, hashes, branch/HEAD, commits, and PR URLs         |
+| Checkpoint        | Existing pre-write file snapshots          | Mission links checkpoint IDs and labels; it does not copy snapshots     |
+| Cognitive memory  | Existing SQLite/YAML memory stores         | Mission links stable entry IDs and summaries; it does not copy memories |
+| Scratch Workspace | Browser localStorage session               | Remains local-only unless explicitly attached                           |

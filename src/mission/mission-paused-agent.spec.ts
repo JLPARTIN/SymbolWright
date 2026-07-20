@@ -17,7 +17,12 @@ describe('paused mission continuation', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const created = await service.create({
-      name: 'Pause', objective: 'Resume explicitly', workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Pause',
+      objective: 'Resume explicitly',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     const paused = service.pause(created.id, created.revision)
     expect(paused.status).toBe('PAUSED')

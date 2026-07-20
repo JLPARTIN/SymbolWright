@@ -5,7 +5,9 @@ import { parseAgentRequestBody } from './codemind-agent-request.js'
 describe('agent mission request parsing', () => {
   it('accepts an optional mission id', () => {
     const parsed = parseAgentRequestBody({
-      providerId: 'openai', message: 'continue', missionId: 'mission_11111111-1111-4111-8111-111111111111',
+      providerId: 'openai',
+      message: 'continue',
+      missionId: 'mission_11111111-1111-4111-8111-111111111111',
     })
     expect(parsed.missionId).toBe('mission_11111111-1111-4111-8111-111111111111')
   })
@@ -17,8 +19,8 @@ describe('agent mission request parsing', () => {
   })
 
   it('rejects empty mission ids', () => {
-    expect(() => parseAgentRequestBody({ providerId: 'openai', message: 'x', missionId: '' })).toThrow(
-      'missionId',
-    )
+    expect(() =>
+      parseAgentRequestBody({ providerId: 'openai', message: 'x', missionId: '' }),
+    ).toThrow('missionId')
   })
 })

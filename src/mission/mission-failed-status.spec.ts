@@ -17,10 +17,17 @@ describe('failed mission status', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const created = await service.create({
-      name: 'Failure', objective: 'Record', workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Failure',
+      objective: 'Record',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     const failed = service.fail(created.id, created.revision, 'Validation could not recover')
     expect(failed.status).toBe('FAILED')
-    expect(service.readEvents(created.id).some((event) => event.type === 'mission.failed')).toBe(true)
+    expect(service.readEvents(created.id).some((event) => event.type === 'mission.failed')).toBe(
+      true,
+    )
   })
 })

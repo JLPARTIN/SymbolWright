@@ -17,7 +17,12 @@ describe('mission runtime mode resume', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const mission = await service.create({
-      name: 'Mode', objective: 'Resume mode', workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Mode',
+      objective: 'Resume mode',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     service.recordAgentUserMessage(mission.id, 'edit', 'APPROVED_EXECUTION', 'openai')
     const restarted = new MissionService({ workspaceRoot: root })

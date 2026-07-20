@@ -70,7 +70,8 @@ function redactInternal(
   if (Array.isArray(value)) {
     const limited = value.slice(0, MAX_ARRAY_ENTRIES)
     const redacted = limited.map((entry) => redactInternal(entry, env, seen, depth + 1))
-    if (value.length > limited.length) redacted.push(`[TRUNCATED ${value.length - limited.length} ENTRIES]`)
+    if (value.length > limited.length)
+      redacted.push(`[TRUNCATED ${value.length - limited.length} ENTRIES]`)
     return redacted
   }
 
@@ -97,10 +98,7 @@ function redactInternal(
   return String(value)
 }
 
-export function redactMissionValue(
-  value: unknown,
-  env: NodeJS.ProcessEnv = process.env,
-): unknown {
+export function redactMissionValue(value: unknown, env: NodeJS.ProcessEnv = process.env): unknown {
   return redactInternal(value, env, new WeakSet<object>(), 0)
 }
 

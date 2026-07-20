@@ -23,10 +23,20 @@ function mission(revision = 1): CodeMindMission {
     agent: { runtimeMode: 'READ_ONLY', messages: [] },
     workspace: { kind: 'repository', openFiles: [], scratchAttached: false },
     evidence: {
-      toolCalls: [], validationRuns: [], webAccesses: [], mcpCalls: [], subagentRuns: [], skillRuns: [],
+      toolCalls: [],
+      validationRuns: [],
+      webAccesses: [],
+      mcpCalls: [],
+      subagentRuns: [],
+      skillRuns: [],
     },
     references: {
-      checkpointIds: [], checkpointLinks: [], memoryEntryIds: [], memoryLinks: [], commitShas: [], pullRequestUrls: [],
+      checkpointIds: [],
+      checkpointLinks: [],
+      memoryEntryIds: [],
+      memoryLinks: [],
+      commitShas: [],
+      pullRequestUrls: [],
     },
     labels: [],
   }

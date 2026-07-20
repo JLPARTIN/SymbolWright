@@ -17,7 +17,12 @@ describe('mission open file resume', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const mission = await service.create({
-      name: 'Files', objective: 'Resume selection', workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Files',
+      objective: 'Resume selection',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     service.recordFileOpened(mission.id, 'a.ts', 'hash-a')
     service.recordFileOpened(mission.id, 'b.ts', 'hash-b')

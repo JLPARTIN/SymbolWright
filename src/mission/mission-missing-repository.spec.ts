@@ -18,9 +18,19 @@ describe('missing mission repository', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const mission = await service.create({
-      name: 'Missing', objective: 'Browse anyway', workspaceKind: 'repository', repositoryPath: 'repo', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Missing',
+      objective: 'Browse anyway',
+      workspaceKind: 'repository',
+      repositoryPath: 'repo',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
-    service.recordAgentResult(mission.id, [{ role: 'assistant', content: 'History' }], 'History', 'completed')
+    service.recordAgentResult(
+      mission.id,
+      [{ role: 'assistant', content: 'History' }],
+      'History',
+      'completed',
+    )
     rmSync(repo, { recursive: true, force: true })
     const reconciliation = await service.reconcileRepository(mission.id)
     expect(reconciliation.repositoryAvailable).toBe(false)

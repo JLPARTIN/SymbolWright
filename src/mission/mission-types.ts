@@ -182,7 +182,11 @@ export interface MissionListSummary {
 }
 
 export interface MissionStoreWarning {
-  readonly code: 'CORRUPT_RECORD' | 'INDEX_RECOVERED' | 'STALE_TEMP_RECOVERED' | 'MISSING_REPOSITORY'
+  readonly code:
+    | 'CORRUPT_RECORD'
+    | 'INDEX_RECOVERED'
+    | 'STALE_TEMP_RECOVERED'
+    | 'MISSING_REPOSITORY'
   readonly message: string
   readonly missionId?: string | undefined
   readonly path?: string | undefined

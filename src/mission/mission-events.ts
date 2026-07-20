@@ -36,7 +36,8 @@ export function createMissionEvent(
   if (summary.length === 0) throw new Error('Mission event summary must not be empty')
   if (input.type.trim().length === 0) throw new Error('Mission event type must not be empty')
 
-  const payload = input.payload === undefined ? undefined : sanitizeMissionPayload(input.payload, env)
+  const payload =
+    input.payload === undefined ? undefined : sanitizeMissionPayload(input.payload, env)
   return {
     eventId: input.eventId ?? `event_${randomUUID()}`,
     missionId: input.missionId,
@@ -50,17 +51,15 @@ export function createMissionEvent(
 export function eventMatchesFilter(event: MissionEvent, filter: MissionEventFilter): boolean {
   if (filter === 'all') return true
   if (filter === 'agent') return event.type.startsWith('agent.')
-  if (filter === 'files') return event.type.startsWith('workspace.file') || event.type.startsWith('workspace.diff')
+  if (filter === 'files')
+    return event.type.startsWith('workspace.file') || event.type.startsWith('workspace.diff')
   if (filter === 'tools') return event.type.startsWith('agent.tool')
   if (filter === 'validation') return event.type.startsWith('validation.')
   if (filter === 'git') return event.type.startsWith('git.') || event.type.startsWith('github.')
   if (filter === 'checkpoints') return event.type.startsWith('checkpoint.')
   if (filter === 'memory') return event.type.startsWith('memory.')
   if (filter === 'web-mcp') return event.type.startsWith('web.') || event.type.startsWith('mcp.')
-  return (
-    event.type.startsWith('subagent.') ||
-    event.type.startsWith('skill.')
-  )
+  return event.type.startsWith('subagent.') || event.type.startsWith('skill.')
 }
 
 export function paginateMissionEvents(
@@ -84,7 +83,10 @@ export function paginateMissionEvents(
 }
 
 function operationKey(event: MissionEvent): string | undefined {
-  const operationId = event.payload?.['operationId'] ?? event.payload?.['toolCallId'] ?? event.payload?.['validationId']
+  const operationId =
+    event.payload?.['operationId'] ??
+    event.payload?.['toolCallId'] ??
+    event.payload?.['validationId']
   return typeof operationId === 'string' && operationId.length > 0 ? operationId : undefined
 }
 

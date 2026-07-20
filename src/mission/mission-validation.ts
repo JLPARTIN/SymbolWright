@@ -58,11 +58,7 @@ function asRecord(value: unknown, message = 'Expected a JSON object'): Record<st
   return value as Record<string, unknown>
 }
 
-function requiredString(
-  record: Record<string, unknown>,
-  field: string,
-  maxChars: number,
-): string {
+function requiredString(record: Record<string, unknown>, field: string, maxChars: number): string {
   const value = record[field]
   if (typeof value !== 'string' || value.trim().length === 0) {
     throw new MissionValidationError(`${field} must be a non-empty string`)
@@ -94,7 +90,8 @@ function nullableString(
 ): string | null | undefined {
   const value = record[field]
   if (value === undefined || value === null) return value
-  if (typeof value !== 'string') throw new MissionValidationError(`${field} must be a string or null`)
+  if (typeof value !== 'string')
+    throw new MissionValidationError(`${field} must be a string or null`)
   if (value.length > maxChars) {
     throw new MissionValidationError(`${field} must not exceed ${maxChars} characters`)
   }
@@ -240,7 +237,9 @@ export function isMissionStatus(value: unknown): value is MissionStatus {
 export function assertCodeMindMission(value: unknown): asserts value is CodeMindMission {
   const record = asRecord(value, 'Mission record must be an object')
   if (record['schemaVersion'] !== CURRENT_MISSION_SCHEMA_VERSION) {
-    throw new MissionValidationError(`Unsupported mission schema version: ${String(record['schemaVersion'])}`)
+    throw new MissionValidationError(
+      `Unsupported mission schema version: ${String(record['schemaVersion'])}`,
+    )
   }
   if (typeof record['id'] !== 'string' || !isValidMissionId(record['id'])) {
     throw new MissionValidationError('Mission record has an invalid id')

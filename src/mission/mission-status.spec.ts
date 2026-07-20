@@ -17,12 +17,18 @@ describe('mission status rules', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const created = await service.create({
-      name: 'Abandon', objective: 'Stop safely', workspaceKind: 'repository',
-      repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Abandon',
+      objective: 'Stop safely',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     const abandoned = service.abandon(created.id, created.revision)
     expect(abandoned.status).toBe('ABANDONED')
     expect(service.get(abandoned.id).status).toBe('ABANDONED')
-    expect(() => service.complete(abandoned.id, abandoned.revision)).toThrow(MissionStateConflictError)
+    expect(() => service.complete(abandoned.id, abandoned.revision)).toThrow(
+      MissionStateConflictError,
+    )
   })
 })

@@ -90,7 +90,8 @@ function parseIndex(raw: unknown): MissionIndex {
   return {
     schemaVersion: 1,
     missionIds: [...new Set(missionIds)],
-    updatedAt: typeof record['updatedAt'] === 'string' ? record['updatedAt'] : new Date(0).toISOString(),
+    updatedAt:
+      typeof record['updatedAt'] === 'string' ? record['updatedAt'] : new Date(0).toISOString(),
   }
 }
 
@@ -178,7 +179,9 @@ export class MissionStore {
     }
   }
 
-  public listMissions(options: { readonly offset?: number; readonly limit?: number } = {}): MissionListResult {
+  public listMissions(
+    options: { readonly offset?: number; readonly limit?: number } = {},
+  ): MissionListResult {
     const offset = Math.max(0, Math.floor(options.offset ?? 0))
     const limit = Math.min(200, Math.max(1, Math.floor(options.limit ?? 50)))
     const warnings: MissionStoreWarning[] = []

@@ -17,10 +17,19 @@ describe('mission diff resume', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const mission = await service.create({
-      name: 'Diff', objective: 'Resume diff', workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Diff',
+      objective: 'Resume diff',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     service.recordDiffViewed(mission.id, 'src/a.ts')
-    expect(new MissionService({ workspaceRoot: root }).get(mission.id).workspace.selectedDiffPath).toBe('src/a.ts')
-    expect(service.readEvents(mission.id).some((event) => event.type === 'workspace.diff.viewed')).toBe(true)
+    expect(
+      new MissionService({ workspaceRoot: root }).get(mission.id).workspace.selectedDiffPath,
+    ).toBe('src/a.ts')
+    expect(
+      service.readEvents(mission.id).some((event) => event.type === 'workspace.diff.viewed'),
+    ).toBe(true)
   })
 })

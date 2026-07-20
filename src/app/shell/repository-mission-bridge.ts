@@ -104,9 +104,11 @@ export function buildRepositoryMissionBridgeScript(): string {
           await window.codemindRecordMissionEvent({ kind: 'pr-created', pullRequestUrl: body.pullRequestUrl });
           return;
         }
-        if (method === 'POST' && /\/api\/repository\/checkpoints\/[^/]+\/restore/.test(String(urlValue)) && response.status === 200) {
-          const match = /\/api\/repository\/checkpoints\/([^/]+)\/restore/.exec(String(urlValue));
-          if (match && match[1]) await window.codemindRecordMissionEvent({ kind: 'checkpoint-restored', checkpointId: decodeURIComponent(match[1]) });
+        const restorePrefix = '/api/repository/checkpoints/';
+        const restoreSuffix = '/restore';
+        if (method === 'POST' && String(urlValue).startsWith(restorePrefix) && String(urlValue).endsWith(restoreSuffix) && response.status === 200) {
+          const checkpointId = String(urlValue).slice(restorePrefix.length, -restoreSuffix.length);
+          if (checkpointId) await window.codemindRecordMissionEvent({ kind: 'checkpoint-restored', checkpointId: decodeURIComponent(checkpointId) });
         }
       }
 

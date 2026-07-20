@@ -35,9 +35,7 @@ export function parseMissionExportBundle(
 ): MissionExportBundle {
   const byteLength = Buffer.byteLength(typeof raw === 'string' ? raw : JSON.stringify(raw), 'utf8')
   if (byteLength > MAX_MISSION_IMPORT_BYTES) {
-    throw new MissionValidationError(
-      `Mission import exceeds ${MAX_MISSION_IMPORT_BYTES} bytes`,
-    )
+    throw new MissionValidationError(`Mission import exceeds ${MAX_MISSION_IMPORT_BYTES} bytes`)
   }
 
   let parsed: unknown = raw
@@ -61,7 +59,8 @@ export function parseMissionExportBundle(
   }
   const mission = migrateMissionRecord(record['mission'])
   const eventsRaw = record['events']
-  if (!Array.isArray(eventsRaw)) throw new MissionValidationError('Mission bundle events must be an array')
+  if (!Array.isArray(eventsRaw))
+    throw new MissionValidationError('Mission bundle events must be an array')
   if (eventsRaw.length > MAX_MISSION_IMPORT_EVENTS) {
     throw new MissionValidationError(
       `Mission bundle events must not exceed ${MAX_MISSION_IMPORT_EVENTS} entries`,
@@ -88,7 +87,9 @@ export function parseMissionExportBundle(
       type: event['type'],
       timestamp: event['timestamp'],
       summary: event['summary'],
-      ...(typeof event['payload'] === 'object' && event['payload'] !== null && !Array.isArray(event['payload'])
+      ...(typeof event['payload'] === 'object' &&
+      event['payload'] !== null &&
+      !Array.isArray(event['payload'])
         ? { payload: event['payload'] as Record<string, unknown> }
         : {}),
     }

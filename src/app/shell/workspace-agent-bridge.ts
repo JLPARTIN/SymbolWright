@@ -62,6 +62,13 @@ export function buildWorkspaceAgentBridgeScript(): string {
       navigateTo('agent');
     })();
 
+    window.codemindGetScratchMissionState = function () {
+      const raw = localStorage.getItem('codemind.workspace.session.v1');
+      if (!raw) return {};
+      try { return JSON.parse(raw); }
+      catch (_) { return {}; }
+    };
+
     ${buildRepositoryMissionBridgeScript()}
   `
 }

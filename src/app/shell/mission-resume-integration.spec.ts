@@ -27,13 +27,20 @@ describe('end-to-end mission restart persistence', () => {
 
     const first = new MissionService({ workspaceRoot: root, generateId: () => ID })
     const mission = await first.create({
-      name: 'Resume proof', objective: 'Persist all linked state', workspaceKind: 'repository',
-      repositoryPath: '.', runtimeMode: 'APPROVED_EXECUTION', labels: [],
+      name: 'Resume proof',
+      objective: 'Persist all linked state',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'APPROVED_EXECUTION',
+      labels: [],
     })
     first.recordAgentUserMessage(mission.id, 'Edit a.txt', 'APPROVED_EXECUTION', 'openai', 'fake')
     first.recordAgentResult(
       mission.id,
-      [{ role: 'user', content: 'Edit a.txt' }, { role: 'assistant', content: 'Edited' }],
+      [
+        { role: 'user', content: 'Edit a.txt' },
+        { role: 'assistant', content: 'Edited' },
+      ],
       'Edited',
       'completed',
     )
@@ -45,8 +52,13 @@ describe('end-to-end mission restart persistence', () => {
       paths: ['a.txt'],
     })
     first.recordValidation(mission.id, {
-      id: 'validation-resume', command: 'npm test', startedAt: '2026-07-20T00:00:00.000Z',
-      completedAt: '2026-07-20T00:01:00.000Z', exitCode: 0, status: 'passed', summary: 'Tests passed',
+      id: 'validation-resume',
+      command: 'npm test',
+      startedAt: '2026-07-20T00:00:00.000Z',
+      completedAt: '2026-07-20T00:01:00.000Z',
+      exitCode: 0,
+      status: 'passed',
+      summary: 'Tests passed',
     })
 
     const second = new MissionService({ workspaceRoot: root })

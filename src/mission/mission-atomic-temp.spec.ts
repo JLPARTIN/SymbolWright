@@ -9,12 +9,35 @@ import type { CodeMindMission } from './mission-types.js'
 const ID = 'mission_11111111-1111-4111-8111-111111111111'
 function value(): CodeMindMission {
   return {
-    schemaVersion: 1, revision: 1, id: ID, name: 'Atomic', objective: 'Recover temp', status: 'ACTIVE',
-    createdAt: '2026-07-20T00:00:00.000Z', updatedAt: '2026-07-20T00:00:00.000Z', lastOpenedAt: '2026-07-20T00:00:00.000Z',
-    repository: { rootPath: '.', modifiedPaths: [] }, agent: { runtimeMode: 'READ_ONLY', messages: [] },
+    schemaVersion: 1,
+    revision: 1,
+    id: ID,
+    name: 'Atomic',
+    objective: 'Recover temp',
+    status: 'ACTIVE',
+    createdAt: '2026-07-20T00:00:00.000Z',
+    updatedAt: '2026-07-20T00:00:00.000Z',
+    lastOpenedAt: '2026-07-20T00:00:00.000Z',
+    repository: { rootPath: '.', modifiedPaths: [] },
+    agent: { runtimeMode: 'READ_ONLY', messages: [] },
     workspace: { kind: 'repository', openFiles: [], scratchAttached: false },
-    evidence: { toolCalls: [], validationRuns: [], webAccesses: [], mcpCalls: [], subagentRuns: [], skillRuns: [] },
-    references: { checkpointIds: [], checkpointLinks: [], memoryEntryIds: [], memoryLinks: [], commitShas: [], pullRequestUrls: [] }, labels: [],
+    evidence: {
+      toolCalls: [],
+      validationRuns: [],
+      webAccesses: [],
+      mcpCalls: [],
+      subagentRuns: [],
+      skillRuns: [],
+    },
+    references: {
+      checkpointIds: [],
+      checkpointLinks: [],
+      memoryEntryIds: [],
+      memoryLinks: [],
+      commitShas: [],
+      pullRequestUrls: [],
+    },
+    labels: [],
   }
 }
 

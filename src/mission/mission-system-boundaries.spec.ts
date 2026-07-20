@@ -5,8 +5,12 @@ import type { CodeMindMission } from './mission-types.js'
 describe('mission subsystem boundaries', () => {
   it('stores checkpoint and memory references instead of duplicate stores', () => {
     const references: CodeMindMission['references'] = {
-      checkpointIds: ['checkpoint-1'], checkpointLinks: [],
-      memoryEntryIds: ['memory-1'], memoryLinks: [], commitShas: [], pullRequestUrls: [],
+      checkpointIds: ['checkpoint-1'],
+      checkpointLinks: [],
+      memoryEntryIds: ['memory-1'],
+      memoryLinks: [],
+      commitShas: [],
+      pullRequestUrls: [],
     }
     expect(references).not.toHaveProperty('checkpointContents')
     expect(references).not.toHaveProperty('memoryDatabase')

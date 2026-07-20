@@ -18,13 +18,24 @@ describe('mission validation evidence', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const mission = await service.create({
-      name: 'Validation', objective: 'Evidence', workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Validation',
+      objective: 'Evidence',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     const output = 'test output'
     service.recordValidation(mission.id, {
-      id: 'validation-1', command: 'npm test', startedAt: '2026-07-20T00:00:00.000Z',
-      completedAt: '2026-07-20T00:01:00.000Z', exitCode: 0, status: 'passed', summary: 'Tests passed',
-      outputExcerpt: output, outputHash: sha256Text(output),
+      id: 'validation-1',
+      command: 'npm test',
+      startedAt: '2026-07-20T00:00:00.000Z',
+      completedAt: '2026-07-20T00:01:00.000Z',
+      exitCode: 0,
+      status: 'passed',
+      summary: 'Tests passed',
+      outputExcerpt: output,
+      outputHash: sha256Text(output),
     })
     const evidence = service.get(mission.id).evidence.validationRuns[0]
     expect(evidence?.status).toBe('passed')

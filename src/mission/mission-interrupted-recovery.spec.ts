@@ -16,15 +16,22 @@ describe('mission interrupted operation recovery', () => {
     roots.push(root)
     const service = new MissionService({ workspaceRoot: root, generateId: () => ID })
     const created = await service.create({
-      name: 'Interrupted', objective: 'Recover', workspaceKind: 'repository',
-      repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Interrupted',
+      objective: 'Recover',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     service.appendEvent(created.id, 'validation.started', 'Tests started', {
-      operationId: 'validation-1', validationId: 'validation-1',
+      operationId: 'validation-1',
+      validationId: 'validation-1',
     })
     const current = service.get(created.id)
     const paused = service.pause(created.id, current.revision)
     service.resume(created.id, paused.revision)
-    expect(service.readEvents(created.id).some((event) => event.type === 'validation.interrupted')).toBe(true)
+    expect(
+      service.readEvents(created.id).some((event) => event.type === 'validation.interrupted'),
+    ).toBe(true)
   })
 })

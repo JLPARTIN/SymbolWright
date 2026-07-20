@@ -20,7 +20,14 @@ describe('checkpoint mission linkage', () => {
         policy: createRuntimePolicyForMode('APPROVED_EXECUTION'),
       },
       'edit_file',
-      [{ targetPath: 'a.txt', resolvedPath: join(root, 'a.txt'), existedBefore: false, originalContent: null }],
+      [
+        {
+          targetPath: 'a.txt',
+          resolvedPath: join(root, 'a.txt'),
+          existedBefore: false,
+          originalContent: null,
+        },
+      ],
       'mission edit',
     )
     expect(metadata?.sessionId).toBe('mission_11111111-1111-4111-8111-111111111111')

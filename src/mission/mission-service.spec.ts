@@ -81,7 +81,13 @@ describe('MissionService', () => {
 
   it('records conversation, files, evidence, commits, PRs, checkpoints, and memory references', async () => {
     const created = await create()
-    service.recordAgentUserMessage(created.id, 'Fix it', 'APPROVED_EXECUTION', 'anthropic', 'claude-test')
+    service.recordAgentUserMessage(
+      created.id,
+      'Fix it',
+      'APPROVED_EXECUTION',
+      'anthropic',
+      'claude-test',
+    )
     service.recordToolStarted(created.id, 'tool-1', 'memory_store')
     service.recordToolCompleted(
       created.id,
@@ -93,17 +99,28 @@ describe('MissionService', () => {
     )
     service.recordAgentResult(
       created.id,
-      [{ role: 'user', content: 'Fix it' }, { role: 'assistant', content: 'Done' }],
+      [
+        { role: 'user', content: 'Fix it' },
+        { role: 'assistant', content: 'Done' },
+      ],
       'Done',
       'completed',
     )
     service.recordFileOpened(created.id, 'a.txt', 'hash-1')
     service.recordFileSaved(created.id, 'a.txt', 'hash-2', {
-      checkpointId: 'checkpoint-1', createdAt: '2026-07-20T12:00:00.000Z', paths: ['a.txt'], label: 'Before fix',
+      checkpointId: 'checkpoint-1',
+      createdAt: '2026-07-20T12:00:00.000Z',
+      paths: ['a.txt'],
+      label: 'Before fix',
     })
     service.recordValidation(created.id, {
-      id: 'validation-1', command: 'npm test', startedAt: '2026-07-20T12:00:00.000Z',
-      completedAt: '2026-07-20T12:01:00.000Z', exitCode: 0, status: 'passed', summary: 'Tests passed',
+      id: 'validation-1',
+      command: 'npm test',
+      startedAt: '2026-07-20T12:00:00.000Z',
+      completedAt: '2026-07-20T12:01:00.000Z',
+      exitCode: 0,
+      status: 'passed',
+      summary: 'Tests passed',
     })
     service.recordCommit(created.id, 'abc123', 'Commit created')
     service.recordPullRequest(created.id, 'https://github.com/example/repo/pull/1')

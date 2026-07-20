@@ -17,10 +17,17 @@ describe('mission checkpoint labels', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const mission = await service.create({
-      name: 'Labels', objective: 'Name checkpoint', workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Labels',
+      objective: 'Name checkpoint',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     service.attachCheckpoint(mission.id, {
-      checkpointId: 'checkpoint-1', createdAt: '2026-07-20T00:00:00.000Z', paths: ['a.ts'],
+      checkpointId: 'checkpoint-1',
+      createdAt: '2026-07-20T00:00:00.000Z',
+      paths: ['a.ts'],
     })
     const labeled = service.labelCheckpoint(mission.id, 'checkpoint-1', 'Before refactor')
     expect(labeled.references.checkpointLinks[0]?.label).toBe('Before refactor')

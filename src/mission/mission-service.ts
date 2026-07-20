@@ -5,10 +5,7 @@ import type { ProviderMessage } from '../provider/provider.types.js'
 import { runGitCommand } from '../runtime/git/git-command-runner.js'
 import type { CodemindRuntimeMode } from '../runtime/types.js'
 import { createMissionEvent, recoverInterruptedMissionEvents } from './mission-events.js'
-import {
-  createMissionExportBundle,
-  parseMissionExportBundle,
-} from './mission-export.js'
+import { createMissionExportBundle, parseMissionExportBundle } from './mission-export.js'
 import { generateMissionId } from './mission-id.js'
 import { redactMissionText, sha256Text } from './mission-redaction.js'
 import { MissionStore } from './mission-store.js'
@@ -109,7 +106,9 @@ export class MissionService {
           : { repositoryName: repository.repositoryName }),
         ...(repository.remoteUrl === undefined ? {} : { remoteUrl: repository.remoteUrl }),
         ...(repository.branch === undefined ? {} : { branch: repository.branch }),
-        ...(repository.headSha === undefined ? {} : { baseSha: repository.headSha, headSha: repository.headSha }),
+        ...(repository.headSha === undefined
+          ? {}
+          : { baseSha: repository.headSha, headSha: repository.headSha }),
         modifiedPaths: repository.modifiedPaths,
       },
       agent: {
@@ -145,12 +144,10 @@ export class MissionService {
       ...(input.notes === undefined ? {} : { notes: input.notes }),
     }
     this.store.createMission(mission)
-    this.appendEvent(
-      mission.id,
-      'mission.created',
-      `Mission created: ${mission.name}`,
-      { workspaceKind: mission.workspace.kind, repositoryRoot: mission.repository.rootPath },
-    )
+    this.appendEvent(mission.id, 'mission.created', `Mission created: ${mission.name}`, {
+      workspaceKind: mission.workspace.kind,
+      repositoryRoot: mission.repository.rootPath,
+    })
     return mission
   }
 
@@ -160,7 +157,9 @@ export class MissionService {
     return mission
   }
 
-  public list(options: { readonly offset?: number; readonly limit?: number } = {}): MissionListResult {
+  public list(
+    options: { readonly offset?: number; readonly limit?: number } = {},
+  ): MissionListResult {
     return this.store.listMissions(options)
   }
 
@@ -169,7 +168,9 @@ export class MissionService {
       const repositoryPatch = input.repository
       const repository = {
         ...mission.repository,
-        ...(repositoryPatch?.rootPath === undefined ? {} : { rootPath: this.resolveRepositoryRoot(repositoryPatch.rootPath) }),
+        ...(repositoryPatch?.rootPath === undefined
+          ? {}
+          : { rootPath: this.resolveRepositoryRoot(repositoryPatch.rootPath) }),
         ...(repositoryPatch?.repositoryName === undefined
           ? {}
           : repositoryPatch.repositoryName === null
@@ -286,11 +287,23 @@ export class MissionService {
   }
 
   public complete(missionId: string, revision: number): CodeMindMission {
-    return this.transition(missionId, revision, 'COMPLETED', 'mission.completed', 'Mission completed.')
+    return this.transition(
+      missionId,
+      revision,
+      'COMPLETED',
+      'mission.completed',
+      'Mission completed.',
+    )
   }
 
   public abandon(missionId: string, revision: number): CodeMindMission {
-    return this.transition(missionId, revision, 'ABANDONED', 'mission.abandoned', 'Mission abandoned.')
+    return this.transition(
+      missionId,
+      revision,
+      'ABANDONED',
+      'mission.abandoned',
+      'Mission abandoned.',
+    )
   }
 
   public fail(missionId: string, revision: number, summary: string): CodeMindMission {
@@ -298,7 +311,8 @@ export class MissionService {
   }
 
   public delete(missionId: string, revision: number, confirm: boolean): void {
-    if (!confirm) throw new MissionStateConflictError('confirm: true is required to delete a mission')
+    if (!confirm)
+      throw new MissionStateConflictError('confirm: true is required to delete a mission')
     const mission = this.get(missionId)
     if (mission.revision !== revision) throw new MissionRevisionConflictError(mission)
     this.store.deleteMission(missionId)
@@ -311,13 +325,16 @@ export class MissionService {
     payload?: unknown,
   ): MissionEvent {
     this.get(missionId)
-    const event = createMissionEvent({
-      missionId,
-      type,
-      summary,
-      ...(payload === undefined ? {} : { payload }),
-      timestamp: this.now().toISOString(),
-    }, this.env)
+    const event = createMissionEvent(
+      {
+        missionId,
+        type,
+        summary,
+        ...(payload === undefined ? {} : { payload }),
+        timestamp: this.now().toISOString(),
+      },
+      this.env,
+    )
     this.store.appendEvent(event)
     return event
   }
@@ -341,7 +358,10 @@ export class MissionService {
         runtimeMode,
         activeProviderId: providerId,
         ...(model === undefined ? {} : { model }),
-        messages: [...current.agent.messages, { role: 'user', content: redactMissionText(message, this.env, 64_000) }],
+        messages: [
+          ...current.agent.messages,
+          { role: 'user', content: redactMissionText(message, this.env, 64_000) },
+        ],
       },
     }))
     this.appendEvent(missionId, 'agent.message.user', 'User message recorded.', {
@@ -362,7 +382,10 @@ export class MissionService {
         ...current.agent,
         messages:
           finalMessages === undefined
-            ? [...current.agent.messages, { role: 'assistant', content: redactMissionText(finalText, this.env, 64_000) }]
+            ? [
+                ...current.agent.messages,
+                { role: 'assistant', content: redactMissionText(finalText, this.env, 64_000) },
+              ]
             : finalMessages,
       },
     }))
@@ -580,18 +603,19 @@ export class MissionService {
         ],
       },
     }))
-    this.appendEvent(missionId, 'checkpoint.created', `Checkpoint ${reference.checkpointId} linked.`, {
-      checkpointId: reference.checkpointId,
-      paths: reference.paths,
-      ...(reference.label === undefined ? {} : { label: reference.label }),
-    })
+    this.appendEvent(
+      missionId,
+      'checkpoint.created',
+      `Checkpoint ${reference.checkpointId} linked.`,
+      {
+        checkpointId: reference.checkpointId,
+        paths: reference.paths,
+        ...(reference.label === undefined ? {} : { label: reference.label }),
+      },
+    )
   }
 
-  public labelCheckpoint(
-    missionId: string,
-    checkpointId: string,
-    label: string,
-  ): CodeMindMission {
+  public labelCheckpoint(missionId: string, checkpointId: string, label: string): CodeMindMission {
     return this.updateLatest(missionId, (mission) => ({
       ...mission,
       references: {
@@ -609,10 +633,7 @@ export class MissionService {
     })
   }
 
-  public recordValidation(
-    missionId: string,
-    evidence: MissionValidationEvidence,
-  ): void {
+  public recordValidation(missionId: string, evidence: MissionValidationEvidence): void {
     this.updateLatest(missionId, (mission) => ({
       ...mission,
       evidence: {
@@ -623,13 +644,17 @@ export class MissionService {
         ],
       },
     }))
-    const terminal = evidence.status === 'passed' ? 'completed' : evidence.status
-    this.appendEvent(
-      missionId,
-      `validation.${terminal}`,
-      evidence.summary,
-      { operationId: evidence.id, validationId: evidence.id, ...evidence },
-    )
+    const terminal =
+      evidence.status === 'running'
+        ? 'started'
+        : evidence.status === 'passed'
+          ? 'completed'
+          : evidence.status
+    this.appendEvent(missionId, `validation.${terminal}`, evidence.summary, {
+      operationId: evidence.id,
+      validationId: evidence.id,
+      ...evidence,
+    })
   }
 
   public attachScratchWorkspace(
@@ -646,7 +671,11 @@ export class MissionService {
         scratchState,
       },
     }))
-    this.appendEvent(missionId, 'workspace.scratch.attached', 'Scratch Workspace attached to mission.')
+    this.appendEvent(
+      missionId,
+      'workspace.scratch.attached',
+      'Scratch Workspace attached to mission.',
+    )
     return updated
   }
 
@@ -681,13 +710,16 @@ export class MissionService {
     this.store.createMission(imported)
     for (const event of bundle.events) {
       this.store.appendEvent(
-        createMissionEvent({
-          missionId: newId,
-          type: event.type,
-          timestamp: event.timestamp,
-          summary: event.summary,
-          ...(event.payload === undefined ? {} : { payload: event.payload }),
-        }, this.env),
+        createMissionEvent(
+          {
+            missionId: newId,
+            type: event.type,
+            timestamp: event.timestamp,
+            summary: event.summary,
+            ...(event.payload === undefined ? {} : { payload: event.payload }),
+          },
+          this.env,
+        ),
       )
     }
     this.appendEvent(newId, 'mission.imported', `Mission imported from ${bundle.mission.id}.`, {
@@ -720,7 +752,12 @@ export class MissionService {
     const branchExists =
       mission.repository.branch === undefined
         ? undefined
-        : (await runGitCommand(['show-ref', '--verify', '--quiet', `refs/heads/${mission.repository.branch}`], root)).exitCode === 0
+        : (
+            await runGitCommand(
+              ['show-ref', '--verify', '--quiet', `refs/heads/${mission.repository.branch}`],
+              root,
+            )
+          ).exitCode === 0
     const warnings: string[] = []
     if (mission.repository.branch !== undefined && state.branch !== mission.repository.branch) {
       warnings.push(
@@ -795,7 +832,10 @@ export class MissionService {
 
   private resolveRepositoryRoot(requestedPath: string): string {
     const resolved = path.resolve(this.workspaceRoot, requestedPath)
-    if (resolved !== this.workspaceRoot && !resolved.startsWith(`${this.workspaceRoot}${path.sep}`)) {
+    if (
+      resolved !== this.workspaceRoot &&
+      !resolved.startsWith(`${this.workspaceRoot}${path.sep}`)
+    ) {
       throw new MissionStateConflictError('Repository path must stay inside the CodeMind workspace')
     }
     return resolved
@@ -844,9 +884,9 @@ export class MissionService {
     if (toolName !== 'memory_store' && toolName !== 'memory_recall') return
     const timestamp = this.now().toISOString()
     const storedMatch = /Memory stored successfully with ID:\s*([^\s]+)/i.exec(output)
-    const recalledIds = [...output.matchAll(/\[(?:EPISODIC|LEXICAL|GRAPH):([^\]]+)\]/gi)].map(
-      (match) => match[1],
-    ).filter((value): value is string => value !== undefined)
+    const recalledIds = [...output.matchAll(/\[(?:EPISODIC|LEXICAL|GRAPH):([^\]]+)\]/gi)]
+      .map((match) => match[1])
+      .filter((value): value is string => value !== undefined)
     const links: MissionMemoryReference[] = []
     if (storedMatch?.[1] !== undefined) {
       links.push({

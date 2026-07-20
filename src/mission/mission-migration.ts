@@ -1,8 +1,5 @@
 import { assertCodeMindMission, MissionValidationError } from './mission-validation.js'
-import {
-  CURRENT_MISSION_SCHEMA_VERSION,
-  type CodeMindMission,
-} from './mission-types.js'
+import { CURRENT_MISSION_SCHEMA_VERSION, type CodeMindMission } from './mission-types.js'
 
 function asRecord(value: unknown): Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {

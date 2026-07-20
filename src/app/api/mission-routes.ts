@@ -8,9 +8,9 @@ import {
 import {
   MissionNotFoundError,
   MissionRevisionConflictError,
-  MissionService,
   MissionStateConflictError,
 } from '../../mission/mission-service.js'
+import type { MissionService } from '../../mission/mission-service.js'
 import type {
   MissionCheckpointReference,
   MissionValidationEvidence,
@@ -122,10 +122,7 @@ function parseCheckpointReference(raw: unknown): MissionCheckpointReference | un
 function parseValidationEvidence(raw: unknown): MissionValidationEvidence {
   const record = asRecord(raw)
   const status = record['status']
-  if (
-    typeof status !== 'string' ||
-    !(VALIDATION_STATUSES as readonly string[]).includes(status)
-  ) {
+  if (typeof status !== 'string' || !(VALIDATION_STATUSES as readonly string[]).includes(status)) {
     throw new MissionValidationError('validation.status is invalid')
   }
   const exitCode = record['exitCode']
@@ -196,17 +193,14 @@ async function handleRecordAction(
   if (kind === 'branch-changed') {
     const branch = requiredString(record, 'branch')
     const headSha = optionalString(record, 'headSha')
-    context.service.recordBranchChanged(
-      missionId,
-      branch,
-      headSha,
-    )
+    context.service.recordBranchChanged(missionId, branch, headSha)
     return
   }
   if (kind === 'commit-created') {
     const mission = context.service.get(missionId)
     const result = await runGitCommand(['rev-parse', 'HEAD'], mission.repository.rootPath)
-    if (result.exitCode !== 0) throw new MissionStateConflictError('Could not read the new commit SHA')
+    if (result.exitCode !== 0)
+      throw new MissionStateConflictError('Could not read the new commit SHA')
     context.service.recordCommit(
       missionId,
       result.stdout.trim(),
@@ -258,7 +252,8 @@ async function switchToRecordedBranch(
     ['show-ref', '--verify', '--quiet', `refs/heads/${recordedBranch}`],
     mission.repository.rootPath,
   )
-  if (exists.exitCode !== 0) throw new MissionStateConflictError('The recorded branch no longer exists')
+  if (exists.exitCode !== 0)
+    throw new MissionStateConflictError('The recorded branch no longer exists')
   const checkout = await runGitCommand(['checkout', recordedBranch], mission.repository.rootPath)
   if (checkout.exitCode !== 0) {
     throw new MissionStateConflictError(checkout.stderr || 'Could not switch branches')
@@ -291,7 +286,9 @@ export async function handleMissionRoute(
         return true
       }
       if (req.method === 'POST') {
-        const mission = await context.service.create(parseCreateMissionInput(await readJsonBody(req)))
+        const mission = await context.service.create(
+          parseCreateMissionInput(await readJsonBody(req)),
+        )
         sendJson(res, 201, {
           mission,
           reconciliation: await context.service.reconcileRepository(mission.id),

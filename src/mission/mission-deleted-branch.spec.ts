@@ -25,13 +25,21 @@ describe('deleted mission branch', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const mission = await service.create({
-      name: 'Branch', objective: 'Do not recreate', workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Branch',
+      objective: 'Do not recreate',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     await runGitCommand(['checkout', 'master'], root)
     await runGitCommand(['branch', '-D', 'recorded'], root)
     const reconciliation = await service.reconcileRepository(mission.id)
     expect(reconciliation.branchExists).toBe(false)
     expect(reconciliation.warnings.join(' ')).toContain('no longer exists')
-    expect((await runGitCommand(['show-ref', '--verify', '--quiet', 'refs/heads/recorded'], root)).exitCode).not.toBe(0)
+    expect(
+      (await runGitCommand(['show-ref', '--verify', '--quiet', 'refs/heads/recorded'], root))
+        .exitCode,
+    ).not.toBe(0)
   })
 })

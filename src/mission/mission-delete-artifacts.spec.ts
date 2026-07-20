@@ -22,7 +22,12 @@ describe('mission deletion boundary', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const mission = await service.create({
-      name: 'Delete', objective: 'Mission only', workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Delete',
+      objective: 'Mission only',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     const missionDir = join(root, '.codemind', 'missions', mission.id)
     writeFileSync(join(missionDir, 'artifacts', 'export.json'), '{}')

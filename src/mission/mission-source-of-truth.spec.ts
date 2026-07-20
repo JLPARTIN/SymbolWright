@@ -5,7 +5,10 @@ import type { CodeMindMission } from './mission-types.js'
 describe('mission repository source of truth', () => {
   it('models open files with paths and hashes rather than full content', () => {
     const openFile: CodeMindMission['workspace']['openFiles'][number] = {
-      path: 'src/a.ts', openedAt: '2026-07-20T00:00:00.000Z', contentHash: 'abc', exists: true,
+      path: 'src/a.ts',
+      openedAt: '2026-07-20T00:00:00.000Z',
+      contentHash: 'abc',
+      exists: true,
     }
     expect(openFile).not.toHaveProperty('content')
   })

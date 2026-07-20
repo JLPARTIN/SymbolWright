@@ -17,7 +17,12 @@ describe('completed mission browsing', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const created = await service.create({
-      name: 'Complete', objective: 'Browse later', workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Complete',
+      objective: 'Browse later',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     const completed = service.complete(created.id, created.revision)
     expect(service.list().missions[0]?.status).toBe('COMPLETED')

@@ -17,7 +17,12 @@ describe('mission concurrent tab revisions', () => {
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
     })
     const loadedInTwoTabs = await service.create({
-      name: 'Revision', objective: 'No lost updates', workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Revision',
+      objective: 'No lost updates',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     service.patch(loadedInTwoTabs.id, { revision: loadedInTwoTabs.revision, notes: 'tab one' })
     try {

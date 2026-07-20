@@ -19,7 +19,12 @@ describe('mission import id conflicts', () => {
     let index = 0
     const service = new MissionService({ workspaceRoot: root, generateId: () => ids[index++]! })
     const original = await service.create({
-      name: 'Original', objective: 'Export', workspaceKind: 'repository', repositoryPath: '.', runtimeMode: 'READ_ONLY', labels: [],
+      name: 'Original',
+      objective: 'Export',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
     })
     const imported = service.import(service.export(original.id))
     expect(imported.id).toBe(ids[1])

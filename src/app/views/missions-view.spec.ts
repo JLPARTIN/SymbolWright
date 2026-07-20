@@ -26,7 +26,7 @@ describe('Missions view', () => {
     const script = buildMissionsViewClientScript()
     expect(script).toContain('appEscapeHtml(mission.name)')
     expect(script).toContain('appEscapeHtml(event.summary)')
-    expect(script).not.toContain("innerHTML = event.payload")
+    expect(script).not.toContain('innerHTML = event.payload')
   })
 
   it('contains narrow-layout-compatible class contracts', () => {
