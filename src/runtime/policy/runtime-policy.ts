@@ -226,7 +226,7 @@ export function assertNetworkAllowed(policy: RuntimePolicySnapshot): void {
  */
 export function assertReadOnlyNetworkAllowed(policy: RuntimePolicySnapshot): void {
   if (!policy.allowReadOnlyNetwork) {
-    throw new Error('Read-only network access is disabled by policy.')
+    throw new Error('Read-only network access is disabled by runtime policy.')
   }
 }
 
