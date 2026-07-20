@@ -11,12 +11,23 @@ import {
   MissionService,
   MissionStateConflictError,
 } from '../../mission/mission-service.js'
-import { MissionValidationError, parseCreateMissionInput, parsePatchMissionInput } from '../../mission/mission-validation.js'
+import type {
+  MissionCheckpointReference,
+  MissionValidationEvidence,
+} from '../../mission/mission-types.js'
+import {
+  MissionValidationError,
+  parseCreateMissionInput,
+  parsePatchMissionInput,
+} from '../../mission/mission-validation.js'
+import { runGitCommand } from '../../runtime/git/git-command-runner.js'
 
 const MAX_MISSION_REQUEST_BYTES = 4 * 1024 * 1024
+const VALIDATION_STATUSES = ['running', 'passed', 'failed', 'blocked', 'interrupted'] as const
 
 export interface MissionRouteContext {
   readonly service: MissionService
+  readonly cwd: string
 }
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
@@ -50,6 +61,29 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>
 }
 
+function requiredString(record: Record<string, unknown>, field: string): string {
+  const value = record[field]
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new MissionValidationError(`${field} must be a non-empty string`)
+  }
+  return value.trim()
+}
+
+function optionalString(record: Record<string, unknown>, field: string): string | undefined {
+  const value = record[field]
+  if (value === undefined) return undefined
+  if (typeof value !== 'string') throw new MissionValidationError(`${field} must be a string`)
+  return value.trim()
+}
+
+function stringArray(value: unknown, field: string): readonly string[] {
+  if (!Array.isArray(value)) throw new MissionValidationError(`${field} must be an array`)
+  return value.map((entry) => {
+    if (typeof entry !== 'string') throw new MissionValidationError(`${field} must contain strings`)
+    return entry
+  })
+}
+
 function parseRevision(record: Record<string, unknown>): number {
   const revision = record['revision']
   if (typeof revision !== 'number' || !Number.isInteger(revision) || revision < 1) {
@@ -68,10 +102,176 @@ function isMissionEventFilter(value: string | null): value is MissionEventFilter
   return value !== null && (MISSION_EVENT_FILTERS as readonly string[]).includes(value)
 }
 
-/**
- * Handles every `/api/missions` route. Returns true when the path belonged to
- * the mission subsystem, even when the specific resource was not found.
- */
+function parseCheckpointReference(raw: unknown): MissionCheckpointReference | undefined {
+  if (raw === undefined) return undefined
+  const record = asRecord(raw)
+  const checkpointId = requiredString(record, 'checkpointId')
+  const createdAt = requiredString(record, 'createdAt')
+  const paths = stringArray(record['paths'] ?? [], 'checkpoint.paths')
+  const triggeringToolCallId = optionalString(record, 'triggeringToolCallId')
+  const label = optionalString(record, 'label')
+  return {
+    checkpointId,
+    createdAt,
+    paths,
+    ...(triggeringToolCallId === undefined ? {} : { triggeringToolCallId }),
+    ...(label === undefined ? {} : { label }),
+  }
+}
+
+function parseValidationEvidence(raw: unknown): MissionValidationEvidence {
+  const record = asRecord(raw)
+  const status = record['status']
+  if (
+    typeof status !== 'string' ||
+    !(VALIDATION_STATUSES as readonly string[]).includes(status)
+  ) {
+    throw new MissionValidationError('validation.status is invalid')
+  }
+  const exitCode = record['exitCode']
+  if (exitCode !== undefined && (typeof exitCode !== 'number' || !Number.isInteger(exitCode))) {
+    throw new MissionValidationError('validation.exitCode must be an integer')
+  }
+  const completedAt = optionalString(record, 'completedAt')
+  const outputExcerpt = optionalString(record, 'outputExcerpt')
+  const outputHash = optionalString(record, 'outputHash')
+  return {
+    id: requiredString(record, 'id'),
+    command: requiredString(record, 'command'),
+    startedAt: requiredString(record, 'startedAt'),
+    ...(completedAt === undefined ? {} : { completedAt }),
+    ...(exitCode === undefined ? {} : { exitCode }),
+    status: status as MissionValidationEvidence['status'],
+    summary: requiredString(record, 'summary'),
+    ...(outputExcerpt === undefined ? {} : { outputExcerpt }),
+    ...(outputHash === undefined ? {} : { outputHash }),
+  }
+}
+
+async function handleRecordAction(
+  missionId: string,
+  record: Record<string, unknown>,
+  context: MissionRouteContext,
+): Promise<void> {
+  const kind = requiredString(record, 'kind')
+  if (kind === 'file-opened') {
+    context.service.recordFileOpened(
+      missionId,
+      requiredString(record, 'path'),
+      optionalString(record, 'contentHash'),
+    )
+    return
+  }
+  if (kind === 'file-saved') {
+    context.service.recordFileSaved(
+      missionId,
+      requiredString(record, 'path'),
+      requiredString(record, 'contentHash'),
+      parseCheckpointReference(record['checkpoint']),
+    )
+    return
+  }
+  if (kind === 'file-conflict') {
+    context.service.recordFileConflict(missionId, requiredString(record, 'path'))
+    return
+  }
+  if (kind === 'diff-viewed') {
+    context.service.recordDiffViewed(missionId, requiredString(record, 'path'))
+    return
+  }
+  if (kind === 'repository-state') {
+    const branch = optionalString(record, 'branch')
+    const headSha = optionalString(record, 'headSha')
+    const modifiedPaths =
+      record['modifiedPaths'] === undefined
+        ? undefined
+        : stringArray(record['modifiedPaths'], 'modifiedPaths')
+    context.service.recordRepositoryState(missionId, {
+      ...(branch === undefined ? {} : { branch }),
+      ...(headSha === undefined ? {} : { headSha }),
+      ...(modifiedPaths === undefined ? {} : { modifiedPaths }),
+    })
+    return
+  }
+  if (kind === 'branch-changed') {
+    const branch = requiredString(record, 'branch')
+    const headSha = optionalString(record, 'headSha')
+    context.service.recordBranchChanged(
+      missionId,
+      branch,
+      headSha,
+    )
+    return
+  }
+  if (kind === 'commit-created') {
+    const mission = context.service.get(missionId)
+    const result = await runGitCommand(['rev-parse', 'HEAD'], mission.repository.rootPath)
+    if (result.exitCode !== 0) throw new MissionStateConflictError('Could not read the new commit SHA')
+    context.service.recordCommit(
+      missionId,
+      result.stdout.trim(),
+      optionalString(record, 'summary') ?? 'Git commit created.',
+    )
+    return
+  }
+  if (kind === 'push-completed') {
+    context.service.recordPush(
+      missionId,
+      requiredString(record, 'branch'),
+      optionalString(record, 'remote') ?? 'origin',
+    )
+    return
+  }
+  if (kind === 'pr-created') {
+    context.service.recordPullRequest(missionId, requiredString(record, 'pullRequestUrl'))
+    return
+  }
+  if (kind === 'checkpoint-restored') {
+    context.service.recordCheckpointRestored(missionId, requiredString(record, 'checkpointId'))
+    return
+  }
+  if (kind === 'validation') {
+    context.service.recordValidation(missionId, parseValidationEvidence(record['validation']))
+    return
+  }
+  throw new MissionValidationError(`Unsupported mission record kind: ${kind}`)
+}
+
+async function switchToRecordedBranch(
+  missionId: string,
+  revision: number,
+  context: MissionRouteContext,
+): Promise<void> {
+  const mission = context.service.get(missionId)
+  if (mission.revision !== revision) throw new MissionRevisionConflictError(mission)
+  const recordedBranch = mission.repository.branch
+  if (recordedBranch === undefined) {
+    throw new MissionStateConflictError('Mission has no recorded branch')
+  }
+  const status = await runGitCommand(['status', '--porcelain=v1'], mission.repository.rootPath)
+  if (status.exitCode !== 0 || status.stdout.trim().length > 0) {
+    throw new MissionStateConflictError(
+      'Repository has uncommitted changes. Commit, stash, or discard them before switching branches.',
+    )
+  }
+  const exists = await runGitCommand(
+    ['show-ref', '--verify', '--quiet', `refs/heads/${recordedBranch}`],
+    mission.repository.rootPath,
+  )
+  if (exists.exitCode !== 0) throw new MissionStateConflictError('The recorded branch no longer exists')
+  const checkout = await runGitCommand(['checkout', recordedBranch], mission.repository.rootPath)
+  if (checkout.exitCode !== 0) {
+    throw new MissionStateConflictError(checkout.stderr || 'Could not switch branches')
+  }
+  const head = await runGitCommand(['rev-parse', 'HEAD'], mission.repository.rootPath)
+  context.service.recordBranchChanged(
+    missionId,
+    recordedBranch,
+    head.exitCode === 0 ? head.stdout.trim() : undefined,
+  )
+}
+
+/** Handles every authenticated `/api/missions` route. */
 export async function handleMissionRoute(
   req: IncomingMessage,
   res: ServerResponse,
@@ -132,7 +332,10 @@ export async function handleMissionRoute(
         return true
       }
       if (req.method === 'PATCH') {
-        const mission = context.service.patch(missionId, parsePatchMissionInput(await readJsonBody(req)))
+        const mission = context.service.patch(
+          missionId,
+          parsePatchMissionInput(await readJsonBody(req)),
+        )
         sendJson(res, 200, { mission })
         return true
       }
@@ -174,6 +377,16 @@ export async function handleMissionRoute(
       return true
     }
 
+    if (action === 'record') {
+      if (req.method !== 'POST') {
+        sendJson(res, 405, { error: 'method_not_allowed' })
+        return true
+      }
+      await handleRecordAction(missionId, asRecord(await readJsonBody(req)), context)
+      sendJson(res, 200, { mission: context.service.get(missionId) })
+      return true
+    }
+
     if (req.method !== 'POST') {
       sendJson(res, 405, { error: 'method_not_allowed' })
       return true
@@ -209,6 +422,24 @@ export async function handleMissionRoute(
       const scratchState = asRecord(record['scratchState'])
       sendJson(res, 200, {
         mission: context.service.attachScratchWorkspace(missionId, revision, scratchState),
+      })
+      return true
+    }
+    if (action === 'switch-recorded-branch') {
+      await switchToRecordedBranch(missionId, revision, context)
+      sendJson(res, 200, {
+        mission: context.service.get(missionId),
+        reconciliation: await context.service.reconcileRepository(missionId),
+      })
+      return true
+    }
+    if (action === 'checkpoint-label') {
+      sendJson(res, 200, {
+        mission: context.service.labelCheckpoint(
+          missionId,
+          requiredString(record, 'checkpointId'),
+          requiredString(record, 'label'),
+        ),
       })
       return true
     }
