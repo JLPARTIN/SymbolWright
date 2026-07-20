@@ -104,7 +104,8 @@ export function renderBrowserWorkspaceReadinessReport(
     `Entrypoint: ${report.contract.entrypoint}`,
     `Panels: ${report.contract.panels.join(', ')}`,
     `Supported clients: ${report.contract.supportedClients.join(', ')}`,
-    `Provider key boundary: ${report.contract.providerKeyStorage}`,
+    `Provider key boundary: ${report.contract.keyBoundary}`,
+    `Provider key storage: ${report.contract.providerKeyStorage}`,
   ]
 
   if (report.findings.length > 0) {

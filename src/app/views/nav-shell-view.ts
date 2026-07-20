@@ -5,6 +5,7 @@ export interface AppNavEntry {
 
 export const APP_NAV_ENTRIES: readonly AppNavEntry[] = [
   { id: 'dashboard', label: 'Dashboard' },
+  { id: 'missions', label: 'Missions' },
   { id: 'workspace', label: 'Workspace' },
   { id: 'repository', label: 'Repository' },
   { id: 'agent', label: 'Agent' },

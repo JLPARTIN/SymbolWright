@@ -1,6 +1,7 @@
 /** Every route id the unified app shell's nav can show. */
 export const APP_SHELL_ROUTE_IDS = [
   'dashboard',
+  'missions',
   'workspace',
   'agent',
   'tools',

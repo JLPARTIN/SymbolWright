@@ -1,3 +1,5 @@
+import { buildRepositoryMissionBridgeScript } from './repository-mission-bridge.js'
+
 /**
  * Bridges the Workspace view's "AI task" buttons to the embedded Agent
  * view in-page, replacing the old separate-page `<a href>` handoff
@@ -59,5 +61,14 @@ export function buildWorkspaceAgentBridgeScript(): string {
       appState.set({ pendingAgentDraft: { message: draft, agentMode: agentMode } });
       navigateTo('agent');
     })();
+
+    window.codemindGetScratchMissionState = function () {
+      const raw = localStorage.getItem('codemind.workspace.session.v1');
+      if (!raw) return {};
+      try { return JSON.parse(raw); }
+      catch (_) { return {}; }
+    };
+
+    ${buildRepositoryMissionBridgeScript()}
   `
 }

@@ -119,6 +119,7 @@ export interface ParsedAgentRequest {
   readonly model?: string
   readonly systemPrompt?: string
   readonly mode: CodemindRuntimeMode
+  readonly missionId?: string
   readonly message: string
   readonly priorMessages?: readonly ProviderMessage[]
   readonly maxIterations: number
@@ -156,6 +157,7 @@ export function parseAgentRequestBody(raw: unknown): ParsedAgentRequest {
 
   const model = body['model']
   const systemPrompt = body['systemPrompt']
+  const missionId = body['missionId']
   const temperature = body['temperature']
   const maxTokens = body['maxTokens']
   const maxIterationsRaw = body['maxIterations']
@@ -166,6 +168,14 @@ export function parseAgentRequestBody(raw: unknown): ParsedAgentRequest {
   }
   if (systemPrompt !== undefined && typeof systemPrompt !== 'string') {
     throw new ChatRequestValidationError('systemPrompt must be a string')
+  }
+  if (
+    missionId !== undefined &&
+    (typeof missionId !== 'string' || missionId.trim().length === 0 || missionId.length > 200)
+  ) {
+    throw new ChatRequestValidationError(
+      'missionId must be a non-empty string of at most 200 characters',
+    )
   }
   if (temperature !== undefined && typeof temperature !== 'number') {
     throw new ChatRequestValidationError('temperature must be a number')
@@ -191,6 +201,7 @@ export function parseAgentRequestBody(raw: unknown): ParsedAgentRequest {
     ...(typeof model === 'string' ? { model } : {}),
     ...(typeof systemPrompt === 'string' ? { systemPrompt } : {}),
     mode: isRuntimeMode(modeRaw) ? modeRaw : 'READ_ONLY',
+    ...(typeof missionId === 'string' ? { missionId: missionId.trim() } : {}),
     message,
     ...(priorMessages === undefined ? {} : { priorMessages }),
     maxIterations: typeof maxIterationsRaw === 'number' ? maxIterationsRaw : DEFAULT_MAX_ITERATIONS,

@@ -7,6 +7,7 @@ describe('renderAppShellHtml', () => {
     const html = renderAppShellHtml()
     for (const viewId of [
       'dashboard',
+      'missions',
       'workspace',
       'agent',
       'tools',
@@ -19,10 +20,11 @@ describe('renderAppShellHtml', () => {
     }
   })
 
-  it('renders a persistent nav with a data-nav entry per primary view, including the real Repository tab', () => {
+  it('renders a persistent nav with a data-nav entry per primary view, including Missions and the real Repository tab', () => {
     const html = renderAppShellHtml()
     for (const viewId of [
       'dashboard',
+      'missions',
       'workspace',
       'repository',
       'agent',
@@ -53,11 +55,11 @@ describe('renderAppShellHtml', () => {
     expect(bootIndex).toBeGreaterThan(routerScriptIndex)
   })
 
-  it('wraps the Workspace and Agent client scripts in their own IIFE so their top-level const state/el declarations cannot collide', () => {
+  it('wraps the Workspace, Agent, and Missions client scripts in their own IIFE so their top-level declarations cannot collide', () => {
     const html = renderAppShellHtml()
     const iifeOpenCount = (html.match(/<script>\(function \(\) \{/g) ?? []).length
-    // One IIFE for the workspace client script, one for the agent (chat) client script.
-    expect(iifeOpenCount).toBe(2)
+    // One IIFE each for workspace, agent/chat, and missions client scripts.
+    expect(iifeOpenCount).toBe(3)
   })
 
   it('serves a single application shell document', () => {

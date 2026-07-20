@@ -24,6 +24,9 @@ export function buildClientStateScript(): string {
       providerId: null,
       providerActive: false,
       pendingAgentDraft: null,
+      activeMissionId: (typeof localStorage !== 'undefined' && localStorage.getItem('codemind_active_mission_id')) || null,
+      activeMission: null,
+      activeMissionReadOnly: false,
       listeners: new Set(),
       subscribe(fn) {
         appState.listeners.add(fn);

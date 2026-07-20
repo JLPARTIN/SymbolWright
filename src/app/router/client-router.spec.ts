@@ -7,9 +7,10 @@ import {
 } from './client-router.js'
 
 describe('buildClientRouterScript', () => {
-  it('lists every app shell view id including the repository placeholder', () => {
+  it('lists every app shell view id including Missions and the real Repository tab', () => {
     expect(APP_SHELL_ROUTE_IDS).toEqual([
       'dashboard',
+      'missions',
       'workspace',
       'agent',
       'tools',
