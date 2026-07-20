@@ -21,6 +21,13 @@ export function buildRepositoryMissionBridgeScript(): string {
         catch (_) { return null; }
       }
 
+      function rememberEditorFile(path, contentHash) {
+        const editor = document.getElementById('repo-editor');
+        if (!editor || !path) return;
+        editor.dataset.missionPath = path;
+        editor.dataset.missionBaseHash = contentHash || '';
+      }
+
       async function latestMissionCheckpoint(activeMissionId) {
         const key = localStorage.getItem('codemind_api_key') || '';
         const list = await repositoryFetch('/api/checkpoints?session=' + encodeURIComponent(activeMissionId), {
@@ -45,19 +52,23 @@ export function buildRepositoryMissionBridgeScript(): string {
 
       async function recordRepositoryResponse(urlValue, method, requestBody, response) {
         const activeMissionId = missionId();
-        if (!activeMissionId || typeof window.codemindRecordMissionEvent !== 'function') return;
         let body;
         try { body = await response.clone().json(); } catch (_) { return; }
         const path = pathFromUrl(urlValue) || (requestBody && requestBody.path);
 
         if (method === 'GET' && String(urlValue).startsWith('/api/repository/file') && response.status === 200 && path) {
-          await window.codemindRecordMissionEvent({ kind: 'file-opened', path: path, contentHash: body.contentHash });
+          rememberEditorFile(path, body.contentHash);
+          if (activeMissionId && typeof window.codemindRecordMissionEvent === 'function') {
+            await window.codemindRecordMissionEvent({ kind: 'file-opened', path: path, contentHash: body.contentHash });
+          }
           return;
         }
+        if (!activeMissionId || typeof window.codemindRecordMissionEvent !== 'function') return;
         if (method === 'PUT' && String(urlValue).startsWith('/api/repository/file')) {
           if (response.status === 409 && path) {
             await window.codemindRecordMissionEvent({ kind: 'file-conflict', path: path });
           } else if (response.status === 200 && path) {
+            rememberEditorFile(path, body.contentHash);
             const checkpoint = await latestMissionCheckpoint(activeMissionId);
             await window.codemindRecordMissionEvent({
               kind: 'file-saved', path: path, contentHash: body.contentHash, checkpoint: checkpoint || undefined,
@@ -123,6 +134,74 @@ export function buildRepositoryMissionBridgeScript(): string {
         });
       };
 
+      async function restoreMissionFile(path) {
+        const key = localStorage.getItem('codemind_api_key') || '';
+        const response = await window.fetch('/api/repository/file?path=' + encodeURIComponent(path), {
+          headers: { authorization: 'Bearer ' + key },
+        });
+        if (!response.ok) {
+          const pathEl = document.getElementById('repo-file-path');
+          if (pathEl) pathEl.textContent = 'Mission file is missing or unavailable: ' + path;
+          return;
+        }
+        const body = await response.json();
+        const editor = document.getElementById('repo-editor');
+        const pathEl = document.getElementById('repo-file-path');
+        const saveButton = document.getElementById('repo-save-btn');
+        if (editor) {
+          editor.value = body.content;
+          editor.disabled = false;
+          rememberEditorFile(path, body.contentHash);
+        }
+        if (pathEl) pathEl.textContent = path;
+        if (saveButton) saveButton.disabled = false;
+      }
+
+      const saveButton = document.getElementById('repo-save-btn');
+      if (saveButton) {
+        saveButton.addEventListener('click', async function (event) {
+          const editor = document.getElementById('repo-editor');
+          if (!editor || !editor.dataset.missionPath || !missionId()) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          const status = document.getElementById('repo-save-status');
+          if (status) status.textContent = 'Saving...';
+          const key = localStorage.getItem('codemind_api_key') || '';
+          const save = async function (baseContentHash) {
+            const body = {
+              path: editor.dataset.missionPath,
+              content: editor.value,
+              sessionId: missionId(),
+            };
+            if (baseContentHash !== null) body.baseContentHash = baseContentHash;
+            return window.fetch('/api/repository/file', {
+              method: 'PUT',
+              headers: { authorization: 'Bearer ' + key, 'content-type': 'application/json' },
+              body: JSON.stringify(body),
+            });
+          };
+          let response = await save(editor.dataset.missionBaseHash || '');
+          if (response.status === 409) {
+            const conflict = await response.json();
+            const overwrite = window.confirm(editor.dataset.missionPath + ' changed on disk. OK overwrites the disk version; Cancel reloads it.');
+            if (!overwrite) {
+              editor.value = conflict.currentContent || '';
+              editor.dataset.missionBaseHash = conflict.currentContentHash || '';
+              if (status) status.textContent = 'Reloaded current disk content.';
+              return;
+            }
+            response = await save(null);
+          }
+          const body = await response.json().catch(function () { return {}; });
+          if (!response.ok) {
+            if (status) status.textContent = 'Save failed: ' + (body.error || response.status);
+            return;
+          }
+          editor.dataset.missionBaseHash = body.contentHash || '';
+          if (status) status.textContent = 'Saved at ' + new Date().toLocaleTimeString();
+        }, true);
+      }
+
       window.codemindApplyMissionToRepository = function (mission, reconciliation) {
         const section = document.querySelector('[data-view="repository"]');
         if (!section) return;
@@ -138,8 +217,8 @@ export function buildRepositoryMissionBridgeScript(): string {
           '<span>Branch: ' + appEscapeHtml(mission.repository.branch || '(unavailable)') + '</span>' +
           '<span>Status: ' + appEscapeHtml(mission.status) + '</span>' +
           (reconciliation && reconciliation.hasDrift ? '<span class="warn">Repository drift detected — reconcile in Missions before assuming state matches.</span>' : '');
-        if (mission.workspace.activeFilePath && typeof window.codemindOpenRepositoryFile === 'function' && (!reconciliation || reconciliation.repositoryAvailable)) {
-          void window.codemindOpenRepositoryFile(mission.workspace.activeFilePath);
+        if (mission.workspace.activeFilePath && (!reconciliation || reconciliation.repositoryAvailable)) {
+          void restoreMissionFile(mission.workspace.activeFilePath);
         }
       };
     })();
