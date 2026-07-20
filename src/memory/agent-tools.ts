@@ -24,7 +24,7 @@ export class AgentMemoryTools {
     return results
       .map(
         (result) =>
-          `[${result.source.toUpperCase()}] (Score: ${result.score.toFixed(2)})\n${result.content}`,
+          `[${result.source.toUpperCase()}:${result.id}] (Score: ${result.score.toFixed(2)})\n${result.content}`,
       )
       .join('\n\n')
   }
