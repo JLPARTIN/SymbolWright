@@ -5,7 +5,7 @@ import type { CodemindRuntimeMode, RuntimePolicySnapshot } from '../types.js'
 /** Paths blocked from read/write access by default policy. */
 export const DEFAULT_RUNTIME_PROTECTED_PATHS = [
   '.git',
-  '.codemind',
+  '.codemind', // local mission/checkpoint state
   '.env',
   '.env.local',
   'node_modules',
@@ -16,7 +16,7 @@ export const DEFAULT_RUNTIME_PROTECTED_PATHS = [
 /** Directories excluded from file-listing to reduce noise. */
 export const DEFAULT_RUNTIME_NOISY_DIRS = [
   '.git',
-  '.codemind',
+  '.codemind', // local mission/checkpoint state
   'node_modules',
   'dist',
   'coverage',
