@@ -19,6 +19,11 @@ describe('deleted mission branch', () => {
     writeFileSync(join(root, 'a.txt'), 'a')
     await runGitCommand(['add', 'a.txt'], root)
     await runGitCommand(['commit', '-m', 'initial'], root)
+    const initialBranchResult = await runGitCommand(['branch', '--show-current'], root)
+    expect(initialBranchResult.exitCode).toBe(0)
+    const initialBranch = initialBranchResult.stdout.trim()
+    expect(initialBranch).not.toBe('')
+
     await runGitCommand(['checkout', '-b', 'recorded'], root)
     const service = new MissionService({
       workspaceRoot: root,
@@ -32,8 +37,11 @@ describe('deleted mission branch', () => {
       runtimeMode: 'READ_ONLY',
       labels: [],
     })
-    await runGitCommand(['checkout', 'master'], root)
-    await runGitCommand(['branch', '-D', 'recorded'], root)
+    const checkoutResult = await runGitCommand(['checkout', initialBranch], root)
+    expect(checkoutResult.exitCode).toBe(0)
+
+    const deleteResult = await runGitCommand(['branch', '-D', 'recorded'], root)
+    expect(deleteResult.exitCode).toBe(0)
     const reconciliation = await service.reconcileRepository(mission.id)
     expect(reconciliation.branchExists).toBe(false)
     expect(reconciliation.warnings.join(' ')).toContain('no longer exists')
