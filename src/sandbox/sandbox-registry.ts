@@ -63,20 +63,25 @@ function languagesForRunner(runner: CodeRunnerDefinition): readonly string[] {
   )
 }
 
+function browserAvailability(runner: CodeRunnerDefinition, now: string): SandboxRunnerAvailability {
+  if (runner.id === 'server-typescript-node') {
+    return runnerAvailability('available', now, {
+      reason:
+        'Legacy server TypeScript runner is guarded-host and must be routed through Bundle 4 policy before execution.',
+    })
+  }
+  return runnerAvailability('available', now)
+}
+
 function browserRunner(runner: CodeRunnerDefinition, now: string): SandboxRunnerDefinition {
   const preview = runner.capability === 'preview-only'
   return {
     id: runner.id,
     languageIds: languagesForRunner(runner),
     displayName: runner.label,
-    trustClass: preview ? 'browser-isolated' : 'browser-isolated',
+    trustClass: 'browser-isolated',
     backend: 'browser',
-    availability: runnerAvailability('available', now, {
-      reason:
-        runner.id === 'server-typescript-node'
-          ? 'Legacy server TypeScript runner is guarded-host and must be routed through Bundle 4 policy before execution.'
-          : undefined,
-    }),
+    availability: browserAvailability(runner, now),
     capabilities: preview ? PREVIEW_CAPABILITIES : BROWSER_CAPABILITIES,
     limits: DEFAULT_SANDBOX_LIMITS,
     networkPolicy: 'disabled',
