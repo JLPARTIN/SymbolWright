@@ -31,7 +31,9 @@ async function readJsonBody(req: IncomingMessage): Promise<unknown> {
     const buffer = chunk as Buffer
     totalBytes += buffer.length
     if (totalBytes > MAX_SANDBOX_REQUEST_BYTES) {
-      throw new SandboxRequestValidationError(`Request body exceeds ${MAX_SANDBOX_REQUEST_BYTES} bytes`)
+      throw new SandboxRequestValidationError(
+        `Request body exceeds ${MAX_SANDBOX_REQUEST_BYTES} bytes`,
+      )
     }
     chunks.push(buffer)
   }
@@ -82,25 +84,30 @@ function recordMissionEvidence(
   result: SandboxExecutionResult,
 ): void {
   if (request.missionId === undefined || context.missionService === undefined) return
-  context.missionService.appendEvent(request.missionId, missionEventType(result), missionEventSummary(result), {
-    executionId: result.executionId,
-    languageId: result.languageId,
-    runnerId: result.runnerId,
-    trustClass: result.trustClass,
-    backend: result.backend,
-    mode: request.mode,
-    status: result.status,
-    durationMs: result.durationMs,
-    ...(result.exitCode === undefined ? {} : { exitCode: result.exitCode }),
-    inputHash: result.evidence.inputHash,
-    ...(result.evidence.outputHash === undefined ? {} : { outputHash: result.evidence.outputHash }),
-    ...(result.evidence.outputExcerpt === undefined
-      ? {}
-      : { outputExcerpt: result.evidence.outputExcerpt }),
-    artifactReferences: result.artifacts.map((artifact) => artifact.artifactId),
-    policyDecision: result.evidence.policyDecision,
-    verificationLevel: result.evidence.verificationLevel,
-  })
+  context.missionService.appendEvent(
+    request.missionId,
+    missionEventType(result),
+    missionEventSummary(result),
+    {
+      executionId: result.executionId,
+      languageId: result.languageId,
+      runnerId: result.runnerId,
+      trustClass: result.trustClass,
+      backend: result.backend,
+      mode: request.mode,
+      status: result.status,
+      durationMs: result.durationMs,
+      ...(result.exitCode === undefined ? {} : { exitCode: result.exitCode }),
+      inputHash: result.evidence.inputHash,
+      ...(result.evidence.outputHash === undefined ? {} : { outputHash: result.evidence.outputHash }),
+      ...(result.evidence.outputExcerpt === undefined
+        ? {}
+        : { outputExcerpt: result.evidence.outputExcerpt }),
+      artifactReferences: result.artifacts.map((artifact) => artifact.artifactId),
+      policyDecision: result.evidence.policyDecision,
+      verificationLevel: result.evidence.verificationLevel,
+    },
+  )
 }
 
 /** Handles every authenticated `/api/sandbox` route. */
@@ -152,7 +159,11 @@ export async function handleSandboxRoute(
         sendJson(res, 405, { error: 'method_not_allowed' })
         return true
       }
-      sendJson(res, 200, context.service.listExecutions(parseLimit(url.searchParams.get('limit'), 50)))
+      sendJson(
+        res,
+        200,
+        context.service.listExecutions(parseLimit(url.searchParams.get('limit'), 50)),
+      )
       return true
     }
 
