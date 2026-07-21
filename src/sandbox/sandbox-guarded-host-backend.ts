@@ -492,7 +492,7 @@ export async function executeGuardedHostRequest(
 
     const result = buildResult(options, 'passed', stdout, stderr, await workspace.cleanup(), {
       exitCode: 0,
-      verificationLevel: VERIFICATION_BY_MODE.get(options.request.mode),
+      verificationLevel: VERIFICATION_BY_MODE.get(options.request.mode) ?? 'UNVERIFIED',
       outputTruncated: truncated,
     })
     resolveCompleted(result)
