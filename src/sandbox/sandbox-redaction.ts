@@ -17,9 +17,7 @@ export function sha256Text(value: string): string {
 export function redactSandboxText(value: string, maxBytes = 64_000): string {
   let redacted = value
   for (const pattern of SECRET_PATTERNS) {
-    redacted = redacted.replace(pattern, (match, key: string | undefined) => {
-      return key === undefined ? '[REDACTED]' : `${key}=[REDACTED]`
-    })
+    redacted = redacted.replace(pattern, '[REDACTED]')
   }
 
   const encoded = new TextEncoder().encode(redacted)
