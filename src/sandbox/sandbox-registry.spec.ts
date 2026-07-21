@@ -16,6 +16,8 @@ import {
 } from './sandbox-redaction.js'
 import { SandboxService } from './sandbox-service.js'
 
+const CHECKED_AT = '2026-07-20T00:00:00.000Z'
+
 describe('sandbox runtime inventory', () => {
   it('registers browser-isolated existing runners without promoting edit-only languages', () => {
     const inventory = STATIC_SANDBOX_INVENTORY_FOR_TESTS
@@ -32,20 +34,29 @@ describe('sandbox runtime inventory', () => {
 
   it('keeps guarded-host unavailable unless explicitly opted in', () => {
     const disabled = buildSandboxInventory({
-      now: () => new Date('2026-07-20T00:00:00.000Z'),
+      now: () => new Date(CHECKED_AT),
       env: {},
+      commandAvailability: new Map([
+        [
+          'python3',
+          runnerAvailability('available', CHECKED_AT, {
+            version: '3.12.0',
+          }),
+        ],
+      ]),
     })
-    expect(
-      disabled.runners.find((runner) => runner.id === 'guarded-host-python')?.availability.status,
-    ).toBe('unavailable')
+    const disabledPython = disabled.runners.find((runner) => runner.id === 'guarded-host-python')
+    expect(disabledPython?.availability.status).toBe('unavailable')
+    expect(disabledPython?.availability.version).toBe('3.12.0')
+    expect(disabledPython?.availability.reason).toContain('disabled by default')
 
     const enabled = buildSandboxInventory({
-      now: () => new Date('2026-07-20T00:00:00.000Z'),
+      now: () => new Date(CHECKED_AT),
       env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
       commandAvailability: new Map([
         [
           'python3',
-          runnerAvailability('available', '2026-07-20T00:00:00.000Z', {
+          runnerAvailability('available', CHECKED_AT, {
             version: '3.12.0',
           }),
         ],
@@ -59,7 +70,7 @@ describe('sandbox runtime inventory', () => {
 
 describe('sandbox policy and service foundation', () => {
   const inventory = buildSandboxInventory({
-    now: () => new Date('2026-07-20T00:00:00.000Z'),
+    now: () => new Date(CHECKED_AT),
   })
   const request = {
     languageId: 'javascript',
@@ -71,7 +82,7 @@ describe('sandbox policy and service foundation', () => {
   it('blocks execution in read-only and proposal-only modes with structured reasons', async () => {
     const service = new SandboxService({
       inventory,
-      now: () => new Date('2026-07-20T00:00:00.000Z'),
+      now: () => new Date(CHECKED_AT),
       generateExecutionId: () => 'sandbox_test',
     })
 
@@ -87,7 +98,7 @@ describe('sandbox policy and service foundation', () => {
   it('does not fake execution before a backend is wired', async () => {
     const service = new SandboxService({
       inventory,
-      now: () => new Date('2026-07-20T00:00:00.000Z'),
+      now: () => new Date(CHECKED_AT),
       generateExecutionId: () => 'sandbox_test',
     })
     const result = await service.execute(request, {
@@ -103,7 +114,7 @@ describe('sandbox policy and service foundation', () => {
     const guarded = buildSandboxInventory({
       env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
       commandAvailability: new Map([
-        ['python3', runnerAvailability('available', '2026-07-20T00:00:00.000Z')],
+        ['python3', runnerAvailability('available', CHECKED_AT)],
       ]),
     }).runners.find((runner) => runner.id === 'guarded-host-python')
     expect(guarded).toBeDefined()
@@ -136,6 +147,32 @@ describe('sandbox policy and service foundation', () => {
       },
     )
     expect(allowed.allowed).toBe(true)
+  })
+
+  it('refreshes inventory from bounded runtime discovery without executing code', async () => {
+    const service = new SandboxService({
+      env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
+      buildInventory: (commandAvailability) =>
+        buildSandboxInventory({
+          env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
+          commandAvailability,
+          now: () => new Date(CHECKED_AT),
+        }),
+      discoverCommandAvailability: async () =>
+        new Map([
+          [
+            'python3',
+            runnerAvailability('available', CHECKED_AT, {
+              version: '3.12.1',
+            }),
+          ],
+        ]),
+    })
+
+    const refreshed = await service.refreshInventory()
+    const python = refreshed.runners.find((runner) => runner.id === 'guarded-host-python')
+    expect(python?.availability.status).toBe('available')
+    expect(python?.availability.version).toBe('3.12.1')
   })
 })
 
