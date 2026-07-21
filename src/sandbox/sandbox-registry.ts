@@ -115,6 +115,31 @@ function guardedHostRunner(
   }
 }
 
+function missingCommandAvailability(command: string, checkedAt: string): SandboxRunnerAvailability {
+  return runnerAvailability('unavailable', checkedAt, {
+    reason: `${command} was not detected.`,
+  })
+}
+
+function disabledGuardedHostAvailability(
+  command: string,
+  checkedAt: string,
+  discovered: SandboxRunnerAvailability | undefined,
+): SandboxRunnerAvailability {
+  if (discovered?.status === 'available') {
+    return runnerAvailability('unavailable', checkedAt, {
+      ...(discovered.version === undefined ? {} : { version: discovered.version }),
+      reason: `${command} was detected, but guarded-host execution is disabled by default.`,
+    })
+  }
+  return runnerAvailability('unavailable', checkedAt, {
+    reason:
+      discovered?.reason === undefined
+        ? 'Guarded-host execution is disabled by default.'
+        : `Guarded-host execution is disabled by default. Discovery: ${discovered.reason}`,
+  })
+}
+
 export interface BuildSandboxInventoryOptions {
   readonly now?: () => Date
   readonly commandAvailability?: ReadonlyMap<string, SandboxRunnerAvailability>
@@ -129,9 +154,6 @@ export function buildSandboxInventory(
   const commandAvailability =
     options.commandAvailability ?? new Map<string, SandboxRunnerAvailability>()
   const guardedHostOptIn = options.env?.['CODEMIND_ALLOW_GUARDED_HOST_EXECUTION'] === 'true'
-  const guardedHostDisabled = runnerAvailability('unavailable', generatedAt, {
-    reason: 'Guarded-host execution is disabled by default.',
-  })
 
   const browserRunners = CODE_RUNNER_DEFINITIONS.filter(
     (runner) => runner.id !== 'server-typescript-node',
@@ -150,18 +172,16 @@ export function buildSandboxInventory(
     ['r', 'Guarded Rscript Runner', 'Rscript'],
   ] as const
 
-  const guardedRunners = guardedCandidates.map(([languageId, displayName, command]) =>
-    guardedHostRunner(
+  const guardedRunners = guardedCandidates.map(([languageId, displayName, command]) => {
+    const discovered = commandAvailability.get(command)
+    return guardedHostRunner(
       languageId,
       displayName,
       guardedHostOptIn
-        ? (commandAvailability.get(command) ??
-            runnerAvailability('unavailable', generatedAt, {
-              reason: `${command} was not detected.`,
-            }))
-        : guardedHostDisabled,
-    ),
-  )
+        ? (discovered ?? missingCommandAvailability(command, generatedAt))
+        : disabledGuardedHostAvailability(command, generatedAt, discovered),
+    )
+  })
 
   return {
     schemaVersion: 1,
@@ -171,6 +191,7 @@ export function buildSandboxInventory(
     warnings: [
       'Container image policy is intentionally empty until images are explicitly allowlisted and verified.',
       'Guarded-host runners are inventory entries only unless explicit opt-in and APPROVED_EXECUTION are present.',
+      'Runtime discovery uses bounded version probes only; it does not execute repository code or install dependencies.',
     ],
   }
 }
@@ -204,4 +225,6 @@ export function listSandboxRunnerIds(inventory: SandboxInventory): readonly stri
 
 export const STATIC_SANDBOX_INVENTORY_FOR_TESTS = buildSandboxInventory({
   now: () => new Date(AVAILABLE_NOW),
+  env: {},
+  commandAvailability: new Map(),
 })
