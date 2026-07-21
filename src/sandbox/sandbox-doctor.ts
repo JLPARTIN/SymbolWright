@@ -46,7 +46,9 @@ export interface SandboxDoctorReport {
 export interface SandboxDoctorOptions {
   readonly env?: NodeJS.ProcessEnv
   readonly now?: () => Date
-  readonly discoverCommandAvailability?: () => Promise<ReadonlyMap<string, SandboxRunnerAvailability>>
+  readonly discoverCommandAvailability?: () => Promise<
+    ReadonlyMap<string, SandboxRunnerAvailability>
+  >
 }
 
 function runtimeEntry(runner: SandboxRunnerDefinition): SandboxRuntimeDoctorEntry {
@@ -136,7 +138,9 @@ function renderRuntime(entry: SandboxRuntimeDoctorEntry): string {
 
 function renderImage(entry: SandboxImageDoctorEntry): string {
   const command =
-    entry.preparationCommand === undefined ? 'no preparation command until an engine is detected' : entry.preparationCommand
+    entry.preparationCommand === undefined
+      ? 'no preparation command until an engine is detected'
+      : entry.preparationCommand
   return `  - ${entry.id}: ${entry.image}; enabled=${entry.enabled}; installed=${entry.installed}; languages=${entry.languages.join(', ')}; prepare=${command}`
 }
 
@@ -152,7 +156,9 @@ export function renderSandboxDoctorReport(report: SandboxDoctorReport): string {
     '',
     'Container engine:',
     `  ${report.containerEngine.engine}: ${report.containerEngine.status}${
-      report.containerEngine.version === undefined ? '' : ` version=${report.containerEngine.version}`
+      report.containerEngine.version === undefined
+        ? ''
+        : ` version=${report.containerEngine.version}`
     }`,
     `  ${report.containerEngine.reason}`,
     '',
