@@ -8,10 +8,18 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { MissionService } from '../../mission/mission-service.js'
 import { SandboxHistoryStore } from '../../sandbox/sandbox-history.js'
+import { buildSandboxInventory, runnerAvailability } from '../../sandbox/sandbox-registry.js'
 import { SandboxService } from '../../sandbox/sandbox-service.js'
+import type { SandboxRunnerAvailability } from '../../sandbox/sandbox-types.js'
 import { handleSandboxRoute } from './sandbox-routes.js'
 
 const TEST_MISSION_ID = 'mission_99999999-9999-4999-8999-999999999999'
+const CHECKED_AT = '2026-07-21T00:00:00.000Z'
+const EXECUTION_ENV: NodeJS.ProcessEnv = {
+  PATH: process.env['PATH'] ?? '',
+  CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true',
+  CODEMIND_SECRET_TOKEN: 'route-secret-token',
+}
 
 let root: string
 
@@ -22,6 +30,10 @@ beforeEach(() => {
 afterEach(() => {
   rmSync(root, { recursive: true, force: true })
 })
+
+function availability(command: string): SandboxRunnerAvailability {
+  return runnerAvailability('available', CHECKED_AT, { version: `${command} test` })
+}
 
 function request(method: string, body?: unknown): IncomingMessage {
   const chunks = body === undefined ? [] : [Buffer.from(JSON.stringify(body))]
@@ -56,18 +68,26 @@ function response(): MockResponse & ServerResponse {
 }
 
 function services() {
+  const commandAvailability = new Map<string, SandboxRunnerAvailability>([
+    ['node', availability('node')],
+  ])
   const historyStore = new SandboxHistoryStore({
     workspaceRoot: root,
-    env: { SECRET_TOKEN: 'secret' },
+    env: EXECUTION_ENV,
   })
   const sandboxService = new SandboxService({
     historyStore,
-    env: { SECRET_TOKEN: 'secret' },
+    env: EXECUTION_ENV,
     generateExecutionId: () => 'sandbox_route_test',
+    inventory: buildSandboxInventory({
+      env: EXECUTION_ENV,
+      commandAvailability,
+      now: () => new Date(CHECKED_AT),
+    }),
   })
   const missionService = new MissionService({
     workspaceRoot: root,
-    env: { SECRET_TOKEN: 'secret' },
+    env: EXECUTION_ENV,
     generateId: () => TEST_MISSION_ID,
   })
   return { sandboxService, missionService }
@@ -132,7 +152,9 @@ describe('sandbox API route handler', () => {
       request('POST', {
         languageId: 'javascript',
         mode: 'run',
-        source: 'console.log("secret")',
+        requestedRunnerId: 'guarded-host-javascript',
+        source:
+          "console.log('sandbox-route-ok'); console.log(process.env.CODEMIND_SECRET_TOKEN ?? 'NO_SECRET')",
         runtimeMode: 'APPROVED_EXECUTION',
         missionId: mission.id,
       }),
@@ -143,11 +165,29 @@ describe('sandbox API route handler', () => {
 
     expect(execute.statusCode).toBe(200)
     const body = execute.json<{
-      result: { executionId: string; status: string; evidence: { inputHash: string } }
+      result: {
+        executionId: string
+        status: string
+        stdout: string
+        backend: string
+        trustClass: string
+        evidence: {
+          inputHash: string
+          verificationLevel: string
+          policyDecision: string
+        }
+      }
     }>()
     expect(body.result.executionId).toBe('sandbox_route_test')
-    expect(body.result.status).toBe('policy-blocked')
+    expect(body.result.status).toBe('passed')
+    expect(body.result.stdout).toContain('sandbox-route-ok')
+    expect(body.result.stdout).toContain('NO_SECRET')
+    expect(body.result.stdout).not.toContain('route-secret-token')
+    expect(body.result.backend).toBe('guarded-host')
+    expect(body.result.trustClass).toBe('guarded-host')
     expect(body.result.evidence.inputHash).toMatch(/^[a-f0-9]{64}$/)
+    expect(body.result.evidence.verificationLevel).toBe('EXECUTED')
+    expect(body.result.evidence.policyDecision).toBe('allowed')
 
     const history = response()
     await handleSandboxRoute(
@@ -161,8 +201,18 @@ describe('sandbox API route handler', () => {
       history.json<{ executions: readonly { executionId: string }[] }>().executions[0]?.executionId,
     ).toBe('sandbox_route_test')
 
-    const events = missionService.readEvents(mission.id)
-    expect(events.some((event) => event.type === 'sandbox.execution.blocked')).toBe(true)
+    const restarted = services()
+    const persisted = restarted.sandboxService.getExecution('sandbox_route_test')
+    expect(persisted?.result.status).toBe('passed')
+    expect(persisted?.result.stdout).toContain('NO_SECRET')
+    expect(persisted?.result.stdout).not.toContain('route-secret-token')
+
+    const events = restarted.missionService.readEvents(mission.id)
+    const sandboxEvent = events.find((event) => event.type === 'sandbox.execution.completed')
+    expect(sandboxEvent).toBeDefined()
+    expect(JSON.stringify(sandboxEvent?.payload)).toContain('sandbox_route_test')
+    expect(JSON.stringify(sandboxEvent?.payload)).toContain('EXECUTED')
+    expect(JSON.stringify(sandboxEvent?.payload)).not.toContain('route-secret-token')
   })
 
   it('returns structured errors for malformed payloads and missing execution records', async () => {
