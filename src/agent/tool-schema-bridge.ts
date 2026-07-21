@@ -276,6 +276,80 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
     run_tests: EMPTY_SCHEMA,
     run_typecheck: EMPTY_SCHEMA,
     run_lint: EMPTY_SCHEMA,
+    sandbox_list_runtimes: {
+      type: 'object',
+      properties: {
+        languageId: {
+          type: 'string',
+          description: 'Optional sandbox language ID filter',
+        },
+        runnerId: {
+          type: 'string',
+          description: 'Optional sandbox runner ID filter',
+        },
+        includeUnavailable: {
+          type: 'boolean',
+          description: 'Whether to include unavailable runtimes in the response',
+        },
+      },
+    },
+    sandbox_execute: {
+      type: 'object',
+      properties: {
+        languageId: {
+          type: 'string',
+          description: 'Registered sandbox language ID, such as javascript, python, or go',
+        },
+        mode: {
+          type: 'string',
+          description: 'Sandbox operation mode: run, compile, or test',
+        },
+        source: {
+          type: 'string',
+          description:
+            'Single source snippet to execute; mutually exclusive with files and repository',
+        },
+        files: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              path: { type: 'string' },
+              content: { type: 'string' },
+            },
+            required: ['path', 'content'],
+          },
+          description:
+            'Explicit bounded file bundle; mutually exclusive with source and repository',
+        },
+        repository: {
+          type: 'object',
+          description: 'Approved repository target with rootPath and selectedPaths',
+        },
+        requestedRunnerId: {
+          type: 'string',
+          description: 'Optional registered sandbox runner ID',
+        },
+        stdin: {
+          type: 'string',
+          description: 'Optional bounded standard input',
+        },
+        args: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional bounded structured arguments',
+        },
+        limits: {
+          type: 'object',
+          description: 'Optional sandbox limit overrides within policy caps',
+        },
+        missionId: {
+          type: 'string',
+          description: 'Optional mission ID for execution evidence',
+        },
+      },
+      required: ['languageId', 'mode'],
+    },
     pr_collaboration: {
       type: 'object',
       properties: {
