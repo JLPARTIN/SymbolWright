@@ -63,7 +63,11 @@ export class SandboxService {
     this.buildInventory =
       options.buildInventory ??
       ((commandAvailability) =>
-        options.inventory ?? buildSandboxInventory({ env: this.env, commandAvailability }))
+        options.inventory ??
+        buildSandboxInventory({
+          env: this.env,
+          ...(commandAvailability === undefined ? {} : { commandAvailability }),
+        }))
     this.discoverCommandAvailability =
       options.discoverCommandAvailability ??
       (() => discoverRuntimeCommands(DEFAULT_SANDBOX_DISCOVERY_PROBES, { env: this.env }))
