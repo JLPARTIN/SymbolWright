@@ -127,8 +127,8 @@ describe('sandbox policy branch coverage', () => {
 
     expect(
       evaluateSandboxPolicy(
-        request({ repository: { rootPath: '/tmp/repository' }, source: undefined }),
-        runner({ capabilities: noCapabilities }),
+        request({ repository: { rootPath: '/tmp/repository' } }),
+        runner({ capabilities: { ...noCapabilities, run: true } }),
         { mode: 'APPROVED_EXECUTION', env: {} },
       ).reason,
     ).toContain('does not support repository execution')
