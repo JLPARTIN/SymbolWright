@@ -18,8 +18,12 @@ async function resolveImagePolicy(
   options: SandboxImageCommandOptions = {},
 ): Promise<ResolvedImagePolicy> {
   const env = options.env ?? process.env
-  const commandAvailability = await (options.discoverCommandAvailability?.() ??
-    discoverRuntimeCommands(DEFAULT_SANDBOX_DISCOVERY_PROBES, { env }))
+  const discoveredAvailability = options.discoverCommandAvailability?.()
+  const commandAvailability =
+    discoveredAvailability === undefined
+      ? await discoverRuntimeCommands(DEFAULT_SANDBOX_DISCOVERY_PROBES, { env })
+      : await discoveredAvailability
+
   return buildSandboxImagePolicy(commandAvailability)
 }
 
@@ -27,7 +31,10 @@ function renderImageIds(images: readonly SandboxImageDefinition[]): string {
   return images.map((image) => image.id).join(', ')
 }
 
-function renderMissingImageId(action: string, images: readonly SandboxImageDefinition[]): string {
+function renderMissingImageId(
+  action: string,
+  images: readonly SandboxImageDefinition[],
+): string {
   return [
     `Missing sandbox image id for: codemind sandbox ${action} <image-id>`,
     '',
@@ -36,7 +43,10 @@ function renderMissingImageId(action: string, images: readonly SandboxImageDefin
   ].join('\n')
 }
 
-function renderUnknownImageId(imageId: string, images: readonly SandboxImageDefinition[]): string {
+function renderUnknownImageId(
+  imageId: string,
+  images: readonly SandboxImageDefinition[],
+): string {
   return [
     `Unknown sandbox image id: ${imageId}`,
     '',
