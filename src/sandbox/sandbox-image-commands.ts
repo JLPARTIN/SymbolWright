@@ -1,9 +1,15 @@
-import { DEFAULT_SANDBOX_DISCOVERY_PROBES, discoverRuntimeCommands } from './sandbox-discovery.js'
+import {
+  DEFAULT_SANDBOX_DISCOVERY_PROBES,
+  discoverRuntimeCommands,
+} from './sandbox-discovery.js'
 import { inspectSandboxLocalImage } from './sandbox-image-store.js'
 import { buildSandboxImagePolicy, findSandboxImage } from './sandbox-images.js'
 import type { SandboxLocalImageInspection } from './sandbox-image-store.js'
 import type { SandboxContainerEngineStatus } from './sandbox-images.js'
-import type { SandboxImageDefinition, SandboxRunnerAvailability } from './sandbox-types.js'
+import type {
+  SandboxImageDefinition,
+  SandboxRunnerAvailability,
+} from './sandbox-types.js'
 
 export interface SandboxImageCommandOptions {
   readonly env?: NodeJS.ProcessEnv
@@ -39,7 +45,10 @@ function renderImageIds(images: readonly SandboxImageDefinition[]): string {
   return images.map((image) => image.id).join(', ')
 }
 
-function renderMissingImageId(action: string, images: readonly SandboxImageDefinition[]): string {
+function renderMissingImageId(
+  action: string,
+  images: readonly SandboxImageDefinition[],
+): string {
   return [
     `Missing sandbox image id for: codemind sandbox ${action} <image-id>`,
     '',
@@ -48,7 +57,10 @@ function renderMissingImageId(action: string, images: readonly SandboxImageDefin
   ].join('\n')
 }
 
-function renderUnknownImageId(imageId: string, images: readonly SandboxImageDefinition[]): string {
+function renderUnknownImageId(
+  imageId: string,
+  images: readonly SandboxImageDefinition[],
+): string {
   return [
     `Unknown sandbox image id: ${imageId}`,
     '',
@@ -57,7 +69,10 @@ function renderUnknownImageId(imageId: string, images: readonly SandboxImageDefi
   ].join('\n')
 }
 
-function renderOptionalMetadata(label: string, value: string | number | undefined): string | undefined {
+function renderOptionalMetadata(
+  label: string,
+  value: string | number | undefined,
+): string | undefined {
   return value === undefined ? undefined : `${label}: ${value}`
 }
 
@@ -66,7 +81,8 @@ async function resolveLocalImageInspection(
   engine: SandboxContainerEngineStatus,
   options: SandboxImageCommandOptions,
 ): Promise<SandboxLocalImageInspection> {
-  if (options.inspectLocalImage !== undefined) return options.inspectLocalImage(image, engine)
+  if (options.inspectLocalImage !== undefined)
+    return options.inspectLocalImage(image, engine)
   return inspectSandboxLocalImage(
     image,
     engine,
@@ -79,7 +95,11 @@ async function renderImageInspection(
   engine: SandboxContainerEngineStatus,
   options: SandboxImageCommandOptions,
 ): Promise<string> {
-  const localInspection = await resolveLocalImageInspection(image, engine, options)
+  const localInspection = await resolveLocalImageInspection(
+    image,
+    engine,
+    options,
+  )
   const optionalMetadata = [
     renderOptionalMetadata('Local image size bytes', localInspection.sizeBytes),
     renderOptionalMetadata('Local image digest', localInspection.digest),
@@ -118,7 +138,9 @@ function renderImagePreparationPlan(
     `Image: ${image.image}`,
     `Languages: ${image.languages.join(', ')}`,
     `Container engine: ${engine.engine} (${engine.status})`,
-    engine.status === 'available' ? 'Status: REVIEW_REQUIRED' : 'Status: BLOCKED',
+    engine.status === 'available'
+      ? 'Status: REVIEW_REQUIRED'
+      : 'Status: BLOCKED',
     engine.status === 'available'
       ? 'Reason: prepare this allowlisted image manually after reviewing local policy.'
       : `Reason: ${engine.reason}`,
@@ -136,7 +158,8 @@ export async function renderSandboxImageInspectCommand(
 ): Promise<string> {
   const policy = await resolveImagePolicy(options)
   const [imageId] = args
-  if (imageId === undefined) return renderMissingImageId('inspect', policy.images)
+  if (imageId === undefined)
+    return renderMissingImageId('inspect', policy.images)
 
   const image = findSandboxImage(policy.images, imageId)
   if (image === undefined) return renderUnknownImageId(imageId, policy.images)
@@ -150,7 +173,8 @@ export async function renderSandboxImagePrepareCommand(
 ): Promise<string> {
   const policy = await resolveImagePolicy(options)
   const [imageId] = args
-  if (imageId === undefined) return renderMissingImageId('prepare', policy.images)
+  if (imageId === undefined)
+    return renderMissingImageId('prepare', policy.images)
 
   const image = findSandboxImage(policy.images, imageId)
   if (image === undefined) return renderUnknownImageId(imageId, policy.images)
