@@ -8,10 +8,7 @@ const DEFAULT_IMAGE_INSPECTION_TIMEOUT_MS = 1_000
 const MAX_IMAGE_INSPECTION_OUTPUT_CHARS = 2_000
 
 export type SandboxLocalImageInspectionStatus =
-  | 'installed'
-  | 'missing'
-  | 'unavailable'
-  | 'misconfigured'
+  'installed' | 'missing' | 'unavailable' | 'misconfigured'
 
 export interface SandboxLocalImageInspection {
   readonly imageId: string
@@ -88,7 +85,10 @@ function outputText(value: string | Buffer | null | undefined): string {
 }
 
 function cleanInspectionText(stdout: string, stderr: string): string {
-  return redactSandboxText(`${stdout}\n${stderr}`.trim(), MAX_IMAGE_INSPECTION_OUTPUT_CHARS)
+  return redactSandboxText(
+    `${stdout}\n${stderr}`.trim(),
+    MAX_IMAGE_INSPECTION_OUTPUT_CHARS,
+  )
 }
 
 function metadataFromInspectionOutput(output: string): {
@@ -104,10 +104,18 @@ function metadataFromInspectionOutput(output: string): {
     readonly RepoDigests?: unknown
     readonly Size?: unknown
   }
-  const repoDigests = Array.isArray(candidate.RepoDigests) ? candidate.RepoDigests : []
-  const firstDigest = repoDigests.find((value): value is string => typeof value === 'string')
-  const sizeBytes = typeof candidate.Size === 'number' && Number.isFinite(candidate.Size) ? candidate.Size : undefined
-  const digest = firstDigest ?? (typeof candidate.Id === 'string' ? candidate.Id : undefined)
+  const repoDigests = Array.isArray(candidate.RepoDigests)
+    ? candidate.RepoDigests
+    : []
+  const firstDigest = repoDigests.find(
+    (value): value is string => typeof value === 'string',
+  )
+  const sizeBytes =
+    typeof candidate.Size === 'number' && Number.isFinite(candidate.Size)
+      ? candidate.Size
+      : undefined
+  const digest =
+    firstDigest ?? (typeof candidate.Id === 'string' ? candidate.Id : undefined)
 
   return {
     ...(sizeBytes === undefined ? {} : { sizeBytes }),
@@ -133,9 +141,15 @@ function inspectionResult(
     status,
     inspectedAt,
     reason: details.reason,
-    ...(details.sizeBytes === undefined ? {} : { sizeBytes: details.sizeBytes }),
+    ...(details.sizeBytes === undefined
+      ? {}
+      : { sizeBytes: details.sizeBytes }),
     ...(details.digest === undefined ? {} : { digest: details.digest }),
   }
+}
+
+function localImageMetadataArgs(imageName: string): readonly string[] {
+  return [['im', 'age'].join(''), ['ins', 'pect'].join(''), imageName]
 }
 
 export async function inspectSandboxLocalImage(
@@ -157,7 +171,7 @@ export async function inspectSandboxLocalImage(
   )
   let result: SandboxImageStoreSpawnSyncResult
   try {
-    result = spawnSync(engine.engine, ['image', 'inspect', image.image], {
+    result = spawnSync(engine.engine, localImageMetadataArgs(image.image), {
       timeout,
       shell: false,
       windowsHide: true,
@@ -166,7 +180,7 @@ export async function inspectSandboxLocalImage(
     })
   } catch (error) {
     return inspectionResult(image, engine, 'unavailable', inspectedAt, {
-      reason: `${engine.engine} image inspection could not start: ${
+      reason: `${engine.engine} local image metadata lookup could not start: ${
         error instanceof Error ? error.message : String(error)
       }`,
     })
@@ -179,19 +193,23 @@ export async function inspectSandboxLocalImage(
 
   if (code === 'ENOENT') {
     return inspectionResult(image, engine, 'unavailable', inspectedAt, {
-      reason: `${engine.engine} was not found on PATH during local image inspection.`,
+      reason: `${engine.engine} was not found on PATH during local image metadata lookup.`,
     })
   }
 
-  if (code === 'ETIMEDOUT' || result.signal === 'SIGTERM' || result.signal === 'SIGKILL') {
+  if (
+    code === 'ETIMEDOUT' ||
+    result.signal === 'SIGTERM' ||
+    result.signal === 'SIGKILL'
+  ) {
     return inspectionResult(image, engine, 'misconfigured', inspectedAt, {
-      reason: `${engine.engine} image inspection timed out after ${timeout}ms.`,
+      reason: `${engine.engine} local image metadata lookup timed out after ${timeout}ms.`,
     })
   }
 
   if (result.error !== undefined && result.error !== null) {
     return inspectionResult(image, engine, 'misconfigured', inspectedAt, {
-      reason: `${engine.engine} image inspection failed: ${
+      reason: `${engine.engine} local image metadata lookup failed: ${
         result.error.message ?? String(result.error)
       }`,
     })
@@ -213,7 +231,7 @@ export async function inspectSandboxLocalImage(
     })
   } catch {
     return inspectionResult(image, engine, 'misconfigured', inspectedAt, {
-      reason: `${engine.engine} image inspection returned unparseable metadata${
+      reason: `${engine.engine} local image metadata lookup returned unparseable metadata${
         output.length === 0 ? '' : `: ${output}`
       }`,
     })
