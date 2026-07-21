@@ -69,7 +69,10 @@ function availabilitySummary(
       engine,
       status: 'available',
       ...(availability.version === undefined ? {} : { version: availability.version }),
-      reason: `${engine} is detectable, but image execution remains disabled until a later backend slice enforces container isolation controls.`,
+      reason: [
+        `${engine} is detectable, but image execution remains disabled`,
+        'until a later backend slice enforces container isolation controls.',
+      ].join(' '),
     }
   }
   return {
@@ -93,7 +96,11 @@ export function selectContainerEngine(
       docker.status === 'misconfigured' || podman.status === 'misconfigured'
         ? 'misconfigured'
         : 'unavailable',
-    reason: `No usable container engine is enabled for sandbox execution. Docker: ${docker.reason} Podman: ${podman.reason}`,
+    reason: [
+      'No usable container engine is enabled for sandbox execution.',
+      `Docker: ${docker.reason}`,
+      `Podman: ${podman.reason}`,
+    ].join(' '),
   }
 }
 
@@ -102,9 +109,14 @@ function imagePolicyWarnings(engine: SandboxContainerEngineStatus): readonly str
     'Container images are an explicit allowlist only; browser requests may not supply arbitrary image names.',
     'Images are never pulled automatically during normal sandbox execution.',
     'Images are marked installed=false until an operator-reviewed inspection path is implemented.',
-    'Container execution remains unavailable until a backend enforces no network, dropped capabilities, non-root user, bounded CPU/memory/PIDs, read-only root filesystem where workable, and no host socket mounts.',
+    'Container execution remains unavailable until a backend enforces no network, dropped capabilities, and non-root execution.',
+    'Container execution policy also requires bounded CPU/memory/PIDs and a read-only root filesystem where workable.',
+    'Container execution policy also forbids host socket mounts.',
     engine.status === 'available'
-      ? `${engine.engine} was detected for future capability evaluation, but this PR does not execute containers.`
+      ? [
+          `${engine.engine} was detected for future capability evaluation.`,
+          'This PR does not execute containers.',
+        ].join(' ')
       : engine.reason,
   ]
 }
