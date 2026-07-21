@@ -143,7 +143,7 @@ export async function handleSandboxRoute(
         sendJson(res, 405, { error: 'method_not_allowed' })
         return true
       }
-      sendJson(res, 200, context.service.refreshInventory())
+      sendJson(res, 200, await context.service.refreshInventory())
       return true
     }
 
