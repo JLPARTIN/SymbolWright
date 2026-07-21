@@ -11,6 +11,8 @@ This document tracks the Bundle #4 sandbox runtime rollout. The current implemen
 - Explicit container image allowlist.
 - Read-only sandbox doctor and image diagnostics renderer.
 - Read-only image inspection and operator-reviewed preparation-plan command contracts.
+- Top-level `codemind sandbox ...` CLI routing through the existing CLI entrypoint.
+- Read-only local image-store inspection for allowlisted image IDs only.
 
 ## Trust classes
 
@@ -28,7 +30,7 @@ Runtime discovery runs bounded version checks only. It does not execute reposito
 
 ## Container image policy
 
-Container images are an explicit allowlist. Browser requests cannot supply arbitrary image names. Images are not pulled automatically during normal execution. The image policy marks images as disabled and not installed until a later operator-reviewed inspection/preparation workflow exists.
+Container images are an explicit allowlist. Browser requests cannot supply arbitrary image names. Images are not pulled automatically during normal execution. The default inventory keeps images disabled and marks them not installed; `codemind sandbox inspect <image-id>` can separately read allowlisted local image-store metadata when Docker or Podman is detected.
 
 ## Sandbox doctor
 
@@ -45,18 +47,18 @@ Preparation commands are advisory. CodeMind does not run them automatically.
 
 ## Image command contracts
 
-The sandbox image command contract accepts allowlisted image IDs only, never raw image names. The renderer contract currently covers future top-level commands shaped like:
+The sandbox image command contract accepts allowlisted image IDs only, never raw image names. The top-level CLI currently supports:
 
 ```bash
+codemind sandbox doctor
+codemind sandbox images
 codemind sandbox inspect node-22-bookworm-slim
 codemind sandbox prepare python-3-12-slim
 ```
 
-These commands are designed as read-only operator guidance. Inspection renders the image policy record CodeMind already knows about. Preparation renders a review-only command plan when Docker or Podman has been detected. CodeMind does not run that command, pull the image, execute containers, or mutate the host in this slice.
+Inspection is read-only. It may call the detected container engine to inspect an allowlisted image already present in the local image store. It does not acquire images, execute containers, mount volumes, pass arbitrary image names, or mutate the host. Preparation renders a review-only command plan when Docker or Podman has been detected. CodeMind does not run that command, download the image, execute containers, or mutate the host in this slice.
 
 Raw image names such as `node:22-bookworm-slim` or registry paths are rejected because browser and CLI requests must not select arbitrary container images.
-
-Top-level CLI switch wiring may land in a follow-up slice. Until that switch is wired, tests exercise the renderer contract directly rather than claiming the published binary command is active.
 
 ## Security boundary
 
@@ -64,7 +66,7 @@ The sandbox runtime currently does not claim server-side code execution is avail
 
 Out of scope for the current slice:
 
-- image pulls;
+- automatic image acquisition;
 - automatic dependency installation;
 - arbitrary Docker images;
 - arbitrary container flags;
