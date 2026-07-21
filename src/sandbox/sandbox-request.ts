@@ -1,7 +1,11 @@
 import path from 'node:path'
 
 import { normalizeSandboxLimits } from './sandbox-limits.js'
-import type { SandboxExecutionMode, SandboxExecutionRequest, SandboxLimits } from './sandbox-types.js'
+import type {
+  SandboxExecutionMode,
+  SandboxExecutionRequest,
+  SandboxLimits,
+} from './sandbox-types.js'
 
 export class SandboxRequestValidationError extends Error {}
 
@@ -132,7 +136,9 @@ export function validateSandboxExecutionRequest(
   const rawRepository = raw['repository']
   const repository = rawRepository === undefined ? undefined : parseRepositoryTarget(rawRepository)
 
-  const sourceModeCount = [source !== undefined, files !== undefined, repository !== undefined].filter(Boolean).length
+  const sourceModeCount = [source !== undefined, files !== undefined, repository !== undefined].filter(
+    Boolean,
+  ).length
   if (sourceModeCount !== 1) {
     throw new SandboxRequestValidationError('Exactly one source mode is required')
   }
