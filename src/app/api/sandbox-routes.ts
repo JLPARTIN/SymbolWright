@@ -104,7 +104,9 @@ function recordMissionEvidence(
       durationMs: result.durationMs,
       ...(result.exitCode === undefined ? {} : { exitCode: result.exitCode }),
       inputHash: result.evidence.inputHash,
-      ...(result.evidence.outputHash === undefined ? {} : { outputHash: result.evidence.outputHash }),
+      ...(result.evidence.outputHash === undefined
+        ? {}
+        : { outputHash: result.evidence.outputHash }),
       ...(result.evidence.outputExcerpt === undefined
         ? {}
         : { outputExcerpt: result.evidence.outputExcerpt }),
