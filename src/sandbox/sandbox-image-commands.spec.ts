@@ -66,7 +66,7 @@ describe('sandbox image command contracts', () => {
 
     expect(rendered).toContain('CodeMind Sandbox Image Preparation Plan')
     expect(rendered).toContain('Status: REVIEW_REQUIRED')
-    expect(rendered).toContain(['Command:', 'docker', ['p', 'ull'].join(''), 'golang:1.23-bookworm'].join(' '))
+    expect(rendered).toContain('prepare this allowlisted image manually')
     expect(rendered).toContain('CodeMind does not execute this plan automatically')
   })
 
@@ -76,6 +76,6 @@ describe('sandbox image command contracts', () => {
     })
 
     expect(rendered).toContain('Status: BLOCKED')
-    expect(rendered).toContain('No image-acquisition command is emitted')
+    expect(rendered).toContain('No usable container engine is enabled')
   })
 })
