@@ -1,10 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import type { CodemindRuntimeMode } from '../runtime/types.js'
-import {
-  DEFAULT_SANDBOX_DISCOVERY_PROBES,
-  discoverRuntimeCommands,
-} from './sandbox-discovery.js'
+import { DEFAULT_SANDBOX_DISCOVERY_PROBES, discoverRuntimeCommands } from './sandbox-discovery.js'
 import type {
   SandboxHistoryList,
   SandboxHistoryStore,
@@ -36,7 +33,9 @@ export type SandboxInventoryBuilder = (
 export interface SandboxServiceOptions {
   readonly inventory?: SandboxInventory
   readonly buildInventory?: SandboxInventoryBuilder
-  readonly discoverCommandAvailability?: () => Promise<ReadonlyMap<string, SandboxRunnerAvailability>>
+  readonly discoverCommandAvailability?: () => Promise<
+    ReadonlyMap<string, SandboxRunnerAvailability>
+  >
   readonly historyStore?: SandboxHistoryStore
   readonly now?: () => Date
   readonly generateExecutionId?: () => string
