@@ -38,7 +38,9 @@ export type SandboxInventoryBuilder = (
 export interface SandboxServiceOptions {
   readonly inventory?: SandboxInventory
   readonly buildInventory?: SandboxInventoryBuilder
-  readonly discoverCommandAvailability?: () => Promise<ReadonlyMap<string, SandboxRunnerAvailability>>
+  readonly discoverCommandAvailability?: () => Promise<
+    ReadonlyMap<string, SandboxRunnerAvailability>
+  >
   readonly historyStore?: SandboxHistoryStore
   readonly now?: () => Date
   readonly generateExecutionId?: () => string
@@ -60,7 +62,9 @@ export interface SandboxCancelResult {
 export class SandboxService {
   private inventory: SandboxInventory
   private readonly buildInventory: SandboxInventoryBuilder
-  private readonly discoverCommandAvailability: () => Promise<ReadonlyMap<string, SandboxRunnerAvailability>>
+  private readonly discoverCommandAvailability: () => Promise<
+    ReadonlyMap<string, SandboxRunnerAvailability>
+  >
   private readonly historyStore: SandboxHistoryStore | undefined
   private readonly now: () => Date
   private readonly generateExecutionId: () => string
