@@ -208,43 +208,39 @@ describe('final working sandbox completion proof', () => {
     )
   }
 
-  it(
-    'cancels a real active execution and persists the cancelled terminal result',
-    async () => {
-      const workspaceRoot = await createWorkspace()
-      const service = createService(
-        workspaceRoot,
-        new Map([['node', availability('node')]]),
-        () => 'sandbox_final_cancel',
-      )
+  it('cancels a real active execution and persists the cancelled terminal result', async () => {
+    const workspaceRoot = await createWorkspace()
+    const service = createService(
+      workspaceRoot,
+      new Map([['node', availability('node')]]),
+      () => 'sandbox_final_cancel',
+    )
 
-      const execution = service.execute(
-        {
-          languageId: 'javascript',
-          mode: 'run',
-          requestedRunnerId: 'guarded-host-javascript',
-          source: "setInterval(() => console.log('sandbox-final-cancel-tick'), 1000)",
-          limits: { timeoutMs: 5_000, maxOutputBytes: 1_024 },
-        },
-        { mode: 'APPROVED_EXECUTION' },
-      )
+    const execution = service.execute(
+      {
+        languageId: 'javascript',
+        mode: 'run',
+        requestedRunnerId: 'guarded-host-javascript',
+        source: "setInterval(() => console.log('sandbox-final-cancel-tick'), 1000)",
+        limits: { timeoutMs: 5_000, maxOutputBytes: 1_024 },
+      },
+      { mode: 'APPROVED_EXECUTION' },
+    )
 
-      await new Promise((resolve) => setTimeout(resolve, 100))
-      const cancellation = await service.cancelExecution('sandbox_final_cancel')
-      const result = await execution
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    const cancellation = await service.cancelExecution('sandbox_final_cancel')
+    const result = await execution
 
-      expect(cancellation.ok).toBe(true)
-      expect(cancellation.status).toBe('cancelled')
-      expect(result.status).toBe('cancelled')
-      expect(result.cleanup).toEqual({ attempted: true, succeeded: true })
+    expect(cancellation.ok).toBe(true)
+    expect(cancellation.status).toBe('cancelled')
+    expect(result.status).toBe('cancelled')
+    expect(result.cleanup).toEqual({ attempted: true, succeeded: true })
 
-      const restarted = createService(
-        workspaceRoot,
-        new Map([['node', availability('node')]]),
-        () => 'sandbox_unused_cancel_restart',
-      )
-      expect(restarted.getExecution('sandbox_final_cancel')?.result.status).toBe('cancelled')
-    },
-    10_000,
-  )
+    const restarted = createService(
+      workspaceRoot,
+      new Map([['node', availability('node')]]),
+      () => 'sandbox_unused_cancel_restart',
+    )
+    expect(restarted.getExecution('sandbox_final_cancel')?.result.status).toBe('cancelled')
+  }, 10_000)
 })
