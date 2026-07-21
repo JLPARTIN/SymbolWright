@@ -14,6 +14,7 @@ This document tracks the Bundle #4 sandbox runtime rollout. The current implemen
 - Top-level `codemind sandbox ...` CLI routing through the existing CLI entrypoint.
 - Read-only local image-store inspection for allowlisted image IDs only.
 - Container backend policy skeleton for future no-network isolated execution.
+- Review-only container command planner for future Docker/Podman execution.
 
 ## Trust classes
 
@@ -58,6 +59,25 @@ Required controls include:
 - cleanup required after every execution attempt.
 
 This policy plan does not create, start, pull, inspect, or remove containers. A later backend slice must enforce the policy before any server-side container execution can be enabled.
+
+## Container command planner
+
+The container command planner turns an allowlisted image, detected Docker/Podman engine, temporary workspace path, fixed entrypoint, and bounded limits into a review-only argument array.
+
+The generated plan includes safety controls such as:
+
+- `--pull=never` to prevent automatic image acquisition;
+- `--network none`;
+- private PID namespace;
+- read-only root filesystem;
+- dropped capabilities;
+- no-new-privileges security option;
+- non-root user;
+- bounded memory, CPU, and process count;
+- controlled temporary workspace mount only;
+- minimal environment variables.
+
+The planner rejects request-shaped attempts to supply arbitrary container options, arbitrary image names, unsafe workspace paths, host home paths, Git directories, and container-engine socket paths. The plan remains `executionEnabled: false`; it is not an execution backend and CodeMind does not run the generated argv in this slice.
 
 ## Sandbox doctor
 
