@@ -28,11 +28,15 @@ function readString(record: Record<string, unknown>, key: string): string | unde
   const value = record[key]
   if (value === undefined) return undefined
   if (typeof value !== 'string') throw new SandboxRequestValidationError(`${key} must be a string`)
-  if (value.includes('\0')) throw new SandboxRequestValidationError(`${key} must not contain null bytes`)
+  if (value.includes('\0'))
+    throw new SandboxRequestValidationError(`${key} must not contain null bytes`)
   return value
 }
 
-function readStringArray(record: Record<string, unknown>, key: string): readonly string[] | undefined {
+function readStringArray(
+  record: Record<string, unknown>,
+  key: string,
+): readonly string[] | undefined {
   const value = record[key]
   if (value === undefined) return undefined
   if (!Array.isArray(value)) throw new SandboxRequestValidationError(`${key} must be an array`)
@@ -40,7 +44,8 @@ function readStringArray(record: Record<string, unknown>, key: string): readonly
     if (typeof entry !== 'string') {
       throw new SandboxRequestValidationError(`${key}[${index}] must be a string`)
     }
-    if (entry.includes('\0')) throw new SandboxRequestValidationError(`${key}[${index}] null byte rejected`)
+    if (entry.includes('\0'))
+      throw new SandboxRequestValidationError(`${key}[${index}] null byte rejected`)
     return entry
   })
 }
@@ -83,7 +88,8 @@ function parseLimits(value: unknown): Partial<SandboxLimits> | undefined {
   ] as const) {
     const raw = value[key]
     if (raw === undefined) continue
-    if (typeof raw !== 'number') throw new SandboxRequestValidationError(`limits.${key} must be numeric`)
+    if (typeof raw !== 'number')
+      throw new SandboxRequestValidationError(`limits.${key} must be numeric`)
     parsed[key] = raw
   }
   return parsed
@@ -136,9 +142,11 @@ export function validateSandboxExecutionRequest(
   const rawRepository = raw['repository']
   const repository = rawRepository === undefined ? undefined : parseRepositoryTarget(rawRepository)
 
-  const sourceModeCount = [source !== undefined, files !== undefined, repository !== undefined].filter(
-    Boolean,
-  ).length
+  const sourceModeCount = [
+    source !== undefined,
+    files !== undefined,
+    repository !== undefined,
+  ].filter(Boolean).length
   if (sourceModeCount !== 1) {
     throw new SandboxRequestValidationError('Exactly one source mode is required')
   }
@@ -160,12 +168,14 @@ export function validateSandboxExecutionRequest(
 function parseFiles(value: unknown, limits: SandboxLimits): SandboxExecutionRequest['files'] {
   if (!Array.isArray(value)) throw new SandboxRequestValidationError('files must be an array')
   if (value.length === 0) throw new SandboxRequestValidationError('files must not be empty')
-  if (value.length > limits.maxFiles) throw new SandboxRequestValidationError('too many source files')
+  if (value.length > limits.maxFiles)
+    throw new SandboxRequestValidationError('too many source files')
 
   const seen = new Set<string>()
   let totalBytes = 0
   return value.map((entry, index) => {
-    if (!isRecord(entry)) throw new SandboxRequestValidationError(`files[${index}] must be an object`)
+    if (!isRecord(entry))
+      throw new SandboxRequestValidationError(`files[${index}] must be an object`)
     const filePath = readString(entry, 'path')
     const content = readString(entry, 'content')
     if (filePath === undefined || content === undefined) {
@@ -173,10 +183,12 @@ function parseFiles(value: unknown, limits: SandboxLimits): SandboxExecutionRequ
     }
     assertSafeRelativePath(filePath)
     const normalized = path.posix.normalize(filePath.replace(/\\/g, '/'))
-    if (seen.has(normalized)) throw new SandboxRequestValidationError(`duplicate file path: ${normalized}`)
+    if (seen.has(normalized))
+      throw new SandboxRequestValidationError(`duplicate file path: ${normalized}`)
     seen.add(normalized)
     const fileBytes = byteLength(content)
-    if (fileBytes > limits.maxFileBytes) throw new SandboxRequestValidationError('file exceeds maxFileBytes')
+    if (fileBytes > limits.maxFileBytes)
+      throw new SandboxRequestValidationError('file exceeds maxFileBytes')
     totalBytes += fileBytes
     if (totalBytes > limits.maxTotalSourceBytes) {
       throw new SandboxRequestValidationError('files exceed maxTotalSourceBytes')
