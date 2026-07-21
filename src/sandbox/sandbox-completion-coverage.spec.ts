@@ -66,7 +66,7 @@ afterEach(async () => {
 })
 
 describe('sandbox completion coverage', () => {
-  it('covers CLI usage, traversal, directory, unsupported extension, history, and cleanup branches', async () => {
+  it('covers CLI error, history, and cleanup branches', async () => {
     const workspaceRoot = await tempWorkspace()
     const directory = path.join(workspaceRoot, 'fixtures')
     await mkdir(directory)
@@ -74,9 +74,9 @@ describe('sandbox completion coverage', () => {
 
     await expect(renderSandboxCommand(['run'])).resolves.toContain('Usage: codemind sandbox run')
     await expect(renderSandboxCommand(['test'])).resolves.toContain('Usage: codemind sandbox test')
-    await expect(renderSandboxCommand(['run', '../escape.js'], { workspaceRoot })).resolves.toContain(
-      'file must stay inside workspace root',
-    )
+    await expect(
+      renderSandboxCommand(['run', '../escape.js'], { workspaceRoot }),
+    ).resolves.toContain('file must stay inside workspace root')
     await expect(renderSandboxCommand(['run', 'fixtures'], { workspaceRoot })).resolves.toContain(
       'target must be a file',
     )
@@ -91,7 +91,7 @@ describe('sandbox completion coverage', () => {
     )
   })
 
-  it('runs a CLI JavaScript file through the shared sandbox service when explicitly approved', async () => {
+  it('runs a CLI JavaScript file through the shared sandbox service', async () => {
     const workspaceRoot = await tempWorkspace()
     await writeFile(path.join(workspaceRoot, 'main.js'), "console.log('cli-run-ok')", 'utf8')
 
@@ -106,7 +106,7 @@ describe('sandbox completion coverage', () => {
     expect(rendered).toContain('cli-run-ok')
   })
 
-  it('covers service not-running cancellation and unwired backend result branches', async () => {
+  it('covers service cancellation and unwired backend result branches', async () => {
     const service = await createService(new Map([['node', availability('node')]]))
     const missing = await service.cancelExecution('missing_execution')
     expect(missing.status).toBe('not_running')
@@ -175,8 +175,11 @@ describe('sandbox completion coverage', () => {
     expect(result.evidence.policyReason).toContain('No executable backend')
   })
 
-  it('covers guarded-host file bundle, test mode, compile mode, timeout, and output truncation branches', async () => {
-    const service = await createService(new Map([['node', availability('node')]]), () => 'guarded_paths')
+  it('covers guarded-host file, test, compile, timeout, and truncation branches', async () => {
+    const service = await createService(
+      new Map([['node', availability('node')]]),
+      () => 'guarded_paths',
+    )
 
     const filesResult = await service.execute(
       {
