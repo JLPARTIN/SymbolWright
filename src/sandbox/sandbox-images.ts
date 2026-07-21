@@ -109,7 +109,7 @@ function imagePolicyWarnings(engine: SandboxContainerEngineStatus): readonly str
   return [
     'Container images are an explicit allowlist only; browser requests may not supply arbitrary image names.',
     'Images are never pulled automatically during normal sandbox execution.',
-    'Images are marked installed=false until an operator-reviewed inspection path is implemented.',
+    'Default inventory marks images installed=false; local inspection can report allowlisted image-store metadata separately.',
     'Container execution remains unavailable until a backend enforces no network, dropped capabilities, and non-root execution.',
     'Container execution policy also requires bounded CPU/memory/PIDs and a read-only root filesystem where workable.',
     'Container execution policy also forbids host socket mounts.',
