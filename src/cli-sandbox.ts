@@ -100,7 +100,8 @@ async function executeFile(
 ): Promise<string> {
   const workspaceRoot = path.resolve(options.workspaceRoot ?? process.cwd())
   const absolutePath = path.resolve(workspaceRoot, filePath)
-  if (!inside(absolutePath, workspaceRoot)) return 'Sandbox error: file must stay inside workspace root.'
+  if (!inside(absolutePath, workspaceRoot))
+    return 'Sandbox error: file must stay inside workspace root.'
   const fileStat = await stat(absolutePath)
   if (!fileStat.isFile()) return 'Sandbox error: target must be a file.'
   const languageId = languageForPath(absolutePath)
