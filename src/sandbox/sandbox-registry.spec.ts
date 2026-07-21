@@ -113,9 +113,7 @@ describe('sandbox policy and service foundation', () => {
   it('requires explicit guarded-host opt-in', () => {
     const guarded = buildSandboxInventory({
       env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
-      commandAvailability: new Map([
-        ['python3', runnerAvailability('available', CHECKED_AT)],
-      ]),
+      commandAvailability: new Map([['python3', runnerAvailability('available', CHECKED_AT)]]),
     }).runners.find((runner) => runner.id === 'guarded-host-python')
     expect(guarded).toBeDefined()
     if (guarded === undefined) throw new Error('guarded runner missing')
@@ -155,8 +153,8 @@ describe('sandbox policy and service foundation', () => {
       buildInventory: (commandAvailability) =>
         buildSandboxInventory({
           env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
-          commandAvailability,
           now: () => new Date(CHECKED_AT),
+          ...(commandAvailability === undefined ? {} : { commandAvailability }),
         }),
       discoverCommandAvailability: async () =>
         new Map([
