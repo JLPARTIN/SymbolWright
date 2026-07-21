@@ -126,7 +126,9 @@ describe('codemind chat server sandbox routes', () => {
     })
     expect(execute.status).toBe(200)
 
-    const events = await fetch(`${started!.url}/api/missions/${mission.id}/events`, { headers: auth() })
+    const events = await fetch(`${started!.url}/api/missions/${mission.id}/events`, {
+      headers: auth(),
+    })
     expect(events.status).toBe(200)
     const body = (await events.json()) as { events: readonly { type: string }[] }
     expect(body.events.some((event) => event.type === 'sandbox.execution.blocked')).toBe(true)
