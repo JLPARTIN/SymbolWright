@@ -34,7 +34,7 @@ describe('codemind bin sandbox routing', () => {
 
     expect(rendered).toContain('CodeMind Sandbox Image Inspection')
     expect(rendered).toContain('Image ID: node-22-bookworm-slim')
-    expect(rendered).toContain('does not inspect, pull, run, or mutate images')
+    expect(rendered).toContain('does not acquire, run, or mutate images')
   })
 
   it('leaves non-sandbox commands for the legacy CLI entrypoint', async () => {
