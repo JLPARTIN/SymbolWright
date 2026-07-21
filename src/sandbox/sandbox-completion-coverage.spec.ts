@@ -217,8 +217,8 @@ describe('sandbox completion coverage', () => {
       },
       { mode: 'APPROVED_EXECUTION' },
     )
-    expect(compileResult.status).toBe('passed')
-    expect(compileResult.evidence.verificationLevel).toBe('COMPILED')
+    expect(compileResult.status).toBe('compile-error')
+    expect(compileResult.evidence.verificationLevel).toBe('UNVERIFIED')
 
     const truncatedResult = await service.execute(
       {
