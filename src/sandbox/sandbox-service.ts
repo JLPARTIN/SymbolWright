@@ -49,7 +49,10 @@ export class SandboxService {
     })
   }
 
-  public async execute(raw: unknown, context: SandboxExecutionContext): Promise<SandboxExecutionResult> {
+  public async execute(
+    raw: unknown,
+    context: SandboxExecutionContext,
+  ): Promise<SandboxExecutionResult> {
     const startedAt = this.now().toISOString()
     const started = Date.parse(startedAt)
     const request = this.validateRequest(raw)
@@ -117,7 +120,9 @@ export class SandboxService {
       evidence: {
         verificationLevel: options.verificationLevel ?? 'UNVERIFIED',
         inputHash: sha256Text(JSON.stringify(request)),
-        ...(stdout.length === 0 && stderr.length === 0 ? {} : { outputHash: sha256Text(`${stdout}\n${stderr}`) }),
+        ...(stdout.length === 0 && stderr.length === 0
+          ? {}
+          : { outputHash: sha256Text(`${stdout}\n${stderr}`) }),
         ...(outputExcerpt.length === 0 ? {} : { outputExcerpt }),
         policyDecision: options.policyDecision,
         ...(options.policyReason === undefined ? {} : { policyReason: options.policyReason }),
