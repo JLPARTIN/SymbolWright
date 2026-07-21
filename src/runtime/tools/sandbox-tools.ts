@@ -1,6 +1,9 @@
 import { SandboxHistoryStore } from '../../sandbox/sandbox-history.js'
 import { SandboxService } from '../../sandbox/sandbox-service.js'
-import type { SandboxExecutionRequest, SandboxExecutionResult } from '../../sandbox/sandbox-types.js'
+import type {
+  SandboxExecutionRequest,
+  SandboxExecutionResult,
+} from '../../sandbox/sandbox-types.js'
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 
 const FORBIDDEN_SANDBOX_TOOL_FIELDS = new Set([
@@ -81,7 +84,8 @@ function proposalFor(request: SandboxExecutionRequest): string {
     {
       status: 'policy-blocked',
       policyDecision: 'blocked',
-      reason: 'PROPOSAL_ONLY mode returns a structured sandbox execution proposal without launching a process.',
+      reason:
+        'PROPOSAL_ONLY mode returns a structured sandbox execution proposal without launching a process.',
       request: {
         languageId: request.languageId,
         mode: request.mode,

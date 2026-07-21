@@ -65,7 +65,10 @@ describe('sandbox runtime agent tools', () => {
 
   it('rejects raw command-shaped execution input', async () => {
     await expect(
-      sandboxExecuteTool.execute({ command: 'node -e "console.log(1)"' }, context('APPROVED_EXECUTION')),
+      sandboxExecuteTool.execute(
+        { command: 'node -e "console.log(1)"' },
+        context('APPROVED_EXECUTION'),
+      ),
     ).rejects.toThrow('raw command/container field')
   })
 

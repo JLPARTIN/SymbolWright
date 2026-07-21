@@ -107,7 +107,7 @@ export function buildRepositoryViewClientScript(): string {
 
     function repoSandboxArgs() {
       const raw = document.getElementById('repo-sandbox-args').value.trim();
-      return raw ? raw.split(/\s+/) : [];
+      return raw ? raw.split(/\\s+/) : [];
     }
 
     function repoSandboxCompatibleRunner(languageId) {
