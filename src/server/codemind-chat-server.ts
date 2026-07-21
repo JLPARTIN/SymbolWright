@@ -49,12 +49,15 @@ import {
   handleRepositoryStatus,
   handleRepositoryTree,
 } from '../app/api/repository-routes.js'
+import { handleSandboxRoute } from '../app/api/sandbox-routes.js'
 import { MissionNotFoundError, MissionService } from '../mission/mission-service.js'
 import type { CodeMindMission } from '../mission/mission-types.js'
 import type { GitHubPrCreationClient } from '../runtime/github-write/github-pr-creation.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
 import type { RuntimeToolContext } from '../runtime/types.js'
+import { SandboxHistoryStore } from '../sandbox/sandbox-history.js'
+import { SandboxService } from '../sandbox/sandbox-service.js'
 import { collectStatus } from '../web/status-runner.js'
 import type { RuntimeStatusView } from '../web/status.js'
 import { renderChatUiHtml } from './chat-ui-html.js'
@@ -245,6 +248,10 @@ export function createChatServerRequestListener(
   const localStatusProvider = options.localStatusProvider ?? collectStatus
   const cwd = options.cwd ?? process.cwd()
   const missionService = options.missionService ?? new MissionService({ workspaceRoot: cwd, env })
+  const sandboxService = new SandboxService({
+    historyStore: new SandboxHistoryStore({ workspaceRoot: cwd, env }),
+    env,
+  })
   const registryContext = {
     cwd,
     hasGitHubToken: env['GITHUB_TOKEN'] !== undefined,
@@ -260,6 +267,7 @@ export function createChatServerRequestListener(
       : {}),
   }
   const missionContext = { service: missionService, cwd }
+  const sandboxContext = { service: sandboxService, missionService }
 
   return (req, res) => {
     void handleRequest(req, res)
@@ -304,6 +312,10 @@ export function createChatServerRequestListener(
 
     try {
       if (await handleMissionRoute(req, res, url, missionContext)) {
+        return
+      }
+
+      if (await handleSandboxRoute(req, res, url, sandboxContext)) {
         return
       }
 
