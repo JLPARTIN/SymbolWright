@@ -147,10 +147,13 @@ export interface BuildSandboxInventoryOptions {
   readonly env?: NodeJS.ProcessEnv
 }
 
-export function buildSandboxInventory(options: BuildSandboxInventoryOptions = {}): SandboxInventory {
+export function buildSandboxInventory(
+  options: BuildSandboxInventoryOptions = {},
+): SandboxInventory {
   const now = options.now ?? (() => new Date())
   const generatedAt = now().toISOString()
-  const commandAvailability = options.commandAvailability ?? new Map<string, SandboxRunnerAvailability>()
+  const commandAvailability =
+    options.commandAvailability ?? new Map<string, SandboxRunnerAvailability>()
   const imagePolicy = buildSandboxImagePolicy(commandAvailability)
   const guardedHostOptIn = options.env?.['CODEMIND_ALLOW_GUARDED_HOST_EXECUTION'] === 'true'
 
