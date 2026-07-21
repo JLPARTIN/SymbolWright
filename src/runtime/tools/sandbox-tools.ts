@@ -1,5 +1,7 @@
-import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
+import { SandboxHistoryStore } from '../../sandbox/sandbox-history.js'
+import { SandboxService } from '../../sandbox/sandbox-service.js'
 import type { SandboxExecutionRequest, SandboxExecutionResult } from '../../sandbox/sandbox-types.js'
+import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 
 const FORBIDDEN_SANDBOX_TOOL_FIELDS = new Set([
   'command',
@@ -19,6 +21,15 @@ function assertNoForbiddenFields(input: unknown): void {
       throw new Error(`sandbox_execute rejects raw command/container field: ${key}`)
     }
   }
+}
+
+function resolveSandboxService(context: RuntimeToolContext): SandboxService {
+  return (
+    context.sandboxService ??
+    new SandboxService({
+      historyStore: new SandboxHistoryStore({ workspaceRoot: context.cwd }),
+    })
+  )
 }
 
 function asToolRequest(input: unknown, context: RuntimeToolContext): unknown {
@@ -96,10 +107,8 @@ export const sandboxListRuntimesTool: RuntimeToolDefinition = {
     'List CodeMind sandbox runtime inventory, runner availability, trust classes, and backend readiness.',
   capability: 'READ',
   execute: async (_input: unknown, context: RuntimeToolContext): Promise<string> => {
-    if (context.sandboxService === undefined) {
-      return 'Sandbox runtime inventory unavailable: no SandboxService is wired into this agent context.'
-    }
-    const inventory = await context.sandboxService.refreshInventory()
+    const service = resolveSandboxService(context)
+    const inventory = await service.refreshInventory()
     return JSON.stringify(
       {
         schemaVersion: inventory.schemaVersion,
@@ -130,16 +139,13 @@ export const sandboxExecuteTool: RuntimeToolDefinition = {
     'Execute, compile, or test code through CodeMind structured sandbox execution. Accepts only structured sandbox requests; raw shell commands, executable paths, image names, and container args are rejected.',
   capability: 'APPROVED_COMMAND',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
-    if (context.sandboxService === undefined) {
-      return 'Sandbox execution unavailable: no SandboxService is wired into this agent context.'
-    }
-
+    const service = resolveSandboxService(context)
     const rawRequest = asToolRequest(input, context)
-    await context.sandboxService.refreshInventory()
-    const request = context.sandboxService.validateRequest(rawRequest)
+    await service.refreshInventory()
+    const request = service.validateRequest(rawRequest)
 
     if (context.policy.mode === 'PLAN_ONLY' || context.policy.mode === 'READ_ONLY') {
-      const result = await context.sandboxService.execute(request, { mode: context.policy.mode })
+      const result = await service.execute(request, { mode: context.policy.mode })
       context.recordSandboxExecution?.(request, result)
       return renderExecutionResult(result)
     }
@@ -148,7 +154,7 @@ export const sandboxExecuteTool: RuntimeToolDefinition = {
       return proposalFor(request)
     }
 
-    const result = await context.sandboxService.execute(request, { mode: 'APPROVED_EXECUTION' })
+    const result = await service.execute(request, { mode: 'APPROVED_EXECUTION' })
     context.recordSandboxExecution?.(request, result)
     return renderExecutionResult(result)
   },
