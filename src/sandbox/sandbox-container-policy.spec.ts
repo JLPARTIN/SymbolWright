@@ -58,7 +58,9 @@ describe('sandbox container policy skeleton', () => {
     expect(plan.imageId).toBe(IMAGE.id)
     expect(plan.limits.timeoutMs).toBe(2_000)
     expect(plan.limits.maxMemoryMb).toBe(128)
-    expect(plan.blockedReasons).toContain('Sandbox image is allowlisted but not enabled for execution.')
+    expect(plan.blockedReasons).toContain(
+      'Sandbox image is allowlisted but not enabled for execution.',
+    )
     expect(plan.blockedReasons).toContain(
       'Sandbox image is not confirmed installed by read-only local inspection.',
     )
