@@ -1,4 +1,11 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import path from 'node:path'
 
 import { redactSandboxText } from './sandbox-redaction.js'
@@ -48,7 +55,10 @@ function ensureDir(dir: string): void {
 function atomicWriteJson(filePath: string, value: unknown): void {
   ensureDir(path.dirname(filePath))
   const tmp = `${filePath}.${process.pid}.${Date.now()}.tmp`
-  writeFileSync(tmp, `${JSON.stringify(value, null, 2)}\n`, { encoding: 'utf8', mode: 0o600 })
+  writeFileSync(tmp, `${JSON.stringify(value, null, 2)}\n`, {
+    encoding: 'utf8',
+    mode: 0o600,
+  })
   renameSync(tmp, filePath)
 }
 
