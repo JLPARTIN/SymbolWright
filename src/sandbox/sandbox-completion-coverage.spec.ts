@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -6,8 +6,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { renderSandboxCommand } from '../cli-sandbox.js'
 import {
-  buildSandboxContainerCommandPlan,
   assertContainerCommandPlanStaysNonExecutable,
+  buildSandboxContainerCommandPlan,
 } from './sandbox-container-command-plan.js'
 import { SandboxHistoryStore } from './sandbox-history.js'
 import { DEFAULT_SANDBOX_IMAGE_ALLOWLIST } from './sandbox-images.js'
@@ -60,7 +60,9 @@ async function createService(
 }
 
 afterEach(async () => {
-  await Promise.all(workspaces.splice(0).map((workspace) => rm(workspace, { recursive: true, force: true })))
+  await Promise.all(
+    workspaces.splice(0).map((workspace) => rm(workspace, { recursive: true, force: true })),
+  )
 })
 
 describe('sandbox completion coverage', () => {
