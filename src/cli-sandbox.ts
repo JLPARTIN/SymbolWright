@@ -100,9 +100,19 @@ async function executeFile(
 ): Promise<string> {
   const workspaceRoot = path.resolve(options.workspaceRoot ?? process.cwd())
   const absolutePath = path.resolve(workspaceRoot, filePath)
-  if (!inside(absolutePath, workspaceRoot))
+  if (!inside(absolutePath, workspaceRoot)) {
     return 'Sandbox error: file must stay inside workspace root.'
-  const fileStat = await stat(absolutePath)
+  }
+
+  let fileStat: Awaited<ReturnType<typeof stat>>
+  try {
+    fileStat = await stat(absolutePath)
+  } catch (error) {
+    if (isMissingFileError(error)) return `Sandbox error: file not found: ${filePath}.`
+    const message = error instanceof Error ? error.message : String(error)
+    return `Sandbox error: cannot access file ${filePath}: ${message}`
+  }
+
   if (!fileStat.isFile()) return 'Sandbox error: target must be a file.'
   const languageId = languageForPath(absolutePath)
   if (languageId === undefined) return `Sandbox error: unsupported file extension for ${filePath}.`
@@ -187,4 +197,13 @@ function languageForPath(filePath: string): string | undefined {
 function inside(child: string, parent: string): boolean {
   const relative = path.relative(parent, child)
   return relative.length === 0 || (!relative.startsWith('..') && !path.isAbsolute(relative))
+}
+
+function isMissingFileError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { readonly code?: unknown }).code === 'ENOENT'
+  )
 }
