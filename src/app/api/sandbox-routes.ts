@@ -74,7 +74,8 @@ function parseLimit(value: string | null, fallback: number): number {
 function missionEventType(result: SandboxExecutionResult): string {
   if (result.status === 'unavailable') return 'sandbox.runtime.unavailable'
   if (result.status === 'policy-blocked') return 'sandbox.execution.blocked'
-  if (result.status === 'timeout') return 'sandbox.execution.cancelled'
+  if (result.status === 'cancelled') return 'sandbox.execution.cancelled'
+  if (result.status === 'timeout') return 'sandbox.execution.failed'
   if (result.status === 'passed') return 'sandbox.execution.completed'
   return 'sandbox.execution.failed'
 }
@@ -104,9 +105,7 @@ function recordMissionEvidence(
       durationMs: result.durationMs,
       ...(result.exitCode === undefined ? {} : { exitCode: result.exitCode }),
       inputHash: result.evidence.inputHash,
-      ...(result.evidence.outputHash === undefined
-        ? {}
-        : { outputHash: result.evidence.outputHash }),
+      ...(result.evidence.outputHash === undefined ? {} : { outputHash: result.evidence.outputHash }),
       ...(result.evidence.outputExcerpt === undefined
         ? {}
         : { outputExcerpt: result.evidence.outputExcerpt }),
@@ -205,11 +204,9 @@ export async function handleSandboxRoute(
         sendJson(res, 405, { error: 'method_not_allowed' })
         return true
       }
-      sendJson(res, 202, {
-        ok: false,
-        status: 'not_running',
-        reason: 'No long-running sandbox backend is wired in this Bundle 4 slice.',
-      })
+      const executionId = decodeURIComponent(url.pathname.slice('/api/sandbox/cancel/'.length))
+      const cancellation = await context.service.cancelExecution(executionId)
+      sendJson(res, cancellation.ok ? 200 : 202, cancellation)
       return true
     }
 
