@@ -11,6 +11,8 @@ import { SandboxHistoryStore } from '../../sandbox/sandbox-history.js'
 import { SandboxService } from '../../sandbox/sandbox-service.js'
 import { handleSandboxRoute } from './sandbox-routes.js'
 
+const TEST_MISSION_ID = 'mission_99999999-9999-4999-8999-999999999999'
+
 let root: string
 
 beforeEach(() => {
@@ -66,7 +68,7 @@ function services() {
   const missionService = new MissionService({
     workspaceRoot: root,
     env: { SECRET_TOKEN: 'secret' },
-    generateId: () => 'mission_route_test',
+    generateId: () => TEST_MISSION_ID,
   })
   return { sandboxService, missionService }
 }
