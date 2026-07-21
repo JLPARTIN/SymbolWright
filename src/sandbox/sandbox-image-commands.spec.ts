@@ -19,7 +19,10 @@ const DOCKER_OPTIONS = {
         }),
       ],
     ]),
-  inspectLocalImage: async (image: SandboxImageDefinition, engine: SandboxContainerEngineStatus) => ({
+  inspectLocalImage: async (
+    image: SandboxImageDefinition,
+    engine: SandboxContainerEngineStatus,
+  ) => ({
     imageId: image.id,
     image: image.image,
     engine: engine.engine,
@@ -33,7 +36,10 @@ const DOCKER_OPTIONS = {
 
 describe('sandbox image command contracts', () => {
   it('inspects only built-in allowlisted image IDs', async () => {
-    const rendered = await renderSandboxImageInspectCommand(['python-3-12-slim'], DOCKER_OPTIONS)
+    const rendered = await renderSandboxImageInspectCommand(
+      ['python-3-12-slim'],
+      DOCKER_OPTIONS,
+    )
 
     expect(rendered).toContain('CodeMind Sandbox Image Inspection')
     expect(rendered).toContain('Image ID: python-3-12-slim')
@@ -67,13 +73,18 @@ describe('sandbox image command contracts', () => {
     expect(rendered).toContain('CodeMind Sandbox Image Preparation Plan')
     expect(rendered).toContain('Status: REVIEW_REQUIRED')
     expect(rendered).toContain('prepare this allowlisted image manually')
-    expect(rendered).toContain('CodeMind does not execute this plan automatically')
+    expect(rendered).toContain(
+      'CodeMind does not execute this plan automatically',
+    )
   })
 
   it('blocks preparation when no container engine is detected', async () => {
-    const rendered = await renderSandboxImagePrepareCommand(['rust-1-bookworm'], {
-      discoverCommandAvailability: async () => new Map(),
-    })
+    const rendered = await renderSandboxImagePrepareCommand(
+      ['rust-1-bookworm'],
+      {
+        discoverCommandAvailability: async () => new Map(),
+      },
+    )
 
     expect(rendered).toContain('Status: BLOCKED')
     expect(rendered).toContain('No usable container engine is enabled')
