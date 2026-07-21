@@ -104,9 +104,7 @@ function recordMissionEvidence(
       durationMs: result.durationMs,
       ...(result.exitCode === undefined ? {} : { exitCode: result.exitCode }),
       inputHash: result.evidence.inputHash,
-      ...(result.evidence.outputHash === undefined
-        ? {}
-        : { outputHash: result.evidence.outputHash }),
+      ...(result.evidence.outputHash === undefined ? {} : { outputHash: result.evidence.outputHash }),
       ...(result.evidence.outputExcerpt === undefined
         ? {}
         : { outputExcerpt: result.evidence.outputExcerpt }),
@@ -144,6 +142,15 @@ export async function handleSandboxRoute(
         return true
       }
       sendJson(res, 200, await context.service.refreshInventory())
+      return true
+    }
+
+    if (url.pathname === '/api/sandbox/images') {
+      if (req.method !== 'GET') {
+        sendJson(res, 405, { error: 'method_not_allowed' })
+        return true
+      }
+      sendJson(res, 200, { images: context.service.listImages() })
       return true
     }
 
