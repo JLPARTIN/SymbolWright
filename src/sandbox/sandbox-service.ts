@@ -2,9 +2,9 @@ import { randomUUID } from 'node:crypto'
 
 import type { CodemindRuntimeMode } from '../runtime/types.js'
 import type {
-  SandboxExecutionRecord,
   SandboxHistoryList,
   SandboxHistoryStore,
+  SandboxExecutionRecord,
 } from './sandbox-history.js'
 import { normalizeSandboxLimits } from './sandbox-limits.js'
 import { evaluateSandboxPolicy } from './sandbox-policy.js'
@@ -48,7 +48,8 @@ export class SandboxService {
   public constructor(options: SandboxServiceOptions) {
     this.env = options.env ?? process.env
     this.buildInventory =
-      options.buildInventory ?? (() => options.inventory ?? buildSandboxInventory({ env: this.env }))
+      options.buildInventory ??
+      (() => options.inventory ?? buildSandboxInventory({ env: this.env }))
     this.inventory = options.inventory ?? this.buildInventory()
     this.historyStore = options.historyStore
     this.now = options.now ?? (() => new Date())
