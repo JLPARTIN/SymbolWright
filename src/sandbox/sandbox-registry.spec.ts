@@ -32,6 +32,26 @@ describe('sandbox runtime inventory', () => {
     expect(listSandboxRunnerIds(inventory)).toContain('guarded-host-go')
   })
 
+  it('includes explicit container image policy without enabling image execution', () => {
+    const inventory = buildSandboxInventory({
+      now: () => new Date(CHECKED_AT),
+      commandAvailability: new Map([
+        [
+          'docker',
+          runnerAvailability('available', CHECKED_AT, {
+            version: '27.0.0',
+          }),
+        ],
+      ]),
+    })
+
+    expect(inventory.images.map((image) => image.id)).toContain('node-22-bookworm-slim')
+    expect(inventory.images.every((image) => image.enabled === false)).toBe(true)
+    expect(inventory.images.every((image) => image.installed === false)).toBe(true)
+    expect(inventory.warnings.join('\n')).toContain('arbitrary image names')
+    expect(inventory.warnings.join('\n')).toContain('docker was detected')
+  })
+
   it('keeps guarded-host unavailable unless explicitly opted in', () => {
     const disabled = buildSandboxInventory({
       now: () => new Date(CHECKED_AT),

@@ -3,6 +3,7 @@ import {
   UNIVERSAL_LANGUAGE_REGISTRY,
   type CodeRunnerDefinition,
 } from '../workspace/language-registry.js'
+import { buildSandboxImagePolicy } from './sandbox-images.js'
 import { DEFAULT_SANDBOX_LIMITS } from './sandbox-limits.js'
 import type {
   SandboxInventory,
@@ -153,6 +154,7 @@ export function buildSandboxInventory(
   const generatedAt = now().toISOString()
   const commandAvailability =
     options.commandAvailability ?? new Map<string, SandboxRunnerAvailability>()
+  const imagePolicy = buildSandboxImagePolicy(commandAvailability)
   const guardedHostOptIn = options.env?.['CODEMIND_ALLOW_GUARDED_HOST_EXECUTION'] === 'true'
 
   const browserRunners = CODE_RUNNER_DEFINITIONS.filter(
@@ -187,9 +189,9 @@ export function buildSandboxInventory(
     schemaVersion: 1,
     generatedAt,
     runners: [...browserRunners, ...guardedRunners],
-    images: [],
+    images: imagePolicy.images,
     warnings: [
-      'Container image policy is intentionally empty until images are explicitly allowlisted and verified.',
+      ...imagePolicy.warnings,
       'Guarded-host runners are inventory entries only unless explicit opt-in and APPROVED_EXECUTION are present.',
       'Runtime discovery uses bounded version probes only; it does not execute repository code or install dependencies.',
     ],

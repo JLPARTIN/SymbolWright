@@ -99,6 +99,23 @@ describe('sandbox API route handler', () => {
     expect(rejected.statusCode).toBe(405)
   })
 
+  it('lists only explicit sandbox image allowlist entries', async () => {
+    const { sandboxService } = services()
+    const res = response()
+
+    await handleSandboxRoute(request('GET'), res, new URL('http://localhost/api/sandbox/images'), {
+      service: sandboxService,
+    })
+
+    expect(res.statusCode).toBe(200)
+    const body = res.json<{
+      images: readonly { id: string; image: string; enabled: boolean; installed?: boolean }[]
+    }>()
+    expect(body.images.map((image) => image.id)).toContain('python-3-12-slim')
+    expect(body.images.every((image) => image.enabled === false)).toBe(true)
+    expect(body.images.some((image) => image.image === 'evil/random:latest')).toBe(false)
+  })
+
   it('executes through policy, persists history, and records mission evidence', async () => {
     const { sandboxService, missionService } = services()
     const mission = await missionService.create({

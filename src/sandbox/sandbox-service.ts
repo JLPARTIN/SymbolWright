@@ -20,6 +20,7 @@ import { excerptSandboxOutput, sha256Text } from './sandbox-redaction.js'
 import type {
   SandboxExecutionRequest,
   SandboxExecutionResult,
+  SandboxImageDefinition,
   SandboxInventory,
   SandboxRunnerAvailability,
   SandboxRunnerDefinition,
@@ -78,6 +79,10 @@ export class SandboxService {
 
   public listInventory(): SandboxInventory {
     return this.inventory
+  }
+
+  public listImages(): readonly SandboxImageDefinition[] {
+    return this.inventory.images
   }
 
   public async refreshInventory(): Promise<SandboxInventory> {

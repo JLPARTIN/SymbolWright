@@ -147,6 +147,15 @@ export async function handleSandboxRoute(
       return true
     }
 
+    if (url.pathname === '/api/sandbox/images') {
+      if (req.method !== 'GET') {
+        sendJson(res, 405, { error: 'method_not_allowed' })
+        return true
+      }
+      sendJson(res, 200, { images: context.service.listImages() })
+      return true
+    }
+
     if (url.pathname === '/api/sandbox/execute') {
       if (req.method !== 'POST') {
         sendJson(res, 405, { error: 'method_not_allowed' })
