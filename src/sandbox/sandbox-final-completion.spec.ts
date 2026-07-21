@@ -73,13 +73,39 @@ afterEach(async () => {
   )
 })
 
+const JS_SUCCESS_SOURCE = [
+  "console.log('sandbox-js-proof')",
+  "console.log(process.env.CODEMIND_SECRET_TOKEN ?? 'NO_SECRET')",
+].join('\n')
+
+const PYTHON_SUCCESS_SOURCE = [
+  'import os',
+  "print('sandbox-python-proof')",
+  "print(os.environ.get('CODEMIND_SECRET_TOKEN', 'NO_SECRET'))",
+].join('\n')
+
+const GO_SUCCESS_SOURCE = [
+  'package main',
+  '',
+  'import (',
+  '  "fmt"',
+  '  "os"',
+  ')',
+  '',
+  'func main() {',
+  '  fmt.Println("sandbox-go-proof")',
+  '  value := os.Getenv("CODEMIND_SECRET_TOKEN")',
+  '  if value == "" { value = "NO_SECRET" }',
+  '  fmt.Println(value)',
+  '}',
+].join('\n')
+
 const runtimeCases: readonly RuntimeProofCase[] = [
   {
     languageId: 'javascript',
     runnerId: 'guarded-host-javascript',
     command: 'node',
-    successSource:
-      "console.log('sandbox-js-proof'); console.log(process.env.CODEMIND_SECRET_TOKEN ?? 'NO_SECRET')",
+    successSource: JS_SUCCESS_SOURCE,
     successOutput: 'sandbox-js-proof',
     runtimeFailureSource: "throw new Error('sandbox-js-boom')",
     runtimeFailureText: 'sandbox-js-boom',
@@ -89,8 +115,7 @@ const runtimeCases: readonly RuntimeProofCase[] = [
     languageId: 'python',
     runnerId: 'guarded-host-python',
     command: 'python3',
-    successSource:
-      "import os\nprint('sandbox-python-proof')\nprint(os.environ.get('CODEMIND_SECRET_TOKEN', 'NO_SECRET'))\n",
+    successSource: PYTHON_SUCCESS_SOURCE,
     successOutput: 'sandbox-python-proof',
     runtimeFailureSource: "raise RuntimeError('sandbox-python-boom')\n",
     runtimeFailureText: 'sandbox-python-boom',
@@ -101,8 +126,7 @@ const runtimeCases: readonly RuntimeProofCase[] = [
     runnerId: 'guarded-host-go',
     command: 'go',
     probeArgs: ['version'],
-    successSource:
-      'package main\n\nimport (\n  "fmt"\n  "os"\n)\n\nfunc main() {\n  fmt.Println("sandbox-go-proof")\n  value := os.Getenv("CODEMIND_SECRET_TOKEN")\n  if value == "" { value = "NO_SECRET" }\n  fmt.Println(value)\n}\n',
+    successSource: GO_SUCCESS_SOURCE,
     successOutput: 'sandbox-go-proof',
     runtimeFailureSource: 'package main\n\nfunc main() { panic("sandbox-go-boom") }\n',
     runtimeFailureText: 'sandbox-go-boom',
