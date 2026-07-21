@@ -1,7 +1,7 @@
 import type { SandboxLimits } from './sandbox-types.js'
 
 export const DEFAULT_SANDBOX_LIMITS: SandboxLimits = {
-  timeoutMs: 10_000,
+  timeoutMs: 20_000,
   compileTimeoutMs: 20_000,
   maxMemoryMb: 512,
   maxCpuPercent: 100,
