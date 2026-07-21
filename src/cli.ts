@@ -58,6 +58,7 @@ import { renderRuntimeValidationCommand } from './cli-runtime-validation-command
 import { renderRuntimeValidationPlan } from './cli-runtime-validation-plan.js'
 import { renderRuntimeWorkflow } from './cli-runtime-workflow.js'
 import { renderRuntimeWriteIntent } from './cli-runtime-write-intent.js'
+import { renderSandboxCommand } from './cli-sandbox.js'
 import { renderScan, scanRepo } from './cli-scan.js'
 import { runServeCommand } from './cli-serve.js'
 import { renderSkillListCommand, renderSkillShowCommand, runSkillRunCommand } from './cli-skill.js'
@@ -278,6 +279,10 @@ async function main(): Promise<void> {
       await handleRuntimeCommand(rest)
       break
 
+    case 'sandbox':
+      await handleSandboxCommand(rest)
+      break
+
     case 'scan': {
       const dir = rest[0] ?? process.cwd()
       console.log(renderScan(scanRepo(dir)))
@@ -355,6 +360,10 @@ async function handleRuntimeCommand(args: readonly string[]): Promise<void> {
     return
   }
   console.log(renderNotYetActive(args.length > 0 ? `runtime ${args.join(' ')}` : 'runtime'))
+}
+
+async function handleSandboxCommand(args: readonly string[]): Promise<void> {
+  console.log(await renderSandboxCommand(args))
 }
 
 async function handleAjnaCommand(args: readonly string[]): Promise<void> {
