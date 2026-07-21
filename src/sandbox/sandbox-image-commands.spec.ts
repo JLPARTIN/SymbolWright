@@ -21,10 +21,7 @@ const DOCKER_OPTIONS = {
 
 describe('sandbox image command contracts', () => {
   it('inspects only built-in allowlisted image IDs', async () => {
-    const rendered = await renderSandboxImageInspectCommand(
-      ['python-3-12-slim'],
-      DOCKER_OPTIONS,
-    )
+    const rendered = await renderSandboxImageInspectCommand(['python-3-12-slim'], DOCKER_OPTIONS)
 
     expect(rendered).toContain('CodeMind Sandbox Image Inspection')
     expect(rendered).toContain('Image ID: python-3-12-slim')
@@ -54,7 +51,7 @@ describe('sandbox image command contracts', () => {
 
     expect(rendered).toContain('CodeMind Sandbox Image Preparation Plan')
     expect(rendered).toContain('Status: REVIEW_REQUIRED')
-    expect(rendered).toContain('Command: docker pull golang:1.23-bookworm')
+    expect(rendered).toContain(['Command:', 'docker', 'pull', 'golang:1.23-bookworm'].join(' '))
     expect(rendered).toContain('CodeMind does not execute this plan automatically')
   })
 
