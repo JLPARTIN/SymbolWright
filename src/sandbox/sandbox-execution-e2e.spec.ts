@@ -51,7 +51,9 @@ async function createService(
 }
 
 afterEach(async () => {
-  await Promise.all(workspaces.splice(0).map((workspace) => rm(workspace, { recursive: true, force: true })))
+  await Promise.all(
+    workspaces.splice(0).map((workspace) => rm(workspace, { recursive: true, force: true })),
+  )
 })
 
 describe('working sandbox execution vertical path', () => {
@@ -121,22 +123,25 @@ describe('working sandbox execution vertical path', () => {
     expect(result.cleanup.succeeded).toBe(true)
   })
 
-  it.runIf(commandAvailable('python3'))('executes Python when python3 is actually available', async () => {
-    const service = await createService(new Map([['python3', availability('python3')]]))
+  it.runIf(commandAvailable('python3'))(
+    'executes Python when python3 is actually available',
+    async () => {
+      const service = await createService(new Map([['python3', availability('python3')]]))
 
-    const result = await service.execute(
-      {
-        languageId: 'python',
-        mode: 'run',
-        requestedRunnerId: 'guarded-host-python',
-        source: "print('sandbox-python-ok')",
-      },
-      { mode: 'APPROVED_EXECUTION' },
-    )
+      const result = await service.execute(
+        {
+          languageId: 'python',
+          mode: 'run',
+          requestedRunnerId: 'guarded-host-python',
+          source: "print('sandbox-python-ok')",
+        },
+        { mode: 'APPROVED_EXECUTION' },
+      )
 
-    expect(result.status).toBe('passed')
-    expect(result.stdout).toContain('sandbox-python-ok')
-  })
+      expect(result.status).toBe('passed')
+      expect(result.stdout).toContain('sandbox-python-ok')
+    },
+  )
 
   it.runIf(commandAvailable('go'))('executes Go when go is actually available', async () => {
     const service = await createService(new Map([['go', availability('go')]]))
