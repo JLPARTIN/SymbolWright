@@ -9,7 +9,11 @@ import {
   runnerAvailability,
   STATIC_SANDBOX_INVENTORY_FOR_TESTS,
 } from './sandbox-registry.js'
-import { containsRepresentativeSandboxSecret, redactSandboxText, sha256Text } from './sandbox-redaction.js'
+import {
+  containsRepresentativeSandboxSecret,
+  redactSandboxText,
+  sha256Text,
+} from './sandbox-redaction.js'
 import { SandboxService } from './sandbox-service.js'
 
 describe('sandbox runtime inventory', () => {
@@ -31,15 +35,18 @@ describe('sandbox runtime inventory', () => {
       now: () => new Date('2026-07-20T00:00:00.000Z'),
       env: {},
     })
-    expect(disabled.runners.find((runner) => runner.id === 'guarded-host-python')?.availability.status).toBe(
-      'unavailable',
-    )
+    expect(
+      disabled.runners.find((runner) => runner.id === 'guarded-host-python')?.availability.status,
+    ).toBe('unavailable')
 
     const enabled = buildSandboxInventory({
       now: () => new Date('2026-07-20T00:00:00.000Z'),
       env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
       commandAvailability: new Map([
-        ['python3', runnerAvailability('available', '2026-07-20T00:00:00.000Z', { version: '3.12.0' })],
+        [
+          'python3',
+          runnerAvailability('available', '2026-07-20T00:00:00.000Z', { version: '3.12.0' }),
+        ],
       ]),
     })
     const python = enabled.runners.find((runner) => runner.id === 'guarded-host-python')
@@ -97,7 +104,12 @@ describe('sandbox policy and service foundation', () => {
     if (guarded === undefined) throw new Error('guarded runner missing')
 
     const blocked = evaluateSandboxPolicy(
-      { languageId: 'python', mode: 'run', source: 'print(1)', requestedRunnerId: 'guarded-host-python' },
+      {
+        languageId: 'python',
+        mode: 'run',
+        source: 'print(1)',
+        requestedRunnerId: 'guarded-host-python',
+      },
       guarded,
       { mode: 'APPROVED_EXECUTION', env: {} },
     )
@@ -105,7 +117,12 @@ describe('sandbox policy and service foundation', () => {
     expect(blocked.reason).toContain('disabled')
 
     const allowed = evaluateSandboxPolicy(
-      { languageId: 'python', mode: 'run', source: 'print(1)', requestedRunnerId: 'guarded-host-python' },
+      {
+        languageId: 'python',
+        mode: 'run',
+        source: 'print(1)',
+        requestedRunnerId: 'guarded-host-python',
+      },
       guarded,
       { mode: 'APPROVED_EXECUTION', env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' } },
     )
