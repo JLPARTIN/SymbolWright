@@ -16,7 +16,7 @@
     }
   },
   "bin": {
-    "codemind": "dist/cli.js",
+    "codemind": "dist/cli-bin.js",
     "codemind-workspace": "dist/cli-workspace-bin.js"
   },
   "files": [
