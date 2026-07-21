@@ -193,7 +193,7 @@ export class SandboxService {
         this.result(executionId, request, effectiveRunner, startedAt, 'policy-blocked', {
           policyDecision: 'blocked',
           policyReason:
-            'Browser-isolated runners execute in the browser runtime, not through the server sandbox API.',
+            'No execution backend: Browser-isolated runners execute in the browser runtime, not through the server sandbox API.',
           durationStartedAt: started,
         }),
       )
