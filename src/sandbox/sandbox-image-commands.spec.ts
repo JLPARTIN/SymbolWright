@@ -21,10 +21,7 @@ const DOCKER_OPTIONS = {
 
 describe('sandbox image command contracts', () => {
   it('inspects only built-in allowlisted image IDs', async () => {
-    const rendered = await renderSandboxImageInspectCommand(
-      ['python-3-12-slim'],
-      DOCKER_OPTIONS,
-    )
+    const rendered = await renderSandboxImageInspectCommand(['python-3-12-slim'], DOCKER_OPTIONS)
 
     expect(rendered).toContain('CodeMind Sandbox Image Inspection')
     expect(rendered).toContain('Image ID: python-3-12-slim')
@@ -35,7 +32,10 @@ describe('sandbox image command contracts', () => {
 
   it('rejects missing and arbitrary image names', async () => {
     const missing = await renderSandboxImageInspectCommand([], DOCKER_OPTIONS)
-    const arbitrary = await renderSandboxImageInspectCommand(['registry.example/bad:latest'], DOCKER_OPTIONS)
+    const arbitrary = await renderSandboxImageInspectCommand(
+      ['registry.example/bad:latest'],
+      DOCKER_OPTIONS,
+    )
 
     expect(missing).toContain('Missing sandbox image id')
     expect(missing).toContain('Allowed image IDs')
