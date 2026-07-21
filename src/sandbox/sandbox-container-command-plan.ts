@@ -47,7 +47,7 @@ const NON_ROOT_USER = '65532:65532'
 const MINIMAL_CONTAINER_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 function assertNoUnknownContainerPlanOptions(options: SandboxContainerCommandPlanOptions): void {
-  for (const key of Object.keys(options as Record<string, unknown>)) {
+  for (const key of Object.keys(options as unknown as Record<string, unknown>)) {
     if (!ALLOWED_OPTION_KEYS.has(key)) {
       throw new Error(`Arbitrary container option is not allowed: ${key}`)
     }
