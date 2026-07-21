@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import type { CodemindRuntimeMode } from '../runtime/types.js'
+import { normalizeSandboxLimits } from './sandbox-limits.js'
 import { evaluateSandboxPolicy } from './sandbox-policy.js'
 import { validateSandboxExecutionRequest } from './sandbox-request.js'
 import { findSandboxRunner, listSandboxLanguageIds, listSandboxRunnerIds } from './sandbox-registry.js'
@@ -147,21 +148,7 @@ function unavailableRunner(request: SandboxExecutionRequest): SandboxRunnerDefin
       repository: false,
       network: false,
     },
-    limits: request.limits ?? {
-      timeoutMs: 10_000,
-      compileTimeoutMs: 20_000,
-      maxMemoryMb: 512,
-      maxCpuPercent: 100,
-      maxProcesses: 64,
-      maxOutputBytes: 64_000,
-      maxArtifactBytes: 2_000_000,
-      maxFiles: 32,
-      maxFileBytes: 128_000,
-      maxTotalSourceBytes: 512_000,
-      maxStdinBytes: 64_000,
-      maxArgs: 32,
-      maxArgBytes: 4_000,
-    },
+    limits: normalizeSandboxLimits(request.limits),
     networkPolicy: 'disabled',
     dependencyState: 'unsupported',
     notes: ['Unavailable runners do not execute code.'],
