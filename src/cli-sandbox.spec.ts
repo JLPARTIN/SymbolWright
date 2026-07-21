@@ -46,7 +46,7 @@ describe('sandbox CLI renderer', () => {
     const rendered = await renderSandboxCommand(['inspect', 'node:22-bookworm-slim'], OPTIONS)
 
     expect(rendered).toContain('Unknown sandbox image id')
-    expect(rendered).toContain('Raw image names are not accepted')
+    expect(rendered).toContain('arbitrary container image names')
   })
 
   it('keeps unsupported sandbox subcommands inactive', async () => {
