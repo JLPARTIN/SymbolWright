@@ -32,7 +32,7 @@ export interface GuardedHostExecutionOptions {
 interface MaterializedWorkspace {
   readonly root: string
   readonly entryPath: string
-  readonly cleanup: () => Promise<{ readonly attempted: true; readonly succeeded: boolean; readonly warning?: string }>
+  readonly cleanup: () => Promise<SandboxExecutionResult['cleanup']>
 }
 
 interface PlannedCommand {
@@ -58,7 +58,7 @@ interface MutableExecutionState {
   cancelRequested: boolean
 }
 
-const DEFAULT_FILE_BY_LANGUAGE: ReadonlyMap<string, string> = new Map([
+const DEFAULT_FILE_BY_LANGUAGE = new Map<string, string>([
   ['javascript', 'main.js'],
   ['typescript', 'main.ts'],
   ['python', 'main.py'],
@@ -71,7 +71,7 @@ const DEFAULT_FILE_BY_LANGUAGE: ReadonlyMap<string, string> = new Map([
   ['php', 'main.php'],
 ])
 
-const EXTENSIONS_BY_LANGUAGE: ReadonlyMap<string, readonly string[]> = new Map([
+const EXTENSIONS_BY_LANGUAGE = new Map<string, readonly string[]>([
   ['javascript', ['.js', '.mjs', '.cjs']],
   ['typescript', ['.ts', '.tsx']],
   ['python', ['.py']],
@@ -84,13 +84,7 @@ const EXTENSIONS_BY_LANGUAGE: ReadonlyMap<string, readonly string[]> = new Map([
   ['php', ['.php']],
 ])
 
-const PASSING_STATUS_BY_MODE: ReadonlyMap<SandboxExecutionRequest['mode'], SandboxExecutionStatus> = new Map([
-  ['run', 'passed'],
-  ['compile', 'passed'],
-  ['test', 'passed'],
-])
-
-const VERIFICATION_BY_MODE: ReadonlyMap<SandboxExecutionRequest['mode'], VerificationLevel> = new Map([
+const VERIFICATION_BY_MODE = new Map<SandboxExecutionRequest['mode'], VerificationLevel>([
   ['run', 'EXECUTED'],
   ['compile', 'COMPILED'],
   ['test', 'TESTED'],
@@ -98,6 +92,12 @@ const VERIFICATION_BY_MODE: ReadonlyMap<SandboxExecutionRequest['mode'], Verific
 
 function byteLength(value: string): number {
   return Buffer.byteLength(value, 'utf8')
+}
+
+function entryNameFor(languageId: string): string {
+  const fileName = DEFAULT_FILE_BY_LANGUAGE.get(languageId)
+  if (fileName === undefined) throw new Error(`No guarded-host entrypoint for ${languageId}`)
+  return fileName
 }
 
 function normalizeRelativePath(filePath: string): string {
@@ -119,12 +119,6 @@ function isInside(child: string, parent: string): boolean {
   return relative.length > 0 && !relative.startsWith('..') && !path.isAbsolute(relative)
 }
 
-function entryNameFor(languageId: string): string {
-  const fileName = DEFAULT_FILE_BY_LANGUAGE.get(languageId)
-  if (fileName === undefined) throw new Error(`No guarded-host entrypoint for ${languageId}`)
-  return fileName
-}
-
 function findEntryFile(languageId: string, files: readonly { readonly path: string }[]): string {
   const extensions = EXTENSIONS_BY_LANGUAGE.get(languageId) ?? []
   const match = files.find((file) => extensions.some((extension) => file.path.endsWith(extension)))
@@ -134,12 +128,7 @@ function findEntryFile(languageId: string, files: readonly { readonly path: stri
 async function materializeWorkspace(request: SandboxExecutionRequest): Promise<MaterializedWorkspace> {
   const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-sandbox-'))
   let entryPath = path.join(root, entryNameFor(request.languageId))
-
-  const cleanup = async (): Promise<{
-    readonly attempted: true
-    readonly succeeded: boolean
-    readonly warning?: string
-  }> => {
+  const cleanup = async (): Promise<SandboxExecutionResult['cleanup']> => {
     try {
       await rm(root, { recursive: true, force: true })
       return { attempted: true, succeeded: true }
@@ -213,32 +202,31 @@ function minimalEnvironment(
 async function writeTypeScriptCompiler(workspaceRoot: string, entryPath: string): Promise<string> {
   const compilerPath = path.join(workspaceRoot, '__codemind_ts_compile.mjs')
   const outputPath = path.join(workspaceRoot, 'main.mjs')
-  const script = [
-    "import { readFileSync, writeFileSync } from 'node:fs'",
-    "import ts from 'typescript'",
-    `const source = readFileSync(${JSON.stringify(entryPath)}, 'utf8')`,
-    'const result = ts.transpileModule(source, {',
-    '  compilerOptions: {',
-    '    module: ts.ModuleKind.ES2022,',
-    '    target: ts.ScriptTarget.ES2022,',
-    '    strict: true,',
-    '  },',
-    '  reportDiagnostics: true,',
-    '})',
-    'const diagnostics = result.diagnostics ?? []',
-    'const errors = diagnostics.filter((diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error)',
-    'if (errors.length > 0) {',
-    '  console.error(ts.formatDiagnosticsWithColorAndContext(errors, {',
-    "    getCanonicalFileName: (fileName) => fileName,",
-    "    getCurrentDirectory: () => process.cwd(),",
-    "    getNewLine: () => '\\n',",
-    '  }))',
-    '  process.exit(1)',
-    '}',
-    `writeFileSync(${JSON.stringify(outputPath)}, result.outputText, 'utf8')`,
-    '',
-  ].join('\n')
-  await writeFile(compilerPath, script, 'utf8')
+  await writeFile(
+    compilerPath,
+    [
+      "import { readFileSync, writeFileSync } from 'node:fs'",
+      "import ts from 'typescript'",
+      `const source = readFileSync(${JSON.stringify(entryPath)}, 'utf8')`,
+      'const result = ts.transpileModule(source, {',
+      '  compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022, strict: true },',
+      '  reportDiagnostics: true,',
+      '})',
+      'const diagnostics = result.diagnostics ?? []',
+      'const errors = diagnostics.filter((diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error)',
+      'if (errors.length > 0) {',
+      '  console.error(ts.formatDiagnosticsWithColorAndContext(errors, {',
+      "    getCanonicalFileName: (fileName) => fileName,",
+      "    getCurrentDirectory: () => process.cwd(),",
+      "    getNewLine: () => '\\n',",
+      '  }))',
+      '  process.exit(1)',
+      '}',
+      `writeFileSync(${JSON.stringify(outputPath)}, result.outputText, 'utf8')`,
+      '',
+    ].join('\n'),
+    'utf8',
+  )
   return compilerPath
 }
 
@@ -253,16 +241,18 @@ async function plannedCommands(
       return [{ phase: request.mode === 'test' ? 'test' : 'run', command: 'node', args: [entry, ...args] }]
     case 'typescript': {
       const compilerPath = await writeTypeScriptCompiler(workspace.root, workspace.entryPath)
-      const compilerEntry = path.relative(workspace.root, compilerPath)
-      const commands: PlannedCommand[] = [{ phase: 'compile', command: 'node', args: [compilerEntry] }]
+      const commands: PlannedCommand[] = [
+        { phase: 'compile', command: 'node', args: [path.relative(workspace.root, compilerPath)] },
+      ]
       if (request.mode !== 'compile') commands.push({ phase: 'run', command: 'node', args: ['main.mjs', ...args] })
       return commands
     }
     case 'python':
       return [{ phase: request.mode === 'test' ? 'test' : 'run', command: 'python3', args: [entry, ...args] }]
     case 'go':
-      if (request.mode === 'test') return [{ phase: 'test', command: 'go', args: ['test', './...'] }]
-      return [{ phase: 'run', command: 'go', args: ['run', entry, ...args] }]
+      return request.mode === 'test'
+        ? [{ phase: 'test', command: 'go', args: ['test', './...'] }]
+        : [{ phase: 'run', command: 'go', args: ['run', entry, ...args] }]
     case 'rust':
       return compileThenMaybeRun(request, 'rustc', [entry, '-o', 'main'], './main', args)
     case 'java':
@@ -299,12 +289,19 @@ function compileThenMaybeRun(
   ]
 }
 
-function appendCapped(existing: string, chunk: Buffer, maxOutputBytes: number): { value: string; truncated: boolean } {
+function appendCapped(
+  existing: string,
+  chunk: Buffer,
+  maxOutputBytes: number,
+): { value: string; truncated: boolean } {
   if (byteLength(existing) >= maxOutputBytes) return { value: existing, truncated: true }
   const text = chunk.toString('utf8')
   const remaining = maxOutputBytes - byteLength(existing)
   if (byteLength(text) <= remaining) return { value: `${existing}${text}`, truncated: false }
-  return { value: `${existing}${text.slice(0, Math.max(0, remaining))}\n[TRUNCATED]`, truncated: true }
+  return {
+    value: `${existing}${text.slice(0, Math.max(0, remaining))}\n[TRUNCATED]`,
+    truncated: true,
+  }
 }
 
 async function runPlannedCommand(
@@ -350,7 +347,7 @@ async function runPlannedCommand(
     })
     child.on('error', (error) => {
       clearTimeout(timer)
-      state.child = undefined
+      delete state.child
       resolve({
         phase: command.phase,
         stdout,
@@ -362,7 +359,7 @@ async function runPlannedCommand(
     })
     child.on('close', (exitCode, signal) => {
       clearTimeout(timer)
-      state.child = undefined
+      delete state.child
       resolve({
         phase: command.phase,
         ...(exitCode === null ? {} : { exitCode }),
@@ -380,11 +377,8 @@ async function runPlannedCommand(
 function killChild(child: ChildProcessWithoutNullStreams): void {
   if (child.pid === undefined) return
   try {
-    if (process.platform === 'win32') {
-      child.kill('SIGTERM')
-    } else {
-      process.kill(-child.pid, 'SIGTERM')
-    }
+    if (process.platform === 'win32') child.kill('SIGTERM')
+    else process.kill(-child.pid, 'SIGTERM')
   } catch {
     child.kill('SIGKILL')
   }
@@ -413,7 +407,6 @@ function buildResult(
   status: SandboxExecutionStatus,
   stdout: string,
   stderr: string,
-  startedAt: string,
   cleanup: SandboxExecutionResult['cleanup'],
   extra: {
     readonly exitCode?: number
@@ -431,9 +424,9 @@ function buildResult(
     trustClass: options.runner.trustClass,
     backend: options.runner.backend,
     status,
-    startedAt,
+    startedAt: options.startedAt,
     completedAt,
-    durationMs: Math.max(0, Date.parse(completedAt) - Date.parse(startedAt)),
+    durationMs: Math.max(0, Date.parse(completedAt) - Date.parse(options.startedAt)),
     ...(extra.exitCode === undefined ? {} : { exitCode: extra.exitCode }),
     ...(extra.signal === undefined ? {} : { signal: extra.signal }),
     stdout,
@@ -454,7 +447,6 @@ function buildResult(
 export async function executeGuardedHostRequest(
   options: GuardedHostExecutionOptions,
 ): Promise<SandboxExecutionResult> {
-  const startedAt = options.startedAt
   let resolveCompleted!: (result: SandboxExecutionResult) => void
   const completed = new Promise<SandboxExecutionResult>((resolve) => {
     resolveCompleted = resolve
@@ -473,11 +465,9 @@ export async function executeGuardedHostRequest(
   let stdout = ''
   let stderr = ''
   let truncated = false
-  let cleanup: SandboxExecutionResult['cleanup'] = { attempted: false, succeeded: false }
 
   try {
-    const commands = await plannedCommands(options.request, workspace)
-    for (const command of commands) {
+    for (const command of await plannedCommands(options.request, workspace)) {
       const outcome = await runPlannedCommand(
         command,
         workspace.root,
@@ -489,29 +479,18 @@ export async function executeGuardedHostRequest(
       stderr = `${stderr}${outcome.stderr}`
       truncated = truncated || outcome.truncated
       if (outcome.exitCode !== 0 || outcome.timedOut || outcome.cancelled) {
-        cleanup = await workspace.cleanup()
-        const result = buildResult(
-          options,
-          failureStatus(outcome),
-          stdout,
-          stderr,
-          startedAt,
-          cleanup,
-          {
-            ...(outcome.exitCode === undefined ? {} : { exitCode: outcome.exitCode }),
-            ...(outcome.signal === undefined ? {} : { signal: outcome.signal }),
-            diagnostics: diagnosticsFor(outcome),
-            outputTruncated: truncated,
-          },
-        )
+        const result = buildResult(options, failureStatus(outcome), stdout, stderr, await workspace.cleanup(), {
+          ...(outcome.exitCode === undefined ? {} : { exitCode: outcome.exitCode }),
+          ...(outcome.signal === undefined ? {} : { signal: outcome.signal }),
+          diagnostics: diagnosticsFor(outcome),
+          outputTruncated: truncated,
+        })
         resolveCompleted(result)
         return result
       }
     }
 
-    cleanup = await workspace.cleanup()
-    const status = PASSING_STATUS_BY_MODE.get(options.request.mode) ?? 'passed'
-    const result = buildResult(options, status, stdout, stderr, startedAt, cleanup, {
+    const result = buildResult(options, 'passed', stdout, stderr, await workspace.cleanup(), {
       exitCode: 0,
       verificationLevel: VERIFICATION_BY_MODE.get(options.request.mode),
       outputTruncated: truncated,
@@ -519,23 +498,14 @@ export async function executeGuardedHostRequest(
     resolveCompleted(result)
     return result
   } catch (error) {
-    cleanup = await workspace.cleanup()
+    const message = error instanceof Error ? error.message : String(error)
     const result = buildResult(
       options,
       'internal-error',
       stdout,
-      `${stderr}${stderr.length === 0 ? '' : '\n'}${error instanceof Error ? error.message : String(error)}`,
-      startedAt,
-      cleanup,
-      {
-        diagnostics: [
-          {
-            severity: 'error',
-            message: error instanceof Error ? error.message : String(error),
-          },
-        ],
-        outputTruncated: truncated,
-      },
+      `${stderr}${stderr.length === 0 ? '' : '\n'}${message}`,
+      await workspace.cleanup(),
+      { diagnostics: [{ severity: 'error', message }], outputTruncated: truncated },
     )
     resolveCompleted(result)
     return result
