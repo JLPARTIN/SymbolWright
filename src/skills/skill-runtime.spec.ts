@@ -8,7 +8,8 @@ import { renderSkillListCommand, renderSkillShowCommand } from '../cli-skill.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
 import type { SandboxRunner } from '../runtime/sandbox/sandbox-runner.js'
 import type { RuntimeToolContext } from '../runtime/types.js'
-import { runSkill } from './skill-runtime.js'
+import { parseSkillRunInput, renderSkillRunResult, runSkill } from './skill-runtime.js'
+import type { SkillDefinition } from './skill-types.js'
 
 function tempWorkspace(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-skill-runtime-'))
@@ -24,6 +25,27 @@ function dynamicCommandLine(command: string): string {
   return `!\`${command}\``
 }
 
+function skillFixture(context: 'inline' | 'fork' = 'inline'): SkillDefinition {
+  return {
+    commandName: 'demo-skill',
+    displayName: 'Demo Skill',
+    description: 'Demo skill',
+    arguments: [],
+    disableModelInvocation: false,
+    userInvocable: true,
+    allowedTools: [],
+    disallowedTools: [],
+    context,
+    paths: [],
+    shell: 'bash',
+    source: 'project',
+    skillDir: '/tmp/demo-skill',
+    entryPath: '/tmp/demo-skill/SKILL.md',
+    body: 'Body',
+    rawFrontmatter: {},
+  }
+}
+
 const fakeRunner: SandboxRunner = {
   runCommand: async (request) => ({
     outcome: 'EXECUTED',
@@ -37,6 +59,54 @@ const fakeRunner: SandboxRunner = {
 }
 
 describe('skill runtime', () => {
+  it('validates skill_run input and preserves optional request fields', () => {
+    expect(() => parseSkillRunInput(null)).toThrow('Missing input')
+    expect(() => parseSkillRunInput({ name: '   ' })).toThrow('Missing skill name')
+    expect(() => parseSkillRunInput({ name: 'demo', mode: 'background' })).toThrow(
+      'skill_run mode must be inline or fork',
+    )
+
+    expect(
+      parseSkillRunInput({
+        name: ' demo ',
+        arguments: 'issue 123',
+        mode: 'fork',
+        enableGovernedTools: true,
+        dynamicContext: false,
+      }),
+    ).toEqual({
+      name: 'demo',
+      arguments: 'issue 123',
+      mode: 'fork',
+      enableGovernedTools: true,
+      dynamicContext: false,
+    })
+  })
+
+  it('renders dispatched and fork-fallback skill results distinctly', () => {
+    expect(
+      renderSkillRunResult({
+        skill: skillFixture('inline'),
+        status: 'dispatched',
+        renderedContent: 'Rendered content',
+        dynamicCommandCount: 1,
+        blockedDynamicCommandCount: 0,
+        dispatchOutput: 'subagent accepted the task',
+      }),
+    ).toContain('Dispatch output:\nsubagent accepted the task')
+
+    const forkFallback = renderSkillRunResult({
+      skill: skillFixture('fork'),
+      status: 'rendered',
+      renderedContent: 'Rendered content',
+      dynamicCommandCount: 0,
+      blockedDynamicCommandCount: 0,
+    })
+
+    expect(forkFallback).toContain('Rendered skill content:\nRendered content')
+    expect(forkFallback).toContain('Note: This forked skill was rendered without')
+  })
+
   it('renders argument substitutions and dynamic context through the runtime policy path', async () => {
     const root = tempWorkspace()
     try {
