@@ -10,6 +10,7 @@ This document tracks the Bundle #4 sandbox runtime rollout. The current implemen
 - Runtime discovery probes for common language commands and container engines.
 - Explicit container image allowlist.
 - Read-only sandbox doctor and image diagnostics renderer.
+- Read-only image inspection and operator-reviewed preparation-plan command contracts.
 
 ## Trust classes
 
@@ -41,6 +42,19 @@ The sandbox doctor report is read-only. It reports:
 - warnings about unsupported or future execution behavior.
 
 Preparation commands are advisory. CodeMind does not run them automatically.
+
+## Image command contracts
+
+The sandbox image command contract accepts allowlisted image IDs only, never raw image names. Examples:
+
+```bash
+codemind sandbox inspect node-22-bookworm-slim
+codemind sandbox prepare python-3-12-slim
+```
+
+These commands are designed as read-only operator guidance. Inspection renders the image policy record CodeMind already knows about. Preparation renders a review-only command plan when Docker or Podman has been detected. CodeMind does not run that command, pull the image, execute containers, or mutate the host in this slice.
+
+Raw image names such as `node:22-bookworm-slim` or registry paths are rejected because browser and CLI requests must not select arbitrary container images.
 
 ## Security boundary
 
