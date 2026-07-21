@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import type { CodemindRuntimeMode } from '../runtime/types.js'
+import { DEFAULT_SANDBOX_DISCOVERY_PROBES, discoverRuntimeCommands } from './sandbox-discovery.js'
 import type {
   SandboxHistoryList,
   SandboxHistoryStore,
@@ -20,13 +21,21 @@ import type {
   SandboxExecutionRequest,
   SandboxExecutionResult,
   SandboxInventory,
+  SandboxRunnerAvailability,
   SandboxRunnerDefinition,
   VerificationLevel,
 } from './sandbox-types.js'
 
+export type SandboxInventoryBuilder = (
+  commandAvailability?: ReadonlyMap<string, SandboxRunnerAvailability>,
+) => SandboxInventory
+
 export interface SandboxServiceOptions {
   readonly inventory?: SandboxInventory
-  readonly buildInventory?: () => SandboxInventory
+  readonly buildInventory?: SandboxInventoryBuilder
+  readonly discoverCommandAvailability?: () => Promise<
+    ReadonlyMap<string, SandboxRunnerAvailability>
+  >
   readonly historyStore?: SandboxHistoryStore
   readonly now?: () => Date
   readonly generateExecutionId?: () => string
@@ -39,7 +48,10 @@ export interface SandboxExecutionContext {
 
 export class SandboxService {
   private inventory: SandboxInventory
-  private readonly buildInventory: () => SandboxInventory
+  private readonly buildInventory: SandboxInventoryBuilder
+  private readonly discoverCommandAvailability: () => Promise<
+    ReadonlyMap<string, SandboxRunnerAvailability>
+  >
   private readonly historyStore: SandboxHistoryStore | undefined
   private readonly now: () => Date
   private readonly generateExecutionId: () => string
@@ -49,7 +61,15 @@ export class SandboxService {
     this.env = options.env ?? process.env
     this.buildInventory =
       options.buildInventory ??
-      (() => options.inventory ?? buildSandboxInventory({ env: this.env }))
+      ((commandAvailability) =>
+        options.inventory ??
+        buildSandboxInventory({
+          env: this.env,
+          ...(commandAvailability === undefined ? {} : { commandAvailability }),
+        }))
+    this.discoverCommandAvailability =
+      options.discoverCommandAvailability ??
+      (() => discoverRuntimeCommands(DEFAULT_SANDBOX_DISCOVERY_PROBES, { env: this.env }))
     this.inventory = options.inventory ?? this.buildInventory()
     this.historyStore = options.historyStore
     this.now = options.now ?? (() => new Date())
@@ -60,8 +80,9 @@ export class SandboxService {
     return this.inventory
   }
 
-  public refreshInventory(): SandboxInventory {
-    this.inventory = this.buildInventory()
+  public async refreshInventory(): Promise<SandboxInventory> {
+    const commandAvailability = await this.discoverCommandAvailability()
+    this.inventory = this.buildInventory(commandAvailability)
     return this.inventory
   }
 
