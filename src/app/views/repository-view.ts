@@ -28,6 +28,23 @@ export function renderRepositoryViewHtml(): string {
         <textarea id="repo-editor" class="repo-editor" spellcheck="false" disabled></textarea>
         <button type="button" id="repo-save-btn" disabled>Save</button>
         <div id="repo-save-status" class="muted"></div>
+
+        <div class="repo-sandbox-panel card">
+          <h3>Run</h3>
+          <p class="muted">Execute the open repository file through the structured sandbox API. No arbitrary shell commands are accepted.</p>
+          <div class="row">
+            <div><label for="repo-sandbox-mode">Mode</label><select id="repo-sandbox-mode"><option value="run">Run File</option><option value="compile">Compile File</option><option value="test">Test Project</option></select></div>
+            <div><label for="repo-sandbox-runner">Runner</label><select id="repo-sandbox-runner"></select></div>
+          </div>
+          <label for="repo-sandbox-stdin">stdin</label>
+          <textarea id="repo-sandbox-stdin" placeholder="Optional standard input"></textarea>
+          <label for="repo-sandbox-args">Arguments</label>
+          <input id="repo-sandbox-args" placeholder="Optional whitespace-separated args" />
+          <button type="button" id="repo-sandbox-run-btn" disabled>Run</button>
+          <button type="button" class="secondary" id="repo-sandbox-cancel-btn" disabled>Cancel</button>
+          <div id="repo-sandbox-status" class="muted">Open a supported file to run it.</div>
+          <pre id="repo-sandbox-result" class="repo-diff"></pre>
+        </div>
       </div>
 
       <div class="repo-changes-panel card">
@@ -62,7 +79,14 @@ export function renderRepositoryViewHtml(): string {
 
 export function buildRepositoryViewClientScript(): string {
   return `
-    const repoState = { currentFilePath: null, currentBaseHash: null, currentBranch: null };
+    const repoState = { currentFilePath: null, currentBaseHash: null, currentBranch: null, sandboxRunners: [], currentSandboxExecutionId: null };
+
+    const REPO_SANDBOX_LANGUAGE_BY_EXTENSION = {
+      '.js': 'javascript', '.mjs': 'javascript', '.cjs': 'javascript',
+      '.ts': 'typescript', '.tsx': 'typescript', '.py': 'python', '.go': 'go',
+      '.rs': 'rust', '.java': 'java', '.c': 'c', '.cpp': 'cpp', '.cc': 'cpp',
+      '.cxx': 'cpp', '.rb': 'ruby', '.php': 'php'
+    };
 
     function repoAuthHeaders(extra) {
       return Object.assign({ authorization: 'Bearer ' + appState.codemindKey }, extra || {});
@@ -73,6 +97,125 @@ export function buildRepositoryViewClientScript(): string {
         .then(function (response) {
           return response.json().then(function (body) { return { status: response.status, body: body }; });
         });
+    }
+
+    function repoSandboxLanguageForPath(filePath) {
+      const dot = filePath.lastIndexOf('.');
+      if (dot < 0) return null;
+      return REPO_SANDBOX_LANGUAGE_BY_EXTENSION[filePath.slice(dot)] || null;
+    }
+
+    function repoSandboxArgs() {
+      const raw = document.getElementById('repo-sandbox-args').value.trim();
+      return raw ? raw.split(/\s+/) : [];
+    }
+
+    function repoSandboxCompatibleRunner(languageId) {
+      return repoState.sandboxRunners.find(function (runner) {
+        return runner.languageIds.indexOf(languageId) >= 0 && runner.availability.status === 'available' && runner.backend !== 'browser';
+      }) || null;
+    }
+
+    function renderRepoSandboxInventory() {
+      const select = document.getElementById('repo-sandbox-runner');
+      const runBtn = document.getElementById('repo-sandbox-run-btn');
+      const statusEl = document.getElementById('repo-sandbox-status');
+      const languageId = repoState.currentFilePath ? repoSandboxLanguageForPath(repoState.currentFilePath) : null;
+      const runners = languageId ? repoState.sandboxRunners.filter(function (runner) {
+        return runner.languageIds.indexOf(languageId) >= 0;
+      }) : [];
+      select.innerHTML = runners.map(function (runner) {
+        const label = runner.id + ' — ' + runner.backend + '/' + runner.trustClass + ' — ' + runner.availability.status;
+        return '<option value="' + appEscapeHtml(runner.id) + '">' + appEscapeHtml(label) + '</option>';
+      }).join('');
+      const compatible = languageId ? repoSandboxCompatibleRunner(languageId) : null;
+      if (compatible) select.value = compatible.id;
+      runBtn.disabled = !repoState.currentFilePath || compatible === null;
+      if (!repoState.currentFilePath) statusEl.textContent = 'Open a supported file to run it.';
+      else if (!languageId) statusEl.textContent = 'No server sandbox language is recognized for this file extension.';
+      else if (compatible === null) statusEl.textContent = languageId + ' has no available server runner. Enable CODEMIND_ALLOW_GUARDED_HOST_EXECUTION=true or prepare an approved container image.';
+      else statusEl.textContent = 'Ready: ' + languageId + ' via ' + compatible.id + ' (' + compatible.backend + ', ' + compatible.trustClass + ').';
+    }
+
+    async function loadRepoSandboxRuntimes() {
+      const result = await repoFetchJson('/api/sandbox/runtimes/refresh', { method: 'POST' });
+      if (result.status !== 200) {
+        document.getElementById('repo-sandbox-status').textContent = 'Runtime inventory failed: ' + (result.body.error || result.status);
+        return;
+      }
+      repoState.sandboxRunners = result.body.runners || [];
+      renderRepoSandboxInventory();
+    }
+
+    function renderRepoSandboxResult(result) {
+      const lines = [
+        'Status: ' + result.status,
+        'Verification: ' + result.evidence.verificationLevel,
+        'Runner: ' + result.runnerId,
+        'Backend: ' + result.backend,
+        'Isolation: ' + result.trustClass,
+        'Duration: ' + result.durationMs + 'ms',
+        'Exit code: ' + (result.exitCode === undefined ? '(none)' : result.exitCode),
+        'Output truncated: ' + result.outputTruncated,
+        'Cleanup: ' + result.cleanup.attempted + '/' + result.cleanup.succeeded,
+        '',
+        'STDOUT:',
+        result.stdout || '(empty)',
+        '',
+        'STDERR:',
+        result.stderr || '(empty)',
+        '',
+        'Diagnostics:',
+        result.diagnostics.length === 0 ? '- none' : result.diagnostics.map(function (diagnostic) { return '- ' + diagnostic.severity + ': ' + diagnostic.message; }).join('\n')
+      ];
+      document.getElementById('repo-sandbox-result').textContent = lines.join('\n');
+    }
+
+    async function runRepoSandbox() {
+      if (!repoState.currentFilePath) return;
+      const languageId = repoSandboxLanguageForPath(repoState.currentFilePath);
+      if (!languageId) return;
+      const runnerId = document.getElementById('repo-sandbox-runner').value;
+      const mode = document.getElementById('repo-sandbox-mode').value;
+      const statusEl = document.getElementById('repo-sandbox-status');
+      const runBtn = document.getElementById('repo-sandbox-run-btn');
+      const cancelBtn = document.getElementById('repo-sandbox-cancel-btn');
+      statusEl.textContent = 'Running sandbox execution...';
+      runBtn.disabled = true;
+      cancelBtn.disabled = false;
+      const payload = {
+        languageId: languageId,
+        mode: mode,
+        repository: { rootPath: '.', selectedPaths: [repoState.currentFilePath] },
+        requestedRunnerId: runnerId,
+        stdin: document.getElementById('repo-sandbox-stdin').value,
+        args: repoSandboxArgs(),
+        runtimeMode: 'APPROVED_EXECUTION'
+      };
+      if (appState.activeMissionId) payload.missionId = appState.activeMissionId;
+      const result = await repoFetchJson('/api/sandbox/execute', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const body = result.body.result;
+      if (result.status !== 200 || !body) {
+        statusEl.textContent = 'Sandbox failed: ' + (result.body.error || result.status);
+      } else {
+        repoState.currentSandboxExecutionId = body.executionId;
+        statusEl.textContent = 'Sandbox execution ' + body.status + ' in ' + body.durationMs + 'ms.';
+        renderRepoSandboxResult(body);
+      }
+      runBtn.disabled = false;
+      cancelBtn.disabled = true;
+    }
+
+    async function cancelRepoSandbox() {
+      if (!repoState.currentSandboxExecutionId) return;
+      const result = await repoFetchJson('/api/sandbox/cancel/' + encodeURIComponent(repoState.currentSandboxExecutionId), { method: 'POST' });
+      document.getElementById('repo-sandbox-status').textContent = result.status === 200 || result.status === 202
+        ? 'Cancellation: ' + result.body.status
+        : 'Cancellation failed: ' + (result.body.error || result.status);
     }
 
     function renderRepoTreeEntries(container, entries, parentPath) {
@@ -144,6 +287,7 @@ export function buildRepositoryViewClientScript(): string {
       saveBtn.disabled = false;
       pathEl.textContent = path;
       document.getElementById('repo-save-status').textContent = '';
+      renderRepoSandboxInventory();
     }
 
     async function saveRepoFile() {
@@ -160,7 +304,7 @@ export function buildRepositoryViewClientScript(): string {
 
       if (result.status === 409) {
         const overwrite = window.confirm(
-          repoState.currentFilePath + ' changed on disk since it was loaded.\\n\\nOK to overwrite the on-disk version with your changes, Cancel to reload the on-disk version instead.'
+          repoState.currentFilePath + ' changed on disk since it was loaded.\n\nOK to overwrite the on-disk version with your changes, Cancel to reload the on-disk version instead.'
         );
         if (overwrite) {
           const forced = await repoFetchJson('/api/repository/file', {
@@ -326,6 +470,8 @@ export function buildRepositoryViewClientScript(): string {
     document.getElementById('repo-commit-btn').addEventListener('click', commitRepoChanges);
     document.getElementById('repo-push-btn').addEventListener('click', pushRepoBranch);
     document.getElementById('repo-pr-btn').addEventListener('click', createRepoPullRequest);
+    document.getElementById('repo-sandbox-run-btn').addEventListener('click', runRepoSandbox);
+    document.getElementById('repo-sandbox-cancel-btn').addEventListener('click', cancelRepoSandbox);
 
     let repoViewLoaded = false;
     registerRouterViewInit('repository', function () {
@@ -338,6 +484,7 @@ export function buildRepositoryViewClientScript(): string {
       loadRepoTree();
       loadRepoBranches();
       loadRepoStatus();
+      loadRepoSandboxRuntimes();
     });
   `
 }
