@@ -12,6 +12,13 @@ import {
 import { SandboxHistoryStore } from './sandbox-history.js'
 import { DEFAULT_SANDBOX_IMAGE_ALLOWLIST } from './sandbox-images.js'
 import type { SandboxContainerEngineStatus } from './sandbox-images.js'
+import { DEFAULT_SANDBOX_LIMITS, normalizeSandboxLimits } from './sandbox-limits.js'
+import {
+  containsRepresentativeSandboxSecret,
+  excerptSandboxOutput,
+  redactSandboxText,
+  sha256Text,
+} from './sandbox-redaction.js'
 import { buildSandboxInventory, runnerAvailability } from './sandbox-registry.js'
 import { SandboxService } from './sandbox-service.js'
 import type { SandboxInventory, SandboxRunnerAvailability } from './sandbox-types.js'
@@ -243,6 +250,45 @@ describe('sandbox completion coverage', () => {
       { mode: 'APPROVED_EXECUTION' },
     )
     expect(timeoutResult.status).toBe('timeout')
+  })
+
+  it('covers limit normalization and redaction branches', () => {
+    const tightened = normalizeSandboxLimits({
+      timeoutMs: 5.9,
+      compileTimeoutMs: Number.POSITIVE_INFINITY,
+      maxMemoryMb: -1,
+      maxCpuPercent: 25.7,
+      maxOutputBytes: 12,
+    })
+
+    expect(tightened.timeoutMs).toBe(5)
+    expect(tightened.compileTimeoutMs).toBe(DEFAULT_SANDBOX_LIMITS.compileTimeoutMs)
+    expect(tightened.maxMemoryMb).toBe(DEFAULT_SANDBOX_LIMITS.maxMemoryMb)
+    expect(tightened.maxCpuPercent).toBe(25)
+    expect(tightened.maxOutputBytes).toBe(12)
+
+    const relaxed = normalizeSandboxLimits({
+      timeoutMs: DEFAULT_SANDBOX_LIMITS.timeoutMs * 10,
+      maxCpuPercent: (DEFAULT_SANDBOX_LIMITS.maxCpuPercent ?? 100) * 10,
+    })
+    expect(relaxed.timeoutMs).toBe(DEFAULT_SANDBOX_LIMITS.timeoutMs)
+    expect(relaxed.maxCpuPercent).toBe(DEFAULT_SANDBOX_LIMITS.maxCpuPercent)
+
+    const redacted = redactSandboxText(
+      'Bearer abcdefghijklmnopqrstuvwxyz123456 CODEMIND_API_KEY=supersecret token=value',
+    )
+    expect(redacted).toContain('[REDACTED]')
+    expect(redacted).not.toContain('supersecret')
+    expect(redactSandboxText('safe output', 64)).toBe('safe output')
+    expect(redactSandboxText('x'.repeat(20), 5)).toContain('[TRUNCATED]')
+    expect(excerptSandboxOutput('stdout', 'stderr', 100)).toContain('--- stderr ---')
+    expect(excerptSandboxOutput('', '', 100)).toBe('')
+    expect(sha256Text('sandbox')).toHaveLength(64)
+    expect(
+      containsRepresentativeSandboxSecret({ header: 'Bearer abcdefghijklmnopqrstuvwxyz123456' }),
+    ).toBe(true)
+    expect(containsRepresentativeSandboxSecret({ safe: 'value' })).toBe(false)
+    expect(containsRepresentativeSandboxSecret(undefined)).toBe(false)
   })
 
   it('covers container command planner safety branches without executing containers', () => {
