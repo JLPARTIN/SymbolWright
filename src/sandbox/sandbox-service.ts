@@ -4,7 +4,11 @@ import type { CodemindRuntimeMode } from '../runtime/types.js'
 import { normalizeSandboxLimits } from './sandbox-limits.js'
 import { evaluateSandboxPolicy } from './sandbox-policy.js'
 import { validateSandboxExecutionRequest } from './sandbox-request.js'
-import { findSandboxRunner, listSandboxLanguageIds, listSandboxRunnerIds } from './sandbox-registry.js'
+import {
+  findSandboxRunner,
+  listSandboxLanguageIds,
+  listSandboxRunnerIds,
+} from './sandbox-registry.js'
 import { excerptSandboxOutput, sha256Text } from './sandbox-redaction.js'
 import type {
   SandboxExecutionRequest,
@@ -65,7 +69,10 @@ export class SandboxService {
       })
     }
 
-    const decision = evaluateSandboxPolicy(request, runner, { mode: context.mode, env: this.env })
+    const decision = evaluateSandboxPolicy(request, runner, {
+      mode: context.mode,
+      env: this.env,
+    })
     if (!decision.allowed) {
       return this.result(request, runner, startedAt, 'policy-blocked', {
         policyDecision: 'blocked',
