@@ -1,6 +1,10 @@
 import { normalizeSandboxLimits } from './sandbox-limits.js'
 import type { SandboxContainerEngineStatus } from './sandbox-images.js'
-import type { SandboxImageDefinition, SandboxLimits, SandboxNetworkPolicy } from './sandbox-types.js'
+import type {
+  SandboxImageDefinition,
+  SandboxLimits,
+  SandboxNetworkPolicy,
+} from './sandbox-types.js'
 
 export interface SandboxContainerIsolationControls {
   readonly privileged: false
@@ -75,7 +79,9 @@ function containerBlockedReasons(
   if (image.installed !== true) {
     reasons.push('Sandbox image is not confirmed installed by read-only local inspection.')
   }
-  reasons.push('Container execution remains disabled until the backend runner enforces this policy.')
+  reasons.push(
+    'Container execution remains disabled until the backend runner enforces this policy.',
+  )
   return reasons
 }
 
