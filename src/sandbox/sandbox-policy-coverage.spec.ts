@@ -58,6 +58,14 @@ function inventory(runners: readonly SandboxRunnerDefinition[]): SandboxInventor
   }
 }
 
+function serviceWithRunner(): SandboxService {
+  return new SandboxService({
+    inventory: inventory([runner()]),
+    now: () => new Date(CHECKED_AT),
+    generateExecutionId: () => 'sandbox_policy_coverage',
+  })
+}
+
 describe('sandbox policy branch coverage', () => {
   it('reports unavailable runners with explicit and fallback reasons', () => {
     const explicitRunner = runner({
@@ -124,6 +132,69 @@ describe('sandbox policy branch coverage', () => {
       { mode: 'APPROVED_EXECUTION', env: {} },
     )
     expect(repositoryDecision.reason).toContain('does not support repository execution')
+  })
+
+  it('covers request validation edge branches', () => {
+    const service = serviceWithRunner()
+    const invalidPayloads: readonly unknown[] = [
+      { languageId: 42, mode: 'run', source: 'x' },
+      { languageId: 'javascript', mode: 'run', source: 'x', stdin: 7 },
+      { languageId: 'javascript', mode: 'run', source: 'x', args: 'bad' },
+      { languageId: 'javascript', mode: 'run', source: 'x', args: [1] },
+      { languageId: 'javascript', mode: 'run', source: 'x', args: ['bad\0arg'] },
+      { languageId: 'javascript', mode: 'run', source: 'x', limits: 'bad' },
+      { languageId: 'javascript', mode: 'run', source: 'x', limits: { timeoutMs: 'fast' } },
+      { languageId: 'javascript', mode: 'run', files: 'bad' },
+      { languageId: 'javascript', mode: 'run', files: [] },
+      {
+        languageId: 'javascript',
+        mode: 'run',
+        limits: { maxFiles: 1 },
+        files: [
+          { path: 'one.js', content: '1' },
+          { path: 'two.js', content: '2' },
+        ],
+      },
+      { languageId: 'javascript', mode: 'run', files: [1] },
+      { languageId: 'javascript', mode: 'run', files: [{ path: 'missing-content.js' }] },
+      { languageId: 'javascript', mode: 'run', files: [{ path: '', content: 'x' }] },
+      {
+        languageId: 'javascript',
+        mode: 'run',
+        limits: { maxFileBytes: 3 },
+        files: [{ path: 'large.js', content: 'larger' }],
+      },
+      {
+        languageId: 'javascript',
+        mode: 'run',
+        limits: { maxFileBytes: 10, maxTotalSourceBytes: 15 },
+        files: [
+          { path: 'one.js', content: '1234567890' },
+          { path: 'two.js', content: '1234567890' },
+        ],
+      },
+      { languageId: 'javascript', mode: 'run', repository: 'bad' },
+      { languageId: 'javascript', mode: 'run', repository: { rootPath: '' } },
+      {
+        languageId: 'javascript',
+        mode: 'run',
+        repository: { rootPath: '/tmp/repo', selectedPaths: 'bad' },
+      },
+      {
+        languageId: 'javascript',
+        mode: 'run',
+        repository: { rootPath: '/tmp/repo', selectedPaths: [1] },
+      },
+      {
+        languageId: 'javascript',
+        mode: 'run',
+        repository: { rootPath: '/tmp/repo', selectedPaths: ['../escape.js'] },
+      },
+    ]
+
+    for (const payload of invalidPayloads) {
+      expect(() => service.validateRequest(payload)).toThrow()
+    }
   })
 
   it('blocks every non-execution runtime mode', () => {
