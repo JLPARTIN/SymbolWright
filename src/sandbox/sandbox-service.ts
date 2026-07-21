@@ -1,10 +1,16 @@
 import { randomUUID } from 'node:crypto'
 
 import type { CodemindRuntimeMode } from '../runtime/types.js'
+import type {
+  SandboxHistoryList,
+  SandboxHistoryStore,
+  SandboxExecutionRecord,
+} from './sandbox-history.js'
 import { normalizeSandboxLimits } from './sandbox-limits.js'
 import { evaluateSandboxPolicy } from './sandbox-policy.js'
 import { validateSandboxExecutionRequest } from './sandbox-request.js'
 import {
+  buildSandboxInventory,
   findSandboxRunner,
   listSandboxLanguageIds,
   listSandboxRunnerIds,
@@ -19,7 +25,9 @@ import type {
 } from './sandbox-types.js'
 
 export interface SandboxServiceOptions {
-  readonly inventory: SandboxInventory
+  readonly inventory?: SandboxInventory
+  readonly buildInventory?: () => SandboxInventory
+  readonly historyStore?: SandboxHistoryStore
   readonly now?: () => Date
   readonly generateExecutionId?: () => string
   readonly env?: NodeJS.ProcessEnv
@@ -30,20 +38,39 @@ export interface SandboxExecutionContext {
 }
 
 export class SandboxService {
-  private readonly inventory: SandboxInventory
+  private inventory: SandboxInventory
+  private readonly buildInventory: () => SandboxInventory
+  private readonly historyStore: SandboxHistoryStore | undefined
   private readonly now: () => Date
   private readonly generateExecutionId: () => string
   private readonly env: NodeJS.ProcessEnv
 
   public constructor(options: SandboxServiceOptions) {
-    this.inventory = options.inventory
+    this.env = options.env ?? process.env
+    this.buildInventory =
+      options.buildInventory ??
+      (() => options.inventory ?? buildSandboxInventory({ env: this.env }))
+    this.inventory = options.inventory ?? this.buildInventory()
+    this.historyStore = options.historyStore
     this.now = options.now ?? (() => new Date())
     this.generateExecutionId = options.generateExecutionId ?? (() => `sandbox_${randomUUID()}`)
-    this.env = options.env ?? process.env
   }
 
   public listInventory(): SandboxInventory {
     return this.inventory
+  }
+
+  public refreshInventory(): SandboxInventory {
+    this.inventory = this.buildInventory()
+    return this.inventory
+  }
+
+  public listExecutions(limit = 50): SandboxHistoryList {
+    return this.historyStore?.list(limit) ?? { schemaVersion: 1, executions: [], warnings: [] }
+  }
+
+  public getExecution(executionId: string): SandboxExecutionRecord | undefined {
+    return this.historyStore?.read(executionId)
   }
 
   public validateRequest(raw: unknown): SandboxExecutionRequest {
@@ -63,10 +90,13 @@ export class SandboxService {
     const runner = findSandboxRunner(this.inventory, request.languageId, request.requestedRunnerId)
 
     if (runner === undefined) {
-      return this.result(request, unavailableRunner(request), startedAt, 'unavailable', {
-        policyDecision: 'blocked',
-        policyReason: `No available runner for language ${request.languageId}.`,
-      })
+      return this.persistResult(
+        request,
+        this.result(request, unavailableRunner(request), startedAt, 'unavailable', {
+          policyDecision: 'blocked',
+          policyReason: `No available runner for language ${request.languageId}.`,
+        }),
+      )
     }
 
     const decision = evaluateSandboxPolicy(request, runner, {
@@ -74,18 +104,32 @@ export class SandboxService {
       env: this.env,
     })
     if (!decision.allowed) {
-      return this.result(request, runner, startedAt, 'policy-blocked', {
-        policyDecision: 'blocked',
-        policyReason: decision.reason,
-      })
+      return this.persistResult(
+        request,
+        this.result(request, runner, startedAt, 'policy-blocked', {
+          policyDecision: 'blocked',
+          policyReason: decision.reason,
+        }),
+      )
     }
 
-    return this.result(request, runner, startedAt, 'policy-blocked', {
-      policyDecision: 'blocked',
-      policyReason:
-        'Bundle 4 runtime foundation is policy-ready, but this runner has no execution backend wired yet.',
-      durationStartedAt: started,
-    })
+    return this.persistResult(
+      request,
+      this.result(request, runner, startedAt, 'policy-blocked', {
+        policyDecision: 'blocked',
+        policyReason:
+          'Bundle 4 runtime foundation is policy-ready, but this runner has no execution backend wired yet.',
+        durationStartedAt: started,
+      }),
+    )
+  }
+
+  private persistResult(
+    request: SandboxExecutionRequest,
+    result: SandboxExecutionResult,
+  ): SandboxExecutionResult {
+    this.historyStore?.record(result, request.missionId)
+    return result
   }
 
   private result(
