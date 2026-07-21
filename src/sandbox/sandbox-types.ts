@@ -29,6 +29,7 @@ export type SandboxExecutionStatus =
   | 'compile-error'
   | 'runtime-error'
   | 'timeout'
+  | 'cancelled'
   | 'resource-limit'
   | 'policy-blocked'
   | 'unavailable'
