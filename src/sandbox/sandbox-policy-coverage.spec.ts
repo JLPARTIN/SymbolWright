@@ -11,9 +11,7 @@ import type {
 
 const CHECKED_AT = '2026-07-21T00:00:00.000Z'
 
-function runner(
-  overrides: Partial<SandboxRunnerDefinition> = {},
-): SandboxRunnerDefinition {
+function runner(overrides: Partial<SandboxRunnerDefinition> = {}): SandboxRunnerDefinition {
   return {
     id: 'coverage-runner',
     languageIds: ['javascript'],
@@ -41,9 +39,7 @@ function runner(
   }
 }
 
-function request(
-  overrides: Partial<SandboxExecutionRequest> = {},
-): SandboxExecutionRequest {
+function request(overrides: Partial<SandboxExecutionRequest> = {}): SandboxExecutionRequest {
   return {
     languageId: 'javascript',
     mode: 'run',
@@ -64,29 +60,29 @@ function inventory(runners: readonly SandboxRunnerDefinition[]): SandboxInventor
 
 describe('sandbox policy branch coverage', () => {
   it('reports unavailable runners with explicit and fallback reasons', () => {
-    const explicit = evaluateSandboxPolicy(
-      request(),
-      runner({
-        availability: {
-          status: 'unavailable',
-          checkedAt: CHECKED_AT,
-          reason: 'runtime probe failed',
-        },
-      }),
-      { mode: 'APPROVED_EXECUTION', env: {} },
-    )
+    const explicitRunner = runner({
+      availability: {
+        status: 'unavailable',
+        checkedAt: CHECKED_AT,
+        reason: 'runtime probe failed',
+      },
+    })
+    const explicit = evaluateSandboxPolicy(request(), explicitRunner, {
+      mode: 'APPROVED_EXECUTION',
+      env: {},
+    })
     expect(explicit).toEqual({ allowed: false, reason: 'runtime probe failed' })
 
-    const fallback = evaluateSandboxPolicy(
-      request(),
-      runner({
-        availability: {
-          status: 'misconfigured',
-          checkedAt: CHECKED_AT,
-        },
-      }),
-      { mode: 'APPROVED_EXECUTION', env: {} },
-    )
+    const fallbackRunner = runner({
+      availability: {
+        status: 'misconfigured',
+        checkedAt: CHECKED_AT,
+      },
+    })
+    const fallback = evaluateSandboxPolicy(request(), fallbackRunner, {
+      mode: 'APPROVED_EXECUTION',
+      env: {},
+    })
     expect(fallback.allowed).toBe(false)
     expect(fallback.reason).toContain('coverage-runner is unavailable')
   })
@@ -102,50 +98,53 @@ describe('sandbox policy branch coverage', () => {
       network: false,
     }
 
-    expect(
-      evaluateSandboxPolicy(request(), runner({ capabilities: noCapabilities }), {
-        mode: 'APPROVED_EXECUTION',
-        env: {},
-      }).reason,
-    ).toContain('does not support run mode')
+    const runDecision = evaluateSandboxPolicy(
+      request(),
+      runner({ capabilities: noCapabilities }),
+      { mode: 'APPROVED_EXECUTION', env: {} },
+    )
+    expect(runDecision.reason).toContain('does not support run mode')
 
-    expect(
-      evaluateSandboxPolicy(
-        request({ mode: 'compile' }),
-        runner({ capabilities: noCapabilities }),
-        { mode: 'APPROVED_EXECUTION', env: {} },
-      ).reason,
-    ).toContain('does not support compile mode')
+    const compileDecision = evaluateSandboxPolicy(
+      request({ mode: 'compile' }),
+      runner({ capabilities: noCapabilities }),
+      { mode: 'APPROVED_EXECUTION', env: {} },
+    )
+    expect(compileDecision.reason).toContain('does not support compile mode')
 
-    expect(
-      evaluateSandboxPolicy(
-        request({ mode: 'test' }),
-        runner({ capabilities: noCapabilities }),
-        { mode: 'APPROVED_EXECUTION', env: {} },
-      ).reason,
-    ).toContain('does not support test mode')
+    const testDecision = evaluateSandboxPolicy(
+      request({ mode: 'test' }),
+      runner({ capabilities: noCapabilities }),
+      { mode: 'APPROVED_EXECUTION', env: {} },
+    )
+    expect(testDecision.reason).toContain('does not support test mode')
 
-    expect(
-      evaluateSandboxPolicy(
-        request({ repository: { rootPath: '/tmp/repository' } }),
-        runner({ capabilities: { ...noCapabilities, run: true } }),
-        { mode: 'APPROVED_EXECUTION', env: {} },
-      ).reason,
-    ).toContain('does not support repository execution')
+    const repositoryDecision = evaluateSandboxPolicy(
+      request({ repository: { rootPath: '/tmp/repository' } }),
+      runner({ capabilities: { ...noCapabilities, run: true } }),
+      { mode: 'APPROVED_EXECUTION', env: {} },
+    )
+    expect(repositoryDecision.reason).toContain('does not support repository execution')
   })
 
   it('blocks every non-execution runtime mode', () => {
     const candidate = runner()
+    const readOnly = evaluateSandboxPolicy(request(), candidate, {
+      mode: 'READ_ONLY',
+      env: {},
+    })
+    const proposalOnly = evaluateSandboxPolicy(request(), candidate, {
+      mode: 'PROPOSAL_ONLY',
+      env: {},
+    })
+    const planOnly = evaluateSandboxPolicy(request(), candidate, {
+      mode: 'PLAN_ONLY',
+      env: {},
+    })
 
-    expect(
-      evaluateSandboxPolicy(request(), candidate, { mode: 'READ_ONLY', env: {} }).reason,
-    ).toContain('READ_ONLY')
-    expect(
-      evaluateSandboxPolicy(request(), candidate, { mode: 'PROPOSAL_ONLY', env: {} }).reason,
-    ).toContain('PROPOSAL_ONLY')
-    expect(
-      evaluateSandboxPolicy(request(), candidate, { mode: 'PLAN_ONLY', env: {} }).reason,
-    ).toContain('PLAN_ONLY')
+    expect(readOnly.reason).toContain('READ_ONLY')
+    expect(proposalOnly.reason).toContain('PROPOSAL_ONLY')
+    expect(planOnly.reason).toContain('PLAN_ONLY')
   })
 
   it('covers guarded-host, unavailable, and generic trust decisions', () => {
@@ -153,26 +152,23 @@ describe('sandbox policy branch coverage', () => {
       trustClass: 'guarded-host',
       backend: 'guarded-host',
     })
-    expect(
-      evaluateSandboxPolicy(request(), guarded, {
-        mode: 'APPROVED_EXECUTION',
-        env: {},
-      }).allowed,
-    ).toBe(false)
-    expect(
-      evaluateSandboxPolicy(request(), guarded, {
-        mode: 'APPROVED_EXECUTION',
-        env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
-      }).allowed,
-    ).toBe(true)
+    const guardedBlocked = evaluateSandboxPolicy(request(), guarded, {
+      mode: 'APPROVED_EXECUTION',
+      env: {},
+    })
+    const guardedAllowed = evaluateSandboxPolicy(request(), guarded, {
+      mode: 'APPROVED_EXECUTION',
+      env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
+    })
+    expect(guardedBlocked.allowed).toBe(false)
+    expect(guardedAllowed.allowed).toBe(true)
 
-    expect(
-      evaluateSandboxPolicy(
-        request(),
-        runner({ trustClass: 'unavailable', backend: 'unavailable' }),
-        { mode: 'APPROVED_EXECUTION', env: {} },
-      ).reason,
-    ).toContain('selected runtime is unavailable')
+    const unavailable = evaluateSandboxPolicy(
+      request(),
+      runner({ trustClass: 'unavailable', backend: 'unavailable' }),
+      { mode: 'APPROVED_EXECUTION', env: {} },
+    )
+    expect(unavailable.reason).toContain('selected runtime is unavailable')
 
     const generic = evaluateSandboxPolicy(
       request(),
