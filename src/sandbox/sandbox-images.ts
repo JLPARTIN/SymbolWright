@@ -89,7 +89,10 @@ export function selectContainerEngine(
   if (podman.status === 'available') return podman
   return {
     engine: 'none',
-    status: docker.status === 'misconfigured' || podman.status === 'misconfigured' ? 'misconfigured' : 'unavailable',
+    status:
+      docker.status === 'misconfigured' || podman.status === 'misconfigured'
+        ? 'misconfigured'
+        : 'unavailable',
     reason: `No usable container engine is enabled for sandbox execution. Docker: ${docker.reason} Podman: ${podman.reason}`,
   }
 }
