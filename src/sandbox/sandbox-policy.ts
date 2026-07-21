@@ -1,5 +1,8 @@
 import type { CodemindRuntimeMode } from '../runtime/types.js'
-import type { SandboxExecutionRequest, SandboxRunnerDefinition } from './sandbox-types.js'
+import type {
+  SandboxExecutionRequest,
+  SandboxRunnerDefinition,
+} from './sandbox-types.js'
 
 export interface SandboxPolicyContext {
   readonly mode: CodemindRuntimeMode
