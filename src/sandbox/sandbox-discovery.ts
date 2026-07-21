@@ -58,8 +58,18 @@ export const DEFAULT_SANDBOX_DISCOVERY_PROBES: readonly SandboxDiscoveryProbe[] 
   { id: 'gcc', command: 'gcc', args: ['--version'], versionPattern: /gcc[^\n]*\s([0-9][^\s]*)/i },
   { id: 'g++', command: 'g++', args: ['--version'], versionPattern: /g\+\+[^\n]*\s([0-9][^\s]*)/i },
   { id: 'Rscript', command: 'Rscript', args: ['--version'], versionPattern: /Rscript\s+([^\s]+)/ },
-  { id: 'docker', command: 'docker', args: ['--version'], versionPattern: /Docker version\s+([^,\s]+)/ },
-  { id: 'podman', command: 'podman', args: ['--version'], versionPattern: /podman version\s+([^\s]+)/i },
+  {
+    id: 'docker',
+    command: 'docker',
+    args: ['--version'],
+    versionPattern: /Docker version\s+([^,\s]+)/,
+  },
+  {
+    id: 'podman',
+    command: 'podman',
+    args: ['--version'],
+    versionPattern: /podman version\s+([^\s]+)/i,
+  },
 ]
 
 function safeDiscoveryEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
@@ -113,7 +123,10 @@ function cleanDiscoveryText(stdout: string, stderr: string): string {
 function extractVersion(probe: SandboxDiscoveryProbe, output: string): string | undefined {
   const match = probe.versionPattern?.exec(output)
   if (match?.[1] !== undefined) return match[1]
-  const firstLine = output.split(/\r?\n/).find((line) => line.trim().length > 0)?.trim()
+  const firstLine = output
+    .split(/\r?\n/)
+    .find((line) => line.trim().length > 0)
+    ?.trim()
   return firstLine === undefined || firstLine.length === 0 ? undefined : firstLine.slice(0, 120)
 }
 
