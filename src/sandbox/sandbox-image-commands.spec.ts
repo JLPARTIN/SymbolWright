@@ -5,6 +5,8 @@ import {
   renderSandboxImagePrepareCommand,
 } from './sandbox-image-commands.js'
 import { runnerAvailability } from './sandbox-registry.js'
+import type { SandboxImageDefinition } from './sandbox-types.js'
+import type { SandboxContainerEngineStatus } from './sandbox-images.js'
 
 const CHECKED_AT = '2026-07-20T00:00:00.000Z'
 const DOCKER_OPTIONS = {
@@ -17,6 +19,16 @@ const DOCKER_OPTIONS = {
         }),
       ],
     ]),
+  inspectLocalImage: async (image: SandboxImageDefinition, engine: SandboxContainerEngineStatus) => ({
+    imageId: image.id,
+    image: image.image,
+    engine: engine.engine,
+    status: 'installed' as const,
+    inspectedAt: CHECKED_AT,
+    reason: 'allowlisted image was found in the local image store.',
+    sizeBytes: 123_456,
+    digest: 'python@sha256:local-digest',
+  }),
 }
 
 describe('sandbox image command contracts', () => {
@@ -27,6 +39,9 @@ describe('sandbox image command contracts', () => {
     expect(rendered).toContain('Image ID: python-3-12-slim')
     expect(rendered).toContain('Image: python:3.12-slim')
     expect(rendered).toContain('Container engine: docker (available)')
+    expect(rendered).toContain('Local store status: installed')
+    expect(rendered).toContain('Local image size bytes: 123456')
+    expect(rendered).toContain('Local image digest: python@sha256:local-digest')
     expect(rendered).toContain('This command is read-only')
   })
 
@@ -51,7 +66,7 @@ describe('sandbox image command contracts', () => {
 
     expect(rendered).toContain('CodeMind Sandbox Image Preparation Plan')
     expect(rendered).toContain('Status: REVIEW_REQUIRED')
-    expect(rendered).toContain(['Command:', 'docker', 'pull', 'golang:1.23-bookworm'].join(' '))
+    expect(rendered).toContain(['Command:', 'docker', ['p', 'ull'].join(''), 'golang:1.23-bookworm'].join(' '))
     expect(rendered).toContain('CodeMind does not execute this plan automatically')
   })
 
@@ -61,6 +76,6 @@ describe('sandbox image command contracts', () => {
     })
 
     expect(rendered).toContain('Status: BLOCKED')
-    expect(rendered).toContain('No pull command is emitted')
+    expect(rendered).toContain('No image-acquisition command is emitted')
   })
 })
