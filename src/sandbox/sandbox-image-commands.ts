@@ -5,7 +5,9 @@ import type { SandboxImageDefinition, SandboxRunnerAvailability } from './sandbo
 
 export interface SandboxImageCommandOptions {
   readonly env?: NodeJS.ProcessEnv
-  readonly discoverCommandAvailability?: () => Promise<ReadonlyMap<string, SandboxRunnerAvailability>>
+  readonly discoverCommandAvailability?: () => Promise<
+    ReadonlyMap<string, SandboxRunnerAvailability>
+  >
 }
 
 interface ResolvedImagePolicy {
@@ -31,10 +33,7 @@ function renderImageIds(images: readonly SandboxImageDefinition[]): string {
   return images.map((image) => image.id).join(', ')
 }
 
-function renderMissingImageId(
-  action: string,
-  images: readonly SandboxImageDefinition[],
-): string {
+function renderMissingImageId(action: string, images: readonly SandboxImageDefinition[]): string {
   return [
     `Missing sandbox image id for: codemind sandbox ${action} <image-id>`,
     '',
@@ -43,10 +42,7 @@ function renderMissingImageId(
   ].join('\n')
 }
 
-function renderUnknownImageId(
-  imageId: string,
-  images: readonly SandboxImageDefinition[],
-): string {
+function renderUnknownImageId(imageId: string, images: readonly SandboxImageDefinition[]): string {
   return [
     `Unknown sandbox image id: ${imageId}`,
     '',
@@ -60,7 +56,7 @@ function renderPreparationCommand(
   image: SandboxImageDefinition,
 ): string | undefined {
   if (engine.engine === 'none' || engine.status !== 'available') return undefined
-  return `${engine.engine} pull ${image.image}`
+  return [engine.engine, 'pull', image.image].join(' ')
 }
 
 function renderImageInspection(
