@@ -4,12 +4,13 @@ import {
   renderSandboxImagesCommand,
   type SandboxDoctorOptions,
 } from './sandbox/sandbox-doctor.js'
+import { renderSandboxImageInspectCommand } from './sandbox/sandbox-image-commands.js'
 
 export async function renderSandboxCommand(
   args: readonly string[],
   options: SandboxDoctorOptions = {},
 ): Promise<string> {
-  const [subcommand] = args
+  const [subcommand, ...subcommandArgs] = args
 
   if (subcommand === undefined || subcommand === 'doctor') {
     return renderSandboxDoctorCommand(options)
@@ -17,6 +18,10 @@ export async function renderSandboxCommand(
 
   if (subcommand === 'images') {
     return renderSandboxImagesCommand(options)
+  }
+
+  if (subcommand === 'inspect') {
+    return renderSandboxImageInspectCommand(subcommandArgs, options)
   }
 
   if (subcommand === 'list') {
