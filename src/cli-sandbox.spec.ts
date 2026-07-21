@@ -63,10 +63,10 @@ describe('sandbox CLI renderer', () => {
     expect(rendered).toContain('arbitrary container image names')
   })
 
-  it('keeps unsupported sandbox subcommands inactive', async () => {
+  it('returns a controlled sandbox error for missing CLI run targets', async () => {
     const rendered = await renderSandboxCommand(['run', 'example.py'], OPTIONS)
 
-    expect(rendered).toContain('not active')
-    expect(rendered).toContain('sandbox run example.py')
+    expect(rendered).toContain('Sandbox error: file not found')
+    expect(rendered).toContain('example.py')
   })
 })

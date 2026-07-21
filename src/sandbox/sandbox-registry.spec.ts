@@ -127,7 +127,7 @@ describe('sandbox policy and service foundation', () => {
     expect(result.status).toBe('policy-blocked')
     expect(result.trustClass).toBe('browser-isolated')
     expect(result.evidence.verificationLevel).toBe('UNVERIFIED')
-    expect(result.evidence.policyReason).toContain('no execution backend')
+    expect(result.evidence.policyReason).toContain('No execution backend')
   })
 
   it('requires explicit guarded-host opt-in', () => {

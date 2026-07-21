@@ -2,10 +2,14 @@ import { randomUUID } from 'node:crypto'
 
 import type { CodemindRuntimeMode } from '../runtime/types.js'
 import { DEFAULT_SANDBOX_DISCOVERY_PROBES, discoverRuntimeCommands } from './sandbox-discovery.js'
+import {
+  executeGuardedHostRequest,
+  type GuardedHostExecutionController,
+} from './sandbox-guarded-host-backend.js'
 import type {
+  SandboxExecutionRecord,
   SandboxHistoryList,
   SandboxHistoryStore,
-  SandboxExecutionRecord,
 } from './sandbox-history.js'
 import { normalizeSandboxLimits } from './sandbox-limits.js'
 import { evaluateSandboxPolicy } from './sandbox-policy.js'
@@ -47,6 +51,14 @@ export interface SandboxExecutionContext {
   readonly mode: CodemindRuntimeMode
 }
 
+export interface SandboxCancelResult {
+  readonly ok: boolean
+  readonly executionId: string
+  readonly status: 'cancelled' | 'not_running'
+  readonly result?: SandboxExecutionResult
+  readonly reason?: string
+}
+
 export class SandboxService {
   private inventory: SandboxInventory
   private readonly buildInventory: SandboxInventoryBuilder
@@ -57,6 +69,7 @@ export class SandboxService {
   private readonly now: () => Date
   private readonly generateExecutionId: () => string
   private readonly env: NodeJS.ProcessEnv
+  private readonly activeExecutions = new Map<string, GuardedHostExecutionController>()
 
   public constructor(options: SandboxServiceOptions) {
     this.env = options.env ?? process.env
@@ -99,6 +112,22 @@ export class SandboxService {
     return this.historyStore?.read(executionId)
   }
 
+  public async cancelExecution(executionId: string): Promise<SandboxCancelResult> {
+    const controller = this.activeExecutions.get(executionId)
+    if (controller === undefined) {
+      return {
+        ok: false,
+        executionId,
+        status: 'not_running',
+        reason: 'No active sandbox execution exists for that id.',
+      }
+    }
+    controller.cancel()
+    const result = await controller.completed
+    this.activeExecutions.delete(executionId)
+    return { ok: true, executionId, status: 'cancelled', result }
+  }
+
   public validateRequest(raw: unknown): SandboxExecutionRequest {
     return validateSandboxExecutionRequest(raw, {
       knownLanguageIds: listSandboxLanguageIds(),
@@ -110,6 +139,7 @@ export class SandboxService {
     raw: unknown,
     context: SandboxExecutionContext,
   ): Promise<SandboxExecutionResult> {
+    const executionId = this.generateExecutionId()
     const startedAt = this.now().toISOString()
     const started = Date.parse(startedAt)
     const request = this.validateRequest(raw)
@@ -118,33 +148,62 @@ export class SandboxService {
     if (runner === undefined) {
       return this.persistResult(
         request,
-        this.result(request, unavailableRunner(request), startedAt, 'unavailable', {
+        this.result(executionId, request, unavailableRunner(request), startedAt, 'unavailable', {
           policyDecision: 'blocked',
           policyReason: `No available runner for language ${request.languageId}.`,
         }),
       )
     }
 
-    const decision = evaluateSandboxPolicy(request, runner, {
+    const effectiveRunner: SandboxRunnerDefinition = {
+      ...runner,
+      limits: normalizeSandboxLimits(request.limits),
+    }
+    const decision = evaluateSandboxPolicy(request, effectiveRunner, {
       mode: context.mode,
       env: this.env,
     })
     if (!decision.allowed) {
       return this.persistResult(
         request,
-        this.result(request, runner, startedAt, 'policy-blocked', {
+        this.result(executionId, request, effectiveRunner, startedAt, 'policy-blocked', {
           policyDecision: 'blocked',
           policyReason: decision.reason,
         }),
       )
     }
 
+    if (effectiveRunner.backend === 'guarded-host') {
+      const result = await executeGuardedHostRequest({
+        executionId,
+        request,
+        runner: effectiveRunner,
+        startedAt,
+        now: this.now,
+        env: this.env,
+        onStart: (controller) => this.activeExecutions.set(executionId, controller),
+      })
+      this.activeExecutions.delete(executionId)
+      return this.persistResult(request, result)
+    }
+
+    if (effectiveRunner.backend === 'browser') {
+      return this.persistResult(
+        request,
+        this.result(executionId, request, effectiveRunner, startedAt, 'policy-blocked', {
+          policyDecision: 'blocked',
+          policyReason:
+            'No execution backend: Browser-isolated runners execute in the browser runtime, not through the server sandbox API.',
+          durationStartedAt: started,
+        }),
+      )
+    }
+
     return this.persistResult(
       request,
-      this.result(request, runner, startedAt, 'policy-blocked', {
+      this.result(executionId, request, effectiveRunner, startedAt, 'unavailable', {
         policyDecision: 'blocked',
-        policyReason:
-          'Bundle 4 runtime foundation is policy-ready, but this runner has no execution backend wired yet.',
+        policyReason: `No executable backend is wired for ${effectiveRunner.backend}.`,
         durationStartedAt: started,
       }),
     )
@@ -154,11 +213,32 @@ export class SandboxService {
     request: SandboxExecutionRequest,
     result: SandboxExecutionResult,
   ): SandboxExecutionResult {
-    this.historyStore?.record(result, request.missionId)
-    return result
+    const finalized = this.finalizeResult(request, result)
+    this.historyStore?.record(finalized, request.missionId)
+    return finalized
+  }
+
+  private finalizeResult(
+    request: SandboxExecutionRequest,
+    result: SandboxExecutionResult,
+  ): SandboxExecutionResult {
+    const outputExcerpt = excerptSandboxOutput(result.stdout, result.stderr)
+    return {
+      ...result,
+      outputTruncated: result.outputTruncated || outputExcerpt.includes('[TRUNCATED]'),
+      evidence: {
+        ...result.evidence,
+        inputHash: sha256Text(JSON.stringify(request)),
+        ...(result.stdout.length === 0 && result.stderr.length === 0
+          ? {}
+          : { outputHash: sha256Text(`${result.stdout}\n${result.stderr}`) }),
+        ...(outputExcerpt.length === 0 ? {} : { outputExcerpt }),
+      },
+    }
   }
 
   private result(
+    executionId: string,
     request: SandboxExecutionRequest,
     runner: SandboxRunnerDefinition,
     startedAt: string,
@@ -169,6 +249,7 @@ export class SandboxService {
       readonly stdout?: string
       readonly stderr?: string
       readonly exitCode?: number
+      readonly signal?: string
       readonly verificationLevel?: VerificationLevel
       readonly durationStartedAt?: number
     },
@@ -179,7 +260,7 @@ export class SandboxService {
     const stderr = options.stderr ?? ''
     const outputExcerpt = excerptSandboxOutput(stdout, stderr)
     return {
-      executionId: this.generateExecutionId(),
+      executionId,
       languageId: request.languageId,
       runnerId: runner.id,
       trustClass: runner.trustClass,
@@ -189,6 +270,7 @@ export class SandboxService {
       completedAt,
       durationMs: Math.max(0, Date.parse(completedAt) - started),
       ...(options.exitCode === undefined ? {} : { exitCode: options.exitCode }),
+      ...(options.signal === undefined ? {} : { signal: options.signal }),
       stdout,
       stderr,
       outputTruncated: outputExcerpt.includes('[TRUNCATED]'),
