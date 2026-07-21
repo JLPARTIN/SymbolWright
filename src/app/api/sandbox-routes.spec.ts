@@ -1,8 +1,8 @@
 import { mkdtempSync, rmSync } from 'node:fs'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Readable } from 'node:stream'
-import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
@@ -54,7 +54,10 @@ function response(): MockResponse & ServerResponse {
 }
 
 function services() {
-  const historyStore = new SandboxHistoryStore({ workspaceRoot: root, env: { SECRET_TOKEN: 'secret' } })
+  const historyStore = new SandboxHistoryStore({
+    workspaceRoot: root,
+    env: { SECRET_TOKEN: 'secret' },
+  })
   const sandboxService = new SandboxService({
     historyStore,
     env: { SECRET_TOKEN: 'secret' },
@@ -117,7 +120,9 @@ describe('sandbox API route handler', () => {
     )
 
     expect(execute.statusCode).toBe(200)
-    const body = execute.json<{ result: { executionId: string; status: string; evidence: { inputHash: string } } }>()
+    const body = execute.json<{
+      result: { executionId: string; status: string; evidence: { inputHash: string } }
+    }>()
     expect(body.result.executionId).toBe('sandbox_route_test')
     expect(body.result.status).toBe('policy-blocked')
     expect(body.result.evidence.inputHash).toMatch(/^[a-f0-9]{64}$/)
@@ -130,9 +135,10 @@ describe('sandbox API route handler', () => {
       { service: sandboxService },
     )
     expect(history.statusCode).toBe(200)
-    expect(history.json<{ executions: readonly { executionId: string }[] }>().executions[0]?.executionId).toBe(
-      'sandbox_route_test',
-    )
+    expect(
+      history.json<{ executions: readonly { executionId: string }[] }>().executions[0]
+        ?.executionId,
+    ).toBe('sandbox_route_test')
 
     const events = missionService.readEvents(mission.id)
     expect(events.some((event) => event.type === 'sandbox.execution.blocked')).toBe(true)
