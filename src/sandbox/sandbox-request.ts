@@ -10,6 +10,10 @@ export interface SandboxRequestValidationOptions {
   readonly knownRunnerIds: readonly string[]
 }
 
+type MutableSandboxLimitOverrides = {
+  -readonly [Key in keyof SandboxLimits]?: SandboxLimits[Key]
+}
+
 const EXECUTION_MODES: readonly SandboxExecutionMode[] = ['run', 'compile', 'test']
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -57,7 +61,7 @@ function parseLimits(value: unknown): Partial<SandboxLimits> | undefined {
   if (value === undefined) return undefined
   if (!isRecord(value)) throw new SandboxRequestValidationError('limits must be an object')
 
-  const parsed: Partial<SandboxLimits> = {}
+  const parsed: MutableSandboxLimitOverrides = {}
   for (const key of [
     'timeoutMs',
     'compileTimeoutMs',
