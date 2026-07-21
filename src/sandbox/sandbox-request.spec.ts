@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { normalizeSandboxLimits } from './sandbox-limits.js'
-import { SandboxRequestValidationError, validateSandboxExecutionRequest } from './sandbox-request.js'
+import {
+  SandboxRequestValidationError,
+  validateSandboxExecutionRequest,
+} from './sandbox-request.js'
 
 const OPTIONS = {
   knownLanguageIds: ['javascript', 'python', 'rust'],
@@ -48,7 +51,12 @@ describe('sandbox request validation', () => {
       },
       { languageId: 'javascript', mode: 'run', source: 'x'.repeat(512_001) },
       { languageId: 'javascript', mode: 'run', source: 'x', stdin: 'x'.repeat(64_001) },
-      { languageId: 'javascript', mode: 'run', source: 'x', args: Array.from({ length: 33 }, () => 'a') },
+      {
+        languageId: 'javascript',
+        mode: 'run',
+        source: 'x',
+        args: Array.from({ length: 33 }, () => 'a'),
+      },
       { languageId: 'javascript', mode: 'run', source: 'x', args: ['x'.repeat(4_001)] },
       { languageId: 'javascript\0', mode: 'run', source: 'x' },
     ]) {
