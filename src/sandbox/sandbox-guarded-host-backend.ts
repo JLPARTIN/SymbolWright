@@ -58,46 +58,46 @@ interface MutableExecutionState {
   cancelRequested: boolean
 }
 
-const DEFAULT_FILE_BY_LANGUAGE = new Map<string, string>([
-  ['javascript', 'main.js'],
-  ['typescript', 'main.ts'],
-  ['python', 'main.py'],
-  ['go', 'main.go'],
-  ['rust', 'main.rs'],
-  ['java', 'Main.java'],
-  ['c', 'main.c'],
-  ['cpp', 'main.cpp'],
-  ['ruby', 'main.rb'],
-  ['php', 'main.php'],
-])
+const DEFAULT_FILE_BY_LANGUAGE: Record<string, string> = {
+  javascript: 'main.js',
+  typescript: 'main.ts',
+  python: 'main.py',
+  go: 'main.go',
+  rust: 'main.rs',
+  java: 'Main.java',
+  c: 'main.c',
+  cpp: 'main.cpp',
+  ruby: 'main.rb',
+  php: 'main.php',
+}
 
-const EXTENSIONS_BY_LANGUAGE = new Map<string, readonly string[]>([
-  ['javascript', ['.js', '.mjs', '.cjs']],
-  ['typescript', ['.ts', '.tsx']],
-  ['python', ['.py']],
-  ['go', ['.go']],
-  ['rust', ['.rs']],
-  ['java', ['.java']],
-  ['c', ['.c']],
-  ['cpp', ['.cpp', '.cc', '.cxx']],
-  ['ruby', ['.rb']],
-  ['php', ['.php']],
-])
+const EXTENSIONS_BY_LANGUAGE: Record<string, readonly string[]> = {
+  javascript: ['.js', '.mjs', '.cjs'],
+  typescript: ['.ts', '.tsx'],
+  python: ['.py'],
+  go: ['.go'],
+  rust: ['.rs'],
+  java: ['.java'],
+  c: ['.c'],
+  cpp: ['.cpp', '.cc', '.cxx'],
+  ruby: ['.rb'],
+  php: ['.php'],
+}
 
-const VERIFICATION_BY_MODE = new Map<SandboxExecutionRequest['mode'], VerificationLevel>([
-  ['run', 'EXECUTED'],
-  ['compile', 'COMPILED'],
-  ['test', 'TESTED'],
-])
-
-function byteLength(value: string): number {
-  return Buffer.byteLength(value, 'utf8')
+const VERIFICATION_BY_MODE: Record<SandboxExecutionRequest['mode'], VerificationLevel> = {
+  run: 'EXECUTED',
+  compile: 'COMPILED',
+  test: 'TESTED',
 }
 
 function entryNameFor(languageId: string): string {
-  const fileName = DEFAULT_FILE_BY_LANGUAGE.get(languageId)
+  const fileName = DEFAULT_FILE_BY_LANGUAGE[languageId]
   if (fileName === undefined) throw new Error(`No guarded-host entrypoint for ${languageId}`)
   return fileName
+}
+
+function byteLength(value: string): number {
+  return Buffer.byteLength(value, 'utf8')
 }
 
 function normalizeRelativePath(filePath: string): string {
@@ -120,26 +120,30 @@ function isInside(child: string, parent: string): boolean {
 }
 
 function findEntryFile(languageId: string, files: readonly { readonly path: string }[]): string {
-  const extensions = EXTENSIONS_BY_LANGUAGE.get(languageId) ?? []
+  const extensions = EXTENSIONS_BY_LANGUAGE[languageId] ?? []
   const match = files.find((file) => extensions.some((extension) => file.path.endsWith(extension)))
   return match?.path ?? files[0]?.path ?? entryNameFor(languageId)
 }
 
-async function materializeWorkspace(request: SandboxExecutionRequest): Promise<MaterializedWorkspace> {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-sandbox-'))
-  let entryPath = path.join(root, entryNameFor(request.languageId))
-  const cleanup = async (): Promise<SandboxExecutionResult['cleanup']> => {
-    try {
-      await rm(root, { recursive: true, force: true })
-      return { attempted: true, succeeded: true }
-    } catch (error) {
-      return {
-        attempted: true,
-        succeeded: false,
-        warning: error instanceof Error ? error.message : String(error),
-      }
+async function cleanupRoot(root: string): Promise<SandboxExecutionResult['cleanup']> {
+  try {
+    await rm(root, { recursive: true, force: true })
+    return { attempted: true, succeeded: true }
+  } catch (error) {
+    return {
+      attempted: true,
+      succeeded: false,
+      warning: error instanceof Error ? error.message : String(error),
     }
   }
+}
+
+async function materializeWorkspace(
+  request: SandboxExecutionRequest,
+): Promise<MaterializedWorkspace> {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-sandbox-'))
+  let entryPath = path.join(root, entryNameFor(request.languageId))
+  const cleanup = () => cleanupRoot(root)
 
   if (request.source !== undefined) {
     await writeFile(entryPath, request.source, 'utf8')
@@ -162,14 +166,14 @@ async function materializeWorkspace(request: SandboxExecutionRequest): Promise<M
   if (request.repository !== undefined) {
     const repositoryRoot = path.resolve(request.repository.rootPath)
     const selectedPath = request.repository.selectedPaths?.[0]
-    if (selectedPath === undefined) throw new Error('repository.selectedPaths requires one target file')
-    const normalizedSelected = normalizeRelativePath(selectedPath)
-    const sourcePath = path.resolve(repositoryRoot, normalizedSelected)
+    if (selectedPath === undefined)
+      throw new Error('repository.selectedPaths requires one target file')
+    const relativePath = normalizeRelativePath(selectedPath)
+    const sourcePath = path.resolve(repositoryRoot, relativePath)
     if (!isInside(sourcePath, repositoryRoot)) throw new Error('Repository target escaped root')
-    const content = await readFile(sourcePath, 'utf8')
-    const target = path.join(root, normalizedSelected)
+    const target = path.join(root, relativePath)
     await mkdir(path.dirname(target), { recursive: true })
-    await writeFile(target, content, 'utf8')
+    await writeFile(target, await readFile(sourcePath, 'utf8'), 'utf8')
     entryPath = target
     return { root, entryPath, cleanup }
   }
@@ -216,8 +220,8 @@ async function writeTypeScriptCompiler(workspaceRoot: string, entryPath: string)
       'const errors = diagnostics.filter((diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error)',
       'if (errors.length > 0) {',
       '  console.error(ts.formatDiagnosticsWithColorAndContext(errors, {',
-      "    getCanonicalFileName: (fileName) => fileName,",
-      "    getCurrentDirectory: () => process.cwd(),",
+      '    getCanonicalFileName: (fileName) => fileName,',
+      '    getCurrentDirectory: () => process.cwd(),',
       "    getNewLine: () => '\\n',",
       '  }))',
       '  process.exit(1)',
@@ -230,6 +234,20 @@ async function writeTypeScriptCompiler(workspaceRoot: string, entryPath: string)
   return compilerPath
 }
 
+function compileThenMaybeRun(
+  request: SandboxExecutionRequest,
+  command: string,
+  compileArgs: readonly string[],
+  executable: string,
+  runArgs: readonly string[],
+): readonly PlannedCommand[] {
+  if (request.mode === 'compile') return [{ phase: 'compile', command, args: compileArgs }]
+  return [
+    { phase: 'compile', command, args: compileArgs },
+    { phase: 'run', command: executable, args: [...runArgs] },
+  ]
+}
+
 async function plannedCommands(
   request: SandboxExecutionRequest,
   workspace: MaterializedWorkspace,
@@ -238,17 +256,30 @@ async function plannedCommands(
   const args = request.args ?? []
   switch (request.languageId) {
     case 'javascript':
-      return [{ phase: request.mode === 'test' ? 'test' : 'run', command: 'node', args: [entry, ...args] }]
+      return [
+        {
+          phase: request.mode === 'test' ? 'test' : 'run',
+          command: 'node',
+          args: [entry, ...args],
+        },
+      ]
     case 'typescript': {
       const compilerPath = await writeTypeScriptCompiler(workspace.root, workspace.entryPath)
       const commands: PlannedCommand[] = [
         { phase: 'compile', command: 'node', args: [path.relative(workspace.root, compilerPath)] },
       ]
-      if (request.mode !== 'compile') commands.push({ phase: 'run', command: 'node', args: ['main.mjs', ...args] })
+      if (request.mode !== 'compile')
+        commands.push({ phase: 'run', command: 'node', args: ['main.mjs', ...args] })
       return commands
     }
     case 'python':
-      return [{ phase: request.mode === 'test' ? 'test' : 'run', command: 'python3', args: [entry, ...args] }]
+      return [
+        {
+          phase: request.mode === 'test' ? 'test' : 'run',
+          command: 'python3',
+          args: [entry, ...args],
+        },
+      ]
     case 'go':
       return request.mode === 'test'
         ? [{ phase: 'test', command: 'go', args: ['test', './...'] }]
@@ -267,26 +298,20 @@ async function plannedCommands(
     case 'cpp':
       return compileThenMaybeRun(request, 'g++', [entry, '-o', 'main'], './main', args)
     case 'ruby':
-      return [{ phase: request.mode === 'test' ? 'test' : 'run', command: 'ruby', args: [entry, ...args] }]
+      return [
+        {
+          phase: request.mode === 'test' ? 'test' : 'run',
+          command: 'ruby',
+          args: [entry, ...args],
+        },
+      ]
     case 'php':
-      return [{ phase: request.mode === 'test' ? 'test' : 'run', command: 'php', args: [entry, ...args] }]
+      return [
+        { phase: request.mode === 'test' ? 'test' : 'run', command: 'php', args: [entry, ...args] },
+      ]
     default:
       throw new Error(`No guarded-host backend command for ${request.languageId}`)
   }
-}
-
-function compileThenMaybeRun(
-  request: SandboxExecutionRequest,
-  command: string,
-  compileArgs: readonly string[],
-  executable: string,
-  runArgs: readonly string[],
-): readonly PlannedCommand[] {
-  if (request.mode === 'compile') return [{ phase: 'compile', command, args: compileArgs }]
-  return [
-    { phase: 'compile', command, args: compileArgs },
-    { phase: 'run', command: executable, args: [...runArgs] },
-  ]
 }
 
 function appendCapped(
@@ -304,15 +329,51 @@ function appendCapped(
   }
 }
 
+function killChild(child: ChildProcessWithoutNullStreams): void {
+  if (child.pid === undefined) return
+  try {
+    if (process.platform === 'win32') child.kill('SIGTERM')
+    else process.kill(-child.pid, 'SIGTERM')
+  } catch {
+    child.kill('SIGKILL')
+  }
+}
+
+function diagnosticsFor(outcome: ProcessOutcome): readonly SandboxDiagnostic[] {
+  if (outcome.exitCode === 0 && !outcome.timedOut && !outcome.cancelled) return []
+  const message = outcome.cancelled
+    ? 'Sandbox execution was cancelled.'
+    : outcome.timedOut
+      ? 'Sandbox execution timed out.'
+      : `${outcome.phase} exited with code ${outcome.exitCode ?? 'unknown'}.`
+  return [{ severity: outcome.cancelled || outcome.timedOut ? 'warning' : 'error', message }]
+}
+
+function failureStatus(outcome: ProcessOutcome): SandboxExecutionStatus {
+  if (outcome.cancelled) return 'cancelled'
+  if (outcome.timedOut) return 'timeout'
+  if (outcome.phase === 'compile') return 'compile-error'
+  if (outcome.phase === 'test') return 'failed'
+  return 'runtime-error'
+}
+
 async function runPlannedCommand(
   command: PlannedCommand,
   workspaceRoot: string,
   limits: SandboxLimits,
   env: NodeJS.ProcessEnv,
   state: MutableExecutionState,
+  stdin?: string,
 ): Promise<ProcessOutcome> {
   if (state.cancelRequested) {
-    return { phase: command.phase, stdout: '', stderr: '', cancelled: true, timedOut: false, truncated: false }
+    return {
+      phase: command.phase,
+      stdout: '',
+      stderr: '',
+      cancelled: true,
+      timedOut: false,
+      truncated: false,
+    }
   }
 
   return await new Promise<ProcessOutcome>((resolve) => {
@@ -371,35 +432,8 @@ async function runPlannedCommand(
         truncated,
       })
     })
+    child.stdin.end(stdin ?? '')
   })
-}
-
-function killChild(child: ChildProcessWithoutNullStreams): void {
-  if (child.pid === undefined) return
-  try {
-    if (process.platform === 'win32') child.kill('SIGTERM')
-    else process.kill(-child.pid, 'SIGTERM')
-  } catch {
-    child.kill('SIGKILL')
-  }
-}
-
-function failureStatus(outcome: ProcessOutcome): SandboxExecutionStatus {
-  if (outcome.cancelled) return 'cancelled'
-  if (outcome.timedOut) return 'timeout'
-  if (outcome.phase === 'compile') return 'compile-error'
-  if (outcome.phase === 'test') return 'failed'
-  return 'runtime-error'
-}
-
-function diagnosticsFor(outcome: ProcessOutcome): readonly SandboxDiagnostic[] {
-  if (outcome.exitCode === 0 && !outcome.timedOut && !outcome.cancelled) return []
-  const message = outcome.cancelled
-    ? 'Sandbox execution was cancelled.'
-    : outcome.timedOut
-      ? 'Sandbox execution timed out.'
-      : `${outcome.phase} exited with code ${outcome.exitCode ?? 'unknown'}.`
-  return [{ severity: outcome.cancelled || outcome.timedOut ? 'warning' : 'error', message }]
 }
 
 function buildResult(
@@ -474,17 +508,25 @@ export async function executeGuardedHostRequest(
         options.runner.limits,
         options.env,
         state,
+        options.request.stdin,
       )
       stdout = `${stdout}${outcome.stdout}`
       stderr = `${stderr}${outcome.stderr}`
       truncated = truncated || outcome.truncated
       if (outcome.exitCode !== 0 || outcome.timedOut || outcome.cancelled) {
-        const result = buildResult(options, failureStatus(outcome), stdout, stderr, await workspace.cleanup(), {
-          ...(outcome.exitCode === undefined ? {} : { exitCode: outcome.exitCode }),
-          ...(outcome.signal === undefined ? {} : { signal: outcome.signal }),
-          diagnostics: diagnosticsFor(outcome),
-          outputTruncated: truncated,
-        })
+        const result = buildResult(
+          options,
+          failureStatus(outcome),
+          stdout,
+          stderr,
+          await workspace.cleanup(),
+          {
+            ...(outcome.exitCode === undefined ? {} : { exitCode: outcome.exitCode }),
+            ...(outcome.signal === undefined ? {} : { signal: outcome.signal }),
+            diagnostics: diagnosticsFor(outcome),
+            outputTruncated: truncated,
+          },
+        )
         resolveCompleted(result)
         return result
       }
@@ -492,7 +534,7 @@ export async function executeGuardedHostRequest(
 
     const result = buildResult(options, 'passed', stdout, stderr, await workspace.cleanup(), {
       exitCode: 0,
-      verificationLevel: VERIFICATION_BY_MODE.get(options.request.mode) ?? 'UNVERIFIED',
+      verificationLevel: VERIFICATION_BY_MODE[options.request.mode],
       outputTruncated: truncated,
     })
     resolveCompleted(result)
