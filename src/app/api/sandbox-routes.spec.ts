@@ -77,9 +77,12 @@ describe('sandbox API route handler', () => {
     const res = response()
 
     expect(
-      await handleSandboxRoute(request('GET'), res, new URL('http://localhost/api/sandbox/runtimes'), {
-        service: sandboxService,
-      }),
+      await handleSandboxRoute(
+        request('GET'),
+        res,
+        new URL('http://localhost/api/sandbox/runtimes'),
+        { service: sandboxService },
+      ),
     ).toBe(true)
     expect(res.statusCode).toBe(200)
     expect(res.json<{ schemaVersion: number }>().schemaVersion).toBe(1)
@@ -94,7 +97,7 @@ describe('sandbox API route handler', () => {
     expect(rejected.statusCode).toBe(405)
   })
 
-  it('executes through the structured policy layer, persists history, and records mission evidence', async () => {
+  it('executes through policy, persists history, and records mission evidence', async () => {
     const { sandboxService, missionService } = services()
     const mission = await missionService.create({
       name: 'Sandbox route mission',
