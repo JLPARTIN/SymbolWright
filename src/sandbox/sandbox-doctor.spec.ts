@@ -67,7 +67,7 @@ describe('sandbox doctor', () => {
     expect(rendered).toContain('Execution enabled: false')
     expect(rendered).toContain('Guarded-host opt-in: false')
     expect(rendered).toContain('docker pull node:22-bookworm-slim')
-    expect(rendered).toContain('does not pull images automatically')
+    expect(rendered).toContain('Images are never pulled automatically')
 
     const images = renderSandboxImagesReport(report)
     expect(images).toContain('CodeMind Sandbox Images')
