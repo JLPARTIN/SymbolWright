@@ -85,10 +85,7 @@ function outputText(value: string | Buffer | null | undefined): string {
 }
 
 function cleanInspectionText(stdout: string, stderr: string): string {
-  return redactSandboxText(
-    `${stdout}\n${stderr}`.trim(),
-    MAX_IMAGE_INSPECTION_OUTPUT_CHARS,
-  )
+  return redactSandboxText(`${stdout}\n${stderr}`.trim(), MAX_IMAGE_INSPECTION_OUTPUT_CHARS)
 }
 
 function metadataFromInspectionOutput(output: string): {
@@ -104,18 +101,13 @@ function metadataFromInspectionOutput(output: string): {
     readonly RepoDigests?: unknown
     readonly Size?: unknown
   }
-  const repoDigests = Array.isArray(candidate.RepoDigests)
-    ? candidate.RepoDigests
-    : []
-  const firstDigest = repoDigests.find(
-    (value): value is string => typeof value === 'string',
-  )
+  const repoDigests = Array.isArray(candidate.RepoDigests) ? candidate.RepoDigests : []
+  const firstDigest = repoDigests.find((value): value is string => typeof value === 'string')
   const sizeBytes =
     typeof candidate.Size === 'number' && Number.isFinite(candidate.Size)
       ? candidate.Size
       : undefined
-  const digest =
-    firstDigest ?? (typeof candidate.Id === 'string' ? candidate.Id : undefined)
+  const digest = firstDigest ?? (typeof candidate.Id === 'string' ? candidate.Id : undefined)
 
   return {
     ...(sizeBytes === undefined ? {} : { sizeBytes }),
@@ -141,9 +133,7 @@ function inspectionResult(
     status,
     inspectedAt,
     reason: details.reason,
-    ...(details.sizeBytes === undefined
-      ? {}
-      : { sizeBytes: details.sizeBytes }),
+    ...(details.sizeBytes === undefined ? {} : { sizeBytes: details.sizeBytes }),
     ...(details.digest === undefined ? {} : { digest: details.digest }),
   }
 }
@@ -197,11 +187,7 @@ export async function inspectSandboxLocalImage(
     })
   }
 
-  if (
-    code === 'ETIMEDOUT' ||
-    result.signal === 'SIGTERM' ||
-    result.signal === 'SIGKILL'
-  ) {
+  if (code === 'ETIMEDOUT' || result.signal === 'SIGTERM' || result.signal === 'SIGKILL') {
     return inspectionResult(image, engine, 'misconfigured', inspectedAt, {
       reason: `${engine.engine} local image metadata lookup timed out after ${timeout}ms.`,
     })
