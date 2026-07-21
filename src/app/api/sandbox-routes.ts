@@ -4,7 +4,10 @@ import { MissionNotFoundError, type MissionService } from '../../mission/mission
 import type { CodemindRuntimeMode } from '../../runtime/types.js'
 import { SandboxRequestValidationError } from '../../sandbox/sandbox-request.js'
 import type { SandboxService } from '../../sandbox/sandbox-service.js'
-import type { SandboxExecutionRequest, SandboxExecutionResult } from '../../sandbox/sandbox-types.js'
+import type {
+  SandboxExecutionRequest,
+  SandboxExecutionResult,
+} from '../../sandbox/sandbox-types.js'
 
 const MAX_SANDBOX_REQUEST_BYTES = 512 * 1024
 const RUNTIME_MODES: readonly CodemindRuntimeMode[] = [
@@ -20,7 +23,9 @@ export interface SandboxRouteContext {
 }
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
-  res.writeHead(statusCode, { 'content-type': 'application/json; charset=utf-8' })
+  res.writeHead(statusCode, {
+    'content-type': 'application/json; charset=utf-8',
+  })
   res.end(JSON.stringify(body))
 }
 
@@ -99,7 +104,9 @@ function recordMissionEvidence(
       durationMs: result.durationMs,
       ...(result.exitCode === undefined ? {} : { exitCode: result.exitCode }),
       inputHash: result.evidence.inputHash,
-      ...(result.evidence.outputHash === undefined ? {} : { outputHash: result.evidence.outputHash }),
+      ...(result.evidence.outputHash === undefined
+        ? {}
+        : { outputHash: result.evidence.outputHash }),
       ...(result.evidence.outputExcerpt === undefined
         ? {}
         : { outputExcerpt: result.evidence.outputExcerpt }),
@@ -148,7 +155,9 @@ export async function handleSandboxRoute(
       const record = asRecord(await readJsonBody(req))
       const request = context.service.validateRequest(record)
       if (request.missionId !== undefined) context.missionService?.get(request.missionId)
-      const result = await context.service.execute(request, { mode: parseRuntimeMode(record) })
+      const result = await context.service.execute(request, {
+        mode: parseRuntimeMode(record),
+      })
       recordMissionEvidence(context, request, result)
       sendJson(res, 200, { result })
       return true
@@ -206,7 +215,9 @@ export async function handleSandboxRoute(
       sendJson(res, 404, { error: error.message })
       return true
     }
-    sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) })
+    sendJson(res, 500, {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return true
   }
 }
