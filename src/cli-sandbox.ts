@@ -109,7 +109,7 @@ async function executeFile(
   const historyStore = new SandboxHistoryStore({ workspaceRoot })
   const service = new SandboxService({
     historyStore,
-    env: options.env,
+    ...(options.env === undefined ? {} : { env: options.env }),
     ...(options.now === undefined ? {} : { now: options.now }),
     ...(options.discoverCommandAvailability === undefined
       ? {}
