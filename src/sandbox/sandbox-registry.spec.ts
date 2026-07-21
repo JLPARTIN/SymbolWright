@@ -45,7 +45,9 @@ describe('sandbox runtime inventory', () => {
       commandAvailability: new Map([
         [
           'python3',
-          runnerAvailability('available', '2026-07-20T00:00:00.000Z', { version: '3.12.0' }),
+          runnerAvailability('available', '2026-07-20T00:00:00.000Z', {
+            version: '3.12.0',
+          }),
         ],
       ]),
     })
@@ -56,7 +58,9 @@ describe('sandbox runtime inventory', () => {
 })
 
 describe('sandbox policy and service foundation', () => {
-  const inventory = buildSandboxInventory({ now: () => new Date('2026-07-20T00:00:00.000Z') })
+  const inventory = buildSandboxInventory({
+    now: () => new Date('2026-07-20T00:00:00.000Z'),
+  })
   const request = {
     languageId: 'javascript',
     mode: 'run',
@@ -86,7 +90,9 @@ describe('sandbox policy and service foundation', () => {
       now: () => new Date('2026-07-20T00:00:00.000Z'),
       generateExecutionId: () => 'sandbox_test',
     })
-    const result = await service.execute(request, { mode: 'APPROVED_EXECUTION' })
+    const result = await service.execute(request, {
+      mode: 'APPROVED_EXECUTION',
+    })
     expect(result.status).toBe('policy-blocked')
     expect(result.trustClass).toBe('browser-isolated')
     expect(result.evidence.verificationLevel).toBe('UNVERIFIED')
@@ -124,7 +130,10 @@ describe('sandbox policy and service foundation', () => {
         requestedRunnerId: 'guarded-host-python',
       },
       guarded,
-      { mode: 'APPROVED_EXECUTION', env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' } },
+      {
+        mode: 'APPROVED_EXECUTION',
+        env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
+      },
     )
     expect(allowed.allowed).toBe(true)
   })
@@ -132,7 +141,8 @@ describe('sandbox policy and service foundation', () => {
 
 describe('sandbox redaction', () => {
   it('redacts representative secrets before evidence can persist', () => {
-    const text = 'Authorization: Bearer abcdefghijklmnop and ghp_123456789012345678901234567890123456'
+    const text =
+      'Authorization: Bearer abcdefghijklmnop and ghp_123456789012345678901234567890123456'
     const redacted = redactSandboxText(text)
     expect(redacted).not.toContain('abcdefghijklmnop')
     expect(redacted).not.toContain('ghp_123')
