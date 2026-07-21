@@ -141,8 +141,7 @@ describe('sandbox API route handler', () => {
     )
     expect(history.statusCode).toBe(200)
     expect(
-      history.json<{ executions: readonly { executionId: string }[] }>().executions[0]
-        ?.executionId,
+      history.json<{ executions: readonly { executionId: string }[] }>().executions[0]?.executionId,
     ).toBe('sandbox_route_test')
 
     const events = missionService.readEvents(mission.id)
@@ -170,4 +169,4 @@ describe('sandbox API route handler', () => {
     )
     expect(missing.statusCode).toBe(404)
   })
-})
+}
