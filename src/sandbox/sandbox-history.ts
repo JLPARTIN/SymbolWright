@@ -60,8 +60,8 @@ function safeExecutionId(executionId: string): string {
 }
 
 function sanitizeResult(result: SandboxExecutionResult): SandboxExecutionResult {
-  const stdout = redactSandboxText(result.stdout, result.evidence.outputExcerpt === undefined ? 64_000 : 64_000)
-  const stderr = redactSandboxText(result.stderr, result.evidence.outputExcerpt === undefined ? 64_000 : 64_000)
+  const stdout = redactSandboxText(result.stdout, 64_000)
+  const stderr = redactSandboxText(result.stderr, 64_000)
   const outputExcerpt =
     result.evidence.outputExcerpt === undefined
       ? undefined
