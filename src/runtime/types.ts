@@ -6,6 +6,8 @@ import type { AgentMemoryTools } from '../memory/agent-tools.js'
 import type { EmbeddingProvider } from '../memory/embedding-provider.js'
 import type { WorkspaceManager } from '../workspace/workspace-manager.js'
 import type { SandboxFileWriter, SandboxRunner } from './sandbox/sandbox-runner.js'
+import type { SandboxService } from '../sandbox/sandbox-service.js'
+import type { SandboxExecutionRequest, SandboxExecutionResult } from '../sandbox/sandbox-types.js'
 
 /** Supported execution modes from plan-only to approved execution. */
 export type CodemindRuntimeMode = 'PLAN_ONLY' | 'READ_ONLY' | 'PROPOSAL_ONLY' | 'APPROVED_EXECUTION'
@@ -58,6 +60,8 @@ export type CodemindToolName =
   | 'web_search'
   | 'subagent_run'
   | 'skill_run'
+  | 'sandbox_list_runtimes'
+  | 'sandbox_execute'
 
 /** Capability categories that determine tool availability per mode. */
 export type RuntimeToolCapability =
@@ -162,6 +166,11 @@ export interface RuntimeToolContext {
   readonly workspace?: WorkspaceManager
   readonly sandboxRunner?: SandboxRunner
   readonly sandboxFileWriter?: SandboxFileWriter
+  readonly sandboxService?: SandboxService
+  readonly recordSandboxExecution?: (
+    request: SandboxExecutionRequest,
+    result: SandboxExecutionResult,
+  ) => void
   readonly memoryTools?: AgentMemoryTools
   /** Groups checkpoints under `.codemind/checkpoints/<sessionId>/`. Auto-generated when absent. */
   readonly sessionId?: string
@@ -244,6 +253,8 @@ export const ALL_CODEMIND_TOOL_NAMES = [
   'web_search',
   'subagent_run',
   'skill_run',
+  'sandbox_list_runtimes',
+  'sandbox_execute',
 ] as const satisfies readonly CodemindToolName[]
 
 type _AssertAllToolNames = CodemindToolName extends (typeof ALL_CODEMIND_TOOL_NAMES)[number]
