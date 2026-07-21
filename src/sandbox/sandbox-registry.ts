@@ -63,7 +63,10 @@ function languagesForRunner(runner: CodeRunnerDefinition): readonly string[] {
   )
 }
 
-function browserAvailability(runner: CodeRunnerDefinition, now: string): SandboxRunnerAvailability {
+function browserAvailability(
+  runner: CodeRunnerDefinition,
+  now: string,
+): SandboxRunnerAvailability {
   if (runner.id === 'server-typescript-node') {
     return runnerAvailability('available', now, {
       reason:
