@@ -98,11 +98,10 @@ describe('sandbox policy branch coverage', () => {
       network: false,
     }
 
-    const runDecision = evaluateSandboxPolicy(
-      request(),
-      runner({ capabilities: noCapabilities }),
-      { mode: 'APPROVED_EXECUTION', env: {} },
-    )
+    const runDecision = evaluateSandboxPolicy(request(), runner({ capabilities: noCapabilities }), {
+      mode: 'APPROVED_EXECUTION',
+      env: {},
+    })
     expect(runDecision.reason).toContain('does not support run mode')
 
     const compileDecision = evaluateSandboxPolicy(
