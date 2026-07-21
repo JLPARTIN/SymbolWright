@@ -13,6 +13,7 @@ This document tracks the Bundle #4 sandbox runtime rollout. The current implemen
 - Read-only image inspection and operator-reviewed preparation-plan command contracts.
 - Top-level `codemind sandbox ...` CLI routing through the existing CLI entrypoint.
 - Read-only local image-store inspection for allowlisted image IDs only.
+- Container backend policy skeleton for future no-network isolated execution.
 
 ## Trust classes
 
@@ -31,6 +32,32 @@ Runtime discovery runs bounded version checks only. It does not execute reposito
 ## Container image policy
 
 Container images are an explicit allowlist. Browser requests cannot supply arbitrary image names. Images are not pulled automatically during normal execution. The default inventory keeps images disabled and marks them not installed; `codemind sandbox inspect <image-id>` can separately read allowlisted local image-store metadata when Docker or Podman is detected.
+
+## Container execution policy skeleton
+
+The container policy skeleton defines the contract a future backend must satisfy before it can truthfully report `container-isolated` execution. The plan is intentionally non-executable for now.
+
+Required controls include:
+
+- network policy `disabled`;
+- no privileged containers;
+- no host PID namespace;
+- no host network;
+- no container-engine socket mounts;
+- no home-directory mounts;
+- no arbitrary mounts;
+- no arbitrary user-supplied container arguments;
+- no registry credentials from browser requests;
+- non-root execution;
+- dropped Linux capabilities;
+- disabled privilege escalation;
+- read-only root filesystem where workable;
+- writable temporary workspace only;
+- minimal environment allowlist;
+- bounded CPU, memory, process count, timeout, output, and artifact limits;
+- cleanup required after every execution attempt.
+
+This policy plan does not create, start, pull, inspect, or remove containers. A later backend slice must enforce the policy before any server-side container execution can be enabled.
 
 ## Sandbox doctor
 
