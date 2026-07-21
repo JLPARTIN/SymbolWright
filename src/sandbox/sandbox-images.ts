@@ -13,7 +13,8 @@ export interface SandboxImagePolicySummary {
   readonly warnings: readonly string[]
 }
 
-const IMAGE_POLICY_SOURCE = 'CodeMind built-in sandbox image allowlist; operator preparation required.'
+const IMAGE_POLICY_SOURCE =
+  'CodeMind built-in sandbox image allowlist; operator preparation required.'
 
 export const DEFAULT_SANDBOX_IMAGE_ALLOWLIST: readonly SandboxImageDefinition[] = [
   {
