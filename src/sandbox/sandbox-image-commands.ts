@@ -1,5 +1,7 @@
 import { DEFAULT_SANDBOX_DISCOVERY_PROBES, discoverRuntimeCommands } from './sandbox-discovery.js'
+import { inspectSandboxLocalImage } from './sandbox-image-store.js'
 import { buildSandboxImagePolicy, findSandboxImage } from './sandbox-images.js'
+import type { SandboxLocalImageInspection } from './sandbox-image-store.js'
 import type { SandboxContainerEngineStatus } from './sandbox-images.js'
 import type { SandboxImageDefinition, SandboxRunnerAvailability } from './sandbox-types.js'
 
@@ -8,6 +10,10 @@ export interface SandboxImageCommandOptions {
   readonly discoverCommandAvailability?: () => Promise<
     ReadonlyMap<string, SandboxRunnerAvailability>
   >
+  readonly inspectLocalImage?: (
+    image: SandboxImageDefinition,
+    engine: SandboxContainerEngineStatus,
+  ) => Promise<SandboxLocalImageInspection>
 }
 
 interface ResolvedImagePolicy {
@@ -51,19 +57,37 @@ function renderUnknownImageId(imageId: string, images: readonly SandboxImageDefi
   ].join('\n')
 }
 
-function renderPreparationCommand(
-  engine: SandboxContainerEngineStatus,
-  image: SandboxImageDefinition,
+function renderOptionalMetadata(
+  label: string,
+  value: string | number | undefined,
 ): string | undefined {
-  if (engine.engine === 'none' || engine.status !== 'available') return undefined
-  return [engine.engine, 'pull', image.image].join(' ')
+  return value === undefined ? undefined : `${label}: ${value}`
 }
 
-function renderImageInspection(
+async function resolveLocalImageInspection(
   image: SandboxImageDefinition,
   engine: SandboxContainerEngineStatus,
-): string {
-  const preparationCommand = renderPreparationCommand(engine, image)
+  options: SandboxImageCommandOptions,
+): Promise<SandboxLocalImageInspection> {
+  if (options.inspectLocalImage !== undefined) return options.inspectLocalImage(image, engine)
+  return inspectSandboxLocalImage(
+    image,
+    engine,
+    options.env === undefined ? {} : { env: options.env },
+  )
+}
+
+async function renderImageInspection(
+  image: SandboxImageDefinition,
+  engine: SandboxContainerEngineStatus,
+  options: SandboxImageCommandOptions,
+): Promise<string> {
+  const localInspection = await resolveLocalImageInspection(image, engine, options)
+  const optionalMetadata = [
+    renderOptionalMetadata('Local image size bytes', localInspection.sizeBytes),
+    renderOptionalMetadata('Local image digest', localInspection.digest),
+  ].filter((line): line is string => line !== undefined)
+
   return [
     'CodeMind Sandbox Image Inspection',
     '',
@@ -71,19 +95,18 @@ function renderImageInspection(
     `Image: ${image.image}`,
     `Languages: ${image.languages.join(', ')}`,
     `Enabled: ${image.enabled}`,
-    `Installed: ${image.installed === true}`,
+    `Installed: ${localInspection.status === 'installed'}`,
+    `Local store status: ${localInspection.status}`,
+    `Local store detail: ${localInspection.reason}`,
+    ...optionalMetadata,
     `Source: ${image.source}`,
     `Container engine: ${engine.engine} (${engine.status})`,
     `Engine detail: ${engine.reason}`,
     '',
-    'Preparation:',
-    preparationCommand === undefined
-      ? '  No preparation command is available until Docker or Podman is detected.'
-      : `  ${preparationCommand}`,
-    '',
     'Safety:',
-    '  This command is read-only and does not inspect, pull, run, or mutate images.',
-    '  The displayed preparation command is for operator review only.',
+    '  This command is read-only and does not acquire, run, or mutate images.',
+    '  Local image inspection reads allowlisted image metadata only.',
+    '  Manual image preparation remains an operator-reviewed task.',
   ].join('\n')
 }
 
@@ -91,20 +114,6 @@ function renderImagePreparationPlan(
   image: SandboxImageDefinition,
   engine: SandboxContainerEngineStatus,
 ): string {
-  const preparationCommand = renderPreparationCommand(engine, image)
-  const commandLines =
-    preparationCommand === undefined
-      ? [
-          'Status: BLOCKED',
-          `Reason: ${engine.reason}`,
-          'No pull command is emitted because no usable container engine is available.',
-        ]
-      : [
-          'Status: REVIEW_REQUIRED',
-          `Command: ${preparationCommand}`,
-          'Run this command manually only after reviewing the image policy and local environment.',
-        ]
-
   return [
     'CodeMind Sandbox Image Preparation Plan',
     '',
@@ -112,11 +121,14 @@ function renderImagePreparationPlan(
     `Image: ${image.image}`,
     `Languages: ${image.languages.join(', ')}`,
     `Container engine: ${engine.engine} (${engine.status})`,
-    ...commandLines,
+    engine.status === 'available' ? 'Status: REVIEW_REQUIRED' : 'Status: BLOCKED',
+    engine.status === 'available'
+      ? 'Reason: prepare this allowlisted image manually after reviewing local policy.'
+      : `Reason: ${engine.reason}`,
     '',
     'Safety:',
     '  CodeMind does not execute this plan automatically.',
-    '  Normal sandbox execution still forbids automatic image pulls.',
+    '  Normal sandbox execution still forbids automatic image acquisition.',
     '  Raw image names, registry credentials, and arbitrary container flags are not accepted.',
   ].join('\n')
 }
@@ -132,7 +144,7 @@ export async function renderSandboxImageInspectCommand(
   const image = findSandboxImage(policy.images, imageId)
   if (image === undefined) return renderUnknownImageId(imageId, policy.images)
 
-  return renderImageInspection(image, policy.engine)
+  return renderImageInspection(image, policy.engine, options)
 }
 
 export async function renderSandboxImagePrepareCommand(

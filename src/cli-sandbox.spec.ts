@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { renderSandboxCommand } from './cli-sandbox.js'
 import { runnerAvailability } from './sandbox/sandbox-registry.js'
+import type { SandboxContainerEngineStatus } from './sandbox/sandbox-images.js'
+import type { SandboxImageDefinition } from './sandbox/sandbox-types.js'
 
 const CHECKED_AT = '2026-07-20T00:00:00.000Z'
 const OPTIONS = {
@@ -15,6 +17,17 @@ const OPTIONS = {
         }),
       ],
     ]),
+  inspectLocalImage: async (
+    image: SandboxImageDefinition,
+    engine: SandboxContainerEngineStatus,
+  ) => ({
+    imageId: image.id,
+    image: image.image,
+    engine: engine.engine,
+    status: 'missing' as const,
+    inspectedAt: CHECKED_AT,
+    reason: 'allowlisted image was not found in the local image store.',
+  }),
 }
 
 describe('sandbox CLI renderer', () => {
@@ -39,7 +52,8 @@ describe('sandbox CLI renderer', () => {
     expect(rendered).toContain('CodeMind Sandbox Image Inspection')
     expect(rendered).toContain('Image ID: node-22-bookworm-slim')
     expect(rendered).toContain('Container engine: docker (available)')
-    expect(rendered).toContain('does not inspect, pull, run, or mutate images')
+    expect(rendered).toContain('Local store status: missing')
+    expect(rendered).toContain('does not acquire, run, or mutate images')
   })
 
   it('rejects raw image names in sandbox image inspection', async () => {
