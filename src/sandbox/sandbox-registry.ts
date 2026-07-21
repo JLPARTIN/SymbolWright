@@ -63,10 +63,7 @@ function languagesForRunner(runner: CodeRunnerDefinition): readonly string[] {
   )
 }
 
-function browserAvailability(
-  runner: CodeRunnerDefinition,
-  now: string,
-): SandboxRunnerAvailability {
+function browserAvailability(runner: CodeRunnerDefinition, now: string): SandboxRunnerAvailability {
   if (runner.id === 'server-typescript-node') {
     return runnerAvailability('available', now, {
       reason:
@@ -124,10 +121,13 @@ export interface BuildSandboxInventoryOptions {
   readonly env?: NodeJS.ProcessEnv
 }
 
-export function buildSandboxInventory(options: BuildSandboxInventoryOptions = {}): SandboxInventory {
+export function buildSandboxInventory(
+  options: BuildSandboxInventoryOptions = {},
+): SandboxInventory {
   const now = options.now ?? (() => new Date())
   const generatedAt = now().toISOString()
-  const commandAvailability = options.commandAvailability ?? new Map<string, SandboxRunnerAvailability>()
+  const commandAvailability =
+    options.commandAvailability ?? new Map<string, SandboxRunnerAvailability>()
   const guardedHostOptIn = options.env?.['CODEMIND_ALLOW_GUARDED_HOST_EXECUTION'] === 'true'
   const guardedHostDisabled = runnerAvailability('unavailable', generatedAt, {
     reason: 'Guarded-host execution is disabled by default.',
@@ -156,7 +156,9 @@ export function buildSandboxInventory(options: BuildSandboxInventoryOptions = {}
       displayName,
       guardedHostOptIn
         ? (commandAvailability.get(command) ??
-            runnerAvailability('unavailable', generatedAt, { reason: `${command} was not detected.` }))
+            runnerAvailability('unavailable', generatedAt, {
+              reason: `${command} was not detected.`,
+            }))
         : guardedHostDisabled,
     ),
   )
