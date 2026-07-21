@@ -86,7 +86,9 @@ function assertSafeHostWorkspacePath(hostWorkspacePath: string): string {
   ]
 
   if (deniedFragments.some((fragment) => normalized.includes(fragment))) {
-    throw new Error('Container workspace path may not target host home, Git, or engine socket paths.')
+    throw new Error(
+      'Container workspace path may not target host home, Git, or engine socket paths.',
+    )
   }
 
   return normalized
