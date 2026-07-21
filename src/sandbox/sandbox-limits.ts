@@ -30,8 +30,7 @@ function optionalPositiveNumber(value: number | undefined): number | undefined {
  * Administrator-level increases can be added later through explicit server config, not request JSON.
  */
 export function normalizeSandboxLimits(requested: Partial<SandboxLimits> = {}): SandboxLimits {
-  const maxCpuPercent = optionalPositiveNumber(requested.maxCpuPercent)
-  return {
+  const normalized: Omit<SandboxLimits, 'maxCpuPercent'> = {
     timeoutMs: Math.min(
       positiveNumber(requested.timeoutMs, DEFAULT_SANDBOX_LIMITS.timeoutMs),
       DEFAULT_SANDBOX_LIMITS.timeoutMs,
@@ -44,9 +43,6 @@ export function normalizeSandboxLimits(requested: Partial<SandboxLimits> = {}): 
       positiveNumber(requested.maxMemoryMb, DEFAULT_SANDBOX_LIMITS.maxMemoryMb),
       DEFAULT_SANDBOX_LIMITS.maxMemoryMb,
     ),
-    ...(maxCpuPercent === undefined
-      ? { maxCpuPercent: DEFAULT_SANDBOX_LIMITS.maxCpuPercent }
-      : { maxCpuPercent: Math.min(maxCpuPercent, DEFAULT_SANDBOX_LIMITS.maxCpuPercent ?? 100) }),
     maxProcesses: Math.min(
       positiveNumber(requested.maxProcesses, DEFAULT_SANDBOX_LIMITS.maxProcesses),
       DEFAULT_SANDBOX_LIMITS.maxProcesses,
@@ -84,4 +80,15 @@ export function normalizeSandboxLimits(requested: Partial<SandboxLimits> = {}): 
       DEFAULT_SANDBOX_LIMITS.maxArgBytes,
     ),
   }
+
+  const requestedCpuPercent = optionalPositiveNumber(requested.maxCpuPercent)
+  const defaultCpuPercent = DEFAULT_SANDBOX_LIMITS.maxCpuPercent
+  const normalizedCpuPercent =
+    requestedCpuPercent === undefined
+      ? defaultCpuPercent
+      : Math.min(requestedCpuPercent, defaultCpuPercent ?? requestedCpuPercent)
+
+  return normalizedCpuPercent === undefined
+    ? normalized
+    : { ...normalized, maxCpuPercent: normalizedCpuPercent }
 }
