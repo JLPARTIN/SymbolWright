@@ -147,13 +147,10 @@ export interface BuildSandboxInventoryOptions {
   readonly env?: NodeJS.ProcessEnv
 }
 
-export function buildSandboxInventory(
-  options: BuildSandboxInventoryOptions = {},
-): SandboxInventory {
+export function buildSandboxInventory(options: BuildSandboxInventoryOptions = {}): SandboxInventory {
   const now = options.now ?? (() => new Date())
   const generatedAt = now().toISOString()
-  const commandAvailability =
-    options.commandAvailability ?? new Map<string, SandboxRunnerAvailability>()
+  const commandAvailability = options.commandAvailability ?? new Map<string, SandboxRunnerAvailability>()
   const imagePolicy = buildSandboxImagePolicy(commandAvailability)
   const guardedHostOptIn = options.env?.['CODEMIND_ALLOW_GUARDED_HOST_EXECUTION'] === 'true'
 
@@ -162,6 +159,7 @@ export function buildSandboxInventory(
   ).map((runner) => browserRunner(runner, generatedAt))
 
   const guardedCandidates = [
+    ['javascript', 'Guarded JavaScript Node Runner', 'node'],
     ['typescript', 'Guarded TypeScript Node Runner', 'node'],
     ['python', 'Guarded Python Runner', 'python3'],
     ['go', 'Guarded Go Runner', 'go'],
@@ -192,7 +190,7 @@ export function buildSandboxInventory(
     images: imagePolicy.images,
     warnings: [
       ...imagePolicy.warnings,
-      'Guarded-host runners are inventory entries only unless explicit opt-in and APPROVED_EXECUTION are present.',
+      'Guarded-host runners require explicit opt-in and APPROVED_EXECUTION before code can run.',
       'Runtime discovery uses bounded version probes only; it does not execute repository code or install dependencies.',
     ],
   }
