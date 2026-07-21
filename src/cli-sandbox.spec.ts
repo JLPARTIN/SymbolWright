@@ -47,10 +47,7 @@ describe('sandbox CLI renderer', () => {
   })
 
   it('renders sandbox image inspection for allowlisted IDs only', async () => {
-    const rendered = await renderSandboxCommand(
-      ['inspect', 'node-22-bookworm-slim'],
-      OPTIONS,
-    )
+    const rendered = await renderSandboxCommand(['inspect', 'node-22-bookworm-slim'], OPTIONS)
 
     expect(rendered).toContain('CodeMind Sandbox Image Inspection')
     expect(rendered).toContain('Image ID: node-22-bookworm-slim')
@@ -60,10 +57,7 @@ describe('sandbox CLI renderer', () => {
   })
 
   it('rejects raw image names in sandbox image inspection', async () => {
-    const rendered = await renderSandboxCommand(
-      ['inspect', 'node:22-bookworm-slim'],
-      OPTIONS,
-    )
+    const rendered = await renderSandboxCommand(['inspect', 'node:22-bookworm-slim'], OPTIONS)
 
     expect(rendered).toContain('Unknown sandbox image id')
     expect(rendered).toContain('arbitrary container image names')
