@@ -56,7 +56,8 @@ export class AgentLoopAutonomousEditExecutor implements AutonomousEditTaskExecut
     this.#maxIterations = options.maxIterations ?? 30
     this.#systemPrompt = options.systemPrompt ?? DEFAULT_SYSTEM_PROMPT
     this.#runAgent = options.runAgent ?? runAgentLoop
-    this.#readChangedFiles = options.readChangedFiles ?? (() => readGitChangedFiles(this.#repositoryRoot))
+    this.#readChangedFiles =
+      options.readChangedFiles ?? (() => readGitChangedFiles(this.#repositoryRoot))
   }
 
   async execute(task: AutonomousTaskNode): Promise<MissionTaskExecutionResult> {
@@ -109,7 +110,8 @@ export class AgentLoopAutonomousEditExecutor implements AutonomousEditTaskExecut
 }
 
 function buildTaskPrompt(task: AutonomousTaskNode): string {
-  const reads = task.resources.reads.length === 0 ? '(none declared)' : task.resources.reads.join(', ')
+  const reads =
+    task.resources.reads.length === 0 ? '(none declared)' : task.resources.reads.join(', ')
   const writes =
     task.resources.writes.length === 0 ? '(discover as needed)' : task.resources.writes.join(', ')
   return [

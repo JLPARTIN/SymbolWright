@@ -3,10 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { LLMProvider } from '../provider/provider.types.js'
 import type { RuntimeToolContext } from '../runtime/types.js'
 import type { AgentLoopResult } from '../agent/agent-loop.types.js'
-import {
-  AgentLoopAutonomousEditExecutor,
-  parseGitStatusPaths,
-} from './agent-loop-edit-executor.js'
+import { AgentLoopAutonomousEditExecutor, parseGitStatusPaths } from './agent-loop-edit-executor.js'
 import type { AutonomousTaskNode } from './task-graph.types.js'
 
 const PROVIDER = {} as LLMProvider
@@ -83,7 +80,9 @@ describe('AgentLoopAutonomousEditExecutor', () => {
     const execution = await executor.execute(task())
 
     expect(execution.state).toBe('blocked')
-    expect(execution.diagnostics?.join(' ')).toContain('without producing a verified repository change')
+    expect(execution.diagnostics?.join(' ')).toContain(
+      'without producing a verified repository change',
+    )
   })
 
   it('persists diagnostics and partial changes when the agent loop fails', async () => {
