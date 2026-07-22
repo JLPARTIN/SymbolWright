@@ -126,7 +126,7 @@ function task(
     kind,
     dependencies,
     resources,
-    state: dependencies.length === 0 ? 'ready' : 'blocked',
+    state: dependencies.length === 0 ? 'ready' : 'queued',
     retry: { maxAttempts, attempts: 0 },
     evidence: [],
     artifacts: [],
