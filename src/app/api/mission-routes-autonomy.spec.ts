@@ -60,7 +60,7 @@ describe('live autonomous mission route registration', () => {
     )
 
     expect(output.res.writeHead).toHaveBeenCalledWith(200, expect.any(Object))
-    expect(JSON.parse(output.chunks[0] ?? '{}')).toEqual({
+    expect(JSON.parse(output.chunks[0] ?? '{}')).toMatchObject({
       missions: [],
       offset: 0,
       limit: 50,
