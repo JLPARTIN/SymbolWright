@@ -249,7 +249,11 @@ export class AutonomousRepairLoop {
   ): Promise<AutonomousRepairLoopRecord> {
     const attempt = record.repairAttempts.length + 1
     const startedAt = new Date().toISOString()
-    let current = { ...record, state: 'repairing' as const, updatedAt: startedAt }
+    let current: AutonomousRepairLoopRecord = {
+      ...record,
+      state: 'repairing',
+      updatedAt: startedAt,
+    }
     await this.#store.save(current)
 
     try {
@@ -287,7 +291,7 @@ export class AutonomousRepairLoop {
       const modifiedFiles = new Set([...current.modifiedFiles, ...editResult.appliedPaths])
       current = {
         ...current,
-        state: editResult.state === 'applied' ? ('validating' as const) : ('failed' as const),
+        state: editResult.state === 'applied' ? 'validating' : 'failed',
         completedPhases: [],
         repairAttempts: [...current.repairAttempts, repairAttempt],
         modifiedFiles: [...modifiedFiles].sort(),
