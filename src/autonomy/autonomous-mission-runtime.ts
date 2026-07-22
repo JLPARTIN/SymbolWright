@@ -34,9 +34,7 @@ export function createAutonomousMissionRuntime(
     store: executionStore,
     executor: options.taskExecutor,
   })
-  const semanticIndexStore = new RepositorySemanticIndexStore(
-    path.join(workspaceRoot, '.codemind'),
-  )
+  const semanticIndexStore = new RepositorySemanticIndexStore(path.join(workspaceRoot, '.codemind'))
   const loadSemanticIndex = async (repositoryRoot: string) => {
     const index = await semanticIndexStore.load(repositoryRoot)
     if (index === undefined) {
