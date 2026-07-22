@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import { TransactionalEditSession } from './transactional-edit-session.js'
 import type {
+  TransactionalEditSession,
   TransactionalEditSessionRecord,
   TransactionalFileEdit,
 } from './transactional-edit-session.js'
