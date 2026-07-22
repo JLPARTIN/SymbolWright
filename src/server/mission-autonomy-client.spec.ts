@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { createMissionAutonomyClient } from './mission-autonomy-client.js'
+import type { MissionAutonomyRequest } from './mission-autonomy-client.js'
 
 describe('mission autonomy client', () => {
   it('requests status and every operator action through the supplied request function', async () => {
-    const request = vi.fn(async () => ({ ok: true }))
+    const request = vi.fn(async <T>() => ({ ok: true }) as T) as MissionAutonomyRequest &
+      ReturnType<typeof vi.fn>
     const client = createMissionAutonomyClient(request)
 
     await client.status('mission-1')
@@ -25,7 +27,9 @@ describe('mission autonomy client', () => {
   it('polls dashboard state until aborted', async () => {
     const controller = new AbortController()
     const onDashboard = vi.fn(() => controller.abort())
-    const request = vi.fn(async () => ({ dashboard: { status: 'running' } }))
+    const request = vi.fn(
+      async <T>() => ({ dashboard: { status: 'running' } }) as T,
+    ) as MissionAutonomyRequest & ReturnType<typeof vi.fn>
     const client = createMissionAutonomyClient(request)
 
     await client.poll('mission-2', onDashboard, {
@@ -38,7 +42,9 @@ describe('mission autonomy client', () => {
   })
 
   it('rejects invalid mission IDs and unsafe polling intervals', async () => {
-    const client = createMissionAutonomyClient(vi.fn())
+    const request = vi.fn(async <T>() => undefined as T) as MissionAutonomyRequest &
+      ReturnType<typeof vi.fn>
+    const client = createMissionAutonomyClient(request)
 
     await expect(client.status('../mission')).rejects.toThrow('Invalid mission ID')
     await expect(client.poll('mission-1', vi.fn(), { intervalMs: 50 })).rejects.toThrow(
