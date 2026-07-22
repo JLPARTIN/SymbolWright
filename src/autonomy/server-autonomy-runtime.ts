@@ -1,7 +1,10 @@
 import type { MissionService } from '../mission/mission-service.js'
 import type { SandboxRunner } from '../runtime/sandbox/sandbox-runner.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
-import { createAutonomousMissionRuntime, type AutonomousMissionRuntime } from './autonomous-mission-runtime.js'
+import {
+  createAutonomousMissionRuntime,
+  type AutonomousMissionRuntime,
+} from './autonomous-mission-runtime.js'
 import { RuntimeAutonomousValidationRunner } from './runtime-validation-runner.js'
 import {
   RuntimeMissionTaskExecutor,
