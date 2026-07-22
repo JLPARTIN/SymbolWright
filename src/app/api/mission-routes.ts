@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
+import { createServerAutonomyRuntime } from '../../autonomy/server-autonomy-runtime.js'
 import {
   MISSION_EVENT_FILTERS,
   paginateMissionEvents,
@@ -21,9 +22,14 @@ import {
   parsePatchMissionInput,
 } from '../../mission/mission-validation.js'
 import { runGitCommand } from '../../runtime/git/git-command-runner.js'
+import { handleAutonomousMissionRoute } from './autonomous-mission-routes.js'
 
 const MAX_MISSION_REQUEST_BYTES = 4 * 1024 * 1024
 const VALIDATION_STATUSES = ['running', 'passed', 'failed', 'blocked', 'interrupted'] as const
+const AUTONOMY_RUNTIMES = new WeakMap<
+  MissionService,
+  ReturnType<typeof createServerAutonomyRuntime>
+>()
 
 export interface MissionRouteContext {
   readonly service: MissionService
@@ -33,6 +39,18 @@ export interface MissionRouteContext {
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
   res.writeHead(statusCode, { 'content-type': 'application/json; charset=utf-8' })
   res.end(JSON.stringify(body))
+}
+
+function autonomyRuntime(context: MissionRouteContext) {
+  const existing = AUTONOMY_RUNTIMES.get(context.service)
+  if (existing !== undefined) return existing
+  const runtime = createServerAutonomyRuntime({
+    workspaceRoot: context.cwd,
+    missionService: context.service,
+    hasGitHubToken: process.env['GITHUB_TOKEN'] !== undefined,
+  })
+  AUTONOMY_RUNTIMES.set(context.service, runtime)
+  return runtime
 }
 
 async function readJsonBody(req: IncomingMessage): Promise<unknown> {
@@ -275,6 +293,16 @@ export async function handleMissionRoute(
 ): Promise<boolean> {
   if (url.pathname !== '/api/missions' && !url.pathname.startsWith('/api/missions/')) {
     return false
+  }
+
+  const runtime = autonomyRuntime(context)
+  if (
+    await handleAutonomousMissionRoute(req, res, url, {
+      coordinator: runtime.coordinator,
+      control: runtime.control,
+    })
+  ) {
+    return true
   }
 
   try {
