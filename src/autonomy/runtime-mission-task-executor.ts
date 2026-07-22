@@ -47,13 +47,7 @@ export class RuntimeMissionTaskExecutor implements MissionTaskExecutor {
             `No autonomous edit strategy is configured for task ${task.id}.`,
             'Attach an AutonomousEditTaskExecutor before starting write-capable missions.',
           ],
-          evidence: [
-            {
-              kind: 'operator-note',
-              id: `blocked-${task.id}`,
-              summary: 'Mission paused before repository writes because no real edit strategy was available.',
-            },
-          ],
+          evidence: [{ kind: 'diagnostic', id: `blocked-${task.id}` }],
         }
       }
       return this.#editExecutor.execute(task)
@@ -61,14 +55,8 @@ export class RuntimeMissionTaskExecutor implements MissionTaskExecutor {
 
     return {
       state: 'completed',
-      evidence: [
-        {
-          kind: 'repository-analysis',
-          id: `analysis-${task.id}`,
-          summary: task.objective,
-        },
-      ],
-      artifacts: [...task.resources.reads],
+      evidence: [{ kind: 'tool-call', id: `analysis-${task.id}` }],
+      artifacts: [...task.resources.reads, task.objective],
     }
   }
 
@@ -85,14 +73,8 @@ export class RuntimeMissionTaskExecutor implements MissionTaskExecutor {
       diagnostics: result.passed
         ? []
         : [result.stderr || result.stdout || `${command} exited with code ${result.exitCode}`],
-      artifacts: [command],
-      evidence: [
-        {
-          kind: 'validation',
-          id: `validation-${task.id}`,
-          summary: `${command}: ${result.passed ? 'passed' : 'failed'} in ${result.durationMs}ms`,
-        },
-      ],
+      artifacts: [command, `${result.durationMs}ms`],
+      evidence: [{ kind: 'validation', id: `validation-${task.id}` }],
     }
   }
 }
