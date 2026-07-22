@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { selectRunnableTaskBatch, tasksConflict } from './parallel-task-scheduler.js'
 import type { AutonomousTaskGraph, AutonomousTaskNode } from './task-graph.types.js'
 
-function task(
-  id: string,
-  options: Partial<AutonomousTaskNode> = {},
-): AutonomousTaskNode {
+function task(id: string, options: Partial<AutonomousTaskNode> = {}): AutonomousTaskNode {
   return {
     id,
     objective: id,

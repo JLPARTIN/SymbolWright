@@ -35,7 +35,10 @@ export function selectRunnableTaskBatch(
   const deferred: string[] = []
 
   for (const candidate of candidates) {
-    if (selected.length >= concurrencyLimit || selected.some((task) => tasksConflict(task, candidate))) {
+    if (
+      selected.length >= concurrencyLimit ||
+      selected.some((task) => tasksConflict(task, candidate))
+    ) {
       deferred.push(candidate.id)
       continue
     }
