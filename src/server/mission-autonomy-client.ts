@@ -14,7 +14,9 @@ export interface MissionAutonomyClient {
   ): Promise<void>
 }
 
-export function createMissionAutonomyClient(request: MissionAutonomyRequest): MissionAutonomyClient {
+export function createMissionAutonomyClient(
+  request: MissionAutonomyRequest,
+): MissionAutonomyClient {
   return {
     async status(missionId) {
       return request(autonomyPath(missionId))
