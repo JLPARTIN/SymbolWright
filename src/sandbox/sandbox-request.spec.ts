@@ -27,7 +27,7 @@ describe('sandbox request validation', () => {
     )
 
     expect(request.languageId).toBe('javascript')
-    expect(request.limits?.timeoutMs).toBe(20_000)
+    expect(request.limits?.timeoutMs).toBe(60_000)
     expect(request.limits?.maxFiles).toBe(32)
   })
 
@@ -92,7 +92,7 @@ describe('sandbox request validation', () => {
 describe('sandbox limit normalization', () => {
   it('only lets request limits reduce risk', () => {
     expect(normalizeSandboxLimits({ timeoutMs: 1 }).timeoutMs).toBe(1)
-    expect(normalizeSandboxLimits({ timeoutMs: 999_999 }).timeoutMs).toBe(20_000)
-    expect(normalizeSandboxLimits({ timeoutMs: -1 }).timeoutMs).toBe(20_000)
+    expect(normalizeSandboxLimits({ timeoutMs: 999_999 }).timeoutMs).toBe(60_000)
+    expect(normalizeSandboxLimits({ timeoutMs: -1 }).timeoutMs).toBe(60_000)
   })
 })
