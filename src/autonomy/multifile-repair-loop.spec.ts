@@ -41,6 +41,33 @@ class MemoryRepairStore implements AutonomousRepairLoopStore {
   }
 }
 
+function passingValidationRunner(): AutonomousValidationRunner {
+  return {
+    async run(input) {
+      return {
+        phase: input.phase,
+        command: input.command,
+        passed: true,
+        exitCode: 0,
+        stdout: 'ok',
+        stderr: '',
+        durationMs: 1,
+      }
+    },
+  }
+}
+
+function noOpRepairStrategy(): AutonomousRepairStrategy {
+  return {
+    async diagnose() {
+      return ['no repair required']
+    },
+    async proposeEdits() {
+      return []
+    },
+  }
+}
+
 describe('transactional multi-file engineering', () => {
   it('applies multiple files atomically and detects stale-file conflicts', async () => {
     const root = await workspace()
@@ -186,5 +213,132 @@ describe('autonomous validation and repair', () => {
     expect(completed.modifiedFiles).toEqual(['src/result.ts'])
     expect(await readFile(target, 'utf8')).toContain('"fixed"')
     expect(repairStore.records.get('repair-proof')?.state).toBe('completed')
+  })
+
+  it('rejects invalid loop configuration', async () => {
+    const root = await workspace()
+    const loop = new AutonomousRepairLoop({
+      store: new MemoryRepairStore(),
+      editSessions: new TransactionalEditSession(new JsonTransactionalEditSessionStore(root)),
+      validationRunner: passingValidationRunner(),
+      repairStrategy: noOpRepairStrategy(),
+    })
+
+    await expect(
+      loop.create({
+        missionId: 'mission-invalid-empty',
+        objective: 'Invalid empty validation plan',
+        repositoryRoot: root,
+        validationCommands: [],
+      }),
+    ).rejects.toThrow('requires at least one validation command')
+
+    await expect(
+      loop.create({
+        missionId: 'mission-invalid-retries',
+        objective: 'Invalid retry count',
+        repositoryRoot: root,
+        validationCommands: ['npm test'],
+        maxRepairAttempts: 11,
+      }),
+    ).rejects.toThrow('between 0 and 10')
+  })
+
+  it('fails immediately when the retry limit is zero', async () => {
+    const root = await workspace()
+    const validationRunner: AutonomousValidationRunner = {
+      async run(input) {
+        return {
+          phase: input.phase,
+          command: input.command,
+          passed: false,
+          exitCode: 1,
+          stdout: '',
+          stderr: 'still broken',
+          durationMs: 1,
+        }
+      },
+    }
+    const store = new MemoryRepairStore()
+    const loop = new AutonomousRepairLoop({
+      store,
+      editSessions: new TransactionalEditSession(new JsonTransactionalEditSessionStore(root)),
+      validationRunner,
+      repairStrategy: noOpRepairStrategy(),
+    })
+    const planned = await loop.create({
+      id: 'zero-retries',
+      missionId: 'mission-zero-retries',
+      objective: 'Fail without repair attempts',
+      repositoryRoot: root,
+      validationCommands: ['npm test'],
+      maxRepairAttempts: 0,
+    })
+
+    const failed = await loop.run(planned)
+    expect(failed.state).toBe('failed')
+    expect(failed.repairAttempts).toHaveLength(0)
+    expect(failed.error).toContain('retry limit reached')
+  })
+
+  it('records an empty-edit repair strategy as a failed attempt', async () => {
+    const root = await workspace()
+    const validationRunner: AutonomousValidationRunner = {
+      async run(input) {
+        return {
+          phase: input.phase,
+          command: input.command,
+          passed: false,
+          exitCode: 1,
+          stdout: '',
+          stderr: 'repair required',
+          durationMs: 1,
+        }
+      },
+    }
+    const loop = new AutonomousRepairLoop({
+      store: new MemoryRepairStore(),
+      editSessions: new TransactionalEditSession(new JsonTransactionalEditSessionStore(root)),
+      validationRunner,
+      repairStrategy: noOpRepairStrategy(),
+    })
+    const planned = await loop.create({
+      id: 'empty-edit-repair',
+      missionId: 'mission-empty-edit',
+      objective: 'Reject empty repair edits',
+      repositoryRoot: root,
+      validationCommands: ['npm test'],
+      maxRepairAttempts: 1,
+    })
+
+    const failed = await loop.run(planned)
+    expect(failed.state).toBe('failed')
+    expect(failed.repairAttempts).toHaveLength(1)
+    expect(failed.error).toBe('Repair strategy returned no edits.')
+    expect(failed.repairAttempts[0]?.diagnosis).toEqual(['Repair strategy returned no edits.'])
+  })
+
+  it('reports missing loops and returns terminal loops without rerunning', async () => {
+    const root = await workspace()
+    const store = new MemoryRepairStore()
+    const loop = new AutonomousRepairLoop({
+      store,
+      editSessions: new TransactionalEditSession(new JsonTransactionalEditSessionStore(root)),
+      validationRunner: passingValidationRunner(),
+      repairStrategy: noOpRepairStrategy(),
+    })
+
+    await expect(loop.resume('missing-loop')).rejects.toThrow('was not found')
+
+    const completed = await loop.create({
+      id: 'terminal-loop',
+      missionId: 'mission-terminal',
+      objective: 'Complete once',
+      repositoryRoot: root,
+      validationCommands: ['npm test'],
+    })
+    const terminal = await loop.run(completed)
+    expect(terminal.state).toBe('completed')
+    await expect(loop.resume('terminal-loop')).resolves.toEqual(terminal)
   })
 })
