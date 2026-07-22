@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { projectMissionDashboard } from './mission-dashboard-projection.js'
 import {
@@ -137,6 +137,85 @@ describe('persistent mission execution', () => {
     expect(completed?.state).toBe('completed')
     expect(completed?.retry.attempts).toBe(2)
     expect(completed?.failureDiagnostics).toEqual(['temporary repository lock'])
+  })
+
+  it('rejects missing executions and returns completed executions without relaunching tasks', async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'codemind-mission-resume-'))
+    workspaces.push(workspace)
+    const store = new JsonMissionExecutionStore(workspace)
+    const execute = vi.fn(async () => ({ state: 'completed' as const }))
+    const executor = new PersistentMissionExecutor({ store, executor: { execute } })
+
+    await expect(executor.resume('missing-mission')).rejects.toThrow(
+      'Mission execution missing-mission was not found.',
+    )
+
+    const completed: PersistedMissionExecution = {
+      schemaVersion: 1,
+      graph: graph([task('done', [], 'completed')]),
+      modifiedFiles: [],
+      startedAt: NOW,
+      updatedAt: NOW,
+      completedAt: '2026-07-22T12:00:05.000Z',
+    }
+    await store.save(completed)
+
+    expect(await executor.resume('mission-restart-proof')).toEqual(completed)
+    expect(execute).not.toHaveBeenCalled()
+  })
+
+  it('persists terminal failure diagnostics for exhausted retries and non-Error throws', async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'codemind-mission-failed-'))
+    workspaces.push(workspace)
+    const failedTask = {
+      ...task('edit', [], 'ready'),
+      retry: { maxAttempts: 1, attempts: 0 },
+    }
+    const executor = new PersistentMissionExecutor({
+      store: new JsonMissionExecutionStore(workspace),
+      executor: {
+        async execute() {
+          throw 'repository unavailable'
+        },
+      },
+    })
+
+    const result = await executor.start(graph([failedTask]))
+
+    expect(result.completedAt).toBeDefined()
+    expect(result.graph.tasks[0]?.state).toBe('failed')
+    expect(result.graph.tasks[0]?.failureDiagnostics).toEqual(['repository unavailable'])
+  })
+
+  it('records blocked outcomes and executes repair tasks through the repairing state', async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'codemind-mission-blocked-'))
+    workspaces.push(workspace)
+    const repairTask: AutonomousTaskNode = {
+      ...task('repair', [], 'ready'),
+      kind: 'repair',
+    }
+    const executor = new PersistentMissionExecutor({
+      store: new JsonMissionExecutionStore(workspace),
+      executor: {
+        async execute(node) {
+          expect(node.kind).toBe('repair')
+          return {
+            state: 'blocked',
+            artifacts: ['repair-plan.json'],
+            diagnostics: ['manual credential required'],
+          }
+        },
+      },
+    })
+
+    const result = await executor.start(graph([repairTask]))
+
+    expect(result.completedAt).toBeDefined()
+    expect(result.graph.tasks[0]).toMatchObject({
+      state: 'blocked',
+      artifacts: ['repair-plan.json'],
+      failureDiagnostics: ['manual credential required'],
+    })
   })
 
   it('projects live task, repair, validation, file, timeline, duration, and ETA state', () => {
