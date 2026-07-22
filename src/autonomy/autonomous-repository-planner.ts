@@ -33,18 +33,39 @@ export function planAutonomousRepositoryMission(
   }
 
   const analysisTasks: AutonomousTaskNode[] = [
-    task(now, 'analyze-architecture', 'Inspect repository architecture and package boundaries', 'repository-analysis', [], {
-      reads: ['**/*'],
-      writes: [],
-    }),
-    task(now, 'resolve-symbol-impact', 'Resolve affected symbols, definitions, and references', 'semantic-index', [], {
-      reads: ['.codemind/repository-indexes/*'],
-      writes: [],
-    }),
-    task(now, 'discover-validation', 'Discover repository validation commands and conventions', 'repository-analysis', [], {
-      reads: ['package.json', '.github/workflows/**', 'tsconfig*.json'],
-      writes: [],
-    }),
+    task(
+      now,
+      'analyze-architecture',
+      'Inspect repository architecture and package boundaries',
+      'repository-analysis',
+      [],
+      {
+        reads: ['**/*'],
+        writes: [],
+      },
+    ),
+    task(
+      now,
+      'resolve-symbol-impact',
+      'Resolve affected symbols, definitions, and references',
+      'semantic-index',
+      [],
+      {
+        reads: ['.codemind/repository-indexes/*'],
+        writes: [],
+      },
+    ),
+    task(
+      now,
+      'discover-validation',
+      'Discover repository validation commands and conventions',
+      'repository-analysis',
+      [],
+      {
+        reads: ['package.json', '.github/workflows/**', 'tsconfig*.json'],
+        writes: [],
+      },
+    ),
   ]
 
   const editTask = task(

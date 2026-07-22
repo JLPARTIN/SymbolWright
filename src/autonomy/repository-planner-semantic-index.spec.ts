@@ -4,10 +4,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { planAutonomousRepositoryMission } from './autonomous-repository-planner.js'
-import {
-  buildRepositorySemanticIndex,
-  queryRepositoryIndex,
-} from './repository-semantic-index.js'
+import { buildRepositorySemanticIndex, queryRepositoryIndex } from './repository-semantic-index.js'
 import { RepositorySemanticIndexStore } from './repository-semantic-index-store.js'
 import { validateAutonomousTaskGraph } from './task-graph.js'
 

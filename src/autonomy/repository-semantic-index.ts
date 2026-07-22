@@ -75,7 +75,10 @@ export function queryRepositoryIndex(
   const references = index.references.filter((reference) => reference.symbolName === symbolName)
   const definingPaths = new Set(definitions.map((definition) => definition.filePath))
   const importers = index.imports
-    .filter((entry) => entry.names.includes(symbolName) || definingPaths.has(resolveImportHint(entry.source)))
+    .filter(
+      (entry) =>
+        entry.names.includes(symbolName) || definingPaths.has(resolveImportHint(entry.source)),
+    )
     .map((entry) => entry.filePath)
 
   return { definitions, references, importers: [...new Set(importers)] }
@@ -124,7 +127,9 @@ function parseImportNames(clause: string): string[] {
 }
 
 function normalizeSymbolKind(value: string): RepositorySymbolKind {
-  return value === 'const' || value === 'let' || value === 'var' ? 'variable' : (value as RepositorySymbolKind)
+  return value === 'const' || value === 'let' || value === 'var'
+    ? 'variable'
+    : (value as RepositorySymbolKind)
 }
 
 function detectLanguage(filePath: string): string {
