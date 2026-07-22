@@ -1,42 +1,50 @@
 import type { MissionService } from '../mission/mission-service.js'
-import { planAutonomousRepositoryMission, type AutonomousRepositoryPlan } from './autonomous-repository-planner.js'
-import { projectMissionDashboard, type MissionDashboardProjection } from './mission-dashboard-projection.js'
 import {
+  planAutonomousRepositoryMission,
+  type AutonomousRepositoryPlan,
+} from './autonomous-repository-planner.js'
+import {
+  projectMissionDashboard,
+  type MissionDashboardProjection,
+} from './mission-dashboard-projection.js'
+import type {
+  MissionExecutionStore,
+  PersistedMissionExecution,
   PersistentMissionExecutor,
-  type PersistentMissionExecutionRecord,
-  type PersistentMissionTaskHandler,
 } from './persistent-mission-executor.js'
 import type { RepositorySemanticIndexSnapshot } from './repository-semantic-index.types.js'
 
 export interface AutonomousMissionCoordinatorOptions {
   readonly missionService: MissionService
   readonly executor: PersistentMissionExecutor
-  readonly loadSemanticIndex: (repositoryRoot: string) => Promise<RepositorySemanticIndexSnapshot>
+  readonly executionStore: MissionExecutionStore
+  readonly loadSemanticIndex: (
+    repositoryRoot: string,
+  ) => Promise<RepositorySemanticIndexSnapshot>
   readonly validationCommands: readonly string[]
-  readonly taskHandlers: ReadonlyMap<string, PersistentMissionTaskHandler>
   readonly now?: () => Date
 }
 
 export interface AutonomousMissionStartResult {
   readonly plan: AutonomousRepositoryPlan
-  readonly execution: PersistentMissionExecutionRecord
+  readonly execution: PersistedMissionExecution
   readonly dashboard: MissionDashboardProjection
 }
 
 export class AutonomousMissionCoordinator {
   readonly #missionService: MissionService
   readonly #executor: PersistentMissionExecutor
+  readonly #executionStore: MissionExecutionStore
   readonly #loadSemanticIndex: AutonomousMissionCoordinatorOptions['loadSemanticIndex']
   readonly #validationCommands: readonly string[]
-  readonly #taskHandlers: ReadonlyMap<string, PersistentMissionTaskHandler>
   readonly #now: () => Date
 
   constructor(options: AutonomousMissionCoordinatorOptions) {
     this.#missionService = options.missionService
     this.#executor = options.executor
+    this.#executionStore = options.executionStore
     this.#loadSemanticIndex = options.loadSemanticIndex
     this.#validationCommands = [...options.validationCommands]
-    this.#taskHandlers = options.taskHandlers
     this.#now = options.now ?? (() => new Date())
   }
 
@@ -64,20 +72,21 @@ export class AutonomousMissionCoordinator {
       },
     )
 
-    const created = await this.#executor.create(plan.graph)
-    const execution = await this.#executor.run(created, this.#taskHandlers)
+    const execution = await this.#executor.start(plan.graph)
     this.#recordExecutionEvents(missionId, execution)
-
     return {
       plan,
       execution,
-      dashboard: projectMissionDashboard(execution, this.#now()),
+      dashboard: projectMissionDashboard({
+        execution,
+        now: this.#now().toISOString(),
+      }),
     }
   }
 
   async resume(missionId: string): Promise<AutonomousMissionStartResult> {
     const mission = this.#missionService.get(missionId)
-    const execution = await this.#executor.resume(missionId, this.#taskHandlers)
+    const execution = await this.#executor.resume(missionId)
     this.#recordExecutionEvents(missionId, execution)
     const index = await this.#loadSemanticIndex(mission.repository.rootPath)
     const plan = planAutonomousRepositoryMission({
@@ -91,26 +100,40 @@ export class AutonomousMissionCoordinator {
     return {
       plan,
       execution,
-      dashboard: projectMissionDashboard(execution, this.#now()),
+      dashboard: projectMissionDashboard({
+        execution,
+        now: this.#now().toISOString(),
+      }),
     }
   }
 
   async status(missionId: string): Promise<MissionDashboardProjection> {
     this.#missionService.get(missionId)
-    const execution = await this.#executor.load(missionId)
-    if (execution === undefined) throw new Error(`Autonomous execution was not found: ${missionId}`)
-    return projectMissionDashboard(execution, this.#now())
+    const execution = await this.#executionStore.load(missionId)
+    if (execution === undefined) {
+      throw new Error(`Autonomous execution was not found: ${missionId}`)
+    }
+    return projectMissionDashboard({
+      execution,
+      now: this.#now().toISOString(),
+    })
   }
 
-  #recordExecutionEvents(missionId: string, execution: PersistentMissionExecutionRecord): void {
+  #recordExecutionEvents(missionId: string, execution: PersistedMissionExecution): void {
+    const failedTasks = execution.graph.tasks
+      .filter((task) => task.state === 'failed')
+      .map((task) => task.id)
+    const state = failedTasks.length > 0 ? 'failed' : execution.completedAt ? 'completed' : 'paused'
     this.#missionService.appendEvent(
       missionId,
-      `autonomy.execution.${execution.state}`,
-      `Autonomous mission execution ${execution.state}.`,
+      `autonomy.execution.${state}`,
+      `Autonomous mission execution ${state}.`,
       {
         modifiedFiles: execution.modifiedFiles,
-        completedTasks: execution.graph.tasks.filter((task) => task.state === 'completed').map((task) => task.id),
-        failedTasks: execution.graph.tasks.filter((task) => task.state === 'failed').map((task) => task.id),
+        completedTasks: execution.graph.tasks
+          .filter((task) => task.state === 'completed')
+          .map((task) => task.id),
+        failedTasks,
       },
     )
 
