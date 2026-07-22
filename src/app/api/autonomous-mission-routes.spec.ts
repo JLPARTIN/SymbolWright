@@ -82,4 +82,44 @@ describe('autonomous mission routes', () => {
     )
     expect(unsupported.res.writeHead).toHaveBeenCalledWith(405, expect.any(Object))
   })
+
+  it('maps missing executions to 404 and state conflicts to 409', async () => {
+    const missingCoordinator = {
+      start: vi.fn(),
+      resume: vi.fn(),
+      status: vi.fn(async () => {
+        throw new Error('Autonomous execution was not found: mission-1')
+      }),
+    }
+    const missing = response()
+    await handleAutonomousMissionRoute(
+      request('GET'),
+      missing.res,
+      new URL('http://localhost/api/missions/mission-1/autonomy'),
+      { coordinator: missingCoordinator as never },
+    )
+    expect(missing.res.writeHead).toHaveBeenCalledWith(404, expect.any(Object))
+    expect(JSON.parse(missing.chunks[0] ?? '{}')).toEqual({
+      error: 'Autonomous execution was not found: mission-1',
+    })
+
+    const conflictCoordinator = {
+      start: vi.fn(async () => {
+        throw new Error('Mission is already running')
+      }),
+      resume: vi.fn(),
+      status: vi.fn(),
+    }
+    const conflict = response()
+    await handleAutonomousMissionRoute(
+      request('POST'),
+      conflict.res,
+      new URL('http://localhost/api/missions/mission-1/autonomy/start'),
+      { coordinator: conflictCoordinator as never },
+    )
+    expect(conflict.res.writeHead).toHaveBeenCalledWith(409, expect.any(Object))
+    expect(JSON.parse(conflict.chunks[0] ?? '{}')).toEqual({
+      error: 'Mission is already running',
+    })
+  })
 })
