@@ -39,9 +39,8 @@ export function projectMissionDashboard(input: {
   const taskCounts = createTaskCounts()
   for (const task of input.execution.graph.tasks) taskCounts[task.state] += 1
 
-  const currentValidationPhase = input.repairLoop?.state === 'validating'
-    ? nextValidationPhase(input.repairLoop)
-    : undefined
+  const currentValidationPhase =
+    input.repairLoop?.state === 'validating' ? nextValidationPhase(input.repairLoop) : undefined
   const timeline = buildTimeline(input.execution, input.repairLoop)
   const status = deriveStatus(input.execution)
   const elapsedMs = Math.max(0, Date.parse(now) - Date.parse(input.execution.startedAt))
@@ -67,10 +66,7 @@ export function projectMissionDashboard(input: {
     currentValidationPhase,
     repairAttemptCount: input.repairLoop?.repairAttempts.length ?? 0,
     modifiedFiles: [
-      ...new Set([
-        ...input.execution.modifiedFiles,
-        ...(input.repairLoop?.modifiedFiles ?? []),
-      ]),
+      ...new Set([...input.execution.modifiedFiles, ...(input.repairLoop?.modifiedFiles ?? [])]),
     ].sort(),
     timeline,
     startedAt: input.execution.startedAt,
@@ -78,12 +74,13 @@ export function projectMissionDashboard(input: {
     ...(input.execution.completedAt === undefined
       ? {}
       : { completedAt: input.execution.completedAt }),
-    durationMs: input.execution.completedAt === undefined
-      ? elapsedMs
-      : Math.max(
-          0,
-          Date.parse(input.execution.completedAt) - Date.parse(input.execution.startedAt),
-        ),
+    durationMs:
+      input.execution.completedAt === undefined
+        ? elapsedMs
+        : Math.max(
+            0,
+            Date.parse(input.execution.completedAt) - Date.parse(input.execution.startedAt),
+          ),
     ...(estimatedCompletionMs === undefined ? {} : { estimatedCompletionMs }),
   }
 }

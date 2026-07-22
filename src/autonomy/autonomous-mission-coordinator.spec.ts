@@ -114,12 +114,22 @@ describe('AutonomousMissionCoordinator', () => {
       async execute(task) {
         return {
           state: 'completed',
-          evidence: [{ kind: task.kind === 'validation' ? 'validation' : 'tool-call', id: `evidence-${task.id}` }],
-          ...(task.kind === 'edit-session' ? { modifiedFiles: ['src/oauth-session.ts', 'src/server.ts'] } : {}),
+          evidence: [
+            {
+              kind: task.kind === 'validation' ? 'validation' : 'tool-call',
+              id: `evidence-${task.id}`,
+            },
+          ],
+          ...(task.kind === 'edit-session'
+            ? { modifiedFiles: ['src/oauth-session.ts', 'src/server.ts'] }
+            : {}),
         }
       },
     }
-    const executor = new PersistentMissionExecutor({ store: executionStore, executor: taskExecutor })
+    const executor = new PersistentMissionExecutor({
+      store: executionStore,
+      executor: taskExecutor,
+    })
     const coordinator = new AutonomousMissionCoordinator({
       missionService,
       executor,

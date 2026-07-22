@@ -135,7 +135,8 @@ describe('Bundle #5 real engineering demonstrations', () => {
         {
           path: 'math.mjs',
           expectedHash: hashFileContent(math),
-          content: 'export const sum = (a, b) => a + b\nexport const double = value => sum(value, value)\n',
+          content:
+            'export const sum = (a, b) => a + b\nexport const double = value => sum(value, value)\n',
         },
         {
           path: 'test.mjs',
@@ -146,7 +147,8 @@ describe('Bundle #5 real engineering demonstrations', () => {
         {
           path: 'build.mjs',
           expectedHash: hashFileContent(build),
-          content: "import { sum } from './math.mjs'\nif (typeof sum !== 'function') process.exit(1)\n",
+          content:
+            "import { sum } from './math.mjs'\nif (typeof sum !== 'function') process.exit(1)\n",
         },
       ],
     })
@@ -156,8 +158,12 @@ describe('Bundle #5 real engineering demonstrations', () => {
 
     expect(applied.state).toBe('applied')
     expect(applied.appliedPaths).toEqual(['math.mjs', 'test.mjs', 'build.mjs'])
-    expect((await validation.run({ repositoryRoot: root, phase: 'test', command: 'test' })).passed).toBe(true)
-    expect((await validation.run({ repositoryRoot: root, phase: 'build', command: 'build' })).passed).toBe(true)
+    expect(
+      (await validation.run({ repositoryRoot: root, phase: 'test', command: 'test' })).passed,
+    ).toBe(true)
+    expect(
+      (await validation.run({ repositoryRoot: root, phase: 'build', command: 'build' })).passed,
+    ).toBe(true)
   })
 
   it('restores an interrupted mission and does not repeat completed work', async () => {

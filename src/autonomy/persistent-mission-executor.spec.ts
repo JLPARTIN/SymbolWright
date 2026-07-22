@@ -104,13 +104,7 @@ describe('persistent mission execution', () => {
 
     const saved = JSON.parse(
       await readFile(
-        path.join(
-          workspace,
-          '.codemind',
-          'autonomy',
-          'missions',
-          'mission-restart-proof.json',
-        ),
+        path.join(workspace, '.codemind', 'autonomy', 'missions', 'mission-restart-proof.json'),
         'utf8',
       ),
     ) as PersistedMissionExecution

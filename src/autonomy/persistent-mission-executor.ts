@@ -64,7 +64,10 @@ export class PersistentMissionExecutor {
   readonly #store: MissionExecutionStore
   readonly #executor: MissionTaskExecutor
 
-  constructor(input: { readonly store: MissionExecutionStore; readonly executor: MissionTaskExecutor }) {
+  constructor(input: {
+    readonly store: MissionExecutionStore
+    readonly executor: MissionTaskExecutor
+  }) {
     this.#store = input.store
     this.#executor = input.executor
   }
@@ -120,7 +123,12 @@ export class PersistentMissionExecutor {
   ): Promise<PersistedMissionExecution> {
     const startedAt = new Date().toISOString()
     let current = updateTask(execution, task.id, {
-      state: task.kind === 'validation' ? 'validating' : task.kind === 'repair' ? 'repairing' : 'running',
+      state:
+        task.kind === 'validation'
+          ? 'validating'
+          : task.kind === 'repair'
+            ? 'repairing'
+            : 'running',
       startedAt,
       updatedAt: startedAt,
     })
@@ -138,10 +146,7 @@ export class PersistentMissionExecutor {
         },
         evidence: [...existing.evidence, ...(result.evidence ?? [])],
         artifacts: [...new Set([...existing.artifacts, ...(result.artifacts ?? [])])],
-        failureDiagnostics: [
-          ...existing.failureDiagnostics,
-          ...(result.diagnostics ?? []),
-        ],
+        failureDiagnostics: [...existing.failureDiagnostics, ...(result.diagnostics ?? [])],
         updatedAt: completedAt,
         ...(result.state === 'completed' ? { completedAt } : {}),
       })

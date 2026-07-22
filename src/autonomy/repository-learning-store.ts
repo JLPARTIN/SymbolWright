@@ -112,10 +112,16 @@ export class JsonRepositoryLearningStore {
     const snapshot = await this.load(input.repositoryId)
     const objectiveTokens = tokenize(input.objective)
     const ranked = snapshot.entries
-      .filter((entry) => input.validationPhase === undefined || entry.validationPhase === input.validationPhase)
+      .filter(
+        (entry) =>
+          input.validationPhase === undefined || entry.validationPhase === input.validationPhase,
+      )
       .map((entry) => ({ entry, score: scoreEntry(entry, objectiveTokens) }))
       .filter((candidate) => candidate.score > 0)
-      .sort((left, right) => right.score - left.score || left.entry.attemptCount - right.entry.attemptCount)
+      .sort(
+        (left, right) =>
+          right.score - left.score || left.entry.attemptCount - right.entry.attemptCount,
+      )
       .slice(0, input.limit ?? 5)
 
     if (ranked.length === 0) return []

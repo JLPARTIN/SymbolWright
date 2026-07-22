@@ -18,9 +18,7 @@ export interface AutonomousMissionCoordinatorOptions {
   readonly missionService: MissionService
   readonly executor: PersistentMissionExecutor
   readonly executionStore: MissionExecutionStore
-  readonly loadSemanticIndex: (
-    repositoryRoot: string,
-  ) => Promise<RepositorySemanticIndexSnapshot>
+  readonly loadSemanticIndex: (repositoryRoot: string) => Promise<RepositorySemanticIndexSnapshot>
   readonly validationCommands: readonly string[]
   readonly now?: () => Date
 }
