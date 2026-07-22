@@ -44,18 +44,19 @@ export function createAutonomousMissionRuntime(
     }
     return index
   }
+  const clockOptions = options.now === undefined ? {} : { now: options.now }
   const coordinator = new AutonomousMissionCoordinator({
     missionService: options.missionService,
     executor,
     executionStore,
     loadSemanticIndex,
     validationCommands: options.validationCommands,
-    now: options.now,
+    ...clockOptions,
   })
   const control = new AutonomousMissionControl({
     executionStore,
     missionService: options.missionService,
-    now: options.now,
+    ...clockOptions,
   })
   return { coordinator, control, executionStore, executor }
 }
