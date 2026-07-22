@@ -9,7 +9,11 @@ import type { AutonomousTaskNode } from './task-graph.types.js'
 
 const NOW = '2026-07-22T18:00:00.000Z'
 
-function task(id: string, state: AutonomousTaskNode['state'], dependencies: readonly string[] = []): AutonomousTaskNode {
+function task(
+  id: string,
+  state: AutonomousTaskNode['state'],
+  dependencies: readonly string[] = [],
+): AutonomousTaskNode {
   return {
     id,
     objective: id,
@@ -138,7 +142,11 @@ describe('AutonomousMissionControl', () => {
     const result = await control.retry('mission-control')
 
     expect(result.completedAt).toBeUndefined()
-    expect(result.graph.tasks.map((entry) => entry.state)).toEqual(['ready', 'queued', 'ready'])
+    expect(result.graph.tasks.map((entry) => entry.state)).toEqual([
+      'ready',
+      'queued',
+      'ready',
+    ])
     expect(result.graph.tasks.every((entry) => entry.failureDiagnostics.length === 0)).toBe(true)
   })
 
