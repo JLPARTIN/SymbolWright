@@ -15,7 +15,10 @@ function task(
     objective,
     kind,
     dependencies: [],
-    resources: { reads: ['src/**'], writes: kind === 'edit-session' ? ['src/a.ts'] : [] },
+    resources: {
+      reads: ['src/**'],
+      writes: kind === 'edit-session' ? ['src/a.ts'] : [],
+    },
     state: 'ready',
     retry: { maxAttempts: 1, attempts: 0 },
     evidence: [],
@@ -38,7 +41,9 @@ describe('RuntimeMissionTaskExecutor', () => {
     )
 
     expect(result.state).toBe('completed')
-    expect(result.evidence).toEqual([{ kind: 'tool-call', id: 'analysis-repository-analysis-task' }])
+    expect(result.evidence).toEqual([
+      { kind: 'tool-call', id: 'analysis-repository-analysis-task' },
+    ])
     expect(result.artifacts).toContain('Inspect repository architecture')
   })
 
