@@ -10,7 +10,7 @@ describe('getVersionInfo', () => {
     const info = getVersionInfo(WORKSPACE)
 
     expect(info.blockId).toBe(VERSION_BLOCK_ID)
-    expect(info.platform).toBe('CodeMind')
+    expect(info.platform).toBe('Codetelligence')
     expect(info.capability).toBe('Ajna Review Cortex')
   })
 
@@ -40,11 +40,11 @@ describe('getVersionInfo', () => {
 })
 
 describe('renderVersionInfo', () => {
-  it('renders readable output', () => {
+  it('renders readable Codetelligence output', () => {
     const info = getVersionInfo(WORKSPACE)
     const output = renderVersionInfo(info)
 
-    expect(output).toContain('CodeMind v')
+    expect(output).toContain('Codetelligence v')
     expect(output).toContain('Ajna Review Cortex')
     expect(output).toContain('Runtime phases:')
     expect(output).toContain('20/20')
