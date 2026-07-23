@@ -61,7 +61,7 @@ describe('multi-agent execution tracker', () => {
     expect(await store.load('mission-1')).toEqual(state)
   })
 
-  it('maps every supported task category and objective to a specialist role', () => {
+  it('covers all supported task categories and objective-based specialist roles', () => {
     expect(roleForTask(task('edit', 'edit-session', 'ready'))).toBe('code-editor')
     expect(roleForTask(task('repair', 'repair', 'ready'))).toBe('repair-agent')
     expect(roleForTask(task('validation', 'validation', 'ready'))).toBe('test-runner')
