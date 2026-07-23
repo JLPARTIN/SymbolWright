@@ -45,8 +45,15 @@ export function analyzeRepositoryImpact(
   const maxDepth = options.maxTraversalDepth ?? 20
 
   for (const changedFile of normalizedChanges) {
-    for (const importer of reverseDependencies.get(changedFile) ?? []) directlyAffected.add(importer)
-    traverseImporters(changedFile, reverseDependencies, directlyAffected, transitivelyAffected, maxDepth)
+    for (const importer of reverseDependencies.get(changedFile) ?? [])
+      directlyAffected.add(importer)
+    traverseImporters(
+      changedFile,
+      reverseDependencies,
+      directlyAffected,
+      transitivelyAffected,
+      maxDepth,
+    )
   }
 
   for (const changedFile of normalizedChanges) {
@@ -55,11 +62,7 @@ export function analyzeRepositoryImpact(
   }
   for (const direct of directlyAffected) transitivelyAffected.delete(direct)
 
-  const allAffected = new Set([
-    ...normalizedChanges,
-    ...directlyAffected,
-    ...transitivelyAffected,
-  ])
+  const allAffected = new Set([...normalizedChanges, ...directlyAffected, ...transitivelyAffected])
   const affectedPackages = uniqueSorted(
     snapshot.files
       .filter((file) => allAffected.has(normalizeRepositoryPath(file.path)))
@@ -86,7 +89,8 @@ export function analyzeRepositoryImpact(
   riskScore = Math.min(100, riskScore)
 
   if (normalizedChanges.length > 3) reasons.push(`${normalizedChanges.length} files are changing.`)
-  if (directlyAffected.size > 0) reasons.push(`${directlyAffected.size} direct importers are affected.`)
+  if (directlyAffected.size > 0)
+    reasons.push(`${directlyAffected.size} direct importers are affected.`)
   if (transitivelyAffected.size > 0) {
     reasons.push(`${transitivelyAffected.size} transitive importers are affected.`)
   }
@@ -99,7 +103,8 @@ export function analyzeRepositoryImpact(
   if (unknownFiles.length > 0) {
     reasons.push(`${unknownFiles.length} changed files are absent from the semantic index.`)
   }
-  if (reasons.length === 0) reasons.push('The change is isolated to indexed files with no known importers.')
+  if (reasons.length === 0)
+    reasons.push('The change is isolated to indexed files with no known importers.')
 
   return {
     changedFiles: normalizedChanges,
@@ -162,7 +167,10 @@ function traverseImporters(
   transitive: Set<string>,
   maxDepth: number,
 ): void {
-  const queue = [...(reverseDependencies.get(changedFile) ?? [])].map((file) => ({ file, depth: 1 }))
+  const queue = [...(reverseDependencies.get(changedFile) ?? [])].map((file) => ({
+    file,
+    depth: 1,
+  }))
   const visited = new Set<string>([changedFile])
   while (queue.length > 0) {
     const current = queue.shift()

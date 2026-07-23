@@ -30,8 +30,12 @@ export function assessMergeReadiness(input: {
   readonly evidenceCount: number
 }): MergeReadinessAssessment {
   const required = new Set(input.impact.validationCommands)
-  const passed = input.validations.filter((validation) => validation.passed).map((item) => item.command)
-  const failed = input.validations.filter((validation) => !validation.passed).map((item) => item.command)
+  const passed = input.validations
+    .filter((validation) => validation.passed)
+    .map((item) => item.command)
+  const failed = input.validations
+    .filter((validation) => !validation.passed)
+    .map((item) => item.command)
   const observed = new Set(input.validations.map((validation) => validation.command))
   const missing = [...required].filter((command) => !observed.has(command)).sort()
   const diagnostics = [...new Set(input.unresolvedDiagnostics ?? [])].sort()
@@ -46,7 +50,8 @@ export function assessMergeReadiness(input: {
 
   const reasons: string[] = []
   if (failed.length > 0) reasons.push(`${failed.length} required validation commands failed.`)
-  if (missing.length > 0) reasons.push(`${missing.length} required validation commands have not run.`)
+  if (missing.length > 0)
+    reasons.push(`${missing.length} required validation commands have not run.`)
   if (diagnostics.length > 0) reasons.push(`${diagnostics.length} unresolved diagnostics remain.`)
   if (input.evidenceCount === 0) reasons.push('No execution evidence is attached.')
   if (input.impact.risk === 'critical' || input.impact.risk === 'high') {
