@@ -118,7 +118,6 @@ export class AutonomousMissionCoordinator {
   async status(missionId: string): Promise<MissionDashboardProjection> {
     this.#missionService.get(missionId)
     const execution = await this.#loadExecution(missionId)
-    await this.#synchronizeSpecialists(execution)
     return projectMissionDashboard({
       execution,
       now: this.#now().toISOString(),
