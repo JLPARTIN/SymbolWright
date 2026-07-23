@@ -1,14 +1,12 @@
-import { runCodemindMcpServer } from './mcp/mcp-server.js'
+import { CODETELLIGENCE_PLATFORM_NAME } from './brand/identity.js'
+import { runCodetelligenceMcpServer } from './mcp/mcp-server.js'
 import { normalizeCodemindRuntimeMode } from './runtime/policy/runtime-policy.js'
 import type { CodemindRuntimeMode } from './runtime/types.js'
 
 /**
- * Deliberately more conservative than `DEFAULT_CODEMIND_RUNTIME_MODE`
- * (`APPROVED_EXECUTION`). That default is right for a session an operator is
- * driving turn-by-turn from their own terminal. `mcp-server` is a background
- * process any MCP-compatible client (Claude Desktop, another agent, etc.)
- * can drive without the operator watching each call, so it starts read-only
- * unless the operator explicitly opts into more with `--mode`.
+ * Deliberately more conservative than the direct terminal runtime default.
+ * An MCP server can be driven by another client without an operator watching
+ * every call, so it starts read-only unless explicitly configured otherwise.
  */
 export const DEFAULT_MCP_SERVER_MODE: CodemindRuntimeMode = 'READ_ONLY'
 
@@ -59,9 +57,9 @@ export async function runMcpServerCommand(
   const { mode } = parseMcpServerArgs(args)
 
   // stdout is the JSON-RPC wire — all diagnostics must go to stderr.
-  console.error(`CodeMind MCP server starting in ${mode} mode (stdio)`)
+  console.error(`${CODETELLIGENCE_PLATFORM_NAME} MCP server starting in ${mode} mode (stdio)`)
 
-  const server = runCodemindMcpServer({
+  const server = runCodetelligenceMcpServer({
     mode,
     cwd,
     hasGitHubToken: process.env['GITHUB_TOKEN'] !== undefined,
