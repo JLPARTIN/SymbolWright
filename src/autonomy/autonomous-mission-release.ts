@@ -27,12 +27,7 @@ export interface AutonomousMissionReleaseRecord {
   readonly missionId: string
   readonly objective: string
   readonly state: AutonomousMissionReleaseState
-  readonly nextAction:
-    | 'merge'
-    | 'review'
-    | 'resolve-blocker'
-    | 'inspect-diagnostics'
-    | 'resume'
+  readonly nextAction: 'merge' | 'review' | 'resolve-blocker' | 'inspect-diagnostics' | 'resume'
   readonly executionMode: AutonomousMissionReleaseExecutionMode
   readonly generatedAt: string
   readonly recovery: {
