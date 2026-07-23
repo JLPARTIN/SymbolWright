@@ -2,6 +2,11 @@ import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 
+import {
+  CODETELLIGENCE_STORAGE_DIRECTORY,
+  LEGACY_CODEMIND_STORAGE_DIRECTORY,
+  readBrandEnvironmentValue,
+} from '../brand/identity.js'
 import type { CodemindProviderId } from '../providers/provider-adapter-contract.js'
 import { parseProviderId } from '../providers/provider-config.js'
 import type { CodemindRuntimeMode } from '../runtime/types.js'
@@ -20,6 +25,8 @@ export interface CodemindConfig {
   readonly voyageApiKey?: string
   readonly runtimeMode?: CodemindRuntimeMode
 }
+
+export type CodetelligenceConfig = CodemindConfig
 
 interface RawConfigFile {
   readonly anthropicApiKey?: unknown
@@ -62,64 +69,97 @@ function positiveIntOrUndefined(value: unknown): number | undefined {
   return undefined
 }
 
+function brandedEnvironmentValue(
+  env: Readonly<Record<string, string | undefined>>,
+  suffix: string,
+): string | undefined {
+  return readBrandEnvironmentValue(env, suffix).value
+}
+
 export interface CodemindConfigSources {
   readonly cliFlags?: Partial<CodemindConfig>
   readonly env?: Record<string, string | undefined>
   readonly homeConfigPath?: string
   readonly projectConfigPath?: string
+  readonly legacyHomeConfigPath?: string
+  readonly legacyProjectConfigPath?: string
 }
+
+export type CodetelligenceConfigSources = CodemindConfigSources
 
 export function resolveCodemindConfig(sources: CodemindConfigSources = {}): CodemindConfig {
   const env = sources.env ?? process.env
-  const homeConfigPath = sources.homeConfigPath ?? join(homedir(), '.codemind', 'config.json')
+  const homeConfigPath =
+    sources.homeConfigPath ?? join(homedir(), CODETELLIGENCE_STORAGE_DIRECTORY, 'config.json')
   const projectConfigPath =
-    sources.projectConfigPath ?? join(process.cwd(), '.codemind', 'config.json')
+    sources.projectConfigPath ?? join(process.cwd(), CODETELLIGENCE_STORAGE_DIRECTORY, 'config.json')
+  const legacyHomeConfigPath =
+    sources.legacyHomeConfigPath ?? join(homedir(), LEGACY_CODEMIND_STORAGE_DIRECTORY, 'config.json')
+  const legacyProjectConfigPath =
+    sources.legacyProjectConfigPath ??
+    join(process.cwd(), LEGACY_CODEMIND_STORAGE_DIRECTORY, 'config.json')
 
   const homeConfig = loadJsonConfig(homeConfigPath)
   const projectConfig = loadJsonConfig(projectConfigPath)
+  const legacyHomeConfig = loadJsonConfig(legacyHomeConfigPath)
+  const legacyProjectConfig = loadJsonConfig(legacyProjectConfigPath)
   const cli = sources.cliFlags ?? {}
 
   const anthropicApiKey =
     stringOrUndefined(cli.anthropicApiKey) ??
     stringOrUndefined(env['ANTHROPIC_API_KEY']) ??
     stringOrUndefined(homeConfig?.anthropicApiKey) ??
-    stringOrUndefined(projectConfig?.anthropicApiKey)
+    stringOrUndefined(projectConfig?.anthropicApiKey) ??
+    stringOrUndefined(legacyHomeConfig?.anthropicApiKey) ??
+    stringOrUndefined(legacyProjectConfig?.anthropicApiKey)
 
   const githubToken =
     stringOrUndefined(cli.githubToken) ??
     stringOrUndefined(env['GITHUB_TOKEN']) ??
     stringOrUndefined(homeConfig?.githubToken) ??
-    stringOrUndefined(projectConfig?.githubToken)
+    stringOrUndefined(projectConfig?.githubToken) ??
+    stringOrUndefined(legacyHomeConfig?.githubToken) ??
+    stringOrUndefined(legacyProjectConfig?.githubToken)
 
   const provider =
     parseProviderId(stringOrUndefined(cli.provider)) ??
-    parseProviderId(env['CODEMIND_PROVIDER']) ??
+    parseProviderId(brandedEnvironmentValue(env, 'PROVIDER')) ??
     parseProviderId(stringOrUndefined(homeConfig?.provider)) ??
-    parseProviderId(stringOrUndefined(projectConfig?.provider))
+    parseProviderId(stringOrUndefined(projectConfig?.provider)) ??
+    parseProviderId(stringOrUndefined(legacyHomeConfig?.provider)) ??
+    parseProviderId(stringOrUndefined(legacyProjectConfig?.provider))
 
   const model =
     stringOrUndefined(cli.model) ??
-    stringOrUndefined(env['CODEMIND_MODEL']) ??
+    brandedEnvironmentValue(env, 'MODEL') ??
     stringOrUndefined(homeConfig?.model) ??
-    stringOrUndefined(projectConfig?.model)
+    stringOrUndefined(projectConfig?.model) ??
+    stringOrUndefined(legacyHomeConfig?.model) ??
+    stringOrUndefined(legacyProjectConfig?.model)
 
   const maxTokens =
     positiveIntOrUndefined(cli.maxTokens) ??
-    positiveIntOrUndefined(env['CODEMIND_MAX_TOKENS']) ??
+    positiveIntOrUndefined(brandedEnvironmentValue(env, 'MAX_TOKENS')) ??
     positiveIntOrUndefined(homeConfig?.maxTokens) ??
-    positiveIntOrUndefined(projectConfig?.maxTokens)
+    positiveIntOrUndefined(projectConfig?.maxTokens) ??
+    positiveIntOrUndefined(legacyHomeConfig?.maxTokens) ??
+    positiveIntOrUndefined(legacyProjectConfig?.maxTokens)
 
   const baseURL =
     stringOrUndefined(cli.baseURL) ??
-    stringOrUndefined(env['CODEMIND_BASE_URL']) ??
+    brandedEnvironmentValue(env, 'BASE_URL') ??
     stringOrUndefined(homeConfig?.baseURL) ??
-    stringOrUndefined(projectConfig?.baseURL)
+    stringOrUndefined(projectConfig?.baseURL) ??
+    stringOrUndefined(legacyHomeConfig?.baseURL) ??
+    stringOrUndefined(legacyProjectConfig?.baseURL)
 
   const embeddingProviderRaw =
     stringOrUndefined(cli.embeddingProvider) ??
-    stringOrUndefined(env['CODEMIND_EMBEDDING_PROVIDER']) ??
+    brandedEnvironmentValue(env, 'EMBEDDING_PROVIDER') ??
     stringOrUndefined(homeConfig?.embeddingProvider) ??
-    stringOrUndefined(projectConfig?.embeddingProvider)
+    stringOrUndefined(projectConfig?.embeddingProvider) ??
+    stringOrUndefined(legacyHomeConfig?.embeddingProvider) ??
+    stringOrUndefined(legacyProjectConfig?.embeddingProvider)
 
   const embeddingProvider: EmbeddingProviderType | undefined =
     embeddingProviderRaw === 'voyage' || embeddingProviderRaw === 'hash'
@@ -130,13 +170,17 @@ export function resolveCodemindConfig(sources: CodemindConfigSources = {}): Code
     stringOrUndefined(cli.voyageApiKey) ??
     stringOrUndefined(env['VOYAGE_API_KEY']) ??
     stringOrUndefined(homeConfig?.voyageApiKey) ??
-    stringOrUndefined(projectConfig?.voyageApiKey)
+    stringOrUndefined(projectConfig?.voyageApiKey) ??
+    stringOrUndefined(legacyHomeConfig?.voyageApiKey) ??
+    stringOrUndefined(legacyProjectConfig?.voyageApiKey)
 
   const runtimeMode =
     normalizeCodemindRuntimeMode(cli.runtimeMode) ??
-    normalizeCodemindRuntimeMode(env['CODEMIND_RUNTIME_MODE']) ??
+    normalizeCodemindRuntimeMode(brandedEnvironmentValue(env, 'RUNTIME_MODE')) ??
     normalizeCodemindRuntimeMode(homeConfig?.runtimeMode) ??
-    normalizeCodemindRuntimeMode(projectConfig?.runtimeMode)
+    normalizeCodemindRuntimeMode(projectConfig?.runtimeMode) ??
+    normalizeCodemindRuntimeMode(legacyHomeConfig?.runtimeMode) ??
+    normalizeCodemindRuntimeMode(legacyProjectConfig?.runtimeMode)
 
   return {
     ...(anthropicApiKey !== undefined ? { anthropicApiKey } : {}),
@@ -150,6 +194,8 @@ export function resolveCodemindConfig(sources: CodemindConfigSources = {}): Code
     ...(runtimeMode !== undefined ? { runtimeMode } : {}),
   }
 }
+
+export const resolveCodetelligenceConfig = resolveCodemindConfig
 
 export function redactApiKey(key: string): string {
   if (key.length <= 8) {
@@ -176,6 +222,8 @@ export interface CodemindConfigValidationResult {
     readonly runtimeMode?: CodemindRuntimeMode
   }
 }
+
+export type CodetelligenceConfigValidationResult = CodemindConfigValidationResult
 
 export function validateCodemindConfig(config: CodemindConfig): CodemindConfigValidationResult {
   const errors: string[] = []
@@ -238,3 +286,5 @@ export function validateCodemindConfig(config: CodemindConfig): CodemindConfigVa
     },
   }
 }
+
+export const validateCodetelligenceConfig = validateCodemindConfig
