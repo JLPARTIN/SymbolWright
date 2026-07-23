@@ -86,6 +86,7 @@ export function analyzeRepositoryImpact(
   riskScore += Math.min(20, transitivelyAffected.size)
   riskScore += Math.min(15, affectedExportedSymbols.length * 3)
   riskScore += Math.min(10, Math.max(0, affectedPackages.length - 1) * 5)
+  if (affectedPackages.length > 1 && affectedExportedSymbols.length > 0) riskScore += 5
   if (unknownFiles.length > 0) riskScore += 10
   riskScore = Math.min(100, riskScore)
 
