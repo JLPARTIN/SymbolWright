@@ -5,8 +5,9 @@ import type { MissionAutonomyRequest } from './mission-autonomy-client.js'
 
 describe('mission autonomy client', () => {
   it('requests status and every operator action through the supplied request function', async () => {
-    const request = vi.fn(async <T>() => ({ ok: true }) as T) as MissionAutonomyRequest &
-      ReturnType<typeof vi.fn>
+    const request = vi.fn(
+      async <T>() => ({ dashboard: { ok: true } }) as T,
+    ) as MissionAutonomyRequest & ReturnType<typeof vi.fn>
     const client = createMissionAutonomyClient(request)
 
     await client.status('mission-1')
@@ -24,20 +25,27 @@ describe('mission autonomy client', () => {
     ])
   })
 
-  it('polls dashboard state until aborted', async () => {
+  it('polls task and specialist dashboard state until aborted', async () => {
     const controller = new AbortController()
-    const onDashboard = vi.fn(() => controller.abort())
+    const onDashboard = vi.fn()
+    const onSpecialists = vi.fn(() => controller.abort())
     const request = vi.fn(
-      async <T>() => ({ dashboard: { status: 'running' } }) as T,
+      async <T>() =>
+        ({
+          dashboard: { status: 'running' },
+          specialists: { statusCounts: { running: 1 } },
+        }) as T,
     ) as MissionAutonomyRequest & ReturnType<typeof vi.fn>
     const client = createMissionAutonomyClient(request)
 
     await client.poll('mission-2', onDashboard, {
       intervalMs: 100,
       signal: controller.signal,
+      onSpecialists,
     })
 
     expect(onDashboard).toHaveBeenCalledWith({ status: 'running' })
+    expect(onSpecialists).toHaveBeenCalledWith({ statusCounts: { running: 1 } })
     expect(request).toHaveBeenCalledOnce()
   })
 

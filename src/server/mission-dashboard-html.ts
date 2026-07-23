@@ -1,6 +1,10 @@
 import type { MissionDashboardProjection } from '../autonomy/mission-dashboard-projection.js'
+import type { MultiAgentDashboardProjection } from '../autonomy/multi-agent-dashboard-projection.js'
 
-export function renderMissionDashboardHtml(dashboard: MissionDashboardProjection): string {
+export function renderMissionDashboardHtml(
+  dashboard: MissionDashboardProjection,
+  specialists?: MultiAgentDashboardProjection,
+): string {
   const actions = availableActions(dashboard.status)
   const taskRows = dashboard.tasks
     .map(
@@ -39,6 +43,7 @@ export function renderMissionDashboardHtml(dashboard: MissionDashboardProjection
 <div><dt>ETA</dt><dd>${dashboard.estimatedCompletionMs === undefined ? '—' : formatDuration(dashboard.estimatedCompletionMs)}</dd></div>
 </dl>
 ${dashboard.currentValidationPhase === undefined ? '' : `<p class="mission-phase">Validation: ${escapeHtml(dashboard.currentValidationPhase)}</p>`}
+${renderSpecialists(specialists)}
 <div class="mission-columns">
 <section><h3>Task graph</h3><ul class="mission-tasks">${taskRows}</ul></section>
 <section><h3>Modified files</h3>${files}</section>
@@ -61,6 +66,20 @@ export function availableActions(
     case 'completed':
       return []
   }
+}
+
+function renderSpecialists(specialists: MultiAgentDashboardProjection | undefined): string {
+  if (specialists === undefined) return ''
+  const agents = specialists.agents
+    .map((agent) => {
+      const diagnostics = agent.diagnostics
+        .map((diagnostic) => `<li>${escapeHtml(diagnostic)}</li>`)
+        .join('')
+      return `<li data-agent-role="${escapeHtml(agent.role)}" data-agent-status="${escapeHtml(agent.status)}"><strong>${escapeHtml(agent.role)}</strong><span>${escapeHtml(agent.taskId)} · ${escapeHtml(agent.status)} · ${agent.evidenceCount} evidence</span>${diagnostics.length === 0 ? '' : `<ul class="mission-agent-diagnostics">${diagnostics}</ul>`}</li>`
+    })
+    .join('')
+
+  return `<section class="mission-specialists"><h3>Specialist agents</h3><dl class="mission-specialist-metrics"><div><dt>Running</dt><dd>${specialists.statusCounts.running}</dd></div><div><dt>Waiting</dt><dd>${specialists.statusCounts.waiting}</dd></div><div><dt>Failed</dt><dd>${specialists.statusCounts.failed}</dd></div><div><dt>Completed</dt><dd>${specialists.statusCounts.completed}</dd></div></dl><ul class="mission-agent-list">${agents}</ul></section>`
 }
 
 function formatDuration(milliseconds: number): string {

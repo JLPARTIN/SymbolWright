@@ -25,6 +25,10 @@ function routeContext() {
       start: vi.fn(async () => ({ execution: { completedAt: 'now' } })),
       resume: vi.fn(async () => ({ execution: { completedAt: 'later' } })),
       status: vi.fn(async () => ({ missionId: 'mission-1', status: 'completed' })),
+      specialists: vi.fn(async () => ({
+        missionId: 'mission-1',
+        statusCounts: { idle: 0, running: 0, waiting: 0, failed: 0, completed: 2 },
+      })),
     },
     control: {
       pause: vi.fn(async () => ({ graph: { tasks: [] } })),
@@ -35,7 +39,7 @@ function routeContext() {
 }
 
 describe('autonomous mission routes', () => {
-  it('starts, resumes, and returns dashboard status', async () => {
+  it('starts, resumes, and returns task and specialist dashboard status', async () => {
     const context = routeContext()
 
     const started = response()
@@ -48,6 +52,7 @@ describe('autonomous mission routes', () => {
       ),
     ).toBe(true)
     expect(context.coordinator.start).toHaveBeenCalledWith('mission-1')
+    expect(context.coordinator.specialists).toHaveBeenCalledWith('mission-1')
     expect(started.res.writeHead).toHaveBeenCalledWith(202, expect.any(Object))
 
     const resumed = response()
@@ -69,6 +74,10 @@ describe('autonomous mission routes', () => {
     expect(context.coordinator.status).toHaveBeenCalledWith('mission-1')
     expect(JSON.parse(status.chunks[0] ?? '{}')).toEqual({
       dashboard: { missionId: 'mission-1', status: 'completed' },
+      specialists: {
+        missionId: 'mission-1',
+        statusCounts: { idle: 0, running: 0, waiting: 0, failed: 0, completed: 2 },
+      },
     })
   })
 
@@ -87,6 +96,7 @@ describe('autonomous mission routes', () => {
       expect(result.res.writeHead).toHaveBeenCalledWith(202, expect.any(Object))
     }
     expect(context.coordinator.status).toHaveBeenCalledWith('mission-1')
+    expect(context.coordinator.specialists).toHaveBeenCalledWith('mission-1')
   })
 
   it('declines unrelated routes and reports unsupported methods', async () => {

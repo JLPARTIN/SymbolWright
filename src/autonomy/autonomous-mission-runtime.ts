@@ -3,6 +3,8 @@ import path from 'node:path'
 import type { MissionService } from '../mission/mission-service.js'
 import { AutonomousMissionControl } from './autonomous-mission-control.js'
 import { AutonomousMissionCoordinator } from './autonomous-mission-coordinator.js'
+import { MultiAgentExecutionTracker } from './multi-agent-execution-tracker.js'
+import { MultiAgentMissionStore } from './multi-agent-mission-runtime.js'
 import {
   JsonMissionExecutionStore,
   PersistentMissionExecutor,
@@ -23,6 +25,8 @@ export interface AutonomousMissionRuntime {
   readonly control: AutonomousMissionControl
   readonly executionStore: JsonMissionExecutionStore
   readonly executor: PersistentMissionExecutor
+  readonly multiAgentStore: MultiAgentMissionStore
+  readonly multiAgentTracker: MultiAgentExecutionTracker
 }
 
 export function createAutonomousMissionRuntime(
@@ -34,6 +38,8 @@ export function createAutonomousMissionRuntime(
     store: executionStore,
     executor: options.taskExecutor,
   })
+  const multiAgentStore = new MultiAgentMissionStore(workspaceRoot)
+  const multiAgentTracker = new MultiAgentExecutionTracker(multiAgentStore)
   const semanticIndexStore = new RepositorySemanticIndexStore(path.join(workspaceRoot, '.codemind'))
   const loadSemanticIndex = async (repositoryRoot: string) => {
     const index = await semanticIndexStore.load(repositoryRoot)
@@ -49,6 +55,7 @@ export function createAutonomousMissionRuntime(
     executionStore,
     loadSemanticIndex,
     validationCommands: options.validationCommands,
+    multiAgentTracker,
     ...clockOptions,
   })
   const control = new AutonomousMissionControl({
@@ -56,5 +63,12 @@ export function createAutonomousMissionRuntime(
     missionService: options.missionService,
     ...clockOptions,
   })
-  return { coordinator, control, executionStore, executor }
+  return {
+    coordinator,
+    control,
+    executionStore,
+    executor,
+    multiAgentStore,
+    multiAgentTracker,
+  }
 }

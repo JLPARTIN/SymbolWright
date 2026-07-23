@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { MissionDashboardProjection } from '../autonomy/mission-dashboard-projection.js'
+import type { MultiAgentDashboardProjection } from '../autonomy/multi-agent-dashboard-projection.js'
 import { availableActions, renderMissionDashboardHtml } from './mission-dashboard-html.js'
 
 function dashboard(
@@ -43,6 +44,48 @@ function dashboard(
   }
 }
 
+function specialists(): MultiAgentDashboardProjection {
+  return {
+    missionId: 'mission-1',
+    objective: 'Implement secure dashboard',
+    statusCounts: { idle: 0, running: 1, waiting: 0, failed: 0, completed: 1 },
+    activeAgents: [
+      {
+        agentId: 'code-editor-edit',
+        role: 'code-editor',
+        taskId: 'edit',
+        status: 'running',
+        evidenceCount: 2,
+        diagnostics: [],
+        modifiedFiles: ['src/server/chat-ui-html.ts'],
+      },
+    ],
+    agents: [
+      {
+        agentId: 'repository-analyst-analysis',
+        role: 'repository-analyst',
+        taskId: 'analysis',
+        status: 'completed',
+        evidenceCount: 1,
+        diagnostics: [],
+        modifiedFiles: [],
+      },
+      {
+        agentId: 'code-editor-edit',
+        role: 'code-editor',
+        taskId: 'edit',
+        status: 'running',
+        evidenceCount: 2,
+        diagnostics: ['Inspect <unsafe> output'],
+        modifiedFiles: ['src/server/chat-ui-html.ts'],
+      },
+    ],
+    evidenceCount: 3,
+    modifiedFiles: ['src/server/chat-ui-html.ts'],
+    updatedAt: '2026-07-22T20:01:00.000Z',
+  }
+}
+
 describe('renderMissionDashboardHtml', () => {
   it('renders live metrics, controls, tasks, files, and timeline safely', () => {
     const html = renderMissionDashboardHtml(dashboard())
@@ -55,6 +98,16 @@ describe('renderMissionDashboardHtml', () => {
     expect(html).toContain('30s')
     expect(html).toContain('&lt;secure&gt;')
     expect(html).not.toContain('<script>')
+  })
+
+  it('renders persisted specialist agents and diagnostics safely', () => {
+    const html = renderMissionDashboardHtml(dashboard(), specialists())
+
+    expect(html).toContain('Specialist agents')
+    expect(html).toContain('data-agent-role="code-editor"')
+    expect(html).toContain('edit · running · 2 evidence')
+    expect(html).toContain('Inspect &lt;unsafe&gt; output')
+    expect(html).not.toContain('<unsafe>')
   })
 
   it('renders an empty modified-files state and no controls after completion', () => {

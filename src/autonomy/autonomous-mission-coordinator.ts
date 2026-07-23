@@ -7,6 +7,11 @@ import {
   projectMissionDashboard,
   type MissionDashboardProjection,
 } from './mission-dashboard-projection.js'
+import {
+  projectMultiAgentDashboard,
+  type MultiAgentDashboardProjection,
+} from './multi-agent-dashboard-projection.js'
+import type { MultiAgentExecutionTracker } from './multi-agent-execution-tracker.js'
 import type {
   MissionExecutionStore,
   PersistedMissionExecution,
@@ -20,6 +25,7 @@ export interface AutonomousMissionCoordinatorOptions {
   readonly executionStore: MissionExecutionStore
   readonly loadSemanticIndex: (repositoryRoot: string) => Promise<RepositorySemanticIndexSnapshot>
   readonly validationCommands: readonly string[]
+  readonly multiAgentTracker?: MultiAgentExecutionTracker
   readonly now?: () => Date
 }
 
@@ -35,6 +41,7 @@ export class AutonomousMissionCoordinator {
   readonly #executionStore: MissionExecutionStore
   readonly #loadSemanticIndex: AutonomousMissionCoordinatorOptions['loadSemanticIndex']
   readonly #validationCommands: readonly string[]
+  readonly #multiAgentTracker: MultiAgentExecutionTracker | undefined
   readonly #now: () => Date
 
   constructor(options: AutonomousMissionCoordinatorOptions) {
@@ -43,6 +50,7 @@ export class AutonomousMissionCoordinator {
     this.#executionStore = options.executionStore
     this.#loadSemanticIndex = options.loadSemanticIndex
     this.#validationCommands = [...options.validationCommands]
+    this.#multiAgentTracker = options.multiAgentTracker
     this.#now = options.now ?? (() => new Date())
   }
 
@@ -71,6 +79,7 @@ export class AutonomousMissionCoordinator {
     )
 
     const execution = await this.#executor.start(plan.graph)
+    await this.#synchronizeSpecialists(execution)
     this.#recordExecutionEvents(missionId, execution)
     return {
       plan,
@@ -85,6 +94,7 @@ export class AutonomousMissionCoordinator {
   async resume(missionId: string): Promise<AutonomousMissionStartResult> {
     const mission = this.#missionService.get(missionId)
     const execution = await this.#executor.resume(missionId)
+    await this.#synchronizeSpecialists(execution)
     this.#recordExecutionEvents(missionId, execution)
     const index = await this.#loadSemanticIndex(mission.repository.rootPath)
     const plan = planAutonomousRepositoryMission({
@@ -107,14 +117,30 @@ export class AutonomousMissionCoordinator {
 
   async status(missionId: string): Promise<MissionDashboardProjection> {
     this.#missionService.get(missionId)
-    const execution = await this.#executionStore.load(missionId)
-    if (execution === undefined) {
-      throw new Error(`Autonomous execution was not found: ${missionId}`)
-    }
+    const execution = await this.#loadExecution(missionId)
     return projectMissionDashboard({
       execution,
       now: this.#now().toISOString(),
     })
+  }
+
+  async specialists(missionId: string): Promise<MultiAgentDashboardProjection | undefined> {
+    this.#missionService.get(missionId)
+    const execution = await this.#loadExecution(missionId)
+    const state = await this.#synchronizeSpecialists(execution)
+    return state === undefined ? undefined : projectMultiAgentDashboard(state)
+  }
+
+  async #loadExecution(missionId: string): Promise<PersistedMissionExecution> {
+    const execution = await this.#executionStore.load(missionId)
+    if (execution === undefined) {
+      throw new Error(`Autonomous execution was not found: ${missionId}`)
+    }
+    return execution
+  }
+
+  async #synchronizeSpecialists(execution: PersistedMissionExecution) {
+    return this.#multiAgentTracker?.synchronize(execution)
   }
 
   #recordExecutionEvents(missionId: string, execution: PersistedMissionExecution): void {
