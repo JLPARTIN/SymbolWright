@@ -254,7 +254,7 @@ describe('renderHelp', () => {
 
 describe('renderStatus', () => {
   it('shows the platform name', () => {
-    expect(renderStatus()).toContain('CodeMind')
+    expect(renderStatus()).toContain('Codetelligence')
   })
 
   it('shows the capability label', () => {
