@@ -57,7 +57,10 @@ export function assessMergeReadiness(input: {
   const blocked = failed.length > 0 || diagnostics.length > 0
   const decision: MergeReadinessDecision = blocked
     ? 'blocked'
-    : missing.length > 0 || input.impact.risk === 'critical' || score < 80
+    : missing.length > 0 ||
+        input.evidenceCount === 0 ||
+        input.impact.risk === 'critical' ||
+        score < 80
       ? 'review-required'
       : 'ready'
 
