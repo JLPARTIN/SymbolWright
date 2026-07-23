@@ -43,6 +43,7 @@ export function renderMissionDashboardHtml(
 <div><dt>ETA</dt><dd>${dashboard.estimatedCompletionMs === undefined ? '—' : formatDuration(dashboard.estimatedCompletionMs)}</dd></div>
 </dl>
 ${dashboard.currentValidationPhase === undefined ? '' : `<p class="mission-phase">Validation: ${escapeHtml(dashboard.currentValidationPhase)}</p>`}
+${renderRepositoryIntelligence(dashboard)}
 ${renderSpecialists(specialists)}
 <div class="mission-columns">
 <section><h3>Task graph</h3><ul class="mission-tasks">${taskRows}</ul></section>
@@ -66,6 +67,23 @@ export function availableActions(
     case 'completed':
       return []
   }
+}
+
+function renderRepositoryIntelligence(dashboard: MissionDashboardProjection): string {
+  if (dashboard.impact === undefined || dashboard.mergeReadiness === undefined) return ''
+  const reasons = dashboard.mergeReadiness.reasons
+    .map((reason) => `<li>${escapeHtml(reason)}</li>`)
+    .join('')
+  const affectedFiles = [
+    ...dashboard.impact.directlyAffectedFiles,
+    ...dashboard.impact.transitivelyAffectedFiles,
+  ]
+  const affected =
+    affectedFiles.length === 0
+      ? '<p class="mission-empty">No downstream importers identified.</p>'
+      : `<ul>${affectedFiles.map((file) => `<li><code>${escapeHtml(file)}</code></li>`).join('')}</ul>`
+
+  return `<section class="mission-intelligence" data-readiness="${escapeHtml(dashboard.mergeReadiness.decision)}" data-impact-risk="${escapeHtml(dashboard.impact.risk)}"><h3>Repository intelligence</h3><dl class="mission-intelligence-metrics"><div><dt>Merge readiness</dt><dd>${escapeHtml(dashboard.mergeReadiness.decision)}</dd></div><div><dt>Readiness score</dt><dd>${dashboard.mergeReadiness.score}/100</dd></div><div><dt>Impact risk</dt><dd>${escapeHtml(dashboard.impact.risk)}</dd></div><div><dt>Impact score</dt><dd>${dashboard.impact.riskScore}/100</dd></div><div><dt>Affected packages</dt><dd>${dashboard.impact.affectedPackages.length}</dd></div><div><dt>Exported contracts</dt><dd>${dashboard.impact.affectedExportedSymbols.length}</dd></div></dl><div class="mission-columns"><section><h4>Affected importers</h4>${affected}</section><section><h4>Readiness reasons</h4><ul>${reasons}</ul></section></div></section>`
 }
 
 function renderSpecialists(specialists: MultiAgentDashboardProjection | undefined): string {

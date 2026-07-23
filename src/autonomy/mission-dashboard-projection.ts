@@ -1,5 +1,8 @@
 import type { AutonomousRepairLoopRecord } from './autonomous-repair-loop.js'
+import type { MergeReadinessAssessment } from './merge-readiness-assessment.js'
+import type { MissionImpactIntelligence } from './mission-impact-intelligence.js'
 import type { PersistedMissionExecution } from './persistent-mission-executor.js'
+import type { RepositoryImpactAnalysis } from './repository-impact-analysis.js'
 import type { AutonomousTaskState } from './task-graph.types.js'
 
 export interface MissionDashboardTaskSummary {
@@ -19,6 +22,8 @@ export interface MissionDashboardProjection {
   readonly currentValidationPhase?: string | undefined
   readonly repairAttemptCount: number
   readonly modifiedFiles: readonly string[]
+  readonly impact?: RepositoryImpactAnalysis | undefined
+  readonly mergeReadiness?: MergeReadinessAssessment | undefined
   readonly timeline: readonly {
     readonly timestamp: string
     readonly label: string
@@ -33,6 +38,7 @@ export interface MissionDashboardProjection {
 export function projectMissionDashboard(input: {
   readonly execution: PersistedMissionExecution
   readonly repairLoop?: AutonomousRepairLoopRecord | undefined
+  readonly intelligence?: MissionImpactIntelligence | undefined
   readonly now?: string | undefined
 }): MissionDashboardProjection {
   const now = input.now ?? new Date().toISOString()
@@ -68,6 +74,12 @@ export function projectMissionDashboard(input: {
     modifiedFiles: [
       ...new Set([...input.execution.modifiedFiles, ...(input.repairLoop?.modifiedFiles ?? [])]),
     ].sort(),
+    ...(input.intelligence === undefined
+      ? {}
+      : {
+          impact: input.intelligence.impact,
+          mergeReadiness: input.intelligence.mergeReadiness,
+        }),
     timeline,
     startedAt: input.execution.startedAt,
     updatedAt: input.execution.updatedAt,
