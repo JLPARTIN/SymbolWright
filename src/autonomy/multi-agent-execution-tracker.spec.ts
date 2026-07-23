@@ -74,9 +74,7 @@ describe('multi-agent execution tracker', () => {
     expect(
       roleForTask(task('plan', 'repository-analysis', 'ready', [], 'Plan and decompose work')),
     ).toBe('planner')
-    expect(roleForTask(task('analysis', 'repository-analysis', 'ready'))).toBe(
-      'repository-analyst',
-    )
+    expect(roleForTask(task('analysis', 'repository-analysis', 'ready'))).toBe('repository-analyst')
   })
 
   it('maps every autonomous task state to a specialist status', () => {
