@@ -58,21 +58,17 @@ describe('renderAppShellHtml', () => {
   it('wraps the Workspace, Agent, and Missions client scripts in their own IIFE so their top-level declarations cannot collide', () => {
     const html = renderAppShellHtml()
     const iifeOpenCount = (html.match(/<script>\(function \(\) \{/g) ?? []).length
-    // One IIFE each for workspace, agent/chat, and missions client scripts.
     expect(iifeOpenCount).toBe(3)
   })
 
-  it('serves a single application shell document', () => {
+  it('serves a single Codetelligence application shell document', () => {
     const html = renderAppShellHtml()
-    expect(html).toContain('<title>CodeMind</title>')
+    expect(html).toContain('<title>Codetelligence</title>')
     expect(html.match(/<!doctype html>/gi)?.length).toBe(1)
   })
 
   it('wires the embedded workspace-to-agent handoff instead of only the separate-page draft link', () => {
     const html = renderAppShellHtml()
-    // The fallback <a id="chat-draft-link"> markup is still present (workspace-client-script.ts
-    // only uses it when window.codemindHandleWorkspaceDraft is undefined), but the shell defines
-    // that hook, so the in-page handoff is what actually fires when a user clicks an AI task button.
     expect(html).toContain('window.codemindHandleWorkspaceDraft = function')
     expect(html).toContain("registerRouterViewInit('agent', applyPendingAgentDraftToAgentView)")
   })
