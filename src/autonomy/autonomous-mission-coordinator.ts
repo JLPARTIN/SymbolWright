@@ -7,6 +7,7 @@ import {
   projectMissionDashboard,
   type MissionDashboardProjection,
 } from './mission-dashboard-projection.js'
+import { createMissionImpactIntelligence } from './mission-impact-intelligence.js'
 import {
   projectMultiAgentDashboard,
   type MultiAgentDashboardProjection,
@@ -86,6 +87,7 @@ export class AutonomousMissionCoordinator {
       execution,
       dashboard: projectMissionDashboard({
         execution,
+        intelligence: this.#intelligence(execution, index),
         now: this.#now().toISOString(),
       }),
     }
@@ -110,16 +112,19 @@ export class AutonomousMissionCoordinator {
       execution,
       dashboard: projectMissionDashboard({
         execution,
+        intelligence: this.#intelligence(execution, index),
         now: this.#now().toISOString(),
       }),
     }
   }
 
   async status(missionId: string): Promise<MissionDashboardProjection> {
-    this.#missionService.get(missionId)
+    const mission = this.#missionService.get(missionId)
     const execution = await this.#loadExecution(missionId)
+    const index = await this.#loadSemanticIndex(mission.repository.rootPath)
     return projectMissionDashboard({
       execution,
+      intelligence: this.#intelligence(execution, index),
       now: this.#now().toISOString(),
     })
   }
@@ -137,6 +142,17 @@ export class AutonomousMissionCoordinator {
       throw new Error(`Autonomous execution was not found: ${missionId}`)
     }
     return execution
+  }
+
+  #intelligence(
+    execution: PersistedMissionExecution,
+    index: RepositorySemanticIndexSnapshot,
+  ) {
+    return createMissionImpactIntelligence({
+      execution,
+      semanticIndex: index,
+      validationCommands: this.#validationCommands,
+    })
   }
 
   async #synchronizeSpecialists(execution: PersistedMissionExecution) {
