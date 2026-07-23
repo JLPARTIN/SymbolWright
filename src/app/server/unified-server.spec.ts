@@ -35,7 +35,7 @@ describe('GET /', () => {
     const response = await fetch(server.url)
     expect(response.status).toBe(200)
     const html = await response.text()
-    expect(html).toContain('<title>CodeMind</title>')
+    expect(html).toContain('<title>Codetelligence</title>')
     expect(html).toContain('data-view="workspace"')
     expect(html).toContain('data-view="agent"')
   })
