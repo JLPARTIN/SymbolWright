@@ -51,12 +51,12 @@ const APP_SHELL_STYLES = `<style>
   .repo-tree-entry { display: block; width: 100%; text-align: left; background: transparent; color: var(--ink); border-radius: 6px; padding: 3px 6px; margin: 0; font-weight: 400; }
   .repo-tree-entry.file { color: #cdd7ff; }
   .repo-editor-panel .repo-editor { width: 100%; min-height: 420px; box-sizing: border-box; background: #080c18; color: var(--ink); border: 1px solid #2a355f; border-radius: 10px; padding: 10px; font: 13px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-  .repo-changes-panel input, .repo-changes-panel textarea { width: 100%; box-sizing: border-box; background: #080c18; color: var(--ink); border: 1px solid #2a355f; border-radius: 8px; padding: 8px; margin-bottom: 6px; }
-  .repo-change-list { list-style: none; margin: 4px 0 10px; padding: 0; }
-  .repo-change-entry { display: block; width: 100%; text-align: left; background: #0c1226; color: #cdd7ff; font-weight: 400; margin: 2px 0; }
-  .repo-diff { background: #080c18; border: 1px solid #2a355f; border-radius: 10px; padding: 10px; max-height: 260px; overflow: auto; white-space: pre-wrap; font-size: 12px; }
-  .repo-changes-panel .row { display: flex; gap: 8px; }
-  .repo-changes-panel .row > div { flex: 1; }
+  .repo-changes-panel input, .repo-changes-panel textarea { width: 100%; box-sizing: border-box; background:#080c18; color:var(--ink); border:1px solid #2a355f; border-radius:8px; padding:8px; margin-bottom:6px; }
+  .repo-change-list { list-style:none; margin:4px 0 10px; padding:0; }
+  .repo-change-entry { display:block; width:100%; text-align:left; background:#0c1226; color:#cdd7ff; font-weight:400; margin:2px 0; }
+  .repo-diff { background:#080c18; border:1px solid #2a355f; border-radius:10px; padding:10px; max-height:260px; overflow:auto; white-space:pre-wrap; font-size:12px; }
+  .repo-changes-panel .row { display:flex; gap:8px; }
+  .repo-changes-panel .row > div { flex:1; }
   .mission-layout { display:grid; grid-template-columns:minmax(260px, 360px) minmax(0, 1fr); gap:16px; align-items:start; }
   .mission-sidebar input, .mission-sidebar textarea, .mission-sidebar select, .mission-import { width:100%; background:#080c18; color:var(--ink); border:1px solid #2a355f; border-radius:8px; padding:8px; margin-bottom:8px; }
   .mission-sidebar textarea, .mission-import { min-height:100px; resize:vertical; }
@@ -76,27 +76,24 @@ const APP_SHELL_STYLES = `<style>
   .mission-event { border-left:3px solid #4b74ff; padding:8px 12px; margin:8px 0; background:#0c1226; }
   .mission-export-output { max-height:360px; overflow:auto; white-space:pre-wrap; word-break:break-word; background:#080c18; padding:10px; border-radius:8px; }
   .mission-context-header { margin:0 0 12px; padding:10px 12px; border:1px solid #2a355f; border-radius:10px; background:#0c1226; font-size:12px; }
-  @media (max-width: 900px) {
-    .repo-layout, .mission-layout { grid-template-columns: 1fr; }
-    .mission-list { max-height:none; }
-  }
-  @media (max-width: 760px) {
-    .app-shell { flex-direction: column; }
-    .app-nav { width: 100%; flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid #283759; position:sticky; top:0; z-index:10; }
+  @media (max-width:900px) { .repo-layout, .mission-layout { grid-template-columns:1fr; } .mission-list { max-height:none; } }
+  @media (max-width:760px) {
+    .app-shell { flex-direction:column; }
+    .app-nav { width:100%; flex-direction:row; flex-wrap:wrap; border-right:0; border-bottom:1px solid #283759; position:sticky; top:0; z-index:10; }
     .app-nav .nav-item { flex:1 1 auto; padding:8px; }
     .app-main { padding:12px; }
     .mission-actions button { width:100%; margin-right:0; }
   }
 </style>`
 
-/** The unified CodeMind application shell. */
+/** The unified Codetelligence application shell. */
 export function renderAppShellHtml(): string {
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CodeMind</title>
+  <title>Codetelligence</title>
   ${renderWorkspaceStyles()}
   ${renderChatStyles()}
   ${APP_SHELL_STYLES}
@@ -130,8 +127,9 @@ export function renderAppShellHtml(): string {
     ${buildWorkspaceAgentBridgeScript()}
 
     renderRoute();
-    if (typeof window.codemindReloadActiveMission === 'function') {
-      void window.codemindReloadActiveMission();
+    const reloadActiveMission = window.codetelligenceReloadActiveMission || window.codemindReloadActiveMission;
+    if (typeof reloadActiveMission === 'function') {
+      void reloadActiveMission();
     }
   </script>
 </body>
