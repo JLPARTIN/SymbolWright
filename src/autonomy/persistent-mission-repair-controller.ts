@@ -79,9 +79,7 @@ export class PersistentMissionRepairController {
   ): Promise<AutonomousRepairLoopRecord> {
     const record = await this.#loadOrCreate()
     const timestamp = this.#now().toISOString()
-    const completedPhases = result.passed
-      ? [...new Set([...record.completedPhases, task.id])]
-      : []
+    const completedPhases = result.passed ? [...new Set([...record.completedPhases, task.id])] : []
     const allPassed = this.#validationCommands.every((_, index) =>
       completedPhases.includes(`validate-${index + 1}`),
     )

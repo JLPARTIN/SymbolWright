@@ -216,10 +216,7 @@ export class PersistentMissionExecutor {
       state: repair.state,
       evidence: [...repairingTask.evidence, ...(repair.evidence ?? [])],
       artifacts: [...new Set([...repairingTask.artifacts, ...(repair.artifacts ?? [])])],
-      failureDiagnostics: [
-        ...repairingTask.failureDiagnostics,
-        ...(repair.diagnostics ?? []),
-      ],
+      failureDiagnostics: [...repairingTask.failureDiagnostics, ...(repair.diagnostics ?? [])],
       updatedAt: completedAt,
     })
     await this.#store.save(current)

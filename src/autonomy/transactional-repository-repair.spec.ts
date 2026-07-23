@@ -40,9 +40,7 @@ describe('nested repository repair transactions', () => {
       unexpectedFiles: [],
     })
     await expect(manager.rollback(start.transaction)).resolves.toEqual(['src/result.ts'])
-    await expect(readFile(target, 'utf8')).resolves.toBe(
-      'export const result = "mission-edit"\n',
-    )
+    await expect(readFile(target, 'utf8')).resolves.toBe('export const result = "mission-edit"\n')
   })
 
   it('continues to block overlapping operator changes that are not mission-owned', async () => {

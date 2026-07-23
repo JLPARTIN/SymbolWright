@@ -26,9 +26,7 @@ export interface AutonomousMissionCoordinatorOptions {
   readonly executor: PersistentMissionExecutor
   readonly executionStore: MissionExecutionStore
   readonly loadSemanticIndex: (repositoryRoot: string) => Promise<RepositorySemanticIndexSnapshot>
-  readonly loadRepairLoop?: (
-    missionId: string,
-  ) => Promise<AutonomousRepairLoopRecord | undefined>
+  readonly loadRepairLoop?: (missionId: string) => Promise<AutonomousRepairLoopRecord | undefined>
   readonly validationCommands: readonly string[]
   readonly multiAgentTracker?: MultiAgentExecutionTracker
   readonly now?: () => Date

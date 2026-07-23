@@ -1,7 +1,4 @@
-import {
-  ProjectMemory,
-  resolveProjectMemoryDir,
-} from '../memory/project-memory.js'
+import { ProjectMemory, resolveProjectMemoryDir } from '../memory/project-memory.js'
 import type { MissionService } from '../mission/mission-service.js'
 import type { ProviderGatewayEnv } from '../providers/provider-config.js'
 import { ProviderRuntimeOverrideStore } from '../providers/provider-runtime-overrides.js'
