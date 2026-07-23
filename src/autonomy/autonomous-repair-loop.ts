@@ -34,6 +34,10 @@ export interface AutonomousRepairAttempt {
   readonly diagnosis: readonly string[]
   readonly editSessionId?: string | undefined
   readonly editState?: TransactionalEditSessionRecord['state'] | undefined
+  readonly executorState?: 'completed' | 'failed' | 'blocked' | undefined
+  readonly modifiedFiles?: readonly string[] | undefined
+  readonly evidenceIds?: readonly string[] | undefined
+  readonly memoryEntryIds?: readonly string[] | undefined
 }
 
 export interface AutonomousRepairLoopRecord {
