@@ -1,6 +1,7 @@
 import { createInterface } from 'node:readline'
 import type { Readable, Writable } from 'node:stream'
 
+import { CODETELLIGENCE_MCP_SERVER_NAME } from '../brand/identity.js'
 import type { CodemindRuntimeMode } from '../runtime/types.js'
 import { handleMcpServerMessage, type McpServerInfo } from './mcp-server-protocol.js'
 import { createCodemindMcpToolHandler } from './mcp-server-tools.js'
@@ -22,14 +23,13 @@ export interface RunningMcpServer {
   stop(): void
 }
 
-const DEFAULT_SERVER_INFO: McpServerInfo = { name: 'codemind', version: '0.1.0' }
+const DEFAULT_SERVER_INFO: McpServerInfo = {
+  name: CODETELLIGENCE_MCP_SERVER_NAME,
+  version: '0.1.0',
+}
 
-/**
- * Speaks newline-delimited JSON-RPC 2.0 over stdio, mirroring the wire format
- * `McpStdioTransport` (the client side) expects when CodeMind itself is the
- * server being spawned by another MCP client.
- */
-export function runCodemindMcpServer(options: McpServerRuntimeOptions): RunningMcpServer {
+/** Speaks newline-delimited JSON-RPC 2.0 over stdio. */
+export function runCodetelligenceMcpServer(options: McpServerRuntimeOptions): RunningMcpServer {
   const handler = createCodemindMcpToolHandler({
     mode: options.mode,
     cwd: options.cwd,
@@ -70,3 +70,6 @@ export function runCodemindMcpServer(options: McpServerRuntimeOptions): RunningM
     stop: () => rl.close(),
   }
 }
+
+/** @deprecated Use runCodetelligenceMcpServer. */
+export const runCodemindMcpServer = runCodetelligenceMcpServer
