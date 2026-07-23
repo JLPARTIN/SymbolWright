@@ -17,6 +17,7 @@ export interface MissionTaskExecutionResult {
 }
 
 export interface MissionTaskExecutor {
+  prepare?(graph: AutonomousTaskGraph): Promise<void> | void
   execute(task: AutonomousTaskNode): Promise<MissionTaskExecutionResult>
 }
 
@@ -73,6 +74,7 @@ export class PersistentMissionExecutor {
   }
 
   async start(graph: AutonomousTaskGraph): Promise<PersistedMissionExecution> {
+    await this.#executor.prepare?.(graph)
     const now = new Date().toISOString()
     const execution: PersistedMissionExecution = {
       schemaVersion: 1,
@@ -89,6 +91,7 @@ export class PersistentMissionExecutor {
     const persisted = await this.#store.load(missionId)
     if (!persisted) throw new Error(`Mission execution ${missionId} was not found.`)
     if (persisted.completedAt !== undefined) return persisted
+    await this.#executor.prepare?.(persisted.graph)
     const resumed = { ...persisted, graph: reconcileGraph(persisted.graph) }
     await this.#store.save(resumed)
     return this.run(resumed)
@@ -207,11 +210,19 @@ function updateTask(
   const graph = {
     ...execution.graph,
     updatedAt: new Date().toISOString(),
-    tasks: execution.graph.tasks.map((task) =>
-      task.id === taskId ? ({ ...task, ...patch } as AutonomousTaskNode) : task,
-    ),
+    tasks: graphTasks(execution.graph.tasks, taskId, patch),
   }
   return { ...execution, graph, updatedAt: graph.updatedAt }
+}
+
+function graphTasks(
+  tasks: readonly AutonomousTaskNode[],
+  taskId: string,
+  patch: Partial<AutonomousTaskNode>,
+): readonly AutonomousTaskNode[] {
+  return tasks.map((task) =>
+    task.id === taskId ? ({ ...task, ...patch } as AutonomousTaskNode) : task,
+  )
 }
 
 function findTask(graph: AutonomousTaskGraph, taskId: string): AutonomousTaskNode {
