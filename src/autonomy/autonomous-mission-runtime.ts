@@ -7,6 +7,7 @@ import {
   AutonomousMissionReleaseService,
   JsonAutonomousMissionReleaseStore,
 } from './autonomous-mission-release.js'
+import { registerAutonomousMissionReleaseService } from './autonomous-mission-release-registry.js'
 import { JsonAutonomousRepairLoopStore } from './autonomous-repair-loop.js'
 import { MultiAgentExecutionTracker } from './multi-agent-execution-tracker.js'
 import { MultiAgentMissionStore } from './multi-agent-mission-runtime.js'
@@ -83,6 +84,7 @@ export function createAutonomousMissionRuntime(
     store: releaseStore,
     ...clockOptions,
   })
+  registerAutonomousMissionReleaseService(coordinator, release)
   return {
     coordinator,
     control,
