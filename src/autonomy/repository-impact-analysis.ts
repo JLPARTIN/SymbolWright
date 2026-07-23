@@ -47,7 +47,8 @@ export function analyzeRepositoryImpact(
   const maxDepth = options.maxTraversalDepth ?? 20
 
   for (const changedFile of normalizedChanges) {
-    for (const importer of reverseDependencies.get(changedFile) ?? []) directlyAffected.add(importer)
+    for (const importer of reverseDependencies.get(changedFile) ?? [])
+      directlyAffected.add(importer)
     traverseImporters(
       changedFile,
       reverseDependencies,
