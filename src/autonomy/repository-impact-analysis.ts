@@ -31,6 +31,8 @@ const DEFAULT_VALIDATION_COMMANDS = [
   'npm run build',
 ] as const
 
+const RUNTIME_IMPORT_EXTENSION = /\.(?:[cm]?js|jsx)$/
+
 export function analyzeRepositoryImpact(
   snapshot: RepositorySemanticIndexSnapshot,
   changedFiles: readonly string[],
@@ -45,8 +47,7 @@ export function analyzeRepositoryImpact(
   const maxDepth = options.maxTraversalDepth ?? 20
 
   for (const changedFile of normalizedChanges) {
-    for (const importer of reverseDependencies.get(changedFile) ?? [])
-      directlyAffected.add(importer)
+    for (const importer of reverseDependencies.get(changedFile) ?? []) directlyAffected.add(importer)
     traverseImporters(
       changedFile,
       reverseDependencies,
@@ -89,8 +90,9 @@ export function analyzeRepositoryImpact(
   riskScore = Math.min(100, riskScore)
 
   if (normalizedChanges.length > 3) reasons.push(`${normalizedChanges.length} files are changing.`)
-  if (directlyAffected.size > 0)
+  if (directlyAffected.size > 0) {
     reasons.push(`${directlyAffected.size} direct importers are affected.`)
+  }
   if (transitivelyAffected.size > 0) {
     reasons.push(`${transitivelyAffected.size} transitive importers are affected.`)
   }
@@ -103,8 +105,9 @@ export function analyzeRepositoryImpact(
   if (unknownFiles.length > 0) {
     reasons.push(`${unknownFiles.length} changed files are absent from the semantic index.`)
   }
-  if (reasons.length === 0)
+  if (reasons.length === 0) {
     reasons.push('The change is isolated to indexed files with no known importers.')
+  }
 
   return {
     changedFiles: normalizedChanges,
@@ -144,20 +147,24 @@ function resolveImportTarget(
 ): string | undefined {
   if (!record.source.startsWith('.')) return undefined
   const importerDirectory = path.posix.dirname(normalizeRepositoryPath(record.filePath))
-  const base = normalizeRepositoryPath(path.posix.join(importerDirectory, record.source))
+  const exactBase = normalizeRepositoryPath(path.posix.join(importerDirectory, record.source))
+  const sourceBase = exactBase.replace(RUNTIME_IMPORT_EXTENSION, '')
   const candidates = [
-    base,
-    `${base}.ts`,
-    `${base}.tsx`,
-    `${base}.js`,
-    `${base}.jsx`,
-    `${base}.mjs`,
-    `${base}.cjs`,
-    path.posix.join(base, 'index.ts'),
-    path.posix.join(base, 'index.tsx'),
-    path.posix.join(base, 'index.js'),
+    exactBase,
+    sourceBase,
+    `${sourceBase}.ts`,
+    `${sourceBase}.tsx`,
+    `${sourceBase}.js`,
+    `${sourceBase}.jsx`,
+    `${sourceBase}.mts`,
+    `${sourceBase}.cts`,
+    `${sourceBase}.mjs`,
+    `${sourceBase}.cjs`,
+    path.posix.join(sourceBase, 'index.ts'),
+    path.posix.join(sourceBase, 'index.tsx'),
+    path.posix.join(sourceBase, 'index.js'),
   ]
-  return candidates.find((candidate) => knownFiles.has(candidate))
+  return uniqueSorted(candidates).find((candidate) => knownFiles.has(candidate))
 }
 
 function traverseImporters(
