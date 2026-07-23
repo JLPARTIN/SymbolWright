@@ -104,27 +104,42 @@ export class MultiAgentMissionRuntime {
     return state
   }
 
-  async run(tasks: readonly AutonomousTaskNode[]): Promise<MultiAgentMissionState> {
-    let state = await this.#store.load(requiredMissionId(tasks))
+  async run(
+    missionId: string,
+    tasks: readonly AutonomousTaskNode[],
+  ): Promise<MultiAgentMissionState> {
+    if (tasks.length === 0) throw new Error('At least one task is required.')
+    let state = await this.#store.load(missionId)
     const taskMap = new Map(tasks.map((task) => [task.id, task]))
 
     while (true) {
       const ready = state.assignments
-        .filter((assignment) => assignment.status === 'idle' || assignment.status === 'waiting')
+        .filter((assignment) => assignment.status === 'idle')
         .filter((assignment) => dependenciesComplete(assignment.taskId, tasks, state))
         .filter((assignment) => !hasWriteConflict(assignment.taskId, tasks, state))
         .slice(0, this.#maxConcurrency)
 
       if (ready.length === 0) break
 
-      state = await this.#updateAssignments(state, ready.map((item) => item.taskId), 'running')
+      state = await this.#updateAssignments(
+        state,
+        ready.map((item) => item.taskId),
+        'running',
+      )
       const sharedContext = createSharedContext(state)
       const results = await Promise.all(
         ready.map(async (assignment) => {
           const task = taskMap.get(assignment.taskId)
           if (task === undefined) throw new Error(`Task ${assignment.taskId} is missing.`)
           try {
-            return { assignment, result: await this.#executor.execute({ role: assignment.role, task, sharedContext }) }
+            return {
+              assignment,
+              result: await this.#executor.execute({
+                role: assignment.role,
+                task,
+                sharedContext,
+              }),
+            }
           } catch (error) {
             return {
               assignment,
@@ -147,7 +162,12 @@ export class MultiAgentMissionRuntime {
           if (result === undefined) return assignment
           return {
             ...assignment,
-            status: result.state === 'completed' ? 'completed' : result.state === 'blocked' ? 'waiting' : 'failed',
+            status:
+              result.state === 'completed'
+                ? 'completed'
+                : result.state === 'blocked'
+                  ? 'waiting'
+                  : 'failed',
             completedAt: timestamp,
             evidence: result.evidence ?? [],
             diagnostics: result.diagnostics ?? [],
@@ -216,18 +236,10 @@ function roleForTask(task: AutonomousTaskNode): SpecialistAgentRole {
   if (task.kind === 'edit-session') return 'code-editor'
   if (task.kind === 'repair') return 'repair-agent'
   if (task.kind === 'validation') return 'test-runner'
-  if (/document|readme|changelog/i.test(task.objective)) return 'documentation-agent'
+  if (task.kind === 'documentation') return 'documentation-agent'
   if (/pull request|pr summary/i.test(task.objective)) return 'pr-summary-agent'
   if (/plan|decompose/i.test(task.objective)) return 'planner'
   return 'repository-analyst'
-}
-
-function requiredMissionId(tasks: readonly AutonomousTaskNode[]): string {
-  const missionIds = new Set(tasks.map((task) => task.missionId))
-  if (missionIds.size !== 1) throw new Error('Tasks must belong to exactly one mission.')
-  const [missionId] = missionIds
-  if (missionId === undefined) throw new Error('At least one task is required.')
-  return missionId
 }
 
 function dependenciesComplete(
@@ -238,7 +250,9 @@ function dependenciesComplete(
   const task = tasks.find((candidate) => candidate.id === taskId)
   if (task === undefined) return false
   const completed = new Set(
-    state.assignments.filter((assignment) => assignment.status === 'completed').map((assignment) => assignment.taskId),
+    state.assignments
+      .filter((assignment) => assignment.status === 'completed')
+      .map((assignment) => assignment.taskId),
   )
   return task.dependencies.every((dependency) => completed.has(dependency))
 }
@@ -251,7 +265,9 @@ function hasWriteConflict(
   const task = tasks.find((candidate) => candidate.id === taskId)
   if (task === undefined || task.resources.writes.length === 0) return false
   const running = new Set(
-    state.assignments.filter((assignment) => assignment.status === 'running').map((assignment) => assignment.taskId),
+    state.assignments
+      .filter((assignment) => assignment.status === 'running')
+      .map((assignment) => assignment.taskId),
   )
   return tasks.some(
     (candidate) =>
