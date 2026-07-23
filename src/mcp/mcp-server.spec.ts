@@ -1,7 +1,7 @@
 import { PassThrough } from 'node:stream'
 import { describe, expect, it } from 'vitest'
 
-import { runCodemindMcpServer } from './mcp-server.js'
+import { runCodemindMcpServer, runCodetelligenceMcpServer } from './mcp-server.js'
 
 function collectLines(stream: PassThrough): { lines: () => string[] } {
   let buffer = ''
@@ -23,13 +23,22 @@ async function flush(): Promise<void> {
   await new Promise((resolve) => setImmediate(resolve))
 }
 
-describe('runCodemindMcpServer', () => {
+describe('runCodetelligenceMcpServer', () => {
+  it('keeps the legacy function as a compatibility alias', () => {
+    expect(runCodemindMcpServer).toBe(runCodetelligenceMcpServer)
+  })
+
   it('answers initialize, tools/list, and tools/call over injected stdio streams', async () => {
     const input = new PassThrough()
     const output = new PassThrough()
     const collector = collectLines(output)
 
-    const server = runCodemindMcpServer({ mode: 'READ_ONLY', cwd: process.cwd(), input, output })
+    const server = runCodetelligenceMcpServer({
+      mode: 'READ_ONLY',
+      cwd: process.cwd(),
+      input,
+      output,
+    })
 
     input.write(
       `${JSON.stringify({
@@ -60,10 +69,16 @@ describe('runCodemindMcpServer', () => {
     const lines = collector.lines().map((line) => JSON.parse(line) as Record<string, unknown>)
 
     expect(lines).toHaveLength(3)
-    expect(lines[0]).toMatchObject({ id: 1, result: { protocolVersion: '2025-06-18' } })
+    expect(lines[0]).toMatchObject({
+      id: 1,
+      result: {
+        protocolVersion: '2025-06-18',
+        serverInfo: { name: 'codetelligence', version: '0.1.0' },
+      },
+    })
     expect(lines[1]).toMatchObject({ id: 2 })
     const toolNames = (lines[1]?.['result'] as { tools: { name: string }[] }).tools.map(
-      (t) => t.name,
+      (tool) => tool.name,
     )
     expect(toolNames).toContain('read_file')
     expect(lines[2]).toMatchObject({
@@ -81,7 +96,7 @@ describe('runCodemindMcpServer', () => {
     const collector = collectLines(output)
     const warnings: string[] = []
 
-    const server = runCodemindMcpServer({
+    const server = runCodetelligenceMcpServer({
       mode: 'READ_ONLY',
       cwd: process.cwd(),
       input,
@@ -104,7 +119,12 @@ describe('runCodemindMcpServer', () => {
     const input = new PassThrough()
     const output = new PassThrough()
 
-    const server = runCodemindMcpServer({ mode: 'READ_ONLY', cwd: process.cwd(), input, output })
+    const server = runCodetelligenceMcpServer({
+      mode: 'READ_ONLY',
+      cwd: process.cwd(),
+      input,
+      output,
+    })
     input.end()
 
     await expect(server.closed).resolves.toBeUndefined()
