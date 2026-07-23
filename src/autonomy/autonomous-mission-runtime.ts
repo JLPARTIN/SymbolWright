@@ -3,6 +3,7 @@ import path from 'node:path'
 import type { MissionService } from '../mission/mission-service.js'
 import { AutonomousMissionControl } from './autonomous-mission-control.js'
 import { AutonomousMissionCoordinator } from './autonomous-mission-coordinator.js'
+import { JsonAutonomousRepairLoopStore } from './autonomous-repair-loop.js'
 import { MultiAgentExecutionTracker } from './multi-agent-execution-tracker.js'
 import { MultiAgentMissionStore } from './multi-agent-mission-runtime.js'
 import {
@@ -25,6 +26,7 @@ export interface AutonomousMissionRuntime {
   readonly control: AutonomousMissionControl
   readonly executionStore: JsonMissionExecutionStore
   readonly executor: PersistentMissionExecutor
+  readonly repairLoopStore: JsonAutonomousRepairLoopStore
   readonly multiAgentStore: MultiAgentMissionStore
   readonly multiAgentTracker: MultiAgentExecutionTracker
 }
@@ -38,6 +40,7 @@ export function createAutonomousMissionRuntime(
     store: executionStore,
     executor: options.taskExecutor,
   })
+  const repairLoopStore = new JsonAutonomousRepairLoopStore(workspaceRoot)
   const multiAgentStore = new MultiAgentMissionStore(workspaceRoot)
   const multiAgentTracker = new MultiAgentExecutionTracker(multiAgentStore)
   const semanticIndexStore = new RepositorySemanticIndexStore(path.join(workspaceRoot, '.codemind'))
@@ -54,6 +57,7 @@ export function createAutonomousMissionRuntime(
     executor,
     executionStore,
     loadSemanticIndex,
+    loadRepairLoop: (missionId) => repairLoopStore.load(`repair-${missionId}`),
     validationCommands: options.validationCommands,
     multiAgentTracker,
     ...clockOptions,
@@ -68,6 +72,7 @@ export function createAutonomousMissionRuntime(
     control,
     executionStore,
     executor,
+    repairLoopStore,
     multiAgentStore,
     multiAgentTracker,
   }
