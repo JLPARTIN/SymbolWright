@@ -21,7 +21,9 @@ export function createMissionImpactIntelligence(input: {
   readonly semanticIndex: RepositorySemanticIndexSnapshot
   readonly validationCommands?: readonly string[]
 }): MissionImpactIntelligence {
-  const validationTasks = input.execution.graph.tasks.filter((task) => task.kind === 'validation')
+  const validationTasks = input.execution.graph.tasks.filter(
+    (task) => task.kind === 'validation',
+  )
   const validationCommands =
     input.validationCommands === undefined
       ? validationTasks.map((task) => validationCommand(task.objective))
@@ -58,7 +60,10 @@ function validationResult(task: AutonomousTaskNode): readonly MergeReadinessVali
       ...(task.startedAt === undefined || task.completedAt === undefined
         ? {}
         : {
-            durationMs: Math.max(0, Date.parse(task.completedAt) - Date.parse(task.startedAt)),
+            durationMs: Math.max(
+              0,
+              Date.parse(task.completedAt) - Date.parse(task.startedAt),
+            ),
           }),
     },
   ]
