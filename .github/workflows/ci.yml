@@ -11,38 +11,61 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
-    name: Apply CodeMind lint fix
+    name: Validate CodeMind
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout pull request branch
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
-      - name: Apply type-only import fix
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('src/autonomy/persistent-mission-repair-controller.ts')
-          text = path.read_text()
-          old = "import {\n  ProjectMemory,\n  type ProjectMemoryEntry,\n} from '../memory/project-memory.js'"
-          new = "import type { ProjectMemory, ProjectMemoryEntry } from '../memory/project-memory.js'"
-          if old not in text:
-              raise SystemExit('expected import block was not found')
-          path.write_text(text.replace(old, new, 1))
-          PY
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
 
-      - name: Commit lint fix
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm run audit
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Sandbox runner contract tests
+        run: npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
+
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Build
+        run: npm run build
+
+      - name: Compute changed files for preflight
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/autonomy/persistent-mission-repair-controller.ts
-          git diff --cached --quiet && exit 0
-          git commit -m "fix(agent): use type-only memory import"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --name-only "origin/${{ github.event.pull_request.base.ref }}...HEAD" > /tmp/codemind-changed-files.txt
+          else
+            git diff --name-only HEAD~1 HEAD > /tmp/codemind-changed-files.txt || true
+          fi
+
+      - name: PR preflight
+        run: |
+          mapfile -t files < /tmp/codemind-changed-files.txt
+          node dist/cli.js preflight "${files[@]}"
+
+      - name: Validate
+        run: npm run validate
