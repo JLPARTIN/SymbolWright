@@ -98,9 +98,7 @@ function file(path: string, packageOwner: string) {
 describe('createMissionImpactIntelligence', () => {
   it('combines persisted mission evidence with semantic dependency impact', () => {
     const result = createMissionImpactIntelligence({
-      execution: execution(
-        task({ id: 'validate', kind: 'validation', objective: 'Run npm test' }),
-      ),
+      execution: execution(task({ id: 'validate', kind: 'validation', objective: 'Run npm test' })),
       semanticIndex: semanticIndex(),
       validationCommands: ['npm test'],
     })
