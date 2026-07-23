@@ -14,10 +14,26 @@ describe('buildClientStateScript', () => {
     expect(buildClientStateScript()).toContain('pendingAgentDraft: null')
   })
 
-  it('reads the same localStorage keys the Agent view uses', () => {
+  it('uses canonical Codetelligence localStorage keys', () => {
     const script = buildClientStateScript()
-    expect(script).toContain("localStorage.getItem('codemind_api_key')")
-    expect(script).toContain("localStorage.getItem('codemind_mode')")
+    expect(script).toContain("'codetelligence_api_key'")
+    expect(script).toContain("'codetelligence_mode'")
+    expect(script).toContain("'codetelligence_active_mission_id'")
+  })
+
+  it('imports legacy CodeMind localStorage values for compatibility', () => {
+    const script = buildClientStateScript()
+    expect(script).toContain("'codemind_api_key'")
+    expect(script).toContain("'codemind_mode'")
+    expect(script).toContain("'codemind_active_mission_id'")
+    expect(script).toContain('localStorage.setItem(canonicalKey, legacyValue)')
+  })
+
+  it('keeps the legacy appState key synchronized with the canonical key', () => {
+    const script = buildClientStateScript()
+    expect(script).toContain('codetelligenceKey: initialCodetelligenceKey')
+    expect(script).toContain('codemindKey: initialCodetelligenceKey')
+    expect(script).toContain('patch.codemindKey = patch.codetelligenceKey')
   })
 
   it('exposes a shared HTML-escaping helper for views rendering untrusted content', () => {
