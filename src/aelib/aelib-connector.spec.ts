@@ -26,11 +26,11 @@ describe('AELIB connector contract', () => {
     })
   })
 
-  it('normalizes endpoint, health path, and token state from env', () => {
+  it('normalizes endpoint, health path, and token state from Codetelligence env', () => {
     const config = resolveAelibConnectorConfig({
-      CODEMIND_AELIB_ENDPOINT: 'http://127.0.0.1:3000',
-      CODEMIND_AELIB_HEALTH_PATH: 'api/health',
-      CODEMIND_AELIB_TOKEN: 'secret-token',
+      CODETELLIGENCE_AELIB_ENDPOINT: 'http://127.0.0.1:3000',
+      CODETELLIGENCE_AELIB_HEALTH_PATH: 'api/health',
+      CODETELLIGENCE_AELIB_TOKEN: 'secret-token',
     })
 
     expect(config).toEqual({
@@ -41,19 +41,32 @@ describe('AELIB connector contract', () => {
     })
   })
 
+  it('prefers Codetelligence values while retaining CodeMind fallbacks', () => {
+    expect(
+      resolveAelibConnectorConfig({
+        CODETELLIGENCE_AELIB_ENDPOINT: 'http://127.0.0.1:4000',
+        CODEMIND_AELIB_ENDPOINT: 'http://127.0.0.1:3000',
+      }).endpoint,
+    ).toBe('http://127.0.0.1:4000')
+    expect(
+      resolveAelibConnectorConfig({ CODEMIND_AELIB_ENDPOINT: 'http://127.0.0.1:3000' })
+        .endpoint,
+    ).toBe('http://127.0.0.1:3000')
+  })
+
   it('does not call the transport when the endpoint is not configured', async () => {
     const testTransport = transport(200)
     const status = await checkAelibConnection({ env: {}, transport: testTransport, now: () => NOW })
 
     expect(status.state).toBe('NOT_CONFIGURED')
-    expect(status.detail).toContain('CODEMIND_AELIB_ENDPOINT')
+    expect(status.detail).toContain('CODETELLIGENCE_AELIB_ENDPOINT')
     expect(testTransport.request).not.toHaveBeenCalled()
   })
 
   it('reports misconfigured endpoint URLs without transport calls', async () => {
     const testTransport = transport(200)
     const status = await checkAelibConnection({
-      env: { CODEMIND_AELIB_ENDPOINT: 'not a url' },
+      env: { CODETELLIGENCE_AELIB_ENDPOINT: 'not a url' },
       transport: testTransport,
       now: () => NOW,
     })
@@ -67,8 +80,8 @@ describe('AELIB connector contract', () => {
     const testTransport = transport(204)
     const status = await checkAelibConnection({
       env: {
-        CODEMIND_AELIB_ENDPOINT: 'http://127.0.0.1:3000/',
-        CODEMIND_AELIB_TOKEN: 'secret-token',
+        CODETELLIGENCE_AELIB_ENDPOINT: 'http://127.0.0.1:3000/',
+        CODETELLIGENCE_AELIB_TOKEN: 'secret-token',
       },
       transport: testTransport,
       now: () => NOW,
@@ -83,6 +96,7 @@ describe('AELIB connector contract', () => {
       headers: {
         accept: 'application/json',
         authorization: 'Bearer secret-token',
+        'x-codetelligence-connector': AELIB_CONNECTOR_ID,
         'x-codemind-connector': AELIB_CONNECTOR_ID,
       },
     })
@@ -90,7 +104,7 @@ describe('AELIB connector contract', () => {
 
   it('does not claim connected on non-2xx health responses', async () => {
     const status = await checkAelibConnection({
-      env: { CODEMIND_AELIB_ENDPOINT: 'http://127.0.0.1:3000' },
+      env: { CODETELLIGENCE_AELIB_ENDPOINT: 'http://127.0.0.1:3000' },
       transport: transport(503),
       now: () => NOW,
     })
@@ -102,8 +116,8 @@ describe('AELIB connector contract', () => {
   it('does not expose token material in status output', async () => {
     const status = await checkAelibConnection({
       env: {
-        CODEMIND_AELIB_ENDPOINT: 'http://127.0.0.1:3000',
-        CODEMIND_AELIB_TOKEN: 'super-secret-token',
+        CODETELLIGENCE_AELIB_ENDPOINT: 'http://127.0.0.1:3000',
+        CODETELLIGENCE_AELIB_TOKEN: 'super-secret-token',
       },
       transport: transport(200),
       now: () => NOW,
