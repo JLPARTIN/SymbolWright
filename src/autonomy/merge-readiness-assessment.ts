@@ -60,12 +60,10 @@ export function assessMergeReadiness(input: {
   if (reasons.length === 0) reasons.push('Required validation and evidence gates are satisfied.')
 
   const blocked = failed.length > 0 || diagnostics.length > 0
+  const requiresImpactReview = input.impact.risk === 'critical' || input.impact.risk === 'high'
   const decision: MergeReadinessDecision = blocked
     ? 'blocked'
-    : missing.length > 0 ||
-        input.evidenceCount === 0 ||
-        input.impact.risk === 'critical' ||
-        score < 80
+    : missing.length > 0 || input.evidenceCount === 0 || requiresImpactReview || score < 80
       ? 'review-required'
       : 'ready'
 
