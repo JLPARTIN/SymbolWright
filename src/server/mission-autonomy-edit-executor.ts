@@ -29,6 +29,7 @@ export function createMissionAutonomyEditExecutor(
   options: MissionAutonomyEditExecutorOptions,
 ): AutonomousEditTaskExecutor | undefined {
   const providerId = options.mission.agent.activeProviderId
+  // Preserve blocked write-task behavior until the operator selects a real provider.
   if (providerId === undefined) return undefined
   if (!(CODEMIND_SUPPORTED_PROVIDER_IDS as readonly string[]).includes(providerId)) {
     throw new Error(`Unsupported mission provider: ${providerId}`)
