@@ -79,12 +79,16 @@ class MissionBoundTaskExecutor implements MissionTaskExecutor {
         ? {}
         : { sandboxRunner: this.#options.sandboxRunner }),
     })
+    const validationCommands =
+      this.#options.validationCommands ?? DEFAULT_AUTONOMOUS_VALIDATION_COMMANDS
     const editExecutor =
       this.#options.editExecutor ??
       createMissionAutonomyEditExecutor({
         mission,
         env: this.#env,
         overrideStore: this.#overrideStore,
+        workspaceRoot: this.#options.workspaceRoot,
+        validationCommands,
       })
 
     this.#delegate = new RuntimeMissionTaskExecutor({

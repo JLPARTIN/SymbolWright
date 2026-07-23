@@ -1,5 +1,9 @@
+import path from 'node:path'
+
 import { AgentLoopAutonomousEditExecutor } from '../autonomy/agent-loop-edit-executor.js'
+import { RepositorySemanticIndexStore } from '../autonomy/repository-semantic-index-store.js'
 import type { AutonomousEditTaskExecutor } from '../autonomy/runtime-mission-task-executor.js'
+import { TransactionalRepositoryEdit } from '../autonomy/transactional-repository-edit.js'
 import type { CodeMindMission } from '../mission/mission-types.js'
 import {
   CODEMIND_SUPPORTED_PROVIDER_IDS,
@@ -19,6 +23,8 @@ export interface MissionAutonomyEditExecutorOptions {
   readonly mission: CodeMindMission
   readonly env: ProviderGatewayEnv
   readonly overrideStore: ProviderRuntimeOverrideStore
+  readonly workspaceRoot?: string
+  readonly validationCommands?: readonly string[]
 }
 
 /**
@@ -51,12 +57,27 @@ export function createMissionAutonomyEditExecutor(
     policy,
     sessionId: options.mission.id,
   }
+  const semanticIndexStore =
+    options.workspaceRoot === undefined
+      ? undefined
+      : new RepositorySemanticIndexStore(
+          path.join(path.resolve(options.workspaceRoot), '.codemind'),
+        )
 
   return new AgentLoopAutonomousEditExecutor({
     provider: resolveAgentLlmProvider(config),
     tools: assembleAgentTools(),
     toolContext,
     repositoryRoot,
+    transactionManager: new TransactionalRepositoryEdit({ repositoryRoot }),
+    ...(semanticIndexStore === undefined
+      ? {}
+      : {
+          loadSemanticIndex: () => semanticIndexStore.load(repositoryRoot),
+        }),
+    ...(options.validationCommands === undefined
+      ? {}
+      : { validationCommands: options.validationCommands }),
     ...(options.mission.agent.model === undefined ? {} : { model: options.mission.agent.model }),
   })
 }
