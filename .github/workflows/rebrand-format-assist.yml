@@ -1,0 +1,46 @@
+name: Rebrand Format Assist
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+      - ".github/workflows/rebrand-format-assist.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format source
+        run: npx prettier --write src/
+
+      - name: Package formatted files
+        run: |
+          mkdir -p /tmp/rebrand-format
+          git diff --name-only -- src/ > /tmp/rebrand-format/changed-files.txt
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            mkdir -p "/tmp/rebrand-format/$(dirname "$file")"
+            cp "$file" "/tmp/rebrand-format/$file"
+          done < /tmp/rebrand-format/changed-files.txt
+
+      - name: Upload formatted files
+        uses: actions/upload-artifact@v4
+        with:
+          name: rebrand-formatted-files
+          path: /tmp/rebrand-format
+          if-no-files-found: error
