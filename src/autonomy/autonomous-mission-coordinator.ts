@@ -1,4 +1,5 @@
 import type { MissionService } from '../mission/mission-service.js'
+import type { AutonomousRepairLoopRecord } from './autonomous-repair-loop.js'
 import {
   planAutonomousRepositoryMission,
   type AutonomousRepositoryPlan,
@@ -25,6 +26,9 @@ export interface AutonomousMissionCoordinatorOptions {
   readonly executor: PersistentMissionExecutor
   readonly executionStore: MissionExecutionStore
   readonly loadSemanticIndex: (repositoryRoot: string) => Promise<RepositorySemanticIndexSnapshot>
+  readonly loadRepairLoop?: (
+    missionId: string,
+  ) => Promise<AutonomousRepairLoopRecord | undefined>
   readonly validationCommands: readonly string[]
   readonly multiAgentTracker?: MultiAgentExecutionTracker
   readonly now?: () => Date
@@ -41,6 +45,7 @@ export class AutonomousMissionCoordinator {
   readonly #executor: PersistentMissionExecutor
   readonly #executionStore: MissionExecutionStore
   readonly #loadSemanticIndex: AutonomousMissionCoordinatorOptions['loadSemanticIndex']
+  readonly #loadRepairLoop: AutonomousMissionCoordinatorOptions['loadRepairLoop']
   readonly #validationCommands: readonly string[]
   readonly #multiAgentTracker: MultiAgentExecutionTracker | undefined
   readonly #now: () => Date
@@ -50,6 +55,7 @@ export class AutonomousMissionCoordinator {
     this.#executor = options.executor
     this.#executionStore = options.executionStore
     this.#loadSemanticIndex = options.loadSemanticIndex
+    this.#loadRepairLoop = options.loadRepairLoop
     this.#validationCommands = [...options.validationCommands]
     this.#multiAgentTracker = options.multiAgentTracker
     this.#now = options.now ?? (() => new Date())
@@ -85,11 +91,7 @@ export class AutonomousMissionCoordinator {
     return {
       plan,
       execution,
-      dashboard: projectMissionDashboard({
-        execution,
-        intelligence: this.#intelligence(execution, index),
-        now: this.#now().toISOString(),
-      }),
+      dashboard: await this.#dashboard(execution, index),
     }
   }
 
@@ -110,11 +112,7 @@ export class AutonomousMissionCoordinator {
     return {
       plan,
       execution,
-      dashboard: projectMissionDashboard({
-        execution,
-        intelligence: this.#intelligence(execution, index),
-        now: this.#now().toISOString(),
-      }),
+      dashboard: await this.#dashboard(execution, index),
     }
   }
 
@@ -122,11 +120,7 @@ export class AutonomousMissionCoordinator {
     const mission = this.#missionService.get(missionId)
     const execution = await this.#loadExecution(missionId)
     const index = await this.#loadSemanticIndex(mission.repository.rootPath)
-    return projectMissionDashboard({
-      execution,
-      intelligence: this.#intelligence(execution, index),
-      now: this.#now().toISOString(),
-    })
+    return this.#dashboard(execution, index)
   }
 
   async specialists(missionId: string): Promise<MultiAgentDashboardProjection | undefined> {
@@ -134,6 +128,19 @@ export class AutonomousMissionCoordinator {
     const execution = await this.#loadExecution(missionId)
     const state = await this.#synchronizeSpecialists(execution)
     return state === undefined ? undefined : projectMultiAgentDashboard(state)
+  }
+
+  async #dashboard(
+    execution: PersistedMissionExecution,
+    index: RepositorySemanticIndexSnapshot,
+  ): Promise<MissionDashboardProjection> {
+    const repairLoop = await this.#loadRepairLoop?.(execution.graph.missionId)
+    return projectMissionDashboard({
+      execution,
+      ...(repairLoop === undefined ? {} : { repairLoop }),
+      intelligence: this.#intelligence(execution, index),
+      now: this.#now().toISOString(),
+    })
   }
 
   async #loadExecution(missionId: string): Promise<PersistedMissionExecution> {
