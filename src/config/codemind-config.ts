@@ -92,9 +92,11 @@ export function resolveCodemindConfig(sources: CodemindConfigSources = {}): Code
   const homeConfigPath =
     sources.homeConfigPath ?? join(homedir(), CODETELLIGENCE_STORAGE_DIRECTORY, 'config.json')
   const projectConfigPath =
-    sources.projectConfigPath ?? join(process.cwd(), CODETELLIGENCE_STORAGE_DIRECTORY, 'config.json')
+    sources.projectConfigPath ??
+    join(process.cwd(), CODETELLIGENCE_STORAGE_DIRECTORY, 'config.json')
   const legacyHomeConfigPath =
-    sources.legacyHomeConfigPath ?? join(homedir(), LEGACY_CODEMIND_STORAGE_DIRECTORY, 'config.json')
+    sources.legacyHomeConfigPath ??
+    join(homedir(), LEGACY_CODEMIND_STORAGE_DIRECTORY, 'config.json')
   const legacyProjectConfigPath =
     sources.legacyProjectConfigPath ??
     join(process.cwd(), LEGACY_CODEMIND_STORAGE_DIRECTORY, 'config.json')
