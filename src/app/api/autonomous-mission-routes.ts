@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { AutonomousMissionControl } from '../../autonomy/autonomous-mission-control.js'
 import type { AutonomousMissionCoordinator } from '../../autonomy/autonomous-mission-coordinator.js'
+import { getAutonomousMissionReleaseService } from '../../autonomy/autonomous-mission-release-registry.js'
 
 export interface AutonomousMissionRouteContext {
   readonly coordinator: AutonomousMissionCoordinator
@@ -31,6 +32,11 @@ export async function handleAutonomousMissionRoute(
   try {
     if (action === undefined && req.method === 'GET') {
       sendJson(res, 200, await dashboardPayload(context, missionId))
+      return true
+    }
+    if (action === 'release' && req.method === 'POST') {
+      const release = releaseService(context)
+      sendJson(res, 200, { release: await release.execute(missionId) })
       return true
     }
     if (action === 'start' && req.method === 'POST') {
@@ -82,13 +88,16 @@ async function dashboardPayload(
   context: AutonomousMissionRouteContext,
   missionId: string,
 ): Promise<Record<string, unknown>> {
-  const [dashboard, specialists] = await Promise.all([
+  const release = getAutonomousMissionReleaseService(context.coordinator)
+  const [dashboard, specialists, releaseRecord] = await Promise.all([
     context.coordinator.status(missionId),
     context.coordinator.specialists(missionId),
+    release?.load(missionId),
   ])
   return {
     dashboard,
     ...(specialists === undefined ? {} : { specialists }),
+    ...(releaseRecord === undefined ? {} : { release: releaseRecord }),
   }
 }
 
@@ -98,4 +107,12 @@ async function specialistPayload(
 ): Promise<Record<string, unknown>> {
   const specialists = await context.coordinator.specialists(missionId)
   return specialists === undefined ? {} : { specialists }
+}
+
+function releaseService(context: AutonomousMissionRouteContext) {
+  const release = getAutonomousMissionReleaseService(context.coordinator)
+  if (release === undefined) {
+    throw new Error('Autonomous mission release service is not configured.')
+  }
+  return release
 }
