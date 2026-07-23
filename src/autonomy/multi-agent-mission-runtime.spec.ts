@@ -64,7 +64,12 @@ describe('multi-agent mission runtime', () => {
     })
     const tasks = [
       task({ id: 'analyze', objective: 'Inspect repository architecture' }),
-      task({ id: 'docs', objective: 'Update README', kind: 'documentation', writes: ['README.md'] }),
+      task({
+        id: 'docs',
+        objective: 'Update README',
+        kind: 'documentation',
+        writes: ['README.md'],
+      }),
       task({
         id: 'validate',
         objective: 'Run npm test',
@@ -113,7 +118,11 @@ describe('multi-agent mission runtime', () => {
       now: () => new Date(NOW),
     })
     const blockedTask = task({ id: 'edit', objective: 'Implement feature', kind: 'edit-session' })
-    await runtime.initialize({ missionId: 'mission-blocked', objective: 'Edit', tasks: [blockedTask] })
+    await runtime.initialize({
+      missionId: 'mission-blocked',
+      objective: 'Edit',
+      tasks: [blockedTask],
+    })
 
     const blocked = await runtime.run('mission-blocked', [blockedTask])
     expect(blocked.assignments[0]).toMatchObject({
@@ -123,7 +132,11 @@ describe('multi-agent mission runtime', () => {
     })
 
     const failedTask = task({ id: 'repair', objective: 'Repair build', kind: 'repair' })
-    await runtime.initialize({ missionId: 'mission-failed', objective: 'Repair', tasks: [failedTask] })
+    await runtime.initialize({
+      missionId: 'mission-failed',
+      objective: 'Repair',
+      tasks: [failedTask],
+    })
     const failed = await runtime.run('mission-failed', [failedTask])
     expect(failed.assignments[0]).toMatchObject({
       role: 'repair-agent',

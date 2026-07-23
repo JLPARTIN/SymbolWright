@@ -44,7 +44,9 @@ export function projectMultiAgentDashboard(
     missionId: state.missionId,
     objective: state.objective,
     statusCounts,
-    activeAgents: agents.filter((agent) => agent.status === 'running' || agent.status === 'waiting'),
+    activeAgents: agents.filter(
+      (agent) => agent.status === 'running' || agent.status === 'waiting',
+    ),
     agents,
     evidenceCount: agents.reduce((total, agent) => total + agent.evidenceCount, 0),
     modifiedFiles: [...new Set(agents.flatMap((agent) => agent.modifiedFiles))].sort(),
