@@ -4,13 +4,22 @@ export interface MissionAutonomyRequest {
   <T>(path: string, init?: RequestInit): Promise<T>
 }
 
+export interface MissionAutonomyStatusResponse {
+  readonly dashboard: unknown
+  readonly specialists?: unknown
+}
+
 export interface MissionAutonomyClient {
-  status(missionId: string): Promise<unknown>
+  status(missionId: string): Promise<MissionAutonomyStatusResponse>
   action(missionId: string, action: AutonomousMissionAction): Promise<unknown>
   poll(
     missionId: string,
     onDashboard: (dashboard: unknown) => void,
-    options?: { readonly intervalMs?: number; readonly signal?: AbortSignal },
+    options?: {
+      readonly intervalMs?: number
+      readonly signal?: AbortSignal
+      readonly onSpecialists?: (specialists: unknown) => void
+    },
   ): Promise<void>
 }
 
@@ -19,7 +28,7 @@ export function createMissionAutonomyClient(
 ): MissionAutonomyClient {
   return {
     async status(missionId) {
-      return request(autonomyPath(missionId))
+      return request<MissionAutonomyStatusResponse>(autonomyPath(missionId))
     },
     async action(missionId, action) {
       return request(`${autonomyPath(missionId)}/${action}`, { method: 'POST' })
@@ -30,8 +39,9 @@ export function createMissionAutonomyClient(
         throw new Error('Autonomy polling interval must be at least 100ms.')
       }
       while (!options.signal?.aborted) {
-        const result = await request<{ readonly dashboard: unknown }>(autonomyPath(missionId))
+        const result = await request<MissionAutonomyStatusResponse>(autonomyPath(missionId))
         onDashboard(result.dashboard)
+        if (result.specialists !== undefined) options.onSpecialists?.(result.specialists)
         await delay(intervalMs, options.signal)
       }
     },
