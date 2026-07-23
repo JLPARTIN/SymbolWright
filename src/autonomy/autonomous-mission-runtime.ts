@@ -3,6 +3,10 @@ import path from 'node:path'
 import type { MissionService } from '../mission/mission-service.js'
 import { AutonomousMissionControl } from './autonomous-mission-control.js'
 import { AutonomousMissionCoordinator } from './autonomous-mission-coordinator.js'
+import {
+  AutonomousMissionReleaseService,
+  JsonAutonomousMissionReleaseStore,
+} from './autonomous-mission-release.js'
 import { JsonAutonomousRepairLoopStore } from './autonomous-repair-loop.js'
 import { MultiAgentExecutionTracker } from './multi-agent-execution-tracker.js'
 import { MultiAgentMissionStore } from './multi-agent-mission-runtime.js'
@@ -24,6 +28,8 @@ export interface AutonomousMissionRuntimeOptions {
 export interface AutonomousMissionRuntime {
   readonly coordinator: AutonomousMissionCoordinator
   readonly control: AutonomousMissionControl
+  readonly release: AutonomousMissionReleaseService
+  readonly releaseStore: JsonAutonomousMissionReleaseStore
   readonly executionStore: JsonMissionExecutionStore
   readonly executor: PersistentMissionExecutor
   readonly repairLoopStore: JsonAutonomousRepairLoopStore
@@ -41,6 +47,7 @@ export function createAutonomousMissionRuntime(
     executor: options.taskExecutor,
   })
   const repairLoopStore = new JsonAutonomousRepairLoopStore(workspaceRoot)
+  const releaseStore = new JsonAutonomousMissionReleaseStore(workspaceRoot)
   const multiAgentStore = new MultiAgentMissionStore(workspaceRoot)
   const multiAgentTracker = new MultiAgentExecutionTracker(multiAgentStore)
   const semanticIndexStore = new RepositorySemanticIndexStore(path.join(workspaceRoot, '.codemind'))
@@ -67,9 +74,20 @@ export function createAutonomousMissionRuntime(
     missionService: options.missionService,
     ...clockOptions,
   })
+  const release = new AutonomousMissionReleaseService({
+    workspaceRoot,
+    missionService: options.missionService,
+    coordinator,
+    executionStore,
+    validationCommands: options.validationCommands,
+    store: releaseStore,
+    ...clockOptions,
+  })
   return {
     coordinator,
     control,
+    release,
+    releaseStore,
     executionStore,
     executor,
     repairLoopStore,
