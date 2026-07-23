@@ -14,11 +14,7 @@ import type { AutonomousTaskNode } from './task-graph.types.js'
 
 const NOW = '2026-07-23T00:01:00.000Z'
 
-function task(
-  id: string,
-  kind: AutonomousTaskNode['kind'],
-  objective: string,
-): AutonomousTaskNode {
+function task(id: string, kind: AutonomousTaskNode['kind'], objective: string): AutonomousTaskNode {
   return {
     id,
     objective,
