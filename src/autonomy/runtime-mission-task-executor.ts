@@ -1,18 +1,28 @@
 import type {
   MissionTaskExecutionResult,
   MissionTaskExecutor,
+  MissionTaskRepairInput,
 } from './persistent-mission-executor.js'
+import type { PersistentMissionRepairController } from './persistent-mission-repair-controller.js'
 import type { AutonomousTaskNode } from './task-graph.types.js'
 import type { AutonomousValidationRunner } from './autonomous-repair-loop.js'
 
+export interface AutonomousEditExecutionContext {
+  readonly ownedBaselineFiles?: readonly string[]
+}
+
 export interface AutonomousEditTaskExecutor {
-  execute(task: AutonomousTaskNode): Promise<MissionTaskExecutionResult>
+  execute(
+    task: AutonomousTaskNode,
+    context?: AutonomousEditExecutionContext,
+  ): Promise<MissionTaskExecutionResult>
 }
 
 export interface RuntimeMissionTaskExecutorOptions {
   readonly repositoryRoot: string
   readonly validationRunner: AutonomousValidationRunner
   readonly editExecutor?: AutonomousEditTaskExecutor
+  readonly repairController?: PersistentMissionRepairController
 }
 
 /**
@@ -27,11 +37,13 @@ export class RuntimeMissionTaskExecutor implements MissionTaskExecutor {
   readonly #repositoryRoot: string
   readonly #validationRunner: AutonomousValidationRunner
   readonly #editExecutor: AutonomousEditTaskExecutor | undefined
+  readonly #repairController: PersistentMissionRepairController | undefined
 
   constructor(options: RuntimeMissionTaskExecutorOptions) {
     this.#repositoryRoot = options.repositoryRoot
     this.#validationRunner = options.validationRunner
     this.#editExecutor = options.editExecutor
+    this.#repairController = options.repairController
   }
 
   async execute(task: AutonomousTaskNode): Promise<MissionTaskExecutionResult> {
@@ -60,6 +72,17 @@ export class RuntimeMissionTaskExecutor implements MissionTaskExecutor {
     }
   }
 
+  async repair(input: MissionTaskRepairInput): Promise<MissionTaskExecutionResult> {
+    if (this.#repairController === undefined) {
+      return {
+        state: 'failed',
+        diagnostics: ['Persistent autonomous repair is not configured for this mission.'],
+        evidence: [{ kind: 'diagnostic', id: `repair-unavailable-${input.validationTask.id}` }],
+      }
+    }
+    return this.#repairController.repair(input)
+  }
+
   async #executeValidation(task: AutonomousTaskNode): Promise<MissionTaskExecutionResult> {
     const command = validationCommand(task)
     const result = await this.#validationRunner.run({
@@ -67,6 +90,7 @@ export class RuntimeMissionTaskExecutor implements MissionTaskExecutor {
       phase: task.id,
       command,
     })
+    await this.#repairController?.recordValidation(task, result)
 
     return {
       state: result.passed ? 'completed' : 'failed',

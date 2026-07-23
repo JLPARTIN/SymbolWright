@@ -5,13 +5,16 @@ import { runAgentLoop } from '../agent/agent-loop.js'
 import type { AgentLoopConfig, AgentLoopResult } from '../agent/agent-loop.types.js'
 import type { MissionTaskExecutionResult } from './persistent-mission-executor.js'
 import type { RepositorySemanticIndexSnapshot } from './repository-semantic-index.types.js'
+import {
+  type AutonomousEditExecutionContext,
+  type AutonomousEditTaskExecutor,
+} from './runtime-mission-task-executor.js'
 import { planSemanticMultiFileEdit, type SemanticEditPlan } from './semantic-edit-orchestrator.js'
 import type { AutonomousTaskNode } from './task-graph.types.js'
 import type {
   RepositoryEditTransaction,
   RepositoryEditTransactionManager,
 } from './transactional-repository-edit.js'
-import type { AutonomousEditTaskExecutor } from './runtime-mission-task-executor.js'
 
 const DEFAULT_SYSTEM_PROMPT =
   'You are CodeMind operating an autonomous repository edit task. Inspect before editing, use repository tools for every change, preserve existing conventions, and finish only after the requested change is implemented. Do not claim files changed unless tools actually changed them.'
@@ -77,14 +80,19 @@ export class AgentLoopAutonomousEditExecutor implements AutonomousEditTaskExecut
     this.#transactionManager = options.transactionManager
   }
 
-  async execute(task: AutonomousTaskNode): Promise<MissionTaskExecutionResult> {
+  async execute(
+    task: AutonomousTaskNode,
+    context?: AutonomousEditExecutionContext,
+  ): Promise<MissionTaskExecutionResult> {
     const semanticIndex = await this.#loadSemanticIndex?.()
     const plan = planSemanticMultiFileEdit({
       task,
       index: semanticIndex,
       validationCommands: this.#validationCommands,
     })
-    const transactionStart = await this.#transactionManager?.begin(plan)
+    const transactionStart = await this.#transactionManager?.begin(plan, {
+      ownedBaselineFiles: context?.ownedBaselineFiles ?? [],
+    })
     if (transactionStart?.state === 'blocked') {
       return {
         state: 'blocked',
