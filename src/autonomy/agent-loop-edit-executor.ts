@@ -5,10 +5,7 @@ import { runAgentLoop } from '../agent/agent-loop.js'
 import type { AgentLoopConfig, AgentLoopResult } from '../agent/agent-loop.types.js'
 import type { MissionTaskExecutionResult } from './persistent-mission-executor.js'
 import type { RepositorySemanticIndexSnapshot } from './repository-semantic-index.types.js'
-import {
-  planSemanticMultiFileEdit,
-  type SemanticEditPlan,
-} from './semantic-edit-orchestrator.js'
+import { planSemanticMultiFileEdit, type SemanticEditPlan } from './semantic-edit-orchestrator.js'
 import type { AutonomousTaskNode } from './task-graph.types.js'
 import type {
   RepositoryEditTransaction,
@@ -193,9 +190,7 @@ export class AgentLoopAutonomousEditExecutor implements AutonomousEditTaskExecut
     }
   }
 
-  async #rollback(
-    transaction: RepositoryEditTransaction | undefined,
-  ): Promise<readonly string[]> {
+  async #rollback(transaction: RepositoryEditTransaction | undefined): Promise<readonly string[]> {
     if (transaction === undefined || this.#transactionManager === undefined) return []
     return this.#transactionManager.rollback(transaction)
   }
@@ -207,11 +202,15 @@ function buildTaskPrompt(task: AutonomousTaskNode, plan: SemanticEditPlan): stri
   const writes =
     task.resources.writes.length === 0 ? '(discover as needed)' : task.resources.writes.join(', ')
   const orderedWrites =
-    plan.orderedWrites.length === 0 ? '(discover from repository evidence)' : plan.orderedWrites.join(' -> ')
+    plan.orderedWrites.length === 0
+      ? '(discover from repository evidence)'
+      : plan.orderedWrites.join(' -> ')
   const affectedImporters =
     plan.affectedImporters.length === 0 ? '(none known)' : plan.affectedImporters.join(', ')
   const validations =
-    plan.validationCommands.length === 0 ? '(discover repository validation)' : plan.validationCommands.join(', ')
+    plan.validationCommands.length === 0
+      ? '(discover repository validation)'
+      : plan.validationCommands.join(', ')
   return [
     `Mission task: ${task.objective}`,
     `Task ID: ${task.id}`,

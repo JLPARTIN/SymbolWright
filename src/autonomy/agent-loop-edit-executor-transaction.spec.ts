@@ -130,9 +130,7 @@ describe('AgentLoopAutonomousEditExecutor semantic transactions', () => {
 
     expect(execution.state).toBe('completed')
     expect(execution.modifiedFiles).toEqual(['src/core.ts', 'src/service.ts'])
-    expect(observedPrompt).toContain(
-      'Dependency-aware edit order: src/core.ts -> src/service.ts',
-    )
+    expect(observedPrompt).toContain('Dependency-aware edit order: src/core.ts -> src/service.ts')
     expect(runAgent).toHaveBeenCalledOnce()
     expect(manager.commit).toHaveBeenCalledOnce()
     expect(execution.evidence).toEqual([

@@ -170,14 +170,16 @@ function buildPlan(input: {
         parallel: true,
         files: uniqueSorted(input.allowedWrites),
         commands: [],
-        purpose: 'Inspect definitions, references, package boundaries, and existing tests before editing.',
+        purpose:
+          'Inspect definitions, references, package boundaries, and existing tests before editing.',
       },
       {
         id: 'edit',
         parallel: false,
         files: [...input.orderedWrites],
         commands: [],
-        purpose: 'Edit dependency providers before their importers and preserve repository contracts.',
+        purpose:
+          'Edit dependency providers before their importers and preserve repository contracts.',
       },
       {
         id: 'verify',

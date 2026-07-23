@@ -60,7 +60,9 @@ export function createMissionAutonomyEditExecutor(
   const semanticIndexStore =
     options.workspaceRoot === undefined
       ? undefined
-      : new RepositorySemanticIndexStore(path.join(path.resolve(options.workspaceRoot), '.codemind'))
+      : new RepositorySemanticIndexStore(
+          path.join(path.resolve(options.workspaceRoot), '.codemind'),
+        )
 
   return new AgentLoopAutonomousEditExecutor({
     provider: resolveAgentLlmProvider(config),

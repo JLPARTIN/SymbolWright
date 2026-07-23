@@ -2,10 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { rm } from 'node:fs/promises'
 import path from 'node:path'
 
-import {
-  runGitCommand,
-  type GitCommandResult,
-} from '../runtime/git/git-command-runner.js'
+import { runGitCommand, type GitCommandResult } from '../runtime/git/git-command-runner.js'
 import type { SemanticEditPlan } from './semantic-edit-orchestrator.js'
 
 export interface RepositoryEditTransaction {
@@ -133,7 +130,10 @@ export class TransactionalRepositoryEdit implements RepositoryEditTransactionMan
     const restored: string[] = []
 
     for (const file of rollbackPaths) {
-      const tracked = await this.#runGit(['ls-files', '--error-unmatch', '--', file], this.#repositoryRoot)
+      const tracked = await this.#runGit(
+        ['ls-files', '--error-unmatch', '--', file],
+        this.#repositoryRoot,
+      )
       if (tracked.exitCode === 0) {
         const result = await this.#runGit(
           ['restore', '--staged', '--worktree', '--', file],
@@ -179,7 +179,9 @@ export function parseGitStatusPaths(output: string): readonly string[] {
 }
 
 function normalizePaths(values: readonly string[]): readonly string[] {
-  return [...new Set(values.map(normalizePath).filter((value) => isSafeRepositoryPath(value)))].sort()
+  return [
+    ...new Set(values.map(normalizePath).filter((value) => isSafeRepositoryPath(value))),
+  ].sort()
 }
 
 function normalizePath(value: string): string {
@@ -187,5 +189,7 @@ function normalizePath(value: string): string {
 }
 
 function isSafeRepositoryPath(value: string): boolean {
-  return value.length > 0 && value !== '.' && !path.posix.isAbsolute(value) && !value.startsWith('../')
+  return (
+    value.length > 0 && value !== '.' && !path.posix.isAbsolute(value) && !value.startsWith('../')
+  )
 }
