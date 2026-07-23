@@ -40,8 +40,7 @@ export class MissionAcceptanceService {
     this.#repositoryRoot = path.resolve(options.repositoryRoot ?? workspaceRoot)
     this.#validationCommands = options.validationCommands
     this.#loadSemanticIndex =
-      options.loadSemanticIndex ??
-      ((repositoryRoot) => semanticIndexStore.load(repositoryRoot))
+      options.loadSemanticIndex ?? ((repositoryRoot) => semanticIndexStore.load(repositoryRoot))
     this.#now = options.now ?? (() => new Date())
   }
 
