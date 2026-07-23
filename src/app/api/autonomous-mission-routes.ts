@@ -2,12 +2,11 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { AutonomousMissionControl } from '../../autonomy/autonomous-mission-control.js'
 import type { AutonomousMissionCoordinator } from '../../autonomy/autonomous-mission-coordinator.js'
-import type { AutonomousMissionReleaseService } from '../../autonomy/autonomous-mission-release.js'
+import { getAutonomousMissionReleaseService } from '../../autonomy/autonomous-mission-release-registry.js'
 
 export interface AutonomousMissionRouteContext {
   readonly coordinator: AutonomousMissionCoordinator
   readonly control: AutonomousMissionControl
-  readonly release: AutonomousMissionReleaseService
 }
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
@@ -36,7 +35,8 @@ export async function handleAutonomousMissionRoute(
       return true
     }
     if (action === 'release' && req.method === 'POST') {
-      sendJson(res, 200, { release: await context.release.execute(missionId) })
+      const release = releaseService(context)
+      sendJson(res, 200, { release: await release.execute(missionId) })
       return true
     }
     if (action === 'start' && req.method === 'POST') {
@@ -88,15 +88,16 @@ async function dashboardPayload(
   context: AutonomousMissionRouteContext,
   missionId: string,
 ): Promise<Record<string, unknown>> {
-  const [dashboard, specialists, release] = await Promise.all([
+  const release = getAutonomousMissionReleaseService(context.coordinator)
+  const [dashboard, specialists, releaseRecord] = await Promise.all([
     context.coordinator.status(missionId),
     context.coordinator.specialists(missionId),
-    context.release.load(missionId),
+    release?.load(missionId),
   ])
   return {
     dashboard,
     ...(specialists === undefined ? {} : { specialists }),
-    ...(release === undefined ? {} : { release }),
+    ...(releaseRecord === undefined ? {} : { release: releaseRecord }),
   }
 }
 
@@ -106,4 +107,12 @@ async function specialistPayload(
 ): Promise<Record<string, unknown>> {
   const specialists = await context.coordinator.specialists(missionId)
   return specialists === undefined ? {} : { specialists }
+}
+
+function releaseService(context: AutonomousMissionRouteContext) {
+  const release = getAutonomousMissionReleaseService(context.coordinator)
+  if (release === undefined) {
+    throw new Error('Autonomous mission release service is not configured.')
+  }
+  return release
 }
