@@ -241,7 +241,7 @@ function enhancedEvidence(
   toolCallIds: readonly string[],
   plan: SemanticEditPlan,
   transaction: RepositoryEditTransaction | undefined,
-): MissionTaskExecutionResult['evidence'] {
+): NonNullable<MissionTaskExecutionResult['evidence']> {
   const toolEvidence = toolCallIds.map((id) => ({ kind: 'tool-call' as const, id }))
   if (transaction === undefined) return toolEvidence
   return [
