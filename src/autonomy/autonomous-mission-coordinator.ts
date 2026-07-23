@@ -144,10 +144,7 @@ export class AutonomousMissionCoordinator {
     return execution
   }
 
-  #intelligence(
-    execution: PersistedMissionExecution,
-    index: RepositorySemanticIndexSnapshot,
-  ) {
+  #intelligence(execution: PersistedMissionExecution, index: RepositorySemanticIndexSnapshot) {
     return createMissionImpactIntelligence({
       execution,
       semanticIndex: index,
