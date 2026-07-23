@@ -49,8 +49,7 @@ describe('AELIB connector contract', () => {
       }).endpoint,
     ).toBe('http://127.0.0.1:4000')
     expect(
-      resolveAelibConnectorConfig({ CODEMIND_AELIB_ENDPOINT: 'http://127.0.0.1:3000' })
-        .endpoint,
+      resolveAelibConnectorConfig({ CODEMIND_AELIB_ENDPOINT: 'http://127.0.0.1:3000' }).endpoint,
     ).toBe('http://127.0.0.1:3000')
   })
 
