@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -20,7 +20,8 @@ describe('nested repository repair transactions', () => {
     const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-repair-transaction-'))
     roots.push(root)
     const target = path.join(root, 'src/result.ts')
-    await writeFile(target, 'export const result = "mission-edit"\n', { recursive: true })
+    await mkdir(path.dirname(target), { recursive: true })
+    await writeFile(target, 'export const result = "mission-edit"\n')
     const manager = new TransactionalRepositoryEdit({
       repositoryRoot: root,
       readChangedFiles: async () => ['src/result.ts'],
@@ -48,7 +49,8 @@ describe('nested repository repair transactions', () => {
     const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-operator-conflict-'))
     roots.push(root)
     const target = path.join(root, 'src/result.ts')
-    await writeFile(target, 'export const result = "operator-edit"\n', { recursive: true })
+    await mkdir(path.dirname(target), { recursive: true })
+    await writeFile(target, 'export const result = "operator-edit"\n')
     const manager = new TransactionalRepositoryEdit({
       repositoryRoot: root,
       readChangedFiles: async () => ['src/result.ts'],
