@@ -1,5 +1,6 @@
 import { startUnifiedServer } from './app/server/unified-server.js'
 import type { StartedUnifiedServer, UnifiedServerOptions } from './app/server/route-types.js'
+import { CODETELLIGENCE_PLATFORM_NAME, readBrandEnvironmentValue } from './brand/identity.js'
 import type { ProviderGatewayEnv } from './providers/provider-config.js'
 
 const DEFAULT_HOST = '127.0.0.1'
@@ -64,22 +65,21 @@ export function parseServeArgs(args: readonly string[]): ServeCommandArgs {
   }
 }
 
-function readEnv(env: ProviderGatewayEnv, key: string): string | undefined {
-  const value = env[key]
-  return value === undefined || value.trim().length === 0 ? undefined : value.trim()
+function readServerEnvironment(env: ProviderGatewayEnv, suffix: string): string | undefined {
+  return readBrandEnvironmentValue(env, suffix).value
 }
 
 export function resolveChatServerOptions(
   args: ServeCommandArgs,
   env: ProviderGatewayEnv,
 ): UnifiedServerOptions {
-  const apiKey = readEnv(env, 'CODEMIND_API_KEY') ?? ''
-  const host = args.host ?? readEnv(env, 'CODEMIND_CHAT_HOST') ?? DEFAULT_HOST
-  const portFromEnv = readEnv(env, 'CODEMIND_CHAT_PORT')
+  const apiKey = readServerEnvironment(env, 'API_KEY') ?? ''
+  const host = args.host ?? readServerEnvironment(env, 'CHAT_HOST') ?? DEFAULT_HOST
+  const portFromEnv = readServerEnvironment(env, 'CHAT_PORT')
   const port = args.port ?? (portFromEnv === undefined ? DEFAULT_PORT : parsePort(portFromEnv))
-  const corsOrigin = args.corsOrigin ?? readEnv(env, 'CODEMIND_CORS_ORIGIN')
-  const tlsCertFile = readEnv(env, 'CODEMIND_TLS_CERT_FILE')
-  const tlsKeyFile = readEnv(env, 'CODEMIND_TLS_KEY_FILE')
+  const corsOrigin = args.corsOrigin ?? readServerEnvironment(env, 'CORS_ORIGIN')
+  const tlsCertFile = readServerEnvironment(env, 'TLS_CERT_FILE')
+  const tlsKeyFile = readServerEnvironment(env, 'TLS_KEY_FILE')
 
   return {
     apiKey,
@@ -93,7 +93,7 @@ export function resolveChatServerOptions(
 
 export function renderServeBanner(server: StartedUnifiedServer): string {
   const lines = [
-    'CodeMind',
+    CODETELLIGENCE_PLATFORM_NAME,
     '',
     `Listening: ${server.url}`,
     '',
