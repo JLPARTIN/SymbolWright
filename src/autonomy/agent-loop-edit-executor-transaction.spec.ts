@@ -3,7 +3,10 @@ import { describe, expect, it, vi } from 'vitest'
 import type { AgentLoopResult } from '../agent/agent-loop.types.js'
 import type { LLMProvider } from '../provider/provider.types.js'
 import type { RuntimeToolContext } from '../runtime/types.js'
-import { AgentLoopAutonomousEditExecutor } from './agent-loop-edit-executor.js'
+import {
+  AgentLoopAutonomousEditExecutor,
+  type AgentLoopRunner,
+} from './agent-loop-edit-executor.js'
 import type { RepositorySemanticIndexSnapshot } from './repository-semantic-index.types.js'
 import type { AutonomousTaskNode } from './task-graph.types.js'
 import type {
@@ -107,7 +110,11 @@ function transactionManager(input: {
 describe('AgentLoopAutonomousEditExecutor semantic transactions', () => {
   it('feeds dependency order to the agent and commits verified in-scope changes', async () => {
     const { manager } = transactionManager({ modifiedFiles: ['src/core.ts', 'src/service.ts'] })
-    const runAgent = vi.fn(async () => result())
+    let observedPrompt = ''
+    const runAgent = vi.fn<AgentLoopRunner>(async (_provider, userMessage) => {
+      observedPrompt = userMessage
+      return result()
+    })
     const executor = new AgentLoopAutonomousEditExecutor({
       provider: PROVIDER,
       tools: [],
@@ -123,9 +130,10 @@ describe('AgentLoopAutonomousEditExecutor semantic transactions', () => {
 
     expect(execution.state).toBe('completed')
     expect(execution.modifiedFiles).toEqual(['src/core.ts', 'src/service.ts'])
-    expect(runAgent.mock.calls[0]?.[1]).toContain(
+    expect(observedPrompt).toContain(
       'Dependency-aware edit order: src/core.ts -> src/service.ts',
     )
+    expect(runAgent).toHaveBeenCalledOnce()
     expect(manager.commit).toHaveBeenCalledOnce()
     expect(execution.evidence).toEqual([
       { kind: 'tool-call', id: 'tool-write' },
