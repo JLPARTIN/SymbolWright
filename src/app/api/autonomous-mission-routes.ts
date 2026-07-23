@@ -2,10 +2,12 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { AutonomousMissionControl } from '../../autonomy/autonomous-mission-control.js'
 import type { AutonomousMissionCoordinator } from '../../autonomy/autonomous-mission-coordinator.js'
+import type { AutonomousMissionReleaseService } from '../../autonomy/autonomous-mission-release.js'
 
 export interface AutonomousMissionRouteContext {
   readonly coordinator: AutonomousMissionCoordinator
   readonly control: AutonomousMissionControl
+  readonly release: AutonomousMissionReleaseService
 }
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
@@ -31,6 +33,10 @@ export async function handleAutonomousMissionRoute(
   try {
     if (action === undefined && req.method === 'GET') {
       sendJson(res, 200, await dashboardPayload(context, missionId))
+      return true
+    }
+    if (action === 'release' && req.method === 'POST') {
+      sendJson(res, 200, { release: await context.release.execute(missionId) })
       return true
     }
     if (action === 'start' && req.method === 'POST') {
@@ -82,13 +88,15 @@ async function dashboardPayload(
   context: AutonomousMissionRouteContext,
   missionId: string,
 ): Promise<Record<string, unknown>> {
-  const [dashboard, specialists] = await Promise.all([
+  const [dashboard, specialists, release] = await Promise.all([
     context.coordinator.status(missionId),
     context.coordinator.specialists(missionId),
+    context.release.load(missionId),
   ])
   return {
     dashboard,
     ...(specialists === undefined ? {} : { specialists }),
+    ...(release === undefined ? {} : { release }),
   }
 }
 
