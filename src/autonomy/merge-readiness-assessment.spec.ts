@@ -91,7 +91,7 @@ describe('assessMergeReadiness', () => {
     expect(result.reasons).toContain('Repository impact risk is critical.')
   })
 
-  it('penalizes missing evidence', () => {
+  it('requires review when execution evidence is missing', () => {
     const result = assessMergeReadiness({
       impact: impact(),
       validations: [
@@ -101,7 +101,7 @@ describe('assessMergeReadiness', () => {
       evidenceCount: 0,
     })
 
-    expect(result.decision).toBe('ready')
+    expect(result.decision).toBe('review-required')
     expect(result.score).toBe(80)
     expect(result.reasons).toContain('No execution evidence is attached.')
   })
