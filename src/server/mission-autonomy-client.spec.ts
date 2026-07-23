@@ -5,8 +5,9 @@ import type { MissionAutonomyRequest } from './mission-autonomy-client.js'
 
 describe('mission autonomy client', () => {
   it('requests status and every operator action through the supplied request function', async () => {
-    const request = vi.fn(async <T>() => ({ dashboard: { ok: true } }) as T) as MissionAutonomyRequest &
-      ReturnType<typeof vi.fn>
+    const request = vi.fn(
+      async <T>() => ({ dashboard: { ok: true } }) as T,
+    ) as MissionAutonomyRequest & ReturnType<typeof vi.fn>
     const client = createMissionAutonomyClient(request)
 
     await client.status('mission-1')
