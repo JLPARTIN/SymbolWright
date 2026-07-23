@@ -24,9 +24,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Print Prettier file list
+      - name: Capture Prettier changes
         run: |
           npm run format >/dev/null
-          echo 'FORMATTED_FILES_BEGIN'
-          git diff --name-only -- src
-          echo 'FORMATTED_FILES_END'
+          git diff --name-only -- src > formatted-files.txt
+          git diff --binary -- src > prettier.patch
+          git diff --name-only -z -- src | tar --null -T - -czf formatted-src.tgz
+
+      - name: Upload format diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: prettier-diagnostic
+          path: |
+            formatted-files.txt
+            prettier.patch
+            formatted-src.tgz
+          if-no-files-found: error
+          retention-days: 1
