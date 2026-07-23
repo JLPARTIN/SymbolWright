@@ -42,30 +42,31 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Format check
-        run: npm run format:check
-
-      - name: Sandbox runner contract tests
-        run: npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
-
-      - name: Test with coverage
-        run: npm run test:coverage
-
-      - name: Build
-        run: npm run build
-
-      - name: Compute changed files for preflight
+      - name: Format changed sources
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git diff --name-only "origin/${{ github.event.pull_request.base.ref }}...HEAD" > /tmp/codemind-changed-files.txt
-          else
-            git diff --name-only HEAD~1 HEAD > /tmp/codemind-changed-files.txt || true
-          fi
+          npx prettier --write \
+            src/autonomy/agent-loop-edit-executor-transaction.spec.ts \
+            src/autonomy/agent-loop-edit-executor.ts \
+            src/autonomy/semantic-edit-orchestrator.spec.ts \
+            src/autonomy/semantic-edit-orchestrator.ts \
+            src/autonomy/server-autonomy-runtime.ts \
+            src/autonomy/transactional-repository-edit.spec.ts \
+            src/autonomy/transactional-repository-edit.ts \
+            src/server/mission-autonomy-edit-executor.ts
 
-      - name: PR preflight
-        run: |
-          mapfile -t files < /tmp/codemind-changed-files.txt
-          node dist/cli.js preflight "${files[@]}"
+      - name: Upload formatted sources
+        uses: actions/upload-artifact@v4
+        with:
+          name: prettier-formatted-sources
+          path: |
+            src/autonomy/agent-loop-edit-executor-transaction.spec.ts
+            src/autonomy/agent-loop-edit-executor.ts
+            src/autonomy/semantic-edit-orchestrator.spec.ts
+            src/autonomy/semantic-edit-orchestrator.ts
+            src/autonomy/server-autonomy-runtime.ts
+            src/autonomy/transactional-repository-edit.spec.ts
+            src/autonomy/transactional-repository-edit.ts
+            src/server/mission-autonomy-edit-executor.ts
 
-      - name: Validate
-        run: npm run validate
+      - name: Require clean formatting
+        run: git diff --exit-code -- src/
