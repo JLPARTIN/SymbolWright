@@ -1,3 +1,5 @@
+import type { AutonomousMissionReleaseRecord } from '../autonomy/autonomous-mission-release.js'
+
 export type AutonomousMissionAction = 'start' | 'pause' | 'resume' | 'cancel' | 'retry'
 
 export interface MissionAutonomyRequest {
@@ -7,11 +9,17 @@ export interface MissionAutonomyRequest {
 export interface MissionAutonomyStatusResponse {
   readonly dashboard: unknown
   readonly specialists?: unknown
+  readonly release?: AutonomousMissionReleaseRecord
+}
+
+export interface MissionAutonomyReleaseResponse {
+  readonly release: AutonomousMissionReleaseRecord
 }
 
 export interface MissionAutonomyClient {
   status(missionId: string): Promise<MissionAutonomyStatusResponse>
   action(missionId: string, action: AutonomousMissionAction): Promise<unknown>
+  release(missionId: string): Promise<MissionAutonomyReleaseResponse>
   poll(
     missionId: string,
     onDashboard: (dashboard: unknown) => void,
@@ -19,6 +27,7 @@ export interface MissionAutonomyClient {
       readonly intervalMs?: number
       readonly signal?: AbortSignal
       readonly onSpecialists?: (specialists: unknown) => void
+      readonly onRelease?: (release: AutonomousMissionReleaseRecord) => void
     },
   ): Promise<void>
 }
@@ -33,6 +42,11 @@ export function createMissionAutonomyClient(
     async action(missionId, action) {
       return request(`${autonomyPath(missionId)}/${action}`, { method: 'POST' })
     },
+    async release(missionId) {
+      return request<MissionAutonomyReleaseResponse>(`${autonomyPath(missionId)}/release`, {
+        method: 'POST',
+      })
+    },
     async poll(missionId, onDashboard, options = {}) {
       const intervalMs = options.intervalMs ?? 1_000
       if (!Number.isFinite(intervalMs) || intervalMs < 100) {
@@ -42,6 +56,7 @@ export function createMissionAutonomyClient(
         const result = await request<MissionAutonomyStatusResponse>(autonomyPath(missionId))
         onDashboard(result.dashboard)
         if (result.specialists !== undefined) options.onSpecialists?.(result.specialists)
+        if (result.release !== undefined) options.onRelease?.(result.release)
         await delay(intervalMs, options.signal)
       }
     },
