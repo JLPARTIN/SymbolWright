@@ -30,9 +30,9 @@ export function createMissionImpactIntelligence(input: {
     validationCommands,
   })
   const validations = validationTasks.flatMap(validationResult)
-  const unresolvedDiagnostics = input.execution.graph.tasks.flatMap(
-    (task) => task.failureDiagnostics,
-  )
+  const unresolvedDiagnostics = input.execution.graph.tasks
+    .filter((task) => task.state !== 'completed')
+    .flatMap((task) => task.failureDiagnostics)
   const evidenceCount = input.execution.graph.tasks.reduce(
     (count, task) => count + task.evidence.length,
     0,
