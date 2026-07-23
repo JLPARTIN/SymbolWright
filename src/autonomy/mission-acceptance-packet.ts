@@ -1,6 +1,7 @@
 import { mkdir, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
+import type { MissionImpactIntelligence } from './mission-impact-intelligence.js'
 import type { PersistedMissionExecution } from './persistent-mission-executor.js'
 
 export type MissionAcceptanceStatus = 'accepted' | 'blocked' | 'failed' | 'incomplete'
@@ -29,6 +30,7 @@ export interface MissionAcceptancePacket {
     readonly completedPhases: readonly string[]
     readonly failedPhases: readonly string[]
   }
+  readonly intelligence: MissionImpactIntelligence | null
   readonly evidence: readonly {
     readonly taskId: string
     readonly taskObjective: string
@@ -51,6 +53,7 @@ export interface MissionAcceptancePacket {
 
 export function createMissionAcceptancePacket(input: {
   readonly execution: PersistedMissionExecution
+  readonly intelligence?: MissionImpactIntelligence
   readonly generatedAt?: string
 }): MissionAcceptancePacket {
   const { execution } = input
@@ -115,6 +118,7 @@ export function createMissionAcceptancePacket(input: {
       completedPhases: completedValidation.map((task) => task.objective),
       failedPhases: failedValidation.map((task) => task.objective),
     },
+    intelligence: input.intelligence ?? null,
     evidence,
     diagnostics,
     artifacts,
@@ -159,7 +163,9 @@ function deriveAcceptanceStatus(input: {
 }
 
 function pullRequestTitle(packet: Omit<MissionAcceptancePacket, 'pullRequest'>): string {
-  const prefix = packet.status === 'accepted' ? 'feat' : 'chore'
+  const mergeReady =
+    packet.intelligence === null || packet.intelligence.mergeReadiness.decision === 'ready'
+  const prefix = packet.status === 'accepted' && mergeReady ? 'feat' : 'chore'
   return `${prefix}(agent): complete mission ${packet.missionId}`
 }
 
@@ -174,6 +180,22 @@ function pullRequestBody(packet: Omit<MissionAcceptancePacket, 'pullRequest'>): 
       : packet.diagnostics
           .flatMap((entry) => entry.messages.map((message) => `- ${entry.taskId}: ${message}`))
           .join('\n')
+  const intelligence = packet.intelligence
+  const readiness =
+    intelligence === null
+      ? '- Merge readiness: unavailable (semantic index was not loaded)'
+      : [
+          `- Merge readiness: **${intelligence.mergeReadiness.decision}**`,
+          `- Readiness score: ${intelligence.mergeReadiness.score}/100`,
+          `- Repository impact: ${intelligence.impact.risk} (${intelligence.impact.riskScore}/100)`,
+          `- Directly affected files: ${intelligence.impact.directlyAffectedFiles.length}`,
+          `- Transitively affected files: ${intelligence.impact.transitivelyAffectedFiles.length}`,
+          `- Affected packages: ${intelligence.impact.affectedPackages.length}`,
+        ].join('\n')
+  const readinessReasons =
+    intelligence === null
+      ? '- None available'
+      : intelligence.mergeReadiness.reasons.map((reason) => `- ${reason}`).join('\n')
 
   return [
     '## Autonomous Mission',
@@ -187,6 +209,14 @@ function pullRequestBody(packet: Omit<MissionAcceptancePacket, 'pullRequest'>): 
     `- Validation passed: ${packet.validation.passed ? 'yes' : 'no'}`,
     `- Evidence records: ${packet.evidence.length}`,
     `- Total attempts: ${packet.taskSummary.attempts}`,
+    '',
+    '## Repository Intelligence',
+    '',
+    readiness,
+    '',
+    '### Readiness Reasons',
+    '',
+    readinessReasons,
     '',
     '## Modified Files',
     '',
