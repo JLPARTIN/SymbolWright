@@ -58,10 +58,7 @@ function validationResult(task: AutonomousTaskNode): readonly MergeReadinessVali
       ...(task.startedAt === undefined || task.completedAt === undefined
         ? {}
         : {
-            durationMs: Math.max(
-              0,
-              Date.parse(task.completedAt) - Date.parse(task.startedAt),
-            ),
+            durationMs: Math.max(0, Date.parse(task.completedAt) - Date.parse(task.startedAt)),
           }),
     },
   ]
