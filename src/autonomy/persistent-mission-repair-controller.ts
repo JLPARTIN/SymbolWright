@@ -1,9 +1,6 @@
 import path from 'node:path'
 
-import {
-  ProjectMemory,
-  type ProjectMemoryEntry,
-} from '../memory/project-memory.js'
+import type { ProjectMemory, ProjectMemoryEntry } from '../memory/project-memory.js'
 import type {
   AutonomousRepairAttempt,
   AutonomousRepairLoopRecord,
