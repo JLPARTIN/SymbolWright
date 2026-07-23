@@ -24,7 +24,8 @@ function task(input: {
     resources: { reads: [], writes: [] },
     state,
     retry: { maxAttempts: 2, attempts: 1 },
-    evidence: state === 'completed' ? [{ kind: 'validation', id: `${input.id}-evidence` }] : [],
+    evidence:
+      state === 'completed' ? [{ kind: 'validation', id: `${input.id}-evidence` }] : [],
     artifacts: [],
     failureDiagnostics: input.diagnostics ?? [],
     createdAt: STARTED_AT,
@@ -44,7 +45,11 @@ function execution(validation: AutonomousTaskNode): PersistedMissionExecution {
       createdAt: STARTED_AT,
       updatedAt: COMPLETED_AT,
       tasks: [
-        task({ id: 'edit', kind: 'edit-session', objective: 'Change core contract' }),
+        task({
+          id: 'edit',
+          kind: 'edit-session',
+          objective: 'Change core contract',
+        }),
         validation,
       ],
     },
@@ -98,7 +103,9 @@ function file(path: string, packageOwner: string) {
 describe('createMissionImpactIntelligence', () => {
   it('combines persisted mission evidence with semantic dependency impact', () => {
     const result = createMissionImpactIntelligence({
-      execution: execution(task({ id: 'validate', kind: 'validation', objective: 'Run npm test' })),
+      execution: execution(
+        task({ id: 'validate', kind: 'validation', objective: 'Run npm test' }),
+      ),
       semanticIndex: semanticIndex(),
       validationCommands: ['npm test'],
     })
