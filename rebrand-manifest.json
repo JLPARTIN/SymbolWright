@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "canonical": {
+    "displayName": "Codetelligence",
+    "repositoryName": "Codetelligence",
+    "packageName": "codetelligence",
+    "cliName": "codetelligence",
+    "workspaceCliName": "codetelligence-workspace",
+    "environmentPrefix": "CODETELLIGENCE",
+    "storageDirectory": ".codetelligence",
+    "mcpServerName": "codetelligence",
+    "missionBundleKind": "codetelligence.mission.bundle",
+    "connectorHeader": "x-codetelligence-connector"
+  },
+  "legacy": {
+    "displayName": "CodeMind",
+    "repositoryName": "CodeMind",
+    "packageName": "codemind",
+    "cliName": "codemind",
+    "workspaceCliName": "codemind-workspace",
+    "environmentPrefix": "CODEMIND",
+    "storageDirectory": ".codemind",
+    "mcpServerName": "codemind",
+    "missionBundleKind": "codemind.mission.bundle",
+    "connectorHeader": "x-codemind-connector"
+  },
+  "compatibilityPolicy": {
+    "canonicalWinsWhenBothConfigured": true,
+    "legacyEnvironmentVariablesAccepted": true,
+    "legacyConfigDirectoriesRead": true,
+    "legacyBrowserStorageImported": true,
+    "legacyMcpFunctionAliasRetained": true,
+    "legacyConnectorHeaderEmitted": true,
+    "legacySecretsRedacted": true,
+    "legacyDataDeletedAutomatically": false
+  },
+  "deferredCutovers": [
+    "npm package name and binary map",
+    "GitHub repository rename",
+    "filesystem data migration and mission bundle schema",
+    "source filename and full exported-symbol rename",
+    "complete documentation filename and historical-reference cleanup",
+    "GHCR image coordinate migration"
+  ]
+}
