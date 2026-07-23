@@ -30,15 +30,23 @@ export async function handleAutonomousMissionRoute(
 
   try {
     if (action === undefined && req.method === 'GET') {
-      sendJson(res, 200, { dashboard: await context.coordinator.status(missionId) })
+      sendJson(res, 200, await dashboardPayload(context, missionId))
       return true
     }
     if (action === 'start' && req.method === 'POST') {
-      sendJson(res, 202, await context.coordinator.start(missionId))
+      const result = await context.coordinator.start(missionId)
+      sendJson(res, 202, {
+        ...result,
+        ...(await specialistPayload(context, missionId)),
+      })
       return true
     }
     if (action === 'resume' && req.method === 'POST') {
-      sendJson(res, 202, await context.coordinator.resume(missionId))
+      const result = await context.coordinator.resume(missionId)
+      sendJson(res, 202, {
+        ...result,
+        ...(await specialistPayload(context, missionId)),
+      })
       return true
     }
     if (action === 'pause' && req.method === 'POST') {
@@ -53,7 +61,7 @@ export async function handleAutonomousMissionRoute(
       const execution = await context.control.retry(missionId)
       sendJson(res, 202, {
         execution,
-        dashboard: await context.coordinator.status(missionId),
+        ...(await dashboardPayload(context, missionId)),
       })
       return true
     }
@@ -68,4 +76,26 @@ export async function handleAutonomousMissionRoute(
     sendJson(res, 409, { error: message })
     return true
   }
+}
+
+async function dashboardPayload(
+  context: AutonomousMissionRouteContext,
+  missionId: string,
+): Promise<Record<string, unknown>> {
+  const [dashboard, specialists] = await Promise.all([
+    context.coordinator.status(missionId),
+    context.coordinator.specialists(missionId),
+  ])
+  return {
+    dashboard,
+    ...(specialists === undefined ? {} : { specialists }),
+  }
+}
+
+async function specialistPayload(
+  context: AutonomousMissionRouteContext,
+  missionId: string,
+): Promise<Record<string, unknown>> {
+  const specialists = await context.coordinator.specialists(missionId)
+  return specialists === undefined ? {} : { specialists }
 }
