@@ -4,10 +4,13 @@ export const DEFAULT_AELIB_HEALTH_PATH = '/health' as const
 export type AelibConnectorState = 'NOT_CONFIGURED' | 'MISCONFIGURED' | 'UNREACHABLE' | 'CONNECTED'
 
 export interface AelibConnectorEnv {
+  readonly CODETELLIGENCE_AELIB_ENDPOINT?: string | undefined
   readonly CODEMIND_AELIB_ENDPOINT?: string | undefined
   readonly AELIB_ENDPOINT?: string | undefined
+  readonly CODETELLIGENCE_AELIB_HEALTH_PATH?: string | undefined
   readonly CODEMIND_AELIB_HEALTH_PATH?: string | undefined
   readonly AELIB_HEALTH_PATH?: string | undefined
+  readonly CODETELLIGENCE_AELIB_TOKEN?: string | undefined
   readonly CODEMIND_AELIB_TOKEN?: string | undefined
   readonly AELIB_TOKEN?: string | undefined
 }
@@ -81,10 +84,22 @@ function toStatus(
 export function resolveAelibConnectorConfig(
   env: AelibConnectorEnv = process.env,
 ): AelibConnectorConfig {
-  const endpoint = firstNonEmpty(env.CODEMIND_AELIB_ENDPOINT, env.AELIB_ENDPOINT)
-  const token = firstNonEmpty(env.CODEMIND_AELIB_TOKEN, env.AELIB_TOKEN)
+  const endpoint = firstNonEmpty(
+    env.CODETELLIGENCE_AELIB_ENDPOINT,
+    env.CODEMIND_AELIB_ENDPOINT,
+    env.AELIB_ENDPOINT,
+  )
+  const token = firstNonEmpty(
+    env.CODETELLIGENCE_AELIB_TOKEN,
+    env.CODEMIND_AELIB_TOKEN,
+    env.AELIB_TOKEN,
+  )
   const healthPath = normalizeHealthPath(
-    firstNonEmpty(env.CODEMIND_AELIB_HEALTH_PATH, env.AELIB_HEALTH_PATH),
+    firstNonEmpty(
+      env.CODETELLIGENCE_AELIB_HEALTH_PATH,
+      env.CODEMIND_AELIB_HEALTH_PATH,
+      env.AELIB_HEALTH_PATH,
+    ),
   )
 
   return {
@@ -115,13 +130,17 @@ export async function checkAelibConnection(
   const checkedAt = options.now?.() ?? new Date()
   const env: AelibConnectorEnv = options.env ?? process.env
   const config = resolveAelibConnectorConfig(env)
-  const token = firstNonEmpty(env.CODEMIND_AELIB_TOKEN, env.AELIB_TOKEN)
+  const token = firstNonEmpty(
+    env.CODETELLIGENCE_AELIB_TOKEN,
+    env.CODEMIND_AELIB_TOKEN,
+    env.AELIB_TOKEN,
+  )
 
   if (config.endpoint === undefined) {
     return toStatus(
       'NOT_CONFIGURED',
       config,
-      'Set CODEMIND_AELIB_ENDPOINT to enable the AELIB-X1YA0I connector health check.',
+      'Set CODETELLIGENCE_AELIB_ENDPOINT to enable the AELIB-X1YA0I connector health check.',
       checkedAt,
     )
   }
@@ -141,6 +160,7 @@ export async function checkAelibConnection(
 
   const headers: Record<string, string> = {
     accept: 'application/json',
+    'x-codetelligence-connector': AELIB_CONNECTOR_ID,
     'x-codemind-connector': AELIB_CONNECTOR_ID,
   }
 
