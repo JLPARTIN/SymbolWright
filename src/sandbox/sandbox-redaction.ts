@@ -5,6 +5,7 @@ const SECRET_PATTERNS: readonly RegExp[] = [
   /gh[pousr]_[A-Za-z0-9_]{20,}/g,
   /sk-[A-Za-z0-9_-]{16,}/g,
   /AIza[A-Za-z0-9_-]{16,}/g,
+  /CODETELLIGENCE_API_KEY\s*=\s*[^\s]+/gi,
   /CODEMIND_API_KEY\s*=\s*[^\s]+/gi,
   /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g,
   /(authorization|cookie|api[_-]?key|token|secret|password)=([^\s&]+)/gi,
