@@ -1,9 +1,9 @@
 import type { PersistedMissionExecution } from './persistent-mission-executor.js'
-import {
+import type {
+  MultiAgentMissionState,
   MultiAgentMissionStore,
-  type MultiAgentMissionState,
-  type SpecialistAgentRole,
-  type SpecialistAgentStatus,
+  SpecialistAgentRole,
+  SpecialistAgentStatus,
 } from './multi-agent-mission-runtime.js'
 import type { AutonomousTaskNode, AutonomousTaskState } from './task-graph.types.js'
 
