@@ -37,17 +37,7 @@ jobs:
         run: npm run audit
 
       - name: Typecheck
-        run: |
-          set -o pipefail
-          npm run typecheck 2>&1 | tee /tmp/codemind-typecheck.log
-
-      - name: Upload typecheck diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: typecheck-diagnostics
-          path: /tmp/codemind-typecheck.log
-          if-no-files-found: ignore
+        run: npm run typecheck
 
       - name: Lint
         run: npm run lint
