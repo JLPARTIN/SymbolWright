@@ -125,10 +125,7 @@ export class AutonomousMissionReleaseService {
     const previous = await this.#executionStore.load(missionId)
     const interruptedTaskIds = activeTaskIds(previous)
     const executionMode = releaseExecutionMode(previous)
-    const result =
-      previous === undefined
-        ? await this.#coordinator.start(missionId)
-        : await this.#coordinator.resume(missionId)
+    const dashboard = await this.#executeOrProject(missionId, previous)
     const [acceptanceResult, specialists] = await Promise.all([
       this.#generateAcceptance(missionId, mission.repository.rootPath),
       this.#coordinator.specialists(missionId),
@@ -146,7 +143,7 @@ export class AutonomousMissionReleaseService {
         resumed: executionMode === 'resume',
         interruptedTaskIds,
       },
-      dashboard: result.dashboard,
+      dashboard,
       ...(specialists === undefined ? {} : { specialists }),
       acceptance: acceptanceResult.packet,
       acceptancePacketPath: acceptanceResult.path,
@@ -175,6 +172,15 @@ export class AutonomousMissionReleaseService {
     this.#missionService.get(missionId)
     return this.#store.load(missionId)
   }
+
+  async #executeOrProject(
+    missionId: string,
+    previous: PersistedMissionExecution | undefined,
+  ): Promise<MissionDashboardProjection> {
+    if (previous === undefined) return (await this.#coordinator.start(missionId)).dashboard
+    if (previous.completedAt !== undefined) return this.#coordinator.status(missionId)
+    return (await this.#coordinator.resume(missionId)).dashboard
+  }
 }
 
 function releaseExecutionMode(
@@ -196,12 +202,11 @@ function releaseState(packet: MissionAcceptancePacket): AutonomousMissionRelease
   if (packet.status === 'failed') return 'failed'
   if (packet.status === 'blocked') return 'blocked'
   if (packet.status === 'incomplete') return 'incomplete'
-  if (packet.intelligence?.mergeReadiness.decision !== undefined) {
-    return packet.intelligence.mergeReadiness.decision === 'ready'
-      ? 'merge-ready'
-      : 'review-required'
-  }
-  return 'merge-ready'
+  if (!packet.validation.passed) return 'blocked'
+  const decision = packet.intelligence?.mergeReadiness.decision
+  if (decision === undefined) return 'review-required'
+  if (decision === 'blocked') return 'blocked'
+  return decision === 'ready' ? 'merge-ready' : 'review-required'
 }
 
 function nextAction(

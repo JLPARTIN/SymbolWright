@@ -1,16 +1,16 @@
-import { readFile } from 'node:fs/promises'
+import { mkdtemp, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { mkdtemp } from 'node:fs/promises'
 
 import { describe, expect, it } from 'vitest'
 
-import type { PersistedMissionExecution } from './persistent-mission-executor.js'
-import type { AutonomousTaskNode } from './task-graph.types.js'
+import type { MissionImpactIntelligence } from './mission-impact-intelligence.js'
 import {
   createMissionAcceptancePacket,
   MissionAcceptancePacketStore,
 } from './mission-acceptance-packet.js'
+import type { PersistedMissionExecution } from './persistent-mission-executor.js'
+import type { AutonomousTaskNode } from './task-graph.types.js'
 
 const STARTED_AT = '2026-07-23T00:00:00.000Z'
 const COMPLETED_AT = '2026-07-23T00:02:00.000Z'
@@ -66,8 +66,35 @@ function execution(
   }
 }
 
+function readyIntelligence(): MissionImpactIntelligence {
+  return {
+    impact: {
+      changedFiles: ['src/a.ts', 'src/b.ts'],
+      directlyAffectedFiles: [],
+      transitivelyAffectedFiles: [],
+      affectedPackages: ['codemind'],
+      affectedExportedSymbols: [],
+      validationCommands: ['npm test'],
+      risk: 'low',
+      riskScore: 10,
+      reasons: ['The change is isolated to indexed files with no known importers.'],
+    },
+    mergeReadiness: {
+      decision: 'ready',
+      score: 90,
+      impactRisk: 'low',
+      passedValidations: ['npm test'],
+      failedValidations: [],
+      missingValidations: [],
+      unresolvedDiagnostics: [],
+      evidenceCount: 2,
+      reasons: ['Required validation and evidence gates are satisfied.'],
+    },
+  }
+}
+
 describe('mission acceptance packet', () => {
-  it('accepts a completed evidence-backed mission and generates a PR packet', () => {
+  it('accepts a completed validated mission with ready intelligence and generates a feature PR packet', () => {
     const packet = createMissionAcceptancePacket({
       execution: execution(
         [
@@ -86,6 +113,7 @@ describe('mission acceptance packet', () => {
         ],
         { modifiedFiles: ['src/a.ts', 'src/b.ts'] },
       ),
+      intelligence: readyIntelligence(),
       generatedAt: COMPLETED_AT,
     })
 
@@ -101,6 +129,20 @@ describe('mission acceptance packet', () => {
     expect(packet.pullRequest.title).toBe('feat(agent): complete mission mission-42')
     expect(packet.pullRequest.body).toContain('Validation passed: yes')
     expect(packet.pullRequest.body).toContain('`src/a.ts`')
+  })
+
+  it('does not generate a feature PR title when repository intelligence is unavailable', () => {
+    const packet = createMissionAcceptancePacket({
+      execution: execution([
+        task({ id: 'validate', kind: 'validation', objective: 'Run npm test' }),
+      ]),
+      generatedAt: COMPLETED_AT,
+    })
+
+    expect(packet.status).toBe('accepted')
+    expect(packet.validation.passed).toBe(true)
+    expect(packet.intelligence).toBeNull()
+    expect(packet.pullRequest.title).toBe('chore(agent): complete mission mission-42')
   })
 
   it.each([

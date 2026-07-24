@@ -164,7 +164,9 @@ function deriveAcceptanceStatus(input: {
 
 function pullRequestTitle(packet: Omit<MissionAcceptancePacket, 'pullRequest'>): string {
   const mergeReady =
-    packet.intelligence === null || packet.intelligence.mergeReadiness.decision === 'ready'
+    packet.validation.passed &&
+    packet.intelligence !== null &&
+    packet.intelligence.mergeReadiness.decision === 'ready'
   const prefix = packet.status === 'accepted' && mergeReady ? 'feat' : 'chore'
   return `${prefix}(agent): complete mission ${packet.missionId}`
 }

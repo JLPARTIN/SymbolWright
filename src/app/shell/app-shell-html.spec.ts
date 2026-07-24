@@ -8,6 +8,7 @@ describe('renderAppShellHtml', () => {
     for (const viewId of [
       'dashboard',
       'missions',
+      'autonomy',
       'workspace',
       'agent',
       'tools',
@@ -20,11 +21,12 @@ describe('renderAppShellHtml', () => {
     }
   })
 
-  it('renders a persistent nav with a data-nav entry per primary view, including Missions and the real Repository tab', () => {
+  it('renders a persistent nav with a data-nav entry per primary view, including Missions, AI Mission Control, and the real Repository tab', () => {
     const html = renderAppShellHtml()
     for (const viewId of [
       'dashboard',
       'missions',
+      'autonomy',
       'workspace',
       'repository',
       'agent',
@@ -45,6 +47,14 @@ describe('renderAppShellHtml', () => {
     expect(html).toContain('/api/repository/push')
     expect(html).toContain('/api/repository/pull-request')
     expect(html).not.toContain('planned-badge')
+  })
+
+  it('wires AI Mission Control to the real authenticated autonomy and release routes', () => {
+    const html = renderAppShellHtml()
+    expect(html).toContain("registerRouterViewInit('autonomy'")
+    expect(html).toContain("'/api/missions/' + encodeURIComponent(missionId) + '/autonomy'")
+    expect(html).toContain("authorization: 'Bearer ' + appState.codemindKey")
+    expect(html).toContain("'release'")
   })
 
   it('boots the router once after all view scripts are inlined', () => {
