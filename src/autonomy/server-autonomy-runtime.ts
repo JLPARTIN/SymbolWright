@@ -2,8 +2,8 @@ import { ProjectMemory, resolveProjectMemoryDir } from '../memory/project-memory
 import type { MissionService } from '../mission/mission-service.js'
 import { encodePortableValidationInvocation } from '../portability/portable-validation-invocation.js'
 import type { PortableValidationRunner } from '../portability/portable-validation-runner.js'
-import { discoverRepositoryPortability } from '../portability/repository-portability.js'
 import { researchRepositoryPortability } from '../portability/repository-portability-research.js'
+import { discoverUniversalRepositoryPortability } from '../portability/universal-repository-portability.js'
 import type { ProviderGatewayEnv } from '../providers/provider-config.js'
 import { ProviderRuntimeOverrideStore } from '../providers/provider-runtime-overrides.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
@@ -62,7 +62,7 @@ export function createServerAutonomyRuntime(
   const resolveValidationCommands = async (missionId: string, repositoryRoot: string) => {
     if (options.validationCommands !== undefined) return options.validationCommands
     const mission = options.missionService.get(missionId)
-    const profile = await discoverRepositoryPortability(repositoryRoot)
+    const profile = await discoverUniversalRepositoryPortability(repositoryRoot)
     const validationCommands = profile.validation.map(encodePortableValidationInvocation)
     options.missionService.appendEvent(
       missionId,
