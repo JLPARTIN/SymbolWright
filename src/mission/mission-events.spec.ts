@@ -52,6 +52,24 @@ describe('mission events', () => {
     expect(paginateMissionEvents(events, { filter: 'agent', limit: 1 }).total).toBe(1)
   })
 
+  it('buckets autonomous mission events (plan, execution, repair, release, portability) under the autonomy filter', () => {
+    const autonomyEvent = createMissionEvent({
+      missionId: MISSION_ID,
+      type: 'autonomy.portability.detected',
+      summary: 'Repository portability profile detected',
+    })
+    expect(eventMatchesFilter(autonomyEvent, 'autonomy')).toBe(true)
+    expect(eventMatchesFilter(autonomyEvent, 'validation')).toBe(false)
+    expect(eventMatchesFilter(autonomyEvent, 'agent')).toBe(false)
+
+    const agentEvent = createMissionEvent({
+      missionId: MISSION_ID,
+      type: 'agent.message.user',
+      summary: 'a',
+    })
+    expect(eventMatchesFilter(agentEvent, 'autonomy')).toBe(false)
+  })
+
   it('recovers started operations without terminal events as interrupted', () => {
     const started = createMissionEvent({
       missionId: MISSION_ID,

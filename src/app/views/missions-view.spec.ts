@@ -35,4 +35,9 @@ describe('Missions view', () => {
     expect(html).toContain('mission-sidebar')
     expect(html).toContain('mission-detail-column')
   })
+
+  it('offers an Autonomy timeline filter so autonomous mission events are not hidden by default', () => {
+    const html = renderMissionsViewHtml()
+    expect(html).toContain('<option value="autonomy">Autonomy</option>')
+  })
 })

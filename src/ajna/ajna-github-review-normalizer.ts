@@ -1,5 +1,14 @@
 import type { AjnaReviewFinding, AjnaReviewRequest } from './ajna-review.types.js'
 import type { CodemindAjnaReviewPrInput } from '../cli-ajna-review-pr.js'
+import {
+  detectAjnaArchitectureDrift,
+  type AjnaArchitecturePolicy,
+  type AjnaImportEdge,
+} from './ajna-architecture-drift.js'
+import {
+  detectAjnaSecuritySensitivePaths,
+  type AjnaSecuritySensitivePolicy,
+} from './ajna-security-sensitive-paths.js'
 
 export interface AjnaGithubPullRequestPayload {
   readonly repository: string
@@ -10,6 +19,8 @@ export interface AjnaGithubPullRequestPayload {
   readonly changedFiles: readonly string[]
   readonly diffEvidence?: readonly string[]
   readonly ciEvidence?: readonly string[]
+  /** Diff-derived importer/imported edges, used only for AJNA-8 layering checks. */
+  readonly importEdges?: readonly AjnaImportEdge[]
 }
 
 export interface AjnaGithubReviewNormalizerOptions {
@@ -17,6 +28,8 @@ export interface AjnaGithubReviewNormalizerOptions {
   readonly requireCiEvidence?: boolean
   readonly requireTestEvidence?: boolean
   readonly recommendedNextAction?: string
+  readonly architecturePolicy?: AjnaArchitecturePolicy
+  readonly securitySensitivePolicy?: AjnaSecuritySensitivePolicy
 }
 
 function assertNonEmptyString(value: unknown, field: string): void {
@@ -73,8 +86,40 @@ function createRequest(
   }
 }
 
-function createEvidenceFindings(payload: AjnaGithubPullRequestPayload): AjnaReviewFinding[] {
+function assertImportEdges(value: unknown, field: string): void {
+  if (value === undefined) return
+  if (!Array.isArray(value)) {
+    throw new Error(`Ajna GitHub review payload ${field} must be an array.`)
+  }
+  value.forEach((entry, index) => {
+    if (
+      typeof entry !== 'object' ||
+      entry === null ||
+      typeof (entry as { importer?: unknown }).importer !== 'string' ||
+      typeof (entry as { imported?: unknown }).imported !== 'string'
+    ) {
+      throw new Error(
+        `Ajna GitHub review payload ${field}[${index}] must have string importer and imported fields.`,
+      )
+    }
+  })
+}
+
+function createEvidenceFindings(
+  payload: AjnaGithubPullRequestPayload,
+  options: AjnaGithubReviewNormalizerOptions,
+): AjnaReviewFinding[] {
   const findings: AjnaReviewFinding[] = []
+  findings.push(
+    ...detectAjnaSecuritySensitivePaths(payload.changedFiles, options.securitySensitivePolicy),
+  )
+  findings.push(
+    ...detectAjnaArchitectureDrift({
+      changedFiles: payload.changedFiles,
+      ...(payload.importEdges === undefined ? {} : { importEdges: payload.importEdges }),
+      ...(options.architecturePolicy === undefined ? {} : { policy: options.architecturePolicy }),
+    }),
+  )
 
   if (payload.diffEvidence && payload.diffEvidence.length > 0) {
     findings.push({
@@ -133,10 +178,11 @@ export function normalizeGithubPullRequestForAjnaReview(
   if (payload.ciEvidence !== undefined) {
     assertStringArray(payload.ciEvidence, 'ciEvidence', { allowEmpty: true })
   }
+  assertImportEdges(payload.importEdges, 'importEdges')
 
   const baseInput: CodemindAjnaReviewPrInput = {
     request: createRequest(payload, options),
-    findings: createEvidenceFindings(payload),
+    findings: createEvidenceFindings(payload, options),
   }
 
   if (options.recommendedNextAction !== undefined) {

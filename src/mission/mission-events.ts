@@ -14,8 +14,23 @@ export const MISSION_EVENT_FILTERS = [
   'memory',
   'web-mcp',
   'subagents-skills',
+  'autonomy',
 ] as const
 export type MissionEventFilter = (typeof MISSION_EVENT_FILTERS)[number]
+
+export const MISSION_EVENT_FILTER_LABELS: Readonly<Record<MissionEventFilter, string>> = {
+  all: 'All',
+  agent: 'Agent',
+  files: 'Files',
+  tools: 'Tools',
+  validation: 'Validation',
+  git: 'Git',
+  checkpoints: 'Checkpoints',
+  memory: 'Memory',
+  'web-mcp': 'Web/MCP',
+  'subagents-skills': 'Subagents/Skills',
+  autonomy: 'Autonomy',
+}
 
 const MAX_SUMMARY_CHARS = 500
 
@@ -59,7 +74,9 @@ export function eventMatchesFilter(event: MissionEvent, filter: MissionEventFilt
   if (filter === 'checkpoints') return event.type.startsWith('checkpoint.')
   if (filter === 'memory') return event.type.startsWith('memory.')
   if (filter === 'web-mcp') return event.type.startsWith('web.') || event.type.startsWith('mcp.')
-  return event.type.startsWith('subagent.') || event.type.startsWith('skill.')
+  if (filter === 'subagents-skills')
+    return event.type.startsWith('subagent.') || event.type.startsWith('skill.')
+  return event.type.startsWith('autonomy.')
 }
 
 export function paginateMissionEvents(

@@ -106,4 +106,67 @@ describe('normalizeGithubPullRequestForAjnaReview', () => {
     expect(input.findings).toHaveLength(1)
     expect(input.findings[0]?.id).toBe('github-diff-evidence')
   })
+
+  it('automatically adds an AJNA-9 security-sensitive finding for a live PR touching auth code', () => {
+    const { diffEvidence: _diffEvidence, ciEvidence: _ciEvidence, ...payload } = makePayload()
+    const input = normalizeGithubPullRequestForAjnaReview({
+      ...payload,
+      changedFiles: ['src/runtime/auth/session-manager.ts'],
+    })
+
+    const securityFinding = input.findings.find(
+      (finding) => finding.category === 'SECURITY_SENSITIVE_CHANGE',
+    )
+    expect(securityFinding).toBeDefined()
+    expect(securityFinding?.blocksMerge).toBe(true)
+  })
+
+  it('automatically adds an AJNA-8 architecture-drift finding when import edges violate a supplied layering policy', () => {
+    const { diffEvidence: _diffEvidence, ciEvidence: _ciEvidence, ...payload } = makePayload()
+    const input = normalizeGithubPullRequestForAjnaReview(
+      {
+        ...payload,
+        changedFiles: ['src/portability/repository-portability.ts'],
+        importEdges: [
+          {
+            importer: 'src/portability/repository-portability.ts',
+            imported: 'src/ajna/ajna-review.types.ts',
+          },
+        ],
+      },
+      { architecturePolicy: { layering: [{ from: 'portability', mustNotImport: ['ajna'] }] } },
+    )
+
+    const driftFinding = input.findings.find((finding) => finding.category === 'ARCHITECTURE_DRIFT')
+    expect(driftFinding).toBeDefined()
+    expect(driftFinding?.blocksMerge).toBe(true)
+  })
+
+  it('rejects malformed import edges', () => {
+    expect(() =>
+      normalizeGithubPullRequestForAjnaReview({
+        ...makePayload(),
+        importEdges: [{ importer: 'a.ts' } as unknown as { importer: string; imported: string }],
+      }),
+    ).toThrow('importEdges[0] must have string importer and imported fields')
+  })
+
+  it('does not add automatic findings for ordinary, narrow changes', () => {
+    const { diffEvidence: _diffEvidence, ciEvidence: _ciEvidence, ...payload } = makePayload()
+    const input = normalizeGithubPullRequestForAjnaReview(payload)
+    expect(input.findings).toEqual([])
+  })
+
+  it('renders an auto-detected security-sensitive finding into the report Security Notes section', () => {
+    const { diffEvidence: _diffEvidence, ciEvidence: _ciEvidence, ...payload } = makePayload()
+    const input = normalizeGithubPullRequestForAjnaReview({
+      ...payload,
+      changedFiles: ['src/runtime/auth/session-manager.ts'],
+    })
+    const result = buildAjnaReviewPrForInput(input)
+
+    expect(result.output).toContain('## Security Notes')
+    expect(result.output).not.toContain('No security-sensitive findings reported.')
+    expect(result.response.mergeReadiness.status).toBe('BLOCKED_BY_SECURITY')
+  })
 })
