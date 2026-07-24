@@ -88,9 +88,7 @@ export function createServerAutonomyRuntime(
         repositoryRoot,
         profile,
         runtimePolicy: policy,
-        ...(options.webSearchProvider === undefined
-          ? {}
-          : { provider: options.webSearchProvider }),
+        ...(options.webSearchProvider === undefined ? {} : { provider: options.webSearchProvider }),
       })
       options.missionService.appendEvent(
         missionId,

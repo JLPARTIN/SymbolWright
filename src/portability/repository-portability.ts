@@ -168,7 +168,8 @@ async function inventoryRepository(
       if (!entry.isFile()) continue
       files.push(relative)
       const extension = path.extname(entry.name).toLowerCase()
-      if (extension.length > 0) extensionCounts.set(extension, (extensionCounts.get(extension) ?? 0) + 1)
+      if (extension.length > 0)
+        extensionCounts.set(extension, (extensionCounts.get(extension) ?? 0) + 1)
       if (MANIFEST_NAMES.has(entry.name) || /\.(?:sln|csproj|fsproj|vbproj)$/.test(entry.name)) {
         manifests.push(relative)
       }
@@ -183,12 +184,19 @@ function detectEcosystems(inventory: RepositoryInventory): RepositoryEcosystem[]
   const names = new Set(inventory.manifests.map((entry) => path.posix.basename(entry)))
   const detected = new Set<RepositoryEcosystem>()
   if (names.has('package.json')) detected.add('node')
-  if ([...names].some((name) => ['pyproject.toml', 'requirements.txt', 'setup.py', 'setup.cfg', 'tox.ini'].includes(name))) detected.add('python')
+  if (
+    [...names].some((name) =>
+      ['pyproject.toml', 'requirements.txt', 'setup.py', 'setup.cfg', 'tox.ini'].includes(name),
+    )
+  )
+    detected.add('python')
   if (names.has('go.mod')) detected.add('go')
   if (names.has('Cargo.toml')) detected.add('rust')
   if (names.has('pom.xml') || names.has('mvnw')) detected.add('java-maven')
-  if (names.has('build.gradle') || names.has('build.gradle.kts') || names.has('gradlew')) detected.add('java-gradle')
-  if ([...names].some((name) => /\.(?:sln|csproj|fsproj|vbproj)$/.test(name))) detected.add('dotnet')
+  if (names.has('build.gradle') || names.has('build.gradle.kts') || names.has('gradlew'))
+    detected.add('java-gradle')
+  if ([...names].some((name) => /\.(?:sln|csproj|fsproj|vbproj)$/.test(name)))
+    detected.add('dotnet')
   if (names.has('Gemfile')) detected.add('ruby')
   if (names.has('composer.json')) detected.add('php')
 
@@ -220,45 +228,64 @@ async function discoverValidation(
   const commands: RepositoryValidationCommand[] = []
   if (ecosystems.includes('node')) commands.push(...(await nodeCommands(root, manifests)))
   if (ecosystems.includes('python')) commands.push(...pythonCommands(manifests))
-  if (ecosystems.includes('go')) commands.push(...conventional('go', '.', [
-    ['format', 'gofmt -l .'],
-    ['lint', 'go vet ./...'],
-    ['test', 'go test ./...'],
-    ['build', 'go build ./...'],
-  ]))
-  if (ecosystems.includes('rust')) commands.push(...conventional('rust', '.', [
-    ['format', 'cargo fmt --check'],
-    ['lint', 'cargo clippy --all-targets --all-features -- -D warnings'],
-    ['test', 'cargo test --all'],
-    ['build', 'cargo build --all'],
-  ]))
+  if (ecosystems.includes('go'))
+    commands.push(
+      ...conventional('go', '.', [
+        ['format', 'gofmt -l .'],
+        ['lint', 'go vet ./...'],
+        ['test', 'go test ./...'],
+        ['build', 'go build ./...'],
+      ]),
+    )
+  if (ecosystems.includes('rust'))
+    commands.push(
+      ...conventional('rust', '.', [
+        ['format', 'cargo fmt --check'],
+        ['lint', 'cargo clippy --all-targets --all-features -- -D warnings'],
+        ['test', 'cargo test --all'],
+        ['build', 'cargo build --all'],
+      ]),
+    )
   if (ecosystems.includes('java-maven')) {
     const wrapper = files.includes('mvnw') ? './mvnw' : 'mvn'
-    commands.push(...conventional('java-maven', '.', [
-      ['test', `${wrapper} test`],
-      ['build', `${wrapper} package -DskipTests`],
-    ]))
+    commands.push(
+      ...conventional('java-maven', '.', [
+        ['test', `${wrapper} test`],
+        ['build', `${wrapper} package -DskipTests`],
+      ]),
+    )
   }
   if (ecosystems.includes('java-gradle')) {
     const wrapper = files.includes('gradlew') ? './gradlew' : 'gradle'
-    commands.push(...conventional('java-gradle', '.', [
-      ['test', `${wrapper} test`],
-      ['build', `${wrapper} build -x test`],
-    ]))
+    commands.push(
+      ...conventional('java-gradle', '.', [
+        ['test', `${wrapper} test`],
+        ['build', `${wrapper} build -x test`],
+      ]),
+    )
   }
-  if (ecosystems.includes('dotnet')) commands.push(...conventional('dotnet', '.', [
-    ['format', 'dotnet format --verify-no-changes'],
-    ['test', 'dotnet test --no-restore'],
-    ['build', 'dotnet build --no-restore'],
-  ]))
-  if (ecosystems.includes('ruby')) commands.push(...conventional('ruby', '.', [
-    ['lint', 'bundle exec rubocop'],
-    ['test', 'bundle exec rspec'],
-  ]))
-  if (ecosystems.includes('php')) commands.push(...conventional('php', '.', [
-    ['audit', 'composer validate --strict'],
-    ['test', 'composer test'],
-  ]))
+  if (ecosystems.includes('dotnet'))
+    commands.push(
+      ...conventional('dotnet', '.', [
+        ['format', 'dotnet format --verify-no-changes'],
+        ['test', 'dotnet test --no-restore'],
+        ['build', 'dotnet build --no-restore'],
+      ]),
+    )
+  if (ecosystems.includes('ruby'))
+    commands.push(
+      ...conventional('ruby', '.', [
+        ['lint', 'bundle exec rubocop'],
+        ['test', 'bundle exec rspec'],
+      ]),
+    )
+  if (ecosystems.includes('php'))
+    commands.push(
+      ...conventional('php', '.', [
+        ['audit', 'composer validate --strict'],
+        ['test', 'composer test'],
+      ]),
+    )
 
   commands.push(...(await ciWorkflowCommands(root, files, ecosystems)))
   return dedupeValidation(commands)
@@ -269,8 +296,11 @@ async function nodeCommands(
   manifests: readonly string[],
 ): Promise<RepositoryValidationCommand[]> {
   const commands: RepositoryValidationCommand[] = []
-  for (const manifest of manifests.filter((entry) => path.posix.basename(entry) === 'package.json')) {
-    const workingDirectory = path.posix.dirname(manifest) === '.' ? '.' : path.posix.dirname(manifest)
+  for (const manifest of manifests.filter(
+    (entry) => path.posix.basename(entry) === 'package.json',
+  )) {
+    const workingDirectory =
+      path.posix.dirname(manifest) === '.' ? '.' : path.posix.dirname(manifest)
     try {
       const parsed = JSON.parse(await readFile(path.join(root, manifest), 'utf8')) as {
         scripts?: Record<string, unknown>
@@ -286,7 +316,8 @@ async function nodeCommands(
       ]
       for (const [phase, names] of candidates) {
         const script = names.find((name) => typeof scripts[name] === 'string')
-        if (script !== undefined) commands.push(command(`npm run ${script}`, 'node', phase, 'manifest', workingDirectory))
+        if (script !== undefined)
+          commands.push(command(`npm run ${script}`, 'node', phase, 'manifest', workingDirectory))
       }
     } catch {
       // Invalid package JSON is surfaced later by validation; discovery stays deterministic.
@@ -310,7 +341,9 @@ function conventional(
   workingDirectory: string,
   commands: readonly [RepositoryValidationCommand['phase'], string][],
 ): RepositoryValidationCommand[] {
-  return commands.map(([phase, value]) => command(value, ecosystem, phase, 'convention', workingDirectory))
+  return commands.map(([phase, value]) =>
+    command(value, ecosystem, phase, 'convention', workingDirectory),
+  )
 }
 
 async function ciWorkflowCommands(
@@ -377,7 +410,9 @@ function command(
   }
 }
 
-function dedupeValidation(commands: readonly RepositoryValidationCommand[]): RepositoryValidationCommand[] {
+function dedupeValidation(
+  commands: readonly RepositoryValidationCommand[],
+): RepositoryValidationCommand[] {
   const seen = new Set<string>()
   return commands.filter((entry) => {
     const key = `${entry.workingDirectory}\u0000${entry.command}`
@@ -406,7 +441,9 @@ function researchQueriesFor(
   manifests: readonly string[],
 ): string[] {
   if (ecosystems.length === 0) {
-    return [`Identify the programming language and standard validation commands for manifests: ${manifests.join(', ') || 'none'}`]
+    return [
+      `Identify the programming language and standard validation commands for manifests: ${manifests.join(', ') || 'none'}`,
+    ]
   }
   const withoutValidation = ecosystems.filter(
     (ecosystem) => !validation.some((entry) => entry.ecosystem === ecosystem),
@@ -440,12 +477,26 @@ function phaseForCommand(value: string): RepositoryValidationCommand['phase'] | 
 }
 
 function stripYamlQuotes(value: string): string {
-  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
     return value.slice(1, -1)
   }
   return value
 }
 
 function ecosystemPriority(ecosystem: RepositoryEcosystem): number {
-  return ['node', 'python', 'go', 'rust', 'java-maven', 'java-gradle', 'dotnet', 'ruby', 'php', 'unknown'].indexOf(ecosystem)
+  return [
+    'node',
+    'python',
+    'go',
+    'rust',
+    'java-maven',
+    'java-gradle',
+    'dotnet',
+    'ruby',
+    'php',
+    'unknown',
+  ].indexOf(ecosystem)
 }

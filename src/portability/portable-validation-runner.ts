@@ -46,11 +46,17 @@ export class DockerPortableValidationRunner implements PortableValidationRunner 
       return blocked(command, image, startedAt, 'Shell execution is disabled by runtime policy.')
     }
     if (!isSafePortableValidationCommand(command)) {
-      return blocked(command, image, startedAt, `Portable validation command is not allowlisted: ${command}`)
+      return blocked(
+        command,
+        image,
+        startedAt,
+        `Portable validation command is not allowlisted: ${command}`,
+      )
     }
 
     const [binary, ...args] = command.split(/\s+/)
-    if (binary === undefined) return blocked(command, image, startedAt, 'Validation command is empty.')
+    if (binary === undefined)
+      return blocked(command, image, startedAt, 'Validation command is empty.')
     const repositoryRoot = path.resolve(request.repositoryRoot)
     const user =
       typeof process.getuid === 'function' && typeof process.getgid === 'function'

@@ -19,17 +19,17 @@ Explicit operator-supplied `validationCommands` still override discovery.
 
 ## Supported ecosystems
 
-| Ecosystem | Primary evidence | Validation image |
-| --- | --- | --- |
-| Node.js / TypeScript / JavaScript | `package.json`, scripts, JS/TS source | `node:22-bookworm` |
-| Python | `pyproject.toml`, requirements/setup/tox files, Python source | `python:3.12-bookworm` |
-| Go | `go.mod`, Go source | `golang:1-bookworm` |
-| Rust | `Cargo.toml`, Rust source | `rust:1-bookworm` |
-| Java / Maven | `pom.xml`, `mvnw`, Java source | `maven:3-eclipse-temurin-21` |
-| Java / Gradle | Gradle manifests/wrapper, Java source | `gradle:8-jdk21` |
-| .NET | solution/project files, C# source | `mcr.microsoft.com/dotnet/sdk:8.0` |
-| Ruby | `Gemfile`, Ruby source | `ruby:3.3-bookworm` |
-| PHP | `composer.json`, PHP source | `composer:2` |
+| Ecosystem                         | Primary evidence                                              | Validation image                   |
+| --------------------------------- | ------------------------------------------------------------- | ---------------------------------- |
+| Node.js / TypeScript / JavaScript | `package.json`, scripts, JS/TS source                         | `node:22-bookworm`                 |
+| Python                            | `pyproject.toml`, requirements/setup/tox files, Python source | `python:3.12-bookworm`             |
+| Go                                | `go.mod`, Go source                                           | `golang:1-bookworm`                |
+| Rust                              | `Cargo.toml`, Rust source                                     | `rust:1-bookworm`                  |
+| Java / Maven                      | `pom.xml`, `mvnw`, Java source                                | `maven:3-eclipse-temurin-21`       |
+| Java / Gradle                     | Gradle manifests/wrapper, Java source                         | `gradle:8-jdk21`                   |
+| .NET                              | solution/project files, C# source                             | `mcr.microsoft.com/dotnet/sdk:8.0` |
+| Ruby                              | `Gemfile`, Ruby source                                        | `ruby:3.3-bookworm`                |
+| PHP                               | `composer.json`, PHP source                                   | `composer:2`                       |
 
 Nested manifests produce validation tasks rooted at their own package directories. No `cd`, shell pipeline, command substitution, or host-shell fallback is used.
 

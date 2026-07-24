@@ -24,9 +24,7 @@ export function parsePortableValidationInvocation(value: string): PortableValida
   if (!trimmed.startsWith(PREFIX)) return { command: trimmed, workingDirectory: '.' }
   const separatorIndex = trimmed.indexOf(SEPARATOR, PREFIX.length)
   if (separatorIndex === -1) throw new Error('Portable validation invocation is malformed.')
-  const workingDirectory = normalizeWorkingDirectory(
-    trimmed.slice(PREFIX.length, separatorIndex),
-  )
+  const workingDirectory = normalizeWorkingDirectory(trimmed.slice(PREFIX.length, separatorIndex))
   const command = trimmed.slice(separatorIndex + SEPARATOR.length).trim()
   if (command.length === 0) throw new Error('Portable validation invocation has no command.')
   return { command, workingDirectory }

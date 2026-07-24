@@ -41,11 +41,7 @@ describe('universal repository portability discovery', () => {
     await write(root, 'apps/web/src/view.ts', 'export const view = true\n')
     await write(root, 'services/api/pyproject.toml', '[project]\nname = "api"\n')
     await write(root, 'services/api/api.py', 'def value():\n    return 1\n')
-    await write(
-      root,
-      'crates/core/Cargo.toml',
-      '[package]\nname = "core"\nversion = "0.1.0"\n',
-    )
+    await write(root, 'crates/core/Cargo.toml', '[package]\nname = "core"\nversion = "0.1.0"\n')
     await write(root, 'crates/core/src/lib.rs', 'pub fn value() -> i32 { 1 }\n')
     await write(root, 'tools/go/go.mod', 'module example.com/tool\n\ngo 1.22\n')
     await write(root, 'tools/go/main.go', 'package main\nfunc main() {}\n')

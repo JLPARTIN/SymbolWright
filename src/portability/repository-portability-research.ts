@@ -49,7 +49,9 @@ export async function researchRepositoryPortability(
     queries,
     evidence,
     guidance: evidence.flatMap((entry) =>
-      entry.results.slice(0, 3).map((result) => `${result.title}: ${result.snippet} (${result.url})`),
+      entry.results
+        .slice(0, 3)
+        .map((result) => `${result.title}: ${result.snippet} (${result.url})`),
     ),
   }
 }

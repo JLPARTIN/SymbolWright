@@ -99,14 +99,13 @@ function validationRoots(
   for (const manifest of manifests) {
     const ecosystem = ecosystemForManifest(path.posix.basename(manifest))
     if (ecosystem === undefined || ecosystem === 'node') continue
-    const workingDirectory = path.posix.dirname(manifest) === '.' ? '.' : path.posix.dirname(manifest)
+    const workingDirectory =
+      path.posix.dirname(manifest) === '.' ? '.' : path.posix.dirname(manifest)
     const values = roots.get(ecosystem) ?? new Set<string>()
     values.add(workingDirectory)
     roots.set(ecosystem, values)
   }
-  return new Map(
-    [...roots].map(([ecosystem, values]) => [ecosystem, [...values].sort()] as const),
-  )
+  return new Map([...roots].map(([ecosystem, values]) => [ecosystem, [...values].sort()] as const))
 }
 
 function ecosystemForManifest(name: string): RepositoryEcosystem | undefined {
@@ -152,9 +151,7 @@ async function findResearchMarkers(
   return markers.sort()
 }
 
-function dedupe(
-  entries: readonly RepositoryValidationCommand[],
-): RepositoryValidationCommand[] {
+function dedupe(entries: readonly RepositoryValidationCommand[]): RepositoryValidationCommand[] {
   const seen = new Set<string>()
   return entries.filter((entry) => {
     const key = `${entry.workingDirectory}\u0000${entry.command}`

@@ -19,7 +19,9 @@ describe('portable validation invocation', () => {
         workingDirectory: 'services/api',
       }),
     ).toBe('codemind-cwd:services/api::python -m pytest')
-    expect(parsePortableValidationInvocation('codemind-cwd:services/api::python -m pytest')).toEqual({
+    expect(
+      parsePortableValidationInvocation('codemind-cwd:services/api::python -m pytest'),
+    ).toEqual({
       command: 'python -m pytest',
       workingDirectory: 'services/api',
     })
