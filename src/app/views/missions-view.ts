@@ -34,6 +34,24 @@ export function renderMissionsViewHtml(): string {
         <button type="button" id="mission-create-btn">Create Mission</button>
         <div id="mission-create-status" class="muted"></div>
 
+        <h3>External Repository Intake</h3>
+        <p class="muted">Acquire a GitHub repository into an isolated CodeMind workspace, detect its ecosystem, and optionally create a mission against it. GitHub writes stay blocked unless explicitly allowed below.</p>
+        <label for="intake-target">Repository URL or owner/repo</label>
+        <input id="intake-target" placeholder="https://github.com/owner/repo or owner/repo" />
+        <label for="intake-ref">Branch/ref (optional)</label>
+        <input id="intake-ref" placeholder="main" />
+        <label for="intake-objective">Objective</label>
+        <textarea id="intake-objective" maxlength="32000" placeholder="What should CodeMind do in this repository?"></textarea>
+        <label for="intake-mode">Intake mode</label>
+        <select id="intake-mode">
+          <option value="dry-run">Analyze only (no clone)</option>
+          <option value="writable">Duplicate/clone into workspace</option>
+        </select>
+        <label><input type="checkbox" id="intake-allow-writes" /> Allow GitHub writes (push branch + open PR) once policy-approved</label>
+        <button type="button" id="intake-run-btn">Run Intake</button>
+        <div id="intake-status" class="muted"></div>
+        <div id="intake-result"></div>
+
         <h3>Recent Missions</h3>
         <button type="button" class="secondary" id="mission-refresh-btn">Refresh</button>
         <div id="mission-list" class="mission-list"></div>
@@ -193,6 +211,60 @@ export function buildMissionsViewClientScript(): string {
       missionRenderReconciliation(result.body.reconciliation);
       await missionLoadTimeline();
       await missionLoadList();
+    }
+
+    function intakeRenderResult(data) {
+      const target = document.getElementById('intake-result');
+      if (!data) { target.innerHTML = ''; return; }
+      const profile = data.profile || {};
+      const portability = profile.portability;
+      const ecosystems = portability ? portability.ecosystems.join(', ') : 'unknown';
+      const commands = portability && Array.isArray(portability.validationCommands) ? portability.validationCommands : [];
+      const riskFlags = Array.isArray(profile.riskFlags) ? profile.riskFlags : [];
+      target.innerHTML =
+        '<div class="card">' +
+        '<div><strong>Target:</strong> ' + appEscapeHtml(data.target.canonicalHttpsUrl) + ' (' + appEscapeHtml(data.target.targetType) + ')</div>' +
+        '<div><strong>Acquired:</strong> ' + (data.acquisition.acquired ? 'yes' : 'no') + ' via ' + appEscapeHtml(data.acquisition.strategy) + '</div>' +
+        (data.acquisition.error ? '<div class="muted">' + appEscapeHtml(data.acquisition.error) + '</div>' : '') +
+        '<div><strong>Ecosystems:</strong> ' + appEscapeHtml(ecosystems) + '</div>' +
+        '<div><strong>Validation commands:</strong> ' + (commands.length ? '<ul>' + commands.map(function (c) { return '<li><code>' + appEscapeHtml(c) + '</code></li>'; }).join('') + '</ul>' : 'none discovered') + '</div>' +
+        (riskFlags.length ? '<div><strong>Risk flags:</strong> ' + appEscapeHtml(riskFlags.join(', ')) + '</div>' : '') +
+        '<div><strong>Write operations allowed:</strong> ' + (profile.writesAllowed ? 'yes' : 'no') + '</div>' +
+        '<div><strong>PR creation allowed:</strong> ' + (profile.pullRequestCreationAllowed ? 'yes' : 'no') + '</div>' +
+        (data.mission ? '<button type="button" id="intake-open-mission-btn">Open Created Mission</button>' : '<p class="muted">No mission was created (analyze-only or acquisition failed).</p>') +
+        '</div>';
+      if (data.mission) {
+        document.getElementById('intake-open-mission-btn').addEventListener('click', function () {
+          void missionOpen(data.mission.id);
+        });
+      }
+    }
+
+    async function missionRunIntake() {
+      const status = document.getElementById('intake-status');
+      const target = document.getElementById('intake-target').value.trim();
+      const objective = document.getElementById('intake-objective').value.trim();
+      const ref = document.getElementById('intake-ref').value.trim();
+      const mode = document.getElementById('intake-mode').value;
+      const allowWrites = document.getElementById('intake-allow-writes').checked;
+      if (!target || !objective) { status.textContent = 'Repository URL/shorthand and objective are required.'; return; }
+      status.textContent = mode === 'dry-run' ? 'Analyzing...' : 'Acquiring repository...';
+      intakeRenderResult(null);
+      const result = await missionFetchJson('/api/github/intake', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          target: target,
+          mode: mode,
+          objective: objective,
+          ref: ref || undefined,
+          enabledOperations: allowWrites ? ['push_branch', 'open_pull_request'] : [],
+        }),
+      });
+      if (result.status !== 200) { status.textContent = result.body.error || ('HTTP ' + result.status); return; }
+      status.textContent = result.body.mission ? 'Repository acquired and mission created.' : 'Analysis complete.';
+      intakeRenderResult(result.body);
+      if (result.body.mission) await missionLoadList();
     }
 
     function missionRenderDetail(mission) {
@@ -447,6 +519,7 @@ export function buildMissionsViewClientScript(): string {
     };
 
     document.getElementById('mission-create-btn').addEventListener('click', function () { void missionCreate(); });
+    document.getElementById('intake-run-btn').addEventListener('click', function () { void missionRunIntake(); });
     document.getElementById('mission-refresh-btn').addEventListener('click', function () { void missionLoadList(); });
     document.getElementById('mission-event-filter').addEventListener('change', function () { void missionLoadTimeline(); });
     document.getElementById('mission-import-btn').addEventListener('click', function () { void missionImport(); });

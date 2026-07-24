@@ -40,4 +40,28 @@ describe('Missions view', () => {
     const html = renderMissionsViewHtml()
     expect(html).toContain('<option value="autonomy">Autonomy</option>')
   })
+
+  it('offers External Repository Intake controls with GitHub writes off by default', () => {
+    const html = renderMissionsViewHtml()
+    expect(html).toContain('External Repository Intake')
+    expect(html).toContain('id="intake-target"')
+    expect(html).toContain('id="intake-mode"')
+    expect(html).toContain('Analyze only (no clone)')
+    expect(html).toContain('Duplicate/clone into workspace')
+    expect(html).toContain('id="intake-allow-writes"')
+    expect(html).not.toMatch(/id="intake-allow-writes"[^>]*checked/)
+  })
+
+  it('calls the real intake API and never shows a created-mission button unless the API actually returned one', () => {
+    const script = buildMissionsViewClientScript()
+    expect(script).toContain("missionFetchJson('/api/github/intake'")
+    expect(script).toContain('intake-open-mission-btn')
+    expect(script).toContain('if (data.mission)')
+  })
+
+  it('escapes intake-derived content rather than injecting raw payload html', () => {
+    const script = buildMissionsViewClientScript()
+    expect(script).toContain('appEscapeHtml(data.target.canonicalHttpsUrl)')
+    expect(script).toContain('appEscapeHtml(ecosystems)')
+  })
 })

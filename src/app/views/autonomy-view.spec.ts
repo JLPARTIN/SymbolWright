@@ -43,4 +43,42 @@ describe('AI Mission Control view', () => {
     expect(script).toContain('Merge readiness</strong><br>Unavailable')
     expect(script).toContain('Repository impact</strong><br>Unavailable')
   })
+
+  it('renders GitHub PR packet controls with writes off by default', () => {
+    const html = renderAutonomyViewHtml()
+
+    expect(html).toContain('GitHub PR Packet')
+    expect(html).toContain('id="pr-packet-allow-writes"')
+    expect(html).not.toMatch(/id="pr-packet-allow-writes"[^>]*checked/)
+    expect(html).toContain('id="pr-packet-generate-btn"')
+  })
+
+  it('only enables Open Pull Request when the server reports both write and PR-creation policy allowed', () => {
+    const script = buildAutonomyViewClientScript()
+
+    expect(script).toContain(
+      'const publishEnabled = Boolean(packet.pullRequestCreationAllowed && packet.writesAllowed);',
+    )
+    expect(script).toContain("(publishEnabled ? '' : ' disabled')")
+  })
+
+  it('calls the real PR packet and publish endpoints for the active mission', () => {
+    const script = buildAutonomyViewClientScript()
+
+    expect(script).toContain(
+      "'/api/missions/' + encodeURIComponent(missionId) + '/github-pr-packet'",
+    )
+    expect(script).toContain(
+      "'/api/missions/' + encodeURIComponent(missionId) + '/github-pr-packet/publish'",
+    )
+  })
+
+  it('escapes PR packet content before rendering', () => {
+    const script = buildAutonomyViewClientScript()
+
+    expect(script).toContain('appEscapeHtml(packet.branchName)')
+    expect(script).toContain('appEscapeHtml(packet.prTitle)')
+    expect(script).toContain('appEscapeHtml(packet.prBody)')
+    expect(script).not.toContain('innerHTML = packet.prBody')
+  })
 })
