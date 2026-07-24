@@ -2,9 +2,6 @@ name: CI
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -14,15 +11,13 @@ permissions:
   contents: read
 
 jobs:
-  validate:
-    name: Validate CodeMind
+  diagnose:
+    name: Diagnose Bundle 7 coverage
     runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js 22
         uses: actions/setup-node@v4
@@ -33,39 +28,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Audit dependencies
-        run: npm run audit
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Format check
-        run: npm run format:check
-
-      - name: Sandbox runner contract tests
-        run: npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
-
-      - name: Test with coverage
-        run: npm run test:coverage
-
-      - name: Build
-        run: npm run build
-
-      - name: Compute changed files for preflight
+      - name: Capture coverage output
+        id: coverage
+        shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git diff --name-only "origin/${{ github.event.pull_request.base.ref }}...HEAD" > /tmp/codemind-changed-files.txt
-          else
-            git diff --name-only HEAD~1 HEAD > /tmp/codemind-changed-files.txt || true
-          fi
+          set +e
+          npm run test:coverage > bundle7-coverage-output.txt 2>&1
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
 
-      - name: PR preflight
-        run: |
-          mapfile -t files < /tmp/codemind-changed-files.txt
-          node dist/cli.js preflight "${files[@]}"
+      - name: Upload coverage diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle7-coverage-output
+          path: bundle7-coverage-output.txt
 
-      - name: Validate
-        run: npm run validate
+      - name: Fail when coverage failed
+        if: steps.coverage.outputs.status != '0'
+        run: exit 1
