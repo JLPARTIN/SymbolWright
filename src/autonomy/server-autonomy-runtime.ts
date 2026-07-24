@@ -1,5 +1,6 @@
 import { ProjectMemory, resolveProjectMemoryDir } from '../memory/project-memory.js'
 import type { MissionService } from '../mission/mission-service.js'
+import { encodePortableValidationInvocation } from '../portability/portable-validation-invocation.js'
 import type { PortableValidationRunner } from '../portability/portable-validation-runner.js'
 import { discoverRepositoryPortability } from '../portability/repository-portability.js'
 import { researchRepositoryPortability } from '../portability/repository-portability-research.js'
@@ -62,6 +63,7 @@ export function createServerAutonomyRuntime(
     if (options.validationCommands !== undefined) return options.validationCommands
     const mission = options.missionService.get(missionId)
     const profile = await discoverRepositoryPortability(repositoryRoot)
+    const validationCommands = profile.validation.map(encodePortableValidationInvocation)
     options.missionService.appendEvent(
       missionId,
       'autonomy.portability.detected',
@@ -72,7 +74,8 @@ export function createServerAutonomyRuntime(
         mixed: profile.mixed,
         manifests: profile.manifests,
         confidence: profile.confidence,
-        validationCommands: profile.validationCommands,
+        validationCommands,
+        validation: profile.validation,
         evidence: profile.evidence,
       },
     )
@@ -101,7 +104,7 @@ export function createServerAutonomyRuntime(
         },
       )
     }
-    return profile.validationCommands
+    return validationCommands
   }
 
   return createAutonomousMissionRuntime({
