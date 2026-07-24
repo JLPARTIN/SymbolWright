@@ -15,8 +15,6 @@ describe('mission ids', () => {
   it('rejects traversal and arbitrary ids', () => {
     expect(isValidMissionId('../../etc')).toBe(false)
     expect(isValidMissionId('mission_test')).toBe(false)
-    expect(() => assertValidMissionId('mission_test')).toThrow(
-      'Invalid mission id: mission_test',
-    )
+    expect(() => assertValidMissionId('mission_test')).toThrow('Invalid mission id: mission_test')
   })
 })
