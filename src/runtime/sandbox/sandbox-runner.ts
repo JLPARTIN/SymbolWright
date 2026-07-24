@@ -93,7 +93,9 @@ export const DEFAULT_SANDBOX_MEMORY = '2048m'
 export const DEFAULT_SANDBOX_CPUS = '1'
 export const DEFAULT_SANDBOX_NETWORK = 'none' as const
 export const DEFAULT_SANDBOX_USER = 'node'
-export const DEFAULT_TIMEOUT_MS = 120_000
+// The full test suite has grown past 480 spec files; 120s was tight enough that CI's
+// dockerized `npm run test` (no coverage) was hitting SIGTERM on legitimately passing runs.
+export const DEFAULT_TIMEOUT_MS = 300_000
 export const DEFAULT_MAX_OUTPUT_BYTES = 1024 * 1024
 
 const FILE_WRITE_SCRIPT = [

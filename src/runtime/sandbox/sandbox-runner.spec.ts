@@ -63,7 +63,7 @@ describe('Docker sandbox configuration', () => {
     expect(config.cpus).toBe('1')
     expect(config.network).toBe('none')
     expect(config.user).toBe(resolveDefaultSandboxUser())
-    expect(config.timeoutMs).toBe(120_000)
+    expect(config.timeoutMs).toBe(300_000)
     expect(config.maxOutputBytes).toBe(1024 * 1024)
   })
 
@@ -97,7 +97,7 @@ describe('Docker sandbox configuration', () => {
     })
     const config = resolveDockerSandboxConfig(options)
 
-    expect(config.timeoutMs).toBe(120_000)
+    expect(config.timeoutMs).toBe(300_000)
     expect(config.maxOutputBytes).toBe(1024 * 1024)
   })
 
