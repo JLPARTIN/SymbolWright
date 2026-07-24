@@ -14,13 +14,15 @@ permissions:
   contents: read
 
 jobs:
-  diagnose:
-    name: Diagnose forensic completion suites
+  validate:
+    name: Validate CodeMind
     runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js 22
         uses: actions/setup-node@v4
@@ -31,30 +33,39 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Capture changed behavioral suites
-        id: tests
-        shell: bash
+      - name: Audit dependencies
+        run: npm run audit
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Sandbox runner contract tests
+        run: npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
+
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Build
+        run: npm run build
+
+      - name: Compute changed files for preflight
         run: |
-          set +e
-          npx vitest run \
-            src/autonomy/repository-semantic-index-bootstrap.spec.ts \
-            src/autonomy/autonomous-mission-release-gates.spec.ts \
-            src/autonomy/post-bundle6-repository-trial.spec.ts \
-            src/autonomy/mission-acceptance-packet.spec.ts \
-            src/app/views/autonomy-view.spec.ts \
-            src/app/shell/app-shell-html.spec.ts \
-            > forensic-vitest-output.txt 2>&1
-          status=$?
-          echo "status=$status" >> "$GITHUB_OUTPUT"
-          exit 0
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --name-only "origin/${{ github.event.pull_request.base.ref }}...HEAD" > /tmp/codemind-changed-files.txt
+          else
+            git diff --name-only HEAD~1 HEAD > /tmp/codemind-changed-files.txt || true
+          fi
 
-      - name: Upload Vitest diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: forensic-vitest-output
-          path: forensic-vitest-output.txt
+      - name: PR preflight
+        run: |
+          mapfile -t files < /tmp/codemind-changed-files.txt
+          node dist/cli.js preflight "${files[@]}"
 
-      - name: Fail when Vitest failed
-        if: steps.tests.outputs.status != '0'
-        run: exit 1
+      - name: Validate
+        run: npm run validate
