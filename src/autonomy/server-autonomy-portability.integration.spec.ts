@@ -12,7 +12,7 @@ import type { SandboxRunner } from '../runtime/sandbox/sandbox-runner.js'
 import { createServerAutonomyRuntime } from './server-autonomy-runtime.js'
 
 const roots: string[] = []
-const MISSION_ID = '00000000-0000-4000-8000-000000000007'
+const MISSION_ID = 'mission_00000000-0000-4000-8000-000000000007'
 
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
