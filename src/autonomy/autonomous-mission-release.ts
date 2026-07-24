@@ -83,7 +83,7 @@ export interface AutonomousMissionReleaseServiceOptions {
   readonly missionService: Pick<MissionService, 'get' | 'appendEvent'>
   readonly coordinator: AutonomousMissionReleaseCoordinator
   readonly executionStore: MissionExecutionStore
-  readonly validationCommands: readonly string[]
+  readonly validationCommands?: readonly string[]
   readonly store?: AutonomousMissionReleaseStore
   readonly generateAcceptance?: (
     missionId: string,
@@ -115,7 +115,9 @@ export class AutonomousMissionReleaseService {
         new MissionAcceptanceService({
           workspaceRoot,
           repositoryRoot,
-          validationCommands: options.validationCommands,
+          ...(options.validationCommands === undefined
+            ? {}
+            : { validationCommands: options.validationCommands }),
           now: this.#now,
         }).generate(missionId))
   }
