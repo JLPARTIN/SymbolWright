@@ -82,7 +82,6 @@ describe('sandbox script evidence provider', () => {
         binary: 'npm',
         args: ['run', 'typecheck'],
         workspaceRoot: '/repo',
-        timeoutMs: undefined,
       },
     ])
   })
