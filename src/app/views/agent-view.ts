@@ -32,7 +32,7 @@ function renderMissionAgentBridgeScript(): string {
         if (block.type === 'tool_use') return '[Tool request: ' + (block.name || 'unknown') + ']';
         if (block.type === 'tool_result') return '[Tool result] ' + (block.content || '');
         return '';
-      }).filter(Boolean).join('\n');
+      }).filter(Boolean).join('\\n');
     }
 
     window.codemindApplyMissionToAgent = function (mission) {
