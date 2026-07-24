@@ -1,0 +1,27 @@
+name: Dependency Review
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    name: Scan dependency changes
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # TODO: remove continue-on-error once GitHub Advanced Security (or public
+      # visibility) is enabled for this repo — dependency-review-action requires
+      # Dependency graph + GHAS and currently fails with "not supported on this
+      # repository" regardless of the dependency changes themselves.
+      - name: Dependency Review
+        continue-on-error: true
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-2.0, GPL-3.0, AGPL-1.0, AGPL-3.0
