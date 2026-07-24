@@ -31,11 +31,39 @@ export interface PortableValidationRunner {
   run(request: PortableValidationRequest): Promise<PortableValidationResult>
 }
 
+export interface PortableSpawnedProcess {
+  readonly stdout: NodeJS.ReadableStream
+  readonly stderr: NodeJS.ReadableStream
+  kill(signal?: NodeJS.Signals | number): boolean
+  on(event: 'error', listener: (error: Error) => void): this
+  on(event: 'close', listener: (code: number | null) => void): this
+}
+
+export type PortableSpawn = (
+  binary: string,
+  args: readonly string[],
+  options: {
+    readonly timeout: number
+    readonly stdio: readonly ['ignore', 'pipe', 'pipe']
+  },
+) => PortableSpawnedProcess
+
+const defaultPortableSpawn: PortableSpawn = (binary, args, options) =>
+  spawn(binary, [...args], {
+    timeout: options.timeout,
+    stdio: [...options.stdio],
+  }) as PortableSpawnedProcess
+
 export class DockerPortableValidationRunner implements PortableValidationRunner {
   readonly #dockerBinary: string
+  readonly #spawn: PortableSpawn
 
-  constructor(dockerBinary = process.env['CODEMIND_SANDBOX_DOCKER_BINARY']?.trim() || 'docker') {
+  constructor(
+    dockerBinary = process.env['CODEMIND_SANDBOX_DOCKER_BINARY']?.trim() || 'docker',
+    spawnProcess: PortableSpawn = defaultPortableSpawn,
+  ) {
     this.#dockerBinary = dockerBinary
+    this.#spawn = spawnProcess
   }
 
   async run(request: PortableValidationRequest): Promise<PortableValidationResult> {
@@ -87,7 +115,7 @@ export class DockerPortableValidationRunner implements PortableValidationRunner 
     ]
 
     return new Promise((resolve) => {
-      const child = spawn(this.#dockerBinary, dockerArgs, {
+      const child = this.#spawn(this.#dockerBinary, dockerArgs, {
         timeout: request.timeoutMs ?? 180_000,
         stdio: ['ignore', 'pipe', 'pipe'],
       })
