@@ -10,6 +10,15 @@ export function renderAutonomyViewHtml(): string {
     </div>
     <div id="autonomy-dashboard" class="card"><p class="muted">Open a mission from the Missions view to begin.</p></div>
     <div id="autonomy-release" class="card" style="display:none"></div>
+
+    <div class="card">
+      <h3>GitHub PR Packet</h3>
+      <p class="muted">Prepares a local branch, commit, and generated PR title/body from the active mission's current changes. Local branch/commit always run; pushing and opening a PR remain blocked unless explicitly allowed and policy-approved.</p>
+      <label><input type="checkbox" id="pr-packet-allow-writes" /> Allow GitHub writes (push branch + open PR) for this packet</label>
+      <button type="button" id="pr-packet-generate-btn">Generate PR Packet</button>
+      <div id="pr-packet-status" class="muted"></div>
+      <div id="pr-packet-result"></div>
+    </div>
   </section>`
 }
 
@@ -189,6 +198,72 @@ export function buildAutonomyViewClientScript(): string {
       if (!enabled) return;
       autonomyUiState.timer = window.setInterval(function () { void autonomyLoad(); }, 1500);
     }
+
+    const prPacketUiState = { lastPacket: null, lastEnabledOperations: [] };
+
+    function prPacketRender(packet) {
+      const target = document.getElementById('pr-packet-result');
+      if (!packet) { target.innerHTML = ''; return; }
+      const publishEnabled = Boolean(packet.pullRequestCreationAllowed && packet.writesAllowed);
+      target.innerHTML =
+        '<div><strong>Branch:</strong> ' + appEscapeHtml(packet.branchName) + ' (from ' + appEscapeHtml(packet.baseBranch) + ')</div>' +
+        '<div><strong>Branch created:</strong> ' + (packet.branchCreated ? 'yes' : 'no') + '</div>' +
+        '<div><strong>Staged files:</strong> ' + packet.stagedFiles.length + '</div>' +
+        '<div><strong>Commit created:</strong> ' + (packet.commitCreated ? 'yes' : 'no') + '</div>' +
+        '<div><strong>Ready to push:</strong> ' + (packet.readyToPush ? 'yes' : 'no') + '</div>' +
+        '<p><strong>PR title</strong></p><p>' + appEscapeHtml(packet.prTitle) + '</p>' +
+        '<p><strong>PR body</strong></p><pre class="mission-export-output" style="display:block">' + appEscapeHtml(packet.prBody) + '</pre>' +
+        '<button type="button" id="pr-packet-copy-btn">Copy PR body</button> ' +
+        '<button type="button" id="pr-packet-publish-btn"' + (publishEnabled ? '' : ' disabled') + '>Open Pull Request</button>' +
+        (publishEnabled ? '' : '<p class="muted">Open PR stays disabled until GitHub writes are allowed for this packet and approved by policy.</p>');
+      document.getElementById('pr-packet-copy-btn').addEventListener('click', function () {
+        if (navigator.clipboard) void navigator.clipboard.writeText(packet.prBody);
+      });
+      if (publishEnabled) {
+        document.getElementById('pr-packet-publish-btn').addEventListener('click', function () { void prPacketPublish(); });
+      }
+    }
+
+    async function prPacketGenerate() {
+      const missionId = autonomyMissionId();
+      const status = document.getElementById('pr-packet-status');
+      if (!missionId) { status.textContent = 'Select an active mission first.'; return; }
+      const allowWrites = document.getElementById('pr-packet-allow-writes').checked;
+      const enabledOperations = allowWrites ? ['push_branch', 'open_pull_request'] : [];
+      prPacketUiState.lastEnabledOperations = enabledOperations;
+      status.textContent = 'Generating PR packet...';
+      const result = await autonomyFetchJson('/api/missions/' + encodeURIComponent(missionId) + '/github-pr-packet', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ enabledOperations: enabledOperations }),
+      });
+      if (result.status !== 200) { status.textContent = result.body.error || ('HTTP ' + result.status); return; }
+      prPacketUiState.lastPacket = result.body.packet;
+      status.textContent = result.body.packet.readyToPush ? 'PR packet ready.' : 'PR packet prepared (no changes to commit).';
+      prPacketRender(result.body.packet);
+    }
+
+    async function prPacketPublish() {
+      const missionId = autonomyMissionId();
+      const status = document.getElementById('pr-packet-status');
+      if (!missionId || !prPacketUiState.lastPacket) return;
+      status.textContent = 'Publishing to GitHub...';
+      const result = await autonomyFetchJson('/api/missions/' + encodeURIComponent(missionId) + '/github-pr-packet/publish', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ enabledOperations: prPacketUiState.lastEnabledOperations, packet: prPacketUiState.lastPacket }),
+      });
+      if (result.status !== 200) { status.textContent = result.body.error || ('HTTP ' + result.status); return; }
+      const branchStatus = result.body.branchResult && result.body.branchResult.status;
+      const prStatus = result.body.prResult && result.body.prResult.status;
+      if (branchStatus === 'ok' && prStatus === 'ok' && result.body.prResult.data) {
+        status.textContent = 'Pull request opened: ' + result.body.prResult.data.url;
+      } else {
+        status.textContent = 'Publish did not complete: branch=' + branchStatus + (prStatus ? (', pr=' + prStatus) : '') + '.';
+      }
+    }
+
+    document.getElementById('pr-packet-generate-btn').addEventListener('click', function () { void prPacketGenerate(); });
 
     appState.subscribe(function (state) {
       if (state.activeMissionId !== autonomyUiState.lastMissionId) void autonomyLoad();

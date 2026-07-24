@@ -29,6 +29,7 @@ import { runAgentLoop } from '../agent/agent-loop.js'
 import type { AgentLoopConfig, AgentLoopEvent, AgentLoopResult } from '../agent/agent-loop.types.js'
 import { getCheckpoint, listCheckpoints } from '../checkpoint/checkpoint-service.js'
 import { handleMissionRoute } from '../app/api/mission-routes.js'
+import { handleGitHubIntakeRoute } from '../app/api/github-intake-routes.js'
 import {
   handleCheckpointDetail,
   handleCheckpointsList,
@@ -268,6 +269,11 @@ export function createChatServerRequestListener(
   }
   const missionContext = { service: missionService, cwd }
   const sandboxContext = { service: sandboxService, missionService }
+  const githubIntakeContext = {
+    service: missionService,
+    cwd,
+    ...(env['GITHUB_TOKEN'] !== undefined ? { githubToken: env['GITHUB_TOKEN'] } : {}),
+  }
 
   return (req, res) => {
     void handleRequest(req, res)
@@ -311,6 +317,10 @@ export function createChatServerRequestListener(
     }
 
     try {
+      if (await handleGitHubIntakeRoute(req, res, url, githubIntakeContext)) {
+        return
+      }
+
       if (await handleMissionRoute(req, res, url, missionContext)) {
         return
       }
