@@ -150,6 +150,29 @@ function generatePrBody(
 }
 
 /**
+ * Acquired external workspaces (and CI runners) commonly have no git
+ * committer identity configured at any level, which makes `git commit` fail
+ * with "Author identity unknown" — not a policy block, just missing setup.
+ * Falls back to a CodeMind bot identity for this commit only (via `-c`,
+ * git's highest-precedence override) rather than mutating the repository's
+ * config, so a workspace that already has a real identity keeps it.
+ */
+async function resolveMissingIdentityOverrides(repositoryRoot: string): Promise<string[]> {
+  const [email, name] = await Promise.all([
+    runGitCommand(['config', 'user.email'], repositoryRoot),
+    runGitCommand(['config', 'user.name'], repositoryRoot),
+  ])
+  const overrides: string[] = []
+  if (email.exitCode !== 0 || email.stdout.trim().length === 0) {
+    overrides.push('-c', 'user.email=codemind-agent@users.noreply.github.com')
+  }
+  if (name.exitCode !== 0 || name.stdout.trim().length === 0) {
+    overrides.push('-c', 'user.name=CodeMind Agent')
+  }
+  return overrides
+}
+
+/**
  * Creates a local branch, stages and commits the given changed files, and
  * generates a full PR title/body/commit message packet. Never pushes and
  * never calls the GitHub API — see github-operations-adapter.ts for the
@@ -188,7 +211,11 @@ export async function preparePrOperationPacket(
   let commitCreated = false
   let commitSha: string | undefined
   if (branchCreated && stagedFiles.length > 0) {
-    const commit = await runGitCommand(['commit', '-m', commitMessage], input.repositoryRoot)
+    const identityOverrides = await resolveMissingIdentityOverrides(input.repositoryRoot)
+    const commit = await runGitCommand(
+      [...identityOverrides, 'commit', '-m', commitMessage],
+      input.repositoryRoot,
+    )
     commitCreated = commit.exitCode === 0
     if (commitCreated) {
       const head = await runGitCommand(['rev-parse', 'HEAD'], input.repositoryRoot)
