@@ -1,19 +1,8 @@
-const MISSION_FILTERS = [
-  ['all', 'All'],
-  ['agent', 'Agent'],
-  ['files', 'Files'],
-  ['tools', 'Tools'],
-  ['validation', 'Validation'],
-  ['git', 'Git'],
-  ['checkpoints', 'Checkpoints'],
-  ['memory', 'Memory'],
-  ['web-mcp', 'Web/MCP'],
-  ['subagents-skills', 'Subagents/Skills'],
-] as const
+import { MISSION_EVENT_FILTERS, MISSION_EVENT_FILTER_LABELS } from '../../mission/mission-events.js'
 
 export function renderMissionsViewHtml(): string {
-  const filters = MISSION_FILTERS.map(
-    ([value, label]) => `<option value="${value}">${label}</option>`,
+  const filters = MISSION_EVENT_FILTERS.map(
+    (value) => `<option value="${value}">${MISSION_EVENT_FILTER_LABELS[value]}</option>`,
   ).join('')
 
   return `<section data-view="missions" class="app-view" style="display:none">

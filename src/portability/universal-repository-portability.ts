@@ -40,7 +40,7 @@ export async function discoverUniversalRepositoryPortability(
 ): Promise<RepositoryPortabilityProfile> {
   const [baseProfile, researchMarkers] = await Promise.all([
     discoverRepositoryPortability(repositoryRoot, options),
-    findResearchMarkers(repositoryRoot, options.maxDepth ?? 8),
+    findResearchMarkers(repositoryRoot, options.maxDepth ?? 8, options.maxFiles ?? 20_000),
   ])
   const expanded = expandMonorepoValidation({
     ...baseProfile,
@@ -128,21 +128,26 @@ function ecosystemForManifest(name: string): RepositoryEcosystem | undefined {
 async function findResearchMarkers(
   repositoryRoot: string,
   maxDepth: number,
+  maxFiles: number,
 ): Promise<readonly string[]> {
   const root = path.resolve(repositoryRoot)
   const markers: string[] = []
+  let visited = 0
 
   async function walk(directory: string, depth: number): Promise<void> {
-    if (depth > maxDepth) return
+    if (depth > maxDepth || visited >= maxFiles) return
     const entries = await readdir(directory, { withFileTypes: true })
     for (const entry of entries) {
+      if (visited >= maxFiles) return
       if (entry.isSymbolicLink()) continue
       const absolute = path.join(directory, entry.name)
       if (entry.isDirectory()) {
         if (!IGNORED_DIRECTORIES.has(entry.name)) await walk(absolute, depth + 1)
         continue
       }
-      if (!entry.isFile() || RESEARCH_MARKERS[entry.name] === undefined) continue
+      if (!entry.isFile()) continue
+      visited += 1
+      if (RESEARCH_MARKERS[entry.name] === undefined) continue
       markers.push(path.relative(root, absolute).replaceAll('\\', '/'))
     }
   }

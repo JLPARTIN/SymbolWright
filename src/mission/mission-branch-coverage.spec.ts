@@ -400,6 +400,11 @@ describe('mission branch coverage contracts', () => {
       createMissionEvent({ missionId, type: 'mcp.call.completed', summary: 'mcp' }),
       createMissionEvent({ missionId, type: 'subagent.started', summary: 'subagent' }),
       createMissionEvent({ missionId, type: 'skill.completed', summary: 'skill' }),
+      createMissionEvent({
+        missionId,
+        type: 'autonomy.portability.detected',
+        summary: 'autonomy',
+      }),
     ]
     const filterExpectations: Record<MissionEventFilter, number> = {
       all: events.length,
@@ -412,6 +417,7 @@ describe('mission branch coverage contracts', () => {
       memory: 1,
       'web-mcp': 2,
       'subagents-skills': 2,
+      autonomy: 1,
     }
     for (const [filter, expectedTotal] of Object.entries(filterExpectations) as [
       MissionEventFilter,
