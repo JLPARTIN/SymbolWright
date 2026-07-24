@@ -1,6 +1,16 @@
+import {
+  parsePortableValidationInvocation,
+  resolvePortableValidationRoot,
+} from '../portability/portable-validation-invocation.js'
+import {
+  DockerPortableValidationRunner,
+  type PortableValidationRunner,
+} from '../portability/portable-validation-runner.js'
+import { isSafePortableValidationCommand } from '../portability/repository-portability.js'
 import type { SandboxRunner } from '../runtime/sandbox/sandbox-runner.js'
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../runtime/types.js'
 import { runValidationCommand } from '../runtime/validation/validation-command-executor.js'
+import { ALLOWLISTED_VALIDATION_COMMANDS } from '../runtime/validation/validation-command-gate.js'
 import type {
   AutonomousValidationResult,
   AutonomousValidationRunner,
@@ -10,12 +20,14 @@ export interface RuntimeAutonomousValidationRunnerOptions {
   readonly policy: RuntimePolicySnapshot
   readonly approval?: RuntimeApproval | undefined
   readonly sandboxRunner?: SandboxRunner | undefined
+  readonly portableRunner?: PortableValidationRunner | undefined
   readonly reason?: string | undefined
 }
 
 /**
- * Production adapter that executes repair-loop validation through CodeMind's
- * existing policy, approval, redaction, transcript, and sandbox pathway.
+ * Production adapter that executes validation through CodeMind's policy gate.
+ * Legacy root-level Node commands retain the original transcript pathway;
+ * discovered ecosystem and nested-package commands use portable containers.
  */
 export class RuntimeAutonomousValidationRunner implements AutonomousValidationRunner {
   readonly #options: RuntimeAutonomousValidationRunnerOptions
@@ -29,8 +41,65 @@ export class RuntimeAutonomousValidationRunner implements AutonomousValidationRu
     readonly phase: string
     readonly command: string
   }): Promise<AutonomousValidationResult> {
+    let invocation
+    try {
+      invocation = parsePortableValidationInvocation(input.command)
+    } catch (error) {
+      return {
+        phase: input.phase,
+        command: input.command,
+        passed: false,
+        exitCode: null,
+        stdout: '',
+        stderr: error instanceof Error ? error.message : String(error),
+        durationMs: 0,
+      }
+    }
+
+    const isLegacyRootCommand =
+      invocation.workingDirectory === '.' &&
+      ALLOWLISTED_VALIDATION_COMMANDS.includes(
+        invocation.command as (typeof ALLOWLISTED_VALIDATION_COMMANDS)[number],
+      )
+
+    if (!isLegacyRootCommand && isSafePortableValidationCommand(invocation.command)) {
+      let repositoryRoot: string
+      try {
+        repositoryRoot = resolvePortableValidationRoot(
+          input.repositoryRoot,
+          invocation.workingDirectory,
+        )
+      } catch (error) {
+        return {
+          phase: input.phase,
+          command: input.command,
+          passed: false,
+          exitCode: null,
+          stdout: '',
+          stderr: error instanceof Error ? error.message : String(error),
+          durationMs: 0,
+        }
+      }
+      const result = await (
+        this.#options.portableRunner ?? new DockerPortableValidationRunner()
+      ).run({
+        repositoryRoot,
+        command: invocation.command,
+        policy: this.#options.policy,
+      })
+      return {
+        phase: input.phase,
+        command: input.command,
+        passed: result.outcome === 'PASS',
+        exitCode: result.exitCode,
+        stdout: result.stdout,
+        stderr: result.stderr || result.reason || '',
+        durationMs: result.durationMs,
+      }
+    }
+
     const result = await runValidationCommand(
-      input.command,
+      invocation.command,
       this.#options.reason ?? `Autonomous repair validation phase ${input.phase}`,
       false,
       input.repositoryRoot,

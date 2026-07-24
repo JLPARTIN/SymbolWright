@@ -23,7 +23,11 @@ export interface AutonomousMissionRuntimeOptions {
   readonly workspaceRoot: string
   readonly missionService: MissionService
   readonly taskExecutor: MissionTaskExecutor
-  readonly validationCommands: readonly string[]
+  readonly validationCommands?: readonly string[]
+  readonly resolveValidationCommands?: (
+    missionId: string,
+    repositoryRoot: string,
+  ) => Promise<readonly string[]>
   readonly now?: () => Date
 }
 
@@ -67,7 +71,12 @@ export function createAutonomousMissionRuntime(
     executionStore,
     loadSemanticIndex,
     loadRepairLoop: (missionId) => repairLoopStore.load(`repair-${missionId}`),
-    validationCommands: options.validationCommands,
+    ...(options.validationCommands === undefined
+      ? {}
+      : { validationCommands: options.validationCommands }),
+    ...(options.resolveValidationCommands === undefined
+      ? {}
+      : { resolveValidationCommands: options.resolveValidationCommands }),
     multiAgentTracker,
     ...clockOptions,
   })
@@ -81,7 +90,6 @@ export function createAutonomousMissionRuntime(
     missionService: options.missionService,
     coordinator,
     executionStore,
-    validationCommands: options.validationCommands,
     store: releaseStore,
     ...clockOptions,
   })

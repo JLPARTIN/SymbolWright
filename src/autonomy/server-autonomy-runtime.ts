@@ -1,10 +1,15 @@
 import { ProjectMemory, resolveProjectMemoryDir } from '../memory/project-memory.js'
 import type { MissionService } from '../mission/mission-service.js'
+import { encodePortableValidationInvocation } from '../portability/portable-validation-invocation.js'
+import type { PortableValidationRunner } from '../portability/portable-validation-runner.js'
+import { researchRepositoryPortability } from '../portability/repository-portability-research.js'
+import { discoverUniversalRepositoryPortability } from '../portability/universal-repository-portability.js'
 import type { ProviderGatewayEnv } from '../providers/provider-config.js'
 import { ProviderRuntimeOverrideStore } from '../providers/provider-runtime-overrides.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
 import type { SandboxRunner } from '../runtime/sandbox/sandbox-runner.js'
 import { createMissionAutonomyEditExecutor } from '../server/mission-autonomy-edit-executor.js'
+import type { WebSearchProvider } from '../web/web-search-provider.js'
 import {
   createAutonomousMissionRuntime,
   type AutonomousMissionRuntime,
@@ -23,6 +28,7 @@ import {
 } from './runtime-mission-task-executor.js'
 import type { AutonomousTaskGraph, AutonomousTaskNode } from './task-graph.types.js'
 
+/** Retained for explicit legacy callers; live missions now discover commands per repository. */
 export const DEFAULT_AUTONOMOUS_VALIDATION_COMMANDS = [
   'npm run typecheck',
   'npm run lint',
@@ -35,28 +41,77 @@ export interface ServerAutonomyRuntimeOptions {
   readonly missionService: MissionService
   readonly hasGitHubToken: boolean
   readonly sandboxRunner?: SandboxRunner
+  readonly portableRunner?: PortableValidationRunner
   readonly editExecutor?: AutonomousEditTaskExecutor
   readonly validationCommands?: readonly string[]
   readonly maxRepairAttempts?: number
+  readonly enablePortabilityWebResearch?: boolean
+  readonly webSearchProvider?: WebSearchProvider
   readonly env?: ProviderGatewayEnv
   readonly overrideStore?: ProviderRuntimeOverrideStore
 }
 
 /**
- * Assembles the live server autonomy runtime. Before execution starts, the
- * task adapter binds itself to the mission's repository, runtime mode,
- * persisted provider, model, tool-capable agent loop, and durable repair state.
+ * Assembles the live server autonomy runtime. Validation is discovered from the
+ * mission repository unless the operator supplies an explicit command list.
  */
 export function createServerAutonomyRuntime(
   options: ServerAutonomyRuntimeOptions,
 ): AutonomousMissionRuntime {
   const taskExecutor = new MissionBoundTaskExecutor(options)
+  const resolveValidationCommands = async (missionId: string, repositoryRoot: string) => {
+    if (options.validationCommands !== undefined) return options.validationCommands
+    const mission = options.missionService.get(missionId)
+    const profile = await discoverUniversalRepositoryPortability(repositoryRoot)
+    const validationCommands = profile.validation.map(encodePortableValidationInvocation)
+    options.missionService.appendEvent(
+      missionId,
+      'autonomy.portability.detected',
+      `Repository portability profile detected: ${profile.ecosystems.join(', ')}.`,
+      {
+        ecosystems: profile.ecosystems,
+        primaryEcosystem: profile.primaryEcosystem,
+        mixed: profile.mixed,
+        manifests: profile.manifests,
+        confidence: profile.confidence,
+        validationCommands,
+        validation: profile.validation,
+        evidence: profile.evidence,
+      },
+    )
+
+    if (options.enablePortabilityWebResearch !== false && profile.researchQueries.length > 0) {
+      const policy = createRuntimePolicyForMode(mission.agent.runtimeMode, {
+        hasGitHubToken: options.hasGitHubToken,
+      })
+      const research = await researchRepositoryPortability({
+        repositoryRoot,
+        profile,
+        runtimePolicy: policy,
+        ...(options.webSearchProvider === undefined ? {} : { provider: options.webSearchProvider }),
+      })
+      options.missionService.appendEvent(
+        missionId,
+        'autonomy.portability.researched',
+        `Portability research completed for ${research.queries.length} query or queries.`,
+        {
+          queries: research.queries,
+          guidance: research.guidance,
+          statuses: research.evidence.map((entry) => entry.status),
+          providers: research.evidence.map((entry) => entry.provider),
+        },
+      )
+    }
+    return validationCommands
+  }
 
   return createAutonomousMissionRuntime({
     workspaceRoot: options.workspaceRoot,
     missionService: options.missionService,
     taskExecutor,
-    validationCommands: options.validationCommands ?? DEFAULT_AUTONOMOUS_VALIDATION_COMMANDS,
+    ...(options.validationCommands === undefined
+      ? { resolveValidationCommands }
+      : { validationCommands: options.validationCommands }),
   })
 }
 
@@ -85,9 +140,11 @@ class MissionBoundTaskExecutor implements MissionTaskExecutor {
       ...(this.#options.sandboxRunner === undefined
         ? {}
         : { sandboxRunner: this.#options.sandboxRunner }),
+      ...(this.#options.portableRunner === undefined
+        ? {}
+        : { portableRunner: this.#options.portableRunner }),
     })
-    const validationCommands =
-      this.#options.validationCommands ?? DEFAULT_AUTONOMOUS_VALIDATION_COMMANDS
+    const validationCommands = validationCommandsFromGraph(graph)
     const editExecutor =
       this.#options.editExecutor ??
       createMissionAutonomyEditExecutor({
@@ -138,4 +195,10 @@ class MissionBoundTaskExecutor implements MissionTaskExecutor {
     }
     return this.#delegate
   }
+}
+
+function validationCommandsFromGraph(graph: AutonomousTaskGraph): readonly string[] {
+  return graph.tasks
+    .filter((task) => task.kind === 'validation')
+    .map((task) => (task.objective.startsWith('Run ') ? task.objective.slice(4) : task.objective))
 }

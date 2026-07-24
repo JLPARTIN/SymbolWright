@@ -27,7 +27,11 @@ export interface AutonomousMissionCoordinatorOptions {
   readonly executionStore: MissionExecutionStore
   readonly loadSemanticIndex: (repositoryRoot: string) => Promise<RepositorySemanticIndexSnapshot>
   readonly loadRepairLoop?: (missionId: string) => Promise<AutonomousRepairLoopRecord | undefined>
-  readonly validationCommands: readonly string[]
+  readonly validationCommands?: readonly string[]
+  readonly resolveValidationCommands?: (
+    missionId: string,
+    repositoryRoot: string,
+  ) => Promise<readonly string[]>
   readonly multiAgentTracker?: MultiAgentExecutionTracker
   readonly now?: () => Date
 }
@@ -45,6 +49,9 @@ export class AutonomousMissionCoordinator {
   readonly #loadSemanticIndex: AutonomousMissionCoordinatorOptions['loadSemanticIndex']
   readonly #loadRepairLoop: AutonomousMissionCoordinatorOptions['loadRepairLoop']
   readonly #validationCommands: readonly string[]
+  readonly #resolveValidationCommands:
+    | AutonomousMissionCoordinatorOptions['resolveValidationCommands']
+    | undefined
   readonly #multiAgentTracker: MultiAgentExecutionTracker | undefined
   readonly #now: () => Date
 
@@ -54,20 +61,24 @@ export class AutonomousMissionCoordinator {
     this.#executionStore = options.executionStore
     this.#loadSemanticIndex = options.loadSemanticIndex
     this.#loadRepairLoop = options.loadRepairLoop
-    this.#validationCommands = [...options.validationCommands]
+    this.#validationCommands = [...(options.validationCommands ?? [])]
+    this.#resolveValidationCommands = options.resolveValidationCommands
     this.#multiAgentTracker = options.multiAgentTracker
     this.#now = options.now ?? (() => new Date())
   }
 
   async start(missionId: string): Promise<AutonomousMissionStartResult> {
     const mission = this.#missionService.get(missionId)
-    const index = await this.#loadSemanticIndex(mission.repository.rootPath)
+    const [index, validationCommands] = await Promise.all([
+      this.#loadSemanticIndex(mission.repository.rootPath),
+      this.#commands(missionId, mission.repository.rootPath),
+    ])
     const plan = planAutonomousRepositoryMission({
       missionId,
       objective: mission.objective,
       repositoryRoot: mission.repository.rootPath,
       index,
-      validationCommands: this.#validationCommands,
+      validationCommands,
       now: this.#now().toISOString(),
     })
 
@@ -79,6 +90,7 @@ export class AutonomousMissionCoordinator {
         taskCount: plan.graph.tasks.length,
         affectedFiles: plan.affectedFiles,
         matchedSymbols: plan.matchedSymbols,
+        validationCommands,
         rationale: plan.rationale,
       },
     )
@@ -99,12 +111,15 @@ export class AutonomousMissionCoordinator {
     await this.#synchronizeSpecialists(execution)
     this.#recordExecutionEvents(missionId, execution)
     const index = await this.#loadSemanticIndex(mission.repository.rootPath)
+    const validationCommands = execution.graph.tasks
+      .filter((task) => task.kind === 'validation')
+      .map((task) => validationCommand(task.objective))
     const plan = planAutonomousRepositoryMission({
       missionId,
       objective: mission.objective,
       repositoryRoot: mission.repository.rootPath,
       index,
-      validationCommands: this.#validationCommands,
+      validationCommands,
       now: execution.graph.createdAt,
     })
     return {
@@ -136,9 +151,15 @@ export class AutonomousMissionCoordinator {
     return projectMissionDashboard({
       execution,
       ...(repairLoop === undefined ? {} : { repairLoop }),
-      intelligence: this.#intelligence(execution, index),
+      intelligence: createMissionImpactIntelligence({ execution, semanticIndex: index }),
       now: this.#now().toISOString(),
     })
+  }
+
+  async #commands(missionId: string, repositoryRoot: string): Promise<readonly string[]> {
+    if (this.#validationCommands.length > 0) return this.#validationCommands
+    const resolved = await this.#resolveValidationCommands?.(missionId, repositoryRoot)
+    return resolved ?? []
   }
 
   async #loadExecution(missionId: string): Promise<PersistedMissionExecution> {
@@ -147,14 +168,6 @@ export class AutonomousMissionCoordinator {
       throw new Error(`Autonomous execution was not found: ${missionId}`)
     }
     return execution
-  }
-
-  #intelligence(execution: PersistedMissionExecution, index: RepositorySemanticIndexSnapshot) {
-    return createMissionImpactIntelligence({
-      execution,
-      semanticIndex: index,
-      validationCommands: this.#validationCommands,
-    })
   }
 
   async #synchronizeSpecialists(execution: PersistedMissionExecution) {
@@ -190,4 +203,8 @@ export class AutonomousMissionCoordinator {
       }
     }
   }
+}
+
+function validationCommand(objective: string): string {
+  return objective.startsWith('Run ') ? objective.slice(4) : objective
 }
