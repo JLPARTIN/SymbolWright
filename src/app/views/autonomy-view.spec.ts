@@ -28,7 +28,8 @@ describe('AI Mission Control view', () => {
   it('escapes mission, task, file, release, and PR content before rendering', () => {
     const script = buildAutonomyViewClientScript()
 
-    expect(script).toContain('appEscapeHtml(mission.name')
+    expect(script).toContain('appEscapeHtml(mission ? mission.name : missionId)')
+    expect(script).toContain('appEscapeHtml(mission ? mission.objective : missionId)')
     expect(script).toContain('appEscapeHtml(task.objective')
     expect(script).toContain('appEscapeHtml(file)')
     expect(script).toContain('appEscapeHtml(release.state')
