@@ -31,12 +31,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run changed behavioral suites
+      - name: Capture changed behavioral suites
+        id: tests
+        shell: bash
         run: |
+          set +e
           npx vitest run \
             src/autonomy/repository-semantic-index-bootstrap.spec.ts \
             src/autonomy/autonomous-mission-release-gates.spec.ts \
             src/autonomy/post-bundle6-repository-trial.spec.ts \
             src/autonomy/mission-acceptance-packet.spec.ts \
             src/app/views/autonomy-view.spec.ts \
-            src/app/shell/app-shell-html.spec.ts
+            src/app/shell/app-shell-html.spec.ts \
+            > forensic-vitest-output.txt 2>&1
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload Vitest diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forensic-vitest-output
+          path: forensic-vitest-output.txt
+
+      - name: Fail when Vitest failed
+        if: steps.tests.outputs.status != '0'
+        run: exit 1
