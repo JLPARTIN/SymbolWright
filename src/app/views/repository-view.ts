@@ -166,9 +166,9 @@ export function buildRepositoryViewClientScript(): string {
         result.stderr || '(empty)',
         '',
         'Diagnostics:',
-        result.diagnostics.length === 0 ? '- none' : result.diagnostics.map(function (diagnostic) { return '- ' + diagnostic.severity + ': ' + diagnostic.message; }).join('\n')
+        result.diagnostics.length === 0 ? '- none' : result.diagnostics.map(function (diagnostic) { return '- ' + diagnostic.severity + ': ' + diagnostic.message; }).join('\\n')
       ];
-      document.getElementById('repo-sandbox-result').textContent = lines.join('\n');
+      document.getElementById('repo-sandbox-result').textContent = lines.join('\\n');
     }
 
     async function runRepoSandbox() {
@@ -304,7 +304,7 @@ export function buildRepositoryViewClientScript(): string {
 
       if (result.status === 409) {
         const overwrite = window.confirm(
-          repoState.currentFilePath + ' changed on disk since it was loaded.\n\nOK to overwrite the on-disk version with your changes, Cancel to reload the on-disk version instead.'
+          repoState.currentFilePath + ' changed on disk since it was loaded.\\n\\nOK to overwrite the on-disk version with your changes, Cancel to reload the on-disk version instead.'
         );
         if (overwrite) {
           const forced = await repoFetchJson('/api/repository/file', {

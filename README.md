@@ -10,6 +10,23 @@ CodeMind is a direct-capable coding-agent platform with optional governance and 
 
 Ajna Review Cortex is the native forensic review capability. Ajna gives CodeMind deterministic review, risk, evidence, and merge-readiness reporting when those workflows are requested or required.
 
+## Codespaces Quick Start
+
+Already in a GitHub Codespace (or any container with Node 20+)? Skip everything below and run:
+
+```bash
+npm run codespaces:start
+```
+
+This installs dependencies only if needed, builds current source, generates a local `CODEMIND_API_KEY` if you didn't set one, starts CodeMind on port `8787`, waits for it to be healthy, and validates that the served browser JavaScript actually parses — then prints one summary with the real forwarded URL and the access key. From there:
+
+1. Open the printed URL — it already points at `#/settings`.
+2. Paste the printed **CodeMind access key** into Settings.
+3. Want AI-backed features instead of browser-only diagnostics? Set a provider key (e.g. `export ANTHROPIC_API_KEY=sk-ant-...`, see [`docs/PROVIDER_KEYS.md`](docs/PROVIDER_KEYS.md)) *before* running `codespaces:start`.
+4. `npm run codespaces:stop` stops it; `npm run codespaces:status` reports whether it's healthy, which provider (if any) is detected, and where its logs are — no secrets in either.
+
+Re-running `npm run codespaces:start` is also how you restart after changing code or env vars — no `Ctrl+C` needed. Full details, including the manual step-by-step path, are in [`docs/codespaces.md`](docs/codespaces.md).
+
 ## Getting Started
 
 Install and build once:

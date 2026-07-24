@@ -23,7 +23,11 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json && node scripts/patch-generated-client-newlines.mjs",
+    "build": "tsc -p tsconfig.json",
+    "validate:served-client": "node scripts/validate-served-client.mjs",
+    "codespaces:start": "node scripts/codespaces-start.mjs",
+    "codespaces:stop": "node scripts/codespaces-stop.mjs",
+    "codespaces:status": "node scripts/codespaces-status.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

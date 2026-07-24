@@ -142,4 +142,5 @@ vite.config.ts.timestamp-*
 .codemind/memory/
 .codemind/sessions/
 .codemind/autonomy/
+.codemind/runtime/
 pr-*-starter-*.patch
