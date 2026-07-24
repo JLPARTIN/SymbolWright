@@ -12,7 +12,7 @@ import type { MissionTaskExecutor } from './persistent-mission-executor.js'
 import { RepositorySemanticIndexStore } from './repository-semantic-index-store.js'
 
 const roots: string[] = []
-const MISSION_ID = 'mission_codemind_repository_trial'
+const MISSION_ID = 'mission_33333333-3333-4333-8333-333333333333'
 const MARKER = '// CodeMind post-Bundle #6 repository trial marker'
 
 afterEach(async () => {
