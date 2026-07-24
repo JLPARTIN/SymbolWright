@@ -16,6 +16,7 @@ import {
   PersistentMissionExecutor,
   type MissionTaskExecutor,
 } from './persistent-mission-executor.js'
+import { ensureRepositorySemanticIndex } from './repository-semantic-index-bootstrap.js'
 import { RepositorySemanticIndexStore } from './repository-semantic-index-store.js'
 
 export interface AutonomousMissionRuntimeOptions {
@@ -52,13 +53,13 @@ export function createAutonomousMissionRuntime(
   const multiAgentStore = new MultiAgentMissionStore(workspaceRoot)
   const multiAgentTracker = new MultiAgentExecutionTracker(multiAgentStore)
   const semanticIndexStore = new RepositorySemanticIndexStore(path.join(workspaceRoot, '.codemind'))
-  const loadSemanticIndex = async (repositoryRoot: string) => {
-    const index = await semanticIndexStore.load(repositoryRoot)
-    if (index === undefined) {
-      throw new Error(`Repository semantic index was not found: ${repositoryRoot}`)
-    }
-    return index
-  }
+  const loadSemanticIndex = async (repositoryRoot: string) =>
+    ensureRepositorySemanticIndex({
+      workspaceRoot,
+      repositoryRoot,
+      store: semanticIndexStore,
+      ...(options.now === undefined ? {} : { now: options.now }),
+    })
   const clockOptions = options.now === undefined ? {} : { now: options.now }
   const coordinator = new AutonomousMissionCoordinator({
     missionService: options.missionService,
