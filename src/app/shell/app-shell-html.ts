@@ -1,5 +1,9 @@
 import { buildClientRouterScript } from '../router/client-router.js'
 import { buildClientStateScript } from '../state/client-state.js'
+import {
+  buildAutonomyViewClientScript,
+  renderAutonomyViewHtml,
+} from '../views/autonomy-view.js'
 import { buildToolsViewClientScript, renderToolsViewHtml } from '../views/tools-view.js'
 import {
   buildCheckpointsViewClientScript,
@@ -76,6 +80,9 @@ const APP_SHELL_STYLES = `<style>
   .mission-event { border-left:3px solid #4b74ff; padding:8px 12px; margin:8px 0; background:#0c1226; }
   .mission-export-output { max-height:360px; overflow:auto; white-space:pre-wrap; word-break:break-word; background:#080c18; padding:10px; border-radius:8px; }
   .mission-context-header { margin:0 0 12px; padding:10px 12px; border:1px solid #2a355f; border-radius:10px; background:#0c1226; font-size:12px; }
+  .autonomy-task-list { list-style:none; padding:0; margin:0; }
+  .autonomy-task-list li { display:flex; justify-content:space-between; gap:12px; border-top:1px solid #2a355f; padding:8px 0; }
+  .autonomy-task-list li span { color:var(--muted); white-space:nowrap; }
   @media (max-width: 900px) {
     .repo-layout, .mission-layout { grid-template-columns: 1fr; }
     .mission-list { max-height:none; }
@@ -86,6 +93,8 @@ const APP_SHELL_STYLES = `<style>
     .app-nav .nav-item { flex:1 1 auto; padding:8px; }
     .app-main { padding:12px; }
     .mission-actions button { width:100%; margin-right:0; }
+    .autonomy-task-list li { display:block; }
+    .autonomy-task-list li span { display:block; margin-top:4px; }
   }
 </style>`
 
@@ -107,6 +116,7 @@ export function renderAppShellHtml(): string {
     <main class="app-main" id="app-root">
       ${renderDashboardViewHtml()}
       ${renderMissionsViewHtml()}
+      ${renderAutonomyViewHtml()}
       ${renderWorkspaceViewHtml()}
       ${renderRepositoryViewHtml()}
       ${renderAgentViewHtml()}
@@ -126,6 +136,7 @@ export function renderAppShellHtml(): string {
     ${buildCheckpointsViewClientScript()}
     ${buildSettingsViewClientScript()}
     ${buildMissionsViewClientScript()}
+    ${buildAutonomyViewClientScript()}
     (function () {${buildRepositoryViewClientScript()}})();
     ${buildWorkspaceAgentBridgeScript()}
 
