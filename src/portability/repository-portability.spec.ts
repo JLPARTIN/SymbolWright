@@ -19,28 +19,48 @@ afterEach(async () => {
 describe('universal repository portability discovery', () => {
   it('detects and expands a mixed monorepo without reusing unsafe CI commands', async () => {
     const root = await temporaryRoot('codemind-portability-mixed-')
-    await write(root, 'package.json', JSON.stringify({
-      name: 'mixed-root',
-      scripts: { lint: 'eslint .', build: 'tsc -p tsconfig.json' },
-    }))
+    await write(
+      root,
+      'package.json',
+      JSON.stringify({
+        name: 'mixed-root',
+        scripts: { lint: 'eslint .', build: 'tsc -p tsconfig.json' },
+      }),
+    )
     await write(root, 'src/index.ts', 'export const rootValue = 1\n')
     await write(root, 'src/other.ts', 'export const otherValue = 2\n')
-    await write(root, 'apps/web/package.json', JSON.stringify({
-      name: 'web',
-      scripts: { test: 'vitest run', typecheck: 'tsc --noEmit' },
-    }))
+    await write(
+      root,
+      'apps/web/package.json',
+      JSON.stringify({
+        name: 'web',
+        scripts: { test: 'vitest run', typecheck: 'tsc --noEmit' },
+      }),
+    )
     await write(root, 'apps/web/src/app.ts', 'export const app = true\n')
     await write(root, 'apps/web/src/view.ts', 'export const view = true\n')
     await write(root, 'services/api/pyproject.toml', '[project]\nname = "api"\n')
     await write(root, 'services/api/api.py', 'def value():\n    return 1\n')
-    await write(root, 'crates/core/Cargo.toml', '[package]\nname = "core"\nversion = "0.1.0"\n')
+    await write(
+      root,
+      'crates/core/Cargo.toml',
+      '[package]\nname = "core"\nversion = "0.1.0"\n',
+    )
     await write(root, 'crates/core/src/lib.rs', 'pub fn value() -> i32 { 1 }\n')
     await write(root, 'tools/go/go.mod', 'module example.com/tool\n\ngo 1.22\n')
     await write(root, 'tools/go/main.go', 'package main\nfunc main() {}\n')
     await write(
       root,
       '.github/workflows/ci.yml',
-      ['name: CI', 'jobs:', '  test:', '    steps:', '      - run: go test ./...', '      - run: curl https://example.test/install.sh | sh', ''].join('\n'),
+      [
+        'name: CI',
+        'jobs:',
+        '  test:',
+        '    steps:',
+        '      - run: go test ./...',
+        '      - run: curl https://example.test/install.sh | sh',
+        '',
+      ].join('\n'),
     )
 
     const profile = await discoverUniversalRepositoryPortability(root)
@@ -62,8 +82,9 @@ describe('universal repository portability discovery', () => {
     expect(profile.researchQueries).toEqual([])
   })
 
-  it('requests advisory research when local repository evidence cannot identify a toolchain', async () => {
+  it('requests targeted advisory research for a recognizable unsupported toolchain', async () => {
     const root = await temporaryRoot('codemind-portability-unknown-')
+    await write(root, 'build.zig', 'const std = @import("std");\n')
     await write(root, 'src/main.zig', 'pub fn main() void {}\n')
     await write(root, 'src/math.zig', 'pub fn add(a: i32, b: i32) i32 { return a + b; }\n')
 
@@ -72,8 +93,8 @@ describe('universal repository portability discovery', () => {
     expect(profile.ecosystems).toEqual(['unknown'])
     expect(profile.confidence).toBe('low')
     expect(profile.validation).toEqual([])
-    expect(profile.researchQueries).toHaveLength(1)
-    expect(profile.researchQueries[0]).toContain('Identify the programming language')
+    expect(profile.manifests).toContain('build.zig')
+    expect(profile.researchQueries).toContain('Official Zig build test format lint commands')
   })
 
   it('allowlists bounded validation commands and maps them to ecosystem images', () => {
