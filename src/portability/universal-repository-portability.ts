@@ -1,3 +1,4 @@
+import { readdir } from 'node:fs/promises'
 import path from 'node:path'
 
 import {
@@ -8,13 +9,60 @@ import {
   type RepositoryValidationCommand,
 } from './repository-portability.js'
 
+const IGNORED_DIRECTORIES = new Set([
+  '.git',
+  '.codemind',
+  'node_modules',
+  'dist',
+  'build',
+  'coverage',
+  'target',
+  '.venv',
+  'venv',
+  '__pycache__',
+  '.gradle',
+  '.next',
+  'vendor',
+])
+
+const RESEARCH_MARKERS: Readonly<Record<string, string>> = {
+  'build.zig': 'Official Zig build test format lint commands',
+  'Package.swift': 'Official Swift Package Manager build test lint commands',
+  'pubspec.yaml': 'Official Dart Flutter analyze test build commands',
+  'mix.exs': 'Official Elixir Mix format test compile commands',
+  'CMakeLists.txt': 'Official CMake C C++ configure build test commands',
+  Makefile: 'Project Makefile validation test build targets',
+}
+
 export async function discoverUniversalRepositoryPortability(
   repositoryRoot: string,
   options: RepositoryPortabilityDiscoveryOptions = {},
 ): Promise<RepositoryPortabilityProfile> {
-  return expandMonorepoValidation(
-    await discoverRepositoryPortability(repositoryRoot, options),
-  )
+  const [baseProfile, researchMarkers] = await Promise.all([
+    discoverRepositoryPortability(repositoryRoot, options),
+    findResearchMarkers(repositoryRoot, options.maxDepth ?? 8),
+  ])
+  const expanded = expandMonorepoValidation({
+    ...baseProfile,
+    manifests: [...new Set([...baseProfile.manifests, ...researchMarkers])].sort(),
+  })
+  const targetedQueries = researchMarkers
+    .map((marker) => RESEARCH_MARKERS[path.posix.basename(marker)])
+    .filter((query): query is string => query !== undefined)
+
+  return {
+    ...expanded,
+    researchQueries:
+      targetedQueries.length === 0
+        ? expanded.researchQueries
+        : [...new Set([...targetedQueries, ...expanded.researchQueries])],
+    evidence: [
+      ...expanded.evidence,
+      ...(researchMarkers.length === 0
+        ? []
+        : [`Detected research-only toolchain markers: ${researchMarkers.join(', ')}.`]),
+    ],
+  }
 }
 
 export function expandMonorepoValidation(
@@ -76,6 +124,32 @@ function ecosystemForManifest(name: string): RepositoryEcosystem | undefined {
   if (name === 'composer.json') return 'php'
   if (name === 'package.json') return 'node'
   return undefined
+}
+
+async function findResearchMarkers(
+  repositoryRoot: string,
+  maxDepth: number,
+): Promise<readonly string[]> {
+  const root = path.resolve(repositoryRoot)
+  const markers: string[] = []
+
+  async function walk(directory: string, depth: number): Promise<void> {
+    if (depth > maxDepth) return
+    const entries = await readdir(directory, { withFileTypes: true })
+    for (const entry of entries) {
+      if (entry.isSymbolicLink()) continue
+      const absolute = path.join(directory, entry.name)
+      if (entry.isDirectory()) {
+        if (!IGNORED_DIRECTORIES.has(entry.name)) await walk(absolute, depth + 1)
+        continue
+      }
+      if (!entry.isFile() || RESEARCH_MARKERS[entry.name] === undefined) continue
+      markers.push(path.relative(root, absolute).replaceAll('\\', '/'))
+    }
+  }
+
+  await walk(root, 0)
+  return markers.sort()
 }
 
 function dedupe(
