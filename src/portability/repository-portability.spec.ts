@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
@@ -91,6 +91,42 @@ describe('universal repository portability discovery', () => {
     expect(profile.validation).toEqual([])
     expect(profile.manifests).toContain('build.zig')
     expect(profile.researchQueries).toContain('Official Zig build test format lint commands')
+  })
+
+  it('walks research-only markers without entering ignored directories or symlink targets', async () => {
+    const root = await temporaryRoot('codemind-portability-research-')
+    const external = await temporaryRoot('codemind-portability-external-')
+    await write(root, 'apps/mobile/pubspec.yaml', 'name: mobile\n')
+    await write(root, 'services/worker/mix.exs', 'defmodule Worker.MixProject do\nend\n')
+    await write(root, 'native/CMakeLists.txt', 'cmake_minimum_required(VERSION 3.20)\n')
+    await write(root, 'Makefile', 'test:\n\ttrue\n')
+    await write(root, 'node_modules/ignored/Package.swift', '// ignored dependency marker\n')
+    await write(external, 'Package.swift', '// ignored symlink target\n')
+    await symlink(external, path.join(root, 'linked-swift'))
+
+    const profile = await discoverUniversalRepositoryPortability(root)
+
+    expect(profile.manifests).toEqual(
+      expect.arrayContaining([
+        'Makefile',
+        'apps/mobile/pubspec.yaml',
+        'native/CMakeLists.txt',
+        'services/worker/mix.exs',
+      ]),
+    )
+    expect(profile.manifests).not.toContain('node_modules/ignored/Package.swift')
+    expect(profile.manifests).not.toContain('linked-swift/Package.swift')
+    expect(profile.researchQueries).toEqual(
+      expect.arrayContaining([
+        'Official Dart Flutter analyze test build commands',
+        'Official Elixir Mix format test compile commands',
+        'Official CMake C C++ configure build test commands',
+        'Project Makefile validation test build targets',
+      ]),
+    )
+    expect(profile.evidence).toContain(
+      'Detected research-only toolchain markers: Makefile, apps/mobile/pubspec.yaml, native/CMakeLists.txt, services/worker/mix.exs.',
+    )
   })
 
   it('allowlists bounded validation commands and maps them to ecosystem images', () => {
