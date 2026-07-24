@@ -29,11 +29,12 @@ export function createSandboxScriptEvidenceProvider(
     }
 
     const startedAt = Date.now()
+    const timeoutMs = resolveScriptTimeoutMs(request.script)
     const result = await sandboxRunner.runCommand({
       binary: 'npm',
       args: ['run', request.script],
       workspaceRoot: request.repoRoot,
-      timeoutMs: resolveScriptTimeoutMs(request.script),
+      ...(timeoutMs === undefined ? {} : { timeoutMs }),
     })
     const durationMs = Date.now() - startedAt
 
