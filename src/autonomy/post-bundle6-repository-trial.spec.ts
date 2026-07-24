@@ -79,9 +79,7 @@ describe('post-Bundle #6 CodeMind repository trial', () => {
       'package.json',
       'src/autonomy/autonomous-mission-release.ts',
     ])
-    expect(index?.symbols.map((symbol) => symbol.name)).toContain(
-      'AutonomousMissionReleaseService',
-    )
+    expect(index?.symbols.map((symbol) => symbol.name)).toContain('AutonomousMissionReleaseService')
     expect(await readFile(path.join(repositoryRoot, releasePath), 'utf8')).toContain(MARKER)
     expect(release.executionMode).toBe('start')
     expect(release.dashboard.status).toBe('completed')
@@ -114,7 +112,9 @@ async function validateTrialTask(
     }
   }
   if (objective === 'Run trial:package-json') {
-    const parsed = JSON.parse(await readFile(path.join(repositoryRoot, 'package.json'), 'utf8')) as {
+    const parsed = JSON.parse(
+      await readFile(path.join(repositoryRoot, 'package.json'), 'utf8'),
+    ) as {
       name?: unknown
     }
     const passed = parsed.name === 'codemind'
@@ -168,7 +168,11 @@ function mission(repositoryRoot: string): CodeMindMission {
   }
 }
 
-async function copyText(sourceRoot: string, targetRoot: string, relativePath: string): Promise<void> {
+async function copyText(
+  sourceRoot: string,
+  targetRoot: string,
+  relativePath: string,
+): Promise<void> {
   const destination = path.join(targetRoot, relativePath)
   await mkdir(path.dirname(destination), { recursive: true })
   await writeFile(destination, await readFile(path.join(sourceRoot, relativePath), 'utf8'))

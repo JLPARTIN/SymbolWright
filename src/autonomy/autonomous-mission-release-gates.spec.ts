@@ -6,11 +6,13 @@ import type { PersistedMissionExecution } from './persistent-mission-executor.js
 
 const MISSION_ID = 'mission-release-gates'
 
-function packet(input: {
-  validationPassed?: boolean
-  decision?: 'ready' | 'review-required' | 'blocked'
-  intelligence?: boolean
-} = {}): MissionAcceptancePacket {
+function packet(
+  input: {
+    validationPassed?: boolean
+    decision?: 'ready' | 'review-required' | 'blocked'
+    intelligence?: boolean
+  } = {},
+): MissionAcceptancePacket {
   const withIntelligence = input.intelligence ?? true
   return {
     schemaVersion: 1,

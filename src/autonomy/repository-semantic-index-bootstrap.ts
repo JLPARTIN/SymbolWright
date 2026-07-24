@@ -23,11 +23,7 @@ const IGNORED_DIRECTORIES = new Set([
   'target',
   'vendor',
 ])
-const IGNORED_FILES = new Set([
-  'package-lock.json',
-  'pnpm-lock.yaml',
-  'yarn.lock',
-])
+const IGNORED_FILES = new Set(['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock'])
 const INDEXABLE_EXTENSIONS = new Set([
   '.bash',
   '.c',

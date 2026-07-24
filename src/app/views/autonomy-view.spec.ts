@@ -33,7 +33,7 @@ describe('AI Mission Control view', () => {
     expect(script).toContain('appEscapeHtml(file)')
     expect(script).toContain('appEscapeHtml(release.state')
     expect(script).toContain('appEscapeHtml(pullRequest.body')
-    expect(script).not.toContain("innerHTML = pullRequest.body")
+    expect(script).not.toContain('innerHTML = pullRequest.body')
   })
 
   it('does not fabricate merge readiness when the server has not supplied it', () => {

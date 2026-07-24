@@ -30,17 +30,18 @@ describe('repository semantic index bootstrap', () => {
       "import { runFeature } from './feature.js'\nexport const result = runFeature()\n",
     )
     await mkdir(path.join(root, 'node_modules', 'ignored'), { recursive: true })
-    await writeFile(path.join(root, 'node_modules', 'ignored', 'index.ts'), 'export const ignored = 1\n')
+    await writeFile(
+      path.join(root, 'node_modules', 'ignored', 'index.ts'),
+      'export const ignored = 1\n',
+    )
     await mkdir(path.join(root, 'dist'), { recursive: true })
     await writeFile(path.join(root, 'dist', 'generated.js'), 'export const generated = true\n')
 
     const files = await collectRepositoryIndexSourceFiles(root)
 
-    expect(files.map((file) => path.relative(root, file.absolutePath).replaceAll('\\', '/'))).toEqual([
-      'package.json',
-      'src/consumer.ts',
-      'src/feature.ts',
-    ])
+    expect(
+      files.map((file) => path.relative(root, file.absolutePath).replaceAll('\\', '/')),
+    ).toEqual(['package.json', 'src/consumer.ts', 'src/feature.ts'])
     expect(files.every((file) => file.packageOwner === 'fixture-package')).toBe(true)
   })
 
@@ -48,10 +49,7 @@ describe('repository semantic index bootstrap', () => {
     const root = await fixtureRoot()
     const workspaceRoot = await fixtureRoot()
     await mkdir(path.join(root, 'src'), { recursive: true })
-    await writeFile(
-      path.join(root, 'src', 'feature.ts'),
-      "export class FeatureService {}\n",
-    )
+    await writeFile(path.join(root, 'src', 'feature.ts'), 'export class FeatureService {}\n')
     const store = new RepositorySemanticIndexStore(path.join(workspaceRoot, '.codemind'))
 
     const index = await ensureRepositorySemanticIndex({
@@ -71,10 +69,18 @@ describe('repository semantic index bootstrap', () => {
     const workspaceRoot = await fixtureRoot()
     await writeFile(path.join(root, 'old.ts'), 'export const oldValue = 1\n')
     const store = new RepositorySemanticIndexStore(path.join(workspaceRoot, '.codemind'))
-    const first = await ensureRepositorySemanticIndex({ workspaceRoot, repositoryRoot: root, store })
+    const first = await ensureRepositorySemanticIndex({
+      workspaceRoot,
+      repositoryRoot: root,
+      store,
+    })
     await writeFile(path.join(root, 'new.ts'), 'export const newValue = 2\n')
 
-    const preserved = await ensureRepositorySemanticIndex({ workspaceRoot, repositoryRoot: root, store })
+    const preserved = await ensureRepositorySemanticIndex({
+      workspaceRoot,
+      repositoryRoot: root,
+      store,
+    })
     const rebuilt = await ensureRepositorySemanticIndex({
       workspaceRoot,
       repositoryRoot: root,
