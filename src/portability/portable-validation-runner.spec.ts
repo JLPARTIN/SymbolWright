@@ -98,6 +98,35 @@ describe('DockerPortableValidationRunner', () => {
     expect(child.kill).not.toHaveBeenCalled()
   })
 
+  it('uses configured Docker resource limits and binary overrides', async () => {
+    vi.stubEnv('CODEMIND_SANDBOX_DOCKER_BINARY', 'custom-docker')
+    vi.stubEnv('CODEMIND_SANDBOX_MEMORY', '512m')
+    vi.stubEnv('CODEMIND_SANDBOX_CPUS', '2')
+    const { spawnProcess } = completedProcess({ code: 0 })
+    const runner = new DockerPortableValidationRunner(undefined, spawnProcess)
+
+    await runner.run({
+      repositoryRoot: '/tmp/repository',
+      command: 'composer validate --strict',
+      policy: createDefaultRuntimePolicy(),
+    })
+
+    expect(spawnProcess).toHaveBeenCalledWith(
+      'custom-docker',
+      expect.arrayContaining([
+        '--memory',
+        '512m',
+        '--cpus',
+        '2',
+        'composer:2',
+        'composer',
+        'validate',
+        '--strict',
+      ]),
+      expect.any(Object),
+    )
+  })
+
   it('reports a nonzero container exit as a validation failure', async () => {
     const { spawnProcess } = completedProcess({ stderr: 'tests failed', code: 2 })
     const runner = new DockerPortableValidationRunner('docker', spawnProcess)
