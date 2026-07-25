@@ -6,6 +6,22 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ### Added
 
+- **GitHub App installation-token delegation**: Layer C of Delegated Agent Access now supports
+  real GitHub App authentication instead of only the `GITHUB_TOKEN` PAT. New
+  `src/github/github-app-auth.ts` signs a GitHub App JWT (RS256, dependency-free via
+  `node:crypto`) from `GITHUB_APP_ID` + `GITHUB_APP_PRIVATE_KEY`/`GITHUB_APP_PRIVATE_KEY_PATH`;
+  `src/github/github-app-token-provider.ts` resolves the installation covering a specific
+  `owner/repo` and mints a short-lived, cached installation access token;
+  `src/github/github-token-resolver.ts` is the single resolver every write path calls —
+  preferring the App when configured and falling back to the PAT only when no App is configured
+  at all (never silently, when an App is configured but lacks an installation for the requested
+  repository — that fails closed with `GitHubAppInstallationNotFoundError`, enforcing GitHub's own
+  installation scope in addition to the SymbolWright grant scope). Wired into the two production
+  write chokepoints for delegated-agent flows: `POST /api/repository/pull-request` and
+  `POST /api/missions/:id/github-pr-packet/publish`. CLI/local-operator GitHub paths are
+  unaffected and continue using the PAT. See `docs/security/DELEGATED_AGENT_ACCESS.md` Section 6
+  for setup.
+
 - **Delegated Agent Access (Large PR Bundle #10)**: a secure, auditable, revocable
   capability-grant system so an operator can authorize an external LLM, coding agent, MCP
   client, or automation to use SymbolWright directly — without sharing `SYMBOLWRIGHT_API_KEY`

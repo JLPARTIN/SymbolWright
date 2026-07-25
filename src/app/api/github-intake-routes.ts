@@ -23,6 +23,8 @@ export interface GitHubIntakeRouteContext {
   readonly service: MissionService
   readonly cwd: string
   readonly githubToken?: string
+  /** Preferred over `githubToken` when present — see `RepositoryRouteContext.githubTokenResolver`. */
+  readonly githubTokenResolver?: (repository?: string) => Promise<string | undefined>
 }
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
@@ -220,11 +222,15 @@ export async function handleGitHubIntakeRoute(
       throw new Error('Mission has no recorded remote URL to publish to.')
     }
     const repository = remoteRepositorySlug(remoteUrl)
+    const resolvedToken =
+      context.githubTokenResolver !== undefined
+        ? await context.githubTokenResolver(repository)
+        : context.githubToken
     const adapter = new GitHubOperationsAdapter({
       policy,
-      ...(context.githubToken === undefined
+      ...(resolvedToken === undefined
         ? {}
-        : { httpClient: new DefaultGitHubHttpClient({ token: context.githubToken }) }),
+        : { httpClient: new DefaultGitHubHttpClient({ token: resolvedToken }) }),
     })
     const branchResult = await adapter.createBranch({
       repository,

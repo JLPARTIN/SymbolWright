@@ -69,7 +69,7 @@ Provider Adapter
 | `POST` | `/api/repository/commit` | Yes | Live | Stage the given `files` (or everything, excluding `.symbolwright/`, when omitted) and commit with `message`. |
 | `POST` | `/api/repository/checkpoints/:id/restore` | Yes | Live | Restore a checkpoint's snapshotted files back into the real working tree (hash-verified per file). |
 | `POST` | `/api/repository/push` | Yes | Live | Push the current branch. Requires `{ confirm: true }`; blocked on protected branches and force pushes (no force option is exposed to the client at all). |
-| `POST` | `/api/repository/pull-request` | Yes | Live | Create a real draft PR via the GitHub API (branch + commit + PR, no local push needed). Requires `{ confirm: true }` and `GITHUB_TOKEN`. |
+| `POST` | `/api/repository/pull-request` | Yes | Live | Create a real draft PR via the GitHub API (branch + commit + PR, no local push needed). Requires `{ confirm: true }` and a GitHub credential — a configured GitHub App installation token (preferred) or `GITHUB_TOKEN`. |
 | `POST` | `/api/missions` | Yes | Contract only | Create a governed SymbolWright mission (full agent/tool-use runtime over HTTP — not yet implemented). |
 | `POST` | `/api/tools/run` | Yes | Contract only | Run a governed tool through policy, approval, audit, and redaction gates. |
 | `GET` | `/api/sessions/:id` | Yes | Contract only | Read a persisted mission session and audit-safe state. |

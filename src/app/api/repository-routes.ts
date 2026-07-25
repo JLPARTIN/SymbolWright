@@ -30,8 +30,25 @@ export interface RepositoryRouteContext {
   readonly cwd: string
   readonly policy: RuntimePolicySnapshot
   readonly githubToken?: string
+  /**
+   * Preferred over `githubToken` when present — resolves the effective GitHub credential for a
+   * specific repository, minting a real GitHub App installation token when one is configured
+   * (`src/github/github-token-resolver.ts`) instead of using the static PAT. Falls back to
+   * `githubToken` when this resolver is absent (e.g. in older test contexts).
+   */
+  readonly githubTokenResolver?: (repository?: string) => Promise<string | undefined>
   /** Test seam: inject a fake GitHubPrCreationClient instead of constructing the real REST client from githubToken. */
   readonly githubPrCreationClient?: GitHubPrCreationClient
+}
+
+async function resolveGitHubToken(
+  context: RepositoryRouteContext,
+  repository: string,
+): Promise<string> {
+  if (context.githubTokenResolver !== undefined) {
+    return (await context.githubTokenResolver(repository)) ?? ''
+  }
+  return context.githubToken ?? ''
 }
 
 const MAX_REPOSITORY_REQUEST_BYTES = 4 * 1024 * 1024
@@ -567,23 +584,16 @@ export async function handleRepositoryPullRequestCreate(
   res: ServerResponse,
   context: RepositoryRouteContext,
 ): Promise<void> {
-  // In this route's wiring, context.policy.allowGitHubWrites is always exactly
-  // "GITHUB_TOKEN is set" (see repositoryContext in symbolwright-chat-server.ts),
-  // so checking token/client presence first gives a strictly more actionable
-  // message than the generic policy-disabled error would.
-  if (
-    context.githubPrCreationClient === undefined &&
-    (context.githubToken === undefined || context.githubToken.trim().length === 0)
-  ) {
+  // In this route's wiring, context.policy.allowGitHubWrites is always exactly "a GitHub
+  // credential mechanism (GITHUB_TOKEN, a configured GitHub App, or a test-injected resolver) is
+  // available" (see repositoryContext in symbolwright-chat-server.ts) — checking it up front, before
+  // parsing the body, gives a strictly more actionable message than a generic policy-disabled error,
+  // and fails the same way regardless of what the request body contains.
+  if (!context.policy.allowGitHubWrites && context.githubPrCreationClient === undefined) {
     sendJson(res, 400, {
       error:
-        'GitHub PR creation requires GITHUB_TOKEN to be configured on the server. Set it and restart symbolwright serve.',
+        'GitHub PR creation requires GITHUB_TOKEN (or a configured GitHub App) on the server. Set one and restart symbolwright serve.',
     })
-    return
-  }
-
-  if (!context.policy.allowGitHubWrites && context.githubPrCreationClient === undefined) {
-    sendJson(res, 403, { error: 'GitHub writes are disabled by runtime policy.' })
     return
   }
 
@@ -643,11 +653,30 @@ export async function handleRepositoryPullRequestCreate(
     return
   }
 
-  const client: GitHubPrCreationClient =
-    context.githubPrCreationClient ??
-    new DefaultGitHubPrCreationClient(
-      new DefaultGitHubHttpClient({ token: context.githubToken ?? '' }),
-    )
+  let client: GitHubPrCreationClient
+  if (context.githubPrCreationClient !== undefined) {
+    client = context.githubPrCreationClient
+  } else {
+    let token: string
+    try {
+      token = await resolveGitHubToken(context, repository)
+    } catch (error) {
+      sendJson(res, 502, {
+        error: `Could not obtain a GitHub credential for "${repository}": ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      })
+      return
+    }
+    if (token.trim().length === 0) {
+      sendJson(res, 400, {
+        error:
+          'GitHub PR creation requires GITHUB_TOKEN (or a configured GitHub App installed on this repository) on the server. Set one and restart symbolwright serve.',
+      })
+      return
+    }
+    client = new DefaultGitHubPrCreationClient(new DefaultGitHubHttpClient({ token }))
+  }
 
   const approval: RuntimeApproval = {
     ticketId: `repository-view-${Date.now()}`,

@@ -49,6 +49,9 @@ GOOGLE_API_KEY=
 GROQ_API_KEY=
 OPENROUTER_API_KEY=
 GITHUB_TOKEN=
+GITHUB_APP_ID=
+GITHUB_APP_PRIVATE_KEY=
+GITHUB_APP_PRIVATE_KEY_PATH=
 SYMBOLWRIGHT_PROVIDER=
 SYMBOLWRIGHT_MODEL=
 SYMBOLWRIGHT_PROVIDER_FALLBACKS=
@@ -57,6 +60,10 @@ SYMBOLWRIGHT_OPENAI_COMPATIBLE_API_KEY=
 ```
 
 Secrets must stay server-side. Redacted config output may report whether a key is configured or missing, but it must not print key material.
+
+`GITHUB_APP_ID`/`GITHUB_APP_PRIVATE_KEY`(`_PATH`) configure the preferred GitHub App installation-token
+path for delegated agent access, in place of the `GITHUB_TOKEN` PAT — see
+[`docs/security/DELEGATED_AGENT_ACCESS.md`](../security/DELEGATED_AGENT_ACCESS.md#6-credentials-and-sessions).
 
 ---
 
