@@ -5,6 +5,10 @@ import {
   buildAgentAccessViewClientScript,
   renderAgentAccessViewHtml,
 } from '../views/agent-access-view.js'
+import {
+  buildAgentTeamsViewClientScript,
+  renderAgentTeamsViewHtml,
+} from '../views/agent-teams-view.js'
 import { buildToolsViewClientScript, renderToolsViewHtml } from '../views/tools-view.js'
 import {
   buildCheckpointsViewClientScript,
@@ -125,6 +129,7 @@ export function renderAppShellHtml(): string {
       ${renderMemoryViewHtml()}
       ${renderCheckpointsViewHtml()}
       ${renderAgentAccessViewHtml()}
+      ${renderAgentTeamsViewHtml()}
       ${renderSettingsViewHtml()}
     </main>
   </div>
@@ -137,6 +142,7 @@ export function renderAppShellHtml(): string {
     ${buildMemoryViewClientScript()}
     ${buildCheckpointsViewClientScript()}
     ${buildAgentAccessViewClientScript()}
+    ${buildAgentTeamsViewClientScript()}
     ${buildSettingsViewClientScript()}
     ${buildMissionsViewClientScript()}
     ${buildAutonomyViewClientScript()}

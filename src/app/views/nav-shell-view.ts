@@ -14,6 +14,7 @@ export const APP_NAV_ENTRIES: readonly AppNavEntry[] = [
   { id: 'memory', label: 'Memory' },
   { id: 'checkpoints', label: 'Checkpoints' },
   { id: 'agent-access', label: 'Agent Access' },
+  { id: 'agent-teams', label: 'Agent Teams' },
   { id: 'settings', label: 'Settings' },
 ]
 

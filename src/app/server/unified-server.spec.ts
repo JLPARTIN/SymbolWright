@@ -39,6 +39,16 @@ describe('GET /', () => {
     expect(html).toContain('data-view="workspace"')
     expect(html).toContain('data-view="agent"')
   })
+
+  it('renders the live chat view as "SymbolWright Chat" and never "CodeMind Chat"', async () => {
+    const server = await launch()
+    const response = await fetch(server.url)
+    expect(response.status).toBe(200)
+    const html = await response.text()
+    expect(html).toContain('<h1>SymbolWright Chat</h1>')
+    expect(html).not.toContain('CodeMind Chat')
+    expect(html).not.toContain('CodeMind chat')
+  })
 })
 
 describe('GET /workspace', () => {

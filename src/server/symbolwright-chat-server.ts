@@ -46,6 +46,8 @@ import {
   type RequestPrincipalKind,
 } from '../app/api/access-routes.js'
 import { handleMissionRoute } from '../app/api/mission-routes.js'
+import { tryHandleAgentTeamRoute } from '../app/api/agent-team-routes.js'
+import { OrchestrationRuntime } from '../orchestration/orchestration-runtime.js'
 import { handleGitHubIntakeRoute } from '../app/api/github-intake-routes.js'
 import {
   handleCheckpointDetail,
@@ -367,6 +369,7 @@ export function createChatServerRequestListener(
   const cwd = options.cwd ?? process.cwd()
   const missionService = options.missionService ?? new MissionService({ workspaceRoot: cwd, env })
   const accessRuntime = options.accessRuntime ?? new AccessRuntime({ workspaceRoot: cwd })
+  const orchestrationRuntime = new OrchestrationRuntime({ workspaceRoot: cwd, accessRuntime })
   const sandboxService = new SandboxService({
     historyStore: new SandboxHistoryStore({ workspaceRoot: cwd, env }),
     env,
@@ -461,6 +464,20 @@ export function createChatServerRequestListener(
           runtime: accessRuntime,
           actor: principal.actor,
           principalKind: principal.kind,
+        })
+      ) {
+        return
+      }
+
+      if (
+        await tryHandleAgentTeamRoute(req, res, url, {
+          orchestration: orchestrationRuntime,
+          accessRuntime,
+          actor: principal.actor,
+          principalKind: principal.kind,
+          ...(principal.principalId === undefined ? {} : { principalId: principal.principalId }),
+          ...(principal.grantId === undefined ? {} : { grantId: principal.grantId }),
+          ...(principal.sessionId === undefined ? {} : { sessionId: principal.sessionId }),
         })
       ) {
         return
