@@ -37,11 +37,12 @@ export interface DoctorReport {
 
 function checkNodeVersion(): DoctorCheck {
   const version = process.version
-  const major = Number(version.slice(1).split('.')[0])
-  if (major >= 20) {
-    return { name: 'Node.js version', status: 'PASS', detail: `${version} (>= 20 required)` }
-  }
-  return { name: 'Node.js version', status: 'FAIL', detail: `${version} (>= 20 required)` }
+  const [majorRaw, minorRaw] = version.slice(1).split('.')
+  const major = Number(majorRaw)
+  const minor = Number(minorRaw)
+  const meetsFloor = major > 22 || (major === 22 && minor >= 5)
+  const status = meetsFloor ? 'PASS' : 'FAIL'
+  return { name: 'Node.js version', status, detail: `${version} (>= 22.5.0 required)` }
 }
 
 function checkPackageJson(workspaceRoot: string): DoctorCheck {
