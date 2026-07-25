@@ -69,6 +69,28 @@ credentials, an embedding provider, a workspace manager) run with only
 its call returns a normal `isError: true` result explaining the failure — it
 does not crash the server or leak partial state.
 
+## Capability-scoped mode (delegated agent access)
+
+By default `mcp-server` trusts whatever process spawns it (local stdio, no
+authentication concept) — the mode gate above is the only restriction. To
+scope an MCP connection to a specific external-agent grant instead (see
+`docs/security/DELEGATED_AGENT_ACCESS.md`), set `SYMBOLWRIGHT_AGENT_TOKEN` to
+a `sw_agent_...` credential before starting the server:
+
+```bash
+export SYMBOLWRIGHT_AGENT_TOKEN=sw_agent_...
+symbolwright mcp-server --mode APPROVED_EXECUTION
+```
+
+When set, the server authenticates the token against the grant it belongs to
+at startup (refusing to start on an invalid/expired/revoked/paused token),
+`tools/list` only advertises tools the grant's capabilities cover, and every
+`tools/call` is re-checked against `AuthorizationService` before running —
+a Repository Analyst grant, for example, never sees `edit_file`, `bash`,
+`git`, or any GitHub write tool in its tool list, and would be denied even if
+it somehow guessed the tool name. Without `SYMBOLWRIGHT_AGENT_TOKEN`, behavior
+is unchanged from before delegated agent access existed.
+
 ## Protocol
 
 Newline-delimited JSON-RPC 2.0 over stdio, same wire format as

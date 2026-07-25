@@ -28,6 +28,23 @@ import {
 import { runAgentLoop } from '../agent/agent-loop.js'
 import type { AgentLoopConfig, AgentLoopEvent, AgentLoopResult } from '../agent/agent-loop.types.js'
 import { getCheckpoint, listCheckpoints } from '../checkpoint/checkpoint-service.js'
+import { AccessRuntime } from '../access/access-runtime.js'
+import {
+  InvalidCredentialError,
+  SessionLimitExceededError,
+} from '../access/access-grant-service.js'
+import { AuthorizationDeniedError, ApprovalRequiredError } from '../access/authorization-service.js'
+import { resolveRouteCapability } from '../access/route-capability-map.js'
+import {
+  BRANCH_SENSITIVE_ROUTE_CAPABILITIES,
+  isLikelyDefaultBranch,
+  resolveCurrentGitBranch,
+} from '../access/git-branch-resolver.js'
+import {
+  handleAccessRoute,
+  handleUnauthenticatedDeviceFlowRoute,
+  type RequestPrincipalKind,
+} from '../app/api/access-routes.js'
 import { handleMissionRoute } from '../app/api/mission-routes.js'
 import { handleGitHubIntakeRoute } from '../app/api/github-intake-routes.js'
 import {
@@ -38,6 +55,7 @@ import {
   handleToolsRegistry,
 } from '../app/api/readonly-registry-routes.js'
 import {
+  detectGitHubRepository,
   handleRepositoryBranchCreate,
   handleRepositoryBranches,
   handleRepositoryCheckpointRestore,
@@ -106,6 +124,8 @@ export interface ChatServerOptions {
   readonly missionService?: MissionService
   /** Test seam: inject a fake GitHubPrCreationClient for the Repository PR-creation route instead of constructing the real REST client. */
   readonly githubPrCreationClient?: GitHubPrCreationClient
+  /** Test seam for deterministic delegated-agent-access (grants/credentials/authorization) behavior. */
+  readonly accessRuntime?: AccessRuntime
 }
 
 export interface StartedChatServer {
@@ -158,6 +178,97 @@ export function isAuthorized(req: IncomingMessage, apiKey: string): boolean {
   }
   const presented = header.slice('Bearer '.length)
   return timingSafeEqualStrings(presented, apiKey)
+}
+
+/**
+ * Resolves *who* is calling: the legacy local operator (the shared `SYMBOLWRIGHT_API_KEY` Bearer
+ * token — unrestricted, matching every pre-existing behavior exactly) or an external agent
+ * presenting a scoped `sw_agent_...` token issued by the delegated-agent-access subsystem
+ * (`src/access/`). Every check here is live against the current grant/credential/session state —
+ * a paused, revoked, or expired grant is rejected immediately, not just once at token-mint time.
+ * Returns `undefined` when neither authentication mode succeeds (caller responds 401).
+ */
+export interface RequestPrincipal {
+  readonly kind: RequestPrincipalKind
+  readonly actor: string
+  readonly principalId?: string
+  readonly grantId?: string
+  readonly sessionId?: string
+}
+
+function resolveRequestPrincipal(
+  req: IncomingMessage,
+  apiKey: string,
+  accessRuntime: AccessRuntime,
+): RequestPrincipal | undefined {
+  if (isAuthorized(req, apiKey)) {
+    return { kind: 'operator', actor: 'operator' }
+  }
+
+  const header = req.headers.authorization
+  if (header === undefined || !header.startsWith('Bearer ')) return undefined
+  const presented = header.slice('Bearer '.length)
+  if (!presented.startsWith('sw_agent_')) return undefined
+
+  try {
+    const { grant, session } = accessRuntime.grantService.authenticateAgentToken(presented, {
+      client: clientIpFor(req),
+    })
+    return {
+      kind: 'agent',
+      actor: grant.displayName,
+      principalId: grant.principalId,
+      grantId: grant.id,
+      sessionId: session.id,
+    }
+  } catch (error) {
+    if (error instanceof InvalidCredentialError || error instanceof SessionLimitExceededError) {
+      return undefined
+    }
+    throw error
+  }
+}
+
+/**
+ * Builds the per-tool-call authorization closure for `/api/agent`. Branch context is resolved
+ * once per request (the branch actually checked out in `toolCwd`) and applied to every capability
+ * check made during that agent turn — every mutating tool call in a turn operates against the
+ * same working-tree branch, so this matches real usage without re-shelling out to `git` per call.
+ */
+async function buildToolAccessControl(
+  agentPrincipal:
+    | { readonly principal: RequestPrincipal; readonly accessRuntime: AccessRuntime }
+    | undefined,
+  toolCwd: string,
+): Promise<RuntimeToolContext['accessControl']> {
+  if (agentPrincipal === undefined) return undefined
+  const { principal, accessRuntime } = agentPrincipal
+  const [branch, repository] = await Promise.all([
+    resolveCurrentGitBranch(toolCwd),
+    detectGitHubRepository(toolCwd),
+  ])
+  const branchContext: { branch?: string; isDefaultBranch?: boolean } =
+    branch === undefined
+      ? {}
+      : { branch, isDefaultBranch: await isLikelyDefaultBranch(toolCwd, branch) }
+  const repositoryContext: { repository?: string } = repository === undefined ? {} : { repository }
+
+  return {
+    principalId: principal.principalId as string,
+    grantId: principal.grantId as string,
+    ...(principal.sessionId === undefined ? {} : { sessionId: principal.sessionId }),
+    requireAuthorized: async (capability: string, toolName: string) => {
+      await accessRuntime.authorizationService.requireAuthorized({
+        principalId: principal.principalId as string,
+        grantId: principal.grantId as string,
+        ...(principal.sessionId === undefined ? {} : { sessionId: principal.sessionId }),
+        capability,
+        toolName,
+        ...repositoryContext,
+        ...branchContext,
+      })
+    },
+  }
 }
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
@@ -248,6 +359,7 @@ export function createChatServerRequestListener(
   const localStatusProvider = options.localStatusProvider ?? collectStatus
   const cwd = options.cwd ?? process.cwd()
   const missionService = options.missionService ?? new MissionService({ workspaceRoot: cwd, env })
+  const accessRuntime = options.accessRuntime ?? new AccessRuntime({ workspaceRoot: cwd })
   const sandboxService = new SandboxService({
     historyStore: new SandboxHistoryStore({ workspaceRoot: cwd, env }),
     env,
@@ -268,6 +380,15 @@ export function createChatServerRequestListener(
   }
   const missionContext = { service: missionService, cwd }
   const sandboxContext = { service: sandboxService, missionService }
+  // Resolved once per server process: the `owner/repo` identity a grant's `repositoryScope` is
+  // checked against. A SymbolWright server process is always bound to exactly one working tree,
+  // so "repository scope" means "is this process's repository in the grant's allowlist" rather
+  // than a per-request selectable target.
+  let cachedRepositoryIdentity: Promise<string | undefined> | undefined
+  const resolveRepositoryIdentity = (): Promise<string | undefined> => {
+    cachedRepositoryIdentity ??= detectGitHubRepository(repositoryContext.cwd)
+    return cachedRepositoryIdentity
+  }
   const githubIntakeContext = {
     service: missionService,
     cwd,
@@ -299,7 +420,14 @@ export function createChatServerRequestListener(
       return
     }
 
-    if (!isAuthorized(req, options.apiKey)) {
+    // OAuth-device-flow request/poll endpoints are intentionally unauthenticated — see
+    // `handleUnauthenticatedDeviceFlowRoute`'s doc comment for why that is safe.
+    if (await handleUnauthenticatedDeviceFlowRoute(req, res, url, accessRuntime)) {
+      return
+    }
+
+    const principal = resolveRequestPrincipal(req, options.apiKey, accessRuntime)
+    if (principal === undefined) {
       sendJson(res, 401, { error: 'unauthorized' })
       return
     }
@@ -310,6 +438,72 @@ export function createChatServerRequestListener(
     }
 
     try {
+      if (
+        await handleAccessRoute(req, res, url, {
+          runtime: accessRuntime,
+          actor: principal.actor,
+          principalKind: principal.kind,
+        })
+      ) {
+        return
+      }
+
+      if (principal.kind === 'agent' && !url.pathname.startsWith('/api/v1/')) {
+        const requiredCapability = resolveRouteCapability(req.method ?? 'GET', url.pathname)
+        if (requiredCapability === undefined) {
+          sendJson(res, 403, {
+            error: 'authorization_denied',
+            reasonCode: 'ROUTE_NOT_PERMITTED',
+            message: 'This agent grant does not permit this endpoint.',
+          })
+          return
+        }
+        let branchContext: { branch?: string; isDefaultBranch?: boolean } = {}
+        if (BRANCH_SENSITIVE_ROUTE_CAPABILITIES.has(requiredCapability)) {
+          const branch = await resolveCurrentGitBranch(repositoryContext.cwd)
+          if (branch !== undefined) {
+            branchContext = {
+              branch,
+              isDefaultBranch: await isLikelyDefaultBranch(repositoryContext.cwd, branch),
+            }
+          }
+        }
+        const repository = await resolveRepositoryIdentity()
+        try {
+          await accessRuntime.authorizationService.requireAuthorized({
+            principalId: principal.principalId as string,
+            grantId: principal.grantId as string,
+            ...(principal.sessionId === undefined ? {} : { sessionId: principal.sessionId }),
+            capability: requiredCapability,
+            ...(repository === undefined ? {} : { repository }),
+            ...branchContext,
+          })
+        } catch (authzError) {
+          if (authzError instanceof ApprovalRequiredError) {
+            sendJson(res, 403, {
+              error: 'approval_required',
+              reasonCode: authzError.decision.reasonCode,
+              message: authzError.decision.reason,
+              approvalRequestId: authzError.decision.approvalId,
+              correlationId: authzError.decision.correlationId,
+            })
+            return
+          }
+          if (authzError instanceof AuthorizationDeniedError) {
+            sendJson(res, 403, {
+              error: 'authorization_denied',
+              reasonCode: authzError.decision.reasonCode,
+              message: authzError.decision.reason,
+              requiredCapability,
+              approvalPossible: false,
+              correlationId: authzError.decision.correlationId,
+            })
+            return
+          }
+          throw authzError
+        }
+      }
+
       if (await handleGitHubIntakeRoute(req, res, url, githubIntakeContext)) {
         return
       }
@@ -367,7 +561,15 @@ export function createChatServerRequestListener(
       }
 
       if (req.method === 'POST' && url.pathname === '/api/agent') {
-        await handleAgent(req, res, env, overrideStore, missionService, cwd)
+        await handleAgent(
+          req,
+          res,
+          env,
+          overrideStore,
+          missionService,
+          cwd,
+          principal.kind === 'agent' ? { principal, accessRuntime } : undefined,
+        )
         return
       }
 
@@ -617,6 +819,7 @@ async function handleAgent(
   overrideStore: ProviderRuntimeOverrideStore,
   missionService: MissionService,
   defaultCwd: string,
+  agentPrincipal?: { readonly principal: RequestPrincipal; readonly accessRuntime: AccessRuntime },
 ): Promise<void> {
   const parsed = parseAgentRequestBody(await readJsonBody(req))
   let mission: SymbolWrightMission | undefined
@@ -654,10 +857,12 @@ async function handleAgent(
     hasGitHubToken: env['GITHUB_TOKEN'] !== undefined,
   })
   const toolCwd = mission?.repository.rootPath ?? defaultCwd
+  const toolAccessControl = await buildToolAccessControl(agentPrincipal, toolCwd)
   const toolContext: RuntimeToolContext = {
     cwd: toolCwd,
     policy,
     ...(mission === undefined ? {} : { sessionId: mission.id }),
+    ...(toolAccessControl === undefined ? {} : { accessControl: toolAccessControl }),
   }
   const tools = assembleAgentTools()
   const priorMessages = parsed.priorMessages ?? mission?.agent.messages

@@ -14,6 +14,8 @@ export interface McpServerRuntimeOptions {
   readonly output?: Writable
   /** Called once per line that isn't valid JSON or valid JSON-RPC — for diagnostics only. */
   readonly onProtocolWarning?: (line: string) => void
+  /** A `sw_agent_...` delegated-agent-access token — see `McpServerToolsOptions.agentToken`. */
+  readonly agentToken?: string
 }
 
 export interface RunningMcpServer {
@@ -34,6 +36,7 @@ export function runSymbolWrightMcpServer(options: McpServerRuntimeOptions): Runn
     mode: options.mode,
     cwd: options.cwd,
     ...(options.hasGitHubToken === undefined ? {} : { hasGitHubToken: options.hasGitHubToken }),
+    ...(options.agentToken === undefined ? {} : { agentToken: options.agentToken }),
   })
   const serverInfo = options.serverInfo ?? DEFAULT_SERVER_INFO
   const input = options.input ?? process.stdin

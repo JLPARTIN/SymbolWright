@@ -1,6 +1,10 @@
 import { buildClientRouterScript } from '../router/client-router.js'
 import { buildClientStateScript } from '../state/client-state.js'
 import { buildAutonomyViewClientScript, renderAutonomyViewHtml } from '../views/autonomy-view.js'
+import {
+  buildAgentAccessViewClientScript,
+  renderAgentAccessViewHtml,
+} from '../views/agent-access-view.js'
 import { buildToolsViewClientScript, renderToolsViewHtml } from '../views/tools-view.js'
 import {
   buildCheckpointsViewClientScript,
@@ -120,6 +124,7 @@ export function renderAppShellHtml(): string {
       ${renderToolsViewHtml()}
       ${renderMemoryViewHtml()}
       ${renderCheckpointsViewHtml()}
+      ${renderAgentAccessViewHtml()}
       ${renderSettingsViewHtml()}
     </main>
   </div>
@@ -131,6 +136,7 @@ export function renderAppShellHtml(): string {
     ${buildToolsViewClientScript()}
     ${buildMemoryViewClientScript()}
     ${buildCheckpointsViewClientScript()}
+    ${buildAgentAccessViewClientScript()}
     ${buildSettingsViewClientScript()}
     ${buildMissionsViewClientScript()}
     ${buildAutonomyViewClientScript()}

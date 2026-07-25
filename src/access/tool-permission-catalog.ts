@@ -1,0 +1,94 @@
+import type { SymbolWrightToolName } from '../runtime/types.js'
+import type { ApprovalRequirement, RiskLevel } from './access-types.js'
+
+/**
+ * Every SymbolWright tool must declare the capability (or capabilities) it
+ * requires before it can be exposed to, or invoked by, an externally
+ * authorized agent. A tool without an entry here is refused for any
+ * agent-token-authenticated caller (fail closed) — see
+ * `resolveToolPermissionDescriptor`.
+ */
+export interface ToolPermissionDescriptor {
+  readonly capability: string
+  readonly additionalCapabilities?: readonly string[]
+  readonly riskLevel: RiskLevel
+  readonly approvalOverride?: ApprovalRequirement
+}
+
+function tool(
+  capability: string,
+  riskLevel: RiskLevel,
+  additionalCapabilities?: readonly string[],
+): ToolPermissionDescriptor {
+  return additionalCapabilities === undefined
+    ? { capability, riskLevel }
+    : { capability, riskLevel, additionalCapabilities }
+}
+
+export const TOOL_PERMISSION_DESCRIPTORS: Readonly<
+  Record<SymbolWrightToolName, ToolPermissionDescriptor>
+> = {
+  plan_goal: tool('symbolwright.plan.create', 'low'),
+  list_files: tool('repo.metadata.read', 'read'),
+  read_file: tool('repo.content.read', 'read'),
+  search_files: tool('symbolwright.repository.search', 'low'),
+  propose_edit: tool('symbolwright.plan.create', 'low'),
+  validation_plan: tool('symbolwright.plan.create', 'low'),
+  ci_review: tool('repo.checks.read', 'read'),
+  pr_notes: tool('symbolwright.plan.create', 'low'),
+  github_pr_fixture_review: tool('repo.pull_requests.read', 'read'),
+  github_ci_fixture_review: tool('repo.checks.read', 'read'),
+  live_read_policy_handshake: tool('repo.metadata.read', 'read'),
+  live_read_client_fixture: tool('repo.metadata.read', 'read'),
+  github_live_read_pr: tool('repo.pull_requests.read', 'read'),
+  github_live_read_ci: tool('repo.checks.read', 'read'),
+  ajna_live_read_review: tool('repo.pull_requests.read', 'read'),
+  ajna_live_read_merge_readiness: tool('repo.checks.read', 'read'),
+  operator_review_packet: tool('symbolwright.plan.create', 'low'),
+  write_intent_plan: tool('symbolwright.plan.create', 'low'),
+  local_file_write: tool('repo.content.update', 'write', ['symbolwright.mission.execute']),
+  apply_patch: tool('repo.content.update', 'write', ['symbolwright.mission.execute']),
+  validation_command_gate: tool('symbolwright.validation.run', 'low'),
+  pr_preparation: tool('symbolwright.plan.create', 'low'),
+  github_write_proposal: tool('repo.pull_request.create', 'write'),
+  github_write_gate: tool('repo.commit.push', 'write'),
+  github_create_pr: tool('repo.pull_request.create', 'write'),
+  pr_collaboration: tool('repo.review.respond', 'write'),
+  zflow_report: tool('symbolwright.mission.read', 'read'),
+  zflow_report_rollup: tool('symbolwright.mission.read', 'read'),
+  zflow_report_catalog: tool('symbolwright.mission.read', 'read'),
+  glob: tool('repo.content.read', 'read'),
+  grep: tool('symbolwright.repository.search', 'low'),
+  bash: tool('symbolwright.sandbox.execute', 'write'),
+  edit_file: tool('repo.content.update', 'write', ['symbolwright.mission.execute']),
+  git: tool('repo.commit.create', 'write'),
+  swarm_dispatch: tool('symbolwright.mission.execute', 'write'),
+  run_tests: tool('symbolwright.validation.run', 'low', ['symbolwright.sandbox.execute']),
+  run_typecheck: tool('symbolwright.validation.run', 'low'),
+  run_lint: tool('symbolwright.validation.run', 'low'),
+  memory_recall: tool('symbolwright.repository.search', 'low'),
+  memory_store: tool('symbolwright.mission.execute', 'low'),
+  preflight: tool('symbolwright.validation.run', 'low'),
+  mcp_call: tool('symbolwright.mission.execute', 'write'),
+  web_fetch: tool('symbolwright.repository.search', 'low'),
+  web_search: tool('symbolwright.repository.search', 'low'),
+  subagent_run: tool('symbolwright.mission.execute', 'write'),
+  skill_run: tool('symbolwright.mission.execute', 'write'),
+  sandbox_list_runtimes: tool('symbolwright.sandbox.execute', 'read'),
+  sandbox_execute: tool('symbolwright.sandbox.execute', 'low'),
+}
+
+export function resolveToolPermissionDescriptor(
+  toolName: string,
+): ToolPermissionDescriptor | undefined {
+  return Object.prototype.hasOwnProperty.call(TOOL_PERMISSION_DESCRIPTORS, toolName)
+    ? TOOL_PERMISSION_DESCRIPTORS[toolName as SymbolWrightToolName]
+    : undefined
+}
+
+/** Every capability referenced by any tool, plus `restore_checkpoint`'s extra requirement. */
+export function requiredCapabilitiesForTool(toolName: string): readonly string[] {
+  const descriptor = resolveToolPermissionDescriptor(toolName)
+  if (descriptor === undefined) return []
+  return [descriptor.capability, ...(descriptor.additionalCapabilities ?? [])]
+}
