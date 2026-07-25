@@ -702,4 +702,108 @@ describe('AccessGrantService + AuthorizationService', () => {
     expect(decision.allowed).toBe(false)
     expect(decision.reasonCode).toBe('PRINCIPAL_MISMATCH')
   })
+
+  describe('executionLimits enforcement', () => {
+    it('denies repo.commit.push when executionLimits.allowDirectPush is false', async () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'No direct push',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        executionLimits: { allowDirectPush: false },
+      })
+      const decision = await authz.evaluate({
+        principalId: grant.principalId,
+        grantId: grant.id,
+        capability: 'repo.commit.push',
+        repository: 'JLPARTIN/SymbolWright',
+        branch: 'symbolwright/agent/fix-1',
+      })
+      expect(decision.allowed).toBe(false)
+      expect(decision.reasonCode).toBe('DIRECT_PUSH_DISABLED')
+    })
+
+    it('still allows repo.commit.push when allowDirectPush is true (the Coding Agent default)', async () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+      })
+      expect(grant.executionLimits.allowDirectPush).toBe(true)
+      const decision = await authz.evaluate({
+        principalId: grant.principalId,
+        grantId: grant.id,
+        capability: 'repo.commit.push',
+        repository: 'JLPARTIN/SymbolWright',
+        branch: 'symbolwright/agent/fix-1',
+      })
+      expect(decision.allowed).toBe(true)
+    })
+
+    it('restricts symbolwright.sandbox.execute to an allowlisted command binary', async () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Git-only sandbox',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        executionLimits: { allowedCommands: ['git'] },
+      })
+
+      const allowed = await authz.evaluate({
+        principalId: grant.principalId,
+        grantId: grant.id,
+        capability: 'symbolwright.sandbox.execute',
+        metadata: { command: 'git status' },
+      })
+      expect(allowed.allowed).toBe(true)
+
+      const denied = await authz.evaluate({
+        principalId: grant.principalId,
+        grantId: grant.id,
+        capability: 'symbolwright.sandbox.execute',
+        metadata: { command: 'npm install' },
+      })
+      expect(denied.allowed).toBe(false)
+      expect(denied.reasonCode).toBe('COMMAND_NOT_ALLOWED')
+    })
+
+    it('denies symbolwright.sandbox.execute when allowedCommands is set but no command metadata is provided', async () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Git-only sandbox',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        executionLimits: { allowedCommands: ['git'] },
+      })
+      const decision = await authz.evaluate({
+        principalId: grant.principalId,
+        grantId: grant.id,
+        capability: 'symbolwright.sandbox.execute',
+      })
+      expect(decision.allowed).toBe(false)
+      expect(decision.reasonCode).toBe('COMMAND_NOT_ALLOWED')
+    })
+
+    it('allows any command when allowedCommands is unset (unchanged default behavior)', async () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+      })
+      const decision = await authz.evaluate({
+        principalId: grant.principalId,
+        grantId: grant.id,
+        capability: 'symbolwright.sandbox.execute',
+        metadata: { command: 'npm install' },
+      })
+      expect(decision.allowed).toBe(true)
+    })
+  })
 })

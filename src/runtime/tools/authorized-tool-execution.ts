@@ -22,9 +22,13 @@ export async function runAuthorizedTool<TInput>(
         `authorization_denied[UNKNOWN_TOOL]: Tool "${tool.name}" has no registered permission descriptor and is refused for an authorized agent.`,
       )
     }
+    const metadata =
+      typeof input === 'object' && input !== null && !Array.isArray(input)
+        ? (input as Record<string, unknown>)
+        : undefined
     const capabilities = [descriptor.capability, ...(descriptor.additionalCapabilities ?? [])]
     for (const capability of capabilities) {
-      await accessControl.requireAuthorized(capability, tool.name)
+      await accessControl.requireAuthorized(capability, tool.name, metadata)
     }
   }
   return tool.execute(input, context)

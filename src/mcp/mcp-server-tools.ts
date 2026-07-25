@@ -75,13 +75,14 @@ export function createSymbolWrightMcpToolHandler(
         principalId: grant.principalId,
         grantId: grant.id,
         sessionId: session.id,
-        requireAuthorized: async (capability, toolName) => {
+        requireAuthorized: async (capability, toolName, metadata) => {
           await runtime.authorizationService.requireAuthorized({
             principalId: grant.principalId,
             grantId: grant.id,
             sessionId: session.id,
             capability,
             toolName,
+            ...(metadata === undefined ? {} : { metadata }),
           })
         },
       },

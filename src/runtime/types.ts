@@ -171,7 +171,16 @@ export interface ToolAccessControl {
   readonly principalId: string
   readonly grantId: string
   readonly sessionId?: string
-  readonly requireAuthorized: (capability: string, toolName: string) => Promise<void>
+  /**
+   * `metadata` carries the tool's own input (e.g. `{ command: "git status" }` for `bash`) through
+   * to `AuthorizationService`, which uses it to evaluate request-shaped `executionLimits` such as
+   * `allowedCommands` that a single `(capability, toolName)` pair can't express.
+   */
+  readonly requireAuthorized: (
+    capability: string,
+    toolName: string,
+    metadata?: Record<string, unknown>,
+  ) => Promise<void>
 }
 
 /** Context passed to every tool execution — cwd, policy, and optional execution adapters. */
