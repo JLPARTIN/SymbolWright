@@ -53,6 +53,21 @@ describe('parseAgentRequestBody', () => {
     ).toThrow(ChatRequestValidationError)
   })
 
+  it('rejects maxTokens outside the allowed range, and accepts a value within it', () => {
+    expect(() =>
+      parseAgentRequestBody({ providerId: 'openai', message: 'hi', maxTokens: 0 }),
+    ).toThrow(ChatRequestValidationError)
+    expect(() =>
+      parseAgentRequestBody({ providerId: 'openai', message: 'hi', maxTokens: -1 }),
+    ).toThrow(ChatRequestValidationError)
+    expect(() =>
+      parseAgentRequestBody({ providerId: 'openai', message: 'hi', maxTokens: 1_000_000 }),
+    ).toThrow(ChatRequestValidationError)
+    expect(
+      parseAgentRequestBody({ providerId: 'openai', message: 'hi', maxTokens: 8192 }).maxTokens,
+    ).toBe(8192)
+  })
+
   it('parses string-content priorMessages', () => {
     const parsed = parseAgentRequestBody({
       providerId: 'openai',

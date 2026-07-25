@@ -30,7 +30,9 @@ import type { AgentLoopConfig, AgentLoopEvent, AgentLoopResult } from '../agent/
 import { getCheckpoint, listCheckpoints } from '../checkpoint/checkpoint-service.js'
 import { AccessRuntime } from '../access/access-runtime.js'
 import {
+  ClientConstraintViolationError,
   InvalidCredentialError,
+  SessionInactivityTimeoutError,
   SessionLimitExceededError,
 } from '../access/access-grant-service.js'
 import { AuthorizationDeniedError, ApprovalRequiredError } from '../access/authorization-service.js'
@@ -110,6 +112,7 @@ const DEFAULT_AGENT_SYSTEM_PROMPT =
 
 const MAX_BODY_BYTES = 256 * 1024
 const DEFAULT_RATE_LIMIT_PER_MINUTE = 60
+const DEFAULT_DEVICE_FLOW_RATE_LIMIT_PER_MINUTE = 20
 
 export class ChatServerConfigError extends Error {}
 
@@ -125,6 +128,10 @@ export interface ChatServerOptions {
   readonly transport?: ProviderHttpTransport
   readonly streamTransport?: ProviderStreamTransport
   readonly rateLimiter?: RateLimiter
+  /** Rate limiter applied to the unauthenticated `/api/v1/device-authorization` and
+   * `/api/v1/oauth/token` routes, keyed by IP. Separate from `rateLimiter` because those routes
+   * run ahead of the Bearer-token gate and would otherwise never hit any limiter at all. */
+  readonly deviceFlowRateLimiter?: RateLimiter
   readonly localStatusProvider?: () => Promise<RuntimeStatusView>
   readonly cwd?: string
   /** Test seam for deterministic mission storage/lifecycle behavior. */
@@ -221,7 +228,7 @@ function resolveRequestPrincipal(
 
   try {
     const { grant, session } = accessRuntime.grantService.authenticateAgentToken(presented, {
-      client: clientIpFor(req),
+      ip: clientIpFor(req),
     })
     return {
       kind: 'agent',
@@ -231,7 +238,12 @@ function resolveRequestPrincipal(
       sessionId: session.id,
     }
   } catch (error) {
-    if (error instanceof InvalidCredentialError || error instanceof SessionLimitExceededError) {
+    if (
+      error instanceof InvalidCredentialError ||
+      error instanceof SessionLimitExceededError ||
+      error instanceof ClientConstraintViolationError ||
+      error instanceof SessionInactivityTimeoutError
+    ) {
       return undefined
     }
     throw error
@@ -364,6 +376,9 @@ export function createChatServerRequestListener(
   const streamTransport = options.streamTransport ?? new FetchProviderStreamTransport()
   const rateLimiter =
     options.rateLimiter ?? new FixedWindowRateLimiter(DEFAULT_RATE_LIMIT_PER_MINUTE, 60_000)
+  const deviceFlowRateLimiter =
+    options.deviceFlowRateLimiter ??
+    new FixedWindowRateLimiter(DEFAULT_DEVICE_FLOW_RATE_LIMIT_PER_MINUTE, 60_000)
   const env = options.env ?? process.env
   const localStatusProvider = options.localStatusProvider ?? collectStatus
   const cwd = options.cwd ?? process.cwd()
@@ -442,7 +457,16 @@ export function createChatServerRequestListener(
     }
 
     // OAuth-device-flow request/poll endpoints are intentionally unauthenticated — see
-    // `handleUnauthenticatedDeviceFlowRoute`'s doc comment for why that is safe.
+    // `handleUnauthenticatedDeviceFlowRoute`'s doc comment for why that is safe. Being
+    // unauthenticated, they sit ahead of the Bearer-token gate below, so they get their own
+    // (stricter, IP-keyed) rate limit instead of relying on the post-auth limiter that never sees
+    // them.
+    if (url.pathname === '/api/v1/device-authorization' || url.pathname === '/api/v1/oauth/token') {
+      if (!deviceFlowRateLimiter.consume(clientIpFor(req))) {
+        sendJson(res, 429, { error: 'rate_limited' })
+        return
+      }
+    }
     if (await handleUnauthenticatedDeviceFlowRoute(req, res, url, accessRuntime)) {
       return
     }
@@ -453,7 +477,11 @@ export function createChatServerRequestListener(
       return
     }
 
-    if (!rateLimiter.consume(clientIpFor(req))) {
+    // Keyed by grant when the caller is an authenticated agent so distinct grants sharing an
+    // egress IP (NAT, shared CI runner) don't share one budget, and one grant can't be starved by
+    // unrelated traffic from the same address; falls back to IP for the operator API key.
+    const rateLimitKey = principal.grantId ?? clientIpFor(req)
+    if (!rateLimiter.consume(rateLimitKey)) {
       sendJson(res, 429, { error: 'rate_limited' })
       return
     }

@@ -11,9 +11,18 @@ import {
   StepUpRequiredError,
   type CreateGrantInput,
 } from '../../access/access-grant-service.js'
+import { ApprovalNotFoundError, ApprovalStateError } from '../../access/authorization-service.js'
 import { ALL_CAPABILITIES } from '../../access/access-capability-catalog.js'
 import { PERMISSION_PROFILES } from '../../access/access-profiles.js'
-import type { BranchScope, RepositoryScope } from '../../access/access-types.js'
+import { APPROVAL_REQUIREMENTS } from '../../access/access-types.js'
+import type {
+  ApprovalPolicy,
+  BranchScope,
+  ClientConstraints,
+  MissionExecutionLimits,
+  RepositoryScope,
+  SessionLimits,
+} from '../../access/access-types.js'
 
 export type RequestPrincipalKind = 'operator' | 'agent'
 
@@ -109,6 +118,132 @@ function parseBranchScopeOverride(value: unknown): Partial<BranchScope> | undefi
   return result
 }
 
+function optionalPositiveNumber(record: Record<string, unknown>, key: string): number | undefined {
+  const value = record[key]
+  if (value === undefined) return undefined
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+    throw new GrantValidationError(`${key} must be a positive number.`)
+  }
+  return value
+}
+
+function optionalBoolean(record: Record<string, unknown>, key: string): boolean | undefined {
+  const value = record[key]
+  if (value === undefined) return undefined
+  if (typeof value !== 'boolean') throw new GrantValidationError(`${key} must be a boolean.`)
+  return value
+}
+
+function optionalStringArray(
+  record: Record<string, unknown>,
+  key: string,
+): readonly string[] | undefined {
+  const value = record[key]
+  if (value === undefined) return undefined
+  if (!Array.isArray(value) || !value.every((entry) => typeof entry === 'string')) {
+    throw new GrantValidationError(`${key} must be an array of strings.`)
+  }
+  return value
+}
+
+function parseMissionExecutionLimits(value: unknown): MissionExecutionLimits | undefined {
+  if (value === undefined) return undefined
+  if (typeof value !== 'object' || value === null) {
+    throw new GrantValidationError('executionLimits must be an object.')
+  }
+  const record = value as Record<string, unknown>
+  const maxConcurrentMissions = optionalPositiveNumber(record, 'maxConcurrentMissions')
+  const maxMissionDurationMinutes = optionalPositiveNumber(record, 'maxMissionDurationMinutes')
+  const maxRepairAttempts = optionalPositiveNumber(record, 'maxRepairAttempts')
+  const sandboxNetworkAccess = optionalBoolean(record, 'sandboxNetworkAccess')
+  const allowedCommands = optionalStringArray(record, 'allowedCommands')
+  const maxFilesChanged = optionalPositiveNumber(record, 'maxFilesChanged')
+  const maxDiffLines = optionalPositiveNumber(record, 'maxDiffLines')
+  const maxCommits = optionalPositiveNumber(record, 'maxCommits')
+  const requirePullRequest = optionalBoolean(record, 'requirePullRequest')
+  const allowDirectPush = optionalBoolean(record, 'allowDirectPush')
+  return {
+    ...(maxConcurrentMissions === undefined ? {} : { maxConcurrentMissions }),
+    ...(maxMissionDurationMinutes === undefined ? {} : { maxMissionDurationMinutes }),
+    ...(maxRepairAttempts === undefined ? {} : { maxRepairAttempts }),
+    ...(sandboxNetworkAccess === undefined ? {} : { sandboxNetworkAccess }),
+    ...(allowedCommands === undefined ? {} : { allowedCommands }),
+    ...(maxFilesChanged === undefined ? {} : { maxFilesChanged }),
+    ...(maxDiffLines === undefined ? {} : { maxDiffLines }),
+    ...(maxCommits === undefined ? {} : { maxCommits }),
+    ...(requirePullRequest === undefined ? {} : { requirePullRequest }),
+    ...(allowDirectPush === undefined ? {} : { allowDirectPush }),
+  }
+}
+
+function parseSessionLimits(value: unknown): SessionLimits | undefined {
+  if (value === undefined) return undefined
+  if (typeof value !== 'object' || value === null) {
+    throw new GrantValidationError('sessionLimits must be an object.')
+  }
+  const record = value as Record<string, unknown>
+  const maxConcurrentSessions = optionalPositiveNumber(record, 'maxConcurrentSessions')
+  const maxSessionDurationMinutes = optionalPositiveNumber(record, 'maxSessionDurationMinutes')
+  const inactivityTimeoutMinutes = optionalPositiveNumber(record, 'inactivityTimeoutMinutes')
+  const singleUse = optionalBoolean(record, 'singleUse')
+  return {
+    ...(maxConcurrentSessions === undefined ? {} : { maxConcurrentSessions }),
+    ...(maxSessionDurationMinutes === undefined ? {} : { maxSessionDurationMinutes }),
+    ...(inactivityTimeoutMinutes === undefined ? {} : { inactivityTimeoutMinutes }),
+    ...(singleUse === undefined ? {} : { singleUse }),
+  }
+}
+
+function parseClientConstraints(value: unknown): ClientConstraints | undefined {
+  if (value === undefined) return undefined
+  if (typeof value !== 'object' || value === null) {
+    throw new GrantValidationError('clientConstraints must be an object.')
+  }
+  const record = value as Record<string, unknown>
+  const allowedIpCidrs = optionalStringArray(record, 'allowedIpCidrs')
+  const allowedClientIds = optionalStringArray(record, 'allowedClientIds')
+  return {
+    ...(allowedIpCidrs === undefined ? {} : { allowedIpCidrs }),
+    ...(allowedClientIds === undefined ? {} : { allowedClientIds }),
+  }
+}
+
+function parseApprovalPolicy(value: unknown): ApprovalPolicy | undefined {
+  if (value === undefined) return undefined
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    !Array.isArray((value as Record<string, unknown>)['rules'])
+  ) {
+    throw new GrantValidationError('approvalPolicy must be an object with a "rules" array.')
+  }
+  const rules = (value as Record<string, unknown>)['rules'] as unknown[]
+  return {
+    rules: rules.map((entry, index) => {
+      if (typeof entry !== 'object' || entry === null) {
+        throw new GrantValidationError(`approvalPolicy.rules[${index}] must be an object.`)
+      }
+      const rule = entry as Record<string, unknown>
+      const match = rule['match']
+      const requirement = rule['requirement']
+      if (typeof match !== 'string' || match.length === 0) {
+        throw new GrantValidationError(
+          `approvalPolicy.rules[${index}].match must be a non-empty string.`,
+        )
+      }
+      if (
+        typeof requirement !== 'string' ||
+        !(APPROVAL_REQUIREMENTS as readonly string[]).includes(requirement)
+      ) {
+        throw new GrantValidationError(
+          `approvalPolicy.rules[${index}].requirement must be one of: ${APPROVAL_REQUIREMENTS.join(', ')}`,
+        )
+      }
+      return { match, requirement: requirement as ApprovalPolicy['rules'][number]['requirement'] }
+    }),
+  }
+}
+
 function redactGrantForResponse(runtime: AccessRuntime, grantId: string): Record<string, unknown> {
   const grant = runtime.grantService.getGrant(grantId)
   if (grant === undefined) return {}
@@ -149,6 +284,10 @@ export async function handleAccessRoute(
       if (!requireOperator(context, res)) return true
       const body = await readJsonBody(req)
       const branchScope = parseBranchScopeOverride(body['branchScope'])
+      const executionLimits = parseMissionExecutionLimits(body['executionLimits'])
+      const sessionLimits = parseSessionLimits(body['sessionLimits'])
+      const clientConstraints = parseClientConstraints(body['clientConstraints'])
+      const approvalPolicy = parseApprovalPolicy(body['approvalPolicy'])
       const input: CreateGrantInput = {
         principalType: body['principalType'] as CreateGrantInput['principalType'],
         displayName: String(body['displayName'] ?? ''),
@@ -188,6 +327,10 @@ export async function handleAccessRoute(
           ? { stepUpConfirmed: body['stepUpConfirmed'] }
           : {}),
         ...(typeof body['enableMerge'] === 'boolean' ? { enableMerge: body['enableMerge'] } : {}),
+        ...(executionLimits === undefined ? {} : { executionLimits }),
+        ...(sessionLimits === undefined ? {} : { sessionLimits }),
+        ...(clientConstraints === undefined ? {} : { clientConstraints }),
+        ...(approvalPolicy === undefined ? {} : { approvalPolicy }),
       }
       const created = runtime.grantService.createGrant(input)
       sendJson(res, 201, created)
@@ -226,6 +369,9 @@ export async function handleAccessRoute(
       if (req.method === 'PATCH' && action === undefined) {
         if (!requireOperator(context, res)) return true
         const body = await readJsonBody(req)
+        const executionLimits = parseMissionExecutionLimits(body['executionLimits'])
+        const sessionLimits = parseSessionLimits(body['sessionLimits'])
+        const clientConstraints = parseClientConstraints(body['clientConstraints'])
         const grant = runtime.grantService.narrowGrant(grantId, {
           ...(typeof body['displayName'] === 'string' ? { displayName: body['displayName'] } : {}),
           ...(typeof body['reason'] === 'string' ? { reason: body['reason'] } : {}),
@@ -237,6 +383,9 @@ export async function handleAccessRoute(
               }
             : {}),
           ...(typeof body['expiresAt'] === 'string' ? { expiresAt: body['expiresAt'] } : {}),
+          ...(executionLimits === undefined ? {} : { executionLimits }),
+          ...(sessionLimits === undefined ? {} : { sessionLimits }),
+          ...(clientConstraints === undefined ? {} : { clientConstraints }),
         })
         sendJson(res, 200, { grant })
         return true
@@ -267,6 +416,32 @@ export async function handleAccessRoute(
       if (req.method === 'POST' && action === 'rotate') {
         if (!requireOperator(context, res)) return true
         sendJson(res, 200, runtime.grantService.rotateCredential(grantId))
+        return true
+      }
+
+      const approvalMatch = action?.match(/^approvals\/([^/]+)\/(approve|deny)$/)
+      if (req.method === 'POST' && approvalMatch !== null && approvalMatch !== undefined) {
+        if (!requireOperator(context, res)) return true
+        const approvalId = approvalMatch[1] as string
+        const outcome = approvalMatch[2] === 'approve' ? 'approved' : 'denied'
+        const body = await readJsonBody(req)
+        const comment = typeof body['comment'] === 'string' ? body['comment'] : undefined
+        const approval = runtime.authorizationService.decideApproval(
+          grantId,
+          approvalId,
+          outcome,
+          context.actor,
+          comment,
+        )
+        sendJson(res, 200, { approval })
+        return true
+      }
+
+      if (req.method === 'GET' && action === 'approvals') {
+        if (!requireOperator(context, res)) return true
+        sendJson(res, 200, {
+          approvals: runtime.authorizationService.listApprovalsForGrant(grantId),
+        })
         return true
       }
     }
@@ -323,6 +498,14 @@ export async function handleAccessRoute(
     }
     if (error instanceof GrantValidationError) {
       sendJson(res, 400, { error: 'validation_error', message: error.message })
+      return true
+    }
+    if (error instanceof ApprovalNotFoundError) {
+      sendJson(res, 404, { error: 'not_found', message: error.message })
+      return true
+    }
+    if (error instanceof ApprovalStateError) {
+      sendJson(res, 400, { error: 'approval_state_error', message: error.message })
       return true
     }
     if (

@@ -1,5 +1,10 @@
 import { AccessRuntime } from '../access/access-runtime.js'
-import { InvalidCredentialError } from '../access/access-grant-service.js'
+import {
+  ClientConstraintViolationError,
+  InvalidCredentialError,
+  SessionInactivityTimeoutError,
+  SessionLimitExceededError,
+} from '../access/access-grant-service.js'
 import { requiredCapabilitiesForTool } from '../access/tool-permission-catalog.js'
 import { bridgeToolsForProvider } from '../agent/tool-schema-bridge.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
@@ -49,10 +54,15 @@ export function createSymbolWrightMcpToolHandler(
     let authenticated: ReturnType<typeof runtime.grantService.authenticateAgentToken>
     try {
       authenticated = runtime.grantService.authenticateAgentToken(options.agentToken, {
-        client: 'mcp-stdio',
+        ip: 'mcp-stdio',
       })
     } catch (error) {
-      if (error instanceof InvalidCredentialError) {
+      if (
+        error instanceof InvalidCredentialError ||
+        error instanceof SessionLimitExceededError ||
+        error instanceof ClientConstraintViolationError ||
+        error instanceof SessionInactivityTimeoutError
+      ) {
         throw new McpAgentTokenAuthenticationError(error.message)
       }
       throw error

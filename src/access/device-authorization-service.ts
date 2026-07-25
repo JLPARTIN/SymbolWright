@@ -42,6 +42,10 @@ export type PollResult =
   | { readonly status: 'ok'; readonly token: string; readonly grantId: string }
 
 export class DeviceAuthorizationService {
+  /** Tracks the last poll time per device code so `poll()` can enforce the advertised
+   * `pollIntervalSeconds` (RFC 8628 `slow_down`) against a client that polls too aggressively. */
+  private readonly lastPollAtByDeviceCode = new Map<string, number>()
+
   public constructor(
     private readonly store: AccessStore,
     private readonly grantService: AccessGrantService,
@@ -160,32 +164,34 @@ export class DeviceAuthorizationService {
     const record = this.store.readDeviceAuthorizationByDeviceCode(deviceCode)
     if (record === undefined) return { status: 'access_denied' }
 
-    if (
-      new Date(record.expiresAt).getTime() <= this.now().getTime() &&
-      record.status === 'pending'
-    ) {
+    const nowMs = this.now().getTime()
+
+    if (new Date(record.expiresAt).getTime() <= nowMs && record.status === 'pending') {
       this.store.writeDeviceAuthorization({ ...record, status: 'expired' })
       return { status: 'expired_token' }
     }
 
-    switch (record.status) {
-      case 'pending':
-        return { status: 'authorization_pending' }
-      case 'denied':
-      case 'expired':
-        return { status: 'access_denied' }
-      case 'consumed':
-        return { status: 'access_denied' }
-      case 'approved': {
-        const handoff = PENDING_TOKEN_HANDOFF.get(deviceCode)
-        if (handoff === undefined || handoff.expiresAt <= this.now().getTime()) {
-          return { status: 'access_denied' }
-        }
-        PENDING_TOKEN_HANDOFF.delete(deviceCode)
-        this.store.writeDeviceAuthorization({ ...record, status: 'consumed' })
-        return { status: 'ok', token: handoff.token, grantId: record.grantId as string }
-      }
+    if (record.status === 'denied' || record.status === 'expired' || record.status === 'consumed') {
+      return { status: 'access_denied' }
     }
+
+    // Only 'pending' and 'approved' reach here — the two states a polling client actively waits
+    // on, and so the two states the advertised poll interval applies to.
+    const lastPollAt = this.lastPollAtByDeviceCode.get(deviceCode)
+    this.lastPollAtByDeviceCode.set(deviceCode, nowMs)
+    if (lastPollAt !== undefined && nowMs - lastPollAt < record.pollIntervalSeconds * 1000) {
+      return { status: 'slow_down' }
+    }
+
+    if (record.status === 'pending') return { status: 'authorization_pending' }
+
+    const handoff = PENDING_TOKEN_HANDOFF.get(deviceCode)
+    if (handoff === undefined || handoff.expiresAt <= nowMs) {
+      return { status: 'access_denied' }
+    }
+    PENDING_TOKEN_HANDOFF.delete(deviceCode)
+    this.store.writeDeviceAuthorization({ ...record, status: 'consumed' })
+    return { status: 'ok', token: handoff.token, grantId: record.grantId as string }
   }
 
   private requireByUserCode(userCode: string): DeviceAuthorization {

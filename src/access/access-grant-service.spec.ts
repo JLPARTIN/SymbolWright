@@ -6,12 +6,18 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { AccessStore } from './access-store.js'
 import {
   AccessGrantService,
+  ClientConstraintViolationError,
   GrantValidationError,
   InvalidCredentialError,
+  SessionInactivityTimeoutError,
   SessionLimitExceededError,
   StepUpRequiredError,
 } from './access-grant-service.js'
-import { AuthorizationService } from './authorization-service.js'
+import {
+  ApprovalNotFoundError,
+  ApprovalStateError,
+  AuthorizationService,
+} from './authorization-service.js'
 import type { RepositoryScope } from './access-types.js'
 
 const REPO_SCOPE: RepositoryScope = {
@@ -270,6 +276,91 @@ describe('AccessGrantService + AuthorizationService', () => {
     expect(third.requiresApproval).toBe(true)
   })
 
+  it('completes a pending approval via decideApproval (the production approve/deny route)', async () => {
+    const { grant } = grants.createGrant({
+      principalType: 'automation',
+      displayName: 'Maintainer',
+      issuedBy: 'operator-1',
+      profileId: 'maintainer-agent',
+      repositoryScope: REPO_SCOPE,
+      enableMerge: true,
+    })
+
+    const pending = await authz.evaluate({
+      principalId: grant.principalId,
+      grantId: grant.id,
+      capability: 'repo.pull_request.merge',
+      repository: 'JLPARTIN/SymbolWright',
+      missionId: 'mission-1',
+    })
+    const approvalId = pending.approvalId as string
+
+    const decided = authz.decideApproval(
+      grant.id,
+      approvalId,
+      'approved',
+      'operator-1',
+      'looks good',
+    )
+    expect(decided.status).toBe('approved')
+    expect(decided.approverId).toBe('operator-1')
+    expect(decided.operatorComment).toBe('looks good')
+
+    const afterApproval = await authz.evaluate({
+      principalId: grant.principalId,
+      grantId: grant.id,
+      capability: 'repo.pull_request.merge',
+      repository: 'JLPARTIN/SymbolWright',
+      missionId: 'mission-1',
+    })
+    expect(afterApproval.allowed).toBe(true)
+
+    // Cannot decide the same approval twice.
+    expect(() => authz.decideApproval(grant.id, approvalId, 'denied', 'operator-1')).toThrow(
+      ApprovalStateError,
+    )
+  })
+
+  it('decideApproval denies a pending request, which then keeps the capability blocked', async () => {
+    const { grant } = grants.createGrant({
+      principalType: 'automation',
+      displayName: 'Maintainer',
+      issuedBy: 'operator-1',
+      profileId: 'maintainer-agent',
+      repositoryScope: REPO_SCOPE,
+      enableMerge: true,
+    })
+
+    const pending = await authz.evaluate({
+      principalId: grant.principalId,
+      grantId: grant.id,
+      capability: 'repo.pull_request.merge',
+      repository: 'JLPARTIN/SymbolWright',
+      missionId: 'mission-1',
+    })
+    const decided = authz.decideApproval(
+      grant.id,
+      pending.approvalId as string,
+      'denied',
+      'operator-1',
+    )
+    expect(decided.status).toBe('denied')
+  })
+
+  it('decideApproval rejects an unknown approval id or one belonging to a different grant', () => {
+    const { grant: grantA } = grants.createGrant({
+      principalType: 'automation',
+      displayName: 'A',
+      issuedBy: 'operator-1',
+      profileId: 'maintainer-agent',
+      repositoryScope: REPO_SCOPE,
+      enableMerge: true,
+    })
+    expect(() =>
+      authz.decideApproval(grantA.id, 'not-a-real-id', 'approved', 'operator-1'),
+    ).toThrow(ApprovalNotFoundError)
+  })
+
   it('authenticates a valid agent token and rejects a tampered or unrelated one', () => {
     const { grant, plaintextToken } = grants.createGrant({
       principalType: 'coding-agent',
@@ -369,6 +460,83 @@ describe('AccessGrantService + AuthorizationService', () => {
 
     grants.authenticateAgentToken(first.token)
     expect(() => grants.authenticateAgentToken(second.token)).toThrow(SessionLimitExceededError)
+  })
+
+  it('ends a session that exceeds its configured inactivity timeout', () => {
+    let currentTime = Date.now()
+    const clockedGrants = new AccessGrantService(store, () => new Date(currentTime))
+    const { plaintextToken } = clockedGrants.createGrant({
+      principalType: 'coding-agent',
+      displayName: 'Coder',
+      issuedBy: 'operator-1',
+      profileId: 'coding-agent',
+      repositoryScope: REPO_SCOPE,
+      sessionLimits: { inactivityTimeoutMinutes: 10 },
+    })
+
+    clockedGrants.authenticateAgentToken(plaintextToken as string)
+
+    currentTime += 11 * 60_000
+    expect(() => clockedGrants.authenticateAgentToken(plaintextToken as string)).toThrow(
+      SessionInactivityTimeoutError,
+    )
+
+    // The stale session was ended, not the credential — a subsequent call starts a fresh session.
+    const reauthenticated = clockedGrants.authenticateAgentToken(plaintextToken as string)
+    expect(reauthenticated.session.revoked).toBe(false)
+  })
+
+  it('does not time out a session that stays active within the inactivity window', () => {
+    let currentTime = Date.now()
+    const clockedGrants = new AccessGrantService(store, () => new Date(currentTime))
+    const { plaintextToken } = clockedGrants.createGrant({
+      principalType: 'coding-agent',
+      displayName: 'Coder',
+      issuedBy: 'operator-1',
+      profileId: 'coding-agent',
+      repositoryScope: REPO_SCOPE,
+      sessionLimits: { inactivityTimeoutMinutes: 10 },
+    })
+
+    clockedGrants.authenticateAgentToken(plaintextToken as string)
+    currentTime += 5 * 60_000
+    expect(() => clockedGrants.authenticateAgentToken(plaintextToken as string)).not.toThrow()
+  })
+
+  it('rejects authentication from an IP outside the grant clientConstraints allowlist', () => {
+    const { plaintextToken } = grants.createGrant({
+      principalType: 'coding-agent',
+      displayName: 'Coder',
+      issuedBy: 'operator-1',
+      profileId: 'coding-agent',
+      repositoryScope: REPO_SCOPE,
+      clientConstraints: { allowedIpCidrs: ['10.0.0.0/24'] },
+    })
+
+    expect(() =>
+      grants.authenticateAgentToken(plaintextToken as string, { ip: '203.0.113.9' }),
+    ).toThrow(ClientConstraintViolationError)
+    expect(() =>
+      grants.authenticateAgentToken(plaintextToken as string, { ip: '10.0.0.42' }),
+    ).not.toThrow()
+  })
+
+  it('rejects authentication from a clientId outside the grant clientConstraints allowlist', () => {
+    const { plaintextToken } = grants.createGrant({
+      principalType: 'coding-agent',
+      displayName: 'Coder',
+      issuedBy: 'operator-1',
+      profileId: 'coding-agent',
+      repositoryScope: REPO_SCOPE,
+      clientConstraints: { allowedClientIds: ['ci-runner-1'] },
+    })
+
+    expect(() =>
+      grants.authenticateAgentToken(plaintextToken as string, { clientId: 'someone-else' }),
+    ).toThrow(ClientConstraintViolationError)
+    expect(() =>
+      grants.authenticateAgentToken(plaintextToken as string, { clientId: 'ci-runner-1' }),
+    ).not.toThrow()
   })
 
   it('cannot resume an already-expired grant', () => {
