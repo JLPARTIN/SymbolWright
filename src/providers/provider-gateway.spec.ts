@@ -180,7 +180,10 @@ describe('ProviderGateway', () => {
       transport: new RecordingTransport({
         status: 401,
         headers: {},
-        body: { type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key' } },
+        body: {
+          type: 'error',
+          error: { type: 'authentication_error', message: 'invalid x-api-key' },
+        },
       }),
     })
 

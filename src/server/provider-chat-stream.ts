@@ -83,7 +83,9 @@ async function buildHttpErrorMessage(
   body: AsyncIterable<string>,
 ): Promise<string> {
   const detail = await readStreamErrorDetail(body)
-  return detail === undefined ? `${label} returned HTTP ${status}` : `${label} returned HTTP ${status}: ${detail}`
+  return detail === undefined
+    ? `${label} returned HTTP ${status}`
+    : `${label} returned HTTP ${status}: ${detail}`
 }
 
 async function* readLines(body: AsyncIterable<string>): AsyncGenerator<string> {
