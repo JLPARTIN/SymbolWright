@@ -12,7 +12,7 @@ Ajna Review Cortex is the native forensic review capability. Ajna gives SymbolWr
 
 ## Codespaces Quick Start
 
-Already in a GitHub Codespace (or any container with Node 20+)? Copy-paste this — it's the whole setup:
+Already in a GitHub Codespace (or any container with Node 22.5+)? Copy-paste this — it's the whole setup:
 
 ```bash
 # 1. (optional) connect a real provider -- skip this to stay in
@@ -321,7 +321,7 @@ npm run validate      audit + typecheck + lint + format + coverage + build + rel
 
 ## CI Strategy
 
-Normal PR validation runs on Node 22 for one clear required signal. Node 20 and Node 22 compatibility proof lives in the separate `Node Compatibility` workflow, which can be run manually or on schedule.
+Normal PR validation runs on Node 22 for one clear required signal. The separate `Node Compatibility` workflow re-proves the same baseline (Node 22, matching the `>=22.5.0` floor in `package.json`) and can be run manually or on schedule.
 
 ## Current Foundation Docs
 

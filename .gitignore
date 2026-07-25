@@ -136,13 +136,14 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 
-# SymbolWright local runtime state
-.symbolwright/sandbox/
-.symbolwright/ci-failure-ledger.json
-.symbolwright/memory/
-.symbolwright/sessions/
-.symbolwright/autonomy/
-.symbolwright/runtime/
+# SymbolWright local runtime state — the whole directory is per-workspace runtime data (delegated
+# access grants/credentials/sessions/audit history, orchestration state, missions, checkpoints,
+# sandbox history, memory, config overrides, etc.), never repo content. Ignore it wholesale rather
+# than itemizing subdirectories one at a time, since a forgotten subdirectory here is a real path to
+# committing security-sensitive state (see docs/security/DELEGATED_AGENT_ACCESS.md). If a
+# subdirectory ever needs to ship an intentionally versioned template, allowlist that specific file
+# with a `!` pattern rather than removing this line.
+.symbolwright/
 
 # Legacy .codemind state dir (pre-rebrand runtime state; read only by
 # migrateLegacyStateDir for one-time migration, never written to — must
