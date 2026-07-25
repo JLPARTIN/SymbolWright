@@ -72,6 +72,11 @@ import { handleSandboxRoute } from '../app/api/sandbox-routes.js'
 import { MissionNotFoundError, MissionService } from '../mission/mission-service.js'
 import type { SymbolWrightMission } from '../mission/mission-types.js'
 import type { GitHubPrCreationClient } from '../runtime/github-write/github-pr-creation.js'
+import { loadGitHubAppConfigFromEnv } from '../github/github-app-auth.js'
+import {
+  createGitHubTokenResolver,
+  type GitHubTokenResolver,
+} from '../github/github-token-resolver.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
 import type { RuntimeToolContext } from '../runtime/types.js'
@@ -126,6 +131,8 @@ export interface ChatServerOptions {
   readonly githubPrCreationClient?: GitHubPrCreationClient
   /** Test seam for deterministic delegated-agent-access (grants/credentials/authorization) behavior. */
   readonly accessRuntime?: AccessRuntime
+  /** Test seam: inject a fake GitHub credential resolver instead of the real GitHub App/PAT resolver built from `env`. */
+  readonly githubTokenResolver?: GitHubTokenResolver
 }
 
 export interface StartedChatServer {
@@ -364,15 +371,25 @@ export function createChatServerRequestListener(
     historyStore: new SandboxHistoryStore({ workspaceRoot: cwd, env }),
     env,
   })
+  // Prefers a real GitHub App installation token (minted per-repository, short-lived) over the
+  // static GITHUB_TOKEN PAT — see docs/security/DELEGATED_AGENT_ACCESS.md Section 6. Falls back to
+  // the PAT automatically only when no App is configured at all; never widens silently when an
+  // App *is* configured but lacks an installation for the requested repository.
+  const githubTokenResolver = options.githubTokenResolver ?? createGitHubTokenResolver({ env })
+  const hasGitHubCredential =
+    options.githubTokenResolver !== undefined ||
+    env['GITHUB_TOKEN'] !== undefined ||
+    loadGitHubAppConfigFromEnv(env) !== undefined
   const registryContext = {
     cwd,
-    hasGitHubToken: env['GITHUB_TOKEN'] !== undefined,
+    hasGitHubToken: hasGitHubCredential,
   }
   const repositoryContext = {
     cwd: registryContext.cwd,
     policy: createRuntimePolicyForMode('APPROVED_EXECUTION', {
       hasGitHubToken: registryContext.hasGitHubToken,
     }),
+    githubTokenResolver,
     ...(env['GITHUB_TOKEN'] !== undefined ? { githubToken: env['GITHUB_TOKEN'] } : {}),
     ...(options.githubPrCreationClient !== undefined
       ? { githubPrCreationClient: options.githubPrCreationClient }
@@ -392,6 +409,7 @@ export function createChatServerRequestListener(
   const githubIntakeContext = {
     service: missionService,
     cwd,
+    githubTokenResolver,
     ...(env['GITHUB_TOKEN'] !== undefined ? { githubToken: env['GITHUB_TOKEN'] } : {}),
   }
 

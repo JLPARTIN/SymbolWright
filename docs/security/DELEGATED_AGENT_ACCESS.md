@@ -17,7 +17,7 @@ Four layers, matching four distinct questions:
 |---|---|---|
 | A — Identity | *Who* is connecting? | `Principal` (`access-types.ts`): a stable `principalId` + `PrincipalType` (`human`, `llm`, `coding-agent`, `mcp-client`, `automation`, `ci`, `service-account`) |
 | B — Capability grant | *What* may that principal do? | `AgentAccessGrant` — scoped repository/branch access, an explicit capability list, an approval policy, execution/session limits, and a status (`pending`/`active`/`paused`/`expired`/`revoked`) |
-| C — GitHub delegation | *How* does SymbolWright perform GitHub operations on the principal's behalf? | SymbolWright's existing `GITHUB_TOKEN`/PAT-backed adapters (`src/github/`, `src/runtime/github-write/`) — never returned to the agent; grant scope gates whether/how they're reached |
+| C — GitHub delegation | *How* does SymbolWright perform GitHub operations on the principal's behalf? | A real GitHub App installation token, minted server-side per repository (`src/github/github-app-token-provider.ts`), with the `GITHUB_TOKEN` PAT as a documented fallback (`src/github/github-token-resolver.ts`) — never returned to the agent; grant scope *and* GitHub's own installation scope both gate whether/how a repository can be reached |
 | D — Per-operation policy | Is *this specific operation, right now* authorized? | `AuthorizationService.evaluate()`/`requireAuthorized()` (`authorization-service.ts`) — the single evaluator every enforcement point below calls |
 
 Authentication (proving who you are) and authorization (deciding what you may do) are deliberately
@@ -166,16 +166,54 @@ Three ways to get a credential (Section 7 of the mission brief), all implemented
   security comes from a short-lived device code, human-in-the-loop approval, and single delivery of
   the resulting token (the plaintext token is held in an in-memory map only until the next poll,
   never written to disk).
-- **GitHub App installation tokens (recommended, not yet implemented)**: the spec's preferred
-  architecture for Layer C is a GitHub App with short-lived, server-generated installation tokens.
-  This bundle does not register or manage a GitHub App — that requires an external app
-  registration this repository doesn't own. Today, Layer C uses SymbolWright's existing
-  `GITHUB_TOKEN`-backed adapters (`src/github/github-operations-adapter.ts`), which already never
-  return the token to a tool result or LLM context (see `mission-redaction.ts`'s `github_token`
-  pattern). A grant's capability/repository/branch scope gates whether an agent-authenticated
-  request or tool call can reach those adapters at all. Migrating Layer C to real GitHub App
-  installation tokens is the natural next step and does not require changing this document's
-  grant/authorization model — only how `githubToken` is sourced.
+- **GitHub App installation tokens (implemented, preferred)**: Layer C's preferred architecture per
+  the mission brief. `src/github/github-app-auth.ts` signs a GitHub App JWT (RS256, `iss` = App ID,
+  a bounded `iat`/`exp` window per GitHub's spec) from `GITHUB_APP_ID` +
+  `GITHUB_APP_PRIVATE_KEY`/`GITHUB_APP_PRIVATE_KEY_PATH`. `src/github/github-app-token-provider.ts`
+  uses that JWT to resolve the installation covering a specific `owner/repo`
+  (`GET /repos/:owner/:repo/installation`) and mint a short-lived installation access token
+  (`POST /app/installations/:id/access_tokens`), caching both the installation id and the token
+  (refreshed ~2 minutes before GitHub's stated expiry). `src/github/github-token-resolver.ts` is
+  the single entry point every write path calls: it prefers the App when one is configured, and
+  falls back to `GITHUB_TOKEN` (PAT) only when **no App is configured at all** — if an App *is*
+  configured but has no installation covering the requested repository, resolution fails closed
+  (`GitHubAppInstallationNotFoundError`) rather than silently widening to the broader PAT. This
+  satisfies acceptance criterion 10 ("GitHub installation scope is enforced in addition to the
+  SymbolWright grant scope") for real: a grant can name a repository, but if the App isn't
+  installed there, no token is ever minted for it. Wired into the two production write
+  chokepoints that matter for delegated-agent flows — `PUT`-adjacent PR creation
+  (`POST /api/repository/pull-request`, `repository-routes.ts`) and external-repository-intake
+  publish (`POST /api/missions/:id/github-pr-packet/publish`, `github-intake-routes.ts`). The
+  App JWT itself is never handed to an agent, logged, or persisted — only the resulting
+  short-lived installation token is used, and only server-side, immediately before one GitHub API
+  call. CLI/local-operator GitHub paths (`cli-github-write-executor.ts`,
+  `symbolwright-activation.ts`'s live-read wiring) are unaffected and continue to use the
+  `GITHUB_TOKEN` PAT — those are the local operator's own terminal session, not a delegated-agent
+  HTTP path, so migrating them is out of scope here.
+
+### Setting up a GitHub App for SymbolWright
+
+1. Create a GitHub App (organization or personal account → Settings → Developer settings → GitHub
+   Apps → New GitHub App). Minimum permissions for the Coding Agent profile: Repository contents
+   (read/write), Pull requests (read/write), Metadata (read), Checks (read), Workflows (read) —
+   add Contents/Administration write only if you intend to grant branch-protection-adjacent
+   capabilities (Temporary Administrator profile). Do not grant organization-admin permissions.
+2. Generate a private key (PEM) for the App.
+3. Install the App on the specific repository (or repositories) you intend to grant agent access
+   to — **only** those repositories; installation scope is what makes `GitHubAppInstallationNotFoundError`
+   fail closed for everything else.
+4. Set on the SymbolWright server process:
+   - `GITHUB_APP_ID` — the App's numeric ID.
+   - `GITHUB_APP_PRIVATE_KEY` — the PEM contents (real or `\n`-escaped newlines are both accepted),
+     **or** `GITHUB_APP_PRIVATE_KEY_PATH` — a file path to the PEM (checked when the inline
+     variable is absent).
+   - Leave `GITHUB_TOKEN` unset (or keep it as an intentional fallback for repositories the App
+     isn't installed on — see the fail-closed behavior above; a repository the App doesn't cover
+     always fails rather than silently using the PAT).
+5. Restart `symbolwright serve`. Per-repository installation coverage is only checked at the time
+   a write is attempted (GitHub's API is the source of truth, not a local cache) — there is no
+   startup-time validation that the App is installed everywhere a grant might target yet
+   (`symbolwright doctor` does not check this; see Known Limitations).
 
 Sessions (`AgentSession`) track `lastActiveAt`, `expiresAt` (from `sessionLimits.maxSessionDurationMinutes`),
 and are created/refreshed on each successful `authenticateAgentToken` call, one implicit session per
@@ -304,7 +342,9 @@ approval policy (`requirement: 'every-high-risk-operation'` with no pre-existing
 
 ## 14. Known limitations
 
-- Layer C is `GITHUB_TOKEN`-based, not a real GitHub App installation-token flow (Section 6).
+- The GitHub App migration (Section 6) covers the two production write chokepoints that matter for
+  delegated-agent flows (PR creation, external-intake publish). CLI/local-operator GitHub paths
+  still use the `GITHUB_TOKEN` PAT — unaffected, not a regression, but not yet migrated either.
 - Branch-name-level scope checking for `POST /api/repository/branches` (creating a *new* branch)
   is capability-gated (`repo.branch.create`) but does not yet re-parse the request body to
   pattern-match the requested branch name at the HTTP layer before the branch is created — the
@@ -317,3 +357,12 @@ approval policy (`requirement: 'every-high-risk-operation'` with no pre-existing
   route is straightforward future work using the same `AccessStore.writeApproval` the evaluator
   already reads.
 - No automated audit-log retention/rotation job.
+- `symbolwright doctor` does not yet validate GitHub App configuration (private-key shape,
+  App-JWT signing readiness, or which repositories are actually installed) — misconfiguration
+  surfaces as a runtime `GitHubAppConfigError`/`GitHubAppInstallationNotFoundError` on first use,
+  not at startup.
+- The installation-id cache (`GitHubAppTokenProvider`) never expires within a process lifetime —
+  if an operator uninstalls the App from a repository after SymbolWright has already cached its
+  installation id, that process keeps using the stale id until restarted (the *token* itself still
+  expires and re-mints normally; only the id-to-installation mapping is cached indefinitely).
+  Restarting `symbolwright serve` after changing App installations is recommended.
