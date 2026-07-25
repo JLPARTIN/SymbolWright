@@ -278,7 +278,11 @@ async function buildToolAccessControl(
     principalId: principal.principalId as string,
     grantId: principal.grantId as string,
     ...(principal.sessionId === undefined ? {} : { sessionId: principal.sessionId }),
-    requireAuthorized: async (capability: string, toolName: string) => {
+    requireAuthorized: async (
+      capability: string,
+      toolName: string,
+      metadata?: Record<string, unknown>,
+    ) => {
       await accessRuntime.authorizationService.requireAuthorized({
         principalId: principal.principalId as string,
         grantId: principal.grantId as string,
@@ -287,6 +291,7 @@ async function buildToolAccessControl(
         toolName,
         ...repositoryContext,
         ...branchContext,
+        ...(metadata === undefined ? {} : { metadata }),
       })
     },
   }

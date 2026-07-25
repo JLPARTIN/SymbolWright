@@ -429,5 +429,42 @@ describe('Delegated Agent Access — end-to-end', () => {
       const onDiskBody = (await onDisk.json()) as { content: string }
       expect(onDiskBody.content).not.toContain('malicious edit')
     })
+
+    it('denies a bash command outside executionLimits.allowedCommands, through the real LLM tool-call loop', async () => {
+      const server = await launch()
+      const { token } = await createCodingAgentGrant(server, {
+        executionLimits: { allowedCommands: ['git'] },
+      })
+      const fake = await startFakeToolCallingProvider('bash', { command: 'npm install' })
+      fakeUpstream = fake.server
+
+      await fetch(`${server.url}/api/providers/register`, {
+        method: 'POST',
+        headers: { ...operatorAuth(), 'content-type': 'application/json' },
+        body: JSON.stringify({
+          providerId: 'custom',
+          baseUrl: fake.url,
+          apiKey: 'sk-fake',
+          model: 'fake-model',
+        }),
+      })
+
+      const response = await fetch(`${server.url}/api/agent`, {
+        method: 'POST',
+        headers: { ...agentAuth(token), 'content-type': 'application/json' },
+        body: JSON.stringify({
+          providerId: 'custom',
+          mode: 'APPROVED_EXECUTION',
+          message: 'Install dependencies',
+          stream: false,
+        }),
+      })
+      expect(response.status).toBe(200)
+      const result = (await response.json()) as {
+        iterations: readonly { toolResults: readonly { isError: boolean; output: string }[] }[]
+      }
+      expect(result.iterations[0]?.toolResults[0]?.isError).toBe(true)
+      expect(result.iterations[0]?.toolResults[0]?.output).toContain('COMMAND_NOT_ALLOWED')
+    })
   })
 })

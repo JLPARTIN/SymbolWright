@@ -255,6 +255,16 @@ export class AuthorizationService {
     )
     if (capabilityDecision !== undefined) return capabilityDecision
 
+    evaluatedPolicies.push('execution-limits')
+    const executionLimitsDecision = this.checkExecutionLimits(
+      grant,
+      request,
+      correlationId,
+      riskLevel,
+      evaluatedPolicies,
+    )
+    if (executionLimitsDecision !== undefined) return executionLimitsDecision
+
     if (request.repository !== undefined) {
       evaluatedPolicies.push('repository-scope')
       const repoDecision = this.checkRepositoryScope(
@@ -411,6 +421,71 @@ export class AuthorizationService {
       // Membership above already required explicit inclusion (no wildcard ever expands to
       // high-risk capabilities — see `expandNonHighRiskWildcard`), so reaching here means the
       // operator explicitly selected it. Nothing further to deny here; approval policy still applies.
+    }
+
+    return undefined
+  }
+
+  /**
+   * Covers the subset of `MissionExecutionLimits` that a single point-in-time capability check can
+   * enforce. `maxConcurrentMissions`, `maxMissionDurationMinutes`, `maxRepairAttempts`,
+   * `maxFilesChanged`/`maxDiffLines`/`maxCommits`, and `sandboxNetworkAccess` are not enforced
+   * here — they need state this evaluator doesn't have (mission records don't carry a `grantId`
+   * today, there's no execution-abort mechanism, and diff/commit stats aren't computed by any
+   * caller yet). `requirePullRequest` is also left unenforced: the recommended Coding Agent profile
+   * sets both `requirePullRequest: true` and `allowDirectPush: true` simultaneously (push to an
+   * agent branch, then open a PR — not "never push directly"), so treating it as a push-time deny
+   * would break that default workflow; it needs mission-level completion tracking instead.
+   */
+  private checkExecutionLimits(
+    grant: AgentAccessGrant,
+    request: AuthorizationRequest,
+    correlationId: string,
+    riskLevel: RiskLevel,
+    evaluatedPolicies: string[],
+  ): AuthorizationDecision | undefined {
+    if (
+      request.capability === 'repo.commit.push' &&
+      grant.executionLimits.allowDirectPush === false
+    ) {
+      return decision(
+        {
+          allowed: false,
+          reasonCode: 'DIRECT_PUSH_DISABLED',
+          reason:
+            'This grant does not permit pushing commits directly (executionLimits.allowDirectPush is false).',
+          requiresApproval: false,
+          grantVersion: grant.version,
+          riskLevel,
+          evaluatedPolicies,
+        },
+        correlationId,
+      )
+    }
+
+    if (request.capability === 'symbolwright.sandbox.execute') {
+      const allowedCommands = grant.executionLimits.allowedCommands
+      if (allowedCommands !== undefined && allowedCommands.length > 0) {
+        const command = request.metadata?.['command']
+        const binary = typeof command === 'string' ? command.trim().split(/\s+/)[0] : undefined
+        if (binary === undefined || !allowedCommands.includes(binary)) {
+          return decision(
+            {
+              allowed: false,
+              reasonCode: 'COMMAND_NOT_ALLOWED',
+              reason:
+                binary === undefined
+                  ? 'This grant restricts sandbox commands to an allowlist, and no command was provided to check against it.'
+                  : `Command "${binary}" is not in this grant's allowed command list.`,
+              requiresApproval: false,
+              grantVersion: grant.version,
+              riskLevel,
+              evaluatedPolicies,
+            },
+            correlationId,
+          )
+        }
+      }
     }
 
     return undefined
