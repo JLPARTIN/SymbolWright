@@ -104,6 +104,10 @@ export interface SymbolWrightMission {
   readonly schemaVersion: typeof CURRENT_MISSION_SCHEMA_VERSION
   readonly revision: number
   readonly id: string
+  /** The delegated-access grant that created this mission, when created by an agent-token
+   * caller (see `src/access/`) — absent for missions created by the local operator. Used to
+   * enforce `executionLimits.maxConcurrentMissions`; never set from request-body input. */
+  readonly grantId?: string | undefined
   readonly name: string
   readonly objective: string
   readonly status: MissionStatus

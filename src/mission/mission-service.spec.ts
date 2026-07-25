@@ -13,6 +13,8 @@ import {
 const IDS = [
   'mission_11111111-1111-4111-8111-111111111111',
   'mission_22222222-2222-4222-8222-222222222222',
+  'mission_33333333-3333-4333-8333-333333333333',
+  'mission_44444444-4444-4444-8444-444444444444',
 ]
 
 describe('MissionService', () => {
@@ -38,15 +40,18 @@ describe('MissionService', () => {
 
   afterEach(() => rmSync(root, { recursive: true, force: true }))
 
-  async function create() {
-    return service.create({
-      name: 'Mission',
-      objective: 'Persist state',
-      workspaceKind: 'repository',
-      repositoryPath: '.',
-      runtimeMode: 'READ_ONLY',
-      labels: [],
-    })
+  async function create(options: { readonly grantId?: string } = {}) {
+    return service.create(
+      {
+        name: 'Mission',
+        objective: 'Persist state',
+        workspaceKind: 'repository',
+        repositoryPath: '.',
+        runtimeMode: 'READ_ONLY',
+        labels: [],
+      },
+      options,
+    )
   }
 
   it('creates, pauses, resumes, completes, and explicitly reopens', async () => {
@@ -59,6 +64,28 @@ describe('MissionService', () => {
     expect(completed.status).toBe('COMPLETED')
     const reopened = service.reopenCompleted(completed.id, completed.revision)
     expect(reopened.status).toBe('ACTIVE')
+  })
+
+  it('records the creating grantId when provided, and omits it when not', async () => {
+    const withGrant = await create({ grantId: 'grant-1' })
+    expect(withGrant.grantId).toBe('grant-1')
+
+    const withoutGrant = await create()
+    expect(withoutGrant.grantId).toBeUndefined()
+  })
+
+  it('counts only ACTIVE missions belonging to the given grant', async () => {
+    const first = await create({ grantId: 'grant-1' })
+    await create({ grantId: 'grant-1' })
+    await create({ grantId: 'grant-2' })
+    await create() // no grant at all (local operator)
+
+    expect(service.countActiveMissionsForGrant('grant-1')).toBe(2)
+    expect(service.countActiveMissionsForGrant('grant-2')).toBe(1)
+    expect(service.countActiveMissionsForGrant('grant-3')).toBe(0)
+
+    service.pause(first.id, first.revision)
+    expect(service.countActiveMissionsForGrant('grant-1')).toBe(1)
   })
 
   it('detects optimistic revision conflicts', async () => {

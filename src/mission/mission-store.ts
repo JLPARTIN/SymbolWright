@@ -205,6 +205,21 @@ export class MissionStore {
     }
   }
 
+  /** Counts missions with `status: 'ACTIVE'` created by a given delegated-access grant, to
+   * enforce `executionLimits.maxConcurrentMissions`. Reads full records (not the lighter
+   * `listMissions` summary) since `grantId` isn't projected into `MissionListSummary`. */
+  public countActiveMissionsForGrant(grantId: string): number {
+    const indexResult = this.readOrRecoverIndex()
+    let count = 0
+    for (const missionId of indexResult.index.missionIds) {
+      const mission = this.readMission(missionId)
+      if (mission !== undefined && mission.status === 'ACTIVE' && mission.grantId === grantId) {
+        count += 1
+      }
+    }
+    return count
+  }
+
   public appendEvent(event: MissionEvent): void {
     this.resolveMissionDir(event.missionId)
     const sanitized = redactMissionRecord(event, this.env)
