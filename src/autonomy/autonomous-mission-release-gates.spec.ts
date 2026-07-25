@@ -44,7 +44,7 @@ function packet(
             changedFiles: ['src/release.ts'],
             directlyAffectedFiles: [],
             transitivelyAffectedFiles: [],
-            affectedPackages: ['codemind'],
+            affectedPackages: ['symbolwright'],
             affectedExportedSymbols: [],
             validationCommands: ['npm test'],
             risk: 'low',
@@ -99,7 +99,7 @@ function service(acceptance: MissionAcceptancePacket, previous?: PersistedMissio
   const save = vi.fn(async () => undefined)
   const appendEvent = vi.fn()
   const release = new AutonomousMissionReleaseService({
-    workspaceRoot: '/tmp/codemind-release-gates',
+    workspaceRoot: '/tmp/symbolwright-release-gates',
     missionService: {
       get: vi.fn(() => ({
         id: MISSION_ID,

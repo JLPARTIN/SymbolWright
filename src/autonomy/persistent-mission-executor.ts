@@ -46,7 +46,7 @@ export class JsonMissionExecutionStore implements MissionExecutionStore {
   readonly #root: string
 
   constructor(workspaceRoot: string) {
-    this.#root = path.resolve(workspaceRoot, '.codemind', 'autonomy', 'missions')
+    this.#root = path.resolve(workspaceRoot, '.symbolwright', 'autonomy', 'missions')
   }
 
   async load(missionId: string): Promise<PersistedMissionExecution | undefined> {

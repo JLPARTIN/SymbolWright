@@ -22,10 +22,10 @@ describe('proposal mode runtime tools', () => {
     const tool = createFixtureRegistry('proposal').getOrThrow('propose_edit')
     const output = await tool.execute(
       { goal: 'add proposal renderer' },
-      createFixtureContext('/workspace/codemind'),
+      createFixtureContext('/workspace/symbolwright'),
     )
 
-    expect(output).toContain('CodeMind patch proposal')
+    expect(output).toContain('SymbolWright patch proposal')
     expect(output).toContain('Goal: add proposal renderer')
     expect(output).toContain('no patch is applied')
     expect(output).toContain('no writes')
@@ -35,10 +35,10 @@ describe('proposal mode runtime tools', () => {
     const tool = createFixtureRegistry('proposal').getOrThrow('pr_notes')
     const output = await tool.execute(
       { focus: 'proposal mode' },
-      createFixtureContext('/workspace/codemind'),
+      createFixtureContext('/workspace/symbolwright'),
     )
 
-    expect(output).toContain('CodeMind PR notes draft')
+    expect(output).toContain('SymbolWright PR notes draft')
     expect(output).toContain('proposal mode')
     expect(output).toContain('No PR comment is posted.')
   })
@@ -47,10 +47,10 @@ describe('proposal mode runtime tools', () => {
     const tool = createFixtureRegistry('proposal').getOrThrow('ci_review')
     const output = await tool.execute(
       { status: 'failed', source: 'local fixture', findings: ['typecheck failed'] },
-      createFixtureContext('/workspace/codemind'),
+      createFixtureContext('/workspace/symbolwright'),
     )
 
-    expect(output).toContain('CodeMind CI review draft')
+    expect(output).toContain('SymbolWright CI review draft')
     expect(output).toContain('Status: failed')
     expect(output).toContain('typecheck failed')
     expect(output).toContain('does not query CI services')

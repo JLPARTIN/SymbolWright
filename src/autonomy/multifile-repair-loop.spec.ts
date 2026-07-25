@@ -20,7 +20,7 @@ import {
 const roots: string[] = []
 
 async function workspace(): Promise<string> {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-autonomy-'))
+  const root = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-autonomy-'))
   roots.push(root)
   return root
 }

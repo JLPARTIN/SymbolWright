@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { createMissionExportBundle } from './mission-export.js'
-import type { CodeMindMission } from './mission-types.js'
+import type { SymbolWrightMission } from './mission-types.js'
 
 const mission = {
   schemaVersion: 1,
@@ -33,7 +33,7 @@ const mission = {
     pullRequestUrls: [],
   },
   labels: [],
-} satisfies CodeMindMission
+} satisfies SymbolWrightMission
 
 describe('mission export warnings', () => {
   it('states that repository, checkpoint, and credential content is excluded', () => {

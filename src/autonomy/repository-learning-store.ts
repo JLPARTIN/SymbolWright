@@ -32,7 +32,7 @@ export class JsonRepositoryLearningStore {
   readonly #root: string
 
   constructor(workspaceRoot: string) {
-    this.#root = path.resolve(workspaceRoot, '.codemind', 'autonomy', 'repository-learning')
+    this.#root = path.resolve(workspaceRoot, '.symbolwright', 'autonomy', 'repository-learning')
   }
 
   async load(repositoryId: string): Promise<RepositoryLearningSnapshot> {

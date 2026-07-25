@@ -1,13 +1,13 @@
 import {
-  CODEMIND_EXTERNAL_CLIENT_KINDS,
-  CODEMIND_PUBLIC_API_ROUTES,
-  type CodemindExternalClientKind,
+  SYMBOLWRIGHT_EXTERNAL_CLIENT_KINDS,
+  SYMBOLWRIGHT_PUBLIC_API_ROUTES,
+  type SymbolWrightExternalClientKind,
 } from '../api/universal-api-contract.js'
-import { CODEMIND_PROVIDER_ADAPTERS } from '../providers/provider-adapter-contract.js'
+import { SYMBOLWRIGHT_PROVIDER_ADAPTERS } from '../providers/provider-adapter-contract.js'
 
-export const CODEMIND_BROWSER_WORKSPACE_BLOCK_ID = 'CODEMIND-BROWSER-WORKSPACE-01' as const
+export const SYMBOLWRIGHT_BROWSER_WORKSPACE_BLOCK_ID = 'SYMBOLWRIGHT-BROWSER-WORKSPACE-01' as const
 
-export const CODEMIND_BROWSER_WORKSPACE_PANELS = [
+export const SYMBOLWRIGHT_BROWSER_WORKSPACE_PANELS = [
   'mission-input',
   'chat-console',
   'terminal-output',
@@ -20,53 +20,54 @@ export const CODEMIND_BROWSER_WORKSPACE_PANELS = [
   'session-history',
 ] as const
 
-export type CodemindBrowserWorkspacePanel = (typeof CODEMIND_BROWSER_WORKSPACE_PANELS)[number]
-export type CodemindBrowserWorkspaceKeyBoundary =
-  | 'browser_to_codemind_only'
+export type SymbolWrightBrowserWorkspacePanel =
+  (typeof SYMBOLWRIGHT_BROWSER_WORKSPACE_PANELS)[number]
+export type SymbolWrightBrowserWorkspaceKeyBoundary =
+  | 'browser_to_symbolwright_only'
   | 'browser_to_provider_direct'
-export type CodemindBrowserWorkspaceProviderKeyStorage =
+export type SymbolWrightBrowserWorkspaceProviderKeyStorage =
   | 'server_side_vault_or_request_scoped_server_runtime'
   | 'browser_runtime'
 
-export interface CodemindBrowserWorkspaceContract {
-  readonly blockId: typeof CODEMIND_BROWSER_WORKSPACE_BLOCK_ID
-  readonly entrypoint: '/codemind'
-  readonly panels: readonly CodemindBrowserWorkspacePanel[]
-  readonly supportedClients: readonly CodemindExternalClientKind[]
+export interface SymbolWrightBrowserWorkspaceContract {
+  readonly blockId: typeof SYMBOLWRIGHT_BROWSER_WORKSPACE_BLOCK_ID
+  readonly entrypoint: '/symbolwright'
+  readonly panels: readonly SymbolWrightBrowserWorkspacePanel[]
+  readonly supportedClients: readonly SymbolWrightExternalClientKind[]
   readonly publicApiRouteCount: number
   readonly providerCount: number
-  readonly keyBoundary: CodemindBrowserWorkspaceKeyBoundary
-  readonly providerKeyStorage: CodemindBrowserWorkspaceProviderKeyStorage
+  readonly keyBoundary: SymbolWrightBrowserWorkspaceKeyBoundary
+  readonly providerKeyStorage: SymbolWrightBrowserWorkspaceProviderKeyStorage
   readonly browserStoresProviderKeys: boolean
 }
 
-export interface CodemindBrowserWorkspaceReadinessReport {
-  readonly blockId: typeof CODEMIND_BROWSER_WORKSPACE_BLOCK_ID
+export interface SymbolWrightBrowserWorkspaceReadinessReport {
+  readonly blockId: typeof SYMBOLWRIGHT_BROWSER_WORKSPACE_BLOCK_ID
   readonly status: 'READY' | 'BLOCKED'
   readonly findings: readonly string[]
-  readonly contract: CodemindBrowserWorkspaceContract
+  readonly contract: SymbolWrightBrowserWorkspaceContract
 }
 
-export function buildBrowserWorkspaceContract(): CodemindBrowserWorkspaceContract {
+export function buildBrowserWorkspaceContract(): SymbolWrightBrowserWorkspaceContract {
   return {
-    blockId: CODEMIND_BROWSER_WORKSPACE_BLOCK_ID,
-    entrypoint: '/codemind',
-    panels: CODEMIND_BROWSER_WORKSPACE_PANELS,
-    supportedClients: CODEMIND_EXTERNAL_CLIENT_KINDS,
-    publicApiRouteCount: CODEMIND_PUBLIC_API_ROUTES.length,
-    providerCount: CODEMIND_PROVIDER_ADAPTERS.length,
-    keyBoundary: 'browser_to_codemind_only',
+    blockId: SYMBOLWRIGHT_BROWSER_WORKSPACE_BLOCK_ID,
+    entrypoint: '/symbolwright',
+    panels: SYMBOLWRIGHT_BROWSER_WORKSPACE_PANELS,
+    supportedClients: SYMBOLWRIGHT_EXTERNAL_CLIENT_KINDS,
+    publicApiRouteCount: SYMBOLWRIGHT_PUBLIC_API_ROUTES.length,
+    providerCount: SYMBOLWRIGHT_PROVIDER_ADAPTERS.length,
+    keyBoundary: 'browser_to_symbolwright_only',
     providerKeyStorage: 'server_side_vault_or_request_scoped_server_runtime',
     browserStoresProviderKeys: false,
   }
 }
 
 export function assessBrowserWorkspaceReadiness(
-  contract: CodemindBrowserWorkspaceContract = buildBrowserWorkspaceContract(),
-): CodemindBrowserWorkspaceReadinessReport {
+  contract: SymbolWrightBrowserWorkspaceContract = buildBrowserWorkspaceContract(),
+): SymbolWrightBrowserWorkspaceReadinessReport {
   const findings: string[] = []
 
-  for (const panel of CODEMIND_BROWSER_WORKSPACE_PANELS) {
+  for (const panel of SYMBOLWRIGHT_BROWSER_WORKSPACE_PANELS) {
     if (!contract.panels.includes(panel)) {
       findings.push(`Missing browser workspace panel: ${panel}`)
     }
@@ -81,12 +82,12 @@ export function assessBrowserWorkspaceReadiness(
   if (contract.browserStoresProviderKeys) {
     findings.push('Browser workspace must not persist provider key material')
   }
-  if (contract.keyBoundary !== 'browser_to_codemind_only') {
-    findings.push('Browser workspace must route through CodeMind before provider calls')
+  if (contract.keyBoundary !== 'browser_to_symbolwright_only') {
+    findings.push('Browser workspace must route through SymbolWright before provider calls')
   }
 
   return {
-    blockId: CODEMIND_BROWSER_WORKSPACE_BLOCK_ID,
+    blockId: SYMBOLWRIGHT_BROWSER_WORKSPACE_BLOCK_ID,
     status: findings.length === 0 ? 'READY' : 'BLOCKED',
     findings,
     contract,
@@ -94,10 +95,10 @@ export function assessBrowserWorkspaceReadiness(
 }
 
 export function renderBrowserWorkspaceReadinessReport(
-  report: CodemindBrowserWorkspaceReadinessReport,
+  report: SymbolWrightBrowserWorkspaceReadinessReport,
 ): string {
   const lines = [
-    'CodeMind Browser Workspace Contract',
+    'SymbolWright Browser Workspace Contract',
     '',
     `Block: ${report.blockId}`,
     `Status: ${report.status}`,

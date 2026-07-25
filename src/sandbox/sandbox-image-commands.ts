@@ -89,7 +89,7 @@ async function renderImageInspection(
   ].filter((line): line is string => line !== undefined)
 
   return [
-    'CodeMind Sandbox Image Inspection',
+    'SymbolWright Sandbox Image Inspection',
     '',
     `Image ID: ${image.id}`,
     `Image: ${image.image}`,
@@ -115,7 +115,7 @@ function renderImagePreparationPlan(
   engine: SandboxContainerEngineStatus,
 ): string {
   return [
-    'CodeMind Sandbox Image Preparation Plan',
+    'SymbolWright Sandbox Image Preparation Plan',
     '',
     `Image ID: ${image.id}`,
     `Image: ${image.image}`,
@@ -127,7 +127,7 @@ function renderImagePreparationPlan(
       : `Reason: ${engine.reason}`,
     '',
     'Safety:',
-    '  CodeMind does not execute this plan automatically.',
+    '  SymbolWright does not execute this plan automatically.',
     '  Normal sandbox execution still forbids automatic image acquisition.',
     '  Raw image names, registry credentials, and arbitrary container flags are not accepted.',
   ].join('\n')

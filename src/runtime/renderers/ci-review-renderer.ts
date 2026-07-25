@@ -9,7 +9,7 @@ export interface CiReviewDraft {
 
 export function renderCiReviewDraft(draft: CiReviewDraft): string {
   return [
-    'CodeMind CI review draft',
+    'SymbolWright CI review draft',
     '',
     `Source: ${draft.source}`,
     `Status: ${draft.status}`,

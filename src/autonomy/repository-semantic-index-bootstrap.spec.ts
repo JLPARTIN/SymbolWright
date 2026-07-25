@@ -50,7 +50,7 @@ describe('repository semantic index bootstrap', () => {
     const workspaceRoot = await fixtureRoot()
     await mkdir(path.join(root, 'src'), { recursive: true })
     await writeFile(path.join(root, 'src', 'feature.ts'), 'export class FeatureService {}\n')
-    const store = new RepositorySemanticIndexStore(path.join(workspaceRoot, '.codemind'))
+    const store = new RepositorySemanticIndexStore(path.join(workspaceRoot, '.symbolwright'))
 
     const index = await ensureRepositorySemanticIndex({
       workspaceRoot,
@@ -68,7 +68,7 @@ describe('repository semantic index bootstrap', () => {
     const root = await fixtureRoot()
     const workspaceRoot = await fixtureRoot()
     await writeFile(path.join(root, 'old.ts'), 'export const oldValue = 1\n')
-    const store = new RepositorySemanticIndexStore(path.join(workspaceRoot, '.codemind'))
+    const store = new RepositorySemanticIndexStore(path.join(workspaceRoot, '.symbolwright'))
     const first = await ensureRepositorySemanticIndex({
       workspaceRoot,
       repositoryRoot: root,
@@ -94,7 +94,7 @@ describe('repository semantic index bootstrap', () => {
 })
 
 async function fixtureRoot(): Promise<string> {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-semantic-bootstrap-'))
+  const root = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-semantic-bootstrap-'))
   roots.push(root)
   return root
 }

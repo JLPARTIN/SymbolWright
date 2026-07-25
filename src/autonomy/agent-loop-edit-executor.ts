@@ -17,7 +17,7 @@ import type {
 } from './transactional-repository-edit.js'
 
 const DEFAULT_SYSTEM_PROMPT =
-  'You are CodeMind operating an autonomous repository edit task. Inspect before editing, use repository tools for every change, preserve existing conventions, and finish only after the requested change is implemented. Do not claim files changed unless tools actually changed them.'
+  'You are SymbolWright operating an autonomous repository edit task. Inspect before editing, use repository tools for every change, preserve existing conventions, and finish only after the requested change is implemented. Do not claim files changed unless tools actually changed them.'
 
 export interface AgentLoopRunner {
   (
@@ -45,7 +45,7 @@ export interface AgentLoopAutonomousEditExecutorOptions {
 }
 
 /**
- * Executes edit and repair tasks through CodeMind's existing tool-capable agent
+ * Executes edit and repair tasks through SymbolWright's existing tool-capable agent
  * loop, then verifies the repository changed before reporting completion.
  */
 export class AgentLoopAutonomousEditExecutor implements AutonomousEditTaskExecutor {

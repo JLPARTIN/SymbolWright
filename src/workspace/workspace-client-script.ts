@@ -22,7 +22,7 @@ export function buildWorkspaceClientScript(options: {
 }): string {
   return `
     const payload = JSON.parse(document.getElementById('workspace-data').textContent);
-    const SESSION_STORAGE_KEY = 'codemind.workspace.session.v1';
+    const SESSION_STORAGE_KEY = 'symbolwright.workspace.session.v1';
     const state = { locale: 'en', lastIntelligenceDraft: null };
     const SQL_RUNNER_ID = ${JSON.stringify(options.sqlRunnerId)};
     const PYODIDE_RUNNER_ID = ${JSON.stringify(options.pyodideRunnerId)};
@@ -77,7 +77,7 @@ export function buildWorkspaceClientScript(options: {
       return {
         schemaVersion: 1,
         id: typeof session.id === 'string' ? session.id : 'local-session',
-        name: typeof session.name === 'string' ? session.name : 'CodeMind Workspace Session',
+        name: typeof session.name === 'string' ? session.name : 'SymbolWright Workspace Session',
         activeFileId,
         files: files.map((file) => ({
           id: file.id,
@@ -214,7 +214,7 @@ export function buildWorkspaceClientScript(options: {
 
     function exportSession() {
       saveCurrentFileState(false);
-      downloadJsonFile(slugify(workspaceSession.name) + '.codemind-session.json', {
+      downloadJsonFile(slugify(workspaceSession.name) + '.symbolwright-session.json', {
         exportedAt: new Date().toISOString(),
         session: workspaceSession,
       });
@@ -261,12 +261,12 @@ export function buildWorkspaceClientScript(options: {
           safetyWarnings: [
             'This bundle is browser-local import/export data; importing it does not write to a Git repository.',
             'Review file names and code before running snippets or sending them to an AI provider.',
-            'Executable capability still depends on CodeMind language registry runner support.',
+            'Executable capability still depends on SymbolWright language registry runner support.',
           ],
         },
         files,
       };
-      downloadJsonFile(slugify(workspaceSession.name) + '.codemind-project.json', bundle);
+      downloadJsonFile(slugify(workspaceSession.name) + '.symbolwright-project.json', bundle);
     }
 
     function importProjectBundle() {
@@ -485,7 +485,7 @@ export function buildWorkspaceClientScript(options: {
       saveCurrentFileState(false);
       const language = currentLanguage();
       const target = targetLanguage();
-      el('chat-draft-status').textContent = 'Preparing CodeMind chat draft...';
+      el('chat-draft-status').textContent = 'Preparing SymbolWright chat draft...';
       el('chat-draft-link').style.display = 'none';
       try {
         const response = await fetch('/api/workspace/intelligence', {
@@ -509,8 +509,8 @@ export function buildWorkspaceClientScript(options: {
         outputPanel.textContent = result.prompt;
         errorsPanel.textContent = '';
         el('chat-draft-status').textContent = 'Draft prepared: ' + result.chatDraft.summary + ' · suggested agent mode ' + result.suggestedAgentMode;
-        if (typeof window.codemindHandleWorkspaceDraft === 'function') {
-          window.codemindHandleWorkspaceDraft(result.chatDraft.message, result.suggestedAgentMode);
+        if (typeof window.symbolWrightHandleWorkspaceDraft === 'function') {
+          window.symbolWrightHandleWorkspaceDraft(result.chatDraft.message, result.suggestedAgentMode);
         } else {
           const draftUrl = new URL(payload.chatUrl, window.location.href);
           draftUrl.searchParams.set('draft', result.chatDraft.message);
@@ -524,7 +524,7 @@ export function buildWorkspaceClientScript(options: {
       }
     }
 
-    sessionNameInput.addEventListener('input', () => { workspaceSession.name = sessionNameInput.value || 'CodeMind Workspace Session'; persistSession(); });
+    sessionNameInput.addEventListener('input', () => { workspaceSession.name = sessionNameInput.value || 'SymbolWright Workspace Session'; persistSession(); });
     editor.addEventListener('input', () => saveCurrentFileState(true));
     languageSelect.addEventListener('change', () => { updateLanguageView(true); clearPanels(); });
     localeSelect.addEventListener('change', () => { state.locale = localeSelect.value; applyTranslations(); updateLanguageView(false); });

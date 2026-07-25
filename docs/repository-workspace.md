@@ -10,7 +10,7 @@ never written to disk or to git).
 
 - **Browses the real file tree** one directory level at a time (lazy
   expand/collapse), skipping the same noisy directories (`node_modules`,
-  `.git`, `dist`, `coverage`, `.next`) every other CodeMind file tool skips.
+  `.git`, `dist`, `coverage`, `.next`) every other SymbolWright file tool skips.
 - **Opens and edits real files.** Saving writes through the same
   checkpoint-bound guarded path `edit_file` uses — every write is snapshotted
   first (visible and restorable from the **Checkpoints** tab), and a file
@@ -23,7 +23,7 @@ never written to disk or to git).
   Creating (or pushing to) `main`/`master`/`production`/`release` directly is
   blocked.
 - **Commits**: stages everything (or a specific file list) and commits with a
-  message. CodeMind's own `.codemind/` checkpoint/session state is always
+  message. SymbolWright's own `.symbolwright/` checkpoint/session state is always
   excluded from "commit everything", regardless of the repository's own
   `.gitignore`.
 - **Pushes** the current branch, with an explicit confirmation dialog before
@@ -37,7 +37,7 @@ never written to disk or to git).
 
 ## API routes
 
-All of the following require `Authorization: Bearer $CODEMIND_API_KEY`. See
+All of the following require `Authorization: Bearer $SYMBOLWRIGHT_API_KEY`. See
 the full table in [`API_REFERENCE.md`](API_REFERENCE.md).
 
 ```

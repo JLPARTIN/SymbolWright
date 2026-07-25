@@ -43,7 +43,7 @@ export async function executeReadFileTool(
   const relativePath = path.relative(context.cwd, resolvedPath) || path.basename(resolvedPath)
 
   return [
-    'CodeMind read',
+    'SymbolWright read',
     '',
     `Path: ${relativePath}`,
     '',

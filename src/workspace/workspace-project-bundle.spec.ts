@@ -37,9 +37,9 @@ describe('workspace project bundle model', () => {
     )
     const bundle = createWorkspaceProjectBundleFromSession(session, now)
 
-    expect(bundle.kind).toBe('codemind.workspace.project-bundle')
+    expect(bundle.kind).toBe('symbolwright.workspace.project-bundle')
     expect(bundle.schemaVersion).toBe(1)
-    expect(bundle.manifest.name).toBe('CodeMind Workspace Session')
+    expect(bundle.manifest.name).toBe('SymbolWright Workspace Session')
     expect(bundle.manifest.files.map((file) => file.path)).toEqual([
       'main.js',
       'queries/report.sql',
@@ -86,7 +86,7 @@ describe('workspace project bundle model', () => {
     const parsed = parseWorkspaceProjectBundleJson(serialized)
     const session = createWorkspaceSessionFromProjectBundle(parsed, now)
 
-    expect(session.name).toBe('CodeMind Workspace Session')
+    expect(session.name).toBe('SymbolWright Workspace Session')
     expect(session.files).toHaveLength(1)
     expect(session.files[0]?.name).toBe('main.js')
     expect(session.files[0]?.languageId).toBe('javascript')

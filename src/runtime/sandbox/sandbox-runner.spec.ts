@@ -69,14 +69,14 @@ describe('Docker sandbox configuration', () => {
 
   it('resolves options from environment variables', () => {
     const options = resolveDockerSandboxRunnerOptionsFromEnv({
-      CODEMIND_SANDBOX_DOCKER_BINARY: 'podman',
-      CODEMIND_SANDBOX_IMAGE: 'node:22-bookworm-slim',
-      CODEMIND_SANDBOX_MEMORY: '768m',
-      CODEMIND_SANDBOX_CPUS: '2',
-      CODEMIND_SANDBOX_USER: '1000:1000',
-      CODEMIND_SANDBOX_NETWORK: 'none',
-      CODEMIND_SANDBOX_TIMEOUT_MS: '90000',
-      CODEMIND_SANDBOX_MAX_OUTPUT_BYTES: '2048',
+      SYMBOLWRIGHT_SANDBOX_DOCKER_BINARY: 'podman',
+      SYMBOLWRIGHT_SANDBOX_IMAGE: 'node:22-bookworm-slim',
+      SYMBOLWRIGHT_SANDBOX_MEMORY: '768m',
+      SYMBOLWRIGHT_SANDBOX_CPUS: '2',
+      SYMBOLWRIGHT_SANDBOX_USER: '1000:1000',
+      SYMBOLWRIGHT_SANDBOX_NETWORK: 'none',
+      SYMBOLWRIGHT_SANDBOX_TIMEOUT_MS: '90000',
+      SYMBOLWRIGHT_SANDBOX_MAX_OUTPUT_BYTES: '2048',
     })
     const config = resolveDockerSandboxConfig(options)
 
@@ -92,8 +92,8 @@ describe('Docker sandbox configuration', () => {
 
   it('ignores invalid integer environment values', () => {
     const options = resolveDockerSandboxRunnerOptionsFromEnv({
-      CODEMIND_SANDBOX_TIMEOUT_MS: 'not-a-number',
-      CODEMIND_SANDBOX_MAX_OUTPUT_BYTES: '-1',
+      SYMBOLWRIGHT_SANDBOX_TIMEOUT_MS: 'not-a-number',
+      SYMBOLWRIGHT_SANDBOX_MAX_OUTPUT_BYTES: '-1',
     })
     const config = resolveDockerSandboxConfig(options)
 
@@ -116,7 +116,7 @@ describe('Docker sandbox configuration', () => {
 describe('Docker sandbox command construction', () => {
   it('builds an isolated container command', () => {
     const args = buildDockerRunArgs({
-      workspaceRoot: '/tmp/codemind-workspace',
+      workspaceRoot: '/tmp/symbolwright-workspace',
       binary: 'npm',
       args: ['test'],
     })
@@ -133,14 +133,14 @@ describe('Docker sandbox command construction', () => {
     expect(args).toContain(resolveDefaultSandboxUser())
     expect(args).toContain('--env')
     expect(args).toContain('HOME=/workspace')
-    expect(args).toContain('/tmp/codemind-workspace:/workspace:rw')
+    expect(args).toContain('/tmp/symbolwright-workspace:/workspace:rw')
     expect(args.slice(-2)).toEqual(['npm', 'test'])
   })
 
   it('applies configured Docker resource values', () => {
     const args = buildDockerRunArgs(
       {
-        workspaceRoot: '/tmp/codemind-workspace',
+        workspaceRoot: '/tmp/symbolwright-workspace',
         binary: 'npm',
         args: ['test'],
       },
@@ -161,7 +161,7 @@ describe('Docker sandbox command construction', () => {
 
   it('builds file writes as parameterized node execution, not shell execution', () => {
     const args = buildDockerFileWriteArgs({
-      workspaceRoot: '/tmp/codemind-workspace',
+      workspaceRoot: '/tmp/symbolwright-workspace',
       targetPath: 'src/output.ts',
       content: 'export {}',
     })
@@ -180,9 +180,9 @@ describe('Docker sandbox command construction', () => {
 
 describe('Docker sandbox fail-closed behavior', () => {
   it('does not fall back to host execution when Docker is unavailable', async () => {
-    const runner = new DockerSandboxRunner({ dockerBinary: 'definitely-not-codemind-docker' })
+    const runner = new DockerSandboxRunner({ dockerBinary: 'definitely-not-symbolwright-docker' })
     const result = await runner.runCommand({
-      workspaceRoot: '/tmp/codemind-workspace',
+      workspaceRoot: '/tmp/symbolwright-workspace',
       binary: 'npm',
       args: ['test'],
     })
@@ -192,9 +192,11 @@ describe('Docker sandbox fail-closed behavior', () => {
   })
 
   it('does not fall back to host file writes when Docker is unavailable', () => {
-    const writer = new DockerSandboxFileWriter({ dockerBinary: 'definitely-not-codemind-docker' })
+    const writer = new DockerSandboxFileWriter({
+      dockerBinary: 'definitely-not-symbolwright-docker',
+    })
     const result = writer.writeFile({
-      workspaceRoot: '/tmp/codemind-workspace',
+      workspaceRoot: '/tmp/symbolwright-workspace',
       targetPath: 'src/output.ts',
       content: 'export {}',
     })

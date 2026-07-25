@@ -9,7 +9,7 @@ export interface PrNotesDraft {
 
 export function renderPrNotesDraft(draft: PrNotesDraft): string {
   return [
-    'CodeMind PR notes draft',
+    'SymbolWright PR notes draft',
     '',
     `Title: ${draft.title}`,
     '',

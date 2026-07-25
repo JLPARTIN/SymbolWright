@@ -1,4 +1,4 @@
-import { CODEMIND_WORKSPACE_I18N, CODEMIND_WORKSPACE_LOCALES } from './i18n.js'
+import { SYMBOLWRIGHT_WORKSPACE_I18N, SYMBOLWRIGHT_WORKSPACE_LOCALES } from './i18n.js'
 import {
   CODE_RUNNER_DEFINITIONS,
   UNIVERSAL_LANGUAGE_REGISTRY,
@@ -24,15 +24,15 @@ export type UniversalWorkspaceClientPayload = {
   languages: readonly CodeLanguageDefinition[]
   runners: typeof CODE_RUNNER_DEFINITIONS
   defaultLanguageId: string
-  locales: typeof CODEMIND_WORKSPACE_LOCALES
-  translations: typeof CODEMIND_WORKSPACE_I18N
+  locales: typeof SYMBOLWRIGHT_WORKSPACE_LOCALES
+  translations: typeof SYMBOLWRIGHT_WORKSPACE_I18N
   chatUrl: string
   sqlWorkerSource: string
   sqlLimits: typeof SQL_BROWSER_RUNNER_LIMITS
   pyodideWorkerSource: string
   pyodideLimits: typeof PYODIDE_BROWSER_RUNNER_LIMITS
   defaultSession: WorkspaceSession
-  projectBundleKind: 'codemind.workspace.project-bundle'
+  projectBundleKind: 'symbolwright.workspace.project-bundle'
 }
 
 export type UniversalWorkspaceRenderOptions = {
@@ -46,15 +46,15 @@ export function createUniversalWorkspacePayload(
     languages: UNIVERSAL_LANGUAGE_REGISTRY,
     runners: CODE_RUNNER_DEFINITIONS,
     defaultLanguageId: getDefaultWorkspaceLanguageId(),
-    locales: CODEMIND_WORKSPACE_LOCALES,
-    translations: CODEMIND_WORKSPACE_I18N,
+    locales: SYMBOLWRIGHT_WORKSPACE_LOCALES,
+    translations: SYMBOLWRIGHT_WORKSPACE_I18N,
     chatUrl: options.chatUrl ?? '#',
     sqlWorkerSource: buildSqlJsWorkerSource(),
     sqlLimits: SQL_BROWSER_RUNNER_LIMITS,
     pyodideWorkerSource: buildPyodideWorkerSource(),
     pyodideLimits: PYODIDE_BROWSER_RUNNER_LIMITS,
     defaultSession: createDefaultWorkspaceSession(),
-    projectBundleKind: 'codemind.workspace.project-bundle',
+    projectBundleKind: 'symbolwright.workspace.project-bundle',
   }
 }
 
@@ -183,7 +183,7 @@ export function renderWorkspaceBodyMarkup(
         <section><h2 data-i18n="diagnosticsTitle">Diagnostics</h2><pre id="diagnostics-panel"></pre></section>
         <section>
           <h2 data-i18n="aiTasksTitle">Code intelligence tasks</h2>
-          <p class="muted">These buttons now prepare a real CodeMind chat/agent draft from selected code, language, diagnostics, output, errors, and verification status. They still do not claim translated code is equivalent until tests run.</p>
+          <p class="muted">These buttons now prepare a real SymbolWright chat/agent draft from selected code, language, diagnostics, output, errors, and verification status. They still do not claim translated code is equivalent until tests run.</p>
           <div class="task-grid">
             <button class="secondary" data-task="generate" data-i18n="generateTask">Generate code</button>
             <button class="secondary" data-task="explain" data-i18n="explainTask">Explain code</button>
@@ -192,7 +192,7 @@ export function renderWorkspaceBodyMarkup(
             <button class="secondary" data-task="propose-tests" data-i18n="testsTask">Propose tests</button>
             <button class="secondary" data-task="compare-semantic-drift" data-i18n="driftTask">Compare semantic drift</button>
           </div>
-          <a id="chat-draft-link" class="button" href="#" target="_blank" rel="noopener">Open draft in CodeMind Chat →</a>
+          <a id="chat-draft-link" class="button" href="#" target="_blank" rel="noopener">Open draft in SymbolWright Chat →</a>
           <p id="chat-draft-status" class="muted"></p>
         </section>
       </div>
@@ -222,7 +222,7 @@ export function renderUniversalWorkspaceHtml(
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CodeMind Universal Polyglot Workspace</title>
+  <title>SymbolWright Universal Polyglot Workspace</title>
   ${renderWorkspaceStyles()}
 </head>
 <body>

@@ -121,7 +121,7 @@ export function groupLintViolationsByFile(
 
 export function renderLintResult(result: LintResult): string {
   const lines = [
-    'CodeMind Lint Workflow',
+    'SymbolWright Lint Workflow',
     '',
     `Status: ${result.passed ? 'PASSED' : 'FAILED'}`,
     `Errors: ${result.errorCount}`,

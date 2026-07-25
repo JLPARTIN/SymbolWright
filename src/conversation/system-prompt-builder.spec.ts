@@ -5,7 +5,7 @@ import { buildSystemPrompt } from './system-prompt-builder.js'
 describe('system-prompt-builder', () => {
   it('returns base identity with no context', () => {
     const prompt = buildSystemPrompt()
-    expect(prompt).toContain('CodeMind')
+    expect(prompt).toContain('SymbolWright')
     expect(prompt).toContain('coding agent')
     expect(prompt.toLowerCase()).toContain('governance')
   })

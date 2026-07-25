@@ -64,7 +64,7 @@ export function groupTypecheckErrorsByFile(
 
 export function renderTypecheckResult(result: TypecheckResult): string {
   const lines = [
-    'CodeMind Typecheck Workflow',
+    'SymbolWright Typecheck Workflow',
     '',
     `Status: ${result.passed ? 'PASSED' : 'FAILED'}`,
     `Errors: ${result.errorCount}`,

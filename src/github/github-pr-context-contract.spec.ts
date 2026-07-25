@@ -4,17 +4,17 @@ import {
   assertGithubPrContextIsReadOnly,
   createReadOnlyGithubPrContextResponse,
 } from './github-pr-context-contract.js'
-import type { CodemindGithubPrContextAdapterRequest } from './github-pr-context.types.js'
-import type { CodemindReadOnlyRepoContext } from '../repo-context/repo-context.types.js'
+import type { SymbolWrightGithubPrContextAdapterRequest } from './github-pr-context.types.js'
+import type { SymbolWrightReadOnlyRepoContext } from '../repo-context/repo-context.types.js'
 
 function makeRequest(
-  overrides: Partial<CodemindGithubPrContextAdapterRequest> = {},
-): CodemindGithubPrContextAdapterRequest {
+  overrides: Partial<SymbolWrightGithubPrContextAdapterRequest> = {},
+): SymbolWrightGithubPrContextAdapterRequest {
   return {
     requestId: 'github-pr-context-1',
     adapterMode: 'READ_ONLY_CONTRACT',
     pullRequest: {
-      repositoryFullName: 'JLPARTIN/JLPARTIN-CodeMind',
+      repositoryFullName: 'JLPARTIN/JLPARTIN-SymbolWright',
       pullRequestNumber: 7,
       baseRef: 'main',
       headRef: 'pr7-github-pr-context-contracts',
@@ -28,13 +28,13 @@ function makeRequest(
 }
 
 function makeContext(
-  overrides: Partial<CodemindReadOnlyRepoContext> = {},
-): CodemindReadOnlyRepoContext {
+  overrides: Partial<SymbolWrightReadOnlyRepoContext> = {},
+): SymbolWrightReadOnlyRepoContext {
   return {
     repository: {
       owner: 'JLPARTIN',
-      name: 'JLPARTIN-CodeMind',
-      fullName: 'JLPARTIN/JLPARTIN-CodeMind',
+      name: 'JLPARTIN-SymbolWright',
+      fullName: 'JLPARTIN/JLPARTIN-SymbolWright',
       defaultBranch: 'main',
     },
     baseRef: { name: 'main' },

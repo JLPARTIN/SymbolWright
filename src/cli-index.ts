@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { resolveCodemindConfig } from './config/codemind-config.js'
+import { resolveSymbolWrightConfig } from './config/symbolwright-config.js'
 import {
   createHashEmbeddingProvider,
   createVoyageEmbeddingProvider,
@@ -39,7 +39,7 @@ export function saveVectorStore(cwd: string, store: VectorStore): void {
 }
 
 function resolveEmbeddingProvider(): EmbeddingProvider {
-  const config = resolveCodemindConfig()
+  const config = resolveSymbolWrightConfig()
   if (config.embeddingProvider === 'voyage' && config.voyageApiKey !== undefined) {
     return createVoyageEmbeddingProvider({ apiKey: config.voyageApiKey })
   }
@@ -58,7 +58,7 @@ export async function runIndexCommand(args: readonly string[]): Promise<string> 
   saveVectorStore(cwd, vectorStore)
 
   const lines = [
-    'CodeMind Index',
+    'SymbolWright Index',
     '',
     `Workspace: ${cwd}`,
     `Provider: ${embeddingProvider.providerId}`,

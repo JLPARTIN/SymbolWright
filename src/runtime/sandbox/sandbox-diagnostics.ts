@@ -114,7 +114,7 @@ export function runSandboxReadinessCheck(
 
 export function renderSandboxReadinessReport(report: SandboxReadinessReport): string {
   const lines = [
-    'CodeMind sandbox readiness',
+    'SymbolWright sandbox readiness',
     '',
     `Ready: ${report.ready ? 'yes' : 'no'}`,
     `Config: ${renderDockerSandboxConfig(report.config)}`,

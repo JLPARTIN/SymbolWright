@@ -28,7 +28,7 @@ export interface RuntimeMissionTaskExecutorOptions {
 /**
  * Production mission-task adapter.
  *
- * Analysis tasks produce durable evidence, validation tasks use CodeMind's
+ * Analysis tasks produce durable evidence, validation tasks use SymbolWright's
  * policy-aware validation runner, and edit tasks require an explicitly wired
  * editing strategy. An absent editing strategy is reported as blocked rather
  * than pretending repository changes were applied.

@@ -9,7 +9,7 @@ import { createFixtureContext } from '../registry/fixture-registry-factory.js'
 import { executeLiveReadPolicyTool, liveReadPolicyHandshakeTool } from './live-read-policy-tool.js'
 
 function writePolicyFixture(data: object): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-policy-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-policy-'))
   const filePath = path.join(dir, 'policy-fixture.json')
   fs.writeFileSync(filePath, JSON.stringify(data))
   return filePath
@@ -26,7 +26,7 @@ describe('executeLiveReadPolicyTool', () => {
 
     const output = await executeLiveReadPolicyTool({ path: fixturePath }, createFixtureContext())
 
-    expect(output).toContain('CodeMind live read policy handshake')
+    expect(output).toContain('SymbolWright live read policy handshake')
     expect(output).toContain('Decision: ALLOW')
     expect(output).toContain('Provider: github')
     expect(output).toContain('Dry run: yes')

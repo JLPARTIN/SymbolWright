@@ -234,7 +234,7 @@ async function handleSlashInput(
       historyStore?.clear()
       return continueWith('Operator history cleared.', { ...session, history: [] })
     case 'exit':
-      return { exit: true, output: 'Exiting CodeMind Operator Workspace.', session }
+      return { exit: true, output: 'Exiting SymbolWright Operator Workspace.', session }
   }
 }
 

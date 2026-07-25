@@ -60,7 +60,7 @@ function renderFileInsights(insights?: readonly AjnaUiFileInsightViewModel[]): s
 
 export function renderAjnaReviewPanelMarkdown(model: AjnaReviewPanelViewModel): string {
   return [
-    '# CodeMind — Ajna Review Panel',
+    '# SymbolWright — Ajna Review Panel',
     '',
     '## Target',
     '',

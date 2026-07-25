@@ -9,7 +9,7 @@ describe('runGitCommand', () => {
   let repoDir: string
 
   beforeEach(async () => {
-    repoDir = mkdtempSync(join(tmpdir(), 'codemind-git-command-runner-'))
+    repoDir = mkdtempSync(join(tmpdir(), 'symbolwright-git-command-runner-'))
     await runGitCommand(['init'], repoDir)
     await runGitCommand(['config', 'user.email', 'test@example.com'], repoDir)
     await runGitCommand(['config', 'user.name', 'Test'], repoDir)

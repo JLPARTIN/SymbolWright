@@ -15,7 +15,7 @@ describe('preparePrOperationPacket', () => {
   let repositoryRoot: string
 
   beforeEach(async () => {
-    repositoryRoot = mkdtempSync(join(tmpdir(), 'codemind-pr-packet-'))
+    repositoryRoot = mkdtempSync(join(tmpdir(), 'symbolwright-pr-packet-'))
     await runGitCommand(['init'], repositoryRoot)
     await runGitCommand(['config', 'user.email', 'test@example.com'], repositoryRoot)
     await runGitCommand(['config', 'user.name', 'Test'], repositoryRoot)
@@ -32,7 +32,7 @@ describe('preparePrOperationPacket', () => {
   function baseInput(overrides: Partial<PrOperationPacketInput> = {}): PrOperationPacketInput {
     return {
       repositoryRoot,
-      branchName: 'codemind/fix-thing',
+      branchName: 'symbolwright/fix-thing',
       baseBranch: 'main',
       objective: 'Fix the thing',
       changedFiles: [],
@@ -55,7 +55,7 @@ describe('preparePrOperationPacket', () => {
     expect(packet.readyToPush).toBe(true)
 
     const branch = await runGitCommand(['branch', '--show-current'], repositoryRoot)
-    expect(branch.stdout.trim()).toBe('codemind/fix-thing')
+    expect(branch.stdout.trim()).toBe('symbolwright/fix-thing')
     const log = await runGitCommand(['log', '--oneline', '-1'], repositoryRoot)
     expect(log.stdout).toContain('Fix the thing')
   })
@@ -70,7 +70,7 @@ describe('preparePrOperationPacket', () => {
   })
 
   it('reports honest branch-creation failure when the branch already exists', async () => {
-    await runGitCommand(['branch', 'codemind/fix-thing'], repositoryRoot)
+    await runGitCommand(['branch', 'symbolwright/fix-thing'], repositoryRoot)
     const packet = await preparePrOperationPacket(baseInput())
     expect(packet.branchCreated).toBe(false)
     expect(packet.commitCreated).toBe(false)
@@ -151,7 +151,7 @@ describe('preparePrOperationPacket', () => {
 
   it('falls back to a branch-derived title when the objective is empty', async () => {
     const packet = await preparePrOperationPacket(baseInput({ objective: '   ' }))
-    expect(packet.prTitle).toBe('Update from CodeMind mission (codemind/fix-thing)')
+    expect(packet.prTitle).toBe('Update from SymbolWright mission (symbolwright/fix-thing)')
   })
 
   it('notes a changed file as "not staged" when staging it fails', async () => {
@@ -167,7 +167,7 @@ describe('preparePrOperationPacket', () => {
   it('includes rollback notes referencing the base and working branches', async () => {
     const packet = await preparePrOperationPacket(baseInput())
     expect(packet.rollbackNotes.join(' ')).toContain('git checkout main')
-    expect(packet.rollbackNotes.join(' ')).toContain('git branch -D codemind/fix-thing')
+    expect(packet.rollbackNotes.join(' ')).toContain('git branch -D symbolwright/fix-thing')
   })
 
   it('reports writesAllowed and pullRequestCreationAllowed from the policy', async () => {
@@ -176,7 +176,7 @@ describe('preparePrOperationPacket', () => {
     expect(restricted.pullRequestCreationAllowed).toBe(false)
 
     await runGitCommand(['checkout', 'main'], repositoryRoot)
-    await runGitCommand(['branch', '-D', 'codemind/fix-thing'], repositoryRoot)
+    await runGitCommand(['branch', '-D', 'symbolwright/fix-thing'], repositoryRoot)
     const permissive = await preparePrOperationPacket(
       baseInput({
         policy: createGitHubOperationsPolicy({
@@ -191,8 +191,8 @@ describe('preparePrOperationPacket', () => {
   it('renders a full human-readable packet report', async () => {
     const packet = await preparePrOperationPacket(baseInput())
     const rendered = renderPrOperationPacket(packet)
-    expect(rendered).toContain('CodeMind PR Operation Packet')
-    expect(rendered).toContain('Branch: codemind/fix-thing (from main)')
+    expect(rendered).toContain('SymbolWright PR Operation Packet')
+    expect(rendered).toContain('Branch: symbolwright/fix-thing (from main)')
     expect(rendered).toContain('PR title: Fix the thing')
   })
 })

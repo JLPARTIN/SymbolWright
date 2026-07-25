@@ -1,4 +1,4 @@
-import type { CodemindToolName, RuntimeToolContext } from '../types.js'
+import type { SymbolWrightToolName, RuntimeToolContext } from '../types.js'
 import type { RuntimeRegistry } from '../registry/runtime-registry.js'
 import { appendTranscriptEntry, type RuntimeTranscript } from '../transcript/runtime-transcript.js'
 import {
@@ -8,7 +8,7 @@ import {
 } from '../audit/runtime-audit-log.js'
 
 export interface RuntimeWorkflowStep {
-  readonly toolName: CodemindToolName
+  readonly toolName: SymbolWrightToolName
   readonly input: Record<string, unknown>
 }
 
@@ -31,7 +31,7 @@ export interface RuntimeWorkflowResult {
 }
 
 export interface RuntimeWorkflowStepResult {
-  readonly toolName: CodemindToolName
+  readonly toolName: SymbolWrightToolName
   readonly output: string
   readonly status: 'ok' | 'error'
 }
@@ -217,7 +217,7 @@ export async function runRuntimeWorkflow(
 
 export function renderWorkflowResult(result: RuntimeWorkflowResult): string {
   const lines = [
-    'CodeMind runtime workflow result',
+    'SymbolWright runtime workflow result',
     '',
     `Workflow:  ${result.name}`,
     `Status:   ${result.status.toUpperCase()}`,

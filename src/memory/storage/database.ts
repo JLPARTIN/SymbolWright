@@ -1,9 +1,10 @@
-import { existsSync, mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync, renameSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 
-const DEFAULT_DB_DIR = resolve(process.cwd(), '.codemind/memory')
-const DEFAULT_DB_PATH = join(DEFAULT_DB_DIR, 'codemind.db')
+const DEFAULT_DB_DIR = resolve(process.cwd(), '.symbolwright/memory')
+const DEFAULT_DB_PATH = join(DEFAULT_DB_DIR, 'symbolwright.db')
+const LEGACY_DB_FILENAME = 'codemind.db'
 
 export type EpisodicInteractionType =
   | 'pr_history'
@@ -46,6 +47,17 @@ export class MemoryDatabase {
     const dir = dirname(dbPath)
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true })
+    }
+
+    // A directory-level .symbolwright -> .symbolwright migration may have copied
+    // over a legacy-named `symbolwright.db` file without renaming it. Adopt it
+    // in place (once) so existing memory data isn't orphaned under the new
+    // canonical filename.
+    if (!existsSync(dbPath)) {
+      const legacyPath = join(dir, LEGACY_DB_FILENAME)
+      if (existsSync(legacyPath)) {
+        renameSync(legacyPath, dbPath)
+      }
     }
 
     this.db = new DatabaseSync(dbPath)

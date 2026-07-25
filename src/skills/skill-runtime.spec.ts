@@ -12,11 +12,11 @@ import { parseSkillRunInput, renderSkillRunResult, runSkill } from './skill-runt
 import type { SkillDefinition } from './skill-types.js'
 
 function tempWorkspace(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-skill-runtime-'))
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-skill-runtime-'))
 }
 
 function writeSkill(root: string, name: string, content: string): void {
-  const skillDir = path.join(root, '.codemind', 'skills', name)
+  const skillDir = path.join(root, '.symbolwright', 'skills', name)
   fs.mkdirSync(skillDir, { recursive: true })
   fs.writeFileSync(path.join(skillDir, 'SKILL.md'), content)
 }

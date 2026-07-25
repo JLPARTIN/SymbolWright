@@ -35,7 +35,7 @@ describe('parallel task scheduler', () => {
   it('runs independent repository analysis tasks in parallel', () => {
     const result = selectRunnableTaskBatch(
       graph([
-        task('index', { resources: { reads: ['src'], writes: ['.codemind/index'] } }),
+        task('index', { resources: { reads: ['src'], writes: ['.symbolwright/index'] } }),
         task('docs', { resources: { reads: ['README.md'], writes: [] } }),
         task('diagnostics', { resources: { reads: ['package.json'], writes: [] } }),
       ]),

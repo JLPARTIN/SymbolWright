@@ -14,7 +14,7 @@ import { ShortTermMemory } from './short-term-memory.js'
 import { MemoryDatabase } from './storage/database.js'
 import { LocalLexicalStore } from './storage/lexical-store.js'
 
-describe('CodeMind Cognitive Memory Architecture', () => {
+describe('SymbolWright Cognitive Memory Architecture', () => {
   let tempDir: string
   let dbPath: string
   let proceduresPath: string
@@ -27,8 +27,8 @@ describe('CodeMind Cognitive Memory Architecture', () => {
   let tools: AgentMemoryTools
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'codemind-memory-test-'))
-    dbPath = join(tempDir, 'codemind.db')
+    tempDir = mkdtempSync(join(tmpdir(), 'symbolwright-memory-test-'))
+    dbPath = join(tempDir, 'symbolwright.db')
     proceduresPath = join(tempDir, 'procedures.yaml')
     legacyLedgerPath = join(tempDir, 'ci-failure-ledger.json')
 
@@ -234,7 +234,7 @@ describe('CodeMind Cognitive Memory Architecture', () => {
   })
 
   it('uses isolated temp paths only', () => {
-    expect(dbPath).toBe(join(tempDir, 'codemind.db'))
+    expect(dbPath).toBe(join(tempDir, 'symbolwright.db'))
     expect(proceduresPath).toBe(join(tempDir, 'procedures.yaml'))
     expect(dbPath.startsWith(tmpdir())).toBe(true)
     expect(proceduresPath.startsWith(tmpdir())).toBe(true)

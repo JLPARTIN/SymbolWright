@@ -1,7 +1,7 @@
 import type { ProviderStreamEvent } from '../../provider/provider.types.js'
 
 /** Categorization of errors for routing recovery and user messaging. */
-export type CodemindErrorCategory =
+export type SymbolWrightErrorCategory =
   | 'provider_error'
   | 'tool_error'
   | 'permission_denied'
@@ -11,8 +11,8 @@ export type CodemindErrorCategory =
   | 'unknown_error'
 
 /** Structured error with category, retryability, and original context. */
-export interface CodemindError {
-  readonly category: CodemindErrorCategory
+export interface SymbolWrightError {
+  readonly category: SymbolWrightErrorCategory
   readonly message: string
   readonly retryable: boolean
   readonly originalError?: unknown
@@ -31,8 +31,8 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
   maxDelayMs: 16000,
 }
 
-/** Classifies a raw error into a CodemindError with category and retryability. */
-export function classifyError(error: unknown): CodemindError {
+/** Classifies a raw error into a SymbolWrightError with category and retryability. */
+export function classifyError(error: unknown): SymbolWrightError {
   if (error instanceof Error) {
     const msg = error.message.toLowerCase()
 
@@ -123,7 +123,7 @@ export function computeRetryDelay(
 
 /** Returns true if the error is retryable and attempts remain. */
 export function shouldRetry(
-  error: CodemindError,
+  error: SymbolWrightError,
   attempt: number,
   config: RetryConfig = DEFAULT_RETRY_CONFIG,
 ): boolean {
@@ -135,7 +135,7 @@ export async function withRetry<T>(
   fn: () => Promise<T>,
   config: RetryConfig = DEFAULT_RETRY_CONFIG,
 ): Promise<T> {
-  let lastError: CodemindError | undefined
+  let lastError: SymbolWrightError | undefined
 
   for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
     try {
@@ -155,8 +155,8 @@ export async function withRetry<T>(
   throw lastError?.originalError ?? new Error(lastError?.message ?? 'Retry exhausted')
 }
 
-/** Formats a CodemindError into a user-facing message. */
-export function formatErrorForUser(error: CodemindError): string {
+/** Formats a SymbolWrightError into a user-facing message. */
+export function formatErrorForUser(error: SymbolWrightError): string {
   switch (error.category) {
     case 'provider_error':
       return error.retryable
@@ -183,13 +183,13 @@ export function formatErrorForUser(error: CodemindError): string {
   }
 }
 
-/** Formats a CodemindError into a message suitable for the LLM context. */
-export function formatErrorForLLM(error: CodemindError, toolName?: string): string {
+/** Formats a SymbolWrightError into a message suitable for the LLM context. */
+export function formatErrorForLLM(error: SymbolWrightError, toolName?: string): string {
   const prefix = toolName !== undefined ? `Tool "${toolName}" failed: ` : ''
   return `${prefix}${error.message}. ${suggestRecovery(error)}`
 }
 
-function suggestRecovery(error: CodemindError): string {
+function suggestRecovery(error: SymbolWrightError): string {
   switch (error.category) {
     case 'tool_error':
       return 'Try an alternative approach or different tool.'

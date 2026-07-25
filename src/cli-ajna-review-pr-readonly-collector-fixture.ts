@@ -39,7 +39,7 @@ export function createAjnaReadOnlyCollectorReviewPort(): AjnaGithubReadOnlyColle
         { path: 'examples/ajna/github-readonly-collector-request.ready.json', status: 'modified' },
       ],
       checkRuns: [
-        { name: 'Fixture Validate CodeMind', status: 'completed', conclusion: 'success' },
+        { name: 'Fixture Validate SymbolWright', status: 'completed', conclusion: 'success' },
       ],
     }),
   }

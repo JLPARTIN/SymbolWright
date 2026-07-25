@@ -12,7 +12,7 @@ function makePayload(
 ): AjnaGithubApiCollectorPayload {
   return {
     pullRequest: {
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       number: 65,
       base: { ref: 'main' },
       head: {
@@ -30,7 +30,7 @@ function makePayload(
     ],
     checkRuns: [
       {
-        name: 'Validate CodeMind',
+        name: 'Validate SymbolWright',
         status: 'completed',
         conclusion: 'success',
       },
@@ -43,7 +43,7 @@ describe('buildAjnaGithubCollectorSnapshotFromApiPayload', () => {
   it('maps offline GitHub API payloads into collector snapshots', () => {
     const snapshot = buildAjnaGithubCollectorSnapshotFromApiPayload(makePayload())
 
-    expect(snapshot.pullRequest.repository).toBe('JLPARTIN/CodeMind')
+    expect(snapshot.pullRequest.repository).toBe('JLPARTIN/SymbolWright')
     expect(snapshot.pullRequest.pullRequestNumber).toBe(65)
     expect(snapshot.pullRequest.baseRef).toBe('main')
     expect(snapshot.changedFiles[0]?.path).toBe(
@@ -58,7 +58,7 @@ describe('buildAjnaGithubCollectorSnapshotFromApiPayload', () => {
     const reviewPayload = buildAjnaGithubPullRequestPayloadFromCollectorSnapshot(snapshot)
     const input = normalizeGithubPullRequestForAjnaReview(reviewPayload)
 
-    expect(input.request.subject.repository).toBe('JLPARTIN/CodeMind')
+    expect(input.request.subject.repository).toBe('JLPARTIN/SymbolWright')
     expect(input.request.changedFiles).toEqual(snapshot.changedFiles.map((file) => file.path))
     expect(input.findings.map((finding) => finding.id)).toEqual([
       'github-diff-evidence',

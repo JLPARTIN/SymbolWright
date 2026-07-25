@@ -5,14 +5,14 @@ import {
   getCompletedRuntimeBuildPhaseCount,
   RUNTIME_BUILD_PHASES,
 } from './runtime/runtime-build-state.js'
-import { checkBuildLedgerConsistency } from './build-state/codemind-build-ledger.js'
+import { checkBuildLedgerConsistency } from './build-state/symbolwright-build-ledger.js'
 import { runDoctor, type DoctorReport } from './cli-doctor.js'
 import { buildUniversalApiContractReport } from './api/universal-api-contract.js'
 import { buildProviderAdapterContractReport } from './providers/provider-adapter-contract.js'
 import { assessBrowserWorkspaceReadiness } from './workspace/browser-workspace-contract.js'
 import { assessRuntimeModeTruth } from './runtime/runtime-mode-truth-gate.js'
 
-export const RELEASE_READINESS_BLOCK_ID = 'CODEMIND-RELEASE-01' as const
+export const RELEASE_READINESS_BLOCK_ID = 'SYMBOLWRIGHT-RELEASE-01' as const
 
 export type ReleaseReadinessOutcome = 'RELEASE_READY' | 'RELEASE_BLOCKED'
 
@@ -376,7 +376,7 @@ function checkUniversalApiGatewayContract(workspaceRoot: string): ReleaseGate {
     path.join('docs', 'API_REFERENCE.md'),
     path.join('docs', 'PROVIDER_KEYS.md'),
     path.join('docs', 'BROWSER_WORKSPACE.md'),
-    path.join('docs', 'USING_CODEMIND_FROM_ANY_LLM.md'),
+    path.join('docs', 'USING_SYMBOLWRIGHT_FROM_ANY_LLM.md'),
   ]
 
   for (const requiredPath of requiredPaths) {
@@ -492,7 +492,7 @@ function checkBuildLedgerConsistent(workspaceRoot: string): ReleaseGate {
       workspaceRoot,
       'docs',
       'runtime',
-      'CODEMIND_RUNTIME_BUILD_STATE.md',
+      'SYMBOLWRIGHT_RUNTIME_BUILD_STATE.md',
     )
 
     if (!fs.existsSync(readmePath)) {
@@ -506,7 +506,7 @@ function checkBuildLedgerConsistent(workspaceRoot: string): ReleaseGate {
       return {
         code: 'BUILD_LEDGER_CONSISTENT',
         status: 'FAIL',
-        detail: 'docs/runtime/CODEMIND_RUNTIME_BUILD_STATE.md missing',
+        detail: 'docs/runtime/SYMBOLWRIGHT_RUNTIME_BUILD_STATE.md missing',
       }
     }
 
@@ -569,7 +569,7 @@ export function assessReleaseReadiness(workspaceRoot: string): ReleaseReadinessR
 
 export function renderReleaseReadinessReport(report: ReleaseReadinessReport): string {
   const lines = [
-    'CodeMind Release Readiness',
+    'SymbolWright Release Readiness',
     '',
     `Block: ${report.blockId}`,
     `Outcome: ${report.outcome}`,

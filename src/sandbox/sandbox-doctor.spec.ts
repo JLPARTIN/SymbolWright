@@ -36,12 +36,12 @@ function availability() {
 describe('sandbox doctor', () => {
   it('builds a read-only report without enabling execution or pulling images', async () => {
     const report = await buildSandboxDoctorReport({
-      env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
+      env: { SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
       now: () => new Date(NOW),
       discoverCommandAvailability: async () => availability(),
     })
 
-    expect(report.blockId).toBe('CODEMIND-SANDBOX-DOCTOR-01')
+    expect(report.blockId).toBe('SYMBOLWRIGHT-SANDBOX-DOCTOR-01')
     expect(report.generatedAt).toBe(NOW)
     expect(report.readOnly).toBe(true)
     expect(report.executionEnabled).toBe(false)
@@ -70,7 +70,7 @@ describe('sandbox doctor', () => {
     expect(rendered).toContain('Images are never pulled automatically')
 
     const images = renderSandboxImagesReport(report)
-    expect(images).toContain('CodeMind Sandbox Images')
+    expect(images).toContain('SymbolWright Sandbox Images')
     expect(images).toContain('Preparation commands are shown for operator review only')
   })
 

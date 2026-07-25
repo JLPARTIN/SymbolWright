@@ -218,7 +218,7 @@ export function getNextRuntimeBuildPhase(): RuntimeBuildPhase | undefined {
 export function renderRuntimeBuildState(): string {
   const nextPhase = getNextRuntimeBuildPhase()
   const lines = [
-    'CodeMind runtime build state',
+    'SymbolWright runtime build state',
     '',
     `Completed phases: ${getCompletedRuntimeBuildPhaseCount()}`,
     nextPhase === undefined

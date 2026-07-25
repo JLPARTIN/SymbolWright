@@ -25,7 +25,7 @@ const approval: RuntimeApproval = {
 }
 
 function makeWorkspace(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-zflow-'))
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-zflow-'))
 }
 
 const request = {
@@ -34,7 +34,7 @@ const request = {
   reason: 'Prepare approved workflow output',
   rollbackNote: 'Delete generated file',
   files: [{ path: 'src/generated.ts', content: 'export const generated = true\n' }],
-  repository: 'JLPARTIN/CodeMind',
+  repository: 'JLPARTIN/SymbolWright',
   baseBranch: 'main',
   headBranch: 'zflow-generated',
   title: 'Zflow generated change',
@@ -57,7 +57,7 @@ describe('runZflowWorkflow', () => {
     expect(result.mode).toBe('preview-only')
     expect(result.localOutput).toBe('completed')
     expect(result.prOutput).toBeNull()
-    expect(result.recoveryOutput).toContain('CodeMind recovery change ledger')
+    expect(result.recoveryOutput).toContain('SymbolWright recovery change ledger')
     expect(result.rollbackOutput).toContain('Rollback plan: Recover Zflow preview')
     expect(fs.existsSync(path.join(workspace, 'src/generated.ts'))).toBe(false)
   })
@@ -68,9 +68,9 @@ describe('runZflowWorkflow', () => {
 
     expect(result.mode).toBe('prepare-pr')
     expect(result.localOutput).toBe('completed')
-    expect(result.prOutput).toContain('CodeMind GitHub PR creation')
+    expect(result.prOutput).toContain('SymbolWright GitHub PR creation')
     expect(result.prOutput).toContain('Outcome: DRY_RUN')
-    expect(result.collaborationOutput).toContain('CodeMind PR collaboration')
+    expect(result.collaborationOutput).toContain('SymbolWright PR collaboration')
     expect(result.collaborationOutput).toContain('Outcome: DRY_RUN')
     expect(result.recoveryOutput).toContain('Changes: 1')
     expect(result.recoveryOutput).toContain('src/generated.ts')
@@ -82,9 +82,9 @@ describe('runZflowWorkflow', () => {
     const result = await runZflowWorkflow(request, makeWorkspace())
     const output = renderZflowResult(result)
 
-    expect(output).toContain('CodeMind zflow workflow')
+    expect(output).toContain('SymbolWright zflow workflow')
     expect(output).toContain('Mode: prepare-pr')
-    expect(output).toContain('CodeMind recovery change ledger')
+    expect(output).toContain('SymbolWright recovery change ledger')
     expect(output).toContain('Rollback plan: Recover Zflow preview')
     expect(output).toContain('no live GitHub mutation by default')
   })

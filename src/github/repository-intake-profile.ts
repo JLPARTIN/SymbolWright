@@ -14,7 +14,7 @@ import type {
  * Builds a structured intake profile for a repository before any mission
  * edits happen — the single artifact the mission planner, the operator UI,
  * and the PR packet all read from. Nothing in this profile is fabricated:
- * fields that require data CodeMind does not have (live GitHub metadata,
+ * fields that require data SymbolWright does not have (live GitHub metadata,
  * ecosystem detection on a repository that failed to acquire) are simply
  * absent rather than guessed.
  */
@@ -126,7 +126,7 @@ export async function buildRepositoryIntakeProfile(
 
 export function renderRepositoryIntakeProfile(profile: RepositoryIntakeProfile): string {
   const lines = [
-    'CodeMind Repository Intake Profile',
+    'SymbolWright Repository Intake Profile',
     '',
     `Target: ${profile.target.canonicalHttpsUrl}`,
     `Origin: ${profile.origin}`,

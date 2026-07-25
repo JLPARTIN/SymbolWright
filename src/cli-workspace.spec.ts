@@ -59,7 +59,7 @@ describe('renderWorkspaceState', () => {
     const state = buildWorkspaceState(process.cwd())
     const output = renderWorkspaceState(state)
 
-    expect(output).toContain('CodeMind Workspace')
+    expect(output).toContain('SymbolWright Workspace')
     expect(output).toContain('Primary:')
     expect(output).toContain(process.cwd())
     expect(output).toContain('Repos: 1')
@@ -93,7 +93,7 @@ describe('renderWorkspaceJson', () => {
       readonly boundary: { readonly mutatesFiles: boolean; readonly invokesProvider: boolean }
     }
 
-    expect(parsed.command).toBe('codemind-workspace')
+    expect(parsed.command).toBe('symbolwright-workspace')
     expect(parsed.cwd).toBe(process.cwd())
     expect(parsed.primary.rootPath).toBe(process.cwd())
     expect(parsed.repoCount).toBe(1)
@@ -116,7 +116,7 @@ describe('renderWorkspaceServePlan', () => {
   it('renders the real local web API endpoints and boundary', () => {
     const output = renderWorkspaceServePlan({ json: false, serve: true, port: 3005 })
 
-    expect(output).toContain('CodeMind Workspace Web Surface')
+    expect(output).toContain('SymbolWright Workspace Web Surface')
     expect(output).toContain('http://127.0.0.1:3005')
     expect(output).toContain('GET /api/health')
     expect(output).toContain('GET /api/providers')
@@ -130,7 +130,7 @@ describe('renderWorkspaceCommand', () => {
   it('renders real workspace state for text output', () => {
     const output = renderWorkspaceCommand([])
 
-    expect(output).toContain('CodeMind Workspace')
+    expect(output).toContain('SymbolWright Workspace')
     expect(output).toContain('Primary:')
     expect(output).toContain('Repos: 1')
     expect(output).toContain('Boundary:')
@@ -144,7 +144,7 @@ describe('renderWorkspaceCommand', () => {
       readonly repoCount: number
     }
 
-    expect(parsed.command).toBe('codemind-workspace')
+    expect(parsed.command).toBe('symbolwright-workspace')
     expect(parsed.cwd).toBeTruthy()
     expect(parsed.repoCount).toBe(1)
   })
@@ -152,7 +152,7 @@ describe('renderWorkspaceCommand', () => {
   it('renders serve plan without starting the server in pure render mode', () => {
     const output = renderWorkspaceCommand(['--serve', '--port', '3005'])
 
-    expect(output).toContain('CodeMind Workspace Web Surface')
+    expect(output).toContain('SymbolWright Workspace Web Surface')
     expect(output).toContain('GET /api/providers')
     expect(output).toContain('GET /api/aelib')
   })

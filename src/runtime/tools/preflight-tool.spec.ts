@@ -11,7 +11,7 @@ import { preflightTool } from './preflight-tool.js'
 const roots: string[] = []
 
 function makeRepo(): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-preflight-tool-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-preflight-tool-'))
   roots.push(root)
   fs.writeFileSync(
     path.join(root, 'package.json'),

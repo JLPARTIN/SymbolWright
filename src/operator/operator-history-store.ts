@@ -7,7 +7,7 @@ export class OperatorHistoryStore {
   constructor(private readonly filePath: string) {}
 
   static fromWorkspace(cwd: string): OperatorHistoryStore {
-    return new OperatorHistoryStore(join(cwd, '.codemind', 'operator-history.jsonl'))
+    return new OperatorHistoryStore(join(cwd, '.symbolwright', 'operator-history.jsonl'))
   }
 
   append(entry: OperatorHistoryEntry): void {

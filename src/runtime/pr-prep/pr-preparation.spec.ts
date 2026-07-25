@@ -138,7 +138,7 @@ describe('PR preparation renderer', () => {
     const result = evaluatePrPreparation(makeInput())
     const output = renderPrPreparation(result)
 
-    expect(output).toContain('CodeMind PR preparation')
+    expect(output).toContain('SymbolWright PR preparation')
     expect(output).toContain('Decision: READY')
     expect(output).toContain('Title: Phase N: PR preparation')
     expect(output).toContain('Base: main')
@@ -224,7 +224,7 @@ describe('PR preparation tool', () => {
   it('executes with valid input and returns combined output', async () => {
     const output = await prPreparationTool.execute(makeInput(), testContext)
 
-    expect(output).toContain('CodeMind PR preparation')
+    expect(output).toContain('SymbolWright PR preparation')
     expect(output).toContain('Decision: READY')
     expect(output).toContain('Runtime audit log')
   })
@@ -313,7 +313,7 @@ describe('CLI PR preparation', () => {
 
     const output = await renderRuntimePrPreparation(fixturePath, tmpDir)
 
-    expect(output).toContain('CodeMind PR preparation')
+    expect(output).toContain('SymbolWright PR preparation')
     expect(output).toContain('Title: Phase N: PR prep')
     expect(output).toContain('PREPARATION_ONLY')
 

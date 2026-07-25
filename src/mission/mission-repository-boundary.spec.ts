@@ -9,7 +9,7 @@ describe('mission repository boundary', () => {
   const roots: string[] = []
   afterEach(() => roots.splice(0).forEach((root) => rmSync(root, { recursive: true, force: true })))
 
-  it('rejects repository roots outside the active CodeMind workspace', async () => {
+  it('rejects repository roots outside the active SymbolWright workspace', async () => {
     const root = mkdtempSync(join(tmpdir(), 'mission-boundary-'))
     roots.push(root)
     const service = new MissionService({ workspaceRoot: root })

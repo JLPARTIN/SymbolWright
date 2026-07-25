@@ -16,7 +16,7 @@ describe('memory-browse', () => {
   let cwd: string
 
   beforeEach(() => {
-    cwd = mkdtempSync(join(tmpdir(), 'codemind-memory-browse-test-'))
+    cwd = mkdtempSync(join(tmpdir(), 'symbolwright-memory-browse-test-'))
   })
 
   afterEach(() => {
@@ -34,7 +34,7 @@ describe('memory-browse', () => {
 
   it('lists episodic interactions newest first, respecting the limit', () => {
     const memoryDir = resolveProjectMemoryDir(cwd)
-    const db = new MemoryDatabase(join(memoryDir, 'codemind.db'))
+    const db = new MemoryDatabase(join(memoryDir, 'symbolwright.db'))
     try {
       db.getDb()
         .prepare(

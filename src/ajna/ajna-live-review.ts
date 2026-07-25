@@ -6,7 +6,7 @@ import { runAjnaReviewPipeline } from './ajna-review-pipeline.js'
 import type { AjnaReviewPipelineReport } from './ajna-review-pipeline.js'
 import type { AjnaRiskLevel } from './ajna-risk-synthesis.js'
 import type { AjnaMergeDecisionState } from './ajna-merge-decision.js'
-import type { CodemindChangedFileContext } from '../repo-context/repo-context.types.js'
+import type { SymbolWrightChangedFileContext } from '../repo-context/repo-context.types.js'
 import { buildAjnaFileInsights } from './analysis/ajna-file-insights.js'
 
 export interface AjnaLiveReviewInput {
@@ -16,7 +16,7 @@ export interface AjnaLiveReviewInput {
   readonly headSha: string
   readonly baseSha: string
   readonly pullRequestNumber?: number
-  readonly changedFiles: readonly CodemindChangedFileContext[]
+  readonly changedFiles: readonly SymbolWrightChangedFileContext[]
   readonly ciPassed?: boolean
   readonly testsPassed?: boolean
   readonly proofStatuses?: AjnaProofBundleInput
@@ -35,7 +35,7 @@ export interface AjnaLiveReviewResult {
   readonly pipelineReport: AjnaReviewPipelineReport
 }
 
-function deriveRepoImpactLevel(changedFiles: readonly CodemindChangedFileContext[]): string {
+function deriveRepoImpactLevel(changedFiles: readonly SymbolWrightChangedFileContext[]): string {
   const insights = buildAjnaFileInsights(changedFiles)
   const maxScore = insights.reduce((max, insight) => Math.max(max, insight.score), 0)
 

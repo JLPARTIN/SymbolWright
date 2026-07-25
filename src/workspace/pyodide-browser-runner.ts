@@ -11,14 +11,14 @@ export const PYODIDE_BROWSER_RUNNER_LIMITS = {
 export const PYODIDE_BROWSER_STARTER_SNIPPET = `def greet(name: str) -> str:
     return f"Hello, {name}!"
 
-print(greet("CodeMind"))`
+print(greet("SymbolWright"))`
 
 export const PYODIDE_BROWSER_RUNNER_SAFETY = [
   'Runs through Pyodide in a browser Worker.',
   'Downloads the Pyodide browser runtime from the configured Pyodide distribution URL.',
   'Captures Python stdout and stderr inside the Worker.',
   'The Worker is terminated if it exceeds the configured timeout.',
-  'No CodeMind server-side Python execution is exposed by this runner.',
+  'No SymbolWright server-side Python execution is exposed by this runner.',
 ] as const
 
 export type PyodideBrowserRunStatus = 'success' | 'syntax-error' | 'runtime-error' | 'timeout'

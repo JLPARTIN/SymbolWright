@@ -15,12 +15,12 @@ export const HEALTH_POLL_INTERVAL_MS = 500
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 export const REPO_ROOT = join(SCRIPT_DIR, '..', '..')
-export const RUNTIME_DIR = join(REPO_ROOT, '.codemind', 'runtime')
+export const RUNTIME_DIR = join(REPO_ROOT, '.symbolwright', 'runtime')
 export const PID_FILE = join(RUNTIME_DIR, 'codespaces-server.pid')
 export const LOG_FILE = join(RUNTIME_DIR, 'codespaces-server.log')
 export const API_KEY_FILE = join(RUNTIME_DIR, 'codespaces-api-key')
 
-/** Provider env vars CodeMind reads (mirrors src/providers/provider-config.ts). Never log the values. */
+/** Provider env vars SymbolWright reads (mirrors src/providers/provider-config.ts). Never log the values. */
 export const PROVIDER_ENV_VARS = [
   { providerId: 'anthropic', displayName: 'Anthropic', envVar: 'ANTHROPIC_API_KEY' },
   { providerId: 'openai', displayName: 'OpenAI', envVar: 'OPENAI_API_KEY' },
@@ -29,7 +29,7 @@ export const PROVIDER_ENV_VARS = [
   { providerId: 'openrouter', displayName: 'OpenRouter', envVar: 'OPENROUTER_API_KEY' },
   { providerId: 'github-models', displayName: 'GitHub Models', envVar: 'GITHUB_TOKEN' },
   { providerId: 'deepseek', displayName: 'DeepSeek', envVar: 'DEEPSEEK_API_KEY' },
-  { providerId: 'custom', displayName: 'Custom OpenAI-compatible', envVar: 'CODEMIND_OPENAI_COMPATIBLE_API_KEY' },
+  { providerId: 'custom', displayName: 'Custom OpenAI-compatible', envVar: 'SYMBOLWRIGHT_OPENAI_COMPATIBLE_API_KEY' },
 ]
 
 export function ensureRuntimeDir() {
@@ -127,20 +127,20 @@ export function isProcessAlive(pid) {
 }
 
 /**
- * Confirms a PID is actually the CodeMind Codespaces server this repo
+ * Confirms a PID is actually the SymbolWright Codespaces server this repo
  * started, not an unrelated process that happens to reuse the PID (e.g.
  * after a reboot). Reads /proc/<pid>/environ for the unique marker this
  * script set when it launched the process -- never signals a PID on trust
  * alone, so an unrelated `node` process is never killed.
  */
-export function isTrackedCodemindProcess(pid, marker) {
+export function isTrackedSymbolWrightProcess(pid, marker) {
   try {
     const environPath = `/proc/${pid}/environ`
     if (!existsSync(environPath)) {
       return false
     }
     const environ = readFileSync(environPath, 'utf8')
-    return environ.split('\0').includes(`CODEMIND_CODESPACES_MARKER=${marker}`)
+    return environ.split('\0').includes(`SYMBOLWRIGHT_CODESPACES_MARKER=${marker}`)
   } catch {
     return false
   }

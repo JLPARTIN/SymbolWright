@@ -13,7 +13,7 @@ export function buildSystemPrompt(context: SystemPromptContext = {}): string {
   const sections: string[] = []
 
   sections.push(
-    'You are CodeMind, an AI coding agent that helps with repository intelligence, code generation, bug fixing, planning, PR review, and merge-readiness.',
+    'You are SymbolWright, an AI coding agent that helps with repository intelligence, code generation, bug fixing, planning, PR review, and merge-readiness.',
   )
   sections.push(
     'Follow the active runtime mode. In APPROVED_EXECUTION, perform direct implementation work with available tools. In PLAN_ONLY, READ_ONLY, or PROPOSAL_ONLY, stay within the non-mutating boundary. Governance and Ajna forensics are available capabilities, not a permanent approval gate.',

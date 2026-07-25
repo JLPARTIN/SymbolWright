@@ -3,7 +3,7 @@ export function renderCheckpointsViewHtml(): string {
   return `<section data-view="checkpoints" class="app-view" style="display:none">
     <h2>Checkpoints</h2>
     <p class="muted">Snapshots taken automatically before <code>edit_file</code>, <code>local_file_write</code>, and <code>apply_patch</code> mutate a file. Restore puts every snapshotted file in a checkpoint back to its pre-write content in the real working tree (hash-verified per file, never a blind reset).</p>
-    <div id="checkpoints-status" class="muted">Connect with your CodeMind API key in Settings to load checkpoints.</div>
+    <div id="checkpoints-status" class="muted">Connect with your SymbolWright API key in Settings to load checkpoints.</div>
     <div id="checkpoints-content"></div>
   </section>`
 }
@@ -15,7 +15,7 @@ export function buildCheckpointsViewClientScript(): string {
       try {
         const response = await fetch('/api/repository/checkpoints/' + encodeURIComponent(checkpointId) + '/restore', {
           method: 'POST',
-          headers: { authorization: 'Bearer ' + appState.codemindKey },
+          headers: { authorization: 'Bearer ' + appState.symbolWrightKey },
         });
         const data = await response.json();
         if (response.ok && data.status === 'restored') {
@@ -32,14 +32,14 @@ export function buildCheckpointsViewClientScript(): string {
     async function loadCheckpointsView() {
       const statusEl = document.getElementById('checkpoints-status');
       const contentEl = document.getElementById('checkpoints-content');
-      if (!appState.codemindKey) {
-        statusEl.textContent = 'Connect with your CodeMind API key in Settings to load checkpoints.';
+      if (!appState.symbolWrightKey) {
+        statusEl.textContent = 'Connect with your SymbolWright API key in Settings to load checkpoints.';
         contentEl.innerHTML = '';
         return;
       }
       statusEl.textContent = 'Loading checkpoints...';
       try {
-        const response = await fetch('/api/checkpoints', { headers: { authorization: 'Bearer ' + appState.codemindKey } });
+        const response = await fetch('/api/checkpoints', { headers: { authorization: 'Bearer ' + appState.symbolWrightKey } });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         statusEl.textContent = data.checkpoints.length + ' checkpoint(s).';

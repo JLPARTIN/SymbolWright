@@ -20,7 +20,7 @@ function makeReadyInput(
     requestId: 'ak-08-req-1',
     sessionId: 'session-1',
     operatorIntent: 'Execute a governed mission through the agent kernel pipeline.',
-    targetRepository: 'JLPARTIN/CodeMind',
+    targetRepository: 'JLPARTIN/SymbolWright',
     targetRef: 'main',
     requestedMode: 'PLAN',
     requestedRoles: ['orchestrator', 'researcher', 'coder', 'validator'],
@@ -44,7 +44,7 @@ function makeReadyInput(
     planningDecision: planning,
     workflowValidation,
     skillValidations: [skillValidation],
-    repoContext: { repository: 'JLPARTIN/CodeMind', ref: 'main' },
+    repoContext: { repository: 'JLPARTIN/SymbolWright', ref: 'main' },
     maxSections: 8,
     maxSourceLineageItems: 3,
   })
@@ -224,7 +224,7 @@ describe('renderAgentKernelMissionPacket', () => {
     const packet = buildAgentKernelMissionPacket(makeReadyInput())
     const output = renderAgentKernelMissionPacket(packet)
 
-    expect(output).toContain('CodeMind Agent Kernel Mission Packet')
+    expect(output).toContain('SymbolWright Agent Kernel Mission Packet')
     expect(output).toContain('Status: READY')
     expect(output).toContain('AGENT-KERNEL-08')
     expect(output).toContain('OBJ-1')

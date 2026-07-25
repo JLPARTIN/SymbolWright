@@ -7,55 +7,57 @@ import {
 
 describe('parseGitHubRepositoryTarget', () => {
   it('parses a plain https URL', () => {
-    const target = parseGitHubRepositoryTarget('https://github.com/JLPARTIN/CodeMind')
+    const target = parseGitHubRepositoryTarget('https://github.com/JLPARTIN/SymbolWright')
     expect(target).toMatchObject({
       host: 'github.com',
       owner: 'JLPARTIN',
-      repo: 'CodeMind',
+      repo: 'SymbolWright',
       targetType: 'repository',
-      canonicalHttpsUrl: 'https://github.com/JLPARTIN/CodeMind',
+      canonicalHttpsUrl: 'https://github.com/JLPARTIN/SymbolWright',
     })
   })
 
   it('parses a .git-suffixed https URL', () => {
-    const target = parseGitHubRepositoryTarget('https://github.com/JLPARTIN/CodeMind.git')
-    expect(target.repo).toBe('CodeMind')
-    expect(target.canonicalHttpsUrl).toBe('https://github.com/JLPARTIN/CodeMind')
+    const target = parseGitHubRepositoryTarget('https://github.com/JLPARTIN/SymbolWright.git')
+    expect(target.repo).toBe('SymbolWright')
+    expect(target.canonicalHttpsUrl).toBe('https://github.com/JLPARTIN/SymbolWright')
   })
 
   it('parses an SSH form URL', () => {
-    const target = parseGitHubRepositoryTarget('git@github.com:JLPARTIN/CodeMind.git')
+    const target = parseGitHubRepositoryTarget('git@github.com:JLPARTIN/SymbolWright.git')
     expect(target).toMatchObject({
       host: 'github.com',
       owner: 'JLPARTIN',
-      repo: 'CodeMind',
+      repo: 'SymbolWright',
       targetType: 'repository',
     })
   })
 
   it('parses a /tree/<branch> URL as a branch target', () => {
     const target = parseGitHubRepositoryTarget(
-      'https://github.com/JLPARTIN/CodeMind/tree/feature/foo',
+      'https://github.com/JLPARTIN/SymbolWright/tree/feature/foo',
     )
     expect(target.targetType).toBe('branch')
     expect(target.ref).toBe('feature/foo')
   })
 
   it('parses a /pull/<number> URL as a pull-request target', () => {
-    const target = parseGitHubRepositoryTarget('https://github.com/JLPARTIN/CodeMind/pull/123')
+    const target = parseGitHubRepositoryTarget('https://github.com/JLPARTIN/SymbolWright/pull/123')
     expect(target.targetType).toBe('pull-request')
     expect(target.pullRequestNumber).toBe(123)
   })
 
   it('parses an /issues/<number> URL as an issue target', () => {
-    const target = parseGitHubRepositoryTarget('https://github.com/JLPARTIN/CodeMind/issues/456')
+    const target = parseGitHubRepositoryTarget(
+      'https://github.com/JLPARTIN/SymbolWright/issues/456',
+    )
     expect(target.targetType).toBe('issue')
     expect(target.issueNumber).toBe(456)
   })
 
   it('parses a /blob/<ref>/<path> URL as a file target', () => {
     const target = parseGitHubRepositoryTarget(
-      'https://github.com/JLPARTIN/CodeMind/blob/main/src/cli.ts',
+      'https://github.com/JLPARTIN/SymbolWright/blob/main/src/cli.ts',
     )
     expect(target.targetType).toBe('file')
     expect(target.ref).toBe('main')
@@ -64,47 +66,47 @@ describe('parseGitHubRepositoryTarget', () => {
 
   it('marks unrecognized trailing path segments as unknown rather than guessing', () => {
     const target = parseGitHubRepositoryTarget(
-      'https://github.com/JLPARTIN/CodeMind/actions/runs/123',
+      'https://github.com/JLPARTIN/SymbolWright/actions/runs/123',
     )
     expect(target.targetType).toBe('unknown')
   })
 
   it('marks a /pull/ URL with a non-numeric or non-positive number as unknown rather than a fake PR number', () => {
     expect(
-      parseGitHubRepositoryTarget('https://github.com/JLPARTIN/CodeMind/pull/abc').targetType,
+      parseGitHubRepositoryTarget('https://github.com/JLPARTIN/SymbolWright/pull/abc').targetType,
     ).toBe('unknown')
     expect(
-      parseGitHubRepositoryTarget('https://github.com/JLPARTIN/CodeMind/pull/0').targetType,
+      parseGitHubRepositoryTarget('https://github.com/JLPARTIN/SymbolWright/pull/0').targetType,
     ).toBe('unknown')
   })
 
   it('marks an /issues/ URL with a non-numeric or non-positive number as unknown rather than a fake issue number', () => {
     expect(
-      parseGitHubRepositoryTarget('https://github.com/JLPARTIN/CodeMind/issues/abc').targetType,
+      parseGitHubRepositoryTarget('https://github.com/JLPARTIN/SymbolWright/issues/abc').targetType,
     ).toBe('unknown')
     expect(
-      parseGitHubRepositoryTarget('https://github.com/JLPARTIN/CodeMind/issues/-1').targetType,
+      parseGitHubRepositoryTarget('https://github.com/JLPARTIN/SymbolWright/issues/-1').targetType,
     ).toBe('unknown')
   })
 
   it('marks a /blob/ URL with no file path segment as unknown rather than a fake file target', () => {
     expect(
-      parseGitHubRepositoryTarget('https://github.com/JLPARTIN/CodeMind/blob/main').targetType,
+      parseGitHubRepositoryTarget('https://github.com/JLPARTIN/SymbolWright/blob/main').targetType,
     ).toBe('unknown')
   })
 
   it('parses an unambiguous owner/repo shorthand', () => {
-    const target = parseGitHubRepositoryTarget('JLPARTIN/CodeMind')
+    const target = parseGitHubRepositoryTarget('JLPARTIN/SymbolWright')
     expect(target).toMatchObject({
       host: 'github.com',
       owner: 'JLPARTIN',
-      repo: 'CodeMind',
+      repo: 'SymbolWright',
       targetType: 'repository',
     })
   })
 
   it('trims surrounding whitespace', () => {
-    const target = parseGitHubRepositoryTarget('  JLPARTIN/CodeMind  ')
+    const target = parseGitHubRepositoryTarget('  JLPARTIN/SymbolWright  ')
     expect(target.owner).toBe('JLPARTIN')
   })
 
@@ -117,7 +119,7 @@ describe('parseGitHubRepositoryTarget', () => {
   })
 
   it('falls back to the default host when an empty allowedHosts list is supplied', () => {
-    const target = parseGitHubRepositoryTarget('JLPARTIN/CodeMind', { allowedHosts: [] })
+    const target = parseGitHubRepositoryTarget('JLPARTIN/SymbolWright', { allowedHosts: [] })
     expect(target.host).toBe('github.com')
   })
 
@@ -144,7 +146,7 @@ describe('parseGitHubRepositoryTarget', () => {
   })
 
   it('rejects unsupported protocols', () => {
-    expect(() => parseGitHubRepositoryTarget('ftp://github.com/JLPARTIN/CodeMind')).toThrow(
+    expect(() => parseGitHubRepositoryTarget('ftp://github.com/JLPARTIN/SymbolWright')).toThrow(
       /protocol/,
     )
     expect(() => parseGitHubRepositoryTarget('file:///etc/passwd')).toThrow(
@@ -157,21 +159,21 @@ describe('parseGitHubRepositoryTarget', () => {
 
   it('rejects embedded credentials in an https URL', () => {
     expect(() =>
-      parseGitHubRepositoryTarget('https://token:x-oauth-basic@github.com/JLPARTIN/CodeMind'),
+      parseGitHubRepositoryTarget('https://token:x-oauth-basic@github.com/JLPARTIN/SymbolWright'),
     ).toThrow(/credentials/)
   })
 
   it('rejects suspicious hosts not on the allowlist', () => {
-    expect(() => parseGitHubRepositoryTarget('https://evil-github.com/JLPARTIN/CodeMind')).toThrow(
-      /not allowlisted/,
-    )
-    expect(() => parseGitHubRepositoryTarget('git@evil.example.com:JLPARTIN/CodeMind.git')).toThrow(
-      /not allowlisted/,
-    )
+    expect(() =>
+      parseGitHubRepositoryTarget('https://evil-github.com/JLPARTIN/SymbolWright'),
+    ).toThrow(/not allowlisted/)
+    expect(() =>
+      parseGitHubRepositoryTarget('git@evil.example.com:JLPARTIN/SymbolWright.git'),
+    ).toThrow(/not allowlisted/)
   })
 
   it('allows an explicitly supplied additional host', () => {
-    const target = parseGitHubRepositoryTarget('https://github.example.com/JLPARTIN/CodeMind', {
+    const target = parseGitHubRepositoryTarget('https://github.example.com/JLPARTIN/SymbolWright', {
       allowedHosts: ['github.example.com'],
     })
     expect(target.host).toBe('github.example.com')
@@ -179,10 +181,10 @@ describe('parseGitHubRepositoryTarget', () => {
 
   it('rejects shell metacharacters', () => {
     for (const malicious of [
-      'JLPARTIN/CodeMind; rm -rf /',
-      'JLPARTIN/CodeMind`whoami`',
-      'JLPARTIN/CodeMind$(whoami)',
-      'https://github.com/JLPARTIN/CodeMind|cat /etc/passwd',
+      'JLPARTIN/SymbolWright; rm -rf /',
+      'JLPARTIN/SymbolWright`whoami`',
+      'JLPARTIN/SymbolWright$(whoami)',
+      'https://github.com/JLPARTIN/SymbolWright|cat /etc/passwd',
     ]) {
       expect(() => parseGitHubRepositoryTarget(malicious)).toThrow(GitHubRepositoryTargetError)
     }
@@ -195,7 +197,7 @@ describe('parseGitHubRepositoryTarget', () => {
   })
 
   it('never fabricates a default branch — it is not part of the parsed target', () => {
-    const target = parseGitHubRepositoryTarget('JLPARTIN/CodeMind')
+    const target = parseGitHubRepositoryTarget('JLPARTIN/SymbolWright')
     expect('defaultBranch' in target).toBe(false)
   })
 })

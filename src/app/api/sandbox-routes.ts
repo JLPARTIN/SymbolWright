@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import { MissionNotFoundError, type MissionService } from '../../mission/mission-service.js'
-import type { CodemindRuntimeMode } from '../../runtime/types.js'
+import type { SymbolWrightRuntimeMode } from '../../runtime/types.js'
 import { SandboxRequestValidationError } from '../../sandbox/sandbox-request.js'
 import type { SandboxService } from '../../sandbox/sandbox-service.js'
 import type {
@@ -10,7 +10,7 @@ import type {
 } from '../../sandbox/sandbox-types.js'
 
 const MAX_SANDBOX_REQUEST_BYTES = 512 * 1024
-const RUNTIME_MODES: readonly CodemindRuntimeMode[] = [
+const RUNTIME_MODES: readonly SymbolWrightRuntimeMode[] = [
   'PLAN_ONLY',
   'READ_ONLY',
   'PROPOSAL_ONLY',
@@ -57,12 +57,14 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>
 }
 
-function parseRuntimeMode(record: Record<string, unknown>): CodemindRuntimeMode {
+function parseRuntimeMode(record: Record<string, unknown>): SymbolWrightRuntimeMode {
   const value = record['runtimeMode'] ?? record['modePolicy'] ?? 'APPROVED_EXECUTION'
   if (typeof value !== 'string' || !(RUNTIME_MODES as readonly string[]).includes(value)) {
-    throw new SandboxRequestValidationError('runtimeMode must be a supported CodeMind runtime mode')
+    throw new SandboxRequestValidationError(
+      'runtimeMode must be a supported SymbolWright runtime mode',
+    )
   }
-  return value as CodemindRuntimeMode
+  return value as SymbolWrightRuntimeMode
 }
 
 function parseLimit(value: string | null, fallback: number): number {

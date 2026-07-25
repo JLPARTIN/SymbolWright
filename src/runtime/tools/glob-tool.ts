@@ -72,7 +72,7 @@ export async function executeGlobTool(input: GlobToolInput, cwd: string): Promis
   const matches = matchGlobSimple(basePath, input.pattern, maxResults)
 
   return [
-    'CodeMind glob',
+    'SymbolWright glob',
     '',
     `Pattern: ${input.pattern}`,
     `Matches: ${matches.length}${matches.length >= maxResults ? ' (truncated)' : ''}`,

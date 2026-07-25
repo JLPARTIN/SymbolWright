@@ -9,8 +9,8 @@ function makeRequest(
   return {
     requestId: 'ak-req-1',
     sessionId: 'session-1',
-    operatorIntent: 'Migrate the A-O-S planning substrate into CodeMind.',
-    targetRepository: 'JLPARTIN/JLPARTIN-CodeMind',
+    operatorIntent: 'Migrate the A-O-S planning substrate into SymbolWright.',
+    targetRepository: 'JLPARTIN/JLPARTIN-SymbolWright',
     targetRef: 'main',
     requestedMode: 'PLAN',
     requestedRoles: ['orchestrator', 'researcher', 'coder', 'validator'],

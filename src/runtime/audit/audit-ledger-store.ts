@@ -254,7 +254,7 @@ export function serializeAuditLedger(
 
 export function renderAuditLedgerPersistResult(result: AuditLedgerPersistResult): string {
   const lines = [
-    'CodeMind Audit Ledger',
+    'SymbolWright Audit Ledger',
     '',
     `Block: ${result.blockId}`,
     `Outcome: ${result.outcome}`,
@@ -274,7 +274,7 @@ export function renderAuditLedgerPersistResult(result: AuditLedgerPersistResult)
 
 export function renderAuditLedgerReplayResult(result: AuditLedgerReplayResult): string {
   const lines = [
-    'CodeMind Audit Ledger Replay',
+    'SymbolWright Audit Ledger Replay',
     '',
     `Block: ${result.blockId}`,
     `Outcome: ${result.outcome}`,

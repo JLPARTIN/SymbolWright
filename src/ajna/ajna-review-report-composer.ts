@@ -4,9 +4,9 @@ import type { AjnaRiskSynthesis } from './ajna-risk-synthesis.js'
 import type { AjnaMergeDecision } from './ajna-merge-decision.js'
 import type { AjnaRenderedGovernanceReport } from './governance/ajna-governance-renderer.js'
 
-export const AJNA_REVIEW_REPORT_COMPOSER_BLOCK_ID = 'CODEMIND-AJNA-REVIEW-09' as const
+export const AJNA_REVIEW_REPORT_COMPOSER_BLOCK_ID = 'SYMBOLWRIGHT-AJNA-REVIEW-09' as const
 export const AJNA_REVIEW_REPORT_COMPOSER_PR_ID = 'PR-CM-AJNA-09' as const
-export const AJNA_REVIEW_REPORT_COMPOSER_PHASE_ID = 'CODEMIND-AJNA-09' as const
+export const AJNA_REVIEW_REPORT_COMPOSER_PHASE_ID = 'SYMBOLWRIGHT-AJNA-09' as const
 
 export const AJNA_REVIEW_REPORT_FORMATS = ['plain', 'markdown', 'compact'] as const
 export type AjnaReviewReportFormat = (typeof AJNA_REVIEW_REPORT_FORMATS)[number]

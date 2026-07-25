@@ -40,7 +40,7 @@ function truncateOutputTail(output: string): readonly string[] {
 
 export function renderPreflightReport(report: PrReadinessReport): string {
   const lines = [
-    'CodeMind PR Preflight',
+    'SymbolWright PR Preflight',
     '',
     `Verdict: ${report.verdict}`,
     `Confidence: ${report.confidence}`,

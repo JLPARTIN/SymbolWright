@@ -197,7 +197,7 @@ export class CostTracker {
 /** Renders a usage summary as a human-readable multi-line string. */
 export function renderUsageSummary(summary: UsageSummary): string {
   const lines: string[] = [
-    'CodeMind Usage Summary',
+    'SymbolWright Usage Summary',
     '',
     `Total Input Tokens:  ${summary.totalInputTokens.toLocaleString()}`,
     `Total Output Tokens: ${summary.totalOutputTokens.toLocaleString()}`,

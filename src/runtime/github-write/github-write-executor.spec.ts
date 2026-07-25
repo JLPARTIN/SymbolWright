@@ -216,7 +216,7 @@ describe('renderGitHubWriteExecutorResult', () => {
     const result = await executeGitHubWrite(makeRequest(), policy, undefined, client, 'live')
     const output = renderGitHubWriteExecutorResult(result)
 
-    expect(output).toContain('CodeMind GitHub Write Executor')
+    expect(output).toContain('SymbolWright GitHub Write Executor')
     expect(output).toContain('Outcome: EXECUTED')
     expect(output).toContain('Execution mode: live')
     expect(output).toContain('Action: post_comment')

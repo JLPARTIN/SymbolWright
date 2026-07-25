@@ -108,7 +108,7 @@ export async function runLocalSelfEditWorkflow(
 
 export function renderLocalSelfEditResult(result: LocalSelfEditResult): string {
   return [
-    'CodeMind local self-edit workflow',
+    'SymbolWright local self-edit workflow',
     '',
     `Mode: ${result.mode}`,
     '',

@@ -1,18 +1,21 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { CODEMIND_PLATFORM_NAME, CODEMIND_AJNA_CAPABILITY_NAME } from './codemind-foundation.js'
+import {
+  SYMBOLWRIGHT_PLATFORM_NAME,
+  SYMBOLWRIGHT_AJNA_CAPABILITY_NAME,
+} from './symbolwright-foundation.js'
 import {
   getCompletedRuntimeBuildPhaseCount,
   RUNTIME_BUILD_PHASES,
 } from './runtime/runtime-build-state.js'
 
-export const VERSION_BLOCK_ID = 'CODEMIND-VERSION-01' as const
+export const VERSION_BLOCK_ID = 'SYMBOLWRIGHT-VERSION-01' as const
 
 export interface VersionInfo {
   readonly blockId: typeof VERSION_BLOCK_ID
-  readonly platform: typeof CODEMIND_PLATFORM_NAME
-  readonly capability: typeof CODEMIND_AJNA_CAPABILITY_NAME
+  readonly platform: typeof SYMBOLWRIGHT_PLATFORM_NAME
+  readonly capability: typeof SYMBOLWRIGHT_AJNA_CAPABILITY_NAME
   readonly version: string
   readonly nodeVersion: string
   readonly runtimePhases: string
@@ -36,8 +39,8 @@ export function getVersionInfo(workspaceRoot: string): VersionInfo {
 
   return {
     blockId: VERSION_BLOCK_ID,
-    platform: CODEMIND_PLATFORM_NAME,
-    capability: CODEMIND_AJNA_CAPABILITY_NAME,
+    platform: SYMBOLWRIGHT_PLATFORM_NAME,
+    capability: SYMBOLWRIGHT_AJNA_CAPABILITY_NAME,
     version,
     nodeVersion: process.version,
     runtimePhases: `${completed}/${total}`,

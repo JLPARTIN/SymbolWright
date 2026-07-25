@@ -230,7 +230,7 @@ describe('renderRuntimeAjnaWorkflow (CLI)', () => {
     expect(output).toContain('Ajna workflow template')
     expect(output).toContain('test-org/test-repo')
     expect(output).toContain('#42')
-    expect(output).toContain('CodeMind runtime workflow result')
+    expect(output).toContain('SymbolWright runtime workflow result')
   })
 
   it('throws when owner is missing', async () => {

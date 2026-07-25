@@ -1,4 +1,4 @@
-import type { CodemindToolName } from '../runtime/types.js'
+import type { SymbolWrightToolName } from '../runtime/types.js'
 import type { SubagentName } from '../hivemind/subagent-definitions.js'
 
 export const SKILL_CONTEXTS = ['inline', 'fork'] as const
@@ -18,8 +18,8 @@ export interface SkillFrontmatter {
   readonly arguments?: readonly string[]
   readonly disableModelInvocation?: boolean
   readonly userInvocable?: boolean
-  readonly allowedTools?: readonly CodemindToolName[]
-  readonly disallowedTools?: readonly CodemindToolName[]
+  readonly allowedTools?: readonly SymbolWrightToolName[]
+  readonly disallowedTools?: readonly SymbolWrightToolName[]
   readonly context?: SkillContext
   readonly agent?: SubagentName
   readonly paths?: readonly string[]
@@ -35,8 +35,8 @@ export interface SkillDefinition {
   readonly arguments: readonly string[]
   readonly disableModelInvocation: boolean
   readonly userInvocable: boolean
-  readonly allowedTools: readonly CodemindToolName[]
-  readonly disallowedTools: readonly CodemindToolName[]
+  readonly allowedTools: readonly SymbolWrightToolName[]
+  readonly disallowedTools: readonly SymbolWrightToolName[]
   readonly context: SkillContext
   readonly agent?: SubagentName
   readonly paths: readonly string[]

@@ -1,14 +1,17 @@
 import { createProvider } from './cli-agent.js'
-import { resolveCodemindConfig, validateCodemindConfig } from './config/codemind-config.js'
+import {
+  resolveSymbolWrightConfig,
+  validateSymbolWrightConfig,
+} from './config/symbolwright-config.js'
 import type { SubagentName } from './hivemind/subagent-definitions.js'
 import { SubagentDispatcher } from './hivemind/subagent-dispatcher.js'
 import {
   createRuntimePolicyForMode,
-  DEFAULT_CODEMIND_RUNTIME_MODE,
-  normalizeCodemindRuntimeMode,
+  DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE,
+  normalizeSymbolWrightRuntimeMode,
 } from './runtime/policy/runtime-policy.js'
 import { renderSubagentEvidence } from './runtime/tools/subagent-run-tool.js'
-import type { CodemindRuntimeMode, RuntimeToolContext } from './runtime/types.js'
+import type { SymbolWrightRuntimeMode, RuntimeToolContext } from './runtime/types.js'
 import { discoverSkills, requireSkillByName } from './skills/skill-discovery.js'
 import { renderSkillDetails, renderSkillListing } from './skills/skill-renderer.js'
 import { renderSkillRunResult, runSkill } from './skills/skill-runtime.js'
@@ -18,7 +21,7 @@ interface ParsedSkillRunFlags {
   readonly positionals: readonly string[]
   readonly enableGovernedTools: boolean
   readonly json: boolean
-  readonly mode: CodemindRuntimeMode
+  readonly mode: SymbolWrightRuntimeMode
   readonly dynamicContext: boolean
 }
 
@@ -26,7 +29,7 @@ function parseSkillRunFlags(args: readonly string[]): ParsedSkillRunFlags {
   const positionals: string[] = []
   let enableGovernedTools = false
   let json = false
-  let mode = DEFAULT_CODEMIND_RUNTIME_MODE
+  let mode = DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE
   let dynamicContext = true
 
   for (let index = 0; index < args.length; index++) {
@@ -49,7 +52,7 @@ function parseSkillRunFlags(args: readonly string[]): ParsedSkillRunFlags {
     }
 
     if (arg === '--mode') {
-      const value = normalizeCodemindRuntimeMode(args[++index])
+      const value = normalizeSymbolWrightRuntimeMode(args[++index])
       if (value === undefined) {
         throw new Error(
           '--mode must be one of PLAN_ONLY, READ_ONLY, PROPOSAL_ONLY, APPROVED_EXECUTION',
@@ -110,10 +113,10 @@ export async function runSkillRunCommand(
     request,
     context,
     forkRunner: async (forkRequest) => {
-      const config = resolveCodemindConfig({})
-      const validation = validateCodemindConfig(config)
+      const config = resolveSymbolWrightConfig({})
+      const validation = validateSymbolWrightConfig(config)
       if (!validation.valid) {
-        throw new Error(`Invalid CodeMind config: ${validation.errors.join('; ')}`)
+        throw new Error(`Invalid SymbolWright config: ${validation.errors.join('; ')}`)
       }
       const provider = createProvider(config)
       const dispatcher = new SubagentDispatcher(

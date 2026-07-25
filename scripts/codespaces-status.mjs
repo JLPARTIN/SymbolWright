@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Read-only diagnostics for the CodeMind Codespaces server: is it listening,
+// Read-only diagnostics for the SymbolWright Codespaces server: is it listening,
 // is it healthy, which PID, which branch/commit, which providers are
 // detected (never their values), where the logs are, the real forwarded
 // URL, and whether the currently served browser scripts still parse.
@@ -10,7 +10,7 @@ import {
   currentGitInfo,
   detectProviders,
   isProcessAlive,
-  isTrackedCodemindProcess,
+  isTrackedSymbolWrightProcess,
   readPidRecord,
   resolveOpenUrl,
 } from './lib/codespaces-common.mjs'
@@ -18,17 +18,17 @@ import {
 async function main() {
   const record = readPidRecord()
   const host = record?.host ?? DEFAULT_HOST
-  const port = record?.port ?? Number.parseInt(process.env.CODEMIND_CHAT_PORT ?? '8787', 10)
+  const port = record?.port ?? Number.parseInt(process.env.SYMBOLWRIGHT_CHAT_PORT ?? '8787', 10)
   const localUrl = `http://${host === '0.0.0.0' ? '127.0.0.1' : host}:${port}`
 
-  console.log('CodeMind Codespaces status\n')
+  console.log('SymbolWright Codespaces status\n')
 
   console.log('Process:')
   if (record === undefined) {
     console.log('  No tracked PID (never started with codespaces:start, or already stopped)')
   } else {
     const alive = isProcessAlive(record.pid)
-    const tracked = alive && isTrackedCodemindProcess(record.pid, record.marker)
+    const tracked = alive && isTrackedSymbolWrightProcess(record.pid, record.marker)
     console.log(`  PID: ${record.pid} (${alive ? (tracked ? 'running, verified' : 'running, UNVERIFIED -- marker mismatch') : 'not running (stale PID file)'})`)
     console.log(`  Started: ${record.startedAt}`)
   }

@@ -13,7 +13,7 @@ const tempDirs: string[] = []
 function makeFixture(): unknown {
   return {
     pullRequest: {
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       number: 66,
       base: { ref: 'main' },
       head: {
@@ -22,12 +22,12 @@ function makeFixture(): unknown {
       },
     },
     files: [{ filename: 'src/ajna/ajna-github-api-payload-adapter.ts', status: 'added' }],
-    checkRuns: [{ name: 'Validate CodeMind', status: 'completed', conclusion: 'success' }],
+    checkRuns: [{ name: 'Validate SymbolWright', status: 'completed', conclusion: 'success' }],
   }
 }
 
 function writeFixtureFile(input: unknown): string {
-  const rootDir = mkdtempSync(join(tmpdir(), 'codemind-ajna-api-review-'))
+  const rootDir = mkdtempSync(join(tmpdir(), 'symbolwright-ajna-api-review-'))
   tempDirs.push(rootDir)
   const inputPath = join(rootDir, 'api-payload.json')
   writeFileSync(inputPath, JSON.stringify(input), 'utf-8')
@@ -44,7 +44,7 @@ describe('parseAjnaGithubApiReviewFixture', () => {
   it('accepts an object fixture', () => {
     const parsed = parseAjnaGithubApiReviewFixture(JSON.stringify(makeFixture()))
 
-    expect(parsed.pullRequest.repository).toBe('JLPARTIN/CodeMind')
+    expect(parsed.pullRequest.repository).toBe('JLPARTIN/SymbolWright')
     expect(parsed.pullRequest.number).toBe(66)
   })
 

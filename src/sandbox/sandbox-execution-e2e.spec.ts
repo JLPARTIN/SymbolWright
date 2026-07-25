@@ -13,7 +13,7 @@ import type { SandboxRunnerAvailability } from './sandbox-types.js'
 const CHECKED_AT = '2026-07-21T00:00:00.000Z'
 const EXECUTION_ENV: NodeJS.ProcessEnv = {
   PATH: process.env['PATH'] ?? '',
-  CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true',
+  SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true',
 }
 
 const workspaces: string[] = []
@@ -35,7 +35,7 @@ async function createService(
   commands: ReadonlyMap<string, SandboxRunnerAvailability>,
   generateExecutionId = () => 'sandbox_test_execution',
 ): Promise<SandboxService> {
-  const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'codemind-sandbox-test-'))
+  const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-sandbox-test-'))
   workspaces.push(workspaceRoot)
   const historyStore = new SandboxHistoryStore({ workspaceRoot })
   return new SandboxService({

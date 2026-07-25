@@ -111,7 +111,7 @@ export async function executePrCollaboration(
 
 export function renderPrCollaborationResult(result: PrCollaborationResult): string {
   const lines = [
-    'CodeMind PR collaboration',
+    'SymbolWright PR collaboration',
     '',
     `Outcome: ${result.outcome}`,
     `Decision: ${result.gateResult.decision}`,

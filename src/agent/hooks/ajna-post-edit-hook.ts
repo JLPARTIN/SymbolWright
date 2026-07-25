@@ -1,4 +1,4 @@
-import type { CodemindChangedFileContext } from '../../repo-context/repo-context.types.js'
+import type { SymbolWrightChangedFileContext } from '../../repo-context/repo-context.types.js'
 import { runAjnaLiveReview } from '../../ajna/ajna-live-review.js'
 import type { AjnaLiveReviewResult } from '../../ajna/ajna-live-review.js'
 import type { AjnaRiskLevel } from '../../ajna/ajna-risk-synthesis.js'
@@ -50,7 +50,7 @@ function buildWarningMessage(review: AjnaLiveReviewResult): string {
 }
 
 export function runAjnaPostEditHook(
-  editedFiles: readonly CodemindChangedFileContext[],
+  editedFiles: readonly SymbolWrightChangedFileContext[],
   context: AjnaPostEditContext,
 ): AjnaPostEditResult {
   if (editedFiles.length === 0) {

@@ -268,7 +268,7 @@ describe('renderRepairLoopResult', () => {
     const result = executeRepairLoop(makeRequest())
     const output = renderRepairLoopResult(result)
 
-    expect(output).toContain('CodeMind Repair Loop')
+    expect(output).toContain('SymbolWright Repair Loop')
     expect(output).toContain('Outcome: COMPLETED')
     expect(output).toContain('Ajna verdict: READY')
     expect(output).toContain('Merge readiness: MERGE_READY')

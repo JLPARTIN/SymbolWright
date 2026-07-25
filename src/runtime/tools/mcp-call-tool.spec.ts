@@ -24,10 +24,10 @@ describe('mcp-call-tool', () => {
   let workspaceDir: string
 
   beforeEach(() => {
-    workspaceDir = mkdtempSync(join(tmpdir(), 'codemind-mcp-tool-'))
-    mkdirSync(join(workspaceDir, '.codemind'), { recursive: true })
+    workspaceDir = mkdtempSync(join(tmpdir(), 'symbolwright-mcp-tool-'))
+    mkdirSync(join(workspaceDir, '.symbolwright'), { recursive: true })
     writeFileSync(
-      join(workspaceDir, '.codemind', 'mcp.json'),
+      join(workspaceDir, '.symbolwright', 'mcp.json'),
       JSON.stringify({
         servers: { fixture: { command: 'node', args: [FIXTURE_SERVER_PATH] } },
       }),

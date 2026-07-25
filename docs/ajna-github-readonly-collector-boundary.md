@@ -8,7 +8,7 @@ The current implementation is intentionally offline. It validates a request and 
 
 ```json
 {
-  "repository": "JLPARTIN/CodeMind",
+  "repository": "JLPARTIN/SymbolWright",
   "pullRequestNumber": 62
 }
 ```

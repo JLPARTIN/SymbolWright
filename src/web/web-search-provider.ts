@@ -100,7 +100,8 @@ export function parseDuckDuckGoHtml(
 }
 
 const DDG_ENDPOINT = 'https://html.duckduckgo.com/html/'
-const DEFAULT_USER_AGENT = 'CodeMind/1.0 (+https://github.com/jlpartin/codemind; web_search tool)'
+const DEFAULT_USER_AGENT =
+  'SymbolWright/1.0 (+https://github.com/jlpartin/symbolwright; web_search tool)'
 
 /**
  * DuckDuckGo occasionally answers automated/datacenter traffic with an

@@ -1,5 +1,5 @@
-import { assertCodeMindMission, MissionValidationError } from './mission-validation.js'
-import { CURRENT_MISSION_SCHEMA_VERSION, type CodeMindMission } from './mission-types.js'
+import { assertSymbolWrightMission, MissionValidationError } from './mission-validation.js'
+import { CURRENT_MISSION_SCHEMA_VERSION, type SymbolWrightMission } from './mission-types.js'
 
 function asRecord(value: unknown): Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -62,7 +62,7 @@ function normalizeVersion1(raw: Record<string, unknown>): Record<string, unknown
   }
 }
 
-export function migrateMissionRecord(raw: unknown): CodeMindMission {
+export function migrateMissionRecord(raw: unknown): SymbolWrightMission {
   const record = asRecord(raw)
   const schemaVersion = record['schemaVersion']
   if (schemaVersion !== 1) {
@@ -72,6 +72,6 @@ export function migrateMissionRecord(raw: unknown): CodeMindMission {
   }
 
   const migrated = normalizeVersion1(record)
-  assertCodeMindMission(migrated)
+  assertSymbolWrightMission(migrated)
   return migrated
 }

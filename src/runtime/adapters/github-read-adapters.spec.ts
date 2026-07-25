@@ -15,7 +15,7 @@ import {
 } from '../registry/fixture-registry-factory.js'
 
 function createFixtureFile(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-gh-fixture-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-gh-fixture-'))
   const file = path.join(dir, 'fixture.json')
   fs.writeFileSync(
     file,
@@ -32,7 +32,7 @@ function createFixtureFile(): string {
         deletions: 2,
       },
       ci: {
-        workflow: 'Validate CodeMind',
+        workflow: 'Validate SymbolWright',
         conclusion: 'success',
         jobs: [{ name: 'Typecheck', status: 'completed', conclusion: 'success' }],
       },
@@ -50,7 +50,7 @@ describe('GitHub read fixture adapters', () => {
   })
 
   it('adapts workflow fixture evidence', () => {
-    const evidence = adaptGitHubCiFixture({ workflow: 'Validate CodeMind' })
+    const evidence = adaptGitHubCiFixture({ workflow: 'Validate SymbolWright' })
 
     expect(evidence.conclusion).toBe('unknown')
     expect(evidence.jobs).toEqual([])
@@ -91,9 +91,9 @@ describe('GitHub read fixture adapters', () => {
       .getOrThrow('github_ci_fixture_review')
       .execute({ path: fixture }, context)
 
-    expect(prOutput).toContain('CodeMind GitHub PR fixture review')
+    expect(prOutput).toContain('SymbolWright GitHub PR fixture review')
     expect(prOutput).toContain('no comments')
-    expect(ciOutput).toContain('CodeMind GitHub CI fixture review')
+    expect(ciOutput).toContain('SymbolWright GitHub CI fixture review')
     expect(ciOutput).toContain('no workflow rerun')
   })
 })

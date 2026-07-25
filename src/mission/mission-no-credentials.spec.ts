@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import type { CodeMindMission } from './mission-types.js'
+import type { SymbolWrightMission } from './mission-types.js'
 
 describe('mission credential boundary', () => {
   it('does not model provider or access credentials', () => {
-    const agentKeys: Array<keyof CodeMindMission['agent']> = [
+    const agentKeys: Array<keyof SymbolWrightMission['agent']> = [
       'runtimeMode',
       'activeProviderId',
       'model',

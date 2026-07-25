@@ -79,7 +79,7 @@ describe('loadWebConfig', () => {
   let dir: string
 
   beforeEach(() => {
-    dir = mkdtempSync(join(tmpdir(), 'codemind-web-config-'))
+    dir = mkdtempSync(join(tmpdir(), 'symbolwright-web-config-'))
   })
 
   afterEach(() => {
@@ -90,22 +90,25 @@ describe('loadWebConfig', () => {
     expect(loadWebConfig(dir, { env: {} })).toEqual(DEFAULT_WEB_CONFIG)
   })
 
-  it('reads the web section from .codemind/config.json', () => {
-    mkdirSync(join(dir, '.codemind'), { recursive: true })
-    writeFileSync(join(dir, '.codemind', 'config.json'), JSON.stringify({ web: { mode: 'off' } }))
+  it('reads the web section from .symbolwright/config.json', () => {
+    mkdirSync(join(dir, '.symbolwright'), { recursive: true })
+    writeFileSync(
+      join(dir, '.symbolwright', 'config.json'),
+      JSON.stringify({ web: { mode: 'off' } }),
+    )
 
     expect(loadWebConfig(dir, { env: {} }).mode).toBe('off')
   })
 
   it('falls back to defaults on invalid JSON', () => {
-    mkdirSync(join(dir, '.codemind'), { recursive: true })
-    writeFileSync(join(dir, '.codemind', 'config.json'), '{not json')
+    mkdirSync(join(dir, '.symbolwright'), { recursive: true })
+    writeFileSync(join(dir, '.symbolwright', 'config.json'), '{not json')
 
     expect(loadWebConfig(dir, { env: {} })).toEqual(DEFAULT_WEB_CONFIG)
   })
 
-  it('applies CODEMIND_WEB_MODE from the environment', () => {
-    expect(loadWebConfig(dir, { env: { CODEMIND_WEB_MODE: 'ask' } }).mode).toBe('ask')
+  it('applies SYMBOLWRIGHT_WEB_MODE from the environment', () => {
+    expect(loadWebConfig(dir, { env: { SYMBOLWRIGHT_WEB_MODE: 'ask' } }).mode).toBe('ask')
   })
 
   it('honors an explicit configPath override', () => {

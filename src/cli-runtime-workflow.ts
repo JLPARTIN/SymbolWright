@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import type { CodemindToolName } from './runtime/types.js'
+import type { SymbolWrightToolName } from './runtime/types.js'
 import type { FakeLiveReadClientData } from './runtime/live-read/fake-live-read-client.js'
 import {
   createFixtureContext,
@@ -42,7 +42,7 @@ export async function renderRuntimeWorkflow(
     }
 
     return {
-      toolName: toolName as CodemindToolName,
+      toolName: toolName as SymbolWrightToolName,
       input: input as Record<string, unknown>,
     }
   })

@@ -24,7 +24,7 @@ function makeClient(): AjnaGithubReadOnlyClientPort {
     ],
     listCheckRunsForRef: async () => [
       {
-        name: 'Validate CodeMind',
+        name: 'Validate SymbolWright',
         status: 'completed',
         conclusion: 'success',
       },
@@ -35,11 +35,11 @@ function makeClient(): AjnaGithubReadOnlyClientPort {
 describe('collectAjnaGithubSnapshotFromReadOnlyClient', () => {
   it('returns a collector snapshot from an injected read-only client', async () => {
     const snapshot = await collectAjnaGithubSnapshotFromReadOnlyClient(makeClient(), {
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       pullRequestNumber: 69,
     })
 
-    expect(snapshot.pullRequest.repository).toBe('JLPARTIN/CodeMind')
+    expect(snapshot.pullRequest.repository).toBe('JLPARTIN/SymbolWright')
     expect(snapshot.pullRequest.pullRequestNumber).toBe(69)
     expect(snapshot.pullRequest.headRef).toBe('ajna-client-port-bundle')
     expect(snapshot.changedFiles).toEqual([
@@ -52,7 +52,7 @@ describe('collectAjnaGithubSnapshotFromReadOnlyClient', () => {
     ])
     expect(snapshot.checkRuns).toEqual([
       {
-        name: 'Validate CodeMind',
+        name: 'Validate SymbolWright',
         status: 'completed',
         conclusion: 'success',
       },
@@ -64,7 +64,7 @@ describe('createAjnaGithubReadOnlyClientCollectorPort', () => {
   it('adapts the injected client into the collector port interface', async () => {
     const port = createAjnaGithubReadOnlyClientCollectorPort(makeClient())
     const snapshot = await port.collect({
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       pullRequestNumber: 69,
     })
 

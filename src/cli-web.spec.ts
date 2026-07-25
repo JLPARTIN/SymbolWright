@@ -28,7 +28,7 @@ describe('cli-web', () => {
   })
 
   beforeEach(() => {
-    workspaceDir = mkdtempSync(join(tmpdir(), 'codemind-cli-web-'))
+    workspaceDir = mkdtempSync(join(tmpdir(), 'symbolwright-cli-web-'))
   })
 
   afterEach(() => {
@@ -89,10 +89,10 @@ describe('cli-web', () => {
       )
     })
 
-    it('reads .codemind/config.json from the workspace root by default', async () => {
-      mkdirSync(join(workspaceDir, '.codemind'), { recursive: true })
+    it('reads .symbolwright/config.json from the workspace root by default', async () => {
+      mkdirSync(join(workspaceDir, '.symbolwright'), { recursive: true })
       writeFileSync(
-        join(workspaceDir, '.codemind', 'config.json'),
+        join(workspaceDir, '.symbolwright', 'config.json'),
         JSON.stringify({ web: { fetch: { allowPrivateNetwork: true } } }),
       )
 

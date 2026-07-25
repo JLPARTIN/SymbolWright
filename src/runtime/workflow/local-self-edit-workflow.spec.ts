@@ -56,7 +56,7 @@ const successfulSandboxRunner: SandboxRunner = {
 }
 
 function makeWorkspace(): string {
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-self-edit-'))
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-self-edit-'))
   fs.writeFileSync(
     path.join(workspace, 'package.json'),
     JSON.stringify({ scripts: { typecheck: 'node -e "console.log(7)"' } }),
@@ -138,8 +138,8 @@ describe('local self-edit workflow', () => {
 
     const output = renderLocalSelfEditResult(result)
 
-    expect(output).toContain('CodeMind local self-edit workflow')
+    expect(output).toContain('SymbolWright local self-edit workflow')
     expect(output).toContain('Mode: preview-only')
-    expect(output).toContain('CodeMind runtime workflow result')
+    expect(output).toContain('SymbolWright runtime workflow result')
   })
 })

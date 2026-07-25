@@ -138,8 +138,8 @@ describe('ProviderGateway', () => {
     })
     const gateway = new ProviderGateway({
       config: loadProviderGatewayConfig({
-        CODEMIND_PROVIDER: 'anthropic',
-        CODEMIND_PROVIDER_FALLBACKS: 'openai',
+        SYMBOLWRIGHT_PROVIDER: 'anthropic',
+        SYMBOLWRIGHT_PROVIDER_FALLBACKS: 'openai',
         OPENAI_API_KEY: 'openai-secret',
       }),
       transport,

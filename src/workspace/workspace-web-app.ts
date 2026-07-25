@@ -18,7 +18,7 @@ export interface WorkspaceWebBoundary {
 
 export interface WorkspaceWebSnapshot {
   readonly app: {
-    readonly name: 'CodeMind Workspace Web Surface'
+    readonly name: 'SymbolWright Workspace Web Surface'
     readonly mode: 'local-runtime-api'
     readonly liveLocalApi: true
   }
@@ -56,7 +56,7 @@ export function buildWorkspaceWebSnapshot(workspace: WorkspaceState): WorkspaceW
   const gateway = new ProviderGateway()
   return {
     app: {
-      name: 'CodeMind Workspace Web Surface',
+      name: 'SymbolWright Workspace Web Surface',
       mode: 'local-runtime-api',
       liveLocalApi: true,
     },
@@ -107,7 +107,7 @@ export function renderWorkspaceWebHtml(): string {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CodeMind Workspace</title>
+  <title>SymbolWright Workspace</title>
   <style>
     :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
     body { margin: 0; background: #0b1020; color: #e8ecff; }
@@ -125,8 +125,8 @@ export function renderWorkspaceWebHtml(): string {
 </head>
 <body>
   <main>
-    <h1>CodeMind Workspace</h1>
-    <p>This is a local runtime API surface. It reports workspace, provider, and AELIB-X1YA0I readiness from CodeMind. It does not execute shell commands, mutate files, invoke LLM providers, or claim external systems are connected without real local evidence.</p>
+    <h1>SymbolWright Workspace</h1>
+    <p>This is a local runtime API surface. It reports workspace, provider, and AELIB-X1YA0I readiness from SymbolWright. It does not execute shell commands, mutate files, invoke LLM providers, or claim external systems are connected without real local evidence.</p>
     <section class="grid">
       <article class="card">
         <div class="label">Local API</div>
@@ -145,7 +145,7 @@ export function renderWorkspaceWebHtml(): string {
       </article>
       <article class="card">
         <div class="label">Boundary</div>
-        <p>No file writes, no shell execution, and no provider invocation are performed by this page. The AELIB health check only calls the configured AELIB endpoint when CODEMIND_AELIB_ENDPOINT is set.</p>
+        <p>No file writes, no shell execution, and no provider invocation are performed by this page. The AELIB health check only calls the configured AELIB endpoint when SYMBOLWRIGHT_AELIB_ENDPOINT is set.</p>
       </article>
     </section>
     <h2>Runtime payload</h2>

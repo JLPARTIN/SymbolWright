@@ -13,7 +13,7 @@ import {
 } from './live-read-policy-handshake.js'
 
 function writeFixture(request: LiveReadPolicyRequest): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-policy-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-policy-'))
   const filePath = path.join(dir, 'request.json')
   fs.writeFileSync(filePath, JSON.stringify(request))
   return filePath
@@ -59,7 +59,7 @@ describe('renderLiveReadPolicyHandshake', () => {
     const result = runLiveReadPolicyHandshake(validRequest)
     const output = renderLiveReadPolicyHandshake(result)
 
-    expect(output).toContain('CodeMind live read policy handshake')
+    expect(output).toContain('SymbolWright live read policy handshake')
     expect(output).toContain('Provider: github')
     expect(output).toContain('Purpose: review pull request evidence')
     expect(output).toContain('Dry run: yes')

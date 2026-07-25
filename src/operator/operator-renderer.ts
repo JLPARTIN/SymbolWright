@@ -2,12 +2,12 @@ import type { OperatorHistoryEntry, OperatorSessionState } from './operator-type
 
 export function renderOperatorBanner(session: OperatorSessionState): string {
   return [
-    'CodeMind Operator Workspace',
+    'SymbolWright Operator Workspace',
     '================================',
     `Workspace: ${session.cwd}`,
     `Session:   ${session.sessionId}`,
     'Mode:      READ_ONLY cockpit by default',
-    'Mutation:  approval-gated through existing CodeMind policy gates',
+    'Mutation:  approval-gated through existing SymbolWright policy gates',
     'GitHub:    write-gated; no merge or push from operator console',
     '',
     'Type a mission or use /help for commands.',
@@ -15,12 +15,12 @@ export function renderOperatorBanner(session: OperatorSessionState): string {
 }
 
 export function renderOperatorPrompt(): string {
-  return 'CodeMind > '
+  return 'SymbolWright > '
 }
 
 export function renderOperatorHelp(): string {
   return [
-    'CodeMind Operator Commands',
+    'SymbolWright Operator Commands',
     '',
     'Mission input:',
     '  Type plain text to create a read-only mission plan.',

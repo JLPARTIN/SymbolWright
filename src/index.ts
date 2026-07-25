@@ -1,36 +1,39 @@
 export {
-  CODEMIND_AJNA_CAPABILITY_NAME,
-  CODEMIND_PLATFORM_NAME,
-  getCodemindFoundationSnapshot,
-} from './codemind-foundation.js'
-export type { CodemindFoundationSnapshot, CodemindRuntimePosture } from './codemind-foundation.js'
+  SYMBOLWRIGHT_AJNA_CAPABILITY_NAME,
+  SYMBOLWRIGHT_PLATFORM_NAME,
+  getSymbolWrightFoundationSnapshot,
+} from './symbolwright-foundation.js'
+export type {
+  SymbolWrightFoundationSnapshot,
+  SymbolWrightRuntimePosture,
+} from './symbolwright-foundation.js'
 
 export {
-  evaluateCodemindPermissionRequest,
+  evaluateSymbolWrightPermissionRequest,
   resolveHighestDisposition,
-} from './permissions/codemind-permission-policy.js'
+} from './permissions/symbolwright-permission-policy.js'
 export {
-  CODEMIND_MODES,
-  CODEMIND_PERMISSION_DISPOSITIONS,
-  CODEMIND_PROTECTED_PATH_CLASSES,
-  CODEMIND_RISK_LEVELS,
-  CODEMIND_TARGET_KINDS,
-  CODEMIND_TOOL_CATEGORIES,
-  CODEMIND_TRUST_ZONES,
-} from './permissions/codemind-permission.types.js'
+  SYMBOLWRIGHT_MODES,
+  SYMBOLWRIGHT_PERMISSION_DISPOSITIONS,
+  SYMBOLWRIGHT_PROTECTED_PATH_CLASSES,
+  SYMBOLWRIGHT_RISK_LEVELS,
+  SYMBOLWRIGHT_TARGET_KINDS,
+  SYMBOLWRIGHT_TOOL_CATEGORIES,
+  SYMBOLWRIGHT_TRUST_ZONES,
+} from './permissions/symbolwright-permission.types.js'
 export type {
-  CodemindMode,
-  CodemindPermissionDecision,
-  CodemindPermissionDisposition,
-  CodemindPermissionRequest,
-  CodemindProtectedPathClass,
-  CodemindProtectedPathHit,
-  CodemindRiskLevel,
-  CodemindTarget,
-  CodemindTargetKind,
-  CodemindToolCategory,
-  CodemindTrustZone,
-} from './permissions/codemind-permission.types.js'
+  SymbolWrightMode,
+  SymbolWrightPermissionDecision,
+  SymbolWrightPermissionDisposition,
+  SymbolWrightPermissionRequest,
+  SymbolWrightProtectedPathClass,
+  SymbolWrightProtectedPathHit,
+  SymbolWrightRiskLevel,
+  SymbolWrightTarget,
+  SymbolWrightTargetKind,
+  SymbolWrightToolCategory,
+  SymbolWrightTrustZone,
+} from './permissions/symbolwright-permission.types.js'
 
 export {
   canAjnaDeclareMergeReady,
@@ -63,23 +66,23 @@ export {
   hasRequiredEvidenceState,
   summarizeReadOnlyRepoContext,
 } from './repo-context/repo-context-summary.js'
-export type { CodemindRepoContextSummary } from './repo-context/repo-context-summary.js'
+export type { SymbolWrightRepoContextSummary } from './repo-context/repo-context-summary.js'
 export {
-  CODEMIND_EVIDENCE_STATES,
-  CODEMIND_REPO_FILE_CHANGE_TYPES,
-  CODEMIND_REPO_FILE_IMPACT_LEVELS,
+  SYMBOLWRIGHT_EVIDENCE_STATES,
+  SYMBOLWRIGHT_REPO_FILE_CHANGE_TYPES,
+  SYMBOLWRIGHT_REPO_FILE_IMPACT_LEVELS,
 } from './repo-context/repo-context.types.js'
 export type {
-  CodemindChangedFileContext,
-  CodemindCiEvidenceContext,
-  CodemindDiffHunkContext,
-  CodemindEvidenceState,
-  CodemindReadOnlyRepoContext,
-  CodemindRepoFileChangeType,
-  CodemindRepoFileImpactLevel,
-  CodemindRepoRef,
-  CodemindRepositoryIdentity,
-  CodemindTestEvidenceContext,
+  SymbolWrightChangedFileContext,
+  SymbolWrightCiEvidenceContext,
+  SymbolWrightDiffHunkContext,
+  SymbolWrightEvidenceState,
+  SymbolWrightReadOnlyRepoContext,
+  SymbolWrightRepoFileChangeType,
+  SymbolWrightRepoFileImpactLevel,
+  SymbolWrightRepoRef,
+  SymbolWrightRepositoryIdentity,
+  SymbolWrightTestEvidenceContext,
 } from './repo-context/repo-context.types.js'
 
 export {
@@ -87,15 +90,15 @@ export {
   createReadOnlyGithubPrContextResponse,
 } from './github/github-pr-context-contract.js'
 export {
-  CODEMIND_GITHUB_PR_ADAPTER_MODES,
-  CODEMIND_GITHUB_PR_CONTEXT_INPUTS,
+  SYMBOLWRIGHT_GITHUB_PR_ADAPTER_MODES,
+  SYMBOLWRIGHT_GITHUB_PR_CONTEXT_INPUTS,
 } from './github/github-pr-context.types.js'
 export type {
-  CodemindGithubPrAdapterMode,
-  CodemindGithubPrContextAdapterRequest,
-  CodemindGithubPrContextAdapterResponse,
-  CodemindGithubPrContextInput,
-  CodemindGithubPullRequestIdentity,
+  SymbolWrightGithubPrAdapterMode,
+  SymbolWrightGithubPrContextAdapterRequest,
+  SymbolWrightGithubPrContextAdapterResponse,
+  SymbolWrightGithubPrContextInput,
+  SymbolWrightGithubPullRequestIdentity,
 } from './github/github-pr-context.types.js'
 
 export {
@@ -250,14 +253,14 @@ export {
   createBuildLedgerSummary,
   renderBuildLedgerConsistencyReport,
   renderBuildLedgerSummary,
-} from './build-state/codemind-build-ledger.js'
+} from './build-state/symbolwright-build-ledger.js'
 export type {
   BuildLedgerConsistencyFinding,
   BuildLedgerConsistencyReport,
   BuildLedgerConsistencyStatus,
   BuildLedgerEntry,
   BuildLedgerSummary,
-} from './build-state/codemind-build-ledger.js'
+} from './build-state/symbolwright-build-ledger.js'
 
 export { renderBuildLedgerCommand } from './cli-build-ledger.js'
 
@@ -438,18 +441,18 @@ export type {
   ReleaseReadinessReport,
 } from './cli-release-readiness.js'
 
-export { buildCodemindProofHarnessReport } from './testing/codemind-proof-harness.js'
+export { buildSymbolWrightProofHarnessReport } from './testing/symbolwright-proof-harness.js'
 export {
-  CODEMIND_PROOF_HARNESS_BLOCK_ID,
-  CODEMIND_PROOF_HARNESS_DOMAINS,
-  CODEMIND_PROOF_HARNESS_PHASE_ID,
-  CODEMIND_PROOF_HARNESS_PR_ID,
-  CODEMIND_PROOF_HARNESS_STATES,
-} from './testing/codemind-proof-harness.js'
+  SYMBOLWRIGHT_PROOF_HARNESS_BLOCK_ID,
+  SYMBOLWRIGHT_PROOF_HARNESS_DOMAINS,
+  SYMBOLWRIGHT_PROOF_HARNESS_PHASE_ID,
+  SYMBOLWRIGHT_PROOF_HARNESS_PR_ID,
+  SYMBOLWRIGHT_PROOF_HARNESS_STATES,
+} from './testing/symbolwright-proof-harness.js'
 export type {
-  CodemindProofHarnessDomain,
-  CodemindProofHarnessDomainInput,
-  CodemindProofHarnessDomainReport,
-  CodemindProofHarnessReport,
-  CodemindProofHarnessState,
-} from './testing/codemind-proof-harness.js'
+  SymbolWrightProofHarnessDomain,
+  SymbolWrightProofHarnessDomainInput,
+  SymbolWrightProofHarnessDomainReport,
+  SymbolWrightProofHarnessReport,
+  SymbolWrightProofHarnessState,
+} from './testing/symbolwright-proof-harness.js'

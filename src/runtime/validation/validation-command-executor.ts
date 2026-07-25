@@ -97,7 +97,7 @@ export async function runValidationCommand(
 
 export function renderValidationExecutorResult(result: ValidationExecutorResult): string {
   const lines = [
-    'CodeMind Validation Command Executor',
+    'SymbolWright Validation Command Executor',
     '',
     `Outcome: ${result.outcome}`,
     `Command: ${result.command}`,

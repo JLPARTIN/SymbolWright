@@ -6,7 +6,7 @@ describe('renderRuntimeStatusDashboardCommand', () => {
   it('renders the runtime status dashboard', () => {
     const output = renderRuntimeStatusDashboardCommand()
 
-    expect(output).toContain('CodeMind runtime status dashboard')
+    expect(output).toContain('SymbolWright runtime status dashboard')
   })
 
   it('includes completed phase count', () => {

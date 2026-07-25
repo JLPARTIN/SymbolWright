@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { buildWorkspaceAgentBridgeScript } from './workspace-agent-bridge.js'
 
 describe('buildWorkspaceAgentBridgeScript', () => {
-  it('defines window.codemindHandleWorkspaceDraft, the hook workspace-client-script.ts calls', () => {
+  it('defines window.symbolWrightHandleWorkspaceDraft, the hook workspace-client-script.ts calls', () => {
     expect(buildWorkspaceAgentBridgeScript()).toContain(
-      'window.codemindHandleWorkspaceDraft = function',
+      'window.symbolWrightHandleWorkspaceDraft = function',
     )
   })
 

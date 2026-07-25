@@ -68,7 +68,7 @@ export function evaluateLocalFileWriteGate(
 
 export function renderLocalFileWriteGateResult(result: LocalFileWriteGateResult): string {
   const sections: string[] = [
-    'CodeMind local file write gate',
+    'SymbolWright local file write gate',
     '',
     `Decision: ${result.decision}`,
     `Target: ${result.targetPath}`,

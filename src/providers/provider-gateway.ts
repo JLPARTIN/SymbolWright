@@ -1,4 +1,4 @@
-import type { CodemindProviderId } from './provider-adapter-contract.js'
+import type { SymbolWrightProviderId } from './provider-adapter-contract.js'
 import { findProviderGatewayAdapter } from './provider-adapters.js'
 import { loadProviderGatewayConfig } from './provider-config.js'
 import { ProviderGatewayError, normalizeProviderGatewayError } from './provider-errors.js'
@@ -84,7 +84,7 @@ export class ProviderGateway {
   }
 
   public async runWithProvider(
-    providerId: CodemindProviderId,
+    providerId: SymbolWrightProviderId,
     request: ProviderGatewayRequest,
   ): Promise<ProviderGatewayResponse> {
     const provider = this.config.providers[providerId]
@@ -116,7 +116,7 @@ export class ProviderGateway {
     return plan.parser(response)
   }
 
-  private resolveAdapter(providerId: CodemindProviderId): ProviderGatewayAdapter {
+  private resolveAdapter(providerId: SymbolWrightProviderId): ProviderGatewayAdapter {
     const adapter = findProviderGatewayAdapter(providerId)
     if (adapter === undefined) {
       throw new ProviderGatewayError(
@@ -131,10 +131,10 @@ export class ProviderGateway {
   }
 
   private resolveProviderCandidates(
-    requestedProvider?: CodemindProviderId,
-  ): readonly CodemindProviderId[] {
+    requestedProvider?: SymbolWrightProviderId,
+  ): readonly SymbolWrightProviderId[] {
     const primary = requestedProvider ?? this.config.activeProvider
-    const candidates: CodemindProviderId[] = []
+    const candidates: SymbolWrightProviderId[] = []
 
     if (primary !== undefined) {
       candidates.push(primary)

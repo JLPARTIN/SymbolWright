@@ -24,7 +24,7 @@ describe('RuntimeRegistry', () => {
     const entry = registry.getOrThrow('validation_plan')
 
     await expect(
-      entry.execute({}, { cwd: '/workspace/codemind', policy: createDefaultRuntimePolicy() }),
+      entry.execute({}, { cwd: '/workspace/symbolwright', policy: createDefaultRuntimePolicy() }),
     ).resolves.toBe('validation plan')
     expect(registry.has('validation_plan')).toBe(true)
   })

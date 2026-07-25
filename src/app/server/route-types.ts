@@ -1,6 +1,6 @@
 import type { Server } from 'node:http'
 
-import type { ChatServerOptions } from '../../server/codemind-chat-server.js'
+import type { ChatServerOptions } from '../../server/symbolwright-chat-server.js'
 
 /**
  * The unified server accepts exactly the same options `ChatServerOptions`

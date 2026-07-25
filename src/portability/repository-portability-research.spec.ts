@@ -17,7 +17,7 @@ afterEach(async () => {
 
 describe('repository portability research', () => {
   it('records policy-gated search evidence as advisory guidance only', async () => {
-    const root = await temporaryRoot('codemind-portability-research-')
+    const root = await temporaryRoot('symbolwright-portability-research-')
     const search = vi.fn<WebSearchProvider['search']>(async () => ({
       outcome: 'ok',
       results: [
@@ -47,7 +47,7 @@ describe('repository portability research', () => {
   })
 
   it('returns blocked evidence without calling a provider when network policy forbids research', async () => {
-    const root = await temporaryRoot('codemind-portability-research-blocked-')
+    const root = await temporaryRoot('symbolwright-portability-research-blocked-')
     const search = vi.fn<WebSearchProvider['search']>()
     const provider: WebSearchProvider = { name: 'fixture-search', search }
     const runtimePolicy = {

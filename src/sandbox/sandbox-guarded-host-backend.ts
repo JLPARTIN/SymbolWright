@@ -141,7 +141,7 @@ async function cleanupRoot(root: string): Promise<SandboxExecutionResult['cleanu
 async function materializeWorkspace(
   request: SandboxExecutionRequest,
 ): Promise<MaterializedWorkspace> {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-sandbox-'))
+  const root = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-sandbox-'))
   let entryPath = path.join(root, entryNameFor(request.languageId))
   const cleanup = () => cleanupRoot(root)
 
@@ -204,7 +204,7 @@ function minimalEnvironment(
 }
 
 async function writeTypeScriptCompiler(workspaceRoot: string, entryPath: string): Promise<string> {
-  const compilerPath = path.join(workspaceRoot, '__codemind_ts_compile.mjs')
+  const compilerPath = path.join(workspaceRoot, '__symbolwright_ts_compile.mjs')
   const outputPath = path.join(workspaceRoot, 'main.mjs')
   await writeFile(
     compilerPath,

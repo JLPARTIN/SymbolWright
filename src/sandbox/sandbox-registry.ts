@@ -110,7 +110,7 @@ function guardedHostRunner(
     dependencyState: availability.status === 'available' ? 'ready' : 'unsupported',
     notes: [
       'Guarded-host is not a strong sandbox.',
-      'It remains disabled unless APPROVED_EXECUTION and CODEMIND_ALLOW_GUARDED_HOST_EXECUTION=true are both present.',
+      'It remains disabled unless APPROVED_EXECUTION and SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION=true are both present.',
       'No inherited secrets, shell interpolation, arbitrary executable paths, or dependency installation are allowed.',
     ],
   }
@@ -155,7 +155,7 @@ export function buildSandboxInventory(
   const commandAvailability =
     options.commandAvailability ?? new Map<string, SandboxRunnerAvailability>()
   const imagePolicy = buildSandboxImagePolicy(commandAvailability)
-  const guardedHostOptIn = options.env?.['CODEMIND_ALLOW_GUARDED_HOST_EXECUTION'] === 'true'
+  const guardedHostOptIn = options.env?.['SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION'] === 'true'
 
   const browserRunners = CODE_RUNNER_DEFINITIONS.filter(
     (runner) => runner.id !== 'server-typescript-node',

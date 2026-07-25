@@ -63,7 +63,7 @@ export function evaluateValidationCommandGate(
 
 export function renderValidationCommandGateResult(result: ValidationCommandGateResult): string {
   const sections: string[] = [
-    'CodeMind validation command gate',
+    'SymbolWright validation command gate',
     '',
     `Decision: ${result.decision}`,
     `Command: ${result.command}`,

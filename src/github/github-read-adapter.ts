@@ -1,21 +1,21 @@
 import type {
-  CodemindGithubReadAdapterOptions,
-  CodemindGithubReadAdapterResult,
-  CodemindGithubReadAdapterTarget,
-  CodemindGithubReadClient,
+  SymbolWrightGithubReadAdapterOptions,
+  SymbolWrightGithubReadAdapterResult,
+  SymbolWrightGithubReadAdapterTarget,
+  SymbolWrightGithubReadClient,
   GithubPullRequestApiPayload,
   GithubPullRequestFileApiPayload,
 } from './github-read-adapter.types.js'
 import type {
-  CodemindChangedFileContext,
-  CodemindRepoFileChangeType,
+  SymbolWrightChangedFileContext,
+  SymbolWrightRepoFileChangeType,
 } from '../repo-context/repo-context.types.js'
 
 function normalizePath(path: string): string {
   return path.replaceAll('\\', '/').trim()
 }
 
-function mapGithubFileStatus(status: string): CodemindRepoFileChangeType {
+function mapGithubFileStatus(status: string): SymbolWrightRepoFileChangeType {
   switch (status) {
     case 'added':
       return 'ADDED'
@@ -38,15 +38,15 @@ function isProtectedPath(path: string): boolean {
     normalized.startsWith('.github/workflows/') ||
     normalized === '.env' ||
     normalized.endsWith('/.env') ||
-    normalized.includes('codemind.policy')
+    normalized.includes('symbolwright.policy')
   )
 }
 
-function mapChangedFile(file: GithubPullRequestFileApiPayload): CodemindChangedFileContext {
+function mapChangedFile(file: GithubPullRequestFileApiPayload): SymbolWrightChangedFileContext {
   const path = normalizePath(file.filename)
   const totalDelta = file.additions + file.deletions
   const protectedPath = isProtectedPath(path)
-  const changedFile: CodemindChangedFileContext = {
+  const changedFile: SymbolWrightChangedFileContext = {
     path,
     changeType: mapGithubFileStatus(file.status),
     additions: file.additions,
@@ -73,8 +73,8 @@ function mapChangedFile(file: GithubPullRequestFileApiPayload): CodemindChangedF
 }
 
 export function createGithubReadClient(
-  options: CodemindGithubReadAdapterOptions,
-): CodemindGithubReadClient {
+  options: SymbolWrightGithubReadAdapterOptions,
+): SymbolWrightGithubReadClient {
   return {
     async getJson<T>(path: string): Promise<T> {
       const headers: Record<string, string> = {
@@ -99,9 +99,9 @@ export function createGithubReadClient(
 }
 
 export async function readGithubPullRequestContext(
-  client: CodemindGithubReadClient,
-  target: CodemindGithubReadAdapterTarget,
-): Promise<CodemindGithubReadAdapterResult> {
+  client: SymbolWrightGithubReadClient,
+  target: SymbolWrightGithubReadAdapterTarget,
+): Promise<SymbolWrightGithubReadAdapterResult> {
   const [owner, repo] = target.repositoryFullName.split('/')
 
   if (!owner || !repo) {
@@ -143,7 +143,7 @@ export async function readGithubPullRequestContext(
     },
     readOnly: true,
     notes: [
-      'GitHub pull request metadata and changed files were mapped into read-only CodeMind repo context.',
+      'GitHub pull request metadata and changed files were mapped into read-only SymbolWright repo context.',
     ],
   }
 }

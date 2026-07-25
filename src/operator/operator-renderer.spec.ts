@@ -21,13 +21,13 @@ describe('operator renderer', () => {
   it('renders the workspace banner', () => {
     const output = renderOperatorBanner(session)
 
-    expect(output).toContain('CodeMind Operator Workspace')
+    expect(output).toContain('SymbolWright Operator Workspace')
     expect(output).toContain('Workspace: /repo')
     expect(output).toContain('READ_ONLY cockpit')
   })
 
   it('renders the prompt', () => {
-    expect(renderOperatorPrompt()).toBe('CodeMind > ')
+    expect(renderOperatorPrompt()).toBe('SymbolWright > ')
   })
 
   it('renders help with mission and slash commands', () => {

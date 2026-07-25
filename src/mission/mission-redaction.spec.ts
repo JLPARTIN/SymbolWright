@@ -13,7 +13,7 @@ describe('mission redaction', () => {
         privateKey: '-----BEGIN PRIVATE KEY-----\nsecret\n-----END PRIVATE KEY-----',
         safe: 'anthropic',
       },
-      { CODEMIND_API_KEY: 'local-access-secret' },
+      { SYMBOLWRIGHT_API_KEY: 'local-access-secret' },
     )
     const serialized = JSON.stringify(value)
     for (const secret of [

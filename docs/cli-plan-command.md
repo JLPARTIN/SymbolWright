@@ -1,4 +1,4 @@
-# CodeMind plan command
+# SymbolWright plan command
 
 The `codemind plan <goal>` command renders a non-mutating implementation plan for an operator-provided goal.
 
@@ -13,7 +13,7 @@ codemind plan "add guarded patch proposal"
 The command prints:
 
 ```txt
-CodeMind plan
+SymbolWright plan
 Goal
 Posture
 Implementation steps

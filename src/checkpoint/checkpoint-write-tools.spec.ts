@@ -37,7 +37,7 @@ describe('checkpointing is mandatory before every mutating write tool', () => {
   let context: RuntimeToolContext
 
   beforeEach(() => {
-    workspaceDir = mkdtempSync(join(tmpdir(), 'codemind-checkpoint-integration-'))
+    workspaceDir = mkdtempSync(join(tmpdir(), 'symbolwright-checkpoint-integration-'))
     context = {
       cwd: workspaceDir,
       policy: createRuntimePolicyForMode('APPROVED_EXECUTION'),

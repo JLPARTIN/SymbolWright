@@ -72,7 +72,7 @@ describe('sandbox runtime inventory', () => {
 
     const enabled = buildSandboxInventory({
       now: () => new Date(CHECKED_AT),
-      env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
+      env: { SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
       commandAvailability: new Map([
         [
           'python3',
@@ -132,7 +132,7 @@ describe('sandbox policy and service foundation', () => {
 
   it('requires explicit guarded-host opt-in', () => {
     const guarded = buildSandboxInventory({
-      env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
+      env: { SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
       commandAvailability: new Map([['python3', runnerAvailability('available', CHECKED_AT)]]),
     }).runners.find((runner) => runner.id === 'guarded-host-python')
     expect(guarded).toBeDefined()
@@ -161,7 +161,7 @@ describe('sandbox policy and service foundation', () => {
       guarded,
       {
         mode: 'APPROVED_EXECUTION',
-        env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
+        env: { SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
       },
     )
     expect(allowed.allowed).toBe(true)
@@ -169,10 +169,10 @@ describe('sandbox policy and service foundation', () => {
 
   it('refreshes inventory from bounded runtime discovery without executing code', async () => {
     const service = new SandboxService({
-      env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
+      env: { SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
       buildInventory: (commandAvailability) =>
         buildSandboxInventory({
-          env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
+          env: { SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
           now: () => new Date(CHECKED_AT),
           ...(commandAvailability === undefined ? {} : { commandAvailability }),
         }),

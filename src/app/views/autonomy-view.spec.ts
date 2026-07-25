@@ -21,7 +21,7 @@ describe('AI Mission Control view', () => {
       expect(script).toContain(`'${action}'`)
     }
     expect(script).toContain("'/api/missions/' + encodeURIComponent(missionId) + '/autonomy'")
-    expect(script).toContain("authorization: 'Bearer ' + appState.codemindKey")
+    expect(script).toContain("authorization: 'Bearer ' + appState.symbolWrightKey")
     expect(script).toContain('window.setInterval')
   })
 

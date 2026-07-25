@@ -44,7 +44,7 @@ export function createGitHubLiveReadCiTool(client: RuntimeLiveReadClient): Runti
       const ajna = bridgeRuntimeEvidenceToAjna({ ci: summary })
 
       return [
-        'CodeMind GitHub live read CI',
+        'SymbolWright GitHub live read CI',
         '',
         `Repository: ${parsed.owner}/${parsed.repo}`,
         summary.title,

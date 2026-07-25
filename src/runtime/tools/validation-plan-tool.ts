@@ -30,7 +30,7 @@ export async function executeValidationPlanTool(
   ]
 
   return [
-    'CodeMind validation plan',
+    'SymbolWright validation plan',
     '',
     `Focus: ${focus}`,
     '',

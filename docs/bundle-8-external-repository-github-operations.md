@@ -1,6 +1,6 @@
 # Bundle #8 — External Repository Acquisition & GitHub Operations
 
-Bundle #8 upgrades CodeMind from a repo-local autonomous engineering system into an
+Bundle #8 upgrades SymbolWright from a repo-local autonomous engineering system into an
 external GitHub repository operator: it can accept a GitHub repository reference,
 validate it, acquire it into an isolated workspace, detect its ecosystem using Bundle
 #7 portability, run the existing (unmodified) autonomous mission runtime against it,
@@ -15,7 +15,7 @@ The production flow is:
    validated, canonical target — rejecting path traversal, embedded credentials,
    unsupported protocols, shell metacharacters, and non-allowlisted hosts.
 2. **Acquire** the repository (`repository-acquisition.ts`) by cloning it into a
-   controlled workspace directory under `.codemind/external-repos/`, or by
+   controlled workspace directory under `.symbolwright/external-repos/`, or by
    duplicating an already-local repository into an isolated copy.
 3. **Profile** the acquired workspace (`repository-intake-profile.ts`), running
    Bundle #7's `discoverUniversalRepositoryPortability` to detect ecosystems,
@@ -75,8 +75,8 @@ support three modes:
 - **`writable`** — same real clone/duplicate, intended to be followed by mission
   creation and edits.
 
-Every acquisition destination is computed by CodeMind under
-`<workspaceRoot>/.codemind/external-repos/<sanitized-slug>-<hash>` and verified to stay
+Every acquisition destination is computed by SymbolWright under
+`<workspaceRoot>/.symbolwright/external-repos/<sanitized-slug>-<hash>` and verified to stay
 inside that root before any I/O — a caller-supplied path is never used directly. Refs
 are validated against a strict allowlist pattern (rejecting leading `-` to prevent
 flag injection, `..`, spaces, and shell metacharacters) before being passed to `git
@@ -171,7 +171,7 @@ workspace as the repository path. `MissionService.create` already reads real git
 state (remote URL, branch, HEAD) from whatever path it is given, and Bundle #6's
 autonomy runtime and Bundle #7's portability discovery already operate generically on
 `mission.repository.rootPath` — neither needed a single line changed to support a
-mission whose repository happens to be an external clone instead of the CodeMind
+mission whose repository happens to be an external clone instead of the SymbolWright
 checkout itself. This was verified, not assumed: see
 `src/autonomy/external-repository-mission.integration.spec.ts`.
 

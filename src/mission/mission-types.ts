@@ -1,5 +1,5 @@
 import type { ProviderMessage } from '../provider/provider.types.js'
-import type { CodemindRuntimeMode } from '../runtime/types.js'
+import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
 
 export const CURRENT_MISSION_SCHEMA_VERSION = 1 as const
 
@@ -100,7 +100,7 @@ export interface MissionImportedSource {
   readonly originalMissionId: string
 }
 
-export interface CodeMindMission {
+export interface SymbolWrightMission {
   readonly schemaVersion: typeof CURRENT_MISSION_SCHEMA_VERSION
   readonly revision: number
   readonly id: string
@@ -120,7 +120,7 @@ export interface CodeMindMission {
     readonly modifiedPaths: readonly string[]
   }
   readonly agent: {
-    readonly runtimeMode: CodemindRuntimeMode
+    readonly runtimeMode: SymbolWrightRuntimeMode
     readonly activeProviderId?: string | undefined
     readonly model?: string | undefined
     readonly messages: readonly PersistedAgentMessage[]
@@ -212,10 +212,10 @@ export interface MissionRepositoryReconciliation {
 }
 
 export interface MissionExportBundle {
-  readonly kind: 'codemind.mission.bundle'
+  readonly kind: 'symbolwright.mission.bundle'
   readonly schemaVersion: 1
   readonly exportedAt: string
-  readonly mission: CodeMindMission
+  readonly mission: SymbolWrightMission
   readonly events: readonly MissionEvent[]
   readonly warnings: readonly string[]
 }

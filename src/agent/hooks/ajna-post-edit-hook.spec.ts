@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { CodemindChangedFileContext } from '../../repo-context/repo-context.types.js'
+import type { SymbolWrightChangedFileContext } from '../../repo-context/repo-context.types.js'
 import { runAjnaPostEditHook } from './ajna-post-edit-hook.js'
 import type { AjnaPostEditContext } from './ajna-post-edit-hook.js'
 
@@ -12,7 +12,9 @@ const DEFAULT_CONTEXT: AjnaPostEditContext = {
   baseSha: 'def456abc123',
 }
 
-function makeFile(overrides: Partial<CodemindChangedFileContext> = {}): CodemindChangedFileContext {
+function makeFile(
+  overrides: Partial<SymbolWrightChangedFileContext> = {},
+): SymbolWrightChangedFileContext {
   return {
     path: 'src/example.ts',
     changeType: 'MODIFIED',

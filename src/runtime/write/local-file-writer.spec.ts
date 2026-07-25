@@ -67,7 +67,7 @@ const blockingSandboxWriter: SandboxFileWriter = {
 }
 
 function makeTmpWorkspace(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-writer-'))
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-writer-'))
 }
 
 function cleanupWorkspace(dir: string): void {
@@ -234,7 +234,7 @@ describe('executeLocalFileWrite', () => {
         workspace,
         writePolicy,
         validApproval,
-        new DockerSandboxFileWriter({ dockerBinary: 'definitely-not-codemind-docker' }),
+        new DockerSandboxFileWriter({ dockerBinary: 'definitely-not-symbolwright-docker' }),
       )
 
       expect(result.outcome).toBe('BLOCKED')

@@ -47,7 +47,7 @@ describe('listMcpServers', () => {
       servers: {
         broken: {
           name: 'broken',
-          command: 'codemind-nonexistent-binary-xyz',
+          command: 'symbolwright-nonexistent-binary-xyz',
           args: [],
           env: {},
           timeoutMs: 2000,

@@ -11,7 +11,7 @@ function makeSnapshot(
 ): AjnaGithubCollectorSnapshot {
   return {
     pullRequest: {
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       pullRequestNumber: 60,
       baseRef: 'main',
       headRef: 'ajna-github-review-input-bundle',
@@ -33,7 +33,7 @@ function makeSnapshot(
     ],
     checkRuns: [
       {
-        name: 'Validate CodeMind',
+        name: 'Validate SymbolWright',
         status: 'completed',
         conclusion: 'success',
       },
@@ -46,7 +46,7 @@ describe('buildAjnaGithubPullRequestPayloadFromCollectorSnapshot', () => {
   it('maps a collector snapshot into a normalizer payload', () => {
     const payload = buildAjnaGithubPullRequestPayloadFromCollectorSnapshot(makeSnapshot())
 
-    expect(payload.repository).toBe('JLPARTIN/CodeMind')
+    expect(payload.repository).toBe('JLPARTIN/SymbolWright')
     expect(payload.pullRequestNumber).toBe(60)
     expect(payload.headSha).toBe('d20856ee90875e9c82bf254f0908dab2b0856a35')
     expect(payload.changedFiles).toEqual(['src/cli-ajna-review-pr-github-fixture.ts', 'src/cli.ts'])
@@ -54,14 +54,16 @@ describe('buildAjnaGithubPullRequestPayloadFromCollectorSnapshot', () => {
       'src/cli-ajna-review-pr-github-fixture.ts was added (35 additions, 0 deletions).',
       'src/cli.ts was modified (9 additions, 0 deletions).',
     ])
-    expect(payload.ciEvidence).toEqual(['Validate CodeMind: status completed, conclusion success.'])
+    expect(payload.ciEvidence).toEqual([
+      'Validate SymbolWright: status completed, conclusion success.',
+    ])
   })
 
   it('feeds the existing Ajna GitHub payload normalizer', () => {
     const payload = buildAjnaGithubPullRequestPayloadFromCollectorSnapshot(makeSnapshot())
     const input = normalizeGithubPullRequestForAjnaReview(payload)
 
-    expect(input.request.subject.repository).toBe('JLPARTIN/CodeMind')
+    expect(input.request.subject.repository).toBe('JLPARTIN/SymbolWright')
     expect(input.request.changedFiles).toEqual(payload.changedFiles)
     expect(input.findings.map((finding) => finding.id)).toEqual([
       'github-diff-evidence',

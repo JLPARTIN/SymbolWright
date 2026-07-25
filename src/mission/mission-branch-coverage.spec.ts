@@ -29,9 +29,9 @@ import {
   MissionService,
   MissionStateConflictError,
 } from './mission-service.js'
-import type { CodeMindMission, MissionEvent } from './mission-types.js'
+import type { SymbolWrightMission, MissionEvent } from './mission-types.js'
 import {
-  assertCodeMindMission,
+  assertSymbolWrightMission,
   isMissionStatus,
   MissionValidationError,
   parseCreateMissionInput,
@@ -56,13 +56,16 @@ describe('mission branch coverage contracts', () => {
   let idIndex: number
 
   beforeEach(async () => {
-    workspace = mkdtempSync(join(tmpdir(), 'codemind-mission-coverage-'))
+    workspace = mkdtempSync(join(tmpdir(), 'symbolwright-mission-coverage-'))
     repo = join(workspace, 'repo')
     mkdirSync(repo)
     await runGitCommand(['init'], repo)
     await runGitCommand(['config', 'user.email', 'test@example.com'], repo)
     await runGitCommand(['config', 'user.name', 'Test User'], repo)
-    await runGitCommand(['remote', 'add', 'origin', 'git@github.com:JLPARTIN/CodeMind.git'], repo)
+    await runGitCommand(
+      ['remote', 'add', 'origin', 'git@github.com:JLPARTIN/SymbolWright.git'],
+      repo,
+    )
     writeFileSync(join(repo, 'tracked.txt'), 'hello')
     await runGitCommand(['add', 'tracked.txt'], repo)
     await runGitCommand(['commit', '-m', 'initial'], repo)
@@ -70,7 +73,7 @@ describe('mission branch coverage contracts', () => {
     service = new MissionService({
       workspaceRoot: workspace,
       env: {
-        CODEMIND_API_KEY: 'local-codemind-secret',
+        SYMBOLWRIGHT_API_KEY: 'local-symbolwright-secret',
         GITHUB_TOKEN: 'ghp_123456789012345678901234567890123456',
       },
       generateId: () => IDS[idIndex++]!,
@@ -80,7 +83,7 @@ describe('mission branch coverage contracts', () => {
 
   afterEach(() => rmSync(workspace, { recursive: true, force: true }))
 
-  async function createMission(): Promise<CodeMindMission> {
+  async function createMission(): Promise<SymbolWrightMission> {
     return service.create({
       name: 'Coverage mission',
       objective: 'Exercise mission branches without fake behavior.',
@@ -96,7 +99,7 @@ describe('mission branch coverage contracts', () => {
 
   it('exercises mission lifecycle, patch, repository, evidence, and reference branches', async () => {
     const created = await createMission()
-    expect(created.repository.repositoryName).toBe('JLPARTIN/CodeMind')
+    expect(created.repository.repositoryName).toBe('JLPARTIN/SymbolWright')
     expect(created.agent.activeProviderId).toBe('anthropic')
     expect(created.labels).toEqual(['bundle-3', 'bundle-3', 'coverage'])
 
@@ -114,18 +117,18 @@ describe('mission branch coverage contracts', () => {
       notes: 'updated notes',
       repository: {
         rootPath: 'repo',
-        repositoryName: 'JLPARTIN/CodeMind',
-        remoteUrl: 'https://github.com/JLPARTIN/CodeMind.git',
+        repositoryName: 'JLPARTIN/SymbolWright',
+        remoteUrl: 'https://github.com/JLPARTIN/SymbolWright.git',
         branch: 'feature/mission',
         baseSha: 'base-sha',
         headSha: 'head-sha',
-        modifiedPaths: ['tracked.txt', 'tracked.txt', '.codemind/internal.json'],
+        modifiedPaths: ['tracked.txt', 'tracked.txt', '.symbolwright/internal.json'],
       },
     })
     expect(patched.revision).toBe(created.revision + 1)
     expect(patched.agent.runtimeMode).toBe('APPROVED_EXECUTION')
     expect(patched.workspace.selectedDiffPath).toBe('tracked.txt')
-    expect(patched.repository.modifiedPaths).toEqual(['tracked.txt', '.codemind/internal.json'])
+    expect(patched.repository.modifiedPaths).toEqual(['tracked.txt', '.symbolwright/internal.json'])
 
     const cleared = service.patch(patched.id, {
       revision: patched.revision,
@@ -189,7 +192,7 @@ describe('mission branch coverage contracts', () => {
       })
     }
     service.recordCommit(created.id, 'commit-sha', 'Commit created')
-    service.recordPullRequest(created.id, 'https://github.com/JLPARTIN/CodeMind/pull/237')
+    service.recordPullRequest(created.id, 'https://github.com/JLPARTIN/SymbolWright/pull/237')
 
     const scratch = service.attachScratchWorkspace(created.id, service.get(created.id).revision, {
       files: [{ path: 'scratch.ts', content: 'const x = 1' }],
@@ -360,10 +363,10 @@ describe('mission branch coverage contracts', () => {
 
     expect(isMissionStatus('FAILED')).toBe(true)
     expect(isMissionStatus('DONE')).toBe(false)
-    expect(() => assertCodeMindMission({ ...mission, status: 'BAD' })).toThrow(
+    expect(() => assertSymbolWrightMission({ ...mission, status: 'BAD' })).toThrow(
       MissionValidationError,
     )
-    expect(() => assertCodeMindMission({ ...mission, createdAt: 'not-a-date' })).toThrow(
+    expect(() => assertSymbolWrightMission({ ...mission, createdAt: 'not-a-date' })).toThrow(
       MissionValidationError,
     )
   })

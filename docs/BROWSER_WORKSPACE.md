@@ -1,11 +1,11 @@
-# CodeMind Browser Workspace
+# SymbolWright Browser Workspace
 
-The browser workspace is the operator console for CodeMind. It should work from any modern browser and should not require the browser to know provider SDK details.
+The browser workspace is the operator console for SymbolWright. It should work from any modern browser and should not require the browser to know provider SDK details.
 
 ## Entrypoint
 
 ```txt
-/codemind
+/symbolwright
 ```
 
 ## Required panels
@@ -34,12 +34,12 @@ The browser must not call the provider directly.
 ## Mission flow
 
 ```txt
-1. Operator opens /codemind.
+1. Operator opens /symbolwright.
 2. Operator enters mission and repo.
 3. Operator chooses provider.
-4. Browser sends mission to CodeMind.
-5. CodeMind validates the request.
-6. CodeMind routes through policy, audit, provider adapter, tools, and sessions.
+4. Browser sends mission to SymbolWright.
+5. SymbolWright validates the request.
+6. SymbolWright routes through policy, audit, provider adapter, tools, and sessions.
 7. Browser streams mission events from /api/missions/:id/events.
 ```
 

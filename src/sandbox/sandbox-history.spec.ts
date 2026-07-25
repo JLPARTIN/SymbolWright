@@ -12,7 +12,7 @@ import type { SandboxExecutionResult } from './sandbox-types.js'
 const roots: string[] = []
 
 function tempRoot(): string {
-  const root = mkdtempSync(join(tmpdir(), 'codemind-sandbox-history-'))
+  const root = mkdtempSync(join(tmpdir(), 'symbolwright-sandbox-history-'))
   roots.push(root)
   return root
 }
@@ -49,7 +49,7 @@ function sampleResult(): SandboxExecutionResult {
 }
 
 describe('SandboxHistoryStore', () => {
-  it('persists redacted execution records under .codemind/sandbox', () => {
+  it('persists redacted execution records under .symbolwright/sandbox', () => {
     const store = new SandboxHistoryStore({
       workspaceRoot: tempRoot(),
       now: () => new Date('2026-07-20T00:00:00.000Z'),

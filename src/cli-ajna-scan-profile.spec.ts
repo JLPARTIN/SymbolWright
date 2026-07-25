@@ -12,7 +12,7 @@ const tempDirs: string[] = []
 
 function makeRepoFixture(options: { guarded?: boolean } = {}): string {
   const guarded = options.guarded ?? true
-  const rootDir = mkdtempSync(join(tmpdir(), 'codemind-ajna-scan-profile-'))
+  const rootDir = mkdtempSync(join(tmpdir(), 'symbolwright-ajna-scan-profile-'))
   tempDirs.push(rootDir)
 
   writeFileSync(
@@ -55,7 +55,7 @@ describe('buildAjnaScanProfileForRepo', () => {
 
     expect(result.profile.status).toBe('BLOCKED')
     expect(result.profile.recommendations).toContain(
-      'Add or point CodeMind at a repository with a src/ source root before Ajna scan profiling.',
+      'Add or point SymbolWright at a repository with a src/ source root before Ajna scan profiling.',
     )
   })
 })

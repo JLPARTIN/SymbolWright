@@ -5,7 +5,7 @@ import { buildUnifiedSystemPrompt } from './unified-system-prompt.js'
 describe('buildUnifiedSystemPrompt', () => {
   it('includes base identity and doctrine', () => {
     const prompt = buildUnifiedSystemPrompt()
-    expect(prompt).toContain('CodeMind')
+    expect(prompt).toContain('SymbolWright')
     expect(prompt).toContain('Identity')
     expect(prompt).toContain('Doctrine')
     expect(prompt).toContain('AELIB-X1YA0I')

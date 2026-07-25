@@ -2,7 +2,7 @@ import { parseRuntimeRunArgs } from './cli-runtime-run-options.js'
 import {
   runReadOnlyRuntimeLoop,
   type ReadOnlyRuntimeRunResult,
-} from './runtime/loop/codemind-agent-loop.js'
+} from './runtime/loop/symbolwright-agent-loop.js'
 
 export async function renderRuntimeRun(
   args: readonly string[],
@@ -27,7 +27,7 @@ export async function renderRuntimeRun(
   }
 
   return [
-    'CodeMind runtime run',
+    'SymbolWright runtime run',
     '',
     `Status: ${result.status}`,
     `Goal: ${result.session.goal}`,

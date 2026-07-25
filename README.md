@@ -6,9 +6,9 @@
   <strong>Standalone AI coding-agent platform for repository intelligence, direct code work, PR review, and merge-readiness.</strong>
 </p>
 
-CodeMind is a direct-capable coding-agent platform with optional governance and forensic review features. Its runtime strictness is controlled by the active runtime mode, not by a hardcoded read-only personality.
+SymbolWright is a direct-capable coding-agent platform with optional governance and forensic review features. Its runtime strictness is controlled by the active runtime mode, not by a hardcoded read-only personality.
 
-Ajna Review Cortex is the native forensic review capability. Ajna gives CodeMind deterministic review, risk, evidence, and merge-readiness reporting when those workflows are requested or required.
+Ajna Review Cortex is the native forensic review capability. Ajna gives SymbolWright deterministic review, risk, evidence, and merge-readiness reporting when those workflows are requested or required.
 
 ## Codespaces Quick Start
 
@@ -18,10 +18,10 @@ Already in a GitHub Codespace (or any container with Node 20+)? Skip everything 
 npm run codespaces:start
 ```
 
-This installs dependencies only if needed, builds current source, generates a local `CODEMIND_API_KEY` if you didn't set one, starts CodeMind on port `8787`, waits for it to be healthy, and validates that the served browser JavaScript actually parses — then prints one summary with the real forwarded URL and the access key. From there:
+This installs dependencies only if needed, builds current source, generates a local `SYMBOLWRIGHT_API_KEY` if you didn't set one, starts SymbolWright on port `8787`, waits for it to be healthy, and validates that the served browser JavaScript actually parses — then prints one summary with the real forwarded URL and the access key. From there:
 
 1. Open the printed URL — it already points at `#/settings`.
-2. Paste the printed **CodeMind access key** into Settings.
+2. Paste the printed **SymbolWright access key** into Settings.
 3. Want AI-backed features instead of browser-only diagnostics? Set a provider key (e.g. `export ANTHROPIC_API_KEY=sk-ant-...`, see [`docs/PROVIDER_KEYS.md`](docs/PROVIDER_KEYS.md)) *before* running `codespaces:start`.
 4. `npm run codespaces:stop` stops it; `npm run codespaces:status` reports whether it's healthy, which provider (if any) is detected, and where its logs are — no secrets in either.
 
@@ -42,7 +42,7 @@ Set at least one provider credential (see [`docs/PROVIDER_KEYS.md`](docs/PROVIDE
 export ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Then pick how you want to use it — CodeMind runs the same way from all four surfaces below:
+Then pick how you want to use it — SymbolWright runs the same way from all four surfaces below:
 
 **Terminal** — direct CLI usage:
 
@@ -53,26 +53,26 @@ node dist/cli.js agent --mode APPROVED_EXECUTION "fix the failing tests"
 **Browser** — one app, one port: a Dashboard, the Universal Polyglot Workspace editor, and a chat/Agent tab with an "Agent mode" toggle for real file reads/edits and shell commands, all as tabs in the same page. No provider key required to get started — pick **Browser-only mode** in the Agent tab for local diagnostics only, or **API-backed mode** to bring your own provider key. Editing code in the Workspace tab and picking an AI task (explain, review, translate, ...) switches straight to the Agent tab with the draft pre-filled — no separate page or port:
 
 ```bash
-export CODEMIND_API_KEY=pick-your-own-access-key
+export SYMBOLWRIGHT_API_KEY=pick-your-own-access-key
 npm run serve
-# open http://127.0.0.1:8787, connect with CODEMIND_API_KEY, choose Browser-only or API-backed mode
+# open http://127.0.0.1:8787, connect with SYMBOLWRIGHT_API_KEY, choose Browser-only or API-backed mode
 ```
 
-See [`docs/runtime/CODEMIND_CHAT_SERVER.md`](docs/runtime/CODEMIND_CHAT_SERVER.md). Running in GitHub Codespaces? Full copy-paste setup, port-forwarding, and troubleshooting steps are in [`docs/codespaces.md`](docs/codespaces.md).
+See [`docs/runtime/SYMBOLWRIGHT_CHAT_SERVER.md`](docs/runtime/SYMBOLWRIGHT_CHAT_SERVER.md). Running in GitHub Codespaces? Full copy-paste setup, port-forwarding, and troubleshooting steps are in [`docs/codespaces.md`](docs/codespaces.md).
 
-**Any MCP-compatible LLM client** (Claude Desktop, Claude Code, other agent frameworks) — add CodeMind as a plugin:
+**Any MCP-compatible LLM client** (Claude Desktop, Claude Code, other agent frameworks) — add SymbolWright as a plugin:
 
 ```json
 {
   "mcpServers": {
-    "codemind": { "command": "node", "args": ["/absolute/path/to/CodeMind/dist/cli.js", "mcp-server"] }
+    "symbolwright": { "command": "node", "args": ["/absolute/path/to/SymbolWright/dist/cli.js", "mcp-server"] }
   }
 }
 ```
 
-Defaults to `READ_ONLY`; add `"--mode", "APPROVED_EXECUTION"` to the `args` array to allow file writes and shell commands. See [`docs/runtime/CODEMIND_MCP_SERVER.md`](docs/runtime/CODEMIND_MCP_SERVER.md).
+Defaults to `READ_ONLY`; add `"--mode", "APPROVED_EXECUTION"` to the `args` array to allow file writes and shell commands. See [`docs/runtime/SYMBOLWRIGHT_MCP_SERVER.md`](docs/runtime/SYMBOLWRIGHT_MCP_SERVER.md).
 
-**Any other LLM, script, or agent framework over plain HTTP** — `codemind serve` also exposes `/api/chat` (streaming chat) and `/api/agent` (the full tool-execution loop) as bearer-authenticated HTTP+SSE endpoints. See [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) and [`docs/USING_CODEMIND_FROM_ANY_LLM.md`](docs/USING_CODEMIND_FROM_ANY_LLM.md).
+**Any other LLM, script, or agent framework over plain HTTP** — `codemind serve` also exposes `/api/chat` (streaming chat) and `/api/agent` (the full tool-execution loop) as bearer-authenticated HTTP+SSE endpoints. See [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) and [`docs/USING_SYMBOLWRIGHT_FROM_ANY_LLM.md`](docs/USING_SYMBOLWRIGHT_FROM_ANY_LLM.md).
 
 ## Current State
 
@@ -82,7 +82,7 @@ All 20 runtime phases (A–T) are complete. The platform supports scanning, cont
 
 ## Runtime Modes
 
-CodeMind uses one canonical runtime-mode set:
+SymbolWright uses one canonical runtime-mode set:
 
 ```txt
 PLAN_ONLY
@@ -116,17 +116,17 @@ codemind agent --plan-only "plan only"
 Environment/config support:
 
 ```bash
-CODEMIND_RUNTIME_MODE=APPROVED_EXECUTION
-CODEMIND_RUNTIME_MODE=READ_ONLY
-CODEMIND_RUNTIME_MODE=PROPOSAL_ONLY
-CODEMIND_RUNTIME_MODE=PLAN_ONLY
+SYMBOLWRIGHT_RUNTIME_MODE=APPROVED_EXECUTION
+SYMBOLWRIGHT_RUNTIME_MODE=READ_ONLY
+SYMBOLWRIGHT_RUNTIME_MODE=PROPOSAL_ONLY
+SYMBOLWRIGHT_RUNTIME_MODE=PLAN_ONLY
 ```
 
 The aliases `direct`, `off`, and `approved` normalize to `APPROVED_EXECUTION`. They do not create a second mode system.
 
 ## CLI Surface
 
-The active CLI package is `codemind` and exposes:
+The active CLI package is `symbolwright` and exposes:
 
 ```txt
 codemind help
@@ -199,7 +199,7 @@ Use the agent command for normal implementation work:
 codemind agent --mode APPROVED_EXECUTION "implement the requested fix and validate it"
 ```
 
-In direct mode, CodeMind should prefer useful completed work over approval theater. It can still use Ajna, audit ledgers, and governance analysis when the task asks for forensic review, release proof, or merge-readiness evidence.
+In direct mode, SymbolWright should prefer useful completed work over approval theater. It can still use Ajna, audit ledgers, and governance analysis when the task asks for forensic review, release proof, or merge-readiness evidence.
 
 ## Non-Mutating Workflows
 
@@ -231,11 +231,11 @@ GitHub write credential checks
 bounded validation and release-readiness gates
 ```
 
-These rails are not approval theater. They prevent accidental repo damage while keeping CodeMind useful as a direct coding agent.
+These rails are not approval theater. They prevent accidental repo damage while keeping SymbolWright useful as a direct coding agent.
 
 ## Platform Capabilities
 
-CodeMind can:
+SymbolWright can:
 
 ```txt
 understand repository structure
@@ -258,9 +258,9 @@ generate agent kernel mission handoff packets
 validate workspace health and release readiness
 recall and store durable episodic, lexical, and procedural memory across agent turns
 run sandboxed PR preflight evidence checks and block pushes on regression
-serve a real browser chat UI + HTTP API against any registered provider (`codemind serve`, see docs/runtime/CODEMIND_CHAT_SERVER.md)
+serve a real browser chat UI + HTTP API against any registered provider (`codemind serve`, see docs/runtime/SYMBOLWRIGHT_CHAT_SERVER.md)
 run the real tool-execution agent loop over HTTP for Anthropic and any OpenAI-compatible provider, mode-gated (`POST /api/agent` on `codemind serve`)
-run itself as a real MCP server so any MCP-compatible LLM client can use its tools as a plugin (`codemind mcp-server`, see docs/runtime/CODEMIND_MCP_SERVER.md)
+run itself as a real MCP server so any MCP-compatible LLM client can use its tools as a plugin (`codemind mcp-server`, see docs/runtime/SYMBOLWRIGHT_MCP_SERVER.md)
 ```
 
 Ajna remains evidence-first:
@@ -313,64 +313,64 @@ Normal PR validation runs on Node 22 for one clear required signal. Node 20 and 
 ## Current Foundation Docs
 
 ```txt
-docs/migration/AELIB_CODEMIND_EXTRACTION_NOTES.md
-docs/governance/CODEMIND_PERMISSION_MODEL.md
-docs/governance/CODEMIND_THREAT_MODEL.md
-docs/cli/CODEMIND_CLI_TERMINAL_UX_PLAN.md
+docs/migration/AELIB_SYMBOLWRIGHT_EXTRACTION_NOTES.md
+docs/governance/SYMBOLWRIGHT_PERMISSION_MODEL.md
+docs/governance/SYMBOLWRIGHT_THREAT_MODEL.md
+docs/cli/SYMBOLWRIGHT_CLI_TERMINAL_UX_PLAN.md
 docs/cli-plan-command.md
-docs/runtime/CODEMIND_RUNTIME_FOUNDATION.md
-docs/runtime/CODEMIND_RUNTIME_BUILD_STATE.md
-docs/runtime/CODEMIND_RUNTIME_READONLY_COMMANDS.md
-docs/runtime/CODEMIND_PROPOSAL_MODE.md
-docs/runtime/CODEMIND_READONLY_LOOP.md
-docs/runtime/CODEMIND_APPROVED_EXECUTION_GATES.md
-docs/runtime/CODEMIND_READ_ADAPTERS.md
-docs/runtime/CODEMIND_LIVE_READ_POLICY_HANDSHAKE.md
-docs/runtime/CODEMIND_LIVE_READ_CLIENT_SEAM.md
-docs/runtime/CODEMIND_GITHUB_LIVE_READ_ADAPTER.md
-docs/runtime/CODEMIND_GITHUB_LIVE_READ_V1.md
-docs/runtime/CODEMIND_AJNA_LIVE_READ_PIPELINE.md
-docs/runtime/CODEMIND_OPERATOR_REVIEW_GATE.md
-docs/runtime/CODEMIND_APPROVED_WRITE_PREPARATION.md
-docs/runtime/CODEMIND_CONTROLLED_LOCAL_FILE_WRITE_GATE.md
-docs/runtime/CODEMIND_APPROVED_VALIDATION_COMMAND_GATE.md
-docs/runtime/CODEMIND_APPROVED_VALIDATION_EXECUTION.md
-docs/runtime/CODEMIND_PR_PREPARATION.md
-docs/runtime/CODEMIND_GITHUB_WRITE_PROPOSAL.md
-docs/runtime/CODEMIND_APPROVED_GITHUB_WRITE_GATE.md
-docs/runtime/CODEMIND_RUNTIME_WORKFLOW_COMPOSITION.md
-docs/runtime/CODEMIND_AJNA_WORKFLOW_SURFACE.md
-docs/runtime/CODEMIND_RUNTIME_STATUS_DASHBOARD.md
-docs/runtime/CODEMIND_APPROVED_LOCAL_FILE_WRITES.md
-docs/runtime/CODEMIND_SANDBOX_PRODUCTION_HARDENING.md
-docs/runtime/CODEMIND_MCP_TOOL_RUNTIME.md
-docs/runtime/CODEMIND_MCP_SERVER.md
-docs/runtime/CODEMIND_WEB_TOOLS.md
-docs/runtime/CODEMIND_CHAT_SERVER.md
-docs/runtime/CODEMIND_CHECKPOINT_REWIND.md
-docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
-docs/ajna/CODEMIND_AJNA_ROADMAP.md
-docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
-docs/build-state/CODEMIND_BUILD_LEDGER.md
-docs/build-state/CODEMIND_FINAL_FORENSIC_AUDIT.md
+docs/runtime/SYMBOLWRIGHT_RUNTIME_FOUNDATION.md
+docs/runtime/SYMBOLWRIGHT_RUNTIME_BUILD_STATE.md
+docs/runtime/SYMBOLWRIGHT_RUNTIME_READONLY_COMMANDS.md
+docs/runtime/SYMBOLWRIGHT_PROPOSAL_MODE.md
+docs/runtime/SYMBOLWRIGHT_READONLY_LOOP.md
+docs/runtime/SYMBOLWRIGHT_APPROVED_EXECUTION_GATES.md
+docs/runtime/SYMBOLWRIGHT_READ_ADAPTERS.md
+docs/runtime/SYMBOLWRIGHT_LIVE_READ_POLICY_HANDSHAKE.md
+docs/runtime/SYMBOLWRIGHT_LIVE_READ_CLIENT_SEAM.md
+docs/runtime/SYMBOLWRIGHT_GITHUB_LIVE_READ_ADAPTER.md
+docs/runtime/SYMBOLWRIGHT_GITHUB_LIVE_READ_V1.md
+docs/runtime/SYMBOLWRIGHT_AJNA_LIVE_READ_PIPELINE.md
+docs/runtime/SYMBOLWRIGHT_OPERATOR_REVIEW_GATE.md
+docs/runtime/SYMBOLWRIGHT_APPROVED_WRITE_PREPARATION.md
+docs/runtime/SYMBOLWRIGHT_CONTROLLED_LOCAL_FILE_WRITE_GATE.md
+docs/runtime/SYMBOLWRIGHT_APPROVED_VALIDATION_COMMAND_GATE.md
+docs/runtime/SYMBOLWRIGHT_APPROVED_VALIDATION_EXECUTION.md
+docs/runtime/SYMBOLWRIGHT_PR_PREPARATION.md
+docs/runtime/SYMBOLWRIGHT_GITHUB_WRITE_PROPOSAL.md
+docs/runtime/SYMBOLWRIGHT_APPROVED_GITHUB_WRITE_GATE.md
+docs/runtime/SYMBOLWRIGHT_RUNTIME_WORKFLOW_COMPOSITION.md
+docs/runtime/SYMBOLWRIGHT_AJNA_WORKFLOW_SURFACE.md
+docs/runtime/SYMBOLWRIGHT_RUNTIME_STATUS_DASHBOARD.md
+docs/runtime/SYMBOLWRIGHT_APPROVED_LOCAL_FILE_WRITES.md
+docs/runtime/SYMBOLWRIGHT_SANDBOX_PRODUCTION_HARDENING.md
+docs/runtime/SYMBOLWRIGHT_MCP_TOOL_RUNTIME.md
+docs/runtime/SYMBOLWRIGHT_MCP_SERVER.md
+docs/runtime/SYMBOLWRIGHT_WEB_TOOLS.md
+docs/runtime/SYMBOLWRIGHT_CHAT_SERVER.md
+docs/runtime/SYMBOLWRIGHT_CHECKPOINT_REWIND.md
+docs/ajna/SYMBOLWRIGHT_AJNA_DOCS_HUB.md
+docs/ajna/SYMBOLWRIGHT_AJNA_ROADMAP.md
+docs/ajna/SYMBOLWRIGHT_AJNA_BUILD_PLAN.md
+docs/build-state/SYMBOLWRIGHT_BUILD_LEDGER.md
+docs/build-state/SYMBOLWRIGHT_FINAL_FORENSIC_AUDIT.md
 docs/autonomy/AGENT_FORENSIC_PROCESS_DOCUMENTATION.md
-docs/context/CODEMIND_PROJECT_CONTEXT_KERNEL.md
+docs/context/SYMBOLWRIGHT_PROJECT_CONTEXT_KERNEL.md
 ```
 
 Some historical docs still use approval-era names because they describe earlier runtime phases or migration notes. Current behavior is controlled by the runtime mode selected for the active command.
 
 ## Relationship to AELIB-X1YA0I
 
-CodeMind was extracted from earlier AELIB-side coding-agent planning work, but it is now developed as its own standalone platform.
+SymbolWright was extracted from earlier AELIB-side coding-agent planning work, but it is now developed as its own standalone platform.
 
-AELIB-X1YA0I may later integrate CodeMind through a thin external adapter.
+AELIB-X1YA0I may later integrate SymbolWright through a thin external adapter.
 
-CodeMind should be able to work on any authorized repository, not only AELIB-X1YA0I.
+SymbolWright should be able to work on any authorized repository, not only AELIB-X1YA0I.
 
 ## Taglines
 
 ```txt
-CodeMind: Build. Fix. Understand.
+SymbolWright: Build. Fix. Understand.
 Ajna: See beyond the code.
 GitHub / PR Review: Expand your vision beyond the diff.
 ```

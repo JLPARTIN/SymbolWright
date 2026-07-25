@@ -24,6 +24,6 @@ describe('mission artifact directory', () => {
       runtimeMode: 'READ_ONLY',
       labels: [],
     })
-    expect(existsSync(join(root, '.codemind', 'missions', mission.id, 'artifacts'))).toBe(true)
+    expect(existsSync(join(root, '.symbolwright', 'missions', mission.id, 'artifacts'))).toBe(true)
   })
 })

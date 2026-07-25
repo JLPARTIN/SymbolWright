@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  CODEMIND_CLI_COMMANDS,
+  SYMBOLWRIGHT_CLI_COMMANDS,
   renderHelp,
   renderNotYetActive,
   renderStatus,
@@ -8,12 +8,12 @@ import {
 
 describe('renderHelp', () => {
   it('includes the usage line', () => {
-    expect(renderHelp()).toContain('Usage: codemind <command>')
+    expect(renderHelp()).toContain('Usage: symbolwright <command>')
   })
 
   it('lists every registered command', () => {
     const output = renderHelp()
-    for (const { name } of CODEMIND_CLI_COMMANDS) {
+    for (const { name } of SYMBOLWRIGHT_CLI_COMMANDS) {
       expect(output).toContain(name)
     }
   })
@@ -254,7 +254,7 @@ describe('renderHelp', () => {
 
 describe('renderStatus', () => {
   it('shows the platform name', () => {
-    expect(renderStatus()).toContain('CodeMind')
+    expect(renderStatus()).toContain('SymbolWright')
   })
 
   it('shows the capability label', () => {
@@ -266,6 +266,6 @@ describe('renderNotYetActive', () => {
   it('renders reserved command message', () => {
     const output = renderNotYetActive('runtime push')
     expect(output).toContain('Command not active yet: runtime push')
-    expect(output).toContain('reserved for a later CodeMind runtime phase')
+    expect(output).toContain('reserved for a later SymbolWright runtime phase')
   })
 })

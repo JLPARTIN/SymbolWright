@@ -31,7 +31,7 @@ export type WorkspaceSessionExport = {
   session: WorkspaceSession
 }
 
-const DEFAULT_SESSION_ID = 'codemind-default-session'
+const DEFAULT_SESSION_ID = 'symbolwright-default-session'
 const DEFAULT_FILE_ID = 'file-main'
 
 export function createDefaultWorkspaceSession(now = new Date()): WorkspaceSession {
@@ -46,7 +46,7 @@ export function createDefaultWorkspaceSession(now = new Date()): WorkspaceSessio
   return {
     schemaVersion: 1,
     id: DEFAULT_SESSION_ID,
-    name: 'CodeMind Workspace Session',
+    name: 'SymbolWright Workspace Session',
     activeFileId: DEFAULT_FILE_ID,
     files: [
       {

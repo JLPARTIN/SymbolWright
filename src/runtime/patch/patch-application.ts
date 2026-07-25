@@ -111,7 +111,7 @@ export function applyStructuredPatch(
 
 export function renderPatchApplicationResult(result: PatchApplicationResult): string {
   const lines: string[] = [
-    'CodeMind patch application',
+    'SymbolWright patch application',
     '',
     `Outcome: ${result.outcome}`,
     `Dry run: ${result.dryRun ? 'yes' : 'no'}`,

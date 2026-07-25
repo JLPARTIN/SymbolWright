@@ -173,7 +173,7 @@ describe('renderGitHubWriteProposal', () => {
     const result = evaluateGitHubWriteProposal(validInput())
     const output = renderGitHubWriteProposal(result)
 
-    expect(output).toContain('CodeMind GitHub write proposal')
+    expect(output).toContain('SymbolWright GitHub write proposal')
     expect(output).toContain('Decision: PROPOSED')
     expect(output).toContain('Action: create_draft_pr')
     expect(output).toContain('Repository: owner/repo')

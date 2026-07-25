@@ -1,4 +1,4 @@
-import type { CodemindToolName } from '../runtime/types.js'
+import type { SymbolWrightToolName } from '../runtime/types.js'
 
 /** The three real read-only workers this bundle ships. Nothing else — no HiveMind-scale swarm. */
 export const SUBAGENT_NAMES = ['explorer', 'reviewer', 'test-planner'] as const
@@ -13,16 +13,16 @@ export interface SubagentDefinition {
   readonly mode: 'readonly'
   readonly description: string
   /** Available immediately — filtered from the real tool registry, not just policy-blocked. */
-  readonly allowedTools: readonly CodemindToolName[]
+  readonly allowedTools: readonly SymbolWrightToolName[]
   /** Withheld unless a caller explicitly turns governance on for this dispatch. */
-  readonly governedTools: readonly CodemindToolName[]
+  readonly governedTools: readonly SymbolWrightToolName[]
   readonly systemPromptSuffix: string
 }
 
 // Read-only info tools every worker gets. "repo_map" isn't a distinct tool in this
 // codebase — glob/search_files already cover read-only repo-structure mapping, so
 // nothing fake was invented to fill that name.
-const READ_ONLY_CORE_TOOLS: readonly CodemindToolName[] = [
+const READ_ONLY_CORE_TOOLS: readonly SymbolWrightToolName[] = [
   'read_file',
   'list_files',
   'search_files',
@@ -34,7 +34,7 @@ const READ_ONLY_CORE_TOOLS: readonly CodemindToolName[] = [
 // Withheld from all three workers by default: real mutation, shell execution,
 // GitHub writes, and nested subagent/swarm spawning. Turning governance on for a
 // dispatch grants exactly this list — nothing broader.
-const GOVERNED_MUTATION_TOOLS: readonly CodemindToolName[] = [
+const GOVERNED_MUTATION_TOOLS: readonly SymbolWrightToolName[] = [
   'edit_file',
   'local_file_write',
   'apply_patch',

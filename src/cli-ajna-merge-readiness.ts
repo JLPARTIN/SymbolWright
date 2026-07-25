@@ -7,12 +7,12 @@ import type {
   AjnaReviewRequest,
 } from './ajna/ajna-review.types.js'
 
-export interface CodemindAjnaMergeReadinessInput {
+export interface SymbolWrightAjnaMergeReadinessInput {
   readonly request: AjnaReviewRequest
   readonly findings: readonly AjnaReviewFinding[]
 }
 
-export interface CodemindAjnaMergeReadinessCommandResult {
+export interface SymbolWrightAjnaMergeReadinessCommandResult {
   readonly inputPath: string | null
   readonly readiness: AjnaMergeReadiness
   readonly output: string
@@ -61,7 +61,7 @@ function assertReviewRequest(value: unknown): AjnaReviewRequest {
   return value as unknown as AjnaReviewRequest
 }
 
-function assertAjnaMergeReadinessInput(value: unknown): CodemindAjnaMergeReadinessInput {
+function assertAjnaMergeReadinessInput(value: unknown): SymbolWrightAjnaMergeReadinessInput {
   if (!isRecord(value)) {
     throw new Error('Ajna merge-readiness input must be a JSON object.')
   }
@@ -78,11 +78,15 @@ function assertAjnaMergeReadinessInput(value: unknown): CodemindAjnaMergeReadine
   }
 }
 
-export function parseAjnaMergeReadinessInput(jsonText: string): CodemindAjnaMergeReadinessInput {
+export function parseAjnaMergeReadinessInput(
+  jsonText: string,
+): SymbolWrightAjnaMergeReadinessInput {
   return assertAjnaMergeReadinessInput(JSON.parse(jsonText) as unknown)
 }
 
-export function readAjnaMergeReadinessInput(inputPath: string): CodemindAjnaMergeReadinessInput {
+export function readAjnaMergeReadinessInput(
+  inputPath: string,
+): SymbolWrightAjnaMergeReadinessInput {
   return parseAjnaMergeReadinessInput(readFileSync(inputPath, 'utf-8'))
 }
 
@@ -100,9 +104,9 @@ export function renderAjnaMergeReadiness(readiness: AjnaMergeReadiness): string 
 }
 
 export function buildAjnaMergeReadinessForInput(
-  input: CodemindAjnaMergeReadinessInput,
+  input: SymbolWrightAjnaMergeReadinessInput,
   inputPath: string | null = null,
-): CodemindAjnaMergeReadinessCommandResult {
+): SymbolWrightAjnaMergeReadinessCommandResult {
   const readiness = deriveAjnaMergeReadiness(input.request, input.findings)
 
   return {

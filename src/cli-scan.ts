@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs'
 import { join } from 'path'
 
-export interface CodemindRepoScan {
+export interface SymbolWrightRepoScan {
   readonly rootDir: string
   readonly packageName: string | null
   readonly packageVersion: string | null
@@ -43,7 +43,7 @@ function walkDir(dir: string, counts: { ts: number; spec: number }): void {
   }
 }
 
-export function scanRepo(rootDir: string): CodemindRepoScan {
+export function scanRepo(rootDir: string): SymbolWrightRepoScan {
   let packageName: string | null = null
   let packageVersion: string | null = null
   let packageDescription: string | null = null
@@ -92,7 +92,7 @@ export function scanRepo(rootDir: string): CodemindRepoScan {
   }
 }
 
-export function renderScan(scan: CodemindRepoScan): string {
+export function renderScan(scan: SymbolWrightRepoScan): string {
   const lines = [
     `Repository:        ${scan.packageName ?? '(unnamed)'}`,
     `Version:           ${scan.packageVersion ?? '(unknown)'}`,

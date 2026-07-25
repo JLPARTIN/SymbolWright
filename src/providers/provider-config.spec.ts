@@ -6,14 +6,14 @@ import { redactProviderGatewayConfig, redactProviderSecret } from './provider-re
 describe('provider gateway config', () => {
   it('loads active provider, model, fallbacks, keys, and custom base URL from env', () => {
     const config = loadProviderGatewayConfig({
-      CODEMIND_PROVIDER: 'openai',
-      CODEMIND_MODEL: 'gpt-test',
-      CODEMIND_PROVIDER_FALLBACKS: 'anthropic,google-gemini,openai',
+      SYMBOLWRIGHT_PROVIDER: 'openai',
+      SYMBOLWRIGHT_MODEL: 'gpt-test',
+      SYMBOLWRIGHT_PROVIDER_FALLBACKS: 'anthropic,google-gemini,openai',
       OPENAI_API_KEY: 'openai-secret',
       ANTHROPIC_API_KEY: 'anthropic-secret',
       GOOGLE_API_KEY: 'google-secret',
-      CODEMIND_OPENAI_COMPATIBLE_BASE_URL: 'https://models.example.test/v1',
-      CODEMIND_OPENAI_COMPATIBLE_API_KEY: 'custom-secret',
+      SYMBOLWRIGHT_OPENAI_COMPATIBLE_BASE_URL: 'https://models.example.test/v1',
+      SYMBOLWRIGHT_OPENAI_COMPATIBLE_API_KEY: 'custom-secret',
     })
 
     expect(config.activeProvider).toBe('openai')

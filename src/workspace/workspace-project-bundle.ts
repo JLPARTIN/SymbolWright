@@ -22,13 +22,13 @@ export type WorkspaceProjectBundleFile = {
 }
 
 export type WorkspaceProjectBundle = {
-  kind: 'codemind.workspace.project-bundle'
+  kind: 'symbolwright.workspace.project-bundle'
   schemaVersion: 1
   manifest: WorkspaceProjectManifest
   files: WorkspaceProjectBundleFile[]
 }
 
-const PROJECT_BUNDLE_KIND = 'codemind.workspace.project-bundle'
+const PROJECT_BUNDLE_KIND = 'symbolwright.workspace.project-bundle'
 const MAX_PROJECT_FILES = 100
 const MAX_FILE_BYTES = 200_000
 const MAX_PROJECT_BYTES = 2_000_000
@@ -36,7 +36,7 @@ const MAX_PROJECT_BYTES = 2_000_000
 const PROJECT_BUNDLE_WARNINGS = [
   'This bundle is browser-local import/export data; importing it does not write to a Git repository.',
   'Review file names and code before running snippets or sending them to an AI provider.',
-  'Executable capability still depends on CodeMind language registry runner support.',
+  'Executable capability still depends on SymbolWright language registry runner support.',
 ] as const
 
 export function detectLanguageIdByPath(path: string): string {

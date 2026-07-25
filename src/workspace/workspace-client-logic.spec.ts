@@ -12,7 +12,7 @@ describe('slugifyWorkspaceName', () => {
   })
 
   it('falls back to a default when everything is stripped', () => {
-    expect(slugifyWorkspaceName('***')).toBe('codemind-workspace')
+    expect(slugifyWorkspaceName('***')).toBe('symbolwright-workspace')
   })
 })
 

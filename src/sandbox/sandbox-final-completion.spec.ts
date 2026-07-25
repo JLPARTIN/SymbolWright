@@ -13,8 +13,8 @@ import type { SandboxRunnerAvailability } from './sandbox-types.js'
 const CHECKED_AT = '2026-07-21T00:00:00.000Z'
 const EXECUTION_ENV: NodeJS.ProcessEnv = {
   PATH: process.env['PATH'] ?? '',
-  CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true',
-  CODEMIND_SECRET_TOKEN: 'sandbox-final-secret',
+  SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true',
+  SYMBOLWRIGHT_SECRET_TOKEN: 'sandbox-final-secret',
 }
 
 const workspaces: string[] = []
@@ -45,7 +45,7 @@ function availability(command: string, version = `${command} test`): SandboxRunn
 }
 
 async function createWorkspace(): Promise<string> {
-  const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'codemind-sandbox-final-'))
+  const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-sandbox-final-'))
   workspaces.push(workspaceRoot)
   return workspaceRoot
 }
@@ -75,13 +75,13 @@ afterEach(async () => {
 
 const JS_SUCCESS_SOURCE = [
   "console.log('sandbox-js-proof')",
-  "console.log(process.env.CODEMIND_SECRET_TOKEN ?? 'NO_SECRET')",
+  "console.log(process.env.SYMBOLWRIGHT_SECRET_TOKEN ?? 'NO_SECRET')",
 ].join('\n')
 
 const PYTHON_SUCCESS_SOURCE = [
   'import os',
   "print('sandbox-python-proof')",
-  "print(os.environ.get('CODEMIND_SECRET_TOKEN', 'NO_SECRET'))",
+  "print(os.environ.get('SYMBOLWRIGHT_SECRET_TOKEN', 'NO_SECRET'))",
 ].join('\n')
 
 const GO_SUCCESS_SOURCE = [
@@ -94,7 +94,7 @@ const GO_SUCCESS_SOURCE = [
   '',
   'func main() {',
   '  fmt.Println("sandbox-go-proof")',
-  '  value := os.Getenv("CODEMIND_SECRET_TOKEN")',
+  '  value := os.Getenv("SYMBOLWRIGHT_SECRET_TOKEN")',
   '  if value == "" { value = "NO_SECRET" }',
   '  fmt.Println(value)',
   '}',

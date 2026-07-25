@@ -79,7 +79,7 @@ describe('renderReleaseReadinessReport', () => {
     const report = assessReleaseReadiness(WORKSPACE)
     const output = renderReleaseReadinessReport(report)
 
-    expect(output).toContain('CodeMind Release Readiness')
+    expect(output).toContain('SymbolWright Release Readiness')
     expect(output).toContain('Outcome: RELEASE_READY')
     expect(output).toContain('[PASS]')
     expect(output).toContain('PUBLIC_API_CONTRACT')

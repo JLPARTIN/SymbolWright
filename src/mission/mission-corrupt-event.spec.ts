@@ -5,10 +5,10 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { createMissionEvent } from './mission-events.js'
 import { MissionStore } from './mission-store.js'
-import type { CodeMindMission } from './mission-types.js'
+import type { SymbolWrightMission } from './mission-types.js'
 
 const ID = 'mission_11111111-1111-4111-8111-111111111111'
-const mission: CodeMindMission = {
+const mission: SymbolWrightMission = {
   schemaVersion: 1,
   revision: 1,
   id: ID,
@@ -52,7 +52,7 @@ describe('mission torn event recovery', () => {
     store.appendEvent(
       createMissionEvent({ missionId: ID, type: 'mission.created', summary: 'Created' }),
     )
-    appendFileSync(join(root, '.codemind', 'missions', ID, 'events.jsonl'), '{torn', 'utf8')
+    appendFileSync(join(root, '.symbolwright', 'missions', ID, 'events.jsonl'), '{torn', 'utf8')
     expect(store.readEvents(ID)).toHaveLength(1)
   })
 })

@@ -95,14 +95,14 @@ const APP_SHELL_STYLES = `<style>
   }
 </style>`
 
-/** The unified CodeMind application shell. */
+/** The unified SymbolWright application shell. */
 export function renderAppShellHtml(): string {
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CodeMind</title>
+  <title>SymbolWright</title>
   ${renderWorkspaceStyles()}
   ${renderChatStyles()}
   ${APP_SHELL_STYLES}
@@ -138,8 +138,8 @@ export function renderAppShellHtml(): string {
     ${buildWorkspaceAgentBridgeScript()}
 
     renderRoute();
-    if (typeof window.codemindReloadActiveMission === 'function') {
-      void window.codemindReloadActiveMission();
+    if (typeof window.symbolWrightReloadActiveMission === 'function') {
+      void window.symbolWrightReloadActiveMission();
     }
   </script>
 </body>

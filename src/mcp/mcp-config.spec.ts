@@ -93,8 +93,8 @@ describe('mcp-config', () => {
   })
 
   describe('resolveMcpConfigPath', () => {
-    it('joins workspace root with .codemind/mcp.json', () => {
-      expect(resolveMcpConfigPath('/repo')).toBe(join('/repo', '.codemind', 'mcp.json'))
+    it('joins workspace root with .symbolwright/mcp.json', () => {
+      expect(resolveMcpConfigPath('/repo')).toBe(join('/repo', '.symbolwright', 'mcp.json'))
     })
   })
 
@@ -102,7 +102,7 @@ describe('mcp-config', () => {
     let dir: string
 
     beforeEach(() => {
-      dir = mkdtempSync(join(tmpdir(), 'codemind-mcp-config-'))
+      dir = mkdtempSync(join(tmpdir(), 'symbolwright-mcp-config-'))
     })
 
     afterEach(() => {
@@ -113,10 +113,10 @@ describe('mcp-config', () => {
       expect(loadMcpConfig(dir)).toEqual({ servers: {} })
     })
 
-    it('loads and parses .codemind/mcp.json from the workspace root', () => {
-      mkdirSync(join(dir, '.codemind'), { recursive: true })
+    it('loads and parses .symbolwright/mcp.json from the workspace root', () => {
+      mkdirSync(join(dir, '.symbolwright'), { recursive: true })
       writeFileSync(
-        join(dir, '.codemind', 'mcp.json'),
+        join(dir, '.symbolwright', 'mcp.json'),
         JSON.stringify({ servers: { fixture: { command: 'node' } } }),
       )
 

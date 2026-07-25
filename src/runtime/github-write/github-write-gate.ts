@@ -77,7 +77,7 @@ export function evaluateGitHubWriteGate(
 
 export function renderGitHubWriteGateResult(result: GitHubWriteGateResult): string {
   const sections: string[] = [
-    'CodeMind GitHub write gate',
+    'SymbolWright GitHub write gate',
     '',
     `Decision: ${result.decision}`,
     `Action: ${result.action}`,

@@ -13,7 +13,7 @@ import type { ZflowExecutionReport } from './runtime/workflow/zflow-report.js'
 import { renderRuntimeReportHub } from './cli-runtime-report-hub.js'
 
 function makeWorkspace(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-report-hub-cli-'))
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-report-hub-cli-'))
 }
 
 function writeFixture(workspace: string, fixture: unknown): string {
@@ -32,9 +32,9 @@ function makeReport(
     result: {
       mode: 'prepare-pr',
       localOutput: 'completed',
-      prOutput: 'CodeMind GitHub PR creation\n\nOutcome: DRY_RUN',
-      collaborationOutput: 'CodeMind PR collaboration\n\nOutcome: DRY_RUN',
-      recoveryOutput: 'CodeMind recovery change ledger\n\nChanges: 1',
+      prOutput: 'SymbolWright GitHub PR creation\n\nOutcome: DRY_RUN',
+      collaborationOutput: 'SymbolWright PR collaboration\n\nOutcome: DRY_RUN',
+      recoveryOutput: 'SymbolWright recovery change ledger\n\nChanges: 1',
       rollbackOutput: 'Rollback plan: Recover Zflow preview\n\n1. src/generated.ts',
     },
     readiness: {

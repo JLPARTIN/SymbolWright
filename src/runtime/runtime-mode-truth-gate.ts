@@ -3,11 +3,11 @@ import path from 'node:path'
 
 import { buildUnifiedSystemPrompt } from '../conversation/unified-system-prompt.js'
 import {
-  CODEMIND_RUNTIME_MODES,
-  DEFAULT_CODEMIND_RUNTIME_MODE,
+  SYMBOLWRIGHT_RUNTIME_MODES,
+  DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE,
   createDefaultRuntimePolicy,
   createRuntimePolicyForMode,
-  normalizeCodemindRuntimeMode,
+  normalizeSymbolWrightRuntimeMode,
 } from './policy/runtime-policy.js'
 
 export type RuntimeModeTruthStatus = 'PASS' | 'FAIL'
@@ -45,12 +45,12 @@ const REQUIRED_PHRASES: readonly RequiredPhraseCheck[] = [
     filePath: 'README.md',
     phrases: [
       'direct-capable coding-agent platform',
-      'CODEMIND_RUNTIME_MODE=APPROVED_EXECUTION',
+      'SYMBOLWRIGHT_RUNTIME_MODE=APPROVED_EXECUTION',
       'Governance is optional by mode',
     ],
   },
   {
-    filePath: path.join('docs', 'governance', 'CODEMIND_PERMISSION_MODEL.md'),
+    filePath: path.join('docs', 'governance', 'SYMBOLWRIGHT_PERMISSION_MODEL.md'),
     phrases: [
       'Governance is a feature, not the default personality',
       '`APPROVED_EXECUTION` is the direct execution mode',
@@ -58,11 +58,11 @@ const REQUIRED_PHRASES: readonly RequiredPhraseCheck[] = [
     ],
   },
   {
-    filePath: path.join('docs', 'governance', 'CODEMIND_THREAT_MODEL.md'),
+    filePath: path.join('docs', 'governance', 'SYMBOLWRIGHT_THREAT_MODEL.md'),
     phrases: [
-      'This document does not make CodeMind read-only by default',
+      'This document does not make SymbolWright read-only by default',
       '`APPROVED_EXECUTION` is direct-capable',
-      'CodeMind may execute directly in `APPROVED_EXECUTION`',
+      'SymbolWright may execute directly in `APPROVED_EXECUTION`',
     ],
   },
 ]
@@ -94,16 +94,16 @@ const BANNED_STALE_PHRASES: readonly BannedPhraseCheck[] = [
     ],
   },
   {
-    filePath: path.join('docs', 'governance', 'CODEMIND_PERMISSION_MODEL.md'),
+    filePath: path.join('docs', 'governance', 'SYMBOLWRIGHT_PERMISSION_MODEL.md'),
     phrases: [
       'No write-capable mode should be active by default',
-      'CodeMind must never assume permission',
+      'SymbolWright must never assume permission',
       'write requires approval',
       'commands require approval',
     ],
   },
   {
-    filePath: path.join('docs', 'governance', 'CODEMIND_THREAT_MODEL.md'),
+    filePath: path.join('docs', 'governance', 'SYMBOLWRIGHT_THREAT_MODEL.md'),
     phrases: [
       'Generated output is proposal-only until validated and approved by policy gates',
       'Approval must come from the explicit operator channel and policy gates',
@@ -183,12 +183,12 @@ function collectRuntimePolicyFindings(): string[] {
   const findings: string[] = []
   const policy = createDefaultRuntimePolicy()
 
-  if (DEFAULT_CODEMIND_RUNTIME_MODE !== 'APPROVED_EXECUTION') {
+  if (DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE !== 'APPROVED_EXECUTION') {
     findings.push('default runtime mode must remain APPROVED_EXECUTION')
   }
 
   for (const mode of REQUIRED_RUNTIME_MODES) {
-    if (!(CODEMIND_RUNTIME_MODES as readonly string[]).includes(mode)) {
+    if (!(SYMBOLWRIGHT_RUNTIME_MODES as readonly string[]).includes(mode)) {
       findings.push(`canonical runtime mode missing from policy: ${mode}`)
     }
   }
@@ -211,13 +211,13 @@ function collectRuntimePolicyFindings(): string[] {
     )
   }
 
-  if (normalizeCodemindRuntimeMode('direct') !== 'APPROVED_EXECUTION') {
+  if (normalizeSymbolWrightRuntimeMode('direct') !== 'APPROVED_EXECUTION') {
     findings.push('direct alias must normalize to APPROVED_EXECUTION')
   }
-  if (normalizeCodemindRuntimeMode('off') !== 'APPROVED_EXECUTION') {
+  if (normalizeSymbolWrightRuntimeMode('off') !== 'APPROVED_EXECUTION') {
     findings.push('off alias must normalize to APPROVED_EXECUTION')
   }
-  if (normalizeCodemindRuntimeMode('approved') !== 'APPROVED_EXECUTION') {
+  if (normalizeSymbolWrightRuntimeMode('approved') !== 'APPROVED_EXECUTION') {
     findings.push('approved alias must normalize to APPROVED_EXECUTION')
   }
 
@@ -240,7 +240,7 @@ function collectPromptFindings(): string[] {
 
   if (!prompt.includes('perform direct implementation work')) {
     findings.push(
-      'APPROVED_EXECUTION prompt must tell CodeMind to perform direct implementation work',
+      'APPROVED_EXECUTION prompt must tell SymbolWright to perform direct implementation work',
     )
   }
   if (!prompt.includes('Direct file edits')) {
@@ -257,7 +257,7 @@ function collectPromptFindings(): string[] {
 }
 
 /**
- * Release-readiness guard that prevents CodeMind from drifting back into a
+ * Release-readiness guard that prevents SymbolWright from drifting back into a
  * default read-only / approval-first posture after direct runtime mode support.
  */
 export function assessRuntimeModeTruth(workspaceRoot: string): RuntimeModeTruthReport {

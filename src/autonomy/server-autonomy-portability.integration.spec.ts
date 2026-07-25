@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { MissionService } from '../mission/mission-service.js'
 import { MissionStore } from '../mission/mission-store.js'
-import type { CodeMindMission } from '../mission/mission-types.js'
+import type { SymbolWrightMission } from '../mission/mission-types.js'
 import type { PortableValidationRunner } from '../portability/portable-validation-runner.js'
 import type { SandboxRunner } from '../runtime/sandbox/sandbox-runner.js'
 import { createServerAutonomyRuntime } from './server-autonomy-runtime.js'
@@ -20,8 +20,8 @@ afterEach(async () => {
 
 describe('server autonomy repository portability', () => {
   it('discovers, plans, and executes validation across mixed package roots', async () => {
-    const workspaceRoot = await temporaryRoot('codemind-portability-workspace-')
-    const repositoryRoot = await temporaryRoot('codemind-portability-repository-')
+    const workspaceRoot = await temporaryRoot('symbolwright-portability-workspace-')
+    const repositoryRoot = await temporaryRoot('symbolwright-portability-repository-')
     await write(
       repositoryRoot,
       'package.json',
@@ -88,9 +88,9 @@ describe('server autonomy repository portability', () => {
       expect.arrayContaining([
         'Run npm run lint',
         'Run npm run build',
-        'Run codemind-cwd:apps/web::npm run test',
-        'Run codemind-cwd:services/api::python -m pytest',
-        'Run codemind-cwd:services/api::python -m compileall .',
+        'Run symbolwright-cwd:apps/web::npm run test',
+        'Run symbolwright-cwd:services/api::python -m pytest',
+        'Run symbolwright-cwd:services/api::python -m compileall .',
       ]),
     )
     expect(result.execution.completedAt).toBeDefined()
@@ -114,7 +114,7 @@ describe('server autonomy repository portability', () => {
   })
 })
 
-function createMission(repositoryRoot: string): CodeMindMission {
+function createMission(repositoryRoot: string): SymbolWrightMission {
   const now = '2026-07-24T01:10:00.000Z'
   return {
     schemaVersion: 1,

@@ -104,7 +104,7 @@ export async function executeSearchFilesTool(
   searchDirectory(context.cwd, resolvedDir, query, context.policy.noisyDirs, limit, matches)
 
   return [
-    'CodeMind search',
+    'SymbolWright search',
     '',
     `Query: ${query}`,
     `Directory: ${requestedDir}`,

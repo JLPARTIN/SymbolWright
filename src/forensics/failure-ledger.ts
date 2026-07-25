@@ -9,7 +9,7 @@ import type {
   MatchedFailureRule,
 } from './types.js'
 
-const LEDGER_PATH = path.join('.codemind', 'ci-failure-ledger.json')
+const LEDGER_PATH = path.join('.symbolwright', 'ci-failure-ledger.json')
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -77,8 +77,8 @@ export function loadFailureLedger(repoRoot: string): FailureLedgerLoadResult {
 }
 
 export function globToRegex(glob: string): RegExp {
-  const tokenSlash = '__CODEMIND_GLOBSTAR_SLASH__'
-  const tokenStar = '__CODEMIND_GLOBSTAR__'
+  const tokenSlash = '__SYMBOLWRIGHT_GLOBSTAR_SLASH__'
+  const tokenStar = '__SYMBOLWRIGHT_GLOBSTAR__'
   const escaped = normalizeRepoPath(glob)
     .replace(/[.+^${}()|[\]\\]/g, String.fromCharCode(92) + '$&')
     .replaceAll('**/', tokenSlash)

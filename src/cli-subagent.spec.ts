@@ -1,8 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
-vi.mock('./config/codemind-config.js', () => ({
-  resolveCodemindConfig: vi.fn(),
-  validateCodemindConfig: vi.fn(),
+vi.mock('./config/symbolwright-config.js', () => ({
+  resolveSymbolWrightConfig: vi.fn(),
+  validateSymbolWrightConfig: vi.fn(),
 }))
 
 vi.mock('./cli-agent.js', () => ({
@@ -19,12 +19,15 @@ vi.mock('./hivemind/subagent-dispatcher.js', () => ({
 }))
 
 import { renderSubagentListCommand, runSubagentRunCommand } from './cli-subagent.js'
-import { resolveCodemindConfig, validateCodemindConfig } from './config/codemind-config.js'
+import {
+  resolveSymbolWrightConfig,
+  validateSymbolWrightConfig,
+} from './config/symbolwright-config.js'
 import { createProvider } from './cli-agent.js'
 import type { SubagentDispatchEvidence } from './hivemind/subagent-dispatcher.js'
 
-const mockResolve = vi.mocked(resolveCodemindConfig)
-const mockValidate = vi.mocked(validateCodemindConfig)
+const mockResolve = vi.mocked(resolveSymbolWrightConfig)
+const mockValidate = vi.mocked(validateSymbolWrightConfig)
 const mockCreateProvider = vi.mocked(createProvider)
 
 function validConfig() {

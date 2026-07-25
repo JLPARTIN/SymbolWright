@@ -21,7 +21,7 @@ describe('performWebFetch', () => {
       if (url.pathname === '/docs') {
         res.writeHead(200, { 'content-type': 'text/html' })
         res.end(
-          '<html><head><title>CodeMind Docs</title></head><body><p>api_key: super-secret-token-value</p></body></html>',
+          '<html><head><title>SymbolWright Docs</title></head><body><p>api_key: super-secret-token-value</p></body></html>',
         )
         return
       }
@@ -53,7 +53,7 @@ describe('performWebFetch', () => {
     })
 
     expect(evidence.status).toBe('ok')
-    expect(evidence.title).toBe('CodeMind Docs')
+    expect(evidence.title).toBe('SymbolWright Docs')
     expect(evidence.hash).toMatch(/^[0-9a-f]{64}$/)
     expect(evidence.auditTrace).toHaveLength(1)
     expect(evidence.auditTrace[0]?.status).toBe('allowed')

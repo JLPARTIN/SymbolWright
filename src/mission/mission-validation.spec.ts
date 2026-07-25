@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  assertCodeMindMission,
+  assertSymbolWrightMission,
   parseCreateMissionInput,
   parsePatchMissionInput,
 } from './mission-validation.js'
@@ -66,6 +66,6 @@ describe('mission validation', () => {
       },
       labels: [],
     }
-    expect(() => assertCodeMindMission(value)).not.toThrow()
+    expect(() => assertSymbolWrightMission(value)).not.toThrow()
   })
 })

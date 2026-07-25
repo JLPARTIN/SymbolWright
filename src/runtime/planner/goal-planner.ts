@@ -57,7 +57,7 @@ export function buildGoalPlan(goal: string): GoalPlan {
 
 export function renderGoalPlan(plan: GoalPlan): string {
   return [
-    'CodeMind runtime plan',
+    'SymbolWright runtime plan',
     '',
     `Goal: ${plan.goal}`,
     '',

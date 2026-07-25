@@ -29,7 +29,7 @@ export function renderProvidersCommand(args: readonly string[] = []): string {
 
   if (subcommand === 'models') {
     return [
-      'CodeMind Provider Models',
+      'SymbolWright Provider Models',
       '',
       ...redacted.providers.map(
         (provider) => `  ${provider.id.padEnd(14)} ${provider.defaultModel ?? 'not configured'}`,
@@ -39,7 +39,7 @@ export function renderProvidersCommand(args: readonly string[] = []): string {
 
   if (subcommand === 'health' || subcommand === 'status') {
     return [
-      'CodeMind Provider Status',
+      'SymbolWright Provider Status',
       '',
       `Active provider: ${redacted.activeProvider ?? 'not configured'}`,
       `Active model:    ${redacted.activeModel ?? 'provider default'}`,
@@ -55,7 +55,7 @@ export function renderProvidersCommand(args: readonly string[] = []): string {
   }
 
   return [
-    'CodeMind Providers',
+    'SymbolWright Providers',
     '',
     `Active provider: ${redacted.activeProvider ?? 'not configured'}`,
     `Active model:    ${redacted.activeModel ?? 'provider default'}`,

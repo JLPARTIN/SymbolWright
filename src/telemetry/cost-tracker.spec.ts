@@ -134,7 +134,7 @@ describe('renderUsageSummary', () => {
     tracker.record('s1', 'claude-sonnet-4-20250514', USAGE, 'orchestrator')
 
     const output = renderUsageSummary(tracker.summarize())
-    expect(output).toContain('CodeMind Usage Summary')
+    expect(output).toContain('SymbolWright Usage Summary')
     expect(output).toContain('Total Input Tokens')
     expect(output).toContain('Total Output Tokens')
     expect(output).toContain('Total Cost')

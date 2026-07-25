@@ -43,7 +43,7 @@ export function parseSubagentRunInput(input: unknown): SubagentRunToolInput {
 
 export function renderSubagentEvidence(evidence: SubagentDispatchEvidence): string {
   return [
-    'CodeMind subagent run',
+    'SymbolWright subagent run',
     '',
     `Subagent: ${evidence.subagent}`,
     `Status: ${evidence.status.toUpperCase()}`,
@@ -105,7 +105,7 @@ export const subagentRunTool: RuntimeToolDefinition = {
     const parsed = parseSubagentRunInput(input)
 
     return [
-      'CodeMind subagent run',
+      'SymbolWright subagent run',
       '',
       `Subagent: ${parsed.subagent}`,
       `Goal: ${parsed.goal}`,

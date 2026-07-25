@@ -9,7 +9,7 @@ import { detectPackageManager } from './package-manager.js'
 const roots: string[] = []
 
 function makeRepo(files: readonly string[]): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-pm-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-pm-'))
   roots.push(root)
   for (const file of files) {
     fs.writeFileSync(path.join(root, file), 'lock')

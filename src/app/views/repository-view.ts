@@ -11,7 +11,7 @@ export function renderRepositoryViewHtml(): string {
   return `<section data-view="repository" class="app-view" style="display:none">
     <h2>Repository</h2>
     <p class="muted">Real, local repository workspace. Reads and writes the actual checked-out working tree on disk (not the browser-local Scratch Workspace in the Workspace tab). Every write is checkpointed first.</p>
-    <div id="repo-status-line" class="muted">Connect with your CodeMind API key in Settings to open the repository.</div>
+    <div id="repo-status-line" class="muted">Connect with your SymbolWright API key in Settings to open the repository.</div>
 
     <div class="repo-layout">
       <div class="repo-tree-panel card">
@@ -89,7 +89,7 @@ export function buildRepositoryViewClientScript(): string {
     };
 
     function repoAuthHeaders(extra) {
-      return Object.assign({ authorization: 'Bearer ' + appState.codemindKey }, extra || {});
+      return Object.assign({ authorization: 'Bearer ' + appState.symbolWrightKey }, extra || {});
     }
 
     function repoFetchJson(url, options) {
@@ -133,7 +133,7 @@ export function buildRepositoryViewClientScript(): string {
       runBtn.disabled = !repoState.currentFilePath || compatible === null;
       if (!repoState.currentFilePath) statusEl.textContent = 'Open a supported file to run it.';
       else if (!languageId) statusEl.textContent = 'No server sandbox language is recognized for this file extension.';
-      else if (compatible === null) statusEl.textContent = languageId + ' has no available server runner. Enable CODEMIND_ALLOW_GUARDED_HOST_EXECUTION=true or prepare an approved container image.';
+      else if (compatible === null) statusEl.textContent = languageId + ' has no available server runner. Enable SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION=true or prepare an approved container image.';
       else statusEl.textContent = 'Ready: ' + languageId + ' via ' + compatible.id + ' (' + compatible.backend + ', ' + compatible.trustClass + ').';
     }
 
@@ -475,8 +475,8 @@ export function buildRepositoryViewClientScript(): string {
 
     let repoViewLoaded = false;
     registerRouterViewInit('repository', function () {
-      if (!appState.codemindKey) {
-        document.getElementById('repo-status-line').textContent = 'Connect with your CodeMind API key in Settings to open the repository.';
+      if (!appState.symbolWrightKey) {
+        document.getElementById('repo-status-line').textContent = 'Connect with your SymbolWright API key in Settings to open the repository.';
         return;
       }
       if (repoViewLoaded) return;

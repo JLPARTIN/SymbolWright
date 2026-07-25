@@ -11,7 +11,7 @@ describe('renderRuntimeSearch', () => {
   })
 
   it('includes matching filenames', async () => {
-    const output = await renderRuntimeSearch('CodeMind')
+    const output = await renderRuntimeSearch('SymbolWright')
 
     expect(output).toContain('README.md')
   })

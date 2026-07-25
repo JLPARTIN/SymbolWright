@@ -24,16 +24,16 @@ describe('GitHubOperationsAdapter', () => {
       const http = createMockHttpClient(
         new Map([
           [
-            'GET /repos/JLPARTIN/CodeMind',
+            'GET /repos/JLPARTIN/SymbolWright',
             {
               status: 200,
               body: {
-                full_name: 'JLPARTIN/CodeMind',
+                full_name: 'JLPARTIN/SymbolWright',
                 default_branch: 'main',
                 fork: false,
                 private: false,
                 archived: false,
-                html_url: 'https://github.com/JLPARTIN/CodeMind',
+                html_url: 'https://github.com/JLPARTIN/SymbolWright',
               },
             },
           ],
@@ -43,16 +43,16 @@ describe('GitHubOperationsAdapter', () => {
         httpClient: http,
         policy: createGitHubOperationsPolicy(),
       })
-      const result = await adapter.getRepositoryMetadata('JLPARTIN', 'CodeMind')
+      const result = await adapter.getRepositoryMetadata('JLPARTIN', 'SymbolWright')
       expect(result).toEqual({
         status: 'ok',
         data: {
-          fullName: 'JLPARTIN/CodeMind',
+          fullName: 'JLPARTIN/SymbolWright',
           defaultBranch: 'main',
           isFork: false,
           isPrivate: false,
           archived: false,
-          htmlUrl: 'https://github.com/JLPARTIN/CodeMind',
+          htmlUrl: 'https://github.com/JLPARTIN/SymbolWright',
         },
       })
     })
@@ -60,14 +60,17 @@ describe('GitHubOperationsAdapter', () => {
     it('derives default branch from repository metadata', async () => {
       const http = createMockHttpClient(
         new Map([
-          ['GET /repos/JLPARTIN/CodeMind', { status: 200, body: { default_branch: 'develop' } }],
+          [
+            'GET /repos/JLPARTIN/SymbolWright',
+            { status: 200, body: { default_branch: 'develop' } },
+          ],
         ]),
       )
       const adapter = new GitHubOperationsAdapter({
         httpClient: http,
         policy: createGitHubOperationsPolicy(),
       })
-      const result = await adapter.getDefaultBranch('JLPARTIN', 'CodeMind')
+      const result = await adapter.getDefaultBranch('JLPARTIN', 'SymbolWright')
       expect(result).toEqual({ status: 'ok', data: 'develop' })
     })
 
@@ -109,7 +112,7 @@ describe('GitHubOperationsAdapter', () => {
 
     it('reports unavailable when no credentials are configured, without attempting a call', async () => {
       const adapter = new GitHubOperationsAdapter({ policy: createGitHubOperationsPolicy() })
-      const result = await adapter.getRepositoryMetadata('JLPARTIN', 'CodeMind')
+      const result = await adapter.getRepositoryMetadata('JLPARTIN', 'SymbolWright')
       expect(result.status).toBe('unavailable')
     })
 

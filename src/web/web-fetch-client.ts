@@ -29,7 +29,8 @@ export interface WebFetchExecutionResult {
 }
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308])
-const DEFAULT_USER_AGENT = 'CodeMind/1.0 (+https://github.com/jlpartin/codemind; web_fetch tool)'
+const DEFAULT_USER_AGENT =
+  'SymbolWright/1.0 (+https://github.com/jlpartin/symbolwright; web_fetch tool)'
 
 function blockedResult(
   requestedUrl: string,

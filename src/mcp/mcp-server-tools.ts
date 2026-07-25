@@ -1,23 +1,25 @@
 import { bridgeToolsForProvider } from '../agent/tool-schema-bridge.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
-import type { CodemindRuntimeMode, RuntimeToolContext } from '../runtime/types.js'
+import type { SymbolWrightRuntimeMode, RuntimeToolContext } from '../runtime/types.js'
 import type { McpServerToolHandler } from './mcp-server-protocol.js'
 
 export interface McpServerToolsOptions {
-  readonly mode: CodemindRuntimeMode
+  readonly mode: SymbolWrightRuntimeMode
   readonly cwd: string
   readonly hasGitHubToken?: boolean
 }
 
 /**
- * Bridges CodeMind's real runtime tool registry (the same tools
+ * Bridges SymbolWright's real runtime tool registry (the same tools
  * `codemind agent` uses) into an MCP tool handler, gated by the same
- * runtime-mode policy as every other CodeMind entry point — a `READ_ONLY`
+ * runtime-mode policy as every other SymbolWright entry point — a `READ_ONLY`
  * server only advertises read/search/plan tools; `APPROVED_EXECUTION`
  * advertises the full set, including file writes and shell execution.
  */
-export function createCodemindMcpToolHandler(options: McpServerToolsOptions): McpServerToolHandler {
+export function createSymbolWrightMcpToolHandler(
+  options: McpServerToolsOptions,
+): McpServerToolHandler {
   const policy = createRuntimePolicyForMode(options.mode, {
     hasGitHubToken: options.hasGitHubToken ?? false,
   })

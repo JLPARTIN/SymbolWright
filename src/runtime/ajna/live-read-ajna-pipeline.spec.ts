@@ -106,7 +106,7 @@ describe('renderLiveReadAjnaReview', () => {
     const result = runLiveReadAjnaReview({ pr: fakePr, ci: fakeCi })
     const output = renderLiveReadAjnaReview(result)
 
-    expect(output).toContain('CodeMind Ajna live-read review')
+    expect(output).toContain('SymbolWright Ajna live-read review')
     expect(output).toContain('Verdict: READY')
     expect(output).toContain('Evidence notes:')
     expect(output).toContain('Boundary:')
@@ -174,7 +174,7 @@ describe('renderLiveReadAjnaMergeReadiness', () => {
     const result = assessLiveReadMergeReadiness({ pr: fakePr, ci: fakeCi })
     const output = renderLiveReadAjnaMergeReadiness(result)
 
-    expect(output).toContain('CodeMind Ajna live-read merge readiness')
+    expect(output).toContain('SymbolWright Ajna live-read merge readiness')
     expect(output).toContain('Ready: YES')
     expect(output).toContain('Summary:')
     expect(output).toContain('Boundary:')
@@ -248,7 +248,7 @@ describe('Ajna live-read merge readiness tool via registry', () => {
 
 describe('CLI integration via fixture file', () => {
   function writeFixture(data: Record<string, unknown>): string {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-ajna-live-'))
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-ajna-live-'))
     const filePath = path.join(dir, 'fixture.json')
     fs.writeFileSync(filePath, JSON.stringify(data))
     return filePath

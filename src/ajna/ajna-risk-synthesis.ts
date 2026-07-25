@@ -1,8 +1,8 @@
 import type { AjnaProofBundle } from './ajna-proof-bundle.js'
 
-export const AJNA_RISK_SYNTHESIS_BLOCK_ID = 'CODEMIND-AJNA-REVIEW-09' as const
+export const AJNA_RISK_SYNTHESIS_BLOCK_ID = 'SYMBOLWRIGHT-AJNA-REVIEW-09' as const
 export const AJNA_RISK_SYNTHESIS_PR_ID = 'PR-CM-AJNA-09' as const
-export const AJNA_RISK_SYNTHESIS_PHASE_ID = 'CODEMIND-AJNA-09' as const
+export const AJNA_RISK_SYNTHESIS_PHASE_ID = 'SYMBOLWRIGHT-AJNA-09' as const
 
 export const AJNA_RISK_LEVELS = ['LOW', 'MODERATE', 'HIGH', 'CRITICAL', 'BLOCKED'] as const
 export type AjnaRiskLevel = (typeof AJNA_RISK_LEVELS)[number]

@@ -72,7 +72,7 @@ function readyIntelligence(): MissionImpactIntelligence {
       changedFiles: ['src/a.ts', 'src/b.ts'],
       directlyAffectedFiles: [],
       transitivelyAffectedFiles: [],
-      affectedPackages: ['codemind'],
+      affectedPackages: ['symbolwright'],
       affectedExportedSymbols: [],
       validationCommands: ['npm test'],
       risk: 'low',
@@ -184,8 +184,8 @@ describe('mission acceptance packet', () => {
     expect(packet.pullRequest.body).toContain('validate: 1 test failed')
   })
 
-  it('persists packets atomically under the CodeMind acceptance directory', async () => {
-    const workspaceRoot = await mkdtemp(path.join(tmpdir(), 'codemind-acceptance-'))
+  it('persists packets atomically under the SymbolWright acceptance directory', async () => {
+    const workspaceRoot = await mkdtemp(path.join(tmpdir(), 'symbolwright-acceptance-'))
     const packet = createMissionAcceptancePacket({
       execution: execution([task({ id: 'complete' })]),
       generatedAt: COMPLETED_AT,
@@ -193,12 +193,12 @@ describe('mission acceptance packet', () => {
     const destination = await new MissionAcceptancePacketStore(workspaceRoot).save(packet)
     const stored = JSON.parse(await readFile(destination, 'utf8')) as { missionId: string }
 
-    expect(destination).toContain(path.join('.codemind', 'autonomy', 'acceptance'))
+    expect(destination).toContain(path.join('.symbolwright', 'autonomy', 'acceptance'))
     expect(stored.missionId).toBe('mission-42')
   })
 
   it('rejects unsafe mission IDs when saving', async () => {
-    const workspaceRoot = await mkdtemp(path.join(tmpdir(), 'codemind-acceptance-'))
+    const workspaceRoot = await mkdtemp(path.join(tmpdir(), 'symbolwright-acceptance-'))
     const packet = {
       ...createMissionAcceptancePacket({
         execution: execution([task({ id: 'complete' })]),

@@ -21,7 +21,7 @@ afterEach(async () => {
 
 describe('multi-agent execution tracker', () => {
   it('persists specialist roles and states from the verified mission execution', async () => {
-    const root = await mkdtemp(path.join(tmpdir(), 'codemind-specialists-'))
+    const root = await mkdtemp(path.join(tmpdir(), 'symbolwright-specialists-'))
     roots.push(root)
     const store = new MultiAgentMissionStore(root)
     const tracker = new MultiAgentExecutionTracker(store)
@@ -91,7 +91,7 @@ describe('multi-agent execution tracker', () => {
   })
 
   it('attributes mission-wide modified files only to completed write tasks without declarations', async () => {
-    const root = await mkdtemp(path.join(tmpdir(), 'codemind-specialist-files-'))
+    const root = await mkdtemp(path.join(tmpdir(), 'symbolwright-specialist-files-'))
     roots.push(root)
     const tracker = new MultiAgentExecutionTracker(new MultiAgentMissionStore(root))
     const execution: PersistedMissionExecution = {
@@ -126,7 +126,7 @@ describe('multi-agent execution tracker', () => {
   })
 
   it('omits task timestamps when execution has not started or completed', async () => {
-    const root = await mkdtemp(path.join(tmpdir(), 'codemind-specialist-timestamps-'))
+    const root = await mkdtemp(path.join(tmpdir(), 'symbolwright-specialist-timestamps-'))
     roots.push(root)
     const tracker = new MultiAgentExecutionTracker(new MultiAgentMissionStore(root))
     const pendingTask = task('pending', 'repository-analysis', 'queued')

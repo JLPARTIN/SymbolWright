@@ -1,3 +1,4 @@
+import { readEnvWithLegacyFallback } from '../config/env-compat.js'
 import type { RuntimeToolContext } from '../runtime/types.js'
 import { requireSkillByName } from './skill-discovery.js'
 import { renderSkillContent } from './skill-renderer.js'
@@ -56,7 +57,12 @@ export async function runSkill(input: {
       sessionId,
       projectDir: input.cwd,
       dynamicContext: input.request.dynamicContext ?? true,
-      disableShellExecution: process.env['CODEMIND_DISABLE_SKILL_SHELL_EXECUTION'] === '1',
+      disableShellExecution:
+        readEnvWithLegacyFallback(
+          'SYMBOLWRIGHT_DISABLE_SKILL_SHELL_EXECUTION',
+          'CODEMIND_DISABLE_SKILL_SHELL_EXECUTION',
+          { env: process.env },
+        ) === '1',
     },
     input.context,
   )
@@ -91,7 +97,7 @@ export async function runSkill(input: {
 
 export function renderSkillRunResult(result: SkillRunResult): string {
   const lines = [
-    'CodeMind skill run',
+    'SymbolWright skill run',
     '',
     `Skill: ${result.skill.commandName}`,
     `Source: ${result.skill.source}`,

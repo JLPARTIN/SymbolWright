@@ -82,7 +82,7 @@ export function evaluatePrPreparation(input: PrPreparationInput): PrPreparationR
 
 export function renderPrPreparation(result: PrPreparationResult): string {
   const sections: string[] = [
-    'CodeMind PR preparation',
+    'SymbolWright PR preparation',
     '',
     `Decision: ${result.decision}`,
     `Title: ${result.title}`,

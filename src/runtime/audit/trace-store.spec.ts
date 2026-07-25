@@ -144,7 +144,7 @@ describe('renderTraceStorePersistResult', () => {
     const result = persistTraceFrames(validFrames, '2026-06-26T00:00:00Z')
     const output = renderTraceStorePersistResult(result)
 
-    expect(output).toContain('CodeMind Trace Store')
+    expect(output).toContain('SymbolWright Trace Store')
     expect(output).toContain('Outcome: STORED')
     expect(output).toContain('Frames stored: 4')
   })
@@ -156,7 +156,7 @@ describe('renderTraceStoreReplayResult', () => {
     const result = replayTraceFrames(lines, 'exec-1')
     const output = renderTraceStoreReplayResult(result)
 
-    expect(output).toContain('CodeMind Trace Store Replay')
+    expect(output).toContain('SymbolWright Trace Store Replay')
     expect(output).toContain('Outcome: REPLAYED')
     expect(output).toContain('Lineage valid: yes')
     expect(output).toContain('Invariants valid: yes')

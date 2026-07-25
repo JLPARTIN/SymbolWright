@@ -27,7 +27,7 @@ describe('executePrCollaboration', () => {
     const result = await executePrCollaboration(
       {
         action: 'apply_label',
-        repository: 'JLPARTIN/CodeMind',
+        repository: 'JLPARTIN/SymbolWright',
         prNumber: 10,
         content: 'ready',
         reason: 'Record status',
@@ -47,7 +47,7 @@ describe('executePrCollaboration', () => {
     const result = await executePrCollaboration(
       {
         action: 'apply_label',
-        repository: 'JLPARTIN/CodeMind',
+        repository: 'JLPARTIN/SymbolWright',
         prNumber: 10,
         content: 'ready',
         reason: 'Record status',
@@ -67,7 +67,7 @@ describe('executePrCollaboration', () => {
     const result = await executePrCollaboration(
       {
         action: 'apply_label',
-        repository: 'JLPARTIN/CodeMind',
+        repository: 'JLPARTIN/SymbolWright',
         prNumber: 10,
         content: 'ready',
         reason: 'Record status',
@@ -78,6 +78,6 @@ describe('executePrCollaboration', () => {
       client,
     )
 
-    expect(renderPrCollaborationResult(result)).toContain('CodeMind PR collaboration')
+    expect(renderPrCollaborationResult(result)).toContain('SymbolWright PR collaboration')
   })
 })

@@ -1,6 +1,6 @@
-# Running CodeMind in GitHub Codespaces
+# Running SymbolWright in GitHub Codespaces
 
-CodeMind ships as **one server, one port**, started by `npm run serve`
+SymbolWright ships as **one server, one port**, started by `npm run serve`
 (`codemind serve` under the hood). It serves a single application shell with
 persistent navigation across a Dashboard, the Universal Polyglot Workspace
 (browser-local scratch editor), a real **Repository** tab (browses and edits
@@ -15,7 +15,7 @@ separate dashboard process and no separate chat server to juggle.
 | `npm run codespaces:start` | `8787` | **Recommended.** One command: installs deps if needed, builds, generates an access key, starts the server, waits for health, validates the served browser JS, and prints a summary with the real forwarded URL and access key. |
 | `npm run codespaces:stop` | — | Stops the server `codespaces:start` launched. Safe to run even if nothing is running. |
 | `npm run codespaces:status` | — | Reports whether the server is healthy, its PID, branch/commit, detected provider (never the key), log location, and served-script validation — all read-only. |
-| `npm run serve` (or `npm run dev`) | `8787` | The unified CodeMind app directly, without the orchestration above. Requires `CODEMIND_API_KEY` to already be set. Use this if you want manual control over each step (see "Manual startup" below). |
+| `npm run serve` (or `npm run dev`) | `8787` | The unified SymbolWright app directly, without the orchestration above. Requires `SYMBOLWRIGHT_API_KEY` to already be set. Use this if you want manual control over each step (see "Manual startup" below). |
 
 ## Recommended: one-command startup
 
@@ -24,10 +24,10 @@ npm run codespaces:start
 ```
 
 That single command handles everything the manual steps below do by hand:
-stopping a stale CodeMind process on port `8787` (without touching unrelated
+stopping a stale SymbolWright process on port `8787` (without touching unrelated
 `node` processes), installing dependencies only when `node_modules` is
 missing or stale, building current source, generating and persisting a
-local `CODEMIND_API_KEY` for this Codespace session (reused across
+local `SYMBOLWRIGHT_API_KEY` for this Codespace session (reused across
 restarts, chmod `600`, never committed), starting the server, polling
 `/api/health` until it's actually healthy, and fetching the real served
 root HTML to syntax-check every inline `<script>` block with Node's own
@@ -93,16 +93,16 @@ starting the server, then open the forwarded port:
 ```bash
 set -euo pipefail
 
-export CODEMIND_API_KEY=$(openssl rand -hex 16)
+export SYMBOLWRIGHT_API_KEY=$(openssl rand -hex 16)
 export ANTHROPIC_API_KEY=sk-ant-...   # or any provider from docs/PROVIDER_KEYS.md
 
-echo "CodeMind access key (paste this into the browser): $CODEMIND_API_KEY"
+echo "SymbolWright access key (paste this into the browser): $SYMBOLWRIGHT_API_KEY"
 npm run serve
 ```
 
 Then, on the forwarded/localhost port `8787`:
 
-1. Open **Settings** and paste the printed `CODEMIND_API_KEY` into "CodeMind
+1. Open **Settings** and paste the printed `SYMBOLWRIGHT_API_KEY` into "SymbolWright
    access key" (or use the Agent tab's own connect box — both write to the
    same browser-local key).
 2. Open the **Agent** tab, pick your provider (it already shows
@@ -133,7 +133,7 @@ process (`Ctrl+C`) and re-run `npm run serve` in the same terminal.
 
 ### 5. Troubleshooting port conflicts
 
-Find and stop whatever is already using CodeMind's port instead of killing
+Find and stop whatever is already using SymbolWright's port instead of killing
 all Node processes:
 
 ```bash
@@ -147,7 +147,7 @@ processes (editors, extensions, other terminals).
 You can run the server on a different port:
 
 ```bash
-CODEMIND_CHAT_PORT=8788 npm run serve
+SYMBOLWRIGHT_CHAT_PORT=8788 npm run serve
 ```
 
 ## MCP server for Claude Desktop / Claude Code (no port, no browser)
@@ -160,7 +160,7 @@ framework) launches the process itself. Point it at the built CLI:
 ```json
 {
   "mcpServers": {
-    "codemind": { "command": "node", "args": ["/absolute/path/to/CodeMind/dist/cli.js", "mcp-server"] }
+    "symbolwright": { "command": "node", "args": ["/absolute/path/to/SymbolWright/dist/cli.js", "mcp-server"] }
   }
 }
 ```
@@ -169,5 +169,5 @@ Defaults to `READ_ONLY` (15 read-only tools: `read_file`, `list_files`,
 `search_files`, `grep`, `glob`, plus reporting/skill tools). Add
 `"--mode", "APPROVED_EXECUTION"` to `args` for the full 41-tool surface
 (file writes, `bash`, `git`, GitHub write tools, validation runners, web
-tools). See [`docs/runtime/CODEMIND_MCP_SERVER.md`](runtime/CODEMIND_MCP_SERVER.md)
+tools). See [`docs/runtime/SYMBOLWRIGHT_MCP_SERVER.md`](runtime/SYMBOLWRIGHT_MCP_SERVER.md)
 for the full tool list and protocol details.

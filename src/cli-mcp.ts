@@ -3,8 +3,8 @@ import { callMcpTool, discoverMcpTools, listMcpServers } from './mcp/mcp-runtime
 import { renderMcpCallEvidence } from './runtime/tools/mcp-call-tool.js'
 import {
   createRuntimePolicyForMode,
-  DEFAULT_CODEMIND_RUNTIME_MODE,
-  normalizeCodemindRuntimeMode,
+  DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE,
+  normalizeSymbolWrightRuntimeMode,
 } from './runtime/policy/runtime-policy.js'
 import type { RuntimePolicySnapshot } from './runtime/types.js'
 
@@ -19,7 +19,7 @@ function parseMcpFlags(args: readonly string[]): ParsedMcpFlags {
   const positionals: string[] = []
   let configPath: string | undefined
   let timeoutMs: number | undefined
-  let mode = DEFAULT_CODEMIND_RUNTIME_MODE
+  let mode = DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i]
@@ -36,7 +36,7 @@ function parseMcpFlags(args: readonly string[]): ParsedMcpFlags {
       continue
     }
     if (arg === '--mode') {
-      const value = normalizeCodemindRuntimeMode(args[++i])
+      const value = normalizeSymbolWrightRuntimeMode(args[++i])
       if (value === undefined) {
         throw new Error(
           '--mode must be one of PLAN_ONLY, READ_ONLY, PROPOSAL_ONLY, APPROVED_EXECUTION',
@@ -68,16 +68,16 @@ export async function renderMcpListCommand(
 
   if (serverNames.length === 0) {
     return [
-      'CodeMind MCP servers',
+      'SymbolWright MCP servers',
       '',
-      'No servers configured. Add entries to .codemind/mcp.json to get started.',
-      'See docs/runtime/CODEMIND_MCP_TOOL_RUNTIME.md for the config schema and a working example.',
+      'No servers configured. Add entries to .symbolwright/mcp.json to get started.',
+      'See docs/runtime/SYMBOLWRIGHT_MCP_TOOL_RUNTIME.md for the config schema and a working example.',
     ].join('\n')
   }
 
   const statuses = await listMcpServers(config, policy)
 
-  const lines = ['CodeMind MCP servers', '']
+  const lines = ['SymbolWright MCP servers', '']
   for (const status of statuses) {
     const reachability = status.reachable
       ? `reachable (${status.toolCount ?? 0} tools)`
@@ -101,7 +101,7 @@ export async function renderMcpToolsCommand(
 
   const listings = await discoverMcpTools(config, policy, serverName)
 
-  const lines = ['CodeMind MCP tools', '']
+  const lines = ['SymbolWright MCP tools', '']
   for (const listing of listings) {
     lines.push(`Server: ${listing.server}`)
     if (listing.tools.length === 0) {

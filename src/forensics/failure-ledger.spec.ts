@@ -10,14 +10,14 @@ import type { FailureLedger } from './types.js'
 const roots: string[] = []
 
 function makeRoot(): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-ledger-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-ledger-'))
   roots.push(root)
-  fs.mkdirSync(path.join(root, '.codemind'), { recursive: true })
+  fs.mkdirSync(path.join(root, '.symbolwright'), { recursive: true })
   return root
 }
 
 function writeLedger(root: string, content: string): void {
-  fs.writeFileSync(path.join(root, '.codemind', 'ci-failure-ledger.json'), content)
+  fs.writeFileSync(path.join(root, '.symbolwright', 'ci-failure-ledger.json'), content)
 }
 
 afterEach(() => {
@@ -28,7 +28,7 @@ afterEach(() => {
 
 describe('failure ledger', () => {
   it('blocks missing, malformed, and invalid ledger shapes', () => {
-    const missingRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-ledger-missing-'))
+    const missingRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-ledger-missing-'))
     roots.push(missingRoot)
     expect(loadFailureLedger(missingRoot)).toMatchObject({ ok: false })
 

@@ -12,7 +12,7 @@ import {
 } from './github-fixture-tools.js'
 
 function writeTempFixture(data: object): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-fixture-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-fixture-'))
   const filePath = path.join(dir, 'fixture.json')
   fs.writeFileSync(filePath, JSON.stringify(data))
   return filePath
@@ -58,7 +58,7 @@ describe('executeGitHubPrFixtureReviewTool', () => {
       createFixtureContext(),
     )
 
-    expect(output).toContain('CodeMind GitHub PR fixture review')
+    expect(output).toContain('SymbolWright GitHub PR fixture review')
     expect(output).toContain('Ajna bridge verdict:')
     expect(output).toContain('local fixture only')
     expect(output).toContain('no GitHub API call')
@@ -93,7 +93,7 @@ describe('executeGitHubCiFixtureReviewTool', () => {
       createFixtureContext(),
     )
 
-    expect(output).toContain('CodeMind GitHub CI fixture review')
+    expect(output).toContain('SymbolWright GitHub CI fixture review')
     expect(output).toContain('Ajna bridge verdict:')
     expect(output).toContain('local fixture only')
   })

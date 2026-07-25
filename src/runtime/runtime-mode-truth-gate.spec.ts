@@ -23,7 +23,7 @@ describe('assessRuntimeModeTruth', () => {
   })
 
   it('fails when docs drift back to approval-first wording', () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-runtime-drift-'))
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-runtime-drift-'))
 
     writeFile(
       root,
@@ -32,14 +32,14 @@ describe('assessRuntimeModeTruth', () => {
         'PLAN_ONLY READ_ONLY PROPOSAL_ONLY APPROVED_EXECUTION',
         'direct-capable coding-agent platform',
         'APPROVED_EXECUTION is the direct execution mode',
-        'CODEMIND_RUNTIME_MODE=APPROVED_EXECUTION',
+        'SYMBOLWRIGHT_RUNTIME_MODE=APPROVED_EXECUTION',
         'Governance is optional by mode',
         'read-only and plan-first by default',
       ].join('\n'),
     )
     writeFile(
       root,
-      path.join('docs', 'governance', 'CODEMIND_PERMISSION_MODEL.md'),
+      path.join('docs', 'governance', 'SYMBOLWRIGHT_PERMISSION_MODEL.md'),
       [
         'PLAN_ONLY READ_ONLY PROPOSAL_ONLY APPROVED_EXECUTION',
         'Governance is a feature, not the default personality',
@@ -49,12 +49,12 @@ describe('assessRuntimeModeTruth', () => {
     )
     writeFile(
       root,
-      path.join('docs', 'governance', 'CODEMIND_THREAT_MODEL.md'),
+      path.join('docs', 'governance', 'SYMBOLWRIGHT_THREAT_MODEL.md'),
       [
         'PLAN_ONLY READ_ONLY PROPOSAL_ONLY APPROVED_EXECUTION',
-        'This document does not make CodeMind read-only by default',
+        'This document does not make SymbolWright read-only by default',
         '`APPROVED_EXECUTION` is direct-capable',
-        'CodeMind may execute directly in `APPROVED_EXECUTION`',
+        'SymbolWright may execute directly in `APPROVED_EXECUTION`',
       ].join('\n'),
     )
 
@@ -67,12 +67,12 @@ describe('assessRuntimeModeTruth', () => {
   })
 
   it('fails when required runtime truth docs are missing', () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-runtime-missing-'))
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-runtime-missing-'))
     const report = assessRuntimeModeTruth(root)
 
     expect(report.status).toBe('FAIL')
     expect(report.findings).toContain('README.md missing')
-    expect(report.findings).toContain('docs/governance/CODEMIND_PERMISSION_MODEL.md missing')
-    expect(report.findings).toContain('docs/governance/CODEMIND_THREAT_MODEL.md missing')
+    expect(report.findings).toContain('docs/governance/SYMBOLWRIGHT_PERMISSION_MODEL.md missing')
+    expect(report.findings).toContain('docs/governance/SYMBOLWRIGHT_THREAT_MODEL.md missing')
   })
 })

@@ -16,7 +16,7 @@ function makePayload(
   overrides: Partial<AjnaGithubPullRequestPayload> = {},
 ): AjnaGithubPullRequestPayload {
   return {
-    repository: 'JLPARTIN/CodeMind',
+    repository: 'JLPARTIN/SymbolWright',
     pullRequestNumber: 59,
     baseRef: 'main',
     headRef: 'ajna-github-payload-normalizer',
@@ -31,7 +31,7 @@ function makePayload(
 }
 
 function writePayloadFile(payload: AjnaGithubPullRequestPayload): string {
-  const rootDir = mkdtempSync(join(tmpdir(), 'codemind-ajna-github-fixture-'))
+  const rootDir = mkdtempSync(join(tmpdir(), 'symbolwright-ajna-github-fixture-'))
   tempDirs.push(rootDir)
   const inputPath = join(rootDir, 'github-pr-payload.json')
   writeFileSync(inputPath, JSON.stringify(payload), 'utf-8')
@@ -48,7 +48,7 @@ describe('parseAjnaGithubPullRequestFixture', () => {
   it('accepts object fixture JSON', () => {
     const payload = parseAjnaGithubPullRequestFixture(JSON.stringify(makePayload()))
 
-    expect(payload.repository).toBe('JLPARTIN/CodeMind')
+    expect(payload.repository).toBe('JLPARTIN/SymbolWright')
     expect(payload.pullRequestNumber).toBe(59)
   })
 
@@ -64,7 +64,7 @@ describe('buildAjnaReviewPrForGithubFixture', () => {
     const result = buildAjnaReviewPrForGithubFixture(makePayload())
 
     expect(result.response.requestId).toBe('github-pr-59')
-    expect(result.response.subject.repository).toBe('JLPARTIN/CodeMind')
+    expect(result.response.subject.repository).toBe('JLPARTIN/SymbolWright')
     expect(result.output).toContain('# Ajna Review Cortex Report')
     expect(result.output).toContain('GitHub diff evidence captured')
     expect(result.output).toContain('GitHub CI evidence captured')

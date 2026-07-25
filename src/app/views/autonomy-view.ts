@@ -2,7 +2,7 @@ export function renderAutonomyViewHtml(): string {
   return `<section data-view="autonomy" class="app-view" style="display:none">
     <h2>AI Mission Control</h2>
     <p class="muted">Run the active mission through repository planning, semantic editing, validation, repair, impact analysis, and evidence-backed release preparation.</p>
-    <div id="autonomy-connection-warning" class="card mission-warning" style="display:none">Connect with your CodeMind access key and select an active mission first.</div>
+    <div id="autonomy-connection-warning" class="card mission-warning" style="display:none">Connect with your SymbolWright access key and select an active mission first.</div>
     <div class="card">
       <div id="autonomy-mission-heading"><strong>No active mission selected.</strong></div>
       <div id="autonomy-actions" class="mission-actions"></div>
@@ -27,7 +27,7 @@ export function buildAutonomyViewClientScript(): string {
     const autonomyUiState = { timer: null, loading: false, lastMissionId: null };
 
     function autonomyHeaders() {
-      return { authorization: 'Bearer ' + appState.codemindKey };
+      return { authorization: 'Bearer ' + appState.symbolWrightKey };
     }
 
     async function autonomyFetchJson(url, options) {
@@ -39,7 +39,7 @@ export function buildAutonomyViewClientScript(): string {
     }
 
     function autonomyMissionId() {
-      return appState.activeMissionId || localStorage.getItem('codemind_active_mission_id');
+      return appState.activeMissionId || localStorage.getItem('symbolwright_active_mission_id');
     }
 
     function autonomySetWarning(message) {
@@ -143,8 +143,8 @@ export function buildAutonomyViewClientScript(): string {
     async function autonomyLoad() {
       const missionId = autonomyMissionId();
       const heading = document.getElementById('autonomy-mission-heading');
-      if (!appState.codemindKey || !missionId) {
-        autonomySetWarning('Connect with your CodeMind access key and select an active mission first.');
+      if (!appState.symbolWrightKey || !missionId) {
+        autonomySetWarning('Connect with your SymbolWright access key and select an active mission first.');
         heading.innerHTML = '<strong>No active mission selected.</strong>';
         autonomyRenderDashboard(null);
         autonomyRenderRelease(null);

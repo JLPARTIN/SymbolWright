@@ -1,6 +1,6 @@
 # Bundle #6 Slice 3 — Semantic Multi-File Engineering and Tool Orchestration
 
-This slice connects CodeMind's persisted repository semantic index to the live provider-backed editing path.
+This slice connects SymbolWright's persisted repository semantic index to the live provider-backed editing path.
 
 ## Execution model
 

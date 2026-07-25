@@ -120,7 +120,7 @@ describe('runtime build state', () => {
   it('renders active command and boundary details', () => {
     const output = renderRuntimeBuildState()
 
-    expect(output).toContain('CodeMind runtime build state')
+    expect(output).toContain('SymbolWright runtime build state')
     expect(output).toContain('Completed phases: 20')
     expect(output).toContain('Phase A')
     expect(output).toContain('Retired approval-ticket dry-run surface')

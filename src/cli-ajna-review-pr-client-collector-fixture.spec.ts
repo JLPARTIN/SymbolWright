@@ -9,7 +9,7 @@ import { renderAjnaReviewPrClientCollectorFixtureForFile } from './cli-ajna-revi
 const tempDirs: string[] = []
 
 function writeRequestFile(input: unknown): string {
-  const rootDir = mkdtempSync(join(tmpdir(), 'codemind-ajna-client-review-'))
+  const rootDir = mkdtempSync(join(tmpdir(), 'symbolwright-ajna-client-review-'))
   tempDirs.push(rootDir)
   const inputPath = join(rootDir, 'request.json')
   writeFileSync(inputPath, JSON.stringify(input), 'utf-8')
@@ -25,14 +25,14 @@ afterEach(() => {
 describe('renderAjnaReviewPrClientCollectorFixtureForFile', () => {
   it('renders an Ajna review report through the default fake client bridge', async () => {
     const output = await renderAjnaReviewPrClientCollectorFixtureForFile(
-      writeRequestFile({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 71 }),
+      writeRequestFile({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 71 }),
     )
 
     expect(output).toContain('# Ajna Review Cortex Report')
     expect(output).toContain('fixture-client-pr-71')
     expect(output).toContain('GitHub diff evidence captured')
     expect(output).toContain('GitHub CI evidence captured')
-    expect(output).toContain('Fixture Validate CodeMind')
+    expect(output).toContain('Fixture Validate SymbolWright')
   })
 
   it('accepts an injected fake client', async () => {
@@ -48,7 +48,7 @@ describe('renderAjnaReviewPrClientCollectorFixtureForFile', () => {
     }
 
     const output = await renderAjnaReviewPrClientCollectorFixtureForFile(
-      writeRequestFile({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 72 }),
+      writeRequestFile({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 72 }),
       client,
     )
 

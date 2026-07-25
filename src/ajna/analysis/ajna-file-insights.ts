@@ -1,4 +1,4 @@
-import type { CodemindChangedFileContext } from '../../repo-context/repo-context.types.js'
+import type { SymbolWrightChangedFileContext } from '../../repo-context/repo-context.types.js'
 
 export interface AjnaFileInsightFlags {
   readonly largeDelta: boolean
@@ -9,8 +9,8 @@ export interface AjnaFileInsightFlags {
 
 export interface AjnaFileInsight {
   readonly path: string
-  readonly changeType: CodemindChangedFileContext['changeType']
-  readonly impactLevel: CodemindChangedFileContext['impactLevel']
+  readonly changeType: SymbolWrightChangedFileContext['changeType']
+  readonly impactLevel: SymbolWrightChangedFileContext['impactLevel']
   readonly additions: number
   readonly deletions: number
   readonly totalDelta: number
@@ -59,7 +59,7 @@ function scoreToSeverity(score: number): AjnaFileInsight['severity'] {
   return 'LOW'
 }
 
-export function computeAjnaFileRiskScore(file: CodemindChangedFileContext): number {
+export function computeAjnaFileRiskScore(file: SymbolWrightChangedFileContext): number {
   const totalDelta = file.additions + file.deletions
   let score = 0
 
@@ -95,7 +95,7 @@ export function computeAjnaFileRiskScore(file: CodemindChangedFileContext): numb
 }
 
 export function buildAjnaFileInsights(
-  changedFiles: readonly CodemindChangedFileContext[],
+  changedFiles: readonly SymbolWrightChangedFileContext[],
 ): readonly AjnaFileInsight[] {
   return changedFiles.map((file) => {
     const totalDelta = file.additions + file.deletions

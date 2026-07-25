@@ -16,7 +16,7 @@ describe('end-to-end mission restart persistence', () => {
   })
 
   it('recovers conversation, real file state, events, checkpoint link, and validation evidence', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'codemind-mission-resume-'))
+    const root = mkdtempSync(join(tmpdir(), 'symbolwright-mission-resume-'))
     roots.push(root)
     await runGitCommand(['init'], root)
     await runGitCommand(['config', 'user.email', 'test@example.com'], root)

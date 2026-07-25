@@ -39,7 +39,7 @@ describe('RecoveryChangeLedger', () => {
   it('renders ledger output', () => {
     const output = renderRecoveryChangeLedger(createRecoveryChangeLedger([first, second]))
 
-    expect(output).toContain('CodeMind recovery change ledger')
+    expect(output).toContain('SymbolWright recovery change ledger')
     expect(output).toContain('Changes: 2')
   })
 })

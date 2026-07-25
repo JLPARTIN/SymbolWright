@@ -103,7 +103,7 @@ export function renderValidationCommandExecutionResult(
   result: ValidationCommandExecutionResult,
 ): string {
   const sections: string[] = [
-    'CodeMind validation command execution',
+    'SymbolWright validation command execution',
     '',
     `Outcome: ${result.outcome}`,
     `Command: ${result.gateResult.command}`,

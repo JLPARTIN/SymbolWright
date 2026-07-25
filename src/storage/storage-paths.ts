@@ -1,6 +1,9 @@
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 
+export const STATE_DIR_NAME = '.symbolwright'
+export const LEGACY_STATE_DIR_NAME = '.codemind'
+
 export interface StoragePaths {
   readonly globalRoot: string
   readonly sessionsDir: string
@@ -11,8 +14,8 @@ export interface StoragePaths {
 }
 
 export function resolveStoragePaths(workspaceCwd: string): StoragePaths {
-  const globalRoot = join(homedir(), '.codemind')
-  const workspaceRoot = join(workspaceCwd, '.codemind')
+  const globalRoot = join(homedir(), STATE_DIR_NAME)
+  const workspaceRoot = join(workspaceCwd, STATE_DIR_NAME)
 
   return {
     globalRoot,

@@ -1,5 +1,9 @@
 export const PROJECT_INSTRUCTION_FILES = [
   'README.md',
+  'SYMBOLWRIGHT.md',
+  // Legacy convention, recognized permanently: a target repository being
+  // analyzed may still use its own CODEMIND.md, independent of this repo's
+  // own rebrand.
   'CODEMIND.md',
   'CLAUDE.md',
   'AGENTS.md',

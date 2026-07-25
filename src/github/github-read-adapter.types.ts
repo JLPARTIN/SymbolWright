@@ -1,16 +1,16 @@
-import type { CodemindReadOnlyRepoContext } from '../repo-context/repo-context.types.js'
+import type { SymbolWrightReadOnlyRepoContext } from '../repo-context/repo-context.types.js'
 
-export interface CodemindGithubReadAdapterTarget {
+export interface SymbolWrightGithubReadAdapterTarget {
   readonly repositoryFullName: string
   readonly pullRequestNumber: number
 }
 
-export interface CodemindGithubReadAdapterOptions {
+export interface SymbolWrightGithubReadAdapterOptions {
   readonly apiBaseUrl: string
   readonly token?: string
 }
 
-export interface CodemindGithubReadClient {
+export interface SymbolWrightGithubReadClient {
   readonly getJson: <T>(path: string) => Promise<T>
 }
 
@@ -43,9 +43,9 @@ export interface GithubPullRequestFileApiPayload {
   readonly patch?: string
 }
 
-export interface CodemindGithubReadAdapterResult {
-  readonly target: CodemindGithubReadAdapterTarget
-  readonly context: CodemindReadOnlyRepoContext
+export interface SymbolWrightGithubReadAdapterResult {
+  readonly target: SymbolWrightGithubReadAdapterTarget
+  readonly context: SymbolWrightReadOnlyRepoContext
   readonly readOnly: true
   readonly notes: readonly string[]
 }

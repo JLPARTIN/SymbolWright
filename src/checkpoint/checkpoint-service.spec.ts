@@ -26,7 +26,7 @@ describe('createCheckpoint', () => {
   let workspaceDir: string
 
   beforeEach(() => {
-    workspaceDir = mkdtempSync(join(tmpdir(), 'codemind-checkpoint-service-'))
+    workspaceDir = mkdtempSync(join(tmpdir(), 'symbolwright-checkpoint-service-'))
   })
 
   afterEach(() => {
@@ -125,7 +125,7 @@ describe('listCheckpoints / getCheckpoint', () => {
   let workspaceDir: string
 
   beforeEach(() => {
-    workspaceDir = mkdtempSync(join(tmpdir(), 'codemind-checkpoint-list-'))
+    workspaceDir = mkdtempSync(join(tmpdir(), 'symbolwright-checkpoint-list-'))
   })
 
   afterEach(() => {
@@ -185,7 +185,7 @@ describe('restoreCheckpoint', () => {
   let workspaceDir: string
 
   beforeEach(() => {
-    workspaceDir = mkdtempSync(join(tmpdir(), 'codemind-checkpoint-restore-'))
+    workspaceDir = mkdtempSync(join(tmpdir(), 'symbolwright-checkpoint-restore-'))
   })
 
   afterEach(() => {

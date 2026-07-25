@@ -1,7 +1,7 @@
 import { PassThrough } from 'node:stream'
 import { describe, expect, it } from 'vitest'
 
-import { runCodemindMcpServer } from './mcp-server.js'
+import { runSymbolWrightMcpServer } from './mcp-server.js'
 
 function collectLines(stream: PassThrough): { lines: () => string[] } {
   let buffer = ''
@@ -23,13 +23,18 @@ async function flush(): Promise<void> {
   await new Promise((resolve) => setImmediate(resolve))
 }
 
-describe('runCodemindMcpServer', () => {
+describe('runSymbolWrightMcpServer', () => {
   it('answers initialize, tools/list, and tools/call over injected stdio streams', async () => {
     const input = new PassThrough()
     const output = new PassThrough()
     const collector = collectLines(output)
 
-    const server = runCodemindMcpServer({ mode: 'READ_ONLY', cwd: process.cwd(), input, output })
+    const server = runSymbolWrightMcpServer({
+      mode: 'READ_ONLY',
+      cwd: process.cwd(),
+      input,
+      output,
+    })
 
     input.write(
       `${JSON.stringify({
@@ -81,7 +86,7 @@ describe('runCodemindMcpServer', () => {
     const collector = collectLines(output)
     const warnings: string[] = []
 
-    const server = runCodemindMcpServer({
+    const server = runSymbolWrightMcpServer({
       mode: 'READ_ONLY',
       cwd: process.cwd(),
       input,
@@ -104,7 +109,12 @@ describe('runCodemindMcpServer', () => {
     const input = new PassThrough()
     const output = new PassThrough()
 
-    const server = runCodemindMcpServer({ mode: 'READ_ONLY', cwd: process.cwd(), input, output })
+    const server = runSymbolWrightMcpServer({
+      mode: 'READ_ONLY',
+      cwd: process.cwd(),
+      input,
+      output,
+    })
     input.end()
 
     await expect(server.closed).resolves.toBeUndefined()

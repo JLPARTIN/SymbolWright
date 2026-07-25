@@ -39,7 +39,7 @@ export function createAjnaClientCollectorFixtureClient(): AjnaGithubReadOnlyClie
     ],
     listCheckRunsForRef: async () => [
       {
-        name: 'Fixture Validate CodeMind',
+        name: 'Fixture Validate SymbolWright',
         status: 'completed',
         conclusion: 'success',
       },

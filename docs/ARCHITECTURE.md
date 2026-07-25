@@ -1,4 +1,4 @@
-# CodeMind Architecture
+# SymbolWright Architecture
 
 ## Layered Architecture
 
@@ -28,7 +28,7 @@
 │  assertWriteApproved · assertShellAllowed    │
 ├─────────────────────────────────────────────┤
 │           Runtime Types                      │
-│  CodemindToolName · RuntimePolicySnapshot    │
+│  SymbolWrightToolName · RuntimePolicySnapshot    │
 │  RuntimeToolContext · GoalPlan               │
 └─────────────────────────────────────────────┘
 ```
@@ -39,7 +39,7 @@
 - **Gate pattern**: `assertApprovalGate` guards write operations behind explicit approval tickets with typed scopes.
 - **Policy-first**: `assertValidPolicy` is called at every boundary — activation, tool bridging, and context validation.
 - **Immutable transcript**: `appendTranscriptEntry` returns a new `RuntimeTranscript` rather than mutating state.
-- **Typed error classification**: `classifyError` maps raw exceptions to `CodemindError` with category, retryability, and recovery hints.
+- **Typed error classification**: `classifyError` maps raw exceptions to `SymbolWrightError` with category, retryability, and recovery hints.
 - **Event bus**: `RuntimeEventBus` provides structured pub/sub observability across subsystems.
 
 ## Data Flow

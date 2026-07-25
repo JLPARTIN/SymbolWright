@@ -4,7 +4,7 @@ export function buildRepositoryMissionBridgeScript(): string {
       const repositoryFetch = window.fetch.bind(window);
 
       function missionId() {
-        return localStorage.getItem('codemind_active_mission_id');
+        return localStorage.getItem('symbolwright_active_mission_id');
       }
 
       function isRepositoryUrl(value) {
@@ -29,7 +29,7 @@ export function buildRepositoryMissionBridgeScript(): string {
       }
 
       async function latestMissionCheckpoint(activeMissionId) {
-        const key = localStorage.getItem('codemind_api_key') || '';
+        const key = localStorage.getItem('symbolwright_api_key') || '';
         const list = await repositoryFetch('/api/checkpoints?session=' + encodeURIComponent(activeMissionId), {
           headers: { authorization: 'Bearer ' + key },
         });
@@ -58,26 +58,26 @@ export function buildRepositoryMissionBridgeScript(): string {
 
         if (method === 'GET' && String(urlValue).startsWith('/api/repository/file') && response.status === 200 && path) {
           rememberEditorFile(path, body.contentHash);
-          if (activeMissionId && typeof window.codemindRecordMissionEvent === 'function') {
-            await window.codemindRecordMissionEvent({ kind: 'file-opened', path: path, contentHash: body.contentHash });
+          if (activeMissionId && typeof window.symbolWrightRecordMissionEvent === 'function') {
+            await window.symbolWrightRecordMissionEvent({ kind: 'file-opened', path: path, contentHash: body.contentHash });
           }
           return;
         }
-        if (!activeMissionId || typeof window.codemindRecordMissionEvent !== 'function') return;
+        if (!activeMissionId || typeof window.symbolWrightRecordMissionEvent !== 'function') return;
         if (method === 'PUT' && String(urlValue).startsWith('/api/repository/file')) {
           if (response.status === 409 && path) {
-            await window.codemindRecordMissionEvent({ kind: 'file-conflict', path: path });
+            await window.symbolWrightRecordMissionEvent({ kind: 'file-conflict', path: path });
           } else if (response.status === 200 && path) {
             rememberEditorFile(path, body.contentHash);
             const checkpoint = await latestMissionCheckpoint(activeMissionId);
-            await window.codemindRecordMissionEvent({
+            await window.symbolWrightRecordMissionEvent({
               kind: 'file-saved', path: path, contentHash: body.contentHash, checkpoint: checkpoint || undefined,
             });
           }
           return;
         }
         if (method === 'GET' && String(urlValue).startsWith('/api/repository/diff') && response.status === 200 && path) {
-          await window.codemindRecordMissionEvent({ kind: 'diff-viewed', path: path });
+          await window.symbolWrightRecordMissionEvent({ kind: 'diff-viewed', path: path });
           return;
         }
         if (method === 'GET' && String(urlValue).startsWith('/api/repository/status') && response.status === 200) {
@@ -85,30 +85,30 @@ export function buildRepositoryMissionBridgeScript(): string {
           const paths = ['staged', 'unstaged', 'untracked', 'conflicted'].flatMap(function (group) {
             return (summary[group] || []).map(function (entry) { return entry.path; });
           });
-          await window.codemindRecordMissionEvent({ kind: 'repository-state', branch: body.currentBranch, modifiedPaths: paths });
+          await window.symbolWrightRecordMissionEvent({ kind: 'repository-state', branch: body.currentBranch, modifiedPaths: paths });
           return;
         }
         if (method === 'POST' && String(urlValue).startsWith('/api/repository/branches') && response.status === 200) {
-          await window.codemindRecordMissionEvent({ kind: 'branch-changed', branch: body.branch });
+          await window.symbolWrightRecordMissionEvent({ kind: 'branch-changed', branch: body.branch });
           return;
         }
         if (method === 'POST' && String(urlValue).startsWith('/api/repository/commit') && response.status === 200) {
-          await window.codemindRecordMissionEvent({ kind: 'commit-created', summary: 'Commit created from Repository view.' });
+          await window.symbolWrightRecordMissionEvent({ kind: 'commit-created', summary: 'Commit created from Repository view.' });
           return;
         }
         if (method === 'POST' && String(urlValue).startsWith('/api/repository/push') && response.status === 200) {
-          await window.codemindRecordMissionEvent({ kind: 'push-completed', branch: body.branch, remote: body.remote });
+          await window.symbolWrightRecordMissionEvent({ kind: 'push-completed', branch: body.branch, remote: body.remote });
           return;
         }
         if (method === 'POST' && String(urlValue).startsWith('/api/repository/pull-request') && response.status === 200 && body.pullRequestUrl) {
-          await window.codemindRecordMissionEvent({ kind: 'pr-created', pullRequestUrl: body.pullRequestUrl });
+          await window.symbolWrightRecordMissionEvent({ kind: 'pr-created', pullRequestUrl: body.pullRequestUrl });
           return;
         }
         const restorePrefix = '/api/repository/checkpoints/';
         const restoreSuffix = '/restore';
         if (method === 'POST' && String(urlValue).startsWith(restorePrefix) && String(urlValue).endsWith(restoreSuffix) && response.status === 200) {
           const checkpointId = String(urlValue).slice(restorePrefix.length, -restoreSuffix.length);
-          if (checkpointId) await window.codemindRecordMissionEvent({ kind: 'checkpoint-restored', checkpointId: decodeURIComponent(checkpointId) });
+          if (checkpointId) await window.symbolWrightRecordMissionEvent({ kind: 'checkpoint-restored', checkpointId: decodeURIComponent(checkpointId) });
         }
       }
 
@@ -137,7 +137,7 @@ export function buildRepositoryMissionBridgeScript(): string {
       };
 
       async function restoreMissionFile(path) {
-        const key = localStorage.getItem('codemind_api_key') || '';
+        const key = localStorage.getItem('symbolwright_api_key') || '';
         const response = await window.fetch('/api/repository/file?path=' + encodeURIComponent(path), {
           headers: { authorization: 'Bearer ' + key },
         });
@@ -168,7 +168,7 @@ export function buildRepositoryMissionBridgeScript(): string {
           event.stopImmediatePropagation();
           const status = document.getElementById('repo-save-status');
           if (status) status.textContent = 'Saving...';
-          const key = localStorage.getItem('codemind_api_key') || '';
+          const key = localStorage.getItem('symbolwright_api_key') || '';
           const save = async function (baseContentHash) {
             const body = {
               path: editor.dataset.missionPath,
@@ -204,7 +204,7 @@ export function buildRepositoryMissionBridgeScript(): string {
         }, true);
       }
 
-      window.codemindApplyMissionToRepository = function (mission, reconciliation) {
+      window.symbolWrightApplyMissionToRepository = function (mission, reconciliation) {
         const section = document.querySelector('[data-view="repository"]');
         if (!section) return;
         let header = document.getElementById('repository-mission-header');

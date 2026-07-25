@@ -1,22 +1,22 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildCodeMindPlan, renderCodeMindPlan } from './cli-plan.js'
+import { buildSymbolWrightPlan, renderSymbolWrightPlan } from './cli-plan.js'
 
-describe('buildCodeMindPlan', () => {
+describe('buildSymbolWrightPlan', () => {
   it('preserves the requested goal', () => {
-    expect(buildCodeMindPlan('add safe patch planning').goal).toBe('add safe patch planning')
+    expect(buildSymbolWrightPlan('add safe patch planning').goal).toBe('add safe patch planning')
   })
 
   it('trims the requested goal', () => {
-    expect(buildCodeMindPlan('  add plan command  ').goal).toBe('add plan command')
+    expect(buildSymbolWrightPlan('  add plan command  ').goal).toBe('add plan command')
   })
 
   it('requires a goal', () => {
-    expect(() => buildCodeMindPlan('   ')).toThrow('Missing goal')
+    expect(() => buildSymbolWrightPlan('   ')).toThrow('Missing goal')
   })
 
   it('keeps the plan non-mutating', () => {
-    expect(buildCodeMindPlan('ship first plan command').boundary).toEqual([
+    expect(buildSymbolWrightPlan('ship first plan command').boundary).toEqual([
       'does not edit files',
       'does not run shell commands',
       'does not call providers',
@@ -26,11 +26,11 @@ describe('buildCodeMindPlan', () => {
   })
 })
 
-describe('renderCodeMindPlan', () => {
+describe('renderSymbolWrightPlan', () => {
   it('renders an operator-readable plan', () => {
-    const output = renderCodeMindPlan('add safe planning')
+    const output = renderSymbolWrightPlan('add safe planning')
 
-    expect(output).toContain('CodeMind plan')
+    expect(output).toContain('SymbolWright plan')
     expect(output).toContain('Goal: add safe planning')
     expect(output).toContain('Posture:')
     expect(output).toContain('Implementation steps:')

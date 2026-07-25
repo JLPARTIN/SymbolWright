@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { ALL_CODEMIND_TOOL_NAMES } from '../runtime/types.js'
+import { ALL_SYMBOLWRIGHT_TOOL_NAMES } from '../runtime/types.js'
 import {
   SUBAGENT_DEFINITIONS,
   SUBAGENT_NAMES,
@@ -8,7 +8,7 @@ import {
   isSubagentName,
 } from './subagent-definitions.js'
 
-const ALL_TOOL_NAMES = new Set<string>(ALL_CODEMIND_TOOL_NAMES)
+const ALL_TOOL_NAMES = new Set<string>(ALL_SYMBOLWRIGHT_TOOL_NAMES)
 
 describe('SUBAGENT_NAMES', () => {
   it('is exactly the three read-only workers this bundle ships', () => {
@@ -36,7 +36,7 @@ describe('SUBAGENT_DEFINITIONS', () => {
     }
   })
 
-  it('every allowedTools and governedTools entry is a real, registered CodemindToolName', () => {
+  it('every allowedTools and governedTools entry is a real, registered SymbolWrightToolName', () => {
     for (const name of SUBAGENT_NAMES) {
       const definition = SUBAGENT_DEFINITIONS[name]
       for (const tool of definition.allowedTools) {

@@ -87,7 +87,7 @@ export async function executeEditFileTool(
   const replacements = input.replaceAll ? originalContent.split(input.oldText).length - 1 : 1
 
   return [
-    'CodeMind edit',
+    'SymbolWright edit',
     '',
     `Path: ${relativePath}`,
     `Replacements: ${replacements}`,

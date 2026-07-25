@@ -13,7 +13,7 @@ export interface LocalFileWriteExecutionResult {
 
 export function renderLocalFileWriteExecutionResult(result: LocalFileWriteExecutionResult): string {
   const lines: string[] = [
-    'CodeMind local file write execution',
+    'SymbolWright local file write execution',
     '',
     `Outcome: ${result.outcome}`,
     `Target: ${result.gateResult.targetPath}`,

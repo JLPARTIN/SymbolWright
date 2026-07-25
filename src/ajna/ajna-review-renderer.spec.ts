@@ -7,7 +7,7 @@ function makeResponse(overrides: Partial<AjnaReviewResponse> = {}): AjnaReviewRe
   return {
     requestId: 'ajna-report-1',
     subject: {
-      repository: 'JLPARTIN/JLPARTIN-CodeMind',
+      repository: 'JLPARTIN/JLPARTIN-SymbolWright',
       pullRequestNumber: 6,
       baseRef: 'main',
       headRef: 'pr6-ajna-review-report-renderer',

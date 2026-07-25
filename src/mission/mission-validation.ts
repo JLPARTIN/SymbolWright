@@ -1,10 +1,10 @@
-import { isCodemindRuntimeMode } from '../runtime/policy/runtime-policy.js'
-import type { CodemindRuntimeMode } from '../runtime/types.js'
+import { isSymbolWrightRuntimeMode } from '../runtime/policy/runtime-policy.js'
+import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
 import { isValidMissionId } from './mission-id.js'
 import {
   CURRENT_MISSION_SCHEMA_VERSION,
   MISSION_STATUSES,
-  type CodeMindMission,
+  type SymbolWrightMission,
   type MissionStatus,
 } from './mission-types.js'
 
@@ -21,7 +21,7 @@ export interface CreateMissionInput {
   readonly objective: string
   readonly workspaceKind: 'repository' | 'scratch'
   readonly repositoryPath: string
-  readonly runtimeMode: CodemindRuntimeMode
+  readonly runtimeMode: SymbolWrightRuntimeMode
   readonly activeProviderId?: string
   readonly model?: string
   readonly labels: readonly string[]
@@ -32,7 +32,7 @@ export interface PatchMissionInput {
   readonly revision: number
   readonly name?: string
   readonly objective?: string
-  readonly runtimeMode?: CodemindRuntimeMode
+  readonly runtimeMode?: SymbolWrightRuntimeMode
   readonly activeProviderId?: string | null
   readonly model?: string | null
   readonly workspaceKind?: 'repository' | 'scratch'
@@ -135,7 +135,7 @@ export function parseCreateMissionInput(raw: unknown): CreateMissionInput {
   }
 
   const runtimeModeRaw = record['runtimeMode'] ?? 'READ_ONLY'
-  if (typeof runtimeModeRaw !== 'string' || !isCodemindRuntimeMode(runtimeModeRaw)) {
+  if (typeof runtimeModeRaw !== 'string' || !isSymbolWrightRuntimeMode(runtimeModeRaw)) {
     throw new MissionValidationError('runtimeMode is invalid')
   }
 
@@ -167,7 +167,7 @@ export function parsePatchMissionInput(raw: unknown): PatchMissionInput {
   const runtimeModeRaw = record['runtimeMode']
   if (
     runtimeModeRaw !== undefined &&
-    (typeof runtimeModeRaw !== 'string' || !isCodemindRuntimeMode(runtimeModeRaw))
+    (typeof runtimeModeRaw !== 'string' || !isSymbolWrightRuntimeMode(runtimeModeRaw))
   ) {
     throw new MissionValidationError('runtimeMode is invalid')
   }
@@ -234,7 +234,7 @@ export function isMissionStatus(value: unknown): value is MissionStatus {
   return typeof value === 'string' && (MISSION_STATUSES as readonly string[]).includes(value)
 }
 
-export function assertCodeMindMission(value: unknown): asserts value is CodeMindMission {
+export function assertSymbolWrightMission(value: unknown): asserts value is SymbolWrightMission {
   const record = asRecord(value, 'Mission record must be an object')
   if (record['schemaVersion'] !== CURRENT_MISSION_SCHEMA_VERSION) {
     throw new MissionValidationError(

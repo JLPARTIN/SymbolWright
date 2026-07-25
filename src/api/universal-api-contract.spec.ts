@@ -1,24 +1,24 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  CODEMIND_EXTERNAL_CLIENT_KINDS,
-  CODEMIND_PUBLIC_API_ROUTES,
+  SYMBOLWRIGHT_EXTERNAL_CLIENT_KINDS,
+  SYMBOLWRIGHT_PUBLIC_API_ROUTES,
   buildUniversalApiContractReport,
   validateExternalMissionRequest,
 } from './universal-api-contract.js'
 import {
-  CODEMIND_PROVIDER_ADAPTERS,
+  SYMBOLWRIGHT_PROVIDER_ADAPTERS,
   buildProviderAdapterContractReport,
 } from '../providers/provider-adapter-contract.js'
 import {
-  CODEMIND_BROWSER_WORKSPACE_PANELS,
+  SYMBOLWRIGHT_BROWSER_WORKSPACE_PANELS,
   assessBrowserWorkspaceReadiness,
   buildBrowserWorkspaceContract,
 } from '../workspace/browser-workspace-contract.js'
 
-describe('universal CodeMind API contract', () => {
+describe('universal SymbolWright API contract', () => {
   it('declares the required public API routes', () => {
-    const routeKeys = CODEMIND_PUBLIC_API_ROUTES.map((route) => `${route.method} ${route.path}`)
+    const routeKeys = SYMBOLWRIGHT_PUBLIC_API_ROUTES.map((route) => `${route.method} ${route.path}`)
 
     expect(routeKeys).toContain('POST /api/missions')
     expect(routeKeys).toContain('POST /api/chat')
@@ -28,11 +28,11 @@ describe('universal CodeMind API contract', () => {
     expect(routeKeys).toContain('GET /api/missions/:id/events')
   })
 
-  it('requires CodeMind API auth and blocks browser-side provider material', () => {
-    for (const route of CODEMIND_PUBLIC_API_ROUTES) {
-      expect(route.requiresCodemindApiKey).toBe(true)
+  it('requires SymbolWright API auth and blocks browser-side provider material', () => {
+    for (const route of SYMBOLWRIGHT_PUBLIC_API_ROUTES) {
+      expect(route.requiresSymbolWrightApiKey).toBe(true)
       expect(route.browserMaySendRawProviderKey).toBe(false)
-      expect(route.allowedClients).toEqual(CODEMIND_EXTERNAL_CLIENT_KINDS)
+      expect(route.allowedClients).toEqual(SYMBOLWRIGHT_EXTERNAL_CLIENT_KINDS)
       expect(route.allowedProviders.length).toBeGreaterThanOrEqual(6)
     }
   })
@@ -42,15 +42,15 @@ describe('universal CodeMind API contract', () => {
 
     expect(report.status).toBe('READY')
     expect(report.findings).toEqual([])
-    expect(report.routeCount).toBe(CODEMIND_PUBLIC_API_ROUTES.length)
+    expect(report.routeCount).toBe(SYMBOLWRIGHT_PUBLIC_API_ROUTES.length)
   })
 
-  it('normalizes supported provider adapters behind the CodeMind server boundary', () => {
+  it('normalizes supported provider adapters behind the SymbolWright server boundary', () => {
     const report = buildProviderAdapterContractReport()
 
     expect(report.status).toBe('READY')
-    expect(report.providerCount).toBe(CODEMIND_PROVIDER_ADAPTERS.length)
-    expect(CODEMIND_PROVIDER_ADAPTERS.map((provider) => provider.id)).toEqual([
+    expect(report.providerCount).toBe(SYMBOLWRIGHT_PROVIDER_ADAPTERS.length)
+    expect(SYMBOLWRIGHT_PROVIDER_ADAPTERS.map((provider) => provider.id)).toEqual([
       'openai',
       'anthropic',
       'google-gemini',
@@ -61,12 +61,12 @@ describe('universal CodeMind API contract', () => {
       'deepseek',
       'custom',
     ])
-    expect(CODEMIND_PROVIDER_ADAPTERS.every((provider) => provider.browserSafe === false)).toBe(
+    expect(SYMBOLWRIGHT_PROVIDER_ADAPTERS.every((provider) => provider.browserSafe === false)).toBe(
       true,
     )
     expect(
-      CODEMIND_PROVIDER_ADAPTERS.every(
-        (provider) => provider.endpointOwnership === 'codemind_server',
+      SYMBOLWRIGHT_PROVIDER_ADAPTERS.every(
+        (provider) => provider.endpointOwnership === 'symbolwright_server',
       ),
     ).toBe(true)
   })
@@ -75,7 +75,7 @@ describe('universal CodeMind API contract', () => {
     const validation = validateExternalMissionRequest({
       client: 'chatgpt',
       provider: 'openai',
-      repo: 'JLPARTIN/CodeMind',
+      repo: 'JLPARTIN/SymbolWright',
       mission: 'Run a forensic audit and prepare large PR bundles.',
       stream: true,
     })
@@ -89,9 +89,9 @@ describe('browser workspace contract', () => {
   it('declares every required workspace panel', () => {
     const contract = buildBrowserWorkspaceContract()
 
-    expect(contract.entrypoint).toBe('/codemind')
+    expect(contract.entrypoint).toBe('/symbolwright')
     expect(contract.browserStoresProviderKeys).toBe(false)
-    expect(contract.panels).toEqual(CODEMIND_BROWSER_WORKSPACE_PANELS)
+    expect(contract.panels).toEqual(SYMBOLWRIGHT_BROWSER_WORKSPACE_PANELS)
   })
 
   it('passes browser workspace readiness', () => {

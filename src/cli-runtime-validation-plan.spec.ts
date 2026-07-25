@@ -6,7 +6,7 @@ describe('renderRuntimeValidationPlan', () => {
   it('returns validation plan output', async () => {
     const output = await renderRuntimeValidationPlan('type safety')
 
-    expect(output).toContain('CodeMind validation plan')
+    expect(output).toContain('SymbolWright validation plan')
   })
 
   it('includes standard validation commands', async () => {
@@ -24,7 +24,7 @@ describe('renderRuntimeValidationPlan', () => {
   it('handles undefined focus', async () => {
     const output = await renderRuntimeValidationPlan(undefined)
 
-    expect(output).toContain('CodeMind validation plan')
+    expect(output).toContain('SymbolWright validation plan')
   })
 
   it('accepts explicit cwd', async () => {

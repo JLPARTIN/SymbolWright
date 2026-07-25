@@ -12,7 +12,7 @@ Prepare a future adapter that can collect pull request context and normalize it 
 codemind ajna review-pr <json-file>
 ```
 
-The future live adapter should produce a `CodemindAjnaReviewPrInput`-compatible object, then hand it to the existing deterministic renderer path.
+The future live adapter should produce a `SymbolWrightAjnaReviewPrInput`-compatible object, then hand it to the existing deterministic renderer path.
 
 ## Proposed command surface
 
@@ -35,7 +35,7 @@ The command should not render directly in the first live-ingestion PR. Keeping c
 The adapter should emit:
 
 ```ts
-interface CodemindAjnaGithubReviewInputPlan {
+interface SymbolWrightAjnaGithubReviewInputPlan {
   readonly repository: string
   readonly pullRequestNumber: number
   readonly baseRef: string
@@ -50,7 +50,7 @@ interface CodemindAjnaGithubReviewInputPlan {
 Then normalize into the existing review-pr JSON shape:
 
 ```ts
-interface CodemindAjnaReviewPrInput {
+interface SymbolWrightAjnaReviewPrInput {
   readonly request: AjnaReviewRequest
   readonly findings: readonly AjnaReviewFinding[]
   readonly recommendedNextAction?: string
@@ -86,7 +86,7 @@ The adapter must validate that:
 
 A future implementation PR should add tests that prove:
 
-- GitHub payloads normalize into `CodemindAjnaReviewPrInput`
+- GitHub payloads normalize into `SymbolWrightAjnaReviewPrInput`
 - missing pull request metadata is rejected
 - empty changed-file payloads are rejected unless explicitly allowed
 - CI evidence is optional but clearly represented when absent

@@ -255,7 +255,7 @@ function stoppedAt(checkpoint: RepairLoopCheckpoint, finding: RepairLoopFinding)
 
 export function renderRepairLoopResult(result: RepairLoopResult): string {
   const lines = [
-    'CodeMind Repair Loop',
+    'SymbolWright Repair Loop',
     '',
     `Outcome: ${result.outcome}`,
     `Last checkpoint: ${result.lastCheckpoint}`,

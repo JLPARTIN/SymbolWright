@@ -9,7 +9,7 @@ import {
   formatErrorForLLM,
   isProviderStreamError,
 } from './error-handler.js'
-import type { CodemindError, RetryConfig } from './error-handler.js'
+import type { SymbolWrightError, RetryConfig } from './error-handler.js'
 import type { ProviderStreamEvent } from '../../provider/provider.types.js'
 
 describe('classifyError', () => {
@@ -92,18 +92,26 @@ describe('shouldRetry', () => {
   const config: RetryConfig = { maxRetries: 3, baseDelayMs: 100, maxDelayMs: 1600 }
 
   it('returns true for retryable error within attempts', () => {
-    const err: CodemindError = { category: 'network_error', message: 'timeout', retryable: true }
+    const err: SymbolWrightError = {
+      category: 'network_error',
+      message: 'timeout',
+      retryable: true,
+    }
     expect(shouldRetry(err, 0, config)).toBe(true)
     expect(shouldRetry(err, 2, config)).toBe(true)
   })
 
   it('returns false when attempts exhausted', () => {
-    const err: CodemindError = { category: 'network_error', message: 'timeout', retryable: true }
+    const err: SymbolWrightError = {
+      category: 'network_error',
+      message: 'timeout',
+      retryable: true,
+    }
     expect(shouldRetry(err, 3, config)).toBe(false)
   })
 
   it('returns false for non-retryable error', () => {
-    const err: CodemindError = {
+    const err: SymbolWrightError = {
       category: 'permission_denied',
       message: 'denied',
       retryable: false,

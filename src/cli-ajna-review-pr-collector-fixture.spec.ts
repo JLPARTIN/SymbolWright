@@ -16,7 +16,7 @@ function makeSnapshot(
 ): AjnaGithubCollectorSnapshot {
   return {
     pullRequest: {
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       pullRequestNumber: 61,
       baseRef: 'main',
       headRef: 'ajna-github-collector-contract-bundle',
@@ -32,7 +32,7 @@ function makeSnapshot(
     ],
     checkRuns: [
       {
-        name: 'Validate CodeMind',
+        name: 'Validate SymbolWright',
         status: 'completed',
         conclusion: 'success',
       },
@@ -42,7 +42,7 @@ function makeSnapshot(
 }
 
 function writeSnapshotFile(snapshot: AjnaGithubCollectorSnapshot): string {
-  const rootDir = mkdtempSync(join(tmpdir(), 'codemind-ajna-collector-fixture-'))
+  const rootDir = mkdtempSync(join(tmpdir(), 'symbolwright-ajna-collector-fixture-'))
   tempDirs.push(rootDir)
   const inputPath = join(rootDir, 'collector-snapshot.json')
   writeFileSync(inputPath, JSON.stringify(snapshot), 'utf-8')
@@ -59,7 +59,7 @@ describe('parseAjnaGithubCollectorFixture', () => {
   it('accepts collector snapshot fixture JSON', () => {
     const snapshot = parseAjnaGithubCollectorFixture(JSON.stringify(makeSnapshot()))
 
-    expect(snapshot.pullRequest.repository).toBe('JLPARTIN/CodeMind')
+    expect(snapshot.pullRequest.repository).toBe('JLPARTIN/SymbolWright')
     expect(snapshot.pullRequest.pullRequestNumber).toBe(61)
   })
 

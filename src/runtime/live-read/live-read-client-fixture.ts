@@ -29,7 +29,7 @@ export async function runLiveReadClientFixture(
   const client = new FakeLiveReadClient(request.clientData)
 
   const sections: string[] = [
-    'CodeMind live read client fixture',
+    'SymbolWright live read client fixture',
     '',
     `Provider: ${client.provider}`,
     `Repository: ${request.owner}/${request.repo}`,

@@ -9,7 +9,7 @@ import { runPreflightCommand } from './cli-preflight.js'
 const roots: string[] = []
 
 function makeRepo(scripts: Record<string, string>): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-preflight-cli-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-preflight-cli-'))
   roots.push(root)
   fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: 'fixture', scripts }))
   fs.writeFileSync(path.join(root, 'package-lock.json'), 'lock')

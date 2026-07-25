@@ -1,10 +1,10 @@
 import type {
-  CodemindPermissionDecision,
-  CodemindPermissionRequest,
-  CodemindMode,
-  CodemindTrustZone,
-} from '../permissions/codemind-permission.types.js'
-import { evaluateCodemindPermissionRequest } from '../permissions/codemind-permission-policy.js'
+  SymbolWrightPermissionDecision,
+  SymbolWrightPermissionRequest,
+  SymbolWrightMode,
+  SymbolWrightTrustZone,
+} from '../permissions/symbolwright-permission.types.js'
+import { evaluateSymbolWrightPermissionRequest } from '../permissions/symbolwright-permission-policy.js'
 import type { RuntimePolicySnapshot } from '../runtime/types.js'
 
 export const PROVIDER_INVOCATION_TOOL_CATEGORY = 'PROVIDER_INVOCATION' as const
@@ -12,10 +12,10 @@ export const PROVIDER_INVOCATION_TOOL_CATEGORY = 'PROVIDER_INVOCATION' as const
 export interface ProviderPolicyGateRequest {
   readonly requestId: string
   readonly sessionId: string
-  readonly mode: CodemindMode
+  readonly mode: SymbolWrightMode
   readonly providerLabel: string
   readonly model: string
-  readonly sourceTrustZone: CodemindTrustZone
+  readonly sourceTrustZone: SymbolWrightTrustZone
   readonly operatorApproved: boolean
   readonly approvalRecordId?: string
 }
@@ -23,7 +23,7 @@ export interface ProviderPolicyGateRequest {
 export interface ProviderPolicyGateDecision {
   readonly requestId: string
   readonly allowed: boolean
-  readonly permissionDecision: CodemindPermissionDecision
+  readonly permissionDecision: SymbolWrightPermissionDecision
   readonly blockedReasons: readonly string[]
 }
 
@@ -39,7 +39,7 @@ export function evaluateProviderPolicyGate(
     )
   }
 
-  const permissionRequest: CodemindPermissionRequest = {
+  const permissionRequest: SymbolWrightPermissionRequest = {
     requestId: request.requestId,
     sessionId: request.sessionId,
     mode: request.mode,
@@ -58,7 +58,7 @@ export function evaluateProviderPolicyGate(
       : {}),
   }
 
-  const permissionDecision = evaluateCodemindPermissionRequest(permissionRequest)
+  const permissionDecision = evaluateSymbolWrightPermissionRequest(permissionRequest)
 
   if (permissionDecision.disposition === 'DENY') {
     blockedReasons.push(

@@ -1,12 +1,12 @@
-import type { CodemindRepoScan } from '../cli-scan.js'
+import type { SymbolWrightRepoScan } from '../cli-scan.js'
 
-export const AJNA_REPO_SCAN_PROFILE_BLOCK_ID = 'CODEMIND-AJNA-SCAN-PROFILE-01' as const
+export const AJNA_REPO_SCAN_PROFILE_BLOCK_ID = 'SYMBOLWRIGHT-AJNA-SCAN-PROFILE-01' as const
 
 export type AjnaRepoScanProfileStatus = 'READY' | 'NEEDS_ATTENTION' | 'BLOCKED'
 export type AjnaRepoScanSignalStatus = 'PASS' | 'WARN' | 'FAIL'
 
 export type AjnaRepoScanProfileInput = Pick<
-  CodemindRepoScan,
+  SymbolWrightRepoScan,
   | 'topLevelDirs'
   | 'tsFileCount'
   | 'specFileCount'
@@ -98,7 +98,7 @@ function recommendationsFromSignals(signals: readonly AjnaRepoScanSignal[]): rea
     switch (signal.id) {
       case 'source.root':
         recommendations.push(
-          'Add or point CodeMind at a repository with a src/ source root before Ajna scan profiling.',
+          'Add or point SymbolWright at a repository with a src/ source root before Ajna scan profiling.',
         )
         break
       case 'source.typescript':

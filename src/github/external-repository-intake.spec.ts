@@ -27,8 +27,8 @@ describe('performExternalRepositoryIntake', () => {
   let missionService: MissionService
 
   beforeEach(async () => {
-    workspaceRoot = mkdtempSync(join(tmpdir(), 'codemind-intake-workspace-'))
-    sourceRepo = mkdtempSync(join(tmpdir(), 'codemind-intake-source-'))
+    workspaceRoot = mkdtempSync(join(tmpdir(), 'symbolwright-intake-workspace-'))
+    sourceRepo = mkdtempSync(join(tmpdir(), 'symbolwright-intake-source-'))
     await runGitCommand(['init'], sourceRepo)
     await runGitCommand(['config', 'user.email', 'test@example.com'], sourceRepo)
     await runGitCommand(['config', 'user.name', 'Test'], sourceRepo)

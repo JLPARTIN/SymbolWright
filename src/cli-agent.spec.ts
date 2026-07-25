@@ -1,15 +1,15 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
-vi.mock('./config/codemind-config.js', () => ({
-  resolveCodemindConfig: vi.fn(),
-  validateCodemindConfig: vi.fn(),
+vi.mock('./config/symbolwright-config.js', () => ({
+  resolveSymbolWrightConfig: vi.fn(),
+  validateSymbolWrightConfig: vi.fn(),
 }))
 
 vi.mock('./provider/anthropic-provider.js', () => ({
   createAnthropicProvider: vi.fn(),
 }))
 
-vi.mock('./activation/codemind-activation.js', () => ({
+vi.mock('./activation/symbolwright-activation.js', () => ({
   runActivatedAgent: vi.fn(),
 }))
 
@@ -22,14 +22,17 @@ import os from 'node:os'
 import path from 'node:path'
 
 import { runAgentCommand, renderSessionsList } from './cli-agent.js'
-import { resolveCodemindConfig, validateCodemindConfig } from './config/codemind-config.js'
+import {
+  resolveSymbolWrightConfig,
+  validateSymbolWrightConfig,
+} from './config/symbolwright-config.js'
 import { createAnthropicProvider } from './provider/anthropic-provider.js'
-import { runActivatedAgent } from './activation/codemind-activation.js'
+import { runActivatedAgent } from './activation/symbolwright-activation.js'
 import { initializeAgentMemorySession } from './memory/agent-memory-session.js'
 import { SessionPersistence } from './storage/session-persistence.js'
 
-const mockResolve = vi.mocked(resolveCodemindConfig)
-const mockValidate = vi.mocked(validateCodemindConfig)
+const mockResolve = vi.mocked(resolveSymbolWrightConfig)
+const mockValidate = vi.mocked(validateSymbolWrightConfig)
 const mockCreateProvider = vi.mocked(createAnthropicProvider)
 const mockRunAgent = vi.mocked(runActivatedAgent)
 const mockInitializeMemory = vi.mocked(initializeAgentMemorySession)
@@ -213,7 +216,7 @@ describe('cli-agent', () => {
 
   describe('renderSessionsList', () => {
     it('returns empty message when no sessions exist', () => {
-      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-sessions-'))
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-sessions-'))
       const persistence = new SessionPersistence(dir)
 
       const output = renderSessionsList(persistence)
@@ -222,7 +225,7 @@ describe('cli-agent', () => {
     })
 
     it('lists sessions with metadata', () => {
-      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-sessions-'))
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-sessions-'))
       const persistence = new SessionPersistence(dir)
 
       persistence.appendMessage('test-session-1', {
@@ -234,7 +237,7 @@ describe('cli-agent', () => {
 
       const output = renderSessionsList(persistence)
 
-      expect(output).toContain('CodeMind Sessions')
+      expect(output).toContain('SymbolWright Sessions')
       expect(output).toContain('test-session-1')
       expect(output).toContain('1 messages')
     })

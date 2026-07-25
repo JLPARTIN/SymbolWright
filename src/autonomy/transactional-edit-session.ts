@@ -40,7 +40,7 @@ export class JsonTransactionalEditSessionStore implements TransactionalEditSessi
   readonly #root: string
 
   constructor(workspaceRoot: string) {
-    this.#root = path.resolve(workspaceRoot, '.codemind', 'autonomy', 'edit-sessions')
+    this.#root = path.resolve(workspaceRoot, '.symbolwright', 'autonomy', 'edit-sessions')
   }
 
   async load(sessionId: string): Promise<TransactionalEditSessionRecord | undefined> {
@@ -229,8 +229,10 @@ function normalizeRelativePath(value: string): string {
     normalized.includes('/../') ||
     normalized === '.git' ||
     normalized.startsWith('.git/') ||
-    normalized === '.codemind' ||
-    normalized.startsWith('.codemind/')
+    normalized === '.symbolwright' ||
+    normalized.startsWith('.symbolwright/') ||
+    normalized === '.symbolwright' ||
+    normalized.startsWith('.symbolwright/')
   ) {
     throw new Error(`Unsafe edit path: ${value}`)
   }

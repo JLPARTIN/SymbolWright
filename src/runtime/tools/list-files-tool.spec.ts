@@ -10,7 +10,7 @@ import type { RuntimeToolContext } from '../types.js'
 import { executeListFilesTool } from './list-files-tool.js'
 
 function createTempWorkspace(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-list-files-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-list-files-'))
   fs.mkdirSync(path.join(dir, 'src'))
   fs.writeFileSync(path.join(dir, 'README.md'), '# test')
   fs.writeFileSync(path.join(dir, 'src', 'index.ts'), 'export const x = 1')
@@ -27,7 +27,7 @@ describe('executeListFilesTool', () => {
     const cwd = createTempWorkspace()
     const output = await executeListFilesTool({}, makeContext(cwd))
 
-    expect(output).toContain('CodeMind list-files')
+    expect(output).toContain('SymbolWright list-files')
     expect(output).toContain('README.md')
     expect(output).toContain('index.ts')
     expect(output).toContain('utils.ts')

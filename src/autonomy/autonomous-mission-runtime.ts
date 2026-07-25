@@ -56,7 +56,9 @@ export function createAutonomousMissionRuntime(
   const releaseStore = new JsonAutonomousMissionReleaseStore(workspaceRoot)
   const multiAgentStore = new MultiAgentMissionStore(workspaceRoot)
   const multiAgentTracker = new MultiAgentExecutionTracker(multiAgentStore)
-  const semanticIndexStore = new RepositorySemanticIndexStore(path.join(workspaceRoot, '.codemind'))
+  const semanticIndexStore = new RepositorySemanticIndexStore(
+    path.join(workspaceRoot, '.symbolwright'),
+  )
   const loadSemanticIndex = async (repositoryRoot: string) =>
     ensureRepositorySemanticIndex({
       workspaceRoot,

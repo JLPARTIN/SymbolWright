@@ -39,7 +39,7 @@ export function buildRuntimeStatusSnapshot(
 
 export function renderRuntimeStatusDashboard(snapshot: RuntimeStatusSnapshot): string {
   const lines = [
-    'CodeMind runtime status dashboard',
+    'SymbolWright runtime status dashboard',
     '',
     `Completed phases:     ${snapshot.completedPhases}`,
     `Next phase:           ${snapshot.nextPhase}`,

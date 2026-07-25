@@ -5,13 +5,15 @@ import {
 } from './ajna/ajna-repo-scan-profile.js'
 import { scanRepo } from './cli-scan.js'
 
-export interface CodemindAjnaScanProfileCommandResult {
+export interface SymbolWrightAjnaScanProfileCommandResult {
   readonly rootDir: string
   readonly profile: AjnaRepoScanProfile
   readonly output: string
 }
 
-export function buildAjnaScanProfileForRepo(rootDir: string): CodemindAjnaScanProfileCommandResult {
+export function buildAjnaScanProfileForRepo(
+  rootDir: string,
+): SymbolWrightAjnaScanProfileCommandResult {
   const profile = buildAjnaRepoScanProfile(scanRepo(rootDir))
 
   return {

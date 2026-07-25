@@ -43,7 +43,7 @@ export function createOperatorReviewPacket(input: {
 
 export function renderOperatorReviewPacket(packet: OperatorReviewPacket): string {
   const sections: string[] = [
-    'CodeMind operator review packet',
+    'SymbolWright operator review packet',
     '',
     `Packet ID: ${packet.id}`,
     `Timestamp: ${packet.timestamp}`,

@@ -46,7 +46,7 @@ const fakeFile: RepositoryFileResult = {
 }
 
 function writeFixture(request: LiveReadClientFixtureRequest): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-live-read-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-live-read-'))
   const filePath = path.join(dir, 'fixture.json')
   fs.writeFileSync(filePath, JSON.stringify(request))
   return filePath
@@ -169,7 +169,7 @@ describe('runLiveReadClientFixture', () => {
 
     const output = await runLiveReadClientFixture(request)
 
-    expect(output).toContain('CodeMind live read client fixture')
+    expect(output).toContain('SymbolWright live read client fixture')
     expect(output).toContain('Provider: fake')
     expect(output).toContain('Repository: test-owner/test-repo')
     expect(output).toContain('PR #42: Add widget feature')

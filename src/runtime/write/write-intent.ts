@@ -41,7 +41,7 @@ export function createWriteIntent(input: {
 
 export function renderWriteIntent(intent: WriteIntent): string {
   const sections: string[] = [
-    'CodeMind write intent plan',
+    'SymbolWright write intent plan',
     '',
     `Intent ID: ${intent.id}`,
     `Target: ${intent.target}`,

@@ -57,7 +57,7 @@ export function createProviderGatewayLlmProvider(
 
   return {
     providerId: options.config.activeProvider ?? 'provider-gateway',
-    displayName: 'CodeMind Provider Gateway',
+    displayName: 'SymbolWright Provider Gateway',
 
     async *complete(
       messages: readonly ProviderMessage[],

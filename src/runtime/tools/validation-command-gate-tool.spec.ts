@@ -52,7 +52,7 @@ const successfulSandboxRunner: SandboxRunner = {
 let tempDir: string
 
 beforeEach(() => {
-  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-gate-tool-'))
+  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-gate-tool-'))
   fs.writeFileSync(
     path.join(tempDir, 'package.json'),
     JSON.stringify({
@@ -138,8 +138,8 @@ describe('validationCommandGateTool', () => {
       makeContext(shellPolicy, approval),
     )
 
-    expect(output).toContain('CodeMind validation command gate')
-    expect(output).toContain('CodeMind validation command execution')
+    expect(output).toContain('SymbolWright validation command gate')
+    expect(output).toContain('SymbolWright validation command execution')
     expect(output).toContain('ALLOWED')
     expect(output).toContain('validation_command')
   })

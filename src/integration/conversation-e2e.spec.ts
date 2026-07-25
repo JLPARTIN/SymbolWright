@@ -54,7 +54,7 @@ describe('conversation-e2e', () => {
       const capturedMessageSets: ProviderMessage[][] = []
       let callIndex = 0
       const responses = [
-        makeTextResponse('CodeMind is a governed AI coding agent.'),
+        makeTextResponse('SymbolWright is a governed AI coding agent.'),
         makeTextResponse('It uses a policy-gated runtime with tool capabilities.'),
         makeTextResponse('Yes, it supports GitHub live read and write operations.'),
       ]
@@ -74,14 +74,14 @@ describe('conversation-e2e', () => {
 
       const config: AgentLoopConfig = {
         maxIterations: 5,
-        systemPrompt: 'You are CodeMind.',
+        systemPrompt: 'You are SymbolWright.',
       }
 
       const conversationHistory: ConversationMessage[] = []
       const toolContext = createToolContext()
 
-      const result1 = await runAgentLoop(provider, 'What is CodeMind?', [], toolContext, config)
-      conversationHistory.push(createMessage('user', 'What is CodeMind?'))
+      const result1 = await runAgentLoop(provider, 'What is SymbolWright?', [], toolContext, config)
+      conversationHistory.push(createMessage('user', 'What is SymbolWright?'))
       conversationHistory.push(createMessage('assistant', result1.finalText))
 
       const priorMessages2 = conversationMessagesToProviderMessages(conversationHistory)
@@ -162,7 +162,7 @@ describe('conversation-e2e', () => {
       const priorMessages = conversationMessagesToProviderMessages(persistedMessages)
       const config: AgentLoopConfig = {
         maxIterations: 5,
-        systemPrompt: 'You are CodeMind.',
+        systemPrompt: 'You are SymbolWright.',
         priorMessages,
       }
 

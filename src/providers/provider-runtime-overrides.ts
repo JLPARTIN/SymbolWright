@@ -1,5 +1,5 @@
-import type { CodemindProviderId } from './provider-adapter-contract.js'
-import { CODEMIND_SUPPORTED_PROVIDER_IDS } from './provider-adapter-contract.js'
+import type { SymbolWrightProviderId } from './provider-adapter-contract.js'
+import { SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS } from './provider-adapter-contract.js'
 import type { ProviderGatewayConfig, ProviderResolvedConfig } from './provider-gateway.types.js'
 
 export interface ProviderRuntimeOverrideInput {
@@ -12,8 +12,8 @@ export interface ProviderRuntimeOverrideInput {
 
 export class ProviderRuntimeOverrideValidationError extends Error {}
 
-function isSupportedProviderId(value: string): value is CodemindProviderId {
-  return (CODEMIND_SUPPORTED_PROVIDER_IDS as readonly string[]).includes(value)
+function isSupportedProviderId(value: string): value is SymbolWrightProviderId {
+  return (SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS as readonly string[]).includes(value)
 }
 
 function assertValidHttpUrl(baseUrl: string): void {
@@ -36,9 +36,9 @@ function assertValidHttpUrl(baseUrl: string): void {
  * server process and is lost on restart (documented, not a bug).
  */
 export class ProviderRuntimeOverrideStore {
-  private readonly overrides = new Map<CodemindProviderId, ProviderRuntimeOverrideInput>()
+  private readonly overrides = new Map<SymbolWrightProviderId, ProviderRuntimeOverrideInput>()
 
-  public set(providerId: string, input: ProviderRuntimeOverrideInput): CodemindProviderId {
+  public set(providerId: string, input: ProviderRuntimeOverrideInput): SymbolWrightProviderId {
     if (!isSupportedProviderId(providerId)) {
       throw new ProviderRuntimeOverrideValidationError(`Unknown provider: ${providerId}`)
     }
@@ -65,7 +65,7 @@ export class ProviderRuntimeOverrideStore {
     this.overrides.clear()
   }
 
-  public snapshot(): ReadonlyMap<CodemindProviderId, ProviderRuntimeOverrideInput> {
+  public snapshot(): ReadonlyMap<SymbolWrightProviderId, ProviderRuntimeOverrideInput> {
     return new Map(this.overrides)
   }
 }
@@ -90,7 +90,7 @@ function mergeProvider(
 
 export function applyProviderRuntimeOverrides(
   base: ProviderGatewayConfig,
-  overrides: ReadonlyMap<CodemindProviderId, ProviderRuntimeOverrideInput>,
+  overrides: ReadonlyMap<SymbolWrightProviderId, ProviderRuntimeOverrideInput>,
 ): ProviderGatewayConfig {
   if (overrides.size === 0) {
     return base
@@ -99,9 +99,9 @@ export function applyProviderRuntimeOverrides(
   const providers = Object.fromEntries(
     Object.entries(base.providers).map(([id, provider]) => [
       id,
-      mergeProvider(provider, overrides.get(id as CodemindProviderId)),
+      mergeProvider(provider, overrides.get(id as SymbolWrightProviderId)),
     ]),
-  ) as Record<CodemindProviderId, ProviderResolvedConfig>
+  ) as Record<SymbolWrightProviderId, ProviderResolvedConfig>
 
   return { ...base, providers }
 }

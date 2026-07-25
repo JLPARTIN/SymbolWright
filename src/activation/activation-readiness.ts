@@ -13,8 +13,8 @@ export function checkProviderConfig(): DoctorCheck {
   }
 
   const configPaths = [
-    path.join(process.env['HOME'] ?? '', '.codemind', 'config.json'),
-    path.join(process.cwd(), '.codemind', 'config.json'),
+    path.join(process.env['HOME'] ?? '', '.symbolwright', 'config.json'),
+    path.join(process.cwd(), '.symbolwright', 'config.json'),
   ]
 
   for (const configPath of configPaths) {
@@ -194,7 +194,7 @@ export function runActivationReadinessChecks(workspaceRoot: string): readonly Do
 }
 
 export function renderActivationReadiness(checks: readonly DoctorCheck[]): string {
-  const lines = ['CodeMind Activation Readiness', '']
+  const lines = ['SymbolWright Activation Readiness', '']
 
   for (const check of checks) {
     const icon = check.status === 'PASS' ? '[PASS]' : check.status === 'FAIL' ? '[FAIL]' : '[WARN]'

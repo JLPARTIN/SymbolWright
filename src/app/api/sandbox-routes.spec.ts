@@ -17,14 +17,14 @@ const TEST_MISSION_ID = 'mission_99999999-9999-4999-8999-999999999999'
 const CHECKED_AT = '2026-07-21T00:00:00.000Z'
 const EXECUTION_ENV: NodeJS.ProcessEnv = {
   PATH: process.env['PATH'] ?? '',
-  CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true',
-  CODEMIND_SECRET_TOKEN: 'route-secret-token',
+  SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true',
+  SYMBOLWRIGHT_SECRET_TOKEN: 'route-secret-token',
 }
 
 let root: string
 
 beforeEach(() => {
-  root = mkdtempSync(join(tmpdir(), 'codemind-sandbox-route-'))
+  root = mkdtempSync(join(tmpdir(), 'symbolwright-sandbox-route-'))
 })
 
 afterEach(() => {
@@ -154,7 +154,7 @@ describe('sandbox API route handler', () => {
         mode: 'run',
         requestedRunnerId: 'guarded-host-javascript',
         source:
-          "console.log('sandbox-route-ok'); console.log(process.env.CODEMIND_SECRET_TOKEN ?? 'NO_SECRET')",
+          "console.log('sandbox-route-ok'); console.log(process.env.SYMBOLWRIGHT_SECRET_TOKEN ?? 'NO_SECRET')",
         runtimeMode: 'APPROVED_EXECUTION',
         missionId: mission.id,
       }),

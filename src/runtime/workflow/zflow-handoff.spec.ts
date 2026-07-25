@@ -10,9 +10,9 @@ import {
 const result: ZflowResult = {
   mode: 'prepare-pr',
   localOutput: 'completed',
-  prOutput: 'CodeMind GitHub PR creation\n\nOutcome: DRY_RUN',
-  collaborationOutput: 'CodeMind PR collaboration\n\nOutcome: DRY_RUN',
-  recoveryOutput: 'CodeMind recovery change ledger\n\nChanges: 1',
+  prOutput: 'SymbolWright GitHub PR creation\n\nOutcome: DRY_RUN',
+  collaborationOutput: 'SymbolWright PR collaboration\n\nOutcome: DRY_RUN',
+  recoveryOutput: 'SymbolWright recovery change ledger\n\nChanges: 1',
   rollbackOutput: 'Rollback plan: Recover Zflow preview\n\n1. src/generated.ts',
 }
 
@@ -42,9 +42,9 @@ describe('zflow handoff', () => {
     })
     const output = renderZflowHandoffPacket(handoff)
 
-    expect(output).toContain('CodeMind zflow handoff')
+    expect(output).toContain('SymbolWright zflow handoff')
     expect(output).toContain('READY_FOR_OPERATOR_REVIEW')
-    expect(output).toContain('CodeMind operator review packet')
+    expect(output).toContain('SymbolWright operator review packet')
     expect(output).toContain('PENDING_OPERATOR_REVIEW')
   })
 })

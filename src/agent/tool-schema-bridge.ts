@@ -1,5 +1,5 @@
 import type {
-  CodemindRuntimeMode,
+  SymbolWrightRuntimeMode,
   RuntimePolicySnapshot,
   RuntimeToolDefinition,
 } from '../runtime/types.js'
@@ -31,7 +31,7 @@ const READ_CAPABILITIES = new Set([
 
 const EMPTY_SCHEMA: ToolInputSchema = { type: 'object', properties: {} }
 
-function isToolAllowedByMode(mode: CodemindRuntimeMode, tool: RuntimeToolDefinition): boolean {
+function isToolAllowedByMode(mode: SymbolWrightRuntimeMode, tool: RuntimeToolDefinition): boolean {
   switch (mode) {
     case 'PLAN_ONLY':
       return tool.capability === 'PLAN' || tool.capability === 'READ' || tool.capability === 'SKILL'
@@ -549,7 +549,7 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
   if (schema === undefined) {
     throw new Error(
       `Tool "${tool.name}" has no registered input schema in buildToolInputSchema. ` +
-        'Every CodemindToolName must have an explicit schema.',
+        'Every SymbolWrightToolName must have an explicit schema.',
     )
   }
   return schema

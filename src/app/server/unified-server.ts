@@ -11,15 +11,15 @@ import {
   assertChatServerCanStart,
   buildChatServerWarnings,
   createChatServerRequestListener,
-} from '../../server/codemind-chat-server.js'
+} from '../../server/symbolwright-chat-server.js'
 import { tryHandleUnifiedRoute } from './route-table.js'
 import type { StartedUnifiedServer, UnifiedServerOptions } from './route-types.js'
 
-export { ChatServerConfigError } from '../../server/codemind-chat-server.js'
+export { ChatServerConfigError } from '../../server/symbolwright-chat-server.js'
 export type { StartedUnifiedServer, UnifiedServerOptions } from './route-types.js'
 
 /**
- * Builds the single request listener for the unified CodeMind server --
+ * Builds the single request listener for the unified SymbolWright server --
  * one process, one port, serving the app shell, the (unauthenticated)
  * Workspace API, and the (authenticated) provider/chat/agent/tools/
  * memory/checkpoints API that used to live on a separate port behind

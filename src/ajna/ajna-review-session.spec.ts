@@ -8,7 +8,7 @@ import {
 } from './ajna-review-session.js'
 
 const VALID_IDENTITY = {
-  repository: 'JLPARTIN/JLPARTIN-CodeMind',
+  repository: 'JLPARTIN/JLPARTIN-SymbolWright',
   pullRequestNumber: 35,
   headSha: 'abc1234567890def',
   baseSha: 'def1234567890abc',
@@ -38,7 +38,7 @@ describe('Ajna Review Session', () => {
   it('derives sessionId deterministically from identity', () => {
     const session = buildAjnaReviewSession({ identity: VALID_IDENTITY })
 
-    expect(session.sessionId).toContain('JLPARTIN/JLPARTIN-CodeMind')
+    expect(session.sessionId).toContain('JLPARTIN/JLPARTIN-SymbolWright')
     expect(session.sessionId).toContain('35')
     expect(session.sessionId).toContain('abc123456789')
   })

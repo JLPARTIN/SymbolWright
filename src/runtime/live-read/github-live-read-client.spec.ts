@@ -215,7 +215,7 @@ describe('github live read PR tool', () => {
       testContext,
     )
 
-    expect(output).toContain('CodeMind GitHub live read PR')
+    expect(output).toContain('SymbolWright GitHub live read PR')
     expect(output).toContain('Repository: test-owner/test-repo')
     expect(output).toContain('PR #42: Add widget feature')
     expect(output).toContain('Ajna bridge verdict: READY')
@@ -251,7 +251,7 @@ describe('github live read CI tool', () => {
       testContext,
     )
 
-    expect(output).toContain('CodeMind GitHub live read CI')
+    expect(output).toContain('SymbolWright GitHub live read CI')
     expect(output).toContain('Repository: test-owner/test-repo')
     expect(output).toContain('Workflow CI')
     expect(output).toContain('Ajna bridge verdict: READY')
@@ -270,7 +270,7 @@ describe('github live read CI tool', () => {
 
 describe('CLI integration via fixture file', () => {
   function writeFixture(data: Record<string, unknown>): string {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-gh-live-'))
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-gh-live-'))
     const filePath = path.join(dir, 'fixture.json')
     fs.writeFileSync(filePath, JSON.stringify(data))
     return filePath

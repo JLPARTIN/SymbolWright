@@ -1,4 +1,4 @@
-import { ALL_CODEMIND_TOOL_NAMES, type CodemindToolName } from '../runtime/types.js'
+import { ALL_SYMBOLWRIGHT_TOOL_NAMES, type SymbolWrightToolName } from '../runtime/types.js'
 import { isSubagentName, type SubagentName } from '../hivemind/subagent-definitions.js'
 import type { SkillContext, SkillFrontmatter, SkillShell } from './skill-types.js'
 
@@ -133,13 +133,13 @@ function parseFrontmatterBlock(block: string): Readonly<Record<string, unknown>>
   return raw
 }
 
-function parseToolNames(value: unknown, field: string): readonly CodemindToolName[] {
-  const validTools = new Set<string>(ALL_CODEMIND_TOOL_NAMES)
+function parseToolNames(value: unknown, field: string): readonly SymbolWrightToolName[] {
+  const validTools = new Set<string>(ALL_SYMBOLWRIGHT_TOOL_NAMES)
   return parseArrayValue(value).map((tool) => {
     if (!validTools.has(tool)) {
       throw new Error(`Unknown tool in skill ${field}: ${tool}`)
     }
-    return tool as CodemindToolName
+    return tool as SymbolWrightToolName
   })
 }
 

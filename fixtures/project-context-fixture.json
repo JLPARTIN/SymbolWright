@@ -3,7 +3,7 @@
   "rootDir": ".",
   "expectedInstructionFiles": [
     "README.md",
-    "CODEMIND.md",
+    "SYMBOLWRIGHT.md",
     "CLAUDE.md",
     "AGENTS.md",
     ".github/copilot-instructions.md"

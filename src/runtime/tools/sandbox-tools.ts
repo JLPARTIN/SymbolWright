@@ -108,7 +108,7 @@ function proposalFor(request: SandboxExecutionRequest): string {
 export const sandboxListRuntimesTool: RuntimeToolDefinition = {
   name: 'sandbox_list_runtimes',
   description:
-    'List CodeMind sandbox runtime inventory, runner availability, trust classes, and backend readiness.',
+    'List SymbolWright sandbox runtime inventory, runner availability, trust classes, and backend readiness.',
   capability: 'READ',
   execute: async (_input: unknown, context: RuntimeToolContext): Promise<string> => {
     const service = resolveSandboxService(context)
@@ -140,7 +140,7 @@ export const sandboxListRuntimesTool: RuntimeToolDefinition = {
 export const sandboxExecuteTool: RuntimeToolDefinition = {
   name: 'sandbox_execute',
   description:
-    'Execute, compile, or test code through CodeMind structured sandbox execution. Accepts only structured sandbox requests; raw shell commands, executable paths, image names, and container args are rejected.',
+    'Execute, compile, or test code through SymbolWright structured sandbox execution. Accepts only structured sandbox requests; raw shell commands, executable paths, image names, and container args are rejected.',
   capability: 'APPROVED_COMMAND',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const service = resolveSandboxService(context)

@@ -1,6 +1,6 @@
-export const AJNA_REVIEW_SESSION_BLOCK_ID = 'CODEMIND-AJNA-REVIEW-01' as const
+export const AJNA_REVIEW_SESSION_BLOCK_ID = 'SYMBOLWRIGHT-AJNA-REVIEW-01' as const
 export const AJNA_REVIEW_SESSION_PR_ID = 'PR-CM-AJNA-01' as const
-export const AJNA_REVIEW_SESSION_PHASE_ID = 'CODEMIND-AJNA-01' as const
+export const AJNA_REVIEW_SESSION_PHASE_ID = 'SYMBOLWRIGHT-AJNA-01' as const
 
 export interface AjnaReviewSessionIdentity {
   readonly repository: string

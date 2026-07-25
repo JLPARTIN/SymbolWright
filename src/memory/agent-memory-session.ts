@@ -32,7 +32,7 @@ export function initializeAgentMemorySession(
   provider: LLMProvider,
 ): AgentMemorySession {
   const memoryDir = resolveProjectMemoryDir(cwd)
-  const db = new MemoryDatabase(join(memoryDir, 'codemind.db'))
+  const db = new MemoryDatabase(join(memoryDir, 'symbolwright.db'))
   const lexicalStore = new LocalLexicalStore(db)
   const proceduralMemory = new ProceduralMemory(join(memoryDir, 'procedures.yaml'))
   const budgeter = new ContextBudgeter()
@@ -46,7 +46,7 @@ export function initializeAgentMemorySession(
     createMemoryLlmAdapter(provider),
   )
 
-  const legacyLedgerPath = join(cwd, '.codemind', 'ci-failure-ledger.json')
+  const legacyLedgerPath = join(cwd, '.symbolwright', 'ci-failure-ledger.json')
   const migrationResult = migrateLegacyLedger(db, legacyLedgerPath)
 
   return {

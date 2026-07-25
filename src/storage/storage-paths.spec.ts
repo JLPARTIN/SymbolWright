@@ -6,10 +6,10 @@ describe('resolveStoragePaths', () => {
   it('resolves global and workspace paths', () => {
     const paths = resolveStoragePaths('/home/user/project')
 
-    expect(paths.globalRoot).toContain('.codemind')
+    expect(paths.globalRoot).toContain('.symbolwright')
     expect(paths.sessionsDir).toContain('sessions')
     expect(paths.auditDir).toContain('audit')
-    expect(paths.workspaceRoot).toBe('/home/user/project/.codemind')
+    expect(paths.workspaceRoot).toBe('/home/user/project/.symbolwright')
     expect(paths.workspaceSessionsDir).toContain('sessions')
     expect(paths.workspaceAuditDir).toContain('audit')
   })

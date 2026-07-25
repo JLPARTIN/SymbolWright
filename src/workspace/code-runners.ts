@@ -171,7 +171,7 @@ function sanitizeLimit(
 }
 
 async function createTemporaryWorkspace(): Promise<string> {
-  const workspace = await mkdtemp(join(tmpdir(), 'codemind-run-'))
+  const workspace = await mkdtemp(join(tmpdir(), 'symbolwright-run-'))
   return resolve(workspace)
 }
 
@@ -243,7 +243,7 @@ function executeJavaScriptInVm(
   }
 
   const blocked = (): never => {
-    throw new Error('This API is disabled inside the CodeMind workspace runner.')
+    throw new Error('This API is disabled inside the SymbolWright workspace runner.')
   }
 
   const context = vm.createContext({
@@ -267,7 +267,7 @@ function executeJavaScriptInVm(
 
   try {
     const script = new vm.Script(compiledJavaScript, {
-      filename: 'codemind-workspace-runner.js',
+      filename: 'symbolwright-workspace-runner.js',
     })
     script.runInContext(context, { timeout: timeoutMs })
 

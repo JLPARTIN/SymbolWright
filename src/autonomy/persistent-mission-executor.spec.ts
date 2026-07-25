@@ -53,7 +53,7 @@ afterEach(async () => {
 
 describe('persistent mission execution', () => {
   it('restores interrupted tasks, preserves completed work, and continues without relaunch', async () => {
-    const workspace = await mkdtemp(path.join(os.tmpdir(), 'codemind-mission-executor-'))
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-executor-'))
     workspaces.push(workspace)
     const store = new JsonMissionExecutionStore(workspace)
     const persisted: PersistedMissionExecution = {
@@ -104,7 +104,7 @@ describe('persistent mission execution', () => {
 
     const saved = JSON.parse(
       await readFile(
-        path.join(workspace, '.codemind', 'autonomy', 'missions', 'mission-restart-proof.json'),
+        path.join(workspace, '.symbolwright', 'autonomy', 'missions', 'mission-restart-proof.json'),
         'utf8',
       ),
     ) as PersistedMissionExecution
@@ -116,7 +116,7 @@ describe('persistent mission execution', () => {
   })
 
   it('retries failed task execution and persists diagnostics before succeeding', async () => {
-    const workspace = await mkdtemp(path.join(os.tmpdir(), 'codemind-mission-retry-'))
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-retry-'))
     workspaces.push(workspace)
     let attempts = 0
     const executor = new PersistentMissionExecutor({
@@ -140,7 +140,7 @@ describe('persistent mission execution', () => {
   })
 
   it('rejects missing executions and returns completed executions without relaunching tasks', async () => {
-    const workspace = await mkdtemp(path.join(os.tmpdir(), 'codemind-mission-resume-'))
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-resume-'))
     workspaces.push(workspace)
     const store = new JsonMissionExecutionStore(workspace)
     const execute = vi.fn(async () => ({ state: 'completed' as const }))
@@ -165,7 +165,7 @@ describe('persistent mission execution', () => {
   })
 
   it('persists terminal failure diagnostics for exhausted retries and non-Error throws', async () => {
-    const workspace = await mkdtemp(path.join(os.tmpdir(), 'codemind-mission-failed-'))
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-failed-'))
     workspaces.push(workspace)
     const failedTask = {
       ...task('edit', [], 'ready'),
@@ -188,7 +188,7 @@ describe('persistent mission execution', () => {
   })
 
   it('records blocked outcomes and executes repair tasks through the repairing state', async () => {
-    const workspace = await mkdtemp(path.join(os.tmpdir(), 'codemind-mission-blocked-'))
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-blocked-'))
     workspaces.push(workspace)
     const repairTask: AutonomousTaskNode = {
       ...task('repair', [], 'ready'),

@@ -12,7 +12,7 @@ describe('web-search-tool', () => {
   let workspaceDir: string
 
   beforeEach(() => {
-    workspaceDir = mkdtempSync(join(tmpdir(), 'codemind-web-search-tool-'))
+    workspaceDir = mkdtempSync(join(tmpdir(), 'symbolwright-web-search-tool-'))
   })
 
   afterEach(() => {
@@ -29,9 +29,9 @@ describe('web-search-tool', () => {
   })
 
   it('blocks disabled search config and renders the reason', async () => {
-    mkdirSync(join(workspaceDir, '.codemind'), { recursive: true })
+    mkdirSync(join(workspaceDir, '.symbolwright'), { recursive: true })
     writeFileSync(
-      join(workspaceDir, '.codemind', 'config.json'),
+      join(workspaceDir, '.symbolwright', 'config.json'),
       JSON.stringify({ web: { search: { enabled: false } } }),
     )
 
@@ -53,9 +53,9 @@ describe('web-search-tool', () => {
   })
 
   it('reports status=blocked when web.mode is off', async () => {
-    mkdirSync(join(workspaceDir, '.codemind'), { recursive: true })
+    mkdirSync(join(workspaceDir, '.symbolwright'), { recursive: true })
     writeFileSync(
-      join(workspaceDir, '.codemind', 'config.json'),
+      join(workspaceDir, '.symbolwright', 'config.json'),
       JSON.stringify({ web: { mode: 'off' } }),
     )
 

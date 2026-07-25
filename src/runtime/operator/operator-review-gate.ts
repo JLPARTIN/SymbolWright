@@ -31,7 +31,7 @@ export function evaluateOperatorReviewGate(packet: OperatorReviewPacket): Operat
 
 export function renderOperatorReviewGateResult(result: OperatorReviewGateResult): string {
   const lines: string[] = [
-    'CodeMind operator review gate',
+    'SymbolWright operator review gate',
     '',
     `Packet ID: ${result.packetId}`,
     `Action: ${result.action}`,

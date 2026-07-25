@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url'
 
 import { renderSandboxCommand } from './cli-sandbox.js'
 
-export async function renderCodemindBinCommand(
+export async function renderSymbolWrightBinCommand(
   args: readonly string[],
   options?: Parameters<typeof renderSandboxCommand>[1],
 ): Promise<string | undefined> {
@@ -13,8 +13,8 @@ export async function renderCodemindBinCommand(
   return renderSandboxCommand(commandArgs, options)
 }
 
-export async function runCodemindBin(argv: readonly string[] = process.argv): Promise<void> {
-  const output = await renderCodemindBinCommand(argv.slice(2))
+export async function runSymbolWrightBin(argv: readonly string[] = process.argv): Promise<void> {
+  const output = await renderSymbolWrightBinCommand(argv.slice(2))
   if (output !== undefined) {
     console.log(output)
     return
@@ -24,7 +24,7 @@ export async function runCodemindBin(argv: readonly string[] = process.argv): Pr
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  runCodemindBin().catch((error: unknown) => {
+  runSymbolWrightBin().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error)
     console.error(message)
     process.exit(1)

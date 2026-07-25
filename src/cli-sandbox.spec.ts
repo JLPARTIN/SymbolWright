@@ -34,7 +34,7 @@ describe('sandbox CLI renderer', () => {
   it('renders sandbox doctor diagnostics by default', async () => {
     const rendered = await renderSandboxCommand(['doctor'], OPTIONS)
 
-    expect(rendered).toContain('CodeMind Sandbox Doctor')
+    expect(rendered).toContain('SymbolWright Sandbox Doctor')
     expect(rendered).toContain('Mode: READ-ONLY')
     expect(rendered).toContain('Execution enabled: false')
   })
@@ -42,14 +42,14 @@ describe('sandbox CLI renderer', () => {
   it('renders sandbox image policy diagnostics', async () => {
     const rendered = await renderSandboxCommand(['images'], OPTIONS)
 
-    expect(rendered).toContain('CodeMind Sandbox Images')
+    expect(rendered).toContain('SymbolWright Sandbox Images')
     expect(rendered).toContain('does not pull images automatically')
   })
 
   it('renders sandbox image inspection for allowlisted IDs only', async () => {
     const rendered = await renderSandboxCommand(['inspect', 'node-22-bookworm-slim'], OPTIONS)
 
-    expect(rendered).toContain('CodeMind Sandbox Image Inspection')
+    expect(rendered).toContain('SymbolWright Sandbox Image Inspection')
     expect(rendered).toContain('Image ID: node-22-bookworm-slim')
     expect(rendered).toContain('Container engine: docker (available)')
     expect(rendered).toContain('Local store status: missing')

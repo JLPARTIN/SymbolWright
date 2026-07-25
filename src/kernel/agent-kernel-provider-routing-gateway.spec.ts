@@ -17,7 +17,7 @@ function makeRequest(
     requestId: 'ak-05-req-1',
     sessionId: 'session-1',
     operatorIntent: 'Plan provider routing for a validated context packet.',
-    targetRepository: 'JLPARTIN/JLPARTIN-CodeMind',
+    targetRepository: 'JLPARTIN/JLPARTIN-SymbolWright',
     targetRef: 'main',
     requestedMode: 'PLAN',
     requestedRoles: ['orchestrator', 'researcher', 'coder', 'validator'],
@@ -58,7 +58,7 @@ function makeReadyPacket(maxSections = 8) {
     workflowValidation,
     skillValidations: [skillValidation],
     repoContext: {
-      repository: 'JLPARTIN/JLPARTIN-CodeMind',
+      repository: 'JLPARTIN/JLPARTIN-SymbolWright',
       ref: 'main',
     },
     maxSections,

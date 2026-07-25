@@ -33,7 +33,7 @@ export class MissionAcceptanceService {
   constructor(options: MissionAcceptanceServiceOptions) {
     const workspaceRoot = path.resolve(options.workspaceRoot)
     const semanticIndexStore = new RepositorySemanticIndexStore(
-      path.join(workspaceRoot, '.codemind'),
+      path.join(workspaceRoot, '.symbolwright'),
     )
     this.#executionStore = new JsonMissionExecutionStore(workspaceRoot)
     this.#packetStore = new MissionAcceptancePacketStore(workspaceRoot)

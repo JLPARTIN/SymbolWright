@@ -285,7 +285,8 @@ const DEFAULT_EXCLUDE_DIRS = [
   '.venv',
   'vendor',
   'target',
-  '.codemind',
+  '.symbolwright',
+  '.symbolwright',
 ]
 
 function collectFiles(
@@ -328,5 +329,5 @@ function collectFiles(
 }
 
 export function resolveProjectMemoryDir(workspaceCwd: string): string {
-  return join(workspaceCwd, '.codemind', 'memory')
+  return join(workspaceCwd, '.symbolwright', 'memory')
 }

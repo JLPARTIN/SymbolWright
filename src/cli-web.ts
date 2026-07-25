@@ -5,7 +5,7 @@ import { performWebSearch } from './web/web-search.js'
 import { renderWebSearchEvidence } from './runtime/tools/web-search-tool.js'
 import {
   createRuntimePolicyForMode,
-  DEFAULT_CODEMIND_RUNTIME_MODE,
+  DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE,
 } from './runtime/policy/runtime-policy.js'
 
 interface ParsedWebFlags {
@@ -91,7 +91,7 @@ export async function renderWebFetchCommand(
   }
 
   const webConfig = resolveWebConfig(cwd, flags)
-  const runtimePolicy = createRuntimePolicyForMode(DEFAULT_CODEMIND_RUNTIME_MODE)
+  const runtimePolicy = createRuntimePolicyForMode(DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE)
 
   const evidence = await performWebFetch({ url, webConfig, runtimePolicy })
 
@@ -109,7 +109,7 @@ export async function renderWebSearchCommand(
   }
 
   const webConfig = resolveWebConfig(cwd, flags)
-  const runtimePolicy = createRuntimePolicyForMode(DEFAULT_CODEMIND_RUNTIME_MODE)
+  const runtimePolicy = createRuntimePolicyForMode(DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE)
 
   const evidence = await performWebSearch({ query, webConfig, runtimePolicy })
 

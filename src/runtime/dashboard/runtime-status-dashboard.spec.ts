@@ -69,7 +69,7 @@ describe('renderRuntimeStatusDashboard', () => {
     const snapshot = buildRuntimeStatusSnapshot(createTestTools(), createTestPolicy())
     const output = renderRuntimeStatusDashboard(snapshot)
 
-    expect(output).toContain('CodeMind runtime status dashboard')
+    expect(output).toContain('SymbolWright runtime status dashboard')
   })
 
   it('renders phase count and next phase', () => {
@@ -128,7 +128,7 @@ describe('renderRuntimeStatusDashboardCommand (CLI)', () => {
   it('returns full dashboard output', () => {
     const output = renderRuntimeStatusDashboardCommand()
 
-    expect(output).toContain('CodeMind runtime status dashboard')
+    expect(output).toContain('SymbolWright runtime status dashboard')
     expect(output).toContain('Completed phases:')
     expect(output).toContain('Registered tools:')
     expect(output).toContain('Policy:')
