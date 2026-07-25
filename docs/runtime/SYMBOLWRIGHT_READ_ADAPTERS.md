@@ -5,8 +5,8 @@ This document records Phase E local fixture read adapters.
 ## Active commands
 
 ```text
-codemind pr-notes --fixture-file <json-file>
-codemind ci-review --fixture-file <json-file>
+symbolwright pr-notes --fixture-file <json-file>
+symbolwright ci-review --fixture-file <json-file>
 ```
 
 ## Purpose

@@ -5,7 +5,7 @@ This document records Phase C bounded read-only runtime loop activation.
 ## Active command
 
 ```text
-codemind runtime run <goal> --read-only
+symbolwright runtime run <goal> --read-only
 ```
 
 ## Purpose

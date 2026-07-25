@@ -36,7 +36,7 @@ That keeps provider switching, audit logs, redaction, mission state, tool policy
 
 ## Registering a provider at runtime
 
-`codemind serve` (see
+`symbolwright serve` (see
 [`runtime/SYMBOLWRIGHT_CHAT_SERVER.md`](runtime/SYMBOLWRIGHT_CHAT_SERVER.md)) accepts
 `POST /api/providers/register` to set or override a provider's `baseUrl`,
 `apiKey`, and `model` while the server is running — this is how you "put an

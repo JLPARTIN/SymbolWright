@@ -40,7 +40,7 @@ Parses JSONL lines back into structured audit ledger entries. Validates entry st
 ## CLI Usage
 
 ```bash
-codemind audit-ledger fixtures/audit-ledger-fixture.json
+symbolwright audit-ledger fixtures/audit-ledger-fixture.json
 ```
 
 ## Finding Codes

@@ -7,12 +7,12 @@ export interface ProposeEditInput {
 
 function parseProposeEditInput(input: unknown): ProposeEditInput {
   if (typeof input !== 'object' || input === null || !('goal' in input)) {
-    throw new Error('Missing goal: codemind propose-patch <goal>')
+    throw new Error('Missing goal: symbolwright propose-patch <goal>')
   }
 
   const goal = (input as { readonly goal: unknown }).goal
   if (typeof goal !== 'string') {
-    throw new Error('Missing goal: codemind propose-patch <goal>')
+    throw new Error('Missing goal: symbolwright propose-patch <goal>')
   }
 
   return { goal }
@@ -21,7 +21,7 @@ function parseProposeEditInput(input: unknown): ProposeEditInput {
 export function buildPatchProposal(goal: string): PatchProposal {
   const trimmedGoal = goal.trim()
   if (trimmedGoal.length === 0) {
-    throw new Error('Missing goal: codemind propose-patch <goal>')
+    throw new Error('Missing goal: symbolwright propose-patch <goal>')
   }
 
   return {

@@ -79,8 +79,12 @@ describe('sandbox completion coverage', () => {
     await mkdir(directory)
     await writeFile(path.join(workspaceRoot, 'notes.txt'), 'plain text', 'utf8')
 
-    await expect(renderSandboxCommand(['run'])).resolves.toContain('Usage: codemind sandbox run')
-    await expect(renderSandboxCommand(['test'])).resolves.toContain('Usage: codemind sandbox test')
+    await expect(renderSandboxCommand(['run'])).resolves.toContain(
+      'Usage: symbolwright sandbox run',
+    )
+    await expect(renderSandboxCommand(['test'])).resolves.toContain(
+      'Usage: symbolwright sandbox test',
+    )
     await expect(
       renderSandboxCommand(['run', '../escape.js'], { workspaceRoot }),
     ).resolves.toContain('file must stay inside workspace root')

@@ -76,7 +76,7 @@ export function renderCheckpointShowCommand(
   const flags = parseCheckpointFlags(args)
   const checkpointId = flags.positionals[0]
   if (checkpointId === undefined) {
-    throw new Error('Usage: codemind checkpoint show <id> [--json]')
+    throw new Error('Usage: symbolwright checkpoint show <id> [--json]')
   }
 
   const metadata = getCheckpoint(cwd, checkpointId)
@@ -128,7 +128,7 @@ export function renderCheckpointRestoreCommand(
   const flags = parseCheckpointFlags(args)
   const checkpointId = flags.positionals[0]
   if (checkpointId === undefined) {
-    throw new Error('Usage: codemind checkpoint restore <id> [--json]')
+    throw new Error('Usage: symbolwright checkpoint restore <id> [--json]')
   }
 
   const policy = createRuntimePolicyForMode(DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE)

@@ -63,12 +63,12 @@ describe('runSubagentRunCommand', () => {
   })
 
   it('throws a usage error when the subagent name is missing', async () => {
-    await expect(runSubagentRunCommand([])).rejects.toThrow(/Usage: codemind subagent run/)
+    await expect(runSubagentRunCommand([])).rejects.toThrow(/Usage: symbolwright subagent run/)
   })
 
   it('throws a usage error when the goal is missing', async () => {
     await expect(runSubagentRunCommand(['explorer'])).rejects.toThrow(
-      /Usage: codemind subagent run/,
+      /Usage: symbolwright subagent run/,
     )
   })
 

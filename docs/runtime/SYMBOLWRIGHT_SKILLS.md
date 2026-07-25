@@ -16,27 +16,27 @@ Project skills override bundled skills with the same command name. This lets a r
 ## CLI
 
 ```bash
-codemind skill list
-codemind skill show repo-forensics
-codemind skill run repo-forensics "focus on runtime wiring"
+symbolwright skill list
+symbolwright skill show repo-forensics
+symbolwright skill run repo-forensics "focus on runtime wiring"
 ```
 
 Forked skills can explicitly grant governed tools for that one dispatch:
 
 ```bash
-codemind skill run pr-review 219 --enable-governed
+symbolwright skill run pr-review 219 --enable-governed
 ```
 
 Disable dynamic context injection for one CLI run:
 
 ```bash
-codemind skill run summarize-changes --no-dynamic-context
+symbolwright skill run summarize-changes --no-dynamic-context
 ```
 
 Disable skill shell execution globally for the process:
 
 ```bash
-SYMBOLWRIGHT_DISABLE_SKILL_SHELL_EXECUTION=1 codemind skill run summarize-changes
+SYMBOLWRIGHT_DISABLE_SKILL_SHELL_EXECUTION=1 symbolwright skill run summarize-changes
 ```
 
 ## SKILL.md format
@@ -130,7 +130,7 @@ context: fork
 agent: reviewer
 ```
 
-That gives the skill an isolated child session, real tool-list isolation, structured findings/evidence/risks, and the same governed-tools switch used by `codemind subagent run`.
+That gives the skill an isolated child session, real tool-list isolation, structured findings/evidence/risks, and the same governed-tools switch used by `symbolwright subagent run`.
 
 ## Bundled skills
 
@@ -143,7 +143,7 @@ SymbolWright ships these bundled Skills v1 entries:
 - `run`
 - `verify`
 
-They are real runtime entries, not documentation-only placeholders: `codemind skill list`, `codemind skill show <name>`, and `codemind skill run <name>` all reach the same parser/render/dispatch path as project skills.
+They are real runtime entries, not documentation-only placeholders: `symbolwright skill list`, `symbolwright skill show <name>`, and `symbolwright skill run <name>` all reach the same parser/render/dispatch path as project skills.
 
 ## Boundaries
 

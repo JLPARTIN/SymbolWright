@@ -60,11 +60,11 @@ Proposal-only and approved execution entries should remain separate later phases
 This PR does not activate:
 
 ```txt
-codemind plan
-codemind read
-codemind search
-codemind propose-patch
-codemind validation-plan
+symbolwright plan
+symbolwright read
+symbolwright search
+symbolwright propose-patch
+symbolwright validation-plan
 bounded agent loops
 Ajna runtime critique
 file edits

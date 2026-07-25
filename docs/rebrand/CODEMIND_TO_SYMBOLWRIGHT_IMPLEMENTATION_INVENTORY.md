@@ -1,13 +1,21 @@
 # CodeMind → SymbolWright Implementation Inventory
 
-**Status:** Implementation complete for Phases 1–5 (of the 8-phase plan in
-`docs/rebrand/CODEMIND_TO_SYMBOLWRIGHT_FORENSIC_AUDIT.md`). Phases 6–7
-(GitHub repository rename, npm package/CLI binary rename, external
-coordination) are explicitly deferred by operator decision.
-**Baseline branch:** `chore/symbolwright-rebrand-phase1-5`
+**Status:** Implementation complete for Phases 1–6 (of the 8-phase plan in
+`docs/rebrand/CODEMIND_TO_SYMBOLWRIGHT_FORENSIC_AUDIT.md`). Phase 7
+(external AELIB header coordination) remains deferred — see §12.
+**Baseline branch:** `chore/symbolwright-rebrand-phase1-5`, continued on
+`chore/symbolwright-rebrand-phase6-npm-cli`
 **Baseline commit (pre-rebrand):** `767a5b0` (`main`, PR #283 merged)
 **This document reflects the actual implementation, updated after the work
 was done** — it is a record of what happened, not a pre-implementation plan.
+
+**Update (Phase 6):** the operator directed continuing into Phase 6 in a
+follow-up session. Sections 1–11 below describe the original Phase 1–5
+work exactly as implemented at the time (npm/CLI/MCP identity still
+`codemind`-only). §12 documents what changed in Phase 6: the npm package,
+CLI binaries, and MCP handshake identity are now canonically
+`symbolwright`, with `codemind` kept as a permanent working alias (not a
+deprecated shim on a removal timeline).
 
 ---
 
@@ -261,7 +269,7 @@ All run against the final state of this branch:
 - `npm run build` — clean
 - `node dist/cli.js release-readiness` — `RELEASE_READY`, 16/16 gates pass, including a live demonstration of the persistence-migration conflict path against this repo's own real `.codemind/` (committed anomaly) vs. a locally-generated `.symbolwright/`
 
-## 11. Known Gaps / Not Done in This Pass
+## 11. Known Gaps / Not Done in This Pass (Phase 1–5, as originally written)
 
 - Phase 6 (GitHub repository rename, npm package/CLI binary rename, GHCR
   image path follow-through) — explicitly deferred, see §9.
@@ -271,3 +279,89 @@ All run against the final state of this branch:
 - `docs/PROVIDER_KEYS.md`'s pre-existing gap (doesn't document several real
   `SYMBOLWRIGHT_SANDBOX_*`/`SYMBOLWRIGHT_TLS_*`/`SYMBOLWRIGHT_OPENAI_COMPATIBLE_*`
   vars) — pre-existing, not caused by this rebrand, not fixed here.
+
+## 12. Phase 6: npm Package, CLI Binary, and MCP Identity Rename
+
+Implemented in a follow-up session, per operator instruction to "proceed
+with the next phases." Mid-session, `git push` revealed the GitHub
+repository had *already* been renamed to `JLPARTIN/SymbolWright`
+externally (not by any session) — that made the repo-rename part of this
+phase already-done in practice; the remaining npm/CLI/MCP work below
+reconciles the rest of the identity with that reality.
+
+**npm package (`package.json`):**
+- `name`: `codemind` → `symbolwright`. Verified available on the npm
+  registry before renaming (`registry.npmjs.org/symbolwright` → 404).
+- `version`: `0.1.0` → `0.2.0` (a new CHANGELOG entry documents the
+  rename; see `CHANGELOG.md`'s `[0.2.0]` section).
+- `bin`: now has **four** entries — `symbolwright`/`symbolwright-workspace`
+  (canonical) and `codemind`/`codemind-workspace` (compatibility aliases),
+  all four pointing at the identical `dist/cli.js` / `dist/cli-workspace-bin.js`
+  build outputs. This is a permanent alias, not a deprecation-window shim
+  with a removal date — no differentiated "you used the old name" notice
+  is printed, since npm doesn't reliably tell an invoked script which bin
+  alias name was used to launch it (`process.argv[1]` reflects the
+  resolved script path, not the invocation alias), and a fragile detection
+  hack wasn't worth it for a permanent alias.
+- `repository.url`: `github.com/jlpartin/codemind.git` →
+  `github.com/jlpartin/symbolwright.git`, matching the now-real repository
+  location.
+- `keywords`: added `symbolwright` alongside the existing `codemind` entry.
+- `package-lock.json` was regenerated via `npm install` (never hand-edited)
+  so its `name`/`version`/`bin` stay in lockstep with `package.json`.
+
+**MCP identity:** `src/mcp/mcp-server.ts`'s `DEFAULT_SERVER_INFO` and
+`src/mcp/mcp-client.ts`'s `CLIENT_INFO` both now report
+`{ name: 'symbolwright', version: '0.2.0' }` in the MCP `initialize`
+handshake (previously `codemind`/`0.1.0`). No dual-identity or `_meta`
+compatibility field was added — the CLI invocation itself
+(`codemind mcp-server` / `symbolwright mcp-server`, identical) is what
+most MCP client configs actually pin, not the handshake name.
+
+**CLI-invocation documentation reversal:** every literal
+`codemind <subcommand>` example across source (usage/error strings) and
+docs (README, `docs/**`) was updated to show `symbolwright <subcommand>`
+as canonical — the exact reverse of the Phase 1–5 preservation regex, run
+with the same subcommand list. `codemind <subcommand>` still works
+identically and is called out as a working alias in the migration guide,
+but is no longer the *documented* primary form.
+
+**Identity-check source code:** `src/cli-doctor.ts`'s package.json check,
+and `src/cli-release-readiness.ts`'s `PUBLIC_API_CONTRACT` and
+`PACKAGE_BIN_CONTRACT` gates, now assert `pkg.name === 'symbolwright'` and
+require all four bin entries (two canonical + two alias) to resolve
+correctly. `PACKAGE_BIN_CONTRACT`'s bin-map comparison was changed from a
+key-order-sensitive `JSON.stringify` equality check to an order-independent
+comparison (`binMapsMatch`), since `npm install`-generated
+`package-lock.json` doesn't guarantee the same key order as
+`package.json` — this was a latent fragility in the gate, not new.
+
+**Fixtures reflecting the real GitHub repository:** now that the repo
+really is `JLPARTIN/SymbolWright`, `fixtures/github-write-executor-fixture.json`,
+`examples/ajna/*.json` (4 files), and the `repo` field in
+`fixtures/github-live-read-fixture.json` were updated to match — the CI
+job display name reference (`"Validate CodeMind"` → `"Validate SymbolWright"`)
+was already correct from Phase 1–5's CI workflow rename. The historical
+branch name and file paths *inside* `github-live-read-fixture.json`
+(reflecting a real, specific, already-closed PR from before this rebrand)
+were deliberately left as-is — they're an accurate historical snapshot,
+not the repo's current identity.
+
+**Not changed in Phase 6** (still §12 of the Do-Not-Change ledger, §9):
+`x-codemind-connector` header (external AELIB coordination still not
+done) and the `cm-` session-ID prefix.
+
+**Live verification mishap and recovery (process note, not a defect in
+the shipped code):** while manually verifying the CLI's runtime behavior,
+running `node dist/cli.js version`/`release-readiness` directly against
+this repository's own working directory triggered the real
+`.codemind` → `.symbolwright` migration logic against this repo's
+*committed* `.codemind/` anomaly (§5), renaming those tracked files to
+`.codemind.migrated` on disk. A subsequent cleanup command
+(`rm -rf .symbolwright .codemind.migrated`) then deleted that renamed
+directory. Because those files were already committed to git, `git
+checkout -- .codemind/` fully restored them from HEAD with no data loss —
+but this is a concrete illustration of why the migration logic is
+filesystem-mutating and why manual CLI verification of this specific repo
+should be done in an isolated temp copy, not the repo root, going
+forward.

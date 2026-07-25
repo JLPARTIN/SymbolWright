@@ -39,7 +39,7 @@ Every evaluation produces a `RuntimeAuditEvent`:
 ## CLI Command
 
 ```txt
-codemind pr-preparation <json-file>
+symbolwright pr-preparation <json-file>
 ```
 
 The fixture JSON must include:

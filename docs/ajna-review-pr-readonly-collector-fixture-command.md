@@ -1,6 +1,6 @@
 # Ajna review-pr read-only collector fixture command
 
-The `codemind ajna review-pr-readonly-collector-fixture <json-file>` command renders a local read-only collector request fixture through the full offline Ajna review path.
+The `symbolwright ajna review-pr-readonly-collector-fixture <json-file>` command renders a local read-only collector request fixture through the full offline Ajna review path.
 
 It proves this local-only chain:
 
@@ -11,7 +11,7 @@ request fixture -> injected fake collector port -> collector snapshot -> GitHub 
 ## Usage
 
 ```bash
-codemind ajna review-pr-readonly-collector-fixture examples/ajna/github-readonly-collector-request.ready.json
+symbolwright ajna review-pr-readonly-collector-fixture examples/ajna/github-readonly-collector-request.ready.json
 ```
 
 ## Boundary

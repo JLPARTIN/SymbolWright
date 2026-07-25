@@ -1,4 +1,4 @@
-# SymbolWright Chat/Agent API (`codemind serve`)
+# SymbolWright Chat/Agent API (`symbolwright serve`)
 
 A real HTTP server backed by the provider gateway
 (`src/providers/provider-gateway.ts`). This is the "bring your own API key,
@@ -6,7 +6,7 @@ use it from a browser" surface: pick any of the preset providers or register
 a fully custom OpenAI-compatible endpoint, then chat from the **Agent** tab
 of the unified app shell (`/`, then `#/agent`) like any other LLM web
 client. Provider credentials stay on the server; the browser only ever
-holds the `SYMBOLWRIGHT_API_KEY`. `codemind serve` starts one process on one
+holds the `SYMBOLWRIGHT_API_KEY`. `symbolwright serve` starts one process on one
 port serving this API alongside the Dashboard, Workspace, Tools, Memory,
 and Checkpoints tabs — see [`../codespaces.md`](../codespaces.md) for the
 full app.
@@ -18,7 +18,7 @@ Browser  →  SymbolWright Chat API (auth: SYMBOLWRIGHT_API_KEY)  →  Provider 
 ## Start it
 
 ```bash
-SYMBOLWRIGHT_API_KEY=your-own-access-key codemind serve
+SYMBOLWRIGHT_API_KEY=your-own-access-key symbolwright serve
 ```
 
 Starting fails closed if `SYMBOLWRIGHT_API_KEY` is unset or blank — there is no
@@ -87,9 +87,9 @@ the OpenAI-compatible family (`openai`, `groq`, `openrouter`,
 
 ## Agent (real tool execution)
 
-`POST /api/agent` runs the actual `codemind agent` tool-execution loop —
+`POST /api/agent` runs the actual `symbolwright agent` tool-execution loop —
 the same runtime tool registry (`assembleAgentTools()`) and mode-gated
-policy as `codemind agent` and `codemind mcp-server` — over HTTP, so the
+policy as `symbolwright agent` and `symbolwright mcp-server` — over HTTP, so the
 model can read files, search the repo, and (in more permissive modes) edit
 files, run shell commands, and more, iterating until it's done:
 
@@ -111,7 +111,7 @@ turn), `mode` (`PLAN_ONLY`/`READ_ONLY`/`PROPOSAL_ONLY`/`APPROVED_EXECUTION`,
 
 `mode` defaults to `READ_ONLY` here, not the platform-wide
 `DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE` (`APPROVED_EXECUTION`) — the same reasoning
-as `codemind mcp-server`'s default: this is a new HTTP surface any
+as `symbolwright mcp-server`'s default: this is a new HTTP surface any
 authenticated caller can hit, so it starts narrower until the caller
 explicitly asks for more via `mode`.
 
@@ -156,8 +156,8 @@ full tool-call context across turns in that browser session.
 yet (each call is a self-contained run; conversation continuity is entirely
 via `priorMessages`), and PR preparation / GitHub write workflows aren't
 wired into it specifically — those still go through the dedicated `symbolwright`
-CLI commands (`codemind pr-preparation`, `codemind github-write-proposal`,
-etc.) and the `codemind agent` CLI's session persistence. See the "Contract
+CLI commands (`symbolwright pr-preparation`, `symbolwright github-write-proposal`,
+etc.) and the `symbolwright agent` CLI's session persistence. See the "Contract
 only" rows in [`../API_REFERENCE.md`](../API_REFERENCE.md) for the fuller
 mission/session/event-stream shape this is still growing toward.
 
@@ -167,7 +167,7 @@ Because `/api/chat` and `/api/agent` are plain authenticated HTTP+SSE
 endpoints, any LLM client or agent framework that can make HTTP calls can
 drive them — point a custom GPT action, an agent framework, or a script at
 this server the same way the browser UI does. For MCP-compatible clients
-specifically (Claude Desktop, Claude Code, etc.), `codemind mcp-server` (see
+specifically (Claude Desktop, Claude Code, etc.), `symbolwright mcp-server` (see
 [`SYMBOLWRIGHT_MCP_SERVER.md`](SYMBOLWRIGHT_MCP_SERVER.md)) is the more native
 integration — see `docs/USING_SYMBOLWRIGHT_FROM_ANY_LLM.md` for the full picture
 across both.

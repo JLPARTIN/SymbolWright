@@ -5,7 +5,7 @@ This document records Phase F live read adapter policy handshake.
 ## Active command
 
 ```text
-codemind live-read-policy <json-file>
+symbolwright live-read-policy <json-file>
 ```
 
 ## Purpose

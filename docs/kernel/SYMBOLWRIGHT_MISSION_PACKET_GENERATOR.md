@@ -47,7 +47,7 @@ The mission packet generator is block AGENT-KERNEL-08, consuming outputs from:
 ## CLI usage
 
 ```bash
-codemind mission-packet <json-file>
+symbolwright mission-packet <json-file>
 ```
 
 ## Fixture format

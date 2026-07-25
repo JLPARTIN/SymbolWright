@@ -44,7 +44,7 @@ describe('createSymbolWrightMcpToolHandler', () => {
     const result = await handler.call('read_file', { path: 'package.json' })
 
     expect(result.isError).toBeUndefined()
-    expect(result.content[0]?.text).toContain('"name": "codemind"')
+    expect(result.content[0]?.text).toContain('"name": "symbolwright"')
   })
 
   it('refuses to call a tool not exposed by the current mode', async () => {

@@ -15,19 +15,19 @@ function makeCanonicalManifest(): AjnaClientPipelineManifest {
       {
         order: 1,
         name: 'Snapshot fixture',
-        cli: 'codemind ajna client-collector-fixture <json-file>',
+        cli: 'symbolwright ajna client-collector-fixture <json-file>',
         result: 'collector snapshot JSON',
       },
       {
         order: 2,
         name: 'Review fixture',
-        cli: 'codemind ajna review-pr-client-collector-fixture <json-file>',
+        cli: 'symbolwright ajna review-pr-client-collector-fixture <json-file>',
         result: 'Ajna review report',
       },
       {
         order: 3,
         name: 'Readiness fixture',
-        cli: 'codemind ajna merge-readiness-client-collector-fixture <json-file>',
+        cli: 'symbolwright ajna merge-readiness-client-collector-fixture <json-file>',
         result: 'Ajna merge-readiness report',
       },
     ],
@@ -42,19 +42,19 @@ function makeChangedManifest(): AjnaClientPipelineManifest {
       {
         order: 1,
         name: 'Snapshot fixture',
-        cli: 'codemind ajna client-collector-fixture <json-file>',
+        cli: 'symbolwright ajna client-collector-fixture <json-file>',
         result: 'collector snapshot JSON',
       },
       {
         order: 2,
         name: 'Review fixture',
-        cli: 'codemind ajna review-pr <json-file>',
+        cli: 'symbolwright ajna review-pr <json-file>',
         result: 'Ajna review report',
       },
       {
         order: 3,
         name: 'Readiness fixture',
-        cli: 'codemind ajna merge-readiness-client-collector-fixture <json-file>',
+        cli: 'symbolwright ajna merge-readiness-client-collector-fixture <json-file>',
         result: 'Ajna merge-readiness report',
       },
     ],
@@ -68,7 +68,7 @@ describe('findAjnaClientPipelineManifestIssues', () => {
 
   it('detects a changed command in the expected local fixture chain', () => {
     expect(findAjnaClientPipelineManifestIssues(makeChangedManifest())).toEqual([
-      'step 2 command changed from codemind ajna review-pr-client-collector-fixture <json-file> to codemind ajna review-pr <json-file>',
+      'step 2 command changed from symbolwright ajna review-pr-client-collector-fixture <json-file> to symbolwright ajna review-pr <json-file>',
     ])
   })
 

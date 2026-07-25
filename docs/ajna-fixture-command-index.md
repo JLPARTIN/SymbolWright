@@ -7,22 +7,22 @@ Use it when you need to move from a local fixture request to a collector snapsho
 ## Quick path
 
 ```text
-1. codemind ajna client-pipeline-manifest
-2. codemind ajna client-pipeline-status
-3. codemind ajna client-collector-fixture <json-file>
-4. codemind ajna review-pr-client-collector-fixture <json-file>
-5. codemind ajna merge-readiness-client-collector-fixture <json-file>
+1. symbolwright ajna client-pipeline-manifest
+2. symbolwright ajna client-pipeline-status
+3. symbolwright ajna client-collector-fixture <json-file>
+4. symbolwright ajna review-pr-client-collector-fixture <json-file>
+5. symbolwright ajna merge-readiness-client-collector-fixture <json-file>
 ```
 
 ## Command map
 
 | Need | Command | Output | Doc |
 | --- | --- | --- | --- |
-| See the local fixture pipeline | `codemind ajna client-pipeline-manifest` | Ordered local pipeline manifest | `docs/ajna-client-pipeline-manifest-command.md` |
-| Check the local fixture pipeline shape | `codemind ajna client-pipeline-status` | Pipeline status report | `docs/ajna-client-pipeline-status-command.md` |
-| Produce collector snapshot JSON | `codemind ajna client-collector-fixture <json-file>` | Collector snapshot JSON | `docs/ajna-client-collector-fixture-command.md` |
-| Produce an Ajna PR review report | `codemind ajna review-pr-client-collector-fixture <json-file>` | Ajna review report | `docs/ajna-review-pr-client-collector-fixture-command.md` |
-| Produce merge-readiness output | `codemind ajna merge-readiness-client-collector-fixture <json-file>` | Ajna merge-readiness report | `docs/ajna-merge-readiness-client-collector-fixture-command.md` |
+| See the local fixture pipeline | `symbolwright ajna client-pipeline-manifest` | Ordered local pipeline manifest | `docs/ajna-client-pipeline-manifest-command.md` |
+| Check the local fixture pipeline shape | `symbolwright ajna client-pipeline-status` | Pipeline status report | `docs/ajna-client-pipeline-status-command.md` |
+| Produce collector snapshot JSON | `symbolwright ajna client-collector-fixture <json-file>` | Collector snapshot JSON | `docs/ajna-client-collector-fixture-command.md` |
+| Produce an Ajna PR review report | `symbolwright ajna review-pr-client-collector-fixture <json-file>` | Ajna review report | `docs/ajna-review-pr-client-collector-fixture-command.md` |
+| Produce merge-readiness output | `symbolwright ajna merge-readiness-client-collector-fixture <json-file>` | Ajna merge-readiness report | `docs/ajna-merge-readiness-client-collector-fixture-command.md` |
 
 ## Boundary
 

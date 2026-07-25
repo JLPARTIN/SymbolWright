@@ -67,12 +67,12 @@ function searchDirectory(
 
 function parseSearchFilesInput(input: unknown): SearchFilesInput {
   if (typeof input !== 'object' || input === null || !('query' in input)) {
-    throw new Error('Missing query: codemind search <query>')
+    throw new Error('Missing query: symbolwright search <query>')
   }
 
   const value = input as Record<string, unknown>
   if (typeof value['query'] !== 'string') {
-    throw new Error('Missing query: codemind search <query>')
+    throw new Error('Missing query: symbolwright search <query>')
   }
 
   const parsed: { query: string; dir?: string; limit?: number } = { query: value['query'] }
@@ -92,7 +92,7 @@ export async function executeSearchFilesTool(
 ): Promise<string> {
   const query = input.query.trim()
   if (query.length === 0) {
-    throw new Error('Missing query: codemind search <query>')
+    throw new Error('Missing query: symbolwright search <query>')
   }
 
   const requestedDir = input.dir?.trim() || '.'

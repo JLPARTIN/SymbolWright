@@ -63,7 +63,7 @@ describe('package public API contract', () => {
     const pkg = readPackageJson()
     const rootExport = pkg.exports?.['.']
 
-    expect(pkg.name).toBe('codemind')
+    expect(pkg.name).toBe('symbolwright')
     expect(pkg.main).toBe('dist/index.js')
     expect(pkg.types).toBe('dist/index.d.ts')
     expect(rootExport?.import).toBe('./dist/index.js')
@@ -82,12 +82,19 @@ describe('package public API contract', () => {
 })
 
 describe('package bin contract', () => {
-  it('maps package binaries to built CLI entry points with source parity', () => {
+  it('maps canonical package binaries to built CLI entry points with source parity', () => {
     const pkg = readPackageJson()
 
-    expect(pkg.bin?.['codemind']).toBe('dist/cli.js')
-    expect(pkg.bin?.['codemind-workspace']).toBe('dist/cli-workspace-bin.js')
+    expect(pkg.bin?.['symbolwright']).toBe('dist/cli.js')
+    expect(pkg.bin?.['symbolwright-workspace']).toBe('dist/cli-workspace-bin.js')
     expect(fs.existsSync(path.join(WORKSPACE, 'src', 'cli.ts'))).toBe(true)
     expect(fs.existsSync(path.join(WORKSPACE, 'src', 'cli-workspace-bin.ts'))).toBe(true)
+  })
+
+  it('keeps the legacy codemind binaries as working aliases to the same entry points', () => {
+    const pkg = readPackageJson()
+
+    expect(pkg.bin?.['codemind']).toBe(pkg.bin?.['symbolwright'])
+    expect(pkg.bin?.['codemind-workspace']).toBe(pkg.bin?.['symbolwright-workspace'])
   })
 })

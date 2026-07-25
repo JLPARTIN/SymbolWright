@@ -108,9 +108,9 @@ trace) as text.
 ## CLI commands
 
 ```txt
-codemind mcp list                          # probe every configured server for reachability + tool count
-codemind mcp tools [server]                # discover tools for one server, or all servers if omitted
-codemind mcp call <server.tool> [json-args] # invoke a tool through the policy gate
+symbolwright mcp list                          # probe every configured server for reachability + tool count
+symbolwright mcp tools [server]                # discover tools for one server, or all servers if omitted
+symbolwright mcp call <server.tool> [json-args] # invoke a tool through the policy gate
 ```
 
 Shared flags: `--config <path>` (override the default `.symbolwright/mcp.json`

@@ -1,6 +1,6 @@
 # Ajna docs command
 
-The `codemind ajna docs` command prints the local Ajna documentation reference for operators.
+The `symbolwright ajna docs` command prints the local Ajna documentation reference for operators.
 
 It points to:
 

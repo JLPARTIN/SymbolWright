@@ -2,7 +2,7 @@
 
 **Phase:** T
 **Status:** COMPLETE
-**Command:** `codemind local-write <json-file>`
+**Command:** `symbolwright local-write <json-file>`
 
 ## Purpose
 
@@ -57,7 +57,7 @@ Writes are blocked to:
 ## CLI
 
 ```bash
-codemind local-write fixtures/local-write-fixture.json
+symbolwright local-write fixtures/local-write-fixture.json
 ```
 
 ## Boundary

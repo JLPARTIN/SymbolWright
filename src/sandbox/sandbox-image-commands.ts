@@ -41,7 +41,7 @@ function renderImageIds(images: readonly SandboxImageDefinition[]): string {
 
 function renderMissingImageId(action: string, images: readonly SandboxImageDefinition[]): string {
   return [
-    `Missing sandbox image id for: codemind sandbox ${action} <image-id>`,
+    `Missing sandbox image id for: symbolwright sandbox ${action} <image-id>`,
     '',
     `Allowed image IDs: ${renderImageIds(images)}`,
     'Image IDs must come from the built-in allowlist. Raw image names are not accepted.',

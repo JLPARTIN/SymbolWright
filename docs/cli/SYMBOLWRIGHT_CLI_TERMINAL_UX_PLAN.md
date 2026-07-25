@@ -49,25 +49,25 @@ preserve operator review
 Planned operator-facing commands:
 
 ```txt
-/codemind plan <goal>
-/codemind scan
-/codemind read <path>
-/codemind search <query>
-/codemind propose-patch <goal>
-/codemind validation-plan
-/codemind ci-review
-/codemind pr-notes
-/codemind status
-/codemind help
+/symbolwright plan <goal>
+/symbolwright scan
+/symbolwright read <path>
+/symbolwright search <query>
+/symbolwright propose-patch <goal>
+/symbolwright validation-plan
+/symbolwright ci-review
+/symbolwright pr-notes
+/symbolwright status
+/symbolwright help
 ```
 
 Ajna-specific commands:
 
 ```txt
-/codemind ajna review-pr <pr>
-/codemind ajna risk-map <pr>
-/codemind ajna merge-readiness <pr>
-/codemind ajna architecture-drift <pr>
+/symbolwright ajna review-pr <pr>
+/symbolwright ajna risk-map <pr>
+/symbolwright ajna merge-readiness <pr>
+/symbolwright ajna architecture-drift <pr>
 ```
 
 These commands are UX contracts. They do not prove that runtime execution is active.
@@ -78,18 +78,18 @@ These commands are UX contracts. They do not prove that runtime execution is act
 
 | Command | Purpose | Default Mode | Mutation Allowed | Approval Needed |
 |---|---|---|---|---|
-| `/codemind plan <goal>` | Produce a repository work plan | PLAN | No | No |
-| `/codemind scan` | Summarize repository structure | READ_ONLY | No | No |
-| `/codemind read <path>` | Read approved file content | READ_ONLY | No | No |
-| `/codemind search <query>` | Search repository text | READ_ONLY | No | No |
-| `/codemind propose-patch <goal>` | Draft a patch plan without applying it | PATCH_PROPOSAL | No | No |
-| `/codemind validation-plan` | Propose validation commands | PLAN | No | No |
-| `/codemind ci-review` | Diagnose CI failures from available logs/context | CI_REVIEW | No | Approval required for external actions |
-| `/codemind pr-notes` | Draft PR summary or review notes | PR_REVIEW | No | No |
-| `/codemind status` | Report SymbolWright mode and policy status | READ_ONLY | No | No |
-| `/codemind help` | Show available command surface | PLAN | No | No |
-| `/codemind ajna review-pr <pr>` | Produce an Ajna PR review report | PR_REVIEW | No | No |
-| `/codemind ajna merge-readiness <pr>` | Assess merge-readiness from evidence | PR_REVIEW | No | No |
+| `/symbolwright plan <goal>` | Produce a repository work plan | PLAN | No | No |
+| `/symbolwright scan` | Summarize repository structure | READ_ONLY | No | No |
+| `/symbolwright read <path>` | Read approved file content | READ_ONLY | No | No |
+| `/symbolwright search <query>` | Search repository text | READ_ONLY | No | No |
+| `/symbolwright propose-patch <goal>` | Draft a patch plan without applying it | PATCH_PROPOSAL | No | No |
+| `/symbolwright validation-plan` | Propose validation commands | PLAN | No | No |
+| `/symbolwright ci-review` | Diagnose CI failures from available logs/context | CI_REVIEW | No | Approval required for external actions |
+| `/symbolwright pr-notes` | Draft PR summary or review notes | PR_REVIEW | No | No |
+| `/symbolwright status` | Report SymbolWright mode and policy status | READ_ONLY | No | No |
+| `/symbolwright help` | Show available command surface | PLAN | No | No |
+| `/symbolwright ajna review-pr <pr>` | Produce an Ajna PR review report | PR_REVIEW | No | No |
+| `/symbolwright ajna merge-readiness <pr>` | Assess merge-readiness from evidence | PR_REVIEW | No | No |
 
 ---
 
@@ -176,18 +176,18 @@ network ingestion by default
 
 | UX Contract | Future Runtime Phase |
 |---|---|
-| `/codemind plan` | SYMBOLWRIGHT-R1 / SYMBOLWRIGHT-R5 |
-| `/codemind scan` | SYMBOLWRIGHT-R2 |
-| `/codemind read` | SYMBOLWRIGHT-R7 |
-| `/codemind search` | SYMBOLWRIGHT-R2 / SYMBOLWRIGHT-R7 |
-| `/codemind propose-patch` | SYMBOLWRIGHT-R5 |
-| `/codemind validation-plan` | SYMBOLWRIGHT-R5 |
-| `/codemind ci-review` | SYMBOLWRIGHT-R9 |
-| `/codemind pr-notes` | SYMBOLWRIGHT-R8 |
-| `/codemind status` | SYMBOLWRIGHT-R1 |
-| `/codemind help` | SYMBOLWRIGHT-R1 |
-| `/codemind ajna review-pr` | AJNA-3 / AJNA-4 |
-| `/codemind ajna merge-readiness` | AJNA-5 |
+| `/symbolwright plan` | SYMBOLWRIGHT-R1 / SYMBOLWRIGHT-R5 |
+| `/symbolwright scan` | SYMBOLWRIGHT-R2 |
+| `/symbolwright read` | SYMBOLWRIGHT-R7 |
+| `/symbolwright search` | SYMBOLWRIGHT-R2 / SYMBOLWRIGHT-R7 |
+| `/symbolwright propose-patch` | SYMBOLWRIGHT-R5 |
+| `/symbolwright validation-plan` | SYMBOLWRIGHT-R5 |
+| `/symbolwright ci-review` | SYMBOLWRIGHT-R9 |
+| `/symbolwright pr-notes` | SYMBOLWRIGHT-R8 |
+| `/symbolwright status` | SYMBOLWRIGHT-R1 |
+| `/symbolwright help` | SYMBOLWRIGHT-R1 |
+| `/symbolwright ajna review-pr` | AJNA-3 / AJNA-4 |
+| `/symbolwright ajna merge-readiness` | AJNA-5 |
 
 ---
 

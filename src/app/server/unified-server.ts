@@ -23,7 +23,7 @@ export type { StartedUnifiedServer, UnifiedServerOptions } from './route-types.j
  * one process, one port, serving the app shell, the (unauthenticated)
  * Workspace API, and the (authenticated) provider/chat/agent/tools/
  * memory/checkpoints API that used to live on a separate port behind
- * `codemind serve`.
+ * `symbolwright serve`.
  *
  * This composes rather than rewrites: the new routes (shell root,
  * `/workspace` redirect, `/api/status` alias, Workspace API) are checked

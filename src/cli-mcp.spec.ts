@@ -101,7 +101,7 @@ describe('cli-mcp', () => {
 
     it('throws when no target is given', async () => {
       await expect(renderMcpCallCommand([], workspaceDir)).rejects.toThrow(
-        /Usage: codemind mcp call/,
+        /Usage: symbolwright mcp call/,
       )
     })
 

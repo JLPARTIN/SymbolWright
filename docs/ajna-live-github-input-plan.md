@@ -9,7 +9,7 @@ This is a plan-first document. It intentionally does not add network ingestion, 
 Prepare a future adapter that can collect pull request context and normalize it into the same local evidence contract consumed by:
 
 ```bash
-codemind ajna review-pr <json-file>
+symbolwright ajna review-pr <json-file>
 ```
 
 The future live adapter should produce a `SymbolWrightAjnaReviewPrInput`-compatible object, then hand it to the existing deterministic renderer path.
@@ -17,7 +17,7 @@ The future live adapter should produce a `SymbolWrightAjnaReviewPrInput`-compati
 ## Proposed command surface
 
 ```bash
-codemind ajna review-pr-github <owner/repo> <pull-number> --out <json-file>
+symbolwright ajna review-pr-github <owner/repo> <pull-number> --out <json-file>
 ```
 
 Future behavior:
@@ -26,7 +26,7 @@ Future behavior:
 2. Read changed file paths and patch summaries.
 3. Read CI status summaries.
 4. Write a local JSON evidence file.
-5. Ask the operator to run `codemind ajna review-pr <json-file>`.
+5. Ask the operator to run `symbolwright ajna review-pr <json-file>`.
 
 The command should not render directly in the first live-ingestion PR. Keeping collection and rendering separate makes the boundary easier to test.
 

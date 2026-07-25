@@ -75,7 +75,7 @@ The CI workflow runs this contract test before the full test suite.
 
 The container `--user` is resolved to the host process's UID:GID (`resolveDefaultSandboxUser()`
 in `sandbox-runner.ts`), not a fixed container-image username. This was fixed after
-`codemind preflight` (see `SYMBOLWRIGHT_RUNTIME_BUILD_STATE.md`) first ran real
+`symbolwright preflight` (see `SYMBOLWRIGHT_RUNTIME_BUILD_STATE.md`) first ran real
 `npm run build`/`npm test`/`npm run typecheck` through the sandbox in CI and hit `EACCES`
 writing into the bind-mounted `/workspace` (`dist/` for build, `node_modules/.vite-temp/` for
 vitest's config cache) — the previously fixed `--user node` did not match the UID that owns

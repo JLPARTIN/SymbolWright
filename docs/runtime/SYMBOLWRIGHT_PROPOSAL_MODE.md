@@ -5,9 +5,9 @@ This document records Phase B proposal-mode activation.
 ## Active commands
 
 ```text
-codemind propose-patch <goal>
-codemind pr-notes [focus]
-codemind ci-review [source]
+symbolwright propose-patch <goal>
+symbolwright pr-notes [focus]
+symbolwright ci-review [source]
 ```
 
 ## Runtime tools

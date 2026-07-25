@@ -1,6 +1,6 @@
 # Ajna review-pr GitHub API fixture command
 
-The `codemind ajna review-pr-github-api-fixture <json-file>` command renders a local GitHub-shaped API payload through the existing deterministic Ajna review-pr path.
+The `symbolwright ajna review-pr-github-api-fixture <json-file>` command renders a local GitHub-shaped API payload through the existing deterministic Ajna review-pr path.
 
 It proves this local-only chain:
 

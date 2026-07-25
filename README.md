@@ -72,13 +72,13 @@ See [`docs/runtime/SYMBOLWRIGHT_CHAT_SERVER.md`](docs/runtime/SYMBOLWRIGHT_CHAT_
 
 Defaults to `READ_ONLY`; add `"--mode", "APPROVED_EXECUTION"` to the `args` array to allow file writes and shell commands. See [`docs/runtime/SYMBOLWRIGHT_MCP_SERVER.md`](docs/runtime/SYMBOLWRIGHT_MCP_SERVER.md).
 
-**Any other LLM, script, or agent framework over plain HTTP** — `codemind serve` also exposes `/api/chat` (streaming chat) and `/api/agent` (the full tool-execution loop) as bearer-authenticated HTTP+SSE endpoints. See [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) and [`docs/USING_SYMBOLWRIGHT_FROM_ANY_LLM.md`](docs/USING_SYMBOLWRIGHT_FROM_ANY_LLM.md).
+**Any other LLM, script, or agent framework over plain HTTP** — `symbolwright serve` also exposes `/api/chat` (streaming chat) and `/api/agent` (the full tool-execution loop) as bearer-authenticated HTTP+SSE endpoints. See [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) and [`docs/USING_SYMBOLWRIGHT_FROM_ANY_LLM.md`](docs/USING_SYMBOLWRIGHT_FROM_ANY_LLM.md).
 
 ## Current State
 
 All 20 runtime phases (A–T) are complete. The platform supports scanning, context building, direct agent execution, proposal workflows, local file writes, validation, GitHub write preparation/execution, PR review, merge-readiness, handoff generation, and audit/trace replay.
 
-`codemind status` reports runtime build state. `codemind doctor` validates workspace health. `codemind release-readiness` checks the release gates.
+`symbolwright status` reports runtime build state. `symbolwright doctor` validates workspace health. `symbolwright release-readiness` checks the release gates.
 
 ## Runtime Modes
 
@@ -98,19 +98,19 @@ APPROVED_EXECUTION
 Mode selection:
 
 ```bash
-codemind agent --mode APPROVED_EXECUTION "fix the failing tests"
-codemind agent --mode READ_ONLY "inspect the repo for stale docs"
-codemind agent --mode PROPOSAL_ONLY "draft the patch without applying it"
-codemind agent --mode PLAN_ONLY "make a plan only"
+symbolwright agent --mode APPROVED_EXECUTION "fix the failing tests"
+symbolwright agent --mode READ_ONLY "inspect the repo for stale docs"
+symbolwright agent --mode PROPOSAL_ONLY "draft the patch without applying it"
+symbolwright agent --mode PLAN_ONLY "make a plan only"
 ```
 
 Aliases:
 
 ```bash
-codemind agent --approved "run direct implementation"
-codemind agent --read-only "inspect only"
-codemind agent --proposal-only "draft only"
-codemind agent --plan-only "plan only"
+symbolwright agent --approved "run direct implementation"
+symbolwright agent --read-only "inspect only"
+symbolwright agent --proposal-only "draft only"
+symbolwright agent --plan-only "plan only"
 ```
 
 Environment/config support:
@@ -129,66 +129,66 @@ The aliases `direct`, `off`, and `approved` normalize to `APPROVED_EXECUTION`. T
 The active CLI package is `symbolwright` and exposes:
 
 ```txt
-codemind help
-codemind status
-codemind operator [mission]
-codemind agent [--mode <mode>] [message]
-codemind sessions
-codemind index [dir]
-codemind plan <goal>
-codemind read <path>
-codemind search <query>
-codemind validation-plan [focus]
-codemind propose-patch <goal>
-codemind pr-notes [focus]
-codemind pr-notes --fixture-file <json-file>
-codemind ci-review [source]
-codemind ci-review --fixture-file <json-file>
-codemind runtime run <goal> --read-only
-codemind live-read-policy <json-file>
-codemind live-read-client-fixture <json-file>
-codemind github-live-read <json-file>
-codemind ajna-live-read <json-file>
-codemind operator-review <json-file>
-codemind write-intent <json-file>
-codemind local-write <json-file>
-codemind apply-patch <json-file>
-codemind validation-command <json-file>
-codemind pr-preparation <json-file>
-codemind github-write-proposal <json-file>
-codemind github-write-gate <json-file>
-codemind github-write-executor <json-file>
-codemind workflow <json-file>
-codemind ajna-workflow <json-file>
-codemind repair-loop <json-file>
-codemind runtime-status
-codemind project-context [dir]
-codemind scan [dir]
-codemind preflight [changed-file...]
-codemind mission-packet <json-file>
-codemind audit-ledger <json-file>
-codemind trace-store <json-file>
-codemind build-ledger
-codemind doctor
-codemind version
-codemind release-readiness
-codemind ajna scan-profile [dir]
-codemind ajna docs
-codemind ajna client-pipeline-manifest
-codemind ajna client-pipeline-status
-codemind ajna review-pr <json-file>
-codemind ajna review-pr-github-fixture <json-file>
-codemind ajna review-pr-github-api-fixture <json-file>
-codemind ajna github-api-snapshot-fixture <json-file>
-codemind ajna client-collector-fixture <json-file>
-codemind ajna review-pr-client-collector-fixture <json-file>
-codemind ajna merge-readiness-client-collector-fixture <json-file>
-codemind ajna review-pr-collector-fixture <json-file>
-codemind ajna review-pr-readonly-collector-fixture <json-file>
-codemind ajna github-readonly-collector-fixture <json-file>
-codemind ajna merge-readiness <json-file>
-codemind serve [--host <host>] [--port <port>] [--cors-origin <origin>]
-codemind mcp-server [--mode <mode>]
+symbolwright help
+symbolwright status
+symbolwright operator [mission]
+symbolwright agent [--mode <mode>] [message]
+symbolwright sessions
+symbolwright index [dir]
+symbolwright plan <goal>
+symbolwright read <path>
+symbolwright search <query>
+symbolwright validation-plan [focus]
+symbolwright propose-patch <goal>
+symbolwright pr-notes [focus]
+symbolwright pr-notes --fixture-file <json-file>
+symbolwright ci-review [source]
+symbolwright ci-review --fixture-file <json-file>
+symbolwright runtime run <goal> --read-only
+symbolwright live-read-policy <json-file>
+symbolwright live-read-client-fixture <json-file>
+symbolwright github-live-read <json-file>
+symbolwright ajna-live-read <json-file>
+symbolwright operator-review <json-file>
+symbolwright write-intent <json-file>
+symbolwright local-write <json-file>
+symbolwright apply-patch <json-file>
+symbolwright validation-command <json-file>
+symbolwright pr-preparation <json-file>
+symbolwright github-write-proposal <json-file>
+symbolwright github-write-gate <json-file>
+symbolwright github-write-executor <json-file>
+symbolwright workflow <json-file>
+symbolwright ajna-workflow <json-file>
+symbolwright repair-loop <json-file>
+symbolwright runtime-status
+symbolwright project-context [dir]
+symbolwright scan [dir]
+symbolwright preflight [changed-file...]
+symbolwright mission-packet <json-file>
+symbolwright audit-ledger <json-file>
+symbolwright trace-store <json-file>
+symbolwright build-ledger
+symbolwright doctor
+symbolwright version
+symbolwright release-readiness
+symbolwright ajna scan-profile [dir]
+symbolwright ajna docs
+symbolwright ajna client-pipeline-manifest
+symbolwright ajna client-pipeline-status
+symbolwright ajna review-pr <json-file>
+symbolwright ajna review-pr-github-fixture <json-file>
+symbolwright ajna review-pr-github-api-fixture <json-file>
+symbolwright ajna github-api-snapshot-fixture <json-file>
+symbolwright ajna client-collector-fixture <json-file>
+symbolwright ajna review-pr-client-collector-fixture <json-file>
+symbolwright ajna merge-readiness-client-collector-fixture <json-file>
+symbolwright ajna review-pr-collector-fixture <json-file>
+symbolwright ajna review-pr-readonly-collector-fixture <json-file>
+symbolwright ajna github-readonly-collector-fixture <json-file>
+symbolwright ajna merge-readiness <json-file>
+symbolwright serve [--host <host>] [--port <port>] [--cors-origin <origin>]
+symbolwright mcp-server [--mode <mode>]
 ```
 
 ## Direct Agent Usage
@@ -196,7 +196,7 @@ codemind mcp-server [--mode <mode>]
 Use the agent command for normal implementation work:
 
 ```bash
-codemind agent --mode APPROVED_EXECUTION "implement the requested fix and validate it"
+symbolwright agent --mode APPROVED_EXECUTION "implement the requested fix and validate it"
 ```
 
 In direct mode, SymbolWright should prefer useful completed work over approval theater. It can still use Ajna, audit ledgers, and governance analysis when the task asks for forensic review, release proof, or merge-readiness evidence.
@@ -206,15 +206,15 @@ In direct mode, SymbolWright should prefer useful completed work over approval t
 Use these when you want planning or evidence without mutation:
 
 ```bash
-codemind plan "add runtime mode docs"
-codemind read README.md
-codemind search runtime
-codemind validation-plan "runtime activation"
-codemind propose-patch "draft the change only"
-codemind ci-review "local fixture"
+symbolwright plan "add runtime mode docs"
+symbolwright read README.md
+symbolwright search runtime
+symbolwright validation-plan "runtime activation"
+symbolwright propose-patch "draft the change only"
+symbolwright ci-review "local fixture"
 ```
 
-The legacy `codemind runtime run` path remains a bounded read-only runtime workflow. It is separate from the direct `codemind agent` surface.
+The legacy `symbolwright runtime run` path remains a bounded read-only runtime workflow. It is separate from the direct `symbolwright agent` surface.
 
 ## Hard Safety Rails
 
@@ -242,7 +242,7 @@ understand repository structure
 load project instructions
 scan code and docs
 plan implementation work
-perform direct implementation through codemind agent
+perform direct implementation through symbolwright agent
 propose patches without applying them
 write allowed local files
 run validation commands
@@ -258,9 +258,9 @@ generate agent kernel mission handoff packets
 validate workspace health and release readiness
 recall and store durable episodic, lexical, and procedural memory across agent turns
 run sandboxed PR preflight evidence checks and block pushes on regression
-serve a real browser chat UI + HTTP API against any registered provider (`codemind serve`, see docs/runtime/SYMBOLWRIGHT_CHAT_SERVER.md)
-run the real tool-execution agent loop over HTTP for Anthropic and any OpenAI-compatible provider, mode-gated (`POST /api/agent` on `codemind serve`)
-run itself as a real MCP server so any MCP-compatible LLM client can use its tools as a plugin (`codemind mcp-server`, see docs/runtime/SYMBOLWRIGHT_MCP_SERVER.md)
+serve a real browser chat UI + HTTP API against any registered provider (`symbolwright serve`, see docs/runtime/SYMBOLWRIGHT_CHAT_SERVER.md)
+run the real tool-execution agent loop over HTTP for Anthropic and any OpenAI-compatible provider, mode-gated (`POST /api/agent` on `symbolwright serve`)
+run itself as a real MCP server so any MCP-compatible LLM client can use its tools as a plugin (`symbolwright mcp-server`, see docs/runtime/SYMBOLWRIGHT_MCP_SERVER.md)
 ```
 
 Ajna remains evidence-first:

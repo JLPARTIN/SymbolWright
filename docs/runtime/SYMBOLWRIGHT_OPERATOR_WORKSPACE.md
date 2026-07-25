@@ -8,13 +8,13 @@ The SymbolWright Operator Workspace is the first real cockpit layer for running 
 npm install
 npm run build
 npm link
-codemind operator
+symbolwright operator
 ```
 
 For a one-shot mission without opening the prompt:
 
 ```bash
-codemind operator "inspect this repo and propose the next safest PR bundle"
+symbolwright operator "inspect this repo and propose the next safest PR bundle"
 ```
 
 ## Prompt model
@@ -62,7 +62,7 @@ CM-400 is intentionally read-first and approval-first.
 Use this layout while developing SymbolWright itself:
 
 ```txt
-Terminal 1: codemind operator
+Terminal 1: symbolwright operator
 Terminal 2: optional focused dev command or future workspace UI server
 Terminal 3: npm run typecheck && npm run lint && npm test && npm run build
 ```

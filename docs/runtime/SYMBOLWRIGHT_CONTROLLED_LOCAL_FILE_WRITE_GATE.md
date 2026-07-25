@@ -31,7 +31,7 @@ Every gate evaluation produces a `RuntimeAuditEvent` via `createLocalFileWriteAu
 ## CLI Command
 
 ```txt
-codemind local-write <json-file>
+symbolwright local-write <json-file>
 ```
 
 The fixture JSON must include:

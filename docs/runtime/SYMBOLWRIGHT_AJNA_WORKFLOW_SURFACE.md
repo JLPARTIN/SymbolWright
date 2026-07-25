@@ -2,7 +2,7 @@
 
 **Phase:** R
 **Status:** COMPLETE
-**Command:** `codemind ajna-workflow <json-file>`
+**Command:** `symbolwright ajna-workflow <json-file>`
 
 ## Purpose
 
@@ -53,5 +53,5 @@ no comments, approvals, merges
 ## CLI
 
 ```bash
-codemind ajna-workflow fixtures/ajna-workflow-fixture.json
+symbolwright ajna-workflow fixtures/ajna-workflow-fixture.json
 ```

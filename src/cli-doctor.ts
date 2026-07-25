@@ -51,7 +51,7 @@ function checkPackageJson(workspaceRoot: string): DoctorCheck {
   }
   try {
     const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as { name?: string; version?: string }
-    if (pkg.name === 'codemind' && typeof pkg.version === 'string') {
+    if (pkg.name === 'symbolwright' && typeof pkg.version === 'string') {
       return { name: 'package.json', status: 'PASS', detail: `${pkg.name}@${pkg.version}` }
     }
     return {

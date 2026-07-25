@@ -72,7 +72,7 @@ describe('cli-checkpoint', () => {
   describe('renderCheckpointShowCommand', () => {
     it('throws when no id is given', () => {
       expect(() => renderCheckpointShowCommand([], workspaceDir)).toThrow(
-        /Usage: codemind checkpoint show/,
+        /Usage: symbolwright checkpoint show/,
       )
     })
 
@@ -98,7 +98,7 @@ describe('cli-checkpoint', () => {
   describe('renderCheckpointRestoreCommand', () => {
     it('throws when no id is given', () => {
       expect(() => renderCheckpointRestoreCommand([], workspaceDir)).toThrow(
-        /Usage: codemind checkpoint restore/,
+        /Usage: symbolwright checkpoint restore/,
       )
     })
 

@@ -1,7 +1,7 @@
 # Running SymbolWright in GitHub Codespaces
 
 SymbolWright ships as **one server, one port**, started by `npm run serve`
-(`codemind serve` under the hood). It serves a single application shell with
+(`symbolwright serve` under the hood). It serves a single application shell with
 persistent navigation across a Dashboard, the Universal Polyglot Workspace
 (browser-local scratch editor), a real **Repository** tab (browses and edits
 the actual checked-out working tree, with git status/diffs, branches,
@@ -152,7 +152,7 @@ SYMBOLWRIGHT_CHAT_PORT=8788 npm run serve
 
 ## MCP server for Claude Desktop / Claude Code (no port, no browser)
 
-`codemind mcp-server` is a separate integration path: it speaks MCP
+`symbolwright mcp-server` is a separate integration path: it speaks MCP
 (JSON-RPC) over **stdio**, not HTTP, so there is no port to forward — your
 MCP-compatible client (Claude Desktop, Claude Code, another agent
 framework) launches the process itself. Point it at the built CLI:

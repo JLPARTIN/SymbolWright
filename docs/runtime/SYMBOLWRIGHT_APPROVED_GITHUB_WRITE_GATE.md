@@ -46,7 +46,7 @@ Every evaluation produces a `RuntimeAuditEvent`:
 ## CLI Command
 
 ```txt
-codemind github-write-gate <json-file>
+symbolwright github-write-gate <json-file>
 ```
 
 The fixture JSON must include:

@@ -165,7 +165,9 @@ export function getSkillByName(
 export function requireSkillByName(name: string, cwd: string = process.cwd()): SkillDefinition {
   const skill = getSkillByName(name, cwd)
   if (skill === undefined) {
-    throw new Error(`Skill not found: ${name}. Run "codemind skill list" to see available skills.`)
+    throw new Error(
+      `Skill not found: ${name}. Run "symbolwright skill list" to see available skills.`,
+    )
   }
   return skill
 }

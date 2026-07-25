@@ -1,13 +1,13 @@
 # Ajna review-pr GitHub fixture command
 
-The `codemind ajna review-pr-github-fixture <json-file>` command renders a local mocked GitHub pull request payload through the existing deterministic Ajna review-pr path.
+The `symbolwright ajna review-pr-github-fixture <json-file>` command renders a local mocked GitHub pull request payload through the existing deterministic Ajna review-pr path.
 
 This command is intentionally local-only. It does not fetch from GitHub, post pull request comments, mutate repositories, call LLM providers, run shell commands, or make merge decisions.
 
 ## Usage
 
 ```bash
-codemind ajna review-pr-github-fixture examples/ajna/github-pr-payload.ready.json
+symbolwright ajna review-pr-github-fixture examples/ajna/github-pr-payload.ready.json
 ```
 
 The command performs this local-only pipeline:
@@ -55,4 +55,4 @@ This command is the bridge between the pure payload normalizer and the future li
 
 ## Do Not Repeat guard
 
-Do not use this command to reimplement `codemind ajna review-pr <json-file>`. The fixture command should only adapt mocked GitHub payloads into the existing review-pr input contract, then reuse the existing renderer.
+Do not use this command to reimplement `symbolwright ajna review-pr <json-file>`. The fixture command should only adapt mocked GitHub payloads into the existing review-pr input contract, then reuse the existing renderer.

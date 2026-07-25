@@ -5,7 +5,7 @@ This document records Phase K approved write preparation.
 ## Active command
 
 ```text
-codemind write-intent <json-file>
+symbolwright write-intent <json-file>
 ```
 
 ## Purpose

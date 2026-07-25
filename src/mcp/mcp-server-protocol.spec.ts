@@ -6,7 +6,7 @@ import {
   type McpServerToolHandler,
 } from './mcp-server-protocol.js'
 
-const SERVER_INFO = { name: 'codemind', version: '0.1.0' }
+const SERVER_INFO = { name: 'symbolwright', version: '0.2.0' }
 
 const FAKE_HANDLER: McpServerToolHandler = {
   list: () => [

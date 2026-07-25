@@ -45,7 +45,7 @@ Every gate evaluation produces a `RuntimeAuditEvent` via `createValidationComman
 ## CLI Command
 
 ```txt
-codemind validation-command <json-file>
+symbolwright validation-command <json-file>
 ```
 
 The fixture JSON must include:

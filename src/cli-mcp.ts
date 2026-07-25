@@ -143,7 +143,7 @@ export async function renderMcpCallCommand(
   const { positionals, configPath, timeoutMs, policy } = parseMcpFlags(args)
   const target = positionals[0]
   if (target === undefined) {
-    throw new Error('Usage: codemind mcp call <server.tool|tool> [json-arguments]')
+    throw new Error('Usage: symbolwright mcp call <server.tool|tool> [json-arguments]')
   }
 
   const config = loadMcpConfig(cwd, configPath)

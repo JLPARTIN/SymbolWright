@@ -36,60 +36,60 @@ Phase T: COMPLETE — Approved local file write execution
 ## Active runtime surface
 
 ```text
-codemind help
-codemind status
-codemind operator [mission]
-codemind agent [--mode <mode>] [message]
-codemind sessions
-codemind index [dir]
-codemind plan <goal>
-codemind read <path>
-codemind search <query>
-codemind validation-plan [focus]
-codemind propose-patch <goal>
-codemind pr-notes [focus]
-codemind pr-notes --fixture-file <json-file>
-codemind ci-review [source]
-codemind ci-review --fixture-file <json-file>
-codemind runtime run <goal> --read-only
-codemind live-read-policy <json-file>
-codemind live-read-client-fixture <json-file>
-codemind github-live-read <json-file>
-codemind ajna-live-read <json-file>
-codemind operator-review <json-file>
-codemind write-intent <json-file>
-codemind local-write <json-file>
-codemind apply-patch <json-file>
-codemind validation-command <json-file>
-codemind pr-preparation <json-file>
-codemind github-write-proposal <json-file>
-codemind github-write-gate <json-file>
-codemind workflow <json-file>
-codemind ajna-workflow <json-file>
-codemind runtime-status
-codemind project-context [dir]
-codemind scan [dir]
-codemind ajna scan-profile [dir]
-codemind ajna docs
-codemind ajna client-pipeline-manifest
-codemind ajna client-pipeline-status
-codemind ajna review-pr <json-file>
-codemind ajna review-pr-github-fixture <json-file>
-codemind ajna review-pr-github-api-fixture <json-file>
-codemind ajna github-api-snapshot-fixture <json-file>
-codemind ajna client-collector-fixture <json-file>
-codemind ajna review-pr-client-collector-fixture <json-file>
-codemind ajna merge-readiness-client-collector-fixture <json-file>
-codemind ajna review-pr-collector-fixture <json-file>
-codemind ajna review-pr-readonly-collector-fixture <json-file>
-codemind ajna github-readonly-collector-fixture <json-file>
-codemind ajna merge-readiness <json-file>
+symbolwright help
+symbolwright status
+symbolwright operator [mission]
+symbolwright agent [--mode <mode>] [message]
+symbolwright sessions
+symbolwright index [dir]
+symbolwright plan <goal>
+symbolwright read <path>
+symbolwright search <query>
+symbolwright validation-plan [focus]
+symbolwright propose-patch <goal>
+symbolwright pr-notes [focus]
+symbolwright pr-notes --fixture-file <json-file>
+symbolwright ci-review [source]
+symbolwright ci-review --fixture-file <json-file>
+symbolwright runtime run <goal> --read-only
+symbolwright live-read-policy <json-file>
+symbolwright live-read-client-fixture <json-file>
+symbolwright github-live-read <json-file>
+symbolwright ajna-live-read <json-file>
+symbolwright operator-review <json-file>
+symbolwright write-intent <json-file>
+symbolwright local-write <json-file>
+symbolwright apply-patch <json-file>
+symbolwright validation-command <json-file>
+symbolwright pr-preparation <json-file>
+symbolwright github-write-proposal <json-file>
+symbolwright github-write-gate <json-file>
+symbolwright workflow <json-file>
+symbolwright ajna-workflow <json-file>
+symbolwright runtime-status
+symbolwright project-context [dir]
+symbolwright scan [dir]
+symbolwright ajna scan-profile [dir]
+symbolwright ajna docs
+symbolwright ajna client-pipeline-manifest
+symbolwright ajna client-pipeline-status
+symbolwright ajna review-pr <json-file>
+symbolwright ajna review-pr-github-fixture <json-file>
+symbolwright ajna review-pr-github-api-fixture <json-file>
+symbolwright ajna github-api-snapshot-fixture <json-file>
+symbolwright ajna client-collector-fixture <json-file>
+symbolwright ajna review-pr-client-collector-fixture <json-file>
+symbolwright ajna merge-readiness-client-collector-fixture <json-file>
+symbolwright ajna review-pr-collector-fixture <json-file>
+symbolwright ajna review-pr-readonly-collector-fixture <json-file>
+symbolwright ajna github-readonly-collector-fixture <json-file>
+symbolwright ajna merge-readiness <json-file>
 ```
 
 ## Retired Phase D surface
 
 ```text
-codemind runtime run <goal> --approval-ticket <id>  retired
+symbolwright runtime run <goal> --approval-ticket <id>  retired
 apply_edit_gated                                    retired
 command_dry_run_gated                              retired
 ```

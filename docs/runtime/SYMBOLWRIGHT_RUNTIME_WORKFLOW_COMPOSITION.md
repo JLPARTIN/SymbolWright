@@ -2,7 +2,7 @@
 
 **Phase:** Q
 **Status:** COMPLETE
-**Command:** `codemind workflow <json-file>`
+**Command:** `symbolwright workflow <json-file>`
 
 ## Purpose
 
@@ -65,7 +65,7 @@ The workflow registry extends the Phase P GitHub write gate registry. All tools 
 ## CLI
 
 ```bash
-codemind workflow fixtures/workflow-fixture.json
+symbolwright workflow fixtures/workflow-fixture.json
 ```
 
 ## Out of Scope

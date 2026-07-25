@@ -80,7 +80,7 @@ async function renderSandboxRunCommand(
   options: SandboxCliOptions,
 ): Promise<string> {
   const filePath = args[0]
-  if (filePath === undefined) return 'Usage: codemind sandbox run <file>'
+  if (filePath === undefined) return 'Usage: symbolwright sandbox run <file>'
   return executeFile(filePath, 'run', options)
 }
 
@@ -89,7 +89,7 @@ async function renderSandboxTestCommand(
   options: SandboxCliOptions,
 ): Promise<string> {
   const filePath = args[0]
-  if (filePath === undefined) return 'Usage: codemind sandbox test <file>'
+  if (filePath === undefined) return 'Usage: symbolwright sandbox test <file>'
   return executeFile(filePath, 'test', options)
 }
 

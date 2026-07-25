@@ -1,10 +1,12 @@
 # SymbolWright Migration Guide
 
-CodeMind's product identity, documentation, UI, environment variables, and
-persisted-state directory have been renamed to **SymbolWright**. The npm
-package name and `codemind` CLI binary have **not** been renamed yet (see
-"What hasn't changed" below) — existing installs keep working with zero
-action required.
+CodeMind has been renamed to **SymbolWright** — product identity,
+documentation, UI, environment variables, persisted-state directory, the
+published npm package, the CLI binary, and the MCP handshake identity are
+all now SymbolWright. Every `codemind`-named equivalent (package name, CLI
+binaries, `CODEMIND_*` environment variables, `.codemind` state directory,
+browser-stored settings) keeps working unchanged as a compatibility layer
+— existing installs and automation need zero immediate action.
 
 ## Why
 
@@ -80,43 +82,58 @@ duplicate or corrupted state results.
 
 ## CLI
 
-The command is still `codemind` — **this has not changed**. All
-subcommands (`codemind agent`, `codemind serve`, `codemind mcp-server`,
-etc.) work exactly as before.
+The canonical command is now `symbolwright` (and `symbolwright-workspace`).
+The old `codemind` and `codemind-workspace` commands **keep working
+unchanged** — both names point at the exact same executable, so scripts
+and muscle memory built around `codemind ...` don't need to change.
+
+```
+symbolwright agent --mode APPROVED_EXECUTION "fix the failing tests"
+codemind agent --mode APPROVED_EXECUTION "fix the failing tests"   # identical, still works
+```
+
+## Package / import identity
+
+The published npm package is now `symbolwright`
+(`npm install symbolwright` / `npx symbolwright ...`). The old `codemind`
+package name and its `codemind`/`codemind-workspace` binaries are kept as
+permanent aliases in the same package — installing either name gets you
+the same tool. There is currently no deprecation timeline for the
+`codemind` aliases.
+
+## MCP server / client identity
+
+The MCP `initialize` handshake now reports `name: "symbolwright"` (both
+when SymbolWright runs as an MCP **server** — `symbolwright mcp-server` /
+`codemind mcp-server`, identical — and when it runs as an MCP **client**
+calling other servers). If your MCP client config matches on this
+identity string rather than just the process path, update it to
+`symbolwright`; the invocation command itself (`codemind mcp-server`)
+still works either way.
 
 ## Browser / dashboard settings
 
 If you already had an API key saved in the SymbolWright/CodeMind dashboard
-(`codemind serve`'s browser UI), it keeps working — on first load, the
+(`symbolwright serve`'s browser UI), it keeps working — on first load, the
 browser automatically copies your key from the old `codemind_api_key`
 localStorage entry into the new `symbolwright_api_key` entry. The Settings
 page's "Clear key" button now clears both. Nothing is lost, and there's no
 action required.
 
-## Package / import identity
+## GitHub repository
 
-The published npm package is still named `codemind`
-(`npm install codemind`), and its CLI binaries are still `codemind` and
-`codemind-workspace`. **This has not changed in this pass** — see
-"What hasn't changed" below.
+The repository now lives at `github.com/JLPARTIN/SymbolWright`. GitHub
+automatically redirects the old `github.com/JLPARTIN/CodeMind` URL, so
+existing clones, bookmarks, and CI configs referencing the old location
+keep working — but update your `git remote` to the new URL when
+convenient, since GitHub's redirect isn't guaranteed to be permanent.
 
-## What hasn't changed (deferred)
+## What hasn't changed (still deferred)
 
-These are real, external-facing contracts that other people's automation
-may already depend on. Renaming them is a breaking change with no
-deprecation window, so they're intentionally out of scope for this pass:
-
-- **npm package name** (`codemind`) and **CLI binaries**
-  (`codemind`, `codemind-workspace`)
-- **MCP server/client handshake identity** (`name: 'codemind'` in the
-  `initialize` request/response) — if you have an MCP client config that
-  matches on this, it keeps working unchanged
-- **GitHub repository location** (`github.com/JLPARTIN/CodeMind`)
 - **The `x-codemind-connector` HTTP header** used by the external AELIB
-  integration
-
-These will be addressed in a future pass, once this phase has run in
-production and any issues with the compatibility layer are ironed out.
+  integration — this needs coordination with that system before it can
+  be renamed, and hasn't happened yet.
+- **The `cm-` session-ID filename prefix** — cosmetic, not addressed.
 
 ## Troubleshooting
 
@@ -146,5 +163,6 @@ If you need to roll back to a build that only understood `.codemind` and
    (or `~/.codemind.migrated`) — rename it back to `.codemind`.
 2. Set `CODEMIND_API_KEY` (and any other `CODEMIND_*` variables you use) —
    they were never removed from your environment by this migration.
-3. The npm package and CLI binary names are unchanged, so no reinstall is
-   needed either way.
+3. `npm install codemind` still installs the exact same package as
+   `npm install symbolwright`, so no reinstall is strictly needed either
+   way — just keep invoking it as `codemind ...` if you prefer.

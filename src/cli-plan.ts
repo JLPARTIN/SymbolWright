@@ -9,7 +9,7 @@ export interface SymbolWrightPlan {
 export function buildSymbolWrightPlan(goal: string): SymbolWrightPlan {
   const trimmedGoal = goal.trim()
   if (trimmedGoal.length === 0) {
-    throw new Error('Missing goal: codemind plan <goal>')
+    throw new Error('Missing goal: symbolwright plan <goal>')
   }
 
   return {

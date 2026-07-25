@@ -1,6 +1,6 @@
 # Ajna client pipeline status command
 
-The `codemind ajna client-pipeline-status` command prints whether the local Ajna client collector fixture pipeline still matches the expected manifest shape.
+The `symbolwright ajna client-pipeline-status` command prints whether the local Ajna client collector fixture pipeline still matches the expected manifest shape.
 
 It checks the three local fixture steps added across the recent Ajna client collector work:
 

@@ -1,5 +1,15 @@
 # CodeMind → SymbolWright Final Forensic Audit
 
+> **Phase 6 addendum (follow-up session):** the operator directed
+> continuing into Phase 6 after this document's original Phase 1–5
+> verdict below. The npm package, CLI binaries, and MCP handshake
+> identity are now canonically `symbolwright`, with `codemind` kept as a
+> permanent compatibility alias. Mid-session, `git push` revealed the
+> GitHub repository had already been renamed to `JLPARTIN/SymbolWright`
+> externally. Full detail in the Implementation Inventory's §12 and in
+> the new §33 at the end of this document. Sections 1–32 below are
+> preserved exactly as originally written for the Phase 1–5 verdict.
+
 ## 1. Executive Verdict
 
 **READY FOR OPERATOR REVIEW.** SymbolWright is now the canonical product
@@ -381,4 +391,48 @@ retained old-name occurrence explained — **met**, §26.
 
 ## 32. Final Verdict
 
-**READY FOR OPERATOR REVIEW**
+**READY FOR OPERATOR REVIEW** (Phase 1–5 scope, as originally assessed)
+
+## 33. Phase 6 Addendum: npm/CLI/MCP Identity
+
+Full detail in `docs/rebrand/CODEMIND_TO_SYMBOLWRIGHT_IMPLEMENTATION_INVENTORY.md`
+§12. Summary:
+
+- **Changed:** `package.json` name (`codemind` → `symbolwright`, verified
+  available on the npm registry first), version bumped to `0.2.0` with a
+  matching `CHANGELOG.md` entry, `bin` now has both canonical
+  (`symbolwright`/`symbolwright-workspace`) and permanently-aliased
+  (`codemind`/`codemind-workspace`) entries pointing at identical build
+  outputs, `repository.url` updated to the real (already externally
+  renamed) `github.com/jlpartin/symbolwright.git`, `package-lock.json`
+  regenerated via `npm install`. MCP server/client handshake identity
+  (`DEFAULT_SERVER_INFO`/`CLIENT_INFO`) now reports `symbolwright`. All
+  `codemind <subcommand>` documentation/usage-string examples were
+  reversed to show `symbolwright <subcommand>` as canonical (the exact
+  inverse of the Phase 1–5 preservation pass), with `codemind` called out
+  as a still-working alias in the migration guide. Fixtures representing
+  the real GitHub repository identity were updated to match the
+  now-actual `JLPARTIN/SymbolWright` location.
+- **Fixed while validating:** `PACKAGE_BIN_CONTRACT`'s bin-map equality
+  check in `cli-release-readiness.ts` was order-sensitive
+  (`JSON.stringify` comparison), which broke once the bin map grew past
+  two keys in an npm-chosen order different from `package.json`'s;
+  replaced with an order-independent comparison.
+- **Not changed:** `x-codemind-connector` header (still needs external
+  AELIB coordination) and the `cm-` session-ID prefix — both remain
+  deferred, unchanged from the original Phase 1–5 assessment.
+- **Validation:** `npm run typecheck`, `lint`, `format:check` clean;
+  `npx vitest run` — 484 files, 3546 passed, 1 pre-existing skip; `npm run
+  build` clean; live `node dist/cli.js version`/`release-readiness` runs
+  confirmed `RELEASE_READY` (16/16 gates) with the new package identity.
+- **Process incident, fully recovered:** live CLI verification against
+  this repo's own working directory triggered the real `.codemind` →
+  `.symbolwright` migration against the repo's committed `.codemind/`
+  anomaly, and a subsequent cleanup command deleted the renamed-aside
+  directory. Since those files were git-committed, `git checkout --
+  .codemind/` restored them from HEAD with zero data loss. No repository
+  content was permanently affected; noted here for transparency and as
+  guidance for future manual verification (use an isolated temp copy, not
+  the repo root).
+
+**Final Verdict (Phase 1–6):** **READY FOR OPERATOR REVIEW**

@@ -244,7 +244,7 @@ describe('renderTuiWorkspace', () => {
   it('renders a full SymbolWright workspace shell', () => {
     const output = renderTuiWorkspace(baseState(), {
       mission: 'modernize ProofLine',
-      commandHistory: ['codemind scan', 'codemind runtime run modernize --read-only'],
+      commandHistory: ['symbolwright scan', 'symbolwright runtime run modernize --read-only'],
       width: 32,
     })
 
@@ -252,7 +252,7 @@ describe('renderTuiWorkspace', () => {
     expect(output).toContain('Mission Console:')
     expect(output).toContain('> modernize ProofLine')
     expect(output).toContain('Command History:')
-    expect(output).toContain('1. codemind scan')
+    expect(output).toContain('1. symbolwright scan')
     expect(output).toContain('Agent Stream:')
     expect(output).toContain('Tools: No active tools.')
     expect(output).toContain('HiveMind: No swarm agents active.')

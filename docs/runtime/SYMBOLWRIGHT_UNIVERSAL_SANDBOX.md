@@ -11,7 +11,7 @@ This document tracks the Bundle #4 sandbox runtime rollout. The current implemen
 - Explicit container image allowlist.
 - Read-only sandbox doctor and image diagnostics renderer.
 - Read-only image inspection and operator-reviewed preparation-plan command contracts.
-- Top-level `codemind sandbox ...` CLI routing through the existing CLI entrypoint.
+- Top-level `symbolwright sandbox ...` CLI routing through the existing CLI entrypoint.
 - Read-only local image-store inspection for allowlisted image IDs only.
 - Container backend policy skeleton for future no-network isolated execution.
 - Review-only container command planner for future Docker/Podman execution.
@@ -32,7 +32,7 @@ Runtime discovery runs bounded version checks only. It does not execute reposito
 
 ## Container image policy
 
-Container images are an explicit allowlist. Browser requests cannot supply arbitrary image names. Images are not pulled automatically during normal execution. The default inventory keeps images disabled and marks them not installed; `codemind sandbox inspect <image-id>` can separately read allowlisted local image-store metadata when Docker or Podman is detected.
+Container images are an explicit allowlist. Browser requests cannot supply arbitrary image names. Images are not pulled automatically during normal execution. The default inventory keeps images disabled and marks them not installed; `symbolwright sandbox inspect <image-id>` can separately read allowlisted local image-store metadata when Docker or Podman is detected.
 
 ## Container execution policy skeleton
 
@@ -97,10 +97,10 @@ Preparation commands are advisory. SymbolWright does not run them automatically.
 The sandbox image command contract accepts allowlisted image IDs only, never raw image names. The top-level CLI currently supports:
 
 ```bash
-codemind sandbox doctor
-codemind sandbox images
-codemind sandbox inspect node-22-bookworm-slim
-codemind sandbox prepare python-3-12-slim
+symbolwright sandbox doctor
+symbolwright sandbox images
+symbolwright sandbox inspect node-22-bookworm-slim
+symbolwright sandbox prepare python-3-12-slim
 ```
 
 Inspection is read-only. It may call the detected container engine to inspect an allowlisted image already present in the local image store. It does not acquire images, execute containers, mount volumes, pass arbitrary image names, or mutate the host. Preparation renders a review-only command plan when Docker or Podman has been detected. SymbolWright does not run that command, download the image, execute containers, or mutate the host in this slice.

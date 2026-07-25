@@ -4,9 +4,9 @@ SymbolWright exposes a provider-neutral API surface so any browser, LLM, coding 
 
 ## Live implementation
 
-`codemind serve` starts one real HTTP server on one port (`src/app/server/unified-server.ts`) implementing the chat + provider routes below, plus the unified app shell at `/` (Dashboard, Workspace, Agent, Tools, Memory, Checkpoints, Settings — all one page, hash-routed). See [`SYMBOLWRIGHT_CHAT_SERVER.md`](runtime/SYMBOLWRIGHT_CHAT_SERVER.md) for setup, auth, and deployment notes.
+`symbolwright serve` starts one real HTTP server on one port (`src/app/server/unified-server.ts`) implementing the chat + provider routes below, plus the unified app shell at `/` (Dashboard, Workspace, Agent, Tools, Memory, Checkpoints, Settings — all one page, hash-routed). See [`SYMBOLWRIGHT_CHAT_SERVER.md`](runtime/SYMBOLWRIGHT_CHAT_SERVER.md) for setup, auth, and deployment notes.
 
-Governed tool execution is live today over two transports: `POST /api/agent` (HTTP+SSE, this server) runs the real `codemind agent` tool-execution loop; `codemind mcp-server` (see [`runtime/SYMBOLWRIGHT_MCP_SERVER.md`](runtime/SYMBOLWRIGHT_MCP_SERVER.md)) exposes the same tool registry to any MCP-compatible LLM client over stdio. Both are gated by the same runtime-mode policy as everywhere else in SymbolWright.
+Governed tool execution is live today over two transports: `POST /api/agent` (HTTP+SSE, this server) runs the real `symbolwright agent` tool-execution loop; `symbolwright mcp-server` (see [`runtime/SYMBOLWRIGHT_MCP_SERVER.md`](runtime/SYMBOLWRIGHT_MCP_SERVER.md)) exposes the same tool registry to any MCP-compatible LLM client over stdio. Both are gated by the same runtime-mode policy as everywhere else in SymbolWright.
 
 `/api/missions`, `/api/tools/run`, `/api/sessions/:id`, and `/api/missions/:id/events` remain contract-only in `src/api/universal-api-contract.ts` — they describe a further target shape (persisted sessions, a single tool-call-at-a-time HTTP primitive, PR/audit integration) that `/api/agent` doesn't cover yet.
 

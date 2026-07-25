@@ -83,7 +83,9 @@ function parseModeFlag(value: string): SymbolWrightRuntimeMode {
 function parseProviderFlag(value: string): SymbolWrightProviderId {
   const provider = parseProviderId(value)
   if (provider === undefined) {
-    throw new Error(`Invalid provider: ${value}. Run "codemind providers" for supported providers.`)
+    throw new Error(
+      `Invalid provider: ${value}. Run "symbolwright providers" for supported providers.`,
+    )
   }
   return provider
 }
