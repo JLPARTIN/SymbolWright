@@ -418,9 +418,7 @@ Full detail in `docs/rebrand/CODEMIND_TO_SYMBOLWRIGHT_IMPLEMENTATION_INVENTORY.m
   (`JSON.stringify` comparison), which broke once the bin map grew past
   two keys in an npm-chosen order different from `package.json`'s;
   replaced with an order-independent comparison.
-- **Not changed:** `x-codemind-connector` header (still needs external
-  AELIB coordination) and the `cm-` session-ID prefix — both remain
-  deferred, unchanged from the original Phase 1–5 assessment.
+- **Not changed:** the `cm-` session-ID prefix — cosmetic, deferred.
 - **Validation:** `npm run typecheck`, `lint`, `format:check` clean;
   `npx vitest run` — 484 files, 3546 passed, 1 pre-existing skip; `npm run
   build` clean; live `node dist/cli.js version`/`release-readiness` runs
@@ -435,4 +433,24 @@ Full detail in `docs/rebrand/CODEMIND_TO_SYMBOLWRIGHT_IMPLEMENTATION_INVENTORY.m
   guidance for future manual verification (use an isolated temp copy, not
   the repo root).
 
-**Final Verdict (Phase 1–6):** **READY FOR OPERATOR REVIEW**
+## 34. Phase 7 Addendum: AELIB Connector Header and Env Vars
+
+- **Resolved, not deferred:** the original Phase 1–6 assessment listed the
+  `x-codemind-connector` header as blocked on external coordination with
+  AELIB-X1YA0I. Since the operator confirmed ownership of that repo, its
+  code was inspected directly (`nest-health.controller.ts`,
+  `api-key.guard.ts`): the `/health` endpoint is `@Public()` and its guard
+  only checks `x-api-key`. The old header name was never read by the
+  receiving system, so no dual-send transition was needed — it was renamed
+  outright to `x-symbolwright-connector` in `src/aelib/aelib-connector.ts`.
+- **Also added:** canonical `SYMBOLWRIGHT_AELIB_ENDPOINT` /
+  `SYMBOLWRIGHT_AELIB_HEALTH_PATH` / `SYMBOLWRIGHT_AELIB_TOKEN` env vars
+  (missed in the original Phase 1 env-compat pass), each falling back
+  through `CODEMIND_AELIB_*` and then the original bare `AELIB_*` form.
+- **AELIB-X1YA0I itself:** confirmed to require no code change — it never
+  read the renamed header or the `CODEMIND_AELIB_*` env vars.
+- **Validation:** `npm run typecheck` clean; `npx vitest run
+  src/aelib/aelib-connector.spec.ts` — 10/10 passed; full suite re-run
+  before merge (see PR).
+
+**Final Verdict (Phase 1–7):** **READY FOR OPERATOR REVIEW**
