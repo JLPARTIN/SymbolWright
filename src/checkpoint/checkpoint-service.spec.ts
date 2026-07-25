@@ -1,8 +1,8 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import fs, { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RuntimeAuditLog } from '../runtime/audit/runtime-audit-log.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
@@ -230,6 +230,38 @@ describe('restoreCheckpoint', () => {
     const updated = getCheckpoint(workspaceDir, metadata.checkpointId)
     expect(updated?.restores).toHaveLength(1)
     expect(updated?.restores[0]?.restoredFileHashes[targetPath]).toMatch(/^[0-9a-f]{64}$/)
+  })
+
+  it('leaves the on-disk file untouched when the restore write is interrupted mid-rename', () => {
+    const targetPath = 'a.ts'
+    const resolvedPath = join(workspaceDir, targetPath)
+    writeFileSync(resolvedPath, 'original content', 'utf-8')
+
+    const metadata = createCheckpoint({
+      workspaceRoot: workspaceDir,
+      sessionId: 'cm-1',
+      tool: 'edit_file',
+      files: [
+        { targetPath, resolvedPath, existedBefore: true, originalContent: 'original content' },
+      ],
+    })
+
+    writeFileSync(resolvedPath, 'mutated content', 'utf-8')
+
+    const renameSpy = vi.spyOn(fs, 'renameSync').mockImplementation(() => {
+      throw new Error('simulated crash between temp write and rename')
+    })
+
+    expect(() =>
+      restoreCheckpoint({
+        workspaceRoot: workspaceDir,
+        checkpointId: metadata.checkpointId,
+        policy: WRITABLE_POLICY,
+      }),
+    ).toThrow('simulated crash between temp write and rename')
+    renameSpy.mockRestore()
+
+    expect(readFileSync(resolvedPath, 'utf-8')).toBe('mutated content')
   })
 
   it('deletes a file that did not exist before the original mutation', () => {

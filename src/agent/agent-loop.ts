@@ -5,6 +5,10 @@ import type {
   ProviderTokenUsage,
 } from '../provider/provider.types.js'
 import type { RuntimeToolDefinition, RuntimeToolContext } from '../runtime/types.js'
+import {
+  UNTRUSTED_CONTENT_SYSTEM_NOTICE,
+  wrapUntrustedContent,
+} from '../runtime/context/untrusted-content-boundary.js'
 import type {
   AgentLoopConfig,
   AgentLoopEvent,
@@ -107,7 +111,12 @@ async function executeToolCall(
 
   const startTime = Date.now()
   try {
-    const output = await bridged.runtimeTool.execute(call.input, toolContext)
+    const rawOutput = await bridged.runtimeTool.execute(call.input, toolContext)
+    const output =
+      toolContext.untrustedRepositoryContent === true &&
+      (bridged.runtimeTool.capability === 'READ' || bridged.runtimeTool.capability === 'SEARCH')
+        ? wrapUntrustedContent(rawOutput)
+        : rawOutput
     return {
       toolUseId: call.id,
       name: call.name,
@@ -170,6 +179,12 @@ export async function runAgentLoop(
   const maxIterations = config.maxIterations ?? DEFAULT_MAX_ITERATIONS
   const bridgedTools = bridgeToolsForProvider(tools, toolContext.policy)
   const providerTools = extractProviderTools(bridgedTools)
+  const systemPrompt =
+    toolContext.untrustedRepositoryContent === true
+      ? [config.systemPrompt, UNTRUSTED_CONTENT_SYSTEM_NOTICE]
+          .filter((part): part is string => part !== undefined && part.length > 0)
+          .join('\n\n')
+      : config.systemPrompt
 
   const messages: ProviderMessage[] = [
     ...(config.priorMessages ?? []),
@@ -186,7 +201,7 @@ export async function runAgentLoop(
     let streamResult: Awaited<ReturnType<typeof collectStreamEvents>>
     try {
       const stream = provider.complete(messages, providerTools, {
-        systemPrompt: config.systemPrompt,
+        systemPrompt,
         ...(config.model !== undefined ? { model: config.model } : {}),
         ...(config.maxTokens !== undefined ? { maxTokens: config.maxTokens } : {}),
         ...(config.temperature !== undefined ? { temperature: config.temperature } : {}),

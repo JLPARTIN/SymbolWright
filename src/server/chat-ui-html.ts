@@ -47,7 +47,7 @@ export function renderChatStyles(): string {
 /**
  * The SymbolWright Chat's inner markup, without an outer `<main>`/`<html>`
  * wrapper, so it can be embedded directly inside the unified app shell's
- * `agent` view as well as the standalone `renderChatUiHtml()` document below.
+ * `agent` view.
  */
 export function renderChatBodyMarkup(): string {
   return `<h1>SymbolWright Chat</h1>
@@ -135,23 +135,4 @@ export function renderChatBodyMarkup(): string {
  */
 export function renderChatScripts(): string {
   return `<script>(function () {${buildChatTranscriptClientScript()}})();</script>`
-}
-
-export function renderChatUiHtml(): string {
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SymbolWright Chat</title>
-  ${renderChatStyles()}
-</head>
-<body>
-  <main>
-    ${renderChatBodyMarkup()}
-  </main>
-
-  ${renderChatScripts()}
-</body>
-</html>`
 }

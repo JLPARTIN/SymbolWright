@@ -98,26 +98,66 @@ export const DEFAULT_SANDBOX_USER = 'node'
 export const DEFAULT_TIMEOUT_MS = 300_000
 export const DEFAULT_MAX_OUTPUT_BYTES = 1024 * 1024
 
-const FILE_WRITE_SCRIPT = [
-  "const fs = require('node:fs')",
-  "const path = require('node:path')",
-  'const targetPath = process.argv[1]',
-  'const chunks = []',
-  "process.stdin.on('data', (chunk) => chunks.push(chunk))",
-  "process.stdin.on('end', () => {",
-  "  const root = path.resolve('/workspace')",
-  '  const target = path.resolve(root, targetPath)',
-  '  if (target !== root && !target.startsWith(root + path.sep)) {',
-  "    console.error('workspace boundary escaped')",
-  '    process.exit(71)',
-  '  }',
-  '  fs.mkdirSync(path.dirname(target), { recursive: true })',
-  "  fs.writeFileSync(target, Buffer.concat(chunks).toString('utf8'), {",
-  "    encoding: 'utf8',",
-  '    mode: 0o600,',
-  '  })',
-  '})',
-].join(';')
+// Runs inside the Docker container via `node -e`, so it must be entirely
+// self-contained (no access to this repository's compiled modules). Mirrors
+// the symlink-aware containment and atomic temp-file+rename write pattern
+// of `src/runtime/policy/runtime-policy.ts` and `src/runtime/fs/atomic-write.ts`,
+// reimplemented here since neither is reachable from inside the container.
+const FILE_WRITE_SCRIPT = `
+const fs = require('node:fs');
+const path = require('node:path');
+const targetPath = process.argv[1];
+const chunks = [];
+process.stdin.on('data', (chunk) => chunks.push(chunk));
+process.stdin.on('end', () => {
+  const root = path.resolve('/workspace');
+  const target = path.resolve(root, targetPath);
+  if (target !== root && !target.startsWith(root + path.sep)) {
+    console.error('workspace boundary escaped');
+    process.exit(71);
+  }
+
+  function realContainingPath(candidate) {
+    let current = candidate;
+    const trailing = [];
+    for (;;) {
+      try {
+        const real = fs.realpathSync(current);
+        return trailing.length === 0 ? real : path.join(real, ...trailing.reverse());
+      } catch {
+        const parent = path.dirname(current);
+        if (parent === current) return candidate;
+        trailing.push(path.basename(current));
+        current = parent;
+      }
+    }
+  }
+
+  const realRoot = realContainingPath(root);
+  const realTarget = realContainingPath(target);
+  if (realTarget !== realRoot && !realTarget.startsWith(realRoot + path.sep)) {
+    console.error('workspace boundary escaped');
+    process.exit(71);
+  }
+
+  const dir = path.dirname(target);
+  fs.mkdirSync(dir, { recursive: true });
+  const tempPath = path.join(
+    dir,
+    '.' + path.basename(target) + '.tmp-' + process.pid + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2),
+  );
+  const content = Buffer.concat(chunks).toString('utf8');
+  try {
+    fs.writeFileSync(tempPath, content, { encoding: 'utf8', mode: 0o600 });
+    fs.renameSync(tempPath, target);
+  } catch (error) {
+    try {
+      if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+    } catch {}
+    throw error;
+  }
+});
+`
 
 function firstEnvValue(env: NodeJS.ProcessEnv, names: readonly string[]): string | undefined {
   for (const name of names) {

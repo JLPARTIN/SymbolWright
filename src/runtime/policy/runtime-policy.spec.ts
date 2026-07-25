@@ -1,6 +1,8 @@
+import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import type { RuntimePolicySnapshot } from '../types.js'
 import {
@@ -266,5 +268,74 @@ describe('assertValidPolicy', () => {
   it('rejects non-array noisyDirs', () => {
     const policy = { ...createDefaultRuntimePolicy(), noisyDirs: null }
     expect(() => assertValidPolicy(policy)).toThrow('"noisyDirs" must be an array')
+  })
+})
+
+describe('symlink-aware workspace containment', () => {
+  let outsideDir: string
+  let workspace: string
+
+  beforeEach(() => {
+    outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-outside-'))
+    workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-workspace-'))
+  })
+
+  afterEach(() => {
+    fs.rmSync(outsideDir, { recursive: true, force: true })
+    fs.rmSync(workspace, { recursive: true, force: true })
+  })
+
+  it('rejects a symlink inside the workspace whose target resolves outside it', () => {
+    const secretOutside = path.join(outsideDir, 'secret.txt')
+    fs.writeFileSync(secretOutside, 'top secret', 'utf8')
+    const evilLink = path.join(workspace, 'evil-link.txt')
+    fs.symlinkSync(secretOutside, evilLink)
+
+    expect(isPathInsideWorkspace(workspace, evilLink)).toBe(false)
+    expect(() => resolveWorkspacePath(workspace, 'evil-link.txt')).toThrow(
+      'Access blocked outside workspace',
+    )
+  })
+
+  it('rejects a symlinked directory inside the workspace whose target resolves outside it', () => {
+    const linkedDir = path.join(workspace, 'linked-dir')
+    fs.symlinkSync(outsideDir, linkedDir)
+    const newFileInsideLink = path.join(workspace, 'linked-dir', 'new-file.txt')
+
+    expect(isPathInsideWorkspace(workspace, newFileInsideLink)).toBe(false)
+    expect(() => resolveWorkspacePath(workspace, 'linked-dir/new-file.txt')).toThrow(
+      'Access blocked outside workspace',
+    )
+  })
+
+  it('still allows a real file inside the workspace with no symlinks involved', () => {
+    fs.mkdirSync(path.join(workspace, 'src'), { recursive: true })
+    const realFile = path.join(workspace, 'src', 'index.ts')
+    fs.writeFileSync(realFile, 'export {}', 'utf8')
+
+    expect(isPathInsideWorkspace(workspace, realFile)).toBe(true)
+  })
+
+  it('still allows a new file whose parent directory is real and exists', () => {
+    fs.mkdirSync(path.join(workspace, 'src'), { recursive: true })
+    const newFile = path.join(workspace, 'src', 'not-yet-created.ts')
+
+    expect(isPathInsideWorkspace(workspace, newFile)).toBe(true)
+  })
+
+  it('still allows a new file nested under directories that do not exist yet', () => {
+    const newNestedFile = path.join(workspace, 'a', 'b', 'c', 'new-file.ts')
+
+    expect(isPathInsideWorkspace(workspace, newNestedFile)).toBe(true)
+  })
+
+  it('still allows a symlink whose target resolves inside the workspace', () => {
+    fs.mkdirSync(path.join(workspace, 'real-target'), { recursive: true })
+    const realTarget = path.join(workspace, 'real-target', 'file.txt')
+    fs.writeFileSync(realTarget, 'content', 'utf8')
+    const linkInsideWorkspace = path.join(workspace, 'link-to-real.txt')
+    fs.symlinkSync(realTarget, linkInsideWorkspace)
+
+    expect(isPathInsideWorkspace(workspace, linkInsideWorkspace)).toBe(true)
   })
 })

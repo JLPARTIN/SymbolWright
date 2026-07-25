@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { join } from 'node:path'
 
+import { isAuthorized } from '../../server/symbolwright-chat-server.js'
 import {
   createWorkspaceCodeIntelligenceBridgeResponse,
   parseWorkspaceCodeIntelligenceRequest,
@@ -129,19 +130,38 @@ async function handleSqlVendorAsset(assetName: string, response: ServerResponse)
   }
 }
 
+const AUTHENTICATED_WORKSPACE_PATHS = new Set([
+  '/api/workspace/languages',
+  '/api/workspace/run',
+  '/api/workspace/intelligence',
+])
+
 /**
- * Handles the unauthenticated Workspace API surface (moved verbatim from
- * `src/web/server.ts`) if the request matches one of its routes. Returns
- * `true` when handled so the caller can fall through to other route tables
- * otherwise. These routes stay unauthenticated -- they don't touch provider
- * credentials or read outside the sandboxed code-execution path, matching
- * the dashboard's pre-unification behavior.
+ * Handles the Workspace API surface (moved verbatim from `src/web/server.ts`)
+ * if the request matches one of its routes. Returns `true` when handled so
+ * the caller can fall through to other route tables otherwise.
+ *
+ * `/api/workspace/languages`, `/api/workspace/run`, and
+ * `/api/workspace/intelligence` require the same Bearer `apiKey` every other
+ * `/api/*` route requires -- `run` executes arbitrary code server-side via
+ * `vm`, so it must not be reachable without authentication just because it
+ * predates the unified server. `/vendor/*` stays unauthenticated: it only
+ * serves static sql.js assets the browser loads directly (no Authorization
+ * header attached), matching the also-unauthenticated app-shell HTML.
  */
 export async function tryHandleWorkspaceRoute(
   req: IncomingMessage,
   res: ServerResponse,
   url: URL,
+  apiKey: string,
 ): Promise<boolean> {
+  if (AUTHENTICATED_WORKSPACE_PATHS.has(url.pathname)) {
+    if (!isAuthorized(req, apiKey)) {
+      sendJson(res, { error: 'unauthorized' }, 401)
+      return true
+    }
+  }
+
   if (req.method === 'GET' && url.pathname === '/api/workspace/languages') {
     sendJson(res, {
       languages: UNIVERSAL_LANGUAGE_REGISTRY,

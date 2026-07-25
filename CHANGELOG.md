@@ -6,6 +6,62 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ### Changed
 
+- **Trust boundary hardening for autonomous execution (Large PR Bundle #9)**:
+  Bundle #8 made external, untrusted repository content a first-class input
+  to the same write path and LLM-context pipeline used for the operator's
+  own trusted code; this bundle hardens that pipeline for the new trust
+  model.
+  - **Atomic, symlink-safe writes everywhere a file is mutated**: new
+    `atomicWriteFile()` helper (`src/runtime/fs/atomic-write.ts`, temp file
+    in the same directory + `rename`) is now used by the `edit_file` tool,
+    checkpoint restore, and `PUT /api/repository/file` — a crash between
+    the write and the rename leaves the original file untouched instead of
+    truncated. `isPathInsideWorkspace`/`resolveWorkspacePath`
+    (`src/runtime/policy/runtime-policy.ts`) are now symlink-aware
+    (`lstat`/`realpath`-based, not just lexical), and the Docker sandbox's
+    own in-container file-writer script got the equivalent hardening. Also
+    fixed a real, unrelated bug found while touching this list: the legacy
+    entry in `DEFAULT_RUNTIME_PROTECTED_PATHS`/`DEFAULT_RUNTIME_NOISY_DIRS`
+    was a duplicated `'.symbolwright'` instead of `'.codemind'` (a leftover
+    from the rebrand's bulk find-replace), meaning the actual legacy state
+    directory was never protected.
+  - **`/api/workspace/run`, `/api/workspace/intelligence`, and
+    `/api/workspace/languages` now require the same Bearer
+    `SYMBOLWRIGHT_API_KEY` auth as every other `/api/*` route.**
+    Previously these were reachable with no authentication at all — `/run`
+    executes arbitrary JavaScript server-side via `vm`. **This is an
+    intentional, documented breaking change** for any caller that relied on
+    the old unauthenticated access; the browser Workspace tab already sends
+    its stored key on every other call and needed no changes.
+  - **Untrusted-content boundary for external-repository-intake missions**:
+    `read_file`/`grep`/`search_files`/`list_files`/`glob` output is now
+    wrapped in an explicit `<symbolwright:untrusted-repository-content>`
+    delimiter before it reaches the LLM, with a matching system-prompt
+    notice, whenever the active mission originated from external GitHub
+    repository intake (`src/runtime/context/untrusted-content-boundary.ts`).
+    A structural boundary, not a detector — it does not classify whether
+    content is actually an attack, only marks it as data.
+  - **One protected-path policy**: `src/permissions/symbolwright-permission-policy.ts`'s
+    previously separately-maintained, narrower protected-path list is now
+    provably derived from `DEFAULT_RUNTIME_PROTECTED_PATHS`, closing a gap
+    where it silently omitted `.git`, `.symbolwright`/`.codemind`,
+    `node_modules`, `dist`, and `coverage` entirely.
+  - **Hygiene**: removed a stray 9-byte `pr-12-starter-lexicon-phrasebank.patch`
+    (content was the literal text `Not Found`); removed the fully-dead
+    `renderMissionDashboardHtml`/`mission-dashboard-html.ts` (zero
+    production callers, superseded by the Missions view) and the dead
+    `renderChatUiHtml()` standalone-page wrapper (shadowed by the unified
+    server's route table; its still-live sibling functions
+    `renderChatBodyMarkup`/`renderChatScripts`/`renderChatStyles`, used by
+    the real Agent view, were kept); corrected `settings-view.ts`'s stale
+    copy describing the Repository tab as "planned for Large PR Bundle 2"
+    when it has since shipped; synced `docs/ARCHITECTURE.md`'s subsystem
+    table with the `src/app`, `src/server`, `src/mission`, `src/autonomy`,
+    `src/sandbox`, `src/github`, `src/mcp`, and `src/kernel` subsystems it
+    had omitted across ~8 prior bundles of growth; removed the Node 20 leg
+    from `node-compatibility.yml`'s matrix, since it tested a runtime below
+    `package.json`'s declared `engines: >=22.5.0` floor.
+
 - **AELIB connector rebrand (Phase 7)**: the outbound health-check header
   sent to the external AELIB-X1YA0I integration is now
   `x-symbolwright-connector` (was `x-codemind-connector`) — verified safe

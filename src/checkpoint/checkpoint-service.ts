@@ -1,10 +1,10 @@
-import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
 import type { RuntimeAuditEvent, RuntimeAuditLog } from '../runtime/audit/runtime-audit-log.js'
 import { createAuditEvent } from '../runtime/audit/runtime-audit-log.js'
 import { assertWriteApproved, isPathInsideWorkspace } from '../runtime/policy/runtime-policy.js'
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../runtime/types.js'
+import { atomicWriteFile } from '../runtime/fs/atomic-write.js'
 
 import { sha256Hex } from './checkpoint-hash.js'
 import { generateCheckpointId } from './checkpoint-session.js'
@@ -257,8 +257,7 @@ export function restoreCheckpoint(request: RestoreCheckpointRequest): Checkpoint
       continue
     }
 
-    mkdirSync(path.dirname(resolvedPath), { recursive: true })
-    writeFileSync(resolvedPath, snapshotContent, 'utf-8')
+    atomicWriteFile(resolvedPath, snapshotContent)
     fileResults.push({
       targetPath: fileRecord.targetPath,
       action: 'restored',

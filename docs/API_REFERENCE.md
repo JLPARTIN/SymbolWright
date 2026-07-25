@@ -38,9 +38,9 @@ Provider Adapter
 | `GET` | `/workspace` | No | Live | Redirects (302) to `/#/workspace` — bookmark compatibility with the pre-unification standalone route. |
 | `GET` | `/api/health` | No | Live | Unauthenticated liveness check. |
 | `GET` | `/api/status` | Yes | Live | Runtime status cards (doctor/release-readiness/runtime-phase/tool-registry state). |
-| `GET` | `/api/workspace/languages` | No | Live | Universal Workspace language/runner registry. |
-| `POST` | `/api/workspace/run` | No | Live | Run code through a server-side runner (e.g. TypeScript). |
-| `POST` | `/api/workspace/intelligence` | No | Live | Prepare a code-intelligence draft (generate/explain/translate/review/tests/drift) for the Agent tab. |
+| `GET` | `/api/workspace/languages` | Yes | Live | Universal Workspace language/runner registry. |
+| `POST` | `/api/workspace/run` | Yes | Live | Run code through a server-side runner (e.g. TypeScript). |
+| `POST` | `/api/workspace/intelligence` | Yes | Live | Prepare a code-intelligence draft (generate/explain/translate/review/tests/drift) for the Agent tab. |
 | `GET` | `/api/providers` | Yes | Live | List provider catalog, redacted config, and configured/missing status. |
 | `POST` | `/api/providers/register` | Yes | Live | Register or override a provider's base URL, API key, or model at runtime — this is how you point SymbolWright at any API you choose. |
 | `POST` | `/api/providers/reset` | Yes | Live | Clear a runtime provider override back to its env-configured defaults. |
