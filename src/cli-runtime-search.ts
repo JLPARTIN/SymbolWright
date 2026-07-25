@@ -6,9 +6,10 @@ import {
 export async function renderRuntimeSearch(
   query: string,
   cwd: string = process.cwd(),
+  limit?: number,
 ): Promise<string> {
   const registry = createFixtureRegistry('read_only')
   const tool = registry.getOrThrow('search_files')
 
-  return tool.execute({ query }, createFixtureContext(cwd))
+  return tool.execute(limit === undefined ? { query } : { query, limit }, createFixtureContext(cwd))
 }

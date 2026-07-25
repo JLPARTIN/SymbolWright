@@ -105,6 +105,35 @@ An agent-token-authenticated request to any other route not explicitly capabilit
 `src/access/route-capability-map.ts` receives `403 { reasonCode: 'ROUTE_NOT_PERMITTED' }` — new
 routes are unreachable by agents until deliberately added to that allowlist.
 
+## Agent Team routes (multi-agent orchestration)
+
+Full model: [`docs/autonomy/MULTI_AGENT_ENGINEERING_ORCHESTRATION.md`](autonomy/MULTI_AGENT_ENGINEERING_ORCHESTRATION.md).
+Unlike the generic route-capability-map above, every `/api/v1/agent-teams/*` handler
+(`src/app/api/agent-team-routes.ts`) re-authorizes itself inline against the exact
+`orchestration.*` capability the operation needs — the same pattern `access-routes.ts` uses. The
+operator (`SYMBOLWRIGHT_API_KEY`) is always authorized; an agent-token principal needs the listed
+capability on its own grant.
+
+| Method | Path | Capability | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/agent-teams` | `orchestration.team.manage` | Form a new team for a mission. |
+| `GET` | `/api/v1/agent-teams` | `orchestration.team.read` | List teams. |
+| `GET` | `/api/v1/agent-teams/:teamId` | `orchestration.team.read` | Team detail: members, tasks, candidates. |
+| `POST` | `/api/v1/agent-teams/:teamId/{start,pause,resume,cancel}` | `orchestration.team.manage` | Lifecycle transitions. |
+| `POST` | `/api/v1/agent-teams/:teamId/members` | `orchestration.team.manage` | Add a member — mints a real, independently revocable `AgentAccessGrant`. |
+| `DELETE` | `/api/v1/agent-teams/:teamId/members/:memberId` | `orchestration.team.manage` | Remove a member — revokes its grant immediately. |
+| `GET` | `/api/v1/agent-teams/:teamId/tasks` | `orchestration.team.read` | List the team's collaborative tasks. |
+| `POST` | `/api/v1/agent-teams/:teamId/tasks` | `orchestration.team.manage` | Create a task. |
+| `POST` | `/api/v1/agent-teams/:teamId/tasks/:taskId/assign` | `orchestration.task.assign` | Score and assign eligible members. |
+| `GET` | `/api/v1/agent-teams/:teamId/candidates` | `orchestration.team.read` | List change candidates. |
+| `POST` | `/api/v1/agent-teams/:teamId/candidates/:candidateId/review` | `orchestration.review.submit` | Submit a peer review (self-review is refused). |
+| `POST` | `/api/v1/agent-teams/:teamId/candidates/:candidateId/{accept,reject}` | `orchestration.review.submit` | Decide a candidate — `accept` requires an independent approval with no open blocking findings. |
+| `POST` | `/api/v1/agent-teams/:teamId/integrations` | `orchestration.integration.request` | Prepare an integration plan (conflict detection, dependency ordering). |
+| `POST` | `/api/v1/agent-teams/:teamId/integrations/:planId/execute` | `orchestration.integration.request` | Apply + validate; rolls back on any failure. |
+| `POST` | `/api/v1/agent-teams/:teamId/integrations/:planId/rollback` | `orchestration.integration.request` | Explicit rollback to the plan's captured base SHA. |
+| `GET` | `/api/v1/agent-teams/:teamId/events` | `orchestration.team.read` | The team's audit trail. |
+| `GET` | `/api/v1/agent-roles` | none (any authenticated principal) | The built-in role catalog. |
+
 ## Mission request shape
 
 ```json

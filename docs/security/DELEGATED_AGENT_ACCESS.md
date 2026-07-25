@@ -60,7 +60,7 @@ delegated access is additive, not a replacement for local operator use.
 
 ## 2. Capability taxonomy
 
-`src/access/access-capability-catalog.ts` defines ~50 capabilities across five categories, each
+`src/access/access-capability-catalog.ts` defines ~59 capabilities across six categories, each
 with a fixed risk level (`read`/`low`/`write`/`high`/`critical`):
 
 - **Repository read** (`repo.metadata.read`, `repo.content.read`, `repo.history.read`,
@@ -75,6 +75,10 @@ with a fixed risk level (`read`/`low`/`write`/`high`/`critical`):
   `repo.issue.{create,update}`)
 - **CI/workflow** (`repo.workflow.{dispatch,rerun}`, `repo.checks.rerun`,
   `repo.actions.{logs,artifacts}.read`)
+- **Orchestration** (`orchestration.team.{read,manage}`, `orchestration.task.assign`,
+  `orchestration.candidate.submit`, `orchestration.review.submit`,
+  `orchestration.integration.request` — see
+  `docs/autonomy/MULTI_AGENT_ENGINEERING_ORCHESTRATION.md`)
 - **High-risk** (`repo.pull_request.merge`, `repo.branch.protection.update`,
   `repo.settings.update`, `repo.collaborators.manage`, `repo.webhooks.manage`,
   `repo.secrets.manage`, `repo.variables.manage`, `repo.deployments.manage`,

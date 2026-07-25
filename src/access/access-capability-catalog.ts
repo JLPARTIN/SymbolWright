@@ -6,6 +6,7 @@ export type CapabilityCategory =
   | 'repo-mutation'
   | 'ci-workflow'
   | 'high-risk'
+  | 'orchestration'
 
 export interface CapabilityDescriptor {
   readonly id: string
@@ -120,6 +121,51 @@ const SYMBOLWRIGHT_INTELLIGENCE: readonly CapabilityDescriptor[] = [
   ),
 ]
 
+/**
+ * Multi-agent orchestration (`src/orchestration/`, Large PR Bundle #11): every collaborative-team
+ * operation still authorizes through this same catalog and `AuthorizationService` — a team member
+ * is only ever as powerful as its own grant's orchestration capabilities, never anything inherited
+ * from the team it participates in.
+ */
+const ORCHESTRATION: readonly CapabilityDescriptor[] = [
+  cap(
+    'orchestration.team.read',
+    'orchestration',
+    'read',
+    'Read agent-team, task, and event state.',
+  ),
+  cap(
+    'orchestration.team.manage',
+    'orchestration',
+    'write',
+    'Form, start, pause, resume, or cancel an agent team, and add/remove members.',
+  ),
+  cap(
+    'orchestration.task.assign',
+    'orchestration',
+    'write',
+    'Assign a collaborative task to an agent.',
+  ),
+  cap(
+    'orchestration.candidate.submit',
+    'orchestration',
+    'write',
+    'Submit an immutable change candidate from an isolated agent workspace.',
+  ),
+  cap(
+    'orchestration.review.submit',
+    'orchestration',
+    'write',
+    "Submit a peer review of another agent's change candidate.",
+  ),
+  cap(
+    'orchestration.integration.request',
+    'orchestration',
+    'write',
+    'Prepare or execute integration of approved change candidates into the canonical workspace.',
+  ),
+]
+
 const REPO_MUTATION: readonly CapabilityDescriptor[] = [
   cap('repo.branch.create', 'repo-mutation', 'write', 'Create a branch.'),
   cap('repo.branch.update', 'repo-mutation', 'write', 'Update a branch.'),
@@ -174,6 +220,7 @@ const HIGH_RISK: readonly CapabilityDescriptor[] = [
 export const ALL_CAPABILITIES: readonly CapabilityDescriptor[] = [
   ...REPO_READ,
   ...SYMBOLWRIGHT_INTELLIGENCE,
+  ...ORCHESTRATION,
   ...REPO_MUTATION,
   ...CI_WORKFLOW,
   ...HIGH_RISK,

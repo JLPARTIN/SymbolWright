@@ -6,6 +6,34 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ### Added
 
+- **Multi-Agent Engineering Orchestration (Large PR Bundle #11)**: a governed collaborative
+  runtime so multiple independently authorized agents — internal or external, human or model —
+  can investigate, propose competing implementations, peer-review each other's work, and converge
+  on one validated pull request under SymbolWright's existing permission, mutation-safety, and
+  audit boundaries. New `src/orchestration/` subsystem, built on Bundle #10's delegated-access
+  grants (never a parallel authorization system): `AgentTeam`/`AgentTeamMember` formation with a
+  real, independently revocable `AgentAccessGrant` minted per member; eleven built-in roles and
+  five trust tiers; a purpose-built collaborative task graph with dependency readiness and a
+  fail-closed (never silently substituting) assignment engine; real isolated `git worktree`
+  workspaces; provenance-tracked shared context whose trust status must be explicitly promoted
+  before an agent's claim can influence downstream planning; immutable, base-SHA-pinned change
+  candidates; peer review that flatly refuses self-approval; an eleven-category conflict detector
+  (textual overlap, protected-path, permission-scope, branch-base-drift, and more); and the one
+  authoritative `TeamIntegrationService` that applies approved candidates in dependency order,
+  runs real validation, and rolls back via `git reset --hard` on any failure. New versioned REST
+  surface `/api/v1/agent-teams/*` and `/api/v1/agent-roles`, wired into the same production HTTP
+  dispatcher every other route uses and re-authorized on every call. New "Agent Teams" dashboard
+  view, wired to the live API. MCP tool exposure and live multi-vendor provider adapters are
+  explicitly out of scope for this bundle — see
+  `docs/autonomy/MULTI_AGENT_ENGINEERING_ORCHESTRATION.md` Section 12 for the full delivered-vs-
+  deferred accounting.
+
+- **Rebrand regression fix — "CodeMind Chat"**: repository-wide forensic search confirmed no
+  active production code path still renders "CodeMind Chat" (the live chat view has read
+  "SymbolWright Chat" since the earlier rebrand phases); added a regression test
+  (`src/app/server/unified-server.spec.ts`) asserting the real `GET /` route's rendered output
+  contains `SymbolWright Chat` and never `CodeMind Chat`, so this cannot silently regress.
+
 - **GitHub App installation-token delegation**: Layer C of Delegated Agent Access now supports
   real GitHub App authentication instead of only the `GITHUB_TOKEN` PAT. New
   `src/github/github-app-auth.ts` signs a GitHub App JWT (RS256, dependency-free via

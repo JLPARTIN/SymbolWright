@@ -273,6 +273,7 @@ serve a real browser chat UI + HTTP API against any registered provider (`symbol
 run the real tool-execution agent loop over HTTP for Anthropic and any OpenAI-compatible provider, mode-gated (`POST /api/agent` on `symbolwright serve`)
 run itself as a real MCP server so any MCP-compatible LLM client can use its tools as a plugin (`symbolwright mcp-server`, see docs/runtime/SYMBOLWRIGHT_MCP_SERVER.md)
 authorize an external LLM/coding agent/MCP client/CI workflow with a scoped, expiring, revocable capability grant instead of a shared API key (Settings -> Agent Access, or `/api/v1/access-grants`, see docs/security/DELEGATED_AGENT_ACCESS.md)
+form a governed multi-agent engineering team where each member holds its own delegated grant, works in an isolated git worktree, submits immutable change candidates, and converges through peer review and one controlled integration engine (Settings -> Agent Teams, or `/api/v1/agent-teams`, see docs/autonomy/MULTI_AGENT_ENGINEERING_ORCHESTRATION.md)
 ```
 
 Ajna remains evidence-first:

@@ -85,3 +85,4 @@ User input → CLI → Activation (policy validation, registry, dispatcher, TUI)
 | **MCP** | stdio MCP server and client, sharing the agent loop's tool registry | `src/mcp/` |
 | **Kernel** | Agent-kernel context/mission packets, planning, and provider routing | `src/kernel/` |
 | **Access** | Delegated agent access: principals, capability grants, credentials, sessions, approvals, authorization service, audit — see `docs/security/DELEGATED_AGENT_ACCESS.md` | `src/access/` |
+| **Orchestration** | Multi-agent engineering teams: roles, trust tiers, collaborative task graph, isolated git-worktree workspaces, provenance-tracked shared context, immutable change candidates, peer review, conflict detection, and the one authoritative integration engine — see `docs/autonomy/MULTI_AGENT_ENGINEERING_ORCHESTRATION.md` | `src/orchestration/` |
