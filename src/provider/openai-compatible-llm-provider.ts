@@ -68,6 +68,45 @@ async function* decodeReadableStream(stream: ReadableStream<Uint8Array>): AsyncG
   }
 }
 
+async function readAllText(body: AsyncIterable<string>): Promise<string> {
+  let text = ''
+  for await (const chunk of body) {
+    text += chunk
+  }
+  return text
+}
+
+/**
+ * Every provider we call sends a JSON error body describing *why* a non-2xx
+ * happened (bad key, unknown model, malformed request, ...). Reading only
+ * `response.status` throws that reason away, leaving the caller stuck
+ * guessing between "bad key" and "bad model" from a bare status code alone.
+ */
+async function readHttpErrorDetail(body: AsyncIterable<string>): Promise<string | undefined> {
+  const raw = (await readAllText(body)).trim()
+  if (raw.length === 0) {
+    return undefined
+  }
+  try {
+    const parsed = JSON.parse(raw) as { error?: { message?: string } | string; message?: string }
+    if (typeof parsed.error === 'string') {
+      return parsed.error
+    }
+    if (typeof parsed.error === 'object' && parsed.error !== null) {
+      const message = parsed.error.message
+      if (typeof message === 'string') {
+        return message
+      }
+    }
+    if (typeof parsed.message === 'string') {
+      return parsed.message
+    }
+  } catch {
+    // Not JSON – fall through to the raw text below.
+  }
+  return raw.slice(0, 500)
+}
+
 async function* readSseLines(body: AsyncIterable<string>): AsyncGenerator<string> {
   let buffer = ''
   for await (const chunk of body) {
@@ -237,7 +276,14 @@ export function createOpenAiCompatibleLlmProvider(
       })
 
       if (response.status < 200 || response.status >= 300) {
-        yield { type: 'error', error: `${config.displayName} returned HTTP ${response.status}` }
+        const detail = await readHttpErrorDetail(response.body)
+        yield {
+          type: 'error',
+          error:
+            detail === undefined
+              ? `${config.displayName} returned HTTP ${response.status}`
+              : `${config.displayName} returned HTTP ${response.status}: ${detail}`,
+        }
         return
       }
 

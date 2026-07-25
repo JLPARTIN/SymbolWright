@@ -272,6 +272,27 @@ describe('streamProviderChat', () => {
     ).rejects.toThrow('returned HTTP 401')
   })
 
+  it('includes the provider error body detail when the upstream returns a non-2xx status', async () => {
+    const transport = {
+      async requestStream(): Promise<ProviderStreamHttpResponse> {
+        return {
+          status: 401,
+          body: toChunks(['{"error":{"message":"Incorrect API key provided"}}']),
+        }
+      },
+    }
+
+    await expect(
+      drain(
+        streamProviderChat(
+          OPENAI_CONFIG,
+          { messages: [{ role: 'user', content: 'hi' }] },
+          transport,
+        ),
+      ),
+    ).rejects.toThrow('returned HTTP 401: Incorrect API key provided')
+  })
+
   it('throws a clear error when no model is available', async () => {
     const { defaultModel: _defaultModel, ...rest } = OPENAI_CONFIG
     const configWithoutModel: ProviderResolvedConfig = rest
