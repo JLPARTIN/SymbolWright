@@ -329,6 +329,43 @@ describe('Delegated Agent Access — end-to-end', () => {
     expect(write.status).toBe(403)
   })
 
+  it('enforces executionLimits.maxConcurrentMissions at mission creation, and records the creating grant', async () => {
+    const server = await launch()
+    const { token } = await createCodingAgentGrant(server, {
+      executionLimits: { maxConcurrentMissions: 1 },
+    })
+
+    async function createMission() {
+      return fetch(`${server.url}/api/missions`, {
+        method: 'POST',
+        headers: { ...agentAuth(token), 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Mission',
+          objective: 'Do the thing',
+          workspaceKind: 'repository',
+          repositoryPath: '.',
+          runtimeMode: 'READ_ONLY',
+        }),
+      })
+    }
+
+    const first = await createMission()
+    expect(first.status).toBe(201)
+
+    const second = await createMission()
+    expect(second.status).toBe(403)
+    const secondBody = (await second.json()) as { reasonCode: string }
+    expect(secondBody.reasonCode).toBe('MAX_CONCURRENT_MISSIONS_EXCEEDED')
+
+    // Verify the mission was actually attributed to the grant, not just that the limit worked.
+    const firstBody = (await first.json()) as { mission: { id: string } }
+    const detail = await fetch(`${server.url}/api/missions/${firstBody.mission.id}`, {
+      headers: operatorAuth(),
+    })
+    const detailBody = (await detail.json()) as { mission: { grantId?: string } }
+    expect(detailBody.mission.grantId).toBeDefined()
+  })
+
   describe('tool-level enforcement inside /api/agent', () => {
     let fakeUpstream: Server | undefined
 

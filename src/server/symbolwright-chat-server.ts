@@ -570,13 +570,36 @@ export function createChatServerRequestListener(
           }
           throw authzError
         }
+
+        if (requiredCapability === 'symbolwright.mission.create') {
+          const grant = accessRuntime.grantService.getGrant(principal.grantId as string)
+          const maxConcurrentMissions = grant?.executionLimits.maxConcurrentMissions
+          if (maxConcurrentMissions !== undefined) {
+            const activeCount = missionService.countActiveMissionsForGrant(
+              principal.grantId as string,
+            )
+            if (activeCount >= maxConcurrentMissions) {
+              sendJson(res, 403, {
+                error: 'execution_limit_exceeded',
+                reasonCode: 'MAX_CONCURRENT_MISSIONS_EXCEEDED',
+                message: `This grant already has ${activeCount} active mission(s), at its configured limit of ${maxConcurrentMissions}.`,
+              })
+              return
+            }
+          }
+        }
       }
 
       if (await handleGitHubIntakeRoute(req, res, url, githubIntakeContext)) {
         return
       }
 
-      if (await handleMissionRoute(req, res, url, missionContext)) {
+      if (
+        await handleMissionRoute(req, res, url, {
+          ...missionContext,
+          ...(principal.grantId === undefined ? {} : { grantId: principal.grantId }),
+        })
+      ) {
         return
       }
 

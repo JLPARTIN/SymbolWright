@@ -34,6 +34,10 @@ const AUTONOMY_RUNTIMES = new WeakMap<
 export interface MissionRouteContext {
   readonly service: MissionService
   readonly cwd: string
+  /** The calling delegated-access grant's id, when the caller is an agent-token principal — set
+   * per-request by `symbolwright-chat-server.ts`, never parsed from the request body. Recorded on
+   * created missions and used to enforce `executionLimits.maxConcurrentMissions`. */
+  readonly grantId?: string
 }
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
@@ -316,6 +320,7 @@ export async function handleMissionRoute(
       if (req.method === 'POST') {
         const mission = await context.service.create(
           parseCreateMissionInput(await readJsonBody(req)),
+          context.grantId === undefined ? {} : { grantId: context.grantId },
         )
         sendJson(res, 201, {
           mission,

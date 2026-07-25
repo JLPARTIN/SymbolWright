@@ -85,7 +85,16 @@ export class MissionService {
     return this.store
   }
 
-  public async create(input: CreateMissionInput): Promise<SymbolWrightMission> {
+  /**
+   * `grantId` is a caller-supplied trust boundary, never parsed from `CreateMissionInput`'s
+   * request-body fields — it must come from the server's own authenticated principal (see
+   * `symbolwright-chat-server.ts`'s `handleMissionRoute` call site), or a client could claim any
+   * grant's identity to dodge `executionLimits.maxConcurrentMissions`.
+   */
+  public async create(
+    input: CreateMissionInput,
+    options: { readonly grantId?: string } = {},
+  ): Promise<SymbolWrightMission> {
     const repositoryRoot = this.resolveRepositoryRoot(input.repositoryPath)
     const repository = await this.readRepositoryState(repositoryRoot)
     const now = this.now().toISOString()
@@ -93,6 +102,7 @@ export class MissionService {
       schemaVersion: 1,
       revision: 1,
       id: this.generateId(),
+      ...(options.grantId === undefined ? {} : { grantId: options.grantId }),
       name: input.name,
       objective: input.objective,
       status: 'ACTIVE',
@@ -161,6 +171,10 @@ export class MissionService {
     options: { readonly offset?: number; readonly limit?: number } = {},
   ): MissionListResult {
     return this.store.listMissions(options)
+  }
+
+  public countActiveMissionsForGrant(grantId: string): number {
+    return this.store.countActiveMissionsForGrant(grantId)
   }
 
   public patch(missionId: string, input: PatchMissionInput): SymbolWrightMission {
