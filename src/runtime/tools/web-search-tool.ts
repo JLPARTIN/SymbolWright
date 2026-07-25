@@ -4,7 +4,7 @@ import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 
 export interface WebSearchToolInput {
   readonly query: string
-  /** Overrides the default `.codemind/config.json` lookup — mainly for tests/fixtures. */
+  /** Overrides the default `.symbolwright/config.json` lookup — mainly for tests/fixtures. */
   readonly configPath?: string
 }
 
@@ -26,7 +26,7 @@ function parseWebSearchInput(input: unknown): WebSearchToolInput {
 
 export function renderWebSearchEvidence(evidence: WebSearchEvidence): string {
   const lines = [
-    'CodeMind web_search',
+    'SymbolWright web_search',
     '',
     `Query: ${evidence.query}`,
     `Provider: ${evidence.provider}`,
@@ -78,7 +78,7 @@ export async function executeWebSearchTool(
 export const webSearchTool: RuntimeToolDefinition = {
   name: 'web_search',
   description:
-    'Search the public web through the CodeMind policy gate. Works out of the box with a default DuckDuckGo adapter, no API key required.',
+    'Search the public web through the SymbolWright policy gate. Works out of the box with a default DuckDuckGo adapter, no API key required.',
   capability: 'WEB_ACCESS',
   execute: async (input, context) => executeWebSearchTool(parseWebSearchInput(input), context),
 }

@@ -78,7 +78,7 @@ function semanticIndex(): RepositorySemanticIndexSnapshot {
 
 describe('MissionAcceptanceService', () => {
   it('loads semantic intelligence and persists an impact-aware acceptance packet', async () => {
-    const workspaceRoot = await mkdtemp(path.join(tmpdir(), 'codemind-acceptance-service-'))
+    const workspaceRoot = await mkdtemp(path.join(tmpdir(), 'symbolwright-acceptance-service-'))
     await new JsonMissionExecutionStore(workspaceRoot).save(execution())
     const requestedRoots: string[] = []
     const service = new MissionAcceptanceService({

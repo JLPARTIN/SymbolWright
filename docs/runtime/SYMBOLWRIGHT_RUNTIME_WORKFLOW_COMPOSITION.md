@@ -1,4 +1,4 @@
-# CodeMind Runtime Workflow Composition
+# SymbolWright Runtime Workflow Composition
 
 **Phase:** Q
 **Status:** COMPLETE

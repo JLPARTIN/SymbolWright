@@ -241,14 +241,14 @@ describe('renderTuiToolPanel', () => {
 })
 
 describe('renderTuiWorkspace', () => {
-  it('renders a full CodeMind workspace shell', () => {
+  it('renders a full SymbolWright workspace shell', () => {
     const output = renderTuiWorkspace(baseState(), {
       mission: 'modernize ProofLine',
       commandHistory: ['codemind scan', 'codemind runtime run modernize --read-only'],
       width: 32,
     })
 
-    expect(output).toContain('CodeMind Workspace')
+    expect(output).toContain('SymbolWright Workspace')
     expect(output).toContain('Mission Console:')
     expect(output).toContain('> modernize ProofLine')
     expect(output).toContain('Command History:')

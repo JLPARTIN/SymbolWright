@@ -6,7 +6,7 @@ const MAX_ARRAY_ENTRIES = 200
 const MAX_OBJECT_KEYS = 200
 
 const SECRET_KEY_PATTERN =
-  /(?:authorization|proxy-authorization|cookie|set-cookie|api[_-]?key|access[_-]?key|secret|password|passwd|token|private[_-]?key|client[_-]?secret|codemind_api_key|github_token)/i
+  /(?:authorization|proxy-authorization|cookie|set-cookie|api[_-]?key|access[_-]?key|secret|password|passwd|token|private[_-]?key|client[_-]?secret|symbolwright_api_key|github_token)/i
 
 const SECRET_ENV_NAME_PATTERN =
   /(?:KEY|TOKEN|SECRET|PASSWORD|PASSWD|AUTH|COOKIE|CREDENTIAL|PRIVATE)/i

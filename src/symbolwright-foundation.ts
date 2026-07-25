@@ -1,22 +1,22 @@
-export const CODEMIND_PLATFORM_NAME = 'CodeMind' as const
-export const CODEMIND_AJNA_CAPABILITY_NAME = 'Ajna Review Cortex' as const
+export const SYMBOLWRIGHT_PLATFORM_NAME = 'SymbolWright' as const
+export const SYMBOLWRIGHT_AJNA_CAPABILITY_NAME = 'Ajna Review Cortex' as const
 
-export type CodemindRuntimePosture = 'DIRECT_EXECUTION'
+export type SymbolWrightRuntimePosture = 'DIRECT_EXECUTION'
 
-export interface CodemindFoundationSnapshot {
-  readonly platform: typeof CODEMIND_PLATFORM_NAME
-  readonly primaryCapability: typeof CODEMIND_AJNA_CAPABILITY_NAME
-  readonly posture: readonly CodemindRuntimePosture[]
+export interface SymbolWrightFoundationSnapshot {
+  readonly platform: typeof SYMBOLWRIGHT_PLATFORM_NAME
+  readonly primaryCapability: typeof SYMBOLWRIGHT_AJNA_CAPABILITY_NAME
+  readonly posture: readonly SymbolWrightRuntimePosture[]
   readonly mutationEnabled: boolean
   readonly githubWriteEnabled: boolean
   readonly bashExecutionEnabled: boolean
   readonly networkIngestionEnabled: boolean
 }
 
-export function getCodemindFoundationSnapshot(): CodemindFoundationSnapshot {
+export function getSymbolWrightFoundationSnapshot(): SymbolWrightFoundationSnapshot {
   return {
-    platform: CODEMIND_PLATFORM_NAME,
-    primaryCapability: CODEMIND_AJNA_CAPABILITY_NAME,
+    platform: SYMBOLWRIGHT_PLATFORM_NAME,
+    primaryCapability: SYMBOLWRIGHT_AJNA_CAPABILITY_NAME,
     posture: ['DIRECT_EXECUTION'],
     mutationEnabled: true,
     githubWriteEnabled: true,

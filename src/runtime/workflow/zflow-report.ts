@@ -80,7 +80,7 @@ export function createZflowReportSnapshot(report: ZflowExecutionReport): ZflowRe
 
 export function renderZflowReportMarkdown(report: ZflowExecutionReport): string {
   return [
-    `# CodeMind Zflow Execution Report`,
+    `# SymbolWright Zflow Execution Report`,
     '',
     `Report ID: ${report.id}`,
     `Generated: ${report.generatedAt}`,

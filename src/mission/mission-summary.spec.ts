@@ -12,15 +12,15 @@ describe('mission list summary', () => {
       status: 'ACTIVE',
       updatedAt: '2026-07-20T00:00:00.000Z',
       lastOpenedAt: '2026-07-20T00:00:00.000Z',
-      repositoryName: 'JLPARTIN/CodeMind',
+      repositoryName: 'JLPARTIN/SymbolWright',
       repositoryRoot: '.',
       branch: 'feature',
       validationState: 'passed',
       changedFileCount: 2,
-      pullRequestUrl: 'https://github.com/JLPARTIN/CodeMind/pull/1',
+      pullRequestUrl: 'https://github.com/JLPARTIN/SymbolWright/pull/1',
       labels: [],
     }
-    expect(summary.repositoryName).toBe('JLPARTIN/CodeMind')
+    expect(summary.repositoryName).toBe('JLPARTIN/SymbolWright')
     expect(summary.changedFileCount).toBe(2)
   })
 })

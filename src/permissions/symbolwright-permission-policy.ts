@@ -1,15 +1,15 @@
 import type {
-  CodemindPermissionDecision,
-  CodemindPermissionDisposition,
-  CodemindPermissionRequest,
-  CodemindProtectedPathHit,
-  CodemindRiskLevel,
-} from './codemind-permission.types.js'
+  SymbolWrightPermissionDecision,
+  SymbolWrightPermissionDisposition,
+  SymbolWrightPermissionRequest,
+  SymbolWrightProtectedPathHit,
+  SymbolWrightRiskLevel,
+} from './symbolwright-permission.types.js'
 
-const POLICY_ID = 'codemind-default-permission-policy'
+const POLICY_ID = 'symbolwright-default-permission-policy'
 const POLICY_VERSION = '0.1.0'
 
-function rankDisposition(disposition: CodemindPermissionDisposition): number {
+function rankDisposition(disposition: SymbolWrightPermissionDisposition): number {
   switch (disposition) {
     case 'DENY':
       return 3
@@ -21,25 +21,25 @@ function rankDisposition(disposition: CodemindPermissionDisposition): number {
 }
 
 export function resolveHighestDisposition(
-  dispositions: readonly CodemindPermissionDisposition[],
-): CodemindPermissionDisposition {
+  dispositions: readonly SymbolWrightPermissionDisposition[],
+): SymbolWrightPermissionDisposition {
   if (dispositions.length === 0) {
     return 'ASK'
   }
 
-  return dispositions.reduce<CodemindPermissionDisposition>(
+  return dispositions.reduce<SymbolWrightPermissionDisposition>(
     (highest, current) => (rankDisposition(current) > rankDisposition(highest) ? current : highest),
     'ALLOW',
   )
 }
 
-function protectedHitForTarget(target: string): CodemindProtectedPathHit | undefined {
+function protectedHitForTarget(target: string): SymbolWrightProtectedPathHit | undefined {
   const normalizedTarget = target.trim().replaceAll('\\', '/')
 
   const protectedPatterns: ReadonlyArray<{
     readonly pattern: string
-    readonly protectedClass: CodemindProtectedPathHit['protectedClass']
-    readonly disposition: CodemindProtectedPathHit['disposition']
+    readonly protectedClass: SymbolWrightProtectedPathHit['protectedClass']
+    readonly disposition: SymbolWrightProtectedPathHit['disposition']
     readonly reason: string
   }> = [
     {
@@ -55,7 +55,7 @@ function protectedHitForTarget(target: string): CodemindProtectedPathHit | undef
       reason: 'Workflow changes require explicit operator review.',
     },
     {
-      pattern: 'codemind.policy',
+      pattern: 'symbolwright.policy',
       protectedClass: 'GOVERNANCE_POLICY',
       disposition: 'DENY',
       reason: 'Policy files require dedicated governance approval before mutation.',
@@ -80,7 +80,9 @@ function protectedHitForTarget(target: string): CodemindProtectedPathHit | undef
   }
 }
 
-function defaultRiskForDisposition(disposition: CodemindPermissionDisposition): CodemindRiskLevel {
+function defaultRiskForDisposition(
+  disposition: SymbolWrightPermissionDisposition,
+): SymbolWrightRiskLevel {
   switch (disposition) {
     case 'ALLOW':
       return 'LOW'
@@ -91,18 +93,18 @@ function defaultRiskForDisposition(disposition: CodemindPermissionDisposition): 
   }
 }
 
-export function evaluateCodemindPermissionRequest(
-  request: CodemindPermissionRequest,
-): CodemindPermissionDecision {
+export function evaluateSymbolWrightPermissionRequest(
+  request: SymbolWrightPermissionRequest,
+): SymbolWrightPermissionDecision {
   const protectedPathHits = request.targets
     .map((target) => protectedHitForTarget(target.value))
-    .filter((hit): hit is CodemindProtectedPathHit => hit !== undefined)
+    .filter((hit): hit is SymbolWrightProtectedPathHit => hit !== undefined)
 
-  const requestedDisposition: CodemindPermissionDisposition = request.operatorApproved
+  const requestedDisposition: SymbolWrightPermissionDisposition = request.operatorApproved
     ? 'ALLOW'
     : 'ASK'
 
-  const toolDisposition: CodemindPermissionDisposition =
+  const toolDisposition: SymbolWrightPermissionDisposition =
     request.toolCategory.includes('MUTATOR') ||
     request.toolCategory === 'PATCH_APPLIER' ||
     request.toolCategory === 'COMMAND_RUNNER'
@@ -123,7 +125,7 @@ export function evaluateCodemindPermissionRequest(
     risk: defaultRiskForDisposition(disposition),
     toolCategory: request.toolCategory,
     reasons: [
-      'CodeMind uses deny-over-ask-over-allow permission resolution.',
+      'SymbolWright uses deny-over-ask-over-allow permission resolution.',
       ...protectedPathHits.map((hit) => hit.reason),
     ],
     operatorApprovalRequired: disposition !== 'ALLOW',

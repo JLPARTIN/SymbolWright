@@ -1,20 +1,20 @@
 import { readGithubPullRequestContext } from '../../github/github-read-adapter.js'
 import type {
-  CodemindGithubReadAdapterResult,
-  CodemindGithubReadAdapterTarget,
-  CodemindGithubReadClient,
+  SymbolWrightGithubReadAdapterResult,
+  SymbolWrightGithubReadAdapterTarget,
+  SymbolWrightGithubReadClient,
 } from '../../github/github-read-adapter.types.js'
 import {
   createReadOnlyRuntimeCapabilityFlags,
-  evaluateCodemindRuntimeBoundary,
-} from '../../runtime/codemind-runtime-boundary.js'
-import type { CodemindRuntimeBoundaryDecision } from '../../runtime/codemind-runtime.types.js'
+  evaluateSymbolWrightRuntimeBoundary,
+} from '../../runtime/symbolwright-runtime-boundary.js'
+import type { SymbolWrightRuntimeBoundaryDecision } from '../../runtime/symbolwright-runtime.types.js'
 import type { AjnaReviewRequest, AjnaReviewSubject } from '../ajna-review.types.js'
 
 export interface AjnaGithubRuntimeBridgeInput {
   readonly requestId: string
   readonly sessionId: string
-  readonly target: CodemindGithubReadAdapterTarget
+  readonly target: SymbolWrightGithubReadAdapterTarget
   readonly operatorApproved: boolean
   readonly operatorIntent?: string
   readonly requireCiEvidence: boolean
@@ -22,14 +22,14 @@ export interface AjnaGithubRuntimeBridgeInput {
 }
 
 export interface AjnaGithubRuntimeBridgeResult {
-  readonly runtimeDecision: CodemindRuntimeBoundaryDecision
-  readonly githubContext: CodemindGithubReadAdapterResult
+  readonly runtimeDecision: SymbolWrightRuntimeBoundaryDecision
+  readonly githubContext: SymbolWrightGithubReadAdapterResult
   readonly ajnaReviewRequest: AjnaReviewRequest
 }
 
 export function mapGithubContextToAjnaReviewRequest(
   requestId: string,
-  githubContext: CodemindGithubReadAdapterResult,
+  githubContext: SymbolWrightGithubReadAdapterResult,
   options: {
     readonly operatorIntent?: string
     readonly requireCiEvidence: boolean
@@ -69,10 +69,10 @@ export function mapGithubContextToAjnaReviewRequest(
 }
 
 export async function buildAjnaReviewRequestFromGithubPr(
-  client: CodemindGithubReadClient,
+  client: SymbolWrightGithubReadClient,
   input: AjnaGithubRuntimeBridgeInput,
 ): Promise<AjnaGithubRuntimeBridgeResult> {
-  const runtimeDecision = evaluateCodemindRuntimeBoundary({
+  const runtimeDecision = evaluateSymbolWrightRuntimeBoundary({
     adapterId: 'github-pr-read-adapter-v0',
     adapterKind: 'GITHUB_PR_CONTEXT_READER',
     executionMode: 'READ_ONLY',
@@ -98,7 +98,7 @@ export async function buildAjnaReviewRequestFromGithubPr(
   })
 
   if (!runtimeDecision.allowedToRun) {
-    throw new Error('GitHub PR read adapter did not pass the CodeMind runtime boundary.')
+    throw new Error('GitHub PR read adapter did not pass the SymbolWright runtime boundary.')
   }
 
   const githubContext = await readGithubPullRequestContext(client, input.target)

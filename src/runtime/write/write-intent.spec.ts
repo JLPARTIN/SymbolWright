@@ -73,7 +73,7 @@ describe('write intent', () => {
     const intent = createWriteIntent(makeIntentInput())
     const output = renderWriteIntent(intent)
 
-    expect(output).toContain('CodeMind write intent plan')
+    expect(output).toContain('SymbolWright write intent plan')
     expect(output).toContain('Intent ID: WI-001')
     expect(output).toContain('Target: file_edit')
     expect(output).toContain('Path: src/cli.ts')
@@ -217,7 +217,7 @@ describe('write approval ticket', () => {
     const ticket = createWriteApprovalTicket(intent, validation)
     const output = renderWriteApprovalTicket(ticket)
 
-    expect(output).toContain('CodeMind write approval ticket')
+    expect(output).toContain('SymbolWright write approval ticket')
     expect(output).toContain('Ticket ID: WRITE-TICKET-WI-001')
     expect(output).toContain('Status: PENDING')
     expect(output).toContain('Validation: PASSED')
@@ -246,9 +246,9 @@ describe('write intent plan tool', () => {
   it('executes with valid input and returns combined output', async () => {
     const output = await writeIntentPlanTool.execute(makeIntentInput(), testContext)
 
-    expect(output).toContain('CodeMind write intent plan')
+    expect(output).toContain('SymbolWright write intent plan')
     expect(output).toContain('Write intent validation: PASS')
-    expect(output).toContain('CodeMind write approval ticket')
+    expect(output).toContain('SymbolWright write approval ticket')
     expect(output).toContain('Status: PENDING')
   })
 
@@ -327,9 +327,9 @@ describe('CLI write intent', () => {
 
     const output = await renderRuntimeWriteIntent(fixturePath, tmpDir)
 
-    expect(output).toContain('CodeMind write intent plan')
+    expect(output).toContain('SymbolWright write intent plan')
     expect(output).toContain('Intent ID: WI-CLI-001')
-    expect(output).toContain('CodeMind write approval ticket')
+    expect(output).toContain('SymbolWright write approval ticket')
 
     fs.rmSync(tmpDir, { recursive: true })
   })

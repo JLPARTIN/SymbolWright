@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  CODEMIND_WORKSPACE_I18N,
+  SYMBOLWRIGHT_WORKSPACE_I18N,
   isWorkspaceLocale,
   resolveWorkspaceLocale,
   translateWorkspace,
@@ -9,9 +9,9 @@ import {
 
 describe('workspace i18n', () => {
   it('ships English and Spanish resources for editor controls', () => {
-    expect(CODEMIND_WORKSPACE_I18N.en.runButton).toBe('Run')
-    expect(CODEMIND_WORKSPACE_I18N.es.runButton).toBe('Ejecutar')
-    expect(CODEMIND_WORKSPACE_I18N.es.copyButton).toBe('Copiar código')
+    expect(SYMBOLWRIGHT_WORKSPACE_I18N.en.runButton).toBe('Run')
+    expect(SYMBOLWRIGHT_WORKSPACE_I18N.es.runButton).toBe('Ejecutar')
+    expect(SYMBOLWRIGHT_WORKSPACE_I18N.es.copyButton).toBe('Copiar código')
   })
 
   it('resolves supported and fallback locales', () => {

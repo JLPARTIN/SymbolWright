@@ -26,7 +26,7 @@ export function runLiveReadPolicyHandshake(
 
 export function renderLiveReadPolicyHandshake(result: LiveReadPolicyHandshakeResult): string {
   return [
-    'CodeMind live read policy handshake',
+    'SymbolWright live read policy handshake',
     '',
     `Provider: ${result.request.provider}`,
     `Purpose: ${result.request.purpose}`,

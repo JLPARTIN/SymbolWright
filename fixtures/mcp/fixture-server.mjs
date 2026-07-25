@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// CodeMind MCP fixture server.
+// SymbolWright MCP fixture server.
 //
 // A minimal, dependency-free Model Context Protocol server speaking JSON-RPC 2.0
 // over stdio (newline-delimited messages on stdout, logs on stderr). It exists
-// purely so CodeMind's MCP runtime has one real, spawnable server to discover
+// purely so SymbolWright's MCP runtime has one real, spawnable server to discover
 // and call tools against in tests and the CLI reachability proof.
 //
 // Protocol surface implemented: initialize, notifications/initialized,
@@ -13,7 +13,7 @@
 import { createInterface } from 'node:readline'
 
 const PROTOCOL_VERSION = '2024-11-05'
-const SERVER_NAME = 'codemind-fixture-server'
+const SERVER_NAME = 'symbolwright-fixture-server'
 const SERVER_VERSION = '1.0.0'
 
 const TOOLS = [

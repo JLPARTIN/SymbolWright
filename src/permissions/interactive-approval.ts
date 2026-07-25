@@ -1,11 +1,11 @@
 import { createInterface } from 'node:readline/promises'
 import { stdin, stdout } from 'node:process'
 
-import { evaluateCodemindPermissionRequest } from './codemind-permission-policy.js'
+import { evaluateSymbolWrightPermissionRequest } from './symbolwright-permission-policy.js'
 import type {
-  CodemindPermissionRequest,
-  CodemindPermissionDecision,
-} from './codemind-permission.types.js'
+  SymbolWrightPermissionRequest,
+  SymbolWrightPermissionDecision,
+} from './symbolwright-permission.types.js'
 
 export interface InteractiveApprovalOptions {
   readonly autoApprove?: boolean
@@ -33,14 +33,16 @@ export async function promptForApproval(
   }
 }
 
-export function evaluateAndCheck(request: CodemindPermissionRequest): CodemindPermissionDecision {
-  return evaluateCodemindPermissionRequest(request)
+export function evaluateAndCheck(
+  request: SymbolWrightPermissionRequest,
+): SymbolWrightPermissionDecision {
+  return evaluateSymbolWrightPermissionRequest(request)
 }
 
-export function shouldPromptUser(decision: CodemindPermissionDecision): boolean {
+export function shouldPromptUser(decision: SymbolWrightPermissionDecision): boolean {
   return decision.disposition === 'ASK'
 }
 
-export function isBlocked(decision: CodemindPermissionDecision): boolean {
+export function isBlocked(decision: SymbolWrightPermissionDecision): boolean {
   return decision.disposition === 'DENY'
 }

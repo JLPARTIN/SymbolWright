@@ -25,7 +25,7 @@ export interface RuntimeAutonomousValidationRunnerOptions {
 }
 
 /**
- * Production adapter that executes validation through CodeMind's policy gate.
+ * Production adapter that executes validation through SymbolWright's policy gate.
  * Legacy root-level Node commands retain the original transcript pathway;
  * discovered ecosystem and nested-package commands use portable containers.
  */

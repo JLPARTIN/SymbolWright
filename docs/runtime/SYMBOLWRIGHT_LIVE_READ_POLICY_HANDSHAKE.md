@@ -1,4 +1,4 @@
-# CodeMind Live Read Policy Handshake
+# SymbolWright Live Read Policy Handshake
 
 This document records Phase F live read adapter policy handshake.
 
@@ -10,7 +10,7 @@ codemind live-read-policy <json-file>
 
 ## Purpose
 
-The policy handshake evaluates whether a proposed live read request would be allowed by CodeMind policy without performing the live read.
+The policy handshake evaluates whether a proposed live read request would be allowed by SymbolWright policy without performing the live read.
 
 ## Input fixture
 

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import type { CodeMindMission } from './mission-types.js'
+import type { SymbolWrightMission } from './mission-types.js'
 
 describe('mission execution boundary', () => {
   it('contains status and resume state but no background execution scheduler', () => {
-    const keys: Array<keyof CodeMindMission> = [
+    const keys: Array<keyof SymbolWrightMission> = [
       'schemaVersion',
       'revision',
       'id',

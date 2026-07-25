@@ -37,7 +37,7 @@ function task(input: {
 }
 
 async function workspace(): Promise<string> {
-  return mkdtemp(path.join(tmpdir(), 'codemind-multi-agent-'))
+  return mkdtemp(path.join(tmpdir(), 'symbolwright-multi-agent-'))
 }
 
 describe('multi-agent mission runtime', () => {

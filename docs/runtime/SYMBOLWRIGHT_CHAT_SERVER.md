@@ -1,4 +1,4 @@
-# CodeMind Chat/Agent API (`codemind serve`)
+# SymbolWright Chat/Agent API (`codemind serve`)
 
 A real HTTP server backed by the provider gateway
 (`src/providers/provider-gateway.ts`). This is the "bring your own API key,
@@ -6,33 +6,33 @@ use it from a browser" surface: pick any of the preset providers or register
 a fully custom OpenAI-compatible endpoint, then chat from the **Agent** tab
 of the unified app shell (`/`, then `#/agent`) like any other LLM web
 client. Provider credentials stay on the server; the browser only ever
-holds the `CODEMIND_API_KEY`. `codemind serve` starts one process on one
+holds the `SYMBOLWRIGHT_API_KEY`. `codemind serve` starts one process on one
 port serving this API alongside the Dashboard, Workspace, Tools, Memory,
 and Checkpoints tabs — see [`../codespaces.md`](../codespaces.md) for the
 full app.
 
 ```txt
-Browser  →  CodeMind Chat API (auth: CODEMIND_API_KEY)  →  Provider Gateway  →  Provider API
+Browser  →  SymbolWright Chat API (auth: SYMBOLWRIGHT_API_KEY)  →  Provider Gateway  →  Provider API
 ```
 
 ## Start it
 
 ```bash
-CODEMIND_API_KEY=your-own-access-key codemind serve
+SYMBOLWRIGHT_API_KEY=your-own-access-key codemind serve
 ```
 
-Starting fails closed if `CODEMIND_API_KEY` is unset or blank — there is no
+Starting fails closed if `SYMBOLWRIGHT_API_KEY` is unset or blank — there is no
 default key.
 
 Flags (all optional, env vars are the fallback):
 
 ```txt
---host <host>              default 127.0.0.1, env CODEMIND_CHAT_HOST
---port <port>              default 8787, env CODEMIND_CHAT_PORT
---cors-origin <origin>     env CODEMIND_CORS_ORIGIN (only needed if the UI is hosted on a different origin than the API)
+--host <host>              default 127.0.0.1, env SYMBOLWRIGHT_CHAT_HOST
+--port <port>              default 8787, env SYMBOLWRIGHT_CHAT_PORT
+--cors-origin <origin>     env SYMBOLWRIGHT_CORS_ORIGIN (only needed if the UI is hosted on a different origin than the API)
 ```
 
-TLS: set `CODEMIND_TLS_CERT_FILE` and `CODEMIND_TLS_KEY_FILE` to terminate
+TLS: set `SYMBOLWRIGHT_TLS_CERT_FILE` and `SYMBOLWRIGHT_TLS_KEY_FILE` to terminate
 TLS directly in the Node process. If you bind to a non-loopback host without
 these set, the server still starts but prints a warning recommending you put
 a TLS-terminating reverse proxy (Caddy, nginx, Cloudflare Tunnel, etc.) in
@@ -42,7 +42,7 @@ front of it before exposing it on the public internet.
 
 See the live-route table in [`../API_REFERENCE.md`](../API_REFERENCE.md).
 Every route under `/api/*` except `/api/health` requires
-`Authorization: Bearer <CODEMIND_API_KEY>`.
+`Authorization: Bearer <SYMBOLWRIGHT_API_KEY>`.
 
 ## Put an API from wherever you want
 
@@ -55,7 +55,7 @@ another vendor's compatibility layer:
 
 ```bash
 curl -X POST http://127.0.0.1:8787/api/providers/register \
-  -H "Authorization: Bearer $CODEMIND_API_KEY" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $SYMBOLWRIGHT_API_KEY" -H "Content-Type: application/json" \
   -d '{
     "providerId": "custom",
     "baseUrl": "https://my-model-host.example.com/v1",
@@ -66,7 +66,7 @@ curl -X POST http://127.0.0.1:8787/api/providers/register \
 
 Overrides live in memory only (`ProviderRuntimeOverrideStore`) and are lost
 on restart — re-register after redeploying, or set the matching
-`*_API_KEY`/`CODEMIND_OPENAI_COMPATIBLE_*` env vars instead if you want a
+`*_API_KEY`/`SYMBOLWRIGHT_OPENAI_COMPATIBLE_*` env vars instead if you want a
 provider preconfigured at boot (see
 [`../PROVIDER_KEYS.md`](../PROVIDER_KEYS.md)).
 
@@ -74,7 +74,7 @@ provider preconfigured at boot (see
 
 ```bash
 curl -X POST http://127.0.0.1:8787/api/chat \
-  -H "Authorization: Bearer $CODEMIND_API_KEY" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $SYMBOLWRIGHT_API_KEY" -H "Content-Type: application/json" \
   -d '{"providerId": "custom", "messages": [{"role": "user", "content": "hi"}]}'
 ```
 
@@ -95,7 +95,7 @@ files, run shell commands, and more, iterating until it's done:
 
 ```bash
 curl -X POST http://127.0.0.1:8787/api/agent \
-  -H "Authorization: Bearer $CODEMIND_API_KEY" -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $SYMBOLWRIGHT_API_KEY" -H "Content-Type: application/json" \
   -d '{
     "providerId": "anthropic",
     "mode": "READ_ONLY",
@@ -110,7 +110,7 @@ turn), `mode` (`PLAN_ONLY`/`READ_ONLY`/`PROPOSAL_ONLY`/`APPROVED_EXECUTION`,
 `true`), and `priorMessages` (see below).
 
 `mode` defaults to `READ_ONLY` here, not the platform-wide
-`DEFAULT_CODEMIND_RUNTIME_MODE` (`APPROVED_EXECUTION`) — the same reasoning
+`DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE` (`APPROVED_EXECUTION`) — the same reasoning
 as `codemind mcp-server`'s default: this is a new HTTP surface any
 authenticated caller can hit, so it starts narrower until the caller
 explicitly asks for more via `mode`.
@@ -155,7 +155,7 @@ full tool-call context across turns in that browser session.
 `/api/agent` runs real tools, but there's no session/audit persistence layer
 yet (each call is a self-contained run; conversation continuity is entirely
 via `priorMessages`), and PR preparation / GitHub write workflows aren't
-wired into it specifically — those still go through the dedicated `codemind`
+wired into it specifically — those still go through the dedicated `symbolwright`
 CLI commands (`codemind pr-preparation`, `codemind github-write-proposal`,
 etc.) and the `codemind agent` CLI's session persistence. See the "Contract
 only" rows in [`../API_REFERENCE.md`](../API_REFERENCE.md) for the fuller
@@ -168,6 +168,6 @@ endpoints, any LLM client or agent framework that can make HTTP calls can
 drive them — point a custom GPT action, an agent framework, or a script at
 this server the same way the browser UI does. For MCP-compatible clients
 specifically (Claude Desktop, Claude Code, etc.), `codemind mcp-server` (see
-[`CODEMIND_MCP_SERVER.md`](CODEMIND_MCP_SERVER.md)) is the more native
-integration — see `docs/USING_CODEMIND_FROM_ANY_LLM.md` for the full picture
+[`SYMBOLWRIGHT_MCP_SERVER.md`](SYMBOLWRIGHT_MCP_SERVER.md)) is the more native
+integration — see `docs/USING_SYMBOLWRIGHT_FROM_ANY_LLM.md` for the full picture
 across both.

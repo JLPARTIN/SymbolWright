@@ -71,12 +71,12 @@ function firstLine(value: string): string {
 
 function generatePrTitle(input: PrOperationPacketInput): string {
   const objective = firstLine(input.objective)
-  return objective.length > 0 ? objective : `Update from CodeMind mission (${input.branchName})`
+  return objective.length > 0 ? objective : `Update from SymbolWright mission (${input.branchName})`
 }
 
 function generateCommitMessage(input: PrOperationPacketInput, title: string): string {
   const fileCount = input.changedFiles.length
-  return `${title}\n\n${fileCount} file(s) changed via CodeMind autonomous mission.`
+  return `${title}\n\n${fileCount} file(s) changed via SymbolWright autonomous mission.`
 }
 
 function generatePrBody(
@@ -153,7 +153,7 @@ function generatePrBody(
  * Acquired external workspaces (and CI runners) commonly have no git
  * committer identity configured at any level, which makes `git commit` fail
  * with "Author identity unknown" — not a policy block, just missing setup.
- * Falls back to a CodeMind bot identity for this commit only (via `-c`,
+ * Falls back to a SymbolWright bot identity for this commit only (via `-c`,
  * git's highest-precedence override) rather than mutating the repository's
  * config, so a workspace that already has a real identity keeps it.
  */
@@ -164,10 +164,10 @@ async function resolveMissingIdentityOverrides(repositoryRoot: string): Promise<
   ])
   const overrides: string[] = []
   if (email.exitCode !== 0 || email.stdout.trim().length === 0) {
-    overrides.push('-c', 'user.email=codemind-agent@users.noreply.github.com')
+    overrides.push('-c', 'user.email=symbolwright-agent@users.noreply.github.com')
   }
   if (name.exitCode !== 0 || name.stdout.trim().length === 0) {
-    overrides.push('-c', 'user.name=CodeMind Agent')
+    overrides.push('-c', 'user.name=SymbolWright Agent')
   }
   return overrides
 }
@@ -251,7 +251,7 @@ export async function preparePrOperationPacket(
 
 export function renderPrOperationPacket(packet: PrOperationPacket): string {
   const lines = [
-    'CodeMind PR Operation Packet',
+    'SymbolWright PR Operation Packet',
     '',
     `Branch: ${packet.branchName} (from ${packet.baseBranch})`,
     `Branch created: ${packet.branchCreated ? 'yes' : 'no'}`,

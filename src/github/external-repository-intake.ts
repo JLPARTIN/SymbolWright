@@ -1,8 +1,8 @@
 import path from 'node:path'
 
-import type { CodeMindMission } from '../mission/mission-types.js'
+import type { SymbolWrightMission } from '../mission/mission-types.js'
 import type { MissionService } from '../mission/mission-service.js'
-import type { CodemindRuntimeMode } from '../runtime/types.js'
+import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
 import {
   acquireExternalRepository,
   type RepositoryAcquisitionMode,
@@ -27,14 +27,14 @@ import {
  * The mission-runtime integration point for external GitHub repositories.
  *
  * Deliberately does not fork the autonomous mission runtime: once a
- * repository is acquired, this creates a normal CodeMind mission whose
+ * repository is acquired, this creates a normal SymbolWright mission whose
  * `repository.rootPath` is the acquired workspace. `MissionService.create`
  * already reads real git state (remote URL, branch, HEAD) from whatever
  * path it is given, and the existing autonomy runtime (Bundle #6) and
  * portability discovery (Bundle #7) already operate generically on
  * `mission.repository.rootPath` — neither needed a single line changed to
  * support a mission whose repository happens to be an external clone
- * instead of the CodeMind checkout itself. Everything downstream (planning,
+ * instead of the SymbolWright checkout itself. Everything downstream (planning,
  * editing, validation, repair, release) reuses that unmodified pipeline.
  */
 
@@ -53,7 +53,7 @@ export interface ExternalRepositoryIntakeOptions {
   readonly ref?: string
   readonly name?: string
   readonly objective: string
-  readonly runtimeMode: CodemindRuntimeMode
+  readonly runtimeMode: SymbolWrightRuntimeMode
   readonly policy?: GitHubOperationsPolicy
   readonly targetOptions?: ParseGitHubRepositoryTargetOptions
   readonly metadata?: RepositoryMetadataSummary
@@ -63,7 +63,7 @@ export interface ExternalRepositoryIntakeResult {
   readonly target: GitHubRepositoryTarget
   readonly acquisition: RepositoryAcquisitionResult
   readonly profile: RepositoryIntakeProfile
-  readonly mission?: CodeMindMission
+  readonly mission?: SymbolWrightMission
 }
 
 function defaultMissionName(target: GitHubRepositoryTarget, ref: string | undefined): string {
@@ -75,7 +75,7 @@ function defaultMissionName(target: GitHubRepositoryTarget, ref: string | undefi
 /**
  * Parses and validates a GitHub repository target, acquires it into a
  * controlled workspace, runs Bundle #7 portability discovery, and — unless
- * running in `dry-run` mode or acquisition failed — creates a real CodeMind
+ * running in `dry-run` mode or acquisition failed — creates a real SymbolWright
  * mission rooted at the acquired workspace so the existing mission runtime
  * can plan, edit, validate, and repair against it.
  */

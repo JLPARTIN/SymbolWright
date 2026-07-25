@@ -1,4 +1,4 @@
-# CodeMind Operator Review Gate
+# SymbolWright Operator Review Gate
 
 This document records Phase J operator review gate for live outputs.
 

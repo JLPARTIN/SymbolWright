@@ -1,9 +1,9 @@
 import { createServer, type Server } from 'node:http'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { startChatServer, type StartedChatServer } from './codemind-chat-server.js'
+import { startChatServer, type StartedChatServer } from './symbolwright-chat-server.js'
 
-const API_KEY = 'test-codemind-key'
+const API_KEY = 'test-symbolwright-key'
 
 /**
  * A real OpenAI-compatible HTTP server (not a mock) that scripts a two-turn
@@ -38,7 +38,7 @@ function startFakeOpenAiCompatibleServer(): Promise<{
         res.write('data: {"choices":[],"usage":{"prompt_tokens":10,"completion_tokens":5}}\n\n')
       } else {
         res.write(
-          'data: {"choices":[{"delta":{"content":"The package is named codemind."},"finish_reason":"stop"}]}\n\n',
+          'data: {"choices":[{"delta":{"content":"The package is named symbolwright."},"finish_reason":"stop"}]}\n\n',
         )
         res.write('data: {"choices":[],"usage":{"prompt_tokens":20,"completion_tokens":8}}\n\n')
       }
@@ -82,7 +82,7 @@ function startFakeGeminiServer(): Promise<{
         )
       } else {
         res.write(
-          'data: {"candidates":[{"content":{"parts":[{"text":"The package is named codemind."}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":20,"candidatesTokenCount":8}}\n\n',
+          'data: {"candidates":[{"content":{"parts":[{"text":"The package is named symbolwright."}]},"finishReason":"STOP"}],"usageMetadata":{"promptTokenCount":20,"candidatesTokenCount":8}}\n\n',
         )
       }
       res.end()
@@ -165,7 +165,7 @@ describe('POST /api/agent', () => {
     }
 
     expect(result.status).toBe('completed')
-    expect(result.finalText).toBe('The package is named codemind.')
+    expect(result.finalText).toBe('The package is named symbolwright.')
     expect(result.totalIterations).toBe(2)
     expect(result.iterations[0]?.toolCalls[0]?.name).toBe('read_file')
     expect(result.iterations[0]?.toolResults[0]?.isError).toBe(false)
@@ -209,7 +209,7 @@ describe('POST /api/agent', () => {
     expect(text).toContain('event: tool_call_end')
     expect(text).toContain('event: result')
     expect(text).toContain('event: done')
-    expect(text).toContain('"finalText":"The package is named codemind."')
+    expect(text).toContain('"finalText":"The package is named symbolwright."')
   })
 
   it('runs a real tool-use loop against google-gemini end to end', async () => {
@@ -248,7 +248,7 @@ describe('POST /api/agent', () => {
       iterations: readonly { toolCalls: readonly { name: string }[] }[]
     }
     expect(result.status).toBe('completed')
-    expect(result.finalText).toBe('The package is named codemind.')
+    expect(result.finalText).toBe('The package is named symbolwright.')
     expect(result.iterations[0]?.toolCalls[0]?.name).toBe('read_file')
     expect(fake.callCount()).toBe(2)
   })

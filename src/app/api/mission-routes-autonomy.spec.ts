@@ -25,7 +25,7 @@ function response() {
 }
 
 async function context() {
-  const cwd = await mkdtemp(path.join(tmpdir(), 'codemind-live-autonomy-route-'))
+  const cwd = await mkdtemp(path.join(tmpdir(), 'symbolwright-live-autonomy-route-'))
   return {
     cwd,
     service: new MissionService({ workspaceRoot: cwd, env: {} }),

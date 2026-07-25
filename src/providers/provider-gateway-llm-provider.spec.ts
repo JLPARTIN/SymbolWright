@@ -32,8 +32,8 @@ describe('createProviderGatewayLlmProvider', () => {
     })
     const provider = createProviderGatewayLlmProvider({
       config: loadProviderGatewayConfig({
-        CODEMIND_PROVIDER: 'openai',
-        CODEMIND_MODEL: 'gpt-test',
+        SYMBOLWRIGHT_PROVIDER: 'openai',
+        SYMBOLWRIGHT_MODEL: 'gpt-test',
         OPENAI_API_KEY: 'openai-secret',
       }),
       transport,
@@ -72,7 +72,7 @@ describe('createProviderGatewayLlmProvider', () => {
     })
     const provider = createProviderGatewayLlmProvider({
       config: loadProviderGatewayConfig({
-        CODEMIND_PROVIDER: 'openai',
+        SYMBOLWRIGHT_PROVIDER: 'openai',
         OPENAI_API_KEY: 'openai-secret',
       }),
       transport,

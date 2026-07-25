@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import type { CodemindRuntimeMode } from '../runtime/types.js'
+import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
 import { DEFAULT_SANDBOX_DISCOVERY_PROBES, discoverRuntimeCommands } from './sandbox-discovery.js'
 import {
   executeGuardedHostRequest,
@@ -48,7 +48,7 @@ export interface SandboxServiceOptions {
 }
 
 export interface SandboxExecutionContext {
-  readonly mode: CodemindRuntimeMode
+  readonly mode: SymbolWrightRuntimeMode
 }
 
 export interface SandboxCancelResult {

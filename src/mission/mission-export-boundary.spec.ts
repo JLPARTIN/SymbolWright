@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { createMissionExportBundle } from './mission-export.js'
-import type { CodeMindMission } from './mission-types.js'
+import type { SymbolWrightMission } from './mission-types.js'
 
-const mission: CodeMindMission = {
+const mission: SymbolWrightMission = {
   schemaVersion: 1,
   revision: 1,
   id: 'mission_11111111-1111-4111-8111-111111111111',

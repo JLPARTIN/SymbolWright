@@ -18,7 +18,7 @@ afterEach(async () => {
 
 describe('universal repository portability discovery', () => {
   it('detects and expands a mixed monorepo without reusing unsafe CI commands', async () => {
-    const root = await temporaryRoot('codemind-portability-mixed-')
+    const root = await temporaryRoot('symbolwright-portability-mixed-')
     await write(
       root,
       'package.json',
@@ -79,7 +79,7 @@ describe('universal repository portability discovery', () => {
   })
 
   it('requests targeted advisory research for a recognizable unsupported toolchain', async () => {
-    const root = await temporaryRoot('codemind-portability-unknown-')
+    const root = await temporaryRoot('symbolwright-portability-unknown-')
     await write(root, 'build.zig', 'const std = @import("std");\n')
     await write(root, 'src/main.zig', 'pub fn main() void {}\n')
     await write(root, 'src/math.zig', 'pub fn add(a: i32, b: i32) i32 { return a + b; }\n')
@@ -94,8 +94,8 @@ describe('universal repository portability discovery', () => {
   })
 
   it('walks research-only markers without entering ignored directories or symlink targets', async () => {
-    const root = await temporaryRoot('codemind-portability-research-')
-    const external = await temporaryRoot('codemind-portability-external-')
+    const root = await temporaryRoot('symbolwright-portability-research-')
+    const external = await temporaryRoot('symbolwright-portability-external-')
     await write(root, 'apps/mobile/pubspec.yaml', 'name: mobile\n')
     await write(root, 'services/worker/mix.exs', 'defmodule Worker.MixProject do\nend\n')
     await write(root, 'native/CMakeLists.txt', 'cmake_minimum_required(VERSION 3.20)\n')

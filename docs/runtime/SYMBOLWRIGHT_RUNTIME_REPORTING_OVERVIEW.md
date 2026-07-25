@@ -1,4 +1,4 @@
-# CodeMind Runtime Reporting Overview
+# SymbolWright Runtime Reporting Overview
 
 The runtime reporting arc provides read-only operator-facing report surfaces for Zflow output review and archival.
 

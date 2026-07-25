@@ -185,7 +185,7 @@ function describeDryRunOperation(request: GitHubWriteExecutorRequest): string {
 
 export function renderGitHubWriteExecutorResult(result: GitHubWriteExecutorResult): string {
   const lines = [
-    'CodeMind GitHub Write Executor',
+    'SymbolWright GitHub Write Executor',
     '',
     `Outcome: ${result.outcome}`,
     `Execution mode: ${result.executionMode}`,

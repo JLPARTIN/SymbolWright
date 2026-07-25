@@ -1,6 +1,6 @@
 import { buildChatTranscriptClientScript } from './chat-transcript-client-script.js'
 
-/** Standalone `<style>` tag for the CodeMind Chat body markup. */
+/** Standalone `<style>` tag for the SymbolWright Chat body markup. */
 export function renderChatStyles(): string {
   return `<style>
     :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
@@ -45,19 +45,19 @@ export function renderChatStyles(): string {
 }
 
 /**
- * The CodeMind Chat's inner markup, without an outer `<main>`/`<html>`
+ * The SymbolWright Chat's inner markup, without an outer `<main>`/`<html>`
  * wrapper, so it can be embedded directly inside the unified app shell's
  * `agent` view as well as the standalone `renderChatUiHtml()` document below.
  */
 export function renderChatBodyMarkup(): string {
-  return `<h1>CodeMind Chat</h1>
-    <p class="sub">Bring your own provider API key, stay in browser-only mode with no key at all, or open a structured draft from the Universal Workspace. CodeMind routes provider requests through its provider gateway &mdash; your provider key never leaves the server.</p>
+  return `<h1>SymbolWright Chat</h1>
+    <p class="sub">Bring your own provider API key, stay in browser-only mode with no key at all, or open a structured draft from the Universal Workspace. SymbolWright routes provider requests through its provider gateway &mdash; your provider key never leaves the server.</p>
     <p id="mode-status" class="sub"><strong>Current mode:</strong> not connected yet</p>
 
     <section id="connect-section" style="display:block">
-      <h2>1. Connect to this CodeMind server</h2>
-      <label for="codemind-key">CodeMind access key (CODEMIND_API_KEY)</label>
-      <input id="codemind-key" type="password" placeholder="paste your CodeMind API key" autocomplete="off" />
+      <h2>1. Connect to this SymbolWright server</h2>
+      <label for="symbolwright-key">SymbolWright access key (SYMBOLWRIGHT_API_KEY)</label>
+      <input id="symbolwright-key" type="password" placeholder="paste your SymbolWright API key" autocomplete="off" />
       <button id="connect-btn">Connect</button>
       <div id="connect-status" class="hint"></div>
       <div class="hint warn">This key is saved in this browser's local storage so you don't have to retype it. Do not use that on a shared or public computer &mdash; clear it from browser storage when you're done.</div>
@@ -67,7 +67,7 @@ export function renderChatBodyMarkup(): string {
       <h2>2. Choose your mode</h2>
       <button id="browser-mode-btn" class="secondary">Browser-only mode &mdash; no API key</button>
       <button id="api-mode-btn" class="secondary">API-backed mode &mdash; bring your own key</button>
-      <div class="hint">Browser-only mode runs CodeMind's local diagnostics (doctor + release-readiness) with no provider connected. Switch to API-backed mode any time to add a provider and chat.</div>
+      <div class="hint">Browser-only mode runs SymbolWright's local diagnostics (doctor + release-readiness) with no provider connected. Switch to API-backed mode any time to add a provider and chat.</div>
     </section>
 
     <section id="local-status-section">
@@ -143,7 +143,7 @@ export function renderChatUiHtml(): string {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CodeMind Chat</title>
+  <title>SymbolWright Chat</title>
   ${renderChatStyles()}
 </head>
 <body>

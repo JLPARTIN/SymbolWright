@@ -7,7 +7,7 @@ import { buildRepositoryMissionBridgeScript } from './repository-mission-bridge.
  * to click, then manually connect and send).
  *
  * `workspace-client-script.ts`'s `showAiTask()` already checks for
- * `window.codemindHandleWorkspaceDraft` and calls it instead of building a
+ * `window.symbolWrightHandleWorkspaceDraft` and calls it instead of building a
  * link when it exists (added when that script was first extracted) — this
  * module is what defines it. The draft is written into the chat input and
  * the runtime mode is pre-selected, but nothing is auto-sent: the user
@@ -18,7 +18,7 @@ import { buildRepositoryMissionBridgeScript } from './repository-mission-bridge.
  */
 export function buildWorkspaceAgentBridgeScript(): string {
   return `
-    window.codemindHandleWorkspaceDraft = function (message, agentMode) {
+    window.symbolWrightHandleWorkspaceDraft = function (message, agentMode) {
       appState.set({ pendingAgentDraft: { message: message, agentMode: agentMode } });
       navigateTo('agent');
     };
@@ -62,8 +62,8 @@ export function buildWorkspaceAgentBridgeScript(): string {
       navigateTo('agent');
     })();
 
-    window.codemindGetScratchMissionState = function () {
-      const raw = localStorage.getItem('codemind.workspace.session.v1');
+    window.symbolWrightGetScratchMissionState = function () {
+      const raw = localStorage.getItem('symbolwright.workspace.session.v1');
       if (!raw) return {};
       try { return JSON.parse(raw); }
       catch (_) { return {}; }

@@ -1,4 +1,4 @@
-# CodeMind Approved PR Collaboration
+# SymbolWright Approved PR Collaboration
 
 Phase Y adds a fake-client-backed collaboration seam for pull request coordination.
 

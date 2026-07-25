@@ -1,4 +1,4 @@
-# CodeMind Read Adapters
+# SymbolWright Read Adapters
 
 This document records Phase E local fixture read adapters.
 

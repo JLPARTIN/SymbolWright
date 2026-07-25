@@ -148,7 +148,7 @@ export function discoverSkills(cwd: string = process.cwd()): readonly SkillDefin
   for (const skill of loadSkillDirectory(path.join(cwd, '.claude', 'skills'), 'claude-project')) {
     addOrReplaceSkill(byName, skill)
   }
-  for (const skill of loadSkillDirectory(path.join(cwd, '.codemind', 'skills'), 'project')) {
+  for (const skill of loadSkillDirectory(path.join(cwd, '.symbolwright', 'skills'), 'project')) {
     addOrReplaceSkill(byName, skill)
   }
 

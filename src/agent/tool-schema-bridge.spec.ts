@@ -6,7 +6,7 @@ import {
   extractProviderTools,
 } from './tool-schema-bridge.js'
 import type { RuntimeToolDefinition, RuntimePolicySnapshot } from '../runtime/types.js'
-import { ALL_CODEMIND_TOOL_NAMES } from '../runtime/types.js'
+import { ALL_SYMBOLWRIGHT_TOOL_NAMES } from '../runtime/types.js'
 
 function makeTool(name: string, capability: string): RuntimeToolDefinition {
   return {
@@ -158,8 +158,8 @@ describe('tool-schema-bridge', () => {
       expect(() => buildToolInputSchema(tool)).toThrow('no registered input schema')
     })
 
-    it('every CodemindToolName has a registered schema', () => {
-      for (const name of ALL_CODEMIND_TOOL_NAMES) {
+    it('every SymbolWrightToolName has a registered schema', () => {
+      for (const name of ALL_SYMBOLWRIGHT_TOOL_NAMES) {
         const tool = makeTool(name, 'READ')
         const schema = buildToolInputSchema(tool)
 
@@ -171,7 +171,7 @@ describe('tool-schema-bridge', () => {
     it('every schema with required fields has matching properties', () => {
       const NO_INPUT_TOOLS = new Set(['run_tests', 'run_typecheck', 'run_lint'])
 
-      for (const name of ALL_CODEMIND_TOOL_NAMES) {
+      for (const name of ALL_SYMBOLWRIGHT_TOOL_NAMES) {
         const tool = makeTool(name, 'READ')
         const schema = buildToolInputSchema(tool)
 

@@ -23,5 +23,5 @@ export function renderNavShellHtml(): string {
       `<button type="button" class="nav-item" data-nav="${entry.id}" onclick="navigateTo('${entry.id}')">${entry.label}</button>`,
   ).join('')
 
-  return `<nav class="app-nav" aria-label="CodeMind navigation">${items}</nav>`
+  return `<nav class="app-nav" aria-label="SymbolWright navigation">${items}</nav>`
 }

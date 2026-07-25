@@ -176,7 +176,7 @@ describe('parseFixtureGeneratedAt', () => {
 
 describe('loadFixtureFile', () => {
   it('loads valid JSON from a file', () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-guard-test-'))
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-guard-test-'))
     const filePath = path.join(dir, 'fixture.json')
     fs.writeFileSync(filePath, JSON.stringify({ title: 'Test' }), 'utf8')
 
@@ -185,7 +185,7 @@ describe('loadFixtureFile', () => {
   })
 
   it('throws on invalid JSON', () => {
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-guard-test-'))
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-guard-test-'))
     const filePath = path.join(dir, 'bad.json')
     fs.writeFileSync(filePath, 'not json', 'utf8')
 

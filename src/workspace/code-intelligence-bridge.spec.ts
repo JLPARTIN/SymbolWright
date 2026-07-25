@@ -61,7 +61,7 @@ describe('workspace code intelligence chat bridge', () => {
     expect(response.ok).toBe(true)
     expect(response.suggestedAgentMode).toBe('READ_ONLY')
     expect(response.chatDraft.summary).toBe('review · JavaScript · UNVERIFIED')
-    expect(response.prompt).toContain('# CodeMind Workspace Code Intelligence Task')
+    expect(response.prompt).toContain('# SymbolWright Workspace Code Intelligence Task')
     expect(response.prompt).toContain('## Last run output')
     expect(response.prompt).toContain('Do not claim execution success')
   })

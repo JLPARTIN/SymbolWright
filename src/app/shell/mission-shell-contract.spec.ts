@@ -21,6 +21,6 @@ describe('mission shell contracts', () => {
   it('does not render secret values into mission markup', () => {
     const html = renderAppShellHtml()
     expect(html).not.toContain('GITHUB_TOKEN=')
-    expect(html).not.toContain('CODEMIND_API_KEY=')
+    expect(html).not.toContain('SYMBOLWRIGHT_API_KEY=')
   })
 })

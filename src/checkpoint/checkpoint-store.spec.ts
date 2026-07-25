@@ -31,22 +31,22 @@ describe('checkpoint-store', () => {
   let workspaceDir: string
 
   beforeEach(() => {
-    workspaceDir = mkdtempSync(join(tmpdir(), 'codemind-checkpoint-store-'))
+    workspaceDir = mkdtempSync(join(tmpdir(), 'symbolwright-checkpoint-store-'))
   })
 
   afterEach(() => {
     rmSync(workspaceDir, { recursive: true, force: true })
   })
 
-  it('resolves the expected .codemind/checkpoints/<session>/<checkpoint> layout', () => {
+  it('resolves the expected .symbolwright/checkpoints/<session>/<checkpoint> layout', () => {
     expect(resolveCheckpointsRoot(workspaceDir)).toBe(
-      join(workspaceDir, '.codemind', 'checkpoints'),
+      join(workspaceDir, '.symbolwright', 'checkpoints'),
     )
     expect(resolveSessionDir(workspaceDir, 'cm-1')).toBe(
-      join(workspaceDir, '.codemind', 'checkpoints', 'cm-1'),
+      join(workspaceDir, '.symbolwright', 'checkpoints', 'cm-1'),
     )
     expect(resolveCheckpointDir(workspaceDir, 'cm-1', 'ckpt-1')).toBe(
-      join(workspaceDir, '.codemind', 'checkpoints', 'cm-1', 'ckpt-1'),
+      join(workspaceDir, '.symbolwright', 'checkpoints', 'cm-1', 'ckpt-1'),
     )
   })
 

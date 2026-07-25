@@ -5,7 +5,7 @@ import {
 } from './chat-transcript-logic.js'
 
 /**
- * Builds the CodeMind Chat browser `<script>` body. Behaviorally equivalent
+ * Builds the SymbolWright Chat browser `<script>` body. Behaviorally equivalent
  * to the inline script that used to live directly inside `chat-ui-html.ts`'s
  * template literal — SSE frame parsing and tool-call message formatting are
  * now sourced from `chat-transcript-logic.ts` via `fn.toString()` so they
@@ -13,9 +13,17 @@ import {
  */
 export function buildChatTranscriptClientScript(): string {
   return `
+    function readMigratedStorageItem(canonicalKey, legacyKey) {
+      const canonicalValue = localStorage.getItem(canonicalKey);
+      if (canonicalValue !== null) return canonicalValue;
+      const legacyValue = localStorage.getItem(legacyKey);
+      if (legacyValue !== null) localStorage.setItem(canonicalKey, legacyValue);
+      return legacyValue;
+    }
+
     const state = {
-      codemindKey: localStorage.getItem('codemind_api_key') || '',
-      mode: localStorage.getItem('codemind_mode') || 'browser',
+      symbolWrightKey: readMigratedStorageItem('symbolwright_api_key', 'codemind_api_key') || '',
+      mode: readMigratedStorageItem('symbolwright_mode', 'codemind_mode') || 'browser',
       providerId: null,
       providerActive: false,
       messages: [],
@@ -25,7 +33,7 @@ export function buildChatTranscriptClientScript(): string {
     const el = (id) => document.getElementById(id);
 
     function authHeaders(extra) {
-      return Object.assign({ authorization: 'Bearer ' + state.codemindKey }, extra || {});
+      return Object.assign({ authorization: 'Bearer ' + state.symbolWrightKey }, extra || {});
     }
 
     function setText(id, text, cls) {
@@ -35,7 +43,7 @@ export function buildChatTranscriptClientScript(): string {
     }
 
     function updateModeStatus() {
-      if (!state.codemindKey) {
+      if (!state.symbolWrightKey) {
         setText('mode-status', 'Current mode: not connected yet', '');
         return;
       }
@@ -50,7 +58,7 @@ export function buildChatTranscriptClientScript(): string {
 
     async function loadProviders() {
       const response = await fetch('/api/providers', { headers: authHeaders() });
-      if (response.status === 401) throw new Error('Invalid CodeMind API key');
+      if (response.status === 401) throw new Error('Invalid SymbolWright API key');
       if (!response.ok) throw new Error('Failed to load providers: HTTP ' + response.status);
       return response.json();
     }
@@ -119,7 +127,7 @@ export function buildChatTranscriptClientScript(): string {
 
     function applyMode(mode) {
       state.mode = mode;
-      localStorage.setItem('codemind_mode', mode);
+      localStorage.setItem('symbolwright_mode', mode);
       el('browser-mode-btn').classList.toggle('active', mode === 'browser');
       el('api-mode-btn').classList.toggle('active', mode === 'api');
       el('local-status-section').style.display = mode === 'browser' ? 'block' : 'none';
@@ -135,17 +143,17 @@ export function buildChatTranscriptClientScript(): string {
     el('api-mode-btn').addEventListener('click', () => applyMode('api'));
 
     async function connect() {
-      const key = el('codemind-key').value.trim();
-      if (!key) { setText('connect-status', 'Enter a CodeMind API key first.', 'fail'); return; }
-      state.codemindKey = key;
+      const key = el('symbolwright-key').value.trim();
+      if (!key) { setText('connect-status', 'Enter a SymbolWright API key first.', 'fail'); return; }
+      state.symbolWrightKey = key;
       try {
         const data = await loadProviders();
-        localStorage.setItem('codemind_api_key', key);
+        localStorage.setItem('symbolwright_api_key', key);
         setText('connect-status', 'Connected.', 'ok');
         renderProviderOptions(data);
         el('mode-section').style.display = 'block';
         applyMode(state.mode);
-        if (typeof window.codemindOnConnected === 'function') window.codemindOnConnected();
+        if (typeof window.symbolWrightOnConnected === 'function') window.symbolWrightOnConnected();
       } catch (error) {
         setText('connect-status', error.message, 'fail');
         updateModeStatus();
@@ -153,7 +161,7 @@ export function buildChatTranscriptClientScript(): string {
     }
 
     el('connect-btn').addEventListener('click', connect);
-    el('codemind-key').addEventListener('keydown', (event) => {
+    el('symbolwright-key').addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
         event.preventDefault();
         connect();
@@ -359,7 +367,7 @@ export function buildChatTranscriptClientScript(): string {
 
       el('chat-input').value = draft;
       appendMessage('tool', 'Workspace code-intelligence draft loaded. Connect and choose API-backed mode to send it.');
-      setText('connect-status', 'Workspace draft loaded. Connect with CODEMIND_API_KEY, then use API-backed mode to send it.', 'ok');
+      setText('connect-status', 'Workspace draft loaded. Connect with SYMBOLWRIGHT_API_KEY, then use API-backed mode to send it.', 'ok');
 
       if (agentMode === 'READ_ONLY' || agentMode === 'PROPOSAL_ONLY' || agentMode === 'APPROVED_EXECUTION') {
         el('agent-mode-toggle').checked = true;
@@ -387,8 +395,8 @@ export function buildChatTranscriptClientScript(): string {
       applyWorkspaceDraftFromUrl();
     }
 
-    if (state.codemindKey) {
-      el('codemind-key').value = state.codemindKey;
+    if (state.symbolWrightKey) {
+      el('symbolwright-key').value = state.symbolWrightKey;
       connect();
     }
   `

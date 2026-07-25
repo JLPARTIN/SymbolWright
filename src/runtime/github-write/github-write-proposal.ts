@@ -67,7 +67,7 @@ export function evaluateGitHubWriteProposal(
 
 export function renderGitHubWriteProposal(result: GitHubWriteProposalResult): string {
   const sections: string[] = [
-    'CodeMind GitHub write proposal',
+    'SymbolWright GitHub write proposal',
     '',
     `Decision: ${result.decision}`,
     `Action: ${result.action}`,

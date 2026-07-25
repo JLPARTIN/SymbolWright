@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  buildCodemindKernelTraceProofReport,
-  CODEMIND_KERNEL_TRACE_PROOF_BLOCK_ID,
-  CODEMIND_KERNEL_TRACE_PROOF_PHASE_ID,
-  CODEMIND_KERNEL_TRACE_PROOF_PR_ID,
-} from './codemind-kernel-trace-proof.js'
+  buildSymbolWrightKernelTraceProofReport,
+  SYMBOLWRIGHT_KERNEL_TRACE_PROOF_BLOCK_ID,
+  SYMBOLWRIGHT_KERNEL_TRACE_PROOF_PHASE_ID,
+  SYMBOLWRIGHT_KERNEL_TRACE_PROOF_PR_ID,
+} from './symbolwright-kernel-trace-proof.js'
 import { type AgentKernelTraceFrame } from '../kernel/agent-kernel-trace.types.js'
 
 function makeFrame(
@@ -31,24 +31,24 @@ function makeFrame(
   }
 }
 
-describe('CodeMind Kernel Trace Proof', () => {
+describe('SymbolWright Kernel Trace Proof', () => {
   it('emits canonical metadata and keeps invariants false', () => {
-    const report = buildCodemindKernelTraceProofReport({
+    const report = buildSymbolWrightKernelTraceProofReport({
       executionId: 'exec-001',
       requiredBlockIds: ['AGENT-KERNEL-01'],
       evidenceFrames: [makeFrame('AGENT-KERNEL-01')],
     })
 
-    expect(report.blockId).toBe(CODEMIND_KERNEL_TRACE_PROOF_BLOCK_ID)
-    expect(report.prId).toBe(CODEMIND_KERNEL_TRACE_PROOF_PR_ID)
-    expect(report.phaseId).toBe(CODEMIND_KERNEL_TRACE_PROOF_PHASE_ID)
+    expect(report.blockId).toBe(SYMBOLWRIGHT_KERNEL_TRACE_PROOF_BLOCK_ID)
+    expect(report.prId).toBe(SYMBOLWRIGHT_KERNEL_TRACE_PROOF_PR_ID)
+    expect(report.phaseId).toBe(SYMBOLWRIGHT_KERNEL_TRACE_PROOF_PHASE_ID)
     expect(report.invariants.providerInvoked).toBe(false)
     expect(report.invariants.repoMutationAllowed).toBe(false)
     expect(report.invariants.commandExecutionAllowed).toBe(false)
   })
 
   it('returns TRACE_PROOF_READY when all required blocks are covered', () => {
-    const report = buildCodemindKernelTraceProofReport({
+    const report = buildSymbolWrightKernelTraceProofReport({
       executionId: 'exec-001',
       requiredBlockIds: ['AGENT-KERNEL-01', 'AGENT-KERNEL-02'],
       evidenceFrames: [makeFrame('AGENT-KERNEL-01'), makeFrame('AGENT-KERNEL-02')],
@@ -61,7 +61,7 @@ describe('CodeMind Kernel Trace Proof', () => {
   })
 
   it('returns TRACE_PROOF_PARTIAL when only some required blocks are covered', () => {
-    const report = buildCodemindKernelTraceProofReport({
+    const report = buildSymbolWrightKernelTraceProofReport({
       executionId: 'exec-001',
       requiredBlockIds: ['AGENT-KERNEL-01', 'AGENT-KERNEL-02', 'AGENT-KERNEL-03'],
       evidenceFrames: [makeFrame('AGENT-KERNEL-01'), makeFrame('AGENT-KERNEL-02')],
@@ -74,7 +74,7 @@ describe('CodeMind Kernel Trace Proof', () => {
   })
 
   it('returns TRACE_PROOF_BLOCKED when blocking notes are present', () => {
-    const report = buildCodemindKernelTraceProofReport({
+    const report = buildSymbolWrightKernelTraceProofReport({
       executionId: 'exec-001',
       requiredBlockIds: ['AGENT-KERNEL-01'],
       evidenceFrames: [makeFrame('AGENT-KERNEL-01')],
@@ -87,7 +87,7 @@ describe('CodeMind Kernel Trace Proof', () => {
   })
 
   it('returns TRACE_PROOF_INVALID when lineage is out of order', () => {
-    const report = buildCodemindKernelTraceProofReport({
+    const report = buildSymbolWrightKernelTraceProofReport({
       executionId: 'exec-001',
       requiredBlockIds: ['AGENT-KERNEL-01', 'AGENT-KERNEL-02'],
       evidenceFrames: [makeFrame('AGENT-KERNEL-02'), makeFrame('AGENT-KERNEL-01')],
@@ -99,7 +99,7 @@ describe('CodeMind Kernel Trace Proof', () => {
   })
 
   it('returns TRACE_PROOF_INVALID when invariants are violated', () => {
-    const report = buildCodemindKernelTraceProofReport({
+    const report = buildSymbolWrightKernelTraceProofReport({
       executionId: 'exec-001',
       requiredBlockIds: ['AGENT-KERNEL-01'],
       evidenceFrames: [
@@ -118,7 +118,7 @@ describe('CodeMind Kernel Trace Proof', () => {
   })
 
   it('drops frames with mismatched executionId and marks partial', () => {
-    const report = buildCodemindKernelTraceProofReport({
+    const report = buildSymbolWrightKernelTraceProofReport({
       executionId: 'exec-001',
       requiredBlockIds: ['AGENT-KERNEL-01', 'AGENT-KERNEL-02'],
       evidenceFrames: [
@@ -133,12 +133,12 @@ describe('CodeMind Kernel Trace Proof', () => {
   })
 
   it('produces a deterministic summary with no random IDs', () => {
-    const report1 = buildCodemindKernelTraceProofReport({
+    const report1 = buildSymbolWrightKernelTraceProofReport({
       executionId: 'exec-A',
       requiredBlockIds: ['AGENT-KERNEL-01'],
       evidenceFrames: [makeFrame('AGENT-KERNEL-01', 'exec-A')],
     })
-    const report2 = buildCodemindKernelTraceProofReport({
+    const report2 = buildSymbolWrightKernelTraceProofReport({
       executionId: 'exec-A',
       requiredBlockIds: ['AGENT-KERNEL-01'],
       evidenceFrames: [makeFrame('AGENT-KERNEL-01', 'exec-A')],

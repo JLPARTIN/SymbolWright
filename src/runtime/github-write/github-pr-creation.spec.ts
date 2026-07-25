@@ -22,7 +22,7 @@ const approval: RuntimeApproval = {
 }
 
 const request = {
-  repository: 'JLPARTIN/CodeMind',
+  repository: 'JLPARTIN/SymbolWright',
   baseBranch: 'main',
   headBranch: 'phase-x-generated',
   title: 'Phase X generated PR',
@@ -70,7 +70,7 @@ describe('executeGitHubPrCreation', () => {
     )
     const output = renderGitHubPrCreationResult(result)
 
-    expect(output).toContain('CodeMind GitHub PR creation')
+    expect(output).toContain('SymbolWright GitHub PR creation')
     expect(output).toContain('Outcome: DRY_RUN')
     expect(output).toContain('Dry-run only. No GitHub API call has been made.')
   })

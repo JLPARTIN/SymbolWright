@@ -1,4 +1,4 @@
-# CodeMind GitHub Write Executor v1
+# SymbolWright GitHub Write Executor v1
 
 This document describes the GitHub write executor, which wraps the GitHub write gate into a governed executor for allowed GitHub write actions.
 

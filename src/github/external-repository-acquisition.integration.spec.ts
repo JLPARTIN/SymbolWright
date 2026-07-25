@@ -67,8 +67,8 @@ describe('external repository acquisition — Bundle #8 fixture trial', () => {
   let workspaceRoot: string
 
   beforeEach(() => {
-    fixtureRoot = mkdtempSync(join(tmpdir(), 'codemind-bundle8-fixture-'))
-    workspaceRoot = mkdtempSync(join(tmpdir(), 'codemind-bundle8-workspace-'))
+    fixtureRoot = mkdtempSync(join(tmpdir(), 'symbolwright-bundle8-fixture-'))
+    workspaceRoot = mkdtempSync(join(tmpdir(), 'symbolwright-bundle8-workspace-'))
   })
 
   afterEach(() => {

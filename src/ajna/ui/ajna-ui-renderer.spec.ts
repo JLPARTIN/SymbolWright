@@ -5,7 +5,7 @@ import type { AjnaReviewPanelViewModel } from './ajna-ui.types.js'
 
 function makeViewModel(): AjnaReviewPanelViewModel {
   return {
-    repository: 'JLPARTIN/JLPARTIN-CodeMind',
+    repository: 'JLPARTIN/JLPARTIN-SymbolWright',
     pullRequestNumber: 12,
     readiness: {
       ruling: 'NEEDS_OPERATOR_DECISION',
@@ -74,8 +74,8 @@ describe('Ajna UI renderer', () => {
   it('renders the review panel markdown', () => {
     const markdown = renderAjnaReviewPanelMarkdown(makeViewModel())
 
-    expect(markdown).toContain('# CodeMind — Ajna Review Panel')
-    expect(markdown).toContain('**Repository:** JLPARTIN/JLPARTIN-CodeMind')
+    expect(markdown).toContain('# SymbolWright — Ajna Review Panel')
+    expect(markdown).toContain('**Repository:** JLPARTIN/JLPARTIN-SymbolWright')
     expect(markdown).toContain('**Ruling:** NEEDS_OPERATOR_DECISION')
     expect(markdown).toContain('**Confidence:** 86.0%')
     expect(markdown).toContain('**Scope Loaded:** 2 changed file(s) loaded for review. (INFO)')

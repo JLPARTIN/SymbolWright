@@ -116,7 +116,7 @@ export const CROSS_LANGUAGE_EQUIVALENCE_EXAMPLES: readonly CrossLanguageEquivale
         input: 'A man, a plan, a canal: Panama!',
         expected: true,
       },
-      { name: 'negative', input: 'CodeMind', expected: false },
+      { name: 'negative', input: 'SymbolWright', expected: false },
     ],
   },
   {
@@ -177,8 +177,8 @@ function activeNames(users: User[]): string[] {
     tests: [
       {
         name: 'spaces',
-        input: '  CodeMind   Workspace ',
-        expected: 'codemind workspace',
+        input: '  SymbolWright   Workspace ',
+        expected: 'symbolwright workspace',
       },
       { name: 'tabs', input: 'A\tB\nC', expected: 'a b c' },
     ],

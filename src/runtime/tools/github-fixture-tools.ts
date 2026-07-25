@@ -46,7 +46,7 @@ export async function executeGitHubPrFixtureReviewTool(
   const ajna = bridgeRuntimeEvidenceToAjna({ pr: summary })
 
   return [
-    'CodeMind GitHub PR fixture review',
+    'SymbolWright GitHub PR fixture review',
     '',
     summary.title,
     ...summary.lines.map((line) => `- ${line}`),
@@ -75,7 +75,7 @@ export async function executeGitHubCiFixtureReviewTool(
   const ajna = bridgeRuntimeEvidenceToAjna({ ci: summary })
 
   return [
-    'CodeMind GitHub CI fixture review',
+    'SymbolWright GitHub CI fixture review',
     '',
     summary.title,
     ...summary.lines.map((line) => `- ${line}`),

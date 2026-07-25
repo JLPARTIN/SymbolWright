@@ -1,54 +1,54 @@
 export {
-  CODEMIND_EXTERNAL_CLIENT_KINDS,
-  CODEMIND_PUBLIC_API_ROUTE_METHODS,
-  CODEMIND_PUBLIC_API_ROUTES,
-  CODEMIND_UNIVERSAL_API_BLOCK_ID,
+  SYMBOLWRIGHT_EXTERNAL_CLIENT_KINDS,
+  SYMBOLWRIGHT_PUBLIC_API_ROUTE_METHODS,
+  SYMBOLWRIGHT_PUBLIC_API_ROUTES,
+  SYMBOLWRIGHT_UNIVERSAL_API_BLOCK_ID,
   buildUniversalApiContractReport,
-  getCodemindPublicApiRoutes,
+  getSymbolWrightPublicApiRoutes,
   renderUniversalApiContractReport,
   validateExternalMissionRequest,
 } from './api/universal-api-contract.js'
 export type {
-  CodemindExternalClientKind,
-  CodemindExternalMissionRequest,
-  CodemindExternalMissionValidation,
-  CodemindPublicApiRoute,
-  CodemindPublicApiRouteMethod,
-  CodemindUniversalApiContractReport,
+  SymbolWrightExternalClientKind,
+  SymbolWrightExternalMissionRequest,
+  SymbolWrightExternalMissionValidation,
+  SymbolWrightPublicApiRoute,
+  SymbolWrightPublicApiRouteMethod,
+  SymbolWrightUniversalApiContractReport,
 } from './api/universal-api-contract.js'
 
 export {
-  CODEMIND_PROVIDER_ADAPTERS,
-  CODEMIND_PROVIDER_ADAPTER_BLOCK_ID,
-  CODEMIND_PROVIDER_CAPABILITIES,
-  CODEMIND_PROVIDER_KEY_HANDLING_MODES,
-  CODEMIND_SUPPORTED_PROVIDER_IDS,
+  SYMBOLWRIGHT_PROVIDER_ADAPTERS,
+  SYMBOLWRIGHT_PROVIDER_ADAPTER_BLOCK_ID,
+  SYMBOLWRIGHT_PROVIDER_CAPABILITIES,
+  SYMBOLWRIGHT_PROVIDER_KEY_HANDLING_MODES,
+  SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS,
   assertProviderKeyNeverLeavesServer,
   buildProviderAdapterContractReport,
-  findCodemindProviderAdapter,
-  getCodemindProviderAdapterRegistry,
+  findSymbolWrightProviderAdapter,
+  getSymbolWrightProviderAdapterRegistry,
   renderProviderAdapterContractReport,
 } from './providers/provider-adapter-contract.js'
 export type {
-  CodemindProviderAdapterContract,
-  CodemindProviderAdapterContractReport,
-  CodemindProviderAdapterSecurityCheck,
-  CodemindProviderCapability,
-  CodemindProviderId,
-  CodemindProviderKeyHandling,
+  SymbolWrightProviderAdapterContract,
+  SymbolWrightProviderAdapterContractReport,
+  SymbolWrightProviderAdapterSecurityCheck,
+  SymbolWrightProviderCapability,
+  SymbolWrightProviderId,
+  SymbolWrightProviderKeyHandling,
 } from './providers/provider-adapter-contract.js'
 
 export {
-  CODEMIND_BROWSER_WORKSPACE_BLOCK_ID,
-  CODEMIND_BROWSER_WORKSPACE_PANELS,
+  SYMBOLWRIGHT_BROWSER_WORKSPACE_BLOCK_ID,
+  SYMBOLWRIGHT_BROWSER_WORKSPACE_PANELS,
   assessBrowserWorkspaceReadiness,
   buildBrowserWorkspaceContract,
   renderBrowserWorkspaceReadinessReport,
 } from './workspace/browser-workspace-contract.js'
 export type {
-  CodemindBrowserWorkspaceContract,
-  CodemindBrowserWorkspacePanel,
-  CodemindBrowserWorkspaceReadinessReport,
+  SymbolWrightBrowserWorkspaceContract,
+  SymbolWrightBrowserWorkspacePanel,
+  SymbolWrightBrowserWorkspaceReadinessReport,
 } from './workspace/browser-workspace-contract.js'
 
 export { renderUniversalApiContractCommand } from './cli-universal-api-contract.js'

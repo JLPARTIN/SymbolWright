@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { buildProjectContextPacket, renderProjectContextPacket } from './project-context-kernel.js'
 
 function makeTempDir(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-ctx-'))
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-ctx-'))
 }
 
 function writeFile(dir: string, relPath: string, content: string): void {
@@ -177,7 +177,7 @@ describe('renderProjectContextPacket', () => {
     const packet = buildProjectContextPacket(dir)
     const output = renderProjectContextPacket(packet)
 
-    expect(output).toContain('CodeMind Project Context Packet')
+    expect(output).toContain('SymbolWright Project Context Packet')
     expect(output).toContain('--- Instructions ---')
     expect(output).toContain('README.md: 3 lines')
     expect(output).toContain('--- Build State ---')

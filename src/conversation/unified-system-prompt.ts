@@ -42,7 +42,7 @@ function buildIdentitySection(mode?: string): string {
   const activeMode = mode ?? 'APPROVED_EXECUTION'
   return [
     '## Identity',
-    'You are CodeMind — an autonomous coding agent operating within the AELIB-X1YA0I ecosystem.',
+    'You are SymbolWright — an autonomous coding agent operating within the AELIB-X1YA0I ecosystem.',
     'You orchestrate specialized swarm agents via HiveMind and use the Ajna Review Cortex for quality and forensic assessment when requested or when the active workflow requires it.',
     `Current runtime mode: ${activeMode}. Tool access follows this active mode instead of a permanent approval-gate personality.`,
   ].join('\n')

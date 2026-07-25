@@ -17,7 +17,7 @@ describe('cli-checkpoint', () => {
   let workspaceDir: string
 
   beforeEach(() => {
-    workspaceDir = mkdtempSync(join(tmpdir(), 'codemind-cli-checkpoint-'))
+    workspaceDir = mkdtempSync(join(tmpdir(), 'symbolwright-cli-checkpoint-'))
   })
 
   afterEach(() => {

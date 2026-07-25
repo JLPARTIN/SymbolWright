@@ -1,4 +1,4 @@
-import type { CodemindProviderId } from './provider-adapter-contract.js'
+import type { SymbolWrightProviderId } from './provider-adapter-contract.js'
 
 export type ProviderGatewayErrorCode =
   | 'UNKNOWN_PROVIDER'
@@ -11,13 +11,13 @@ export type ProviderGatewayErrorCode =
 
 export class ProviderGatewayError extends Error {
   public readonly code: ProviderGatewayErrorCode
-  public readonly providerId: CodemindProviderId | undefined
+  public readonly providerId: SymbolWrightProviderId | undefined
   public readonly status: number | undefined
 
   public constructor(
     code: ProviderGatewayErrorCode,
     message: string,
-    options: { readonly providerId?: CodemindProviderId; readonly status?: number } = {},
+    options: { readonly providerId?: SymbolWrightProviderId; readonly status?: number } = {},
   ) {
     super(message)
     this.name = 'ProviderGatewayError'

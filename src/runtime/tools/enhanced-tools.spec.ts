@@ -12,7 +12,7 @@ import type { SandboxRunner } from '../sandbox/sandbox-runner.js'
 let tempDir: string
 
 beforeEach(() => {
-  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-test-'))
+  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-test-'))
   fs.writeFileSync(path.join(tempDir, 'hello.ts'), 'export function hello() { return "Hello" }\n')
   fs.writeFileSync(path.join(tempDir, 'world.ts'), 'export function world() { return "World" }\n')
   fs.mkdirSync(path.join(tempDir, 'sub'))

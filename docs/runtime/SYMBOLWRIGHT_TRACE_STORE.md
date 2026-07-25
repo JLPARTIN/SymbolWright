@@ -1,4 +1,4 @@
-# CodeMind Trace Store
+# SymbolWright Trace Store
 
 The Trace Store provides durable JSONL-based persistence and replay for Agent Kernel trace frames with lineage validation and invariant checking.
 

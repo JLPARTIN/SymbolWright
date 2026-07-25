@@ -1,17 +1,17 @@
 # Next Large PR Bundle — Forensic Recommendation
 
 **Audit date:** 2026-07-24
-**Repository:** `JLPARTIN/CodeMind` (no SymbolWright rebrand has occurred — the repository, package name, CLI binary, and docs are all still "CodeMind")
-**Audited ref:** `19ae05b20c561156d8586045095c0408615b2d52` on `claude/codemind-forensic-bundle-ngdcit`, identical to `origin/main` at audit time (0 commits ahead, 0 behind)
+**Repository:** `JLPARTIN/SymbolWright` (no SymbolWright rebrand has occurred — the repository, package name, CLI binary, and docs are all still "SymbolWright")
+**Audited ref:** `19ae05b20c561156d8586045095c0408615b2d52` on `claude/symbolwright-forensic-bundle-ngdcit`, identical to `origin/main` at audit time (0 commits ahead, 0 behind)
 **Mission type:** Forensic discovery and planning only. No production code was modified.
 
 ---
 
 ## 1. Executive Verdict
 
-CodeMind is a genuinely mature autonomous repository-engineering platform (~128,500 lines of TypeScript across 40 `src/` subsystems, 482 passing spec files, 8 shipped Large PR Bundles, and a self-imposed habit of forensic post-bundle audits). The mission lifecycle, planning, Docker-sandboxed validation, checkpoint/rollback, GitHub PR automation, and the unified dashboard are **real and wired to production**, not scaffolds — this audit independently re-verified the highest-risk claims (Docker sandbox flags, fail-closed behavior when Docker is absent, checkpoint restore integrity, external-repo mission reuse, semantic-index persistence) by reading the exact code paths rather than trusting the CHANGELOG.
+SymbolWright is a genuinely mature autonomous repository-engineering platform (~128,500 lines of TypeScript across 40 `src/` subsystems, 482 passing spec files, 8 shipped Large PR Bundles, and a self-imposed habit of forensic post-bundle audits). The mission lifecycle, planning, Docker-sandboxed validation, checkpoint/rollback, GitHub PR automation, and the unified dashboard are **real and wired to production**, not scaffolds — this audit independently re-verified the highest-risk claims (Docker sandbox flags, fail-closed behavior when Docker is absent, checkpoint restore integrity, external-repo mission reuse, semantic-index persistence) by reading the exact code paths rather than trusting the CHANGELOG.
 
-The single highest-leverage next step is **not** a new feature. Bundle #8 (merged immediately before this audit) gave CodeMind the ability to acquire an arbitrary external GitHub repository and run its full autonomous edit → validate → repair loop against it. That capability changed CodeMind's trust model — the content flowing through the write path and into the LLM's context window is no longer guaranteed to be the operator's own trusted code. The write path and the LLM-context boundary were never hardened for that assumption: file writes are non-atomic and symlink-blind everywhere, one JavaScript-execution API route ships with **no authentication at all**, and there is no mitigation anywhere in the codebase for prompt injection carried in repository file content. These are not speculative; each was independently confirmed by reading the exact source lines (Section 39).
+The single highest-leverage next step is **not** a new feature. Bundle #8 (merged immediately before this audit) gave SymbolWright the ability to acquire an arbitrary external GitHub repository and run its full autonomous edit → validate → repair loop against it. That capability changed SymbolWright's trust model — the content flowing through the write path and into the LLM's context window is no longer guaranteed to be the operator's own trusted code. The write path and the LLM-context boundary were never hardened for that assumption: file writes are non-atomic and symlink-blind everywhere, one JavaScript-execution API route ships with **no authentication at all**, and there is no mitigation anywhere in the codebase for prompt injection carried in repository file content. These are not speculative; each was independently confirmed by reading the exact source lines (Section 39).
 
 The recommended bundle is **`feat(trust): harden mutation-safety and untrusted-content boundaries for autonomous execution`** — a "Trusted Execution Boundary" hardening bundle that makes every write path atomic and symlink-safe, closes the one unauthenticated code-execution route, adds a real (if intentionally modest) prompt-injection boundary around content read from a repository before it reaches the LLM, and consolidates the two divergent protected-path policies into one. It scored highest of five evidence-grounded candidates (Section 22) because it has the largest architectural leverage (touches the one write path every other subsystem depends on), the clearest "why now" (directly triggered by Bundle #8's just-shipped capability), and produces a complete, testable, operator-visible outcome without inventing new placeholder surface area.
 
@@ -22,8 +22,8 @@ The recommended bundle is **`feat(trust): harden mutation-safety and untrusted-c
 ## 2. Repository Baseline
 
 ```
-Repository root:  /home/user/CodeMind
-Current branch:   claude/codemind-forensic-bundle-ngdcit
+Repository root:  /home/user/SymbolWright
+Current branch:   claude/symbolwright-forensic-bundle-ngdcit
 HEAD SHA:         19ae05b20c561156d8586045095c0408615b2d52
 git status --short:  (clean — no output)
 origin/main:      19ae05b2... (identical — 0 ahead / 0 behind)
@@ -61,7 +61,7 @@ Runtime validation was then executed directly against the real repository (Secti
 | `src/autonomy/` (65) | Autonomous task-graph planner, coordinator, persistent executor, repair controller, semantic index, release service | **No** |
 | `src/ajna/` (62) | PR review / merge-readiness engine, including AJNA-8/9 drift+security detectors | Yes |
 | `src/app/` (48) | Unified dashboard shell, views, and API route tables (`src/app/api/*`) | **No** |
-| `src/server/` (29) | The original chat/provider/agent HTTP dispatcher (`codemind-chat-server.ts`) the unified server wraps | **No** |
+| `src/server/` (29) | The original chat/provider/agent HTTP dispatcher (`symbolwright-chat-server.ts`) the unified server wraps | **No** |
 | `src/memory/` (29) | Cognitive memory: episodic/lexical SQLite storage (`node:sqlite`), retrieval engine, decay/consolidation | **No** |
 | `src/sandbox/` (31) | Docker-hardened validation/write sandbox **and** a separate, weaker "guarded-host" code-playground backend | **No** |
 | `src/workspace/` (33) | Multi-repo workspace manager plus the browser-facing polyglot code-runner (SQL/Python/TS-in-VM) | Yes |
@@ -81,7 +81,7 @@ A genuine naming/architecture smell, not a bug: `src/provider/` (concrete LLM ad
 
 ## 5. Runtime and Startup Map
 
-**`codemind serve`** (default port `8787`, loopback by default): `src/cli.ts:317-319` → `runServeCommand` (`src/cli-serve.ts:129`) → `startUnifiedServer` (`src/app/server/unified-server.ts:57`). Refuses to start without a non-empty `CODEMIND_API_KEY` (`assertChatServerCanStart`, `src/server/codemind-chat-server.ts:120-121`). Auth is a timing-safe Bearer-token compare (`codemind-chat-server.ts:155-161`) applied centrally at `codemind-chat-server.ts:309` before the mission/autonomy/sandbox/repository/tools/memory/checkpoint route tables. Rate-limited (`FixedWindowRateLimiter`, 60/min default). CORS is opt-in only via `CODEMIND_CORS_ORIGIN`.
+**`codemind serve`** (default port `8787`, loopback by default): `src/cli.ts:317-319` → `runServeCommand` (`src/cli-serve.ts:129`) → `startUnifiedServer` (`src/app/server/unified-server.ts:57`). Refuses to start without a non-empty `SYMBOLWRIGHT_API_KEY` (`assertChatServerCanStart`, `src/server/symbolwright-chat-server.ts:120-121`). Auth is a timing-safe Bearer-token compare (`symbolwright-chat-server.ts:155-161`) applied centrally at `symbolwright-chat-server.ts:309` before the mission/autonomy/sandbox/repository/tools/memory/checkpoint route tables. Rate-limited (`FixedWindowRateLimiter`, 60/min default). CORS is opt-in only via `SYMBOLWRIGHT_CORS_ORIGIN`.
 
 **A route table runs *before* that auth check**: `src/app/server/route-table.ts:20-46` (`tryHandleUnifiedRoute`) dispatches to `tryHandleWorkspaceRoute` (`src/app/api/workspace-routes.ts:140-169`) for `/api/workspace/languages`, `/api/workspace/run`, `/api/workspace/intelligence`, and `/vendor/*`, all **by design** unauthenticated (documented at `workspace-routes.ts:132-139` as "moved verbatim from `src/web/server.ts`... these routes stay unauthenticated"). This is the anchor finding for the winning bundle — see Section 18/29.
 
@@ -92,7 +92,7 @@ A genuine naming/architecture smell, not a bug: `src/provider/` (concrete LLM ad
 
 **CI** (`.github/workflows/`): `ci.yml` runs audit → typecheck → lint → format:check → a sandbox spec → `test:coverage` → build → preflight → `npm run validate`, with no `continue-on-error` anywhere in any of the four workflows (confirmed by grep). One drift: `package.json` declares `"engines": {"node": ">=22.5.0"}` but `node-compatibility.yml` still runs a weekly Node 20 compatibility matrix job — either the floor or the matrix is stale (this exact class of Node-version drift caused the most recent commit on `main`, `19ae05b`, "fix(ci): resolve post-merge red main — sandbox preflight timeout and Deploy Node version mismatch").
 
-Two pieces of dead code found in the request path, neither wired to anything reachable in production: `renderChatUiHtml()` (`src/server/codemind-chat-server.ts:292-294`) is shadowed by `route-table.ts:25-28` and never actually serves; `renderMissionDashboardHtml` (`src/server/mission-dashboard-html.ts`, 122 lines) has zero callers anywhere in `src/` — superseded by `src/app/views/missions-view.ts` and never removed.
+Two pieces of dead code found in the request path, neither wired to anything reachable in production: `renderChatUiHtml()` (`src/server/symbolwright-chat-server.ts:292-294`) is shadowed by `route-table.ts:25-28` and never actually serves; `renderMissionDashboardHtml` (`src/server/mission-dashboard-html.ts`, 122 lines) has zero callers anywhere in `src/` — superseded by `src/app/views/missions-view.ts` and never removed.
 
 ---
 
@@ -100,9 +100,9 @@ Two pieces of dead code found in the request path, neither wired to anything rea
 
 Two distinct, both-persisted state machines exist:
 
-**Workspace-level mission** (`MissionStatus = ACTIVE | PAUSED | COMPLETED | ABANDONED | FAILED`, `src/mission/mission-types.ts:6`). All transitions go through `MissionService.transition()`/`.update()` (`src/mission/mission-service.ts:790-823`), which bumps a `revision` counter, writes via `MissionStore` (flat JSON, atomic temp-file+rename under `.codemind/missions/`), and appends a durable `MissionEvent`. `resume()` (PAUSED→ACTIVE) explicitly calls `recoverInterruptedMissionEvents` to synthesize `.interrupted` events for any `.started` operation with no terminal event (`mission-service.ts:255-273`; logic in `mission-events.ts:127-151`). `transition()` refuses further changes once a mission is `COMPLETED`/`ABANDONED` (immutability guard, `:798-801`); `reopenCompleted` and `delete` are both explicit, confirm-gated operations.
+**Workspace-level mission** (`MissionStatus = ACTIVE | PAUSED | COMPLETED | ABANDONED | FAILED`, `src/mission/mission-types.ts:6`). All transitions go through `MissionService.transition()`/`.update()` (`src/mission/mission-service.ts:790-823`), which bumps a `revision` counter, writes via `MissionStore` (flat JSON, atomic temp-file+rename under `.symbolwright/missions/`), and appends a durable `MissionEvent`. `resume()` (PAUSED→ACTIVE) explicitly calls `recoverInterruptedMissionEvents` to synthesize `.interrupted` events for any `.started` operation with no terminal event (`mission-service.ts:255-273`; logic in `mission-events.ts:127-151`). `transition()` refuses further changes once a mission is `COMPLETED`/`ABANDONED` (immutability guard, `:798-801`); `reopenCompleted` and `delete` are both explicit, confirm-gated operations.
 
-**Autonomy task-graph** (a second, lower-level state machine): `queued|blocked|ready|running|validating|repairing|completed|failed|cancelled|interrupted` (`src/autonomy/task-graph.types.ts:1-12`), persisted per-task via `JsonMissionExecutionStore` under `.codemind/autonomy/missions/*.json`, reachable through `POST /api/missions/:id/autonomy/{start,resume,pause,cancel,retry}` → `AutonomousMissionCoordinator` → `PersistentMissionExecutor`.
+**Autonomy task-graph** (a second, lower-level state machine): `queued|blocked|ready|running|validating|repairing|completed|failed|cancelled|interrupted` (`src/autonomy/task-graph.types.ts:1-12`), persisted per-task via `JsonMissionExecutionStore` under `.symbolwright/autonomy/missions/*.json`, reachable through `POST /api/missions/:id/autonomy/{start,resume,pause,cancel,retry}` → `AutonomousMissionCoordinator` → `PersistentMissionExecutor`.
 
 ```
 create ──▶ ACTIVE ──pause──▶ PAUSED ──resume──▶ ACTIVE (+ recoverInterruptedMissionEvents)
@@ -125,7 +125,7 @@ queued → blocked/ready → running → validating → repairing → completed/
 | Capability | Evidence Paths | Maturity | Runtime Connected | Persisted | Tested | Operator Visible | Main Gap |
 |---|---|---|---|---|---|---|---|
 | Repository analysis (manifest/ecosystem detection) | `src/portability/repository-portability.ts` | 4 — Operational | Yes | Cached (semantic index store) | Yes | Indirect (drives validation commands shown) | Heuristic-only; no structural monorepo-graph analysis |
-| Semantic indexing (regex symbol/import/reference index) | `src/autonomy/repository-semantic-index.ts`, `-bootstrap.ts`, `-store.ts` | 3 — Partially operational | Yes (planner, impact-analysis, acceptance) | Yes (`.codemind/repository-indexes/*.json`, atomic write) | Yes | No dedicated UI | **Never invalidated after mutation** — cached indefinitely per repo, no `force` call in production (verified: `autonomous-mission-runtime.ts:59-66`, no `force:true` outside tests) |
+| Semantic indexing (regex symbol/import/reference index) | `src/autonomy/repository-semantic-index.ts`, `-bootstrap.ts`, `-store.ts` | 3 — Partially operational | Yes (planner, impact-analysis, acceptance) | Yes (`.symbolwright/repository-indexes/*.json`, atomic write) | Yes | No dedicated UI | **Never invalidated after mutation** — cached indefinitely per repo, no `force` call in production (verified: `autonomous-mission-runtime.ts:59-66`, no `force:true` outside tests) |
 | Mission planning (task-graph) | `src/autonomy/autonomous-repository-planner.ts:20-112`, `task-graph.ts` | 4 — Operational | Yes | Yes | Yes | Yes | Task-graph *shape* is templated (3 analysis → 1 edit → N validation), not a general planner |
 | Task graph execution | `src/autonomy/persistent-mission-executor.ts` | 4 — Operational | Yes | Yes | Yes | Yes | — |
 | Multi-file editing / mutation safety | `src/runtime/tools/edit-file-tool.ts`, `runtime-policy.ts` | 3 — Partially operational | Yes | N/A (direct fs) | Yes | Indirect | **Non-atomic writes, lexical-only path containment (no symlink check)** everywhere in the write path |
@@ -134,7 +134,7 @@ queued → blocked/ready → running → validating → repairing → completed/
 | Autonomous repair | `src/autonomy/persistent-mission-repair-controller.ts` | 4 — Operational | Yes | Yes | Yes | Yes | No failure-category taxonomy; bounded 3-attempt budget spent identically on flaky and real failures; a second, apparently-superseded `AutonomousRepairLoop` implementation still exists |
 | Restart recovery | `persistent-mission-executor.ts:97-105,298-309`, `mission-events.ts:127-151` | 3 — Partially operational | Yes (on manual resume) | Yes | Yes | Partial | No automatic boot-time reconciliation sweep |
 | Evidence system | `src/mission/mission-events.ts`, checkpoint store, redaction layer | 4 — Operational | Yes | Yes | Yes | Yes | — |
-| API/authentication | `src/server/codemind-chat-server.ts` (Bearer, timing-safe) | 4 — Operational (with one exception) | Yes | N/A | Yes | Yes | `/api/workspace/run`, `/api/workspace/intelligence`, `/vendor/*` are unauthenticated by design; `/run` executes arbitrary JS |
+| API/authentication | `src/server/symbolwright-chat-server.ts` (Bearer, timing-safe) | 4 — Operational (with one exception) | Yes | N/A | Yes | Yes | `/api/workspace/run`, `/api/workspace/intelligence`, `/vendor/*` are unauthenticated by design; `/run` executes arbitrary JS |
 | Dashboard control | `src/app/views/*` | 4 — Operational | Yes | N/A | Partial (some UI-level spec coverage) | Yes | One stale UI-copy claim (Section 19); polling, not SSE |
 | Codespaces/mobile | `scripts/codespaces-start.mjs`, `src/app/shell/app-shell-html.ts:83-104` | 4 — Operational | Yes | N/A | Partial | Yes | — |
 | Security intelligence | `src/ajna/ajna-security-sensitive-paths.ts` | 2 — Scaffolded | Partial (see Section 9) | N/A | Yes | Partial | Path/filename regex only — no content/secret-value scanning, no dependency-vuln integration beyond `npm audit` text-matching |
@@ -148,14 +148,14 @@ queued → blocked/ready → running → validating → repairing → completed/
 
 **Reconciled finding (verified directly by the lead investigator, not just the sub-agent):** two separate systems both claim "repository graph" territory, with opposite maturity:
 
-1. `src/autonomy/repository-semantic-index.ts` is **real and populated**. `buildRepositorySemanticIndex()` walks the real repository (skipping symlinks — `entry.isSymbolicLink()) continue` in `repository-semantic-index-bootstrap.ts:123`), extracts top-level symbol declarations, `import` statements, and whole-word symbol references via regex (not an AST parser — confirmed by reading the file: `SYMBOL_PATTERN`/`IMPORT_PATTERN` are plain regexes), and persists the result atomically (`repository-semantic-index-store.ts:9-16`, real temp-file+rename) to `.codemind/repository-indexes/<hash>.json`. It is genuinely consumed downstream: `autonomous-repository-planner.ts:20-112` matches mission-objective tokens against `index.symbols`/`index.references` to compute `affectedFiles`, and `repository-impact-analysis.ts`/`mission-impact-intelligence.ts`/`mission-acceptance-service.ts` all import it.
+1. `src/autonomy/repository-semantic-index.ts` is **real and populated**. `buildRepositorySemanticIndex()` walks the real repository (skipping symlinks — `entry.isSymbolicLink()) continue` in `repository-semantic-index-bootstrap.ts:123`), extracts top-level symbol declarations, `import` statements, and whole-word symbol references via regex (not an AST parser — confirmed by reading the file: `SYMBOL_PATTERN`/`IMPORT_PATTERN` are plain regexes), and persists the result atomically (`repository-semantic-index-store.ts:9-16`, real temp-file+rename) to `.symbolwright/repository-indexes/<hash>.json`. It is genuinely consumed downstream: `autonomous-repository-planner.ts:20-112` matches mission-objective tokens against `index.symbols`/`index.references` to compute `affectedFiles`, and `repository-impact-analysis.ts`/`mission-impact-intelligence.ts`/`mission-acceptance-service.ts` all import it.
 2. `src/memory/storage/database.ts:67-78` defines SQL tables `graph_nodes`/`graph_edges` for a semantically similar import/dependency graph, and `retrieval-engine.ts:65-88` genuinely queries them for memory retrieval scoring. **Nothing in production code ever inserts into these tables** — the only `INSERT INTO graph_nodes/graph_edges` statements in the entire repository are in `cognitive-memory-architecture.spec.ts:184-192`, hand-inserting two fake rows to test the read path.
 
 **Interpretation:** the platform already solved "extract a symbol/import graph from the repository" once (item 1) and consumes it for planning — this is a real strength, not a gap, and must not be rebuilt from scratch. But that same, already-built extraction is not reused by the two other consumers that need identical data and currently either fake it or leave it empty:
 - **Ajna's architecture-drift detector** (`src/ajna/ajna-architecture-drift.ts:6-8`, which explicitly comments "Ajna does not read files or parse source itself here") takes `importEdges` as an optional caller-supplied input. Grep across `src/` confirms no production caller ever supplies it — the layering-boundary check is dead in practice, running only in its own spec.
 - **Memory's graph tables** are read but never written outside tests, per item 2 above.
 
-**A second orphan, independently confirmed:** `src/agent/workflows/pr-workflow.ts` (the Ajna-gated PR workflow state machine, which does call `evaluateAjnaMergeGate` and blocks on a `BLOCKED` verdict) has **no callers anywhere in `src/` outside its own spec file** — it is not reachable from `src/runtime/loop/codemind-agent-loop.ts`'s default tool preset (`createFixtureRegistry('proposal')`), which does not include the Ajna live-read tool preset. Ajna's live-read tools are wired only into CLI demo entry points (`cli-runtime-ajna-workflow.ts`, `cli-runtime-ajna-live-read.ts`), not the production autonomous mission loop.
+**A second orphan, independently confirmed:** `src/agent/workflows/pr-workflow.ts` (the Ajna-gated PR workflow state machine, which does call `evaluateAjnaMergeGate` and blocks on a `BLOCKED` verdict) has **no callers anywhere in `src/` outside its own spec file** — it is not reachable from `src/runtime/loop/symbolwright-agent-loop.ts`'s default tool preset (`createFixtureRegistry('proposal')`), which does not include the Ajna live-read tool preset. Ajna's live-read tools are wired only into CLI demo entry points (`cli-runtime-ajna-workflow.ts`, `cli-runtime-ajna-live-read.ts`), not the production autonomous mission loop.
 
 **Memory (episodic/lexical):** genuinely operational. `RetrievalEngine` (`retrieval-engine.ts:24-98`) blends FTS5 lexical search (weight 0.5), episodic recency+relevance scoring (weight 0.3+0.2), and the graph-join branch (weight 0.8, structurally dead per above) into one budgeted candidate set that feeds `rag-context-builder.ts` — this is genuine retrieval-for-use, not write-only telemetry.
 
@@ -214,7 +214,7 @@ Both mission-level and autonomy-level stores write via temp-file+rename (verifie
 
 ## 14. API and Authentication Findings
 
-Roughly 40+ route patterns across `codemind-chat-server.ts` and `src/app/api/*`. The primary Bearer-token check (`isAuthorized`, `codemind-chat-server.ts:309`, timing-safe) correctly gates missions, autonomy, sandbox, repository, tools, memory, and checkpoint routes.
+Roughly 40+ route patterns across `symbolwright-chat-server.ts` and `src/app/api/*`. The primary Bearer-token check (`isAuthorized`, `symbolwright-chat-server.ts:309`, timing-safe) correctly gates missions, autonomy, sandbox, repository, tools, memory, and checkpoint routes.
 
 **The one confirmed exception, and the anchor security finding of this audit:** `src/app/server/route-table.ts` dispatches `/api/workspace/run` to `handleWorkspaceRun` before the chat-server's auth check ever runs. That handler ultimately calls `executeJavaScriptInVm` (`src/workspace/code-runners.ts:235-291`), which the lead investigator read directly: it does build a real `vm.createContext` with `require`, `process`, `Buffer`, `fetch`, and all timers explicitly undefined/blocked, and applies a timeout — this is a deliberately hardened context, not naked `eval`. But Node's own documentation is explicit that `vm` "is not a security mechanism" (known escape techniques exist via the constructor chain even with `process`/`require` removed from the context object), and this route requires **no authentication whatsoever** while living on the same port the authenticated agent/repository API binds, including `0.0.0.0` in typical Codespaces port-forwarding configurations. The code comment at `workspace-routes.ts:132-139` shows this was a deliberate, documented design choice ("moved verbatim from `src/web/server.ts`... these routes stay unauthenticated"), inherited from a pre-unification dashboard where it was arguably lower-stakes — it was not re-evaluated when that dashboard was merged onto the same authenticated port as the rest of the platform.
 
@@ -238,7 +238,7 @@ The full create → plan → launch → monitor → inspect → PR journey was t
 
 ## 17. CI and Test-Evidence Findings
 
-482 spec files (confirmed by direct count in this audit: `find src -name '*.spec.ts' | wc -l` → 482). Coverage thresholds in `vitest.config.ts` (statements/branches/functions/lines: 85/80/85/85) match the CHANGELOG claim. Zero genuine skipped tests were found via source grep (`.skip(`, `it.skip`, `describe.skip`, `xit`, `xdescribe` — the only regex hits were `process.exit(1)` substrings inside fixture strings, not real skips). **Direct runtime confirmation in this audit:** `npm test` → **482/482 test files passed, 3524/3525 individual tests passed, 1 skipped**, full suite in 50.8 s (Section 39) — a materially better real-world number than the CHANGELOG's own historical "249/249 files" note, reflecting continued healthy growth. Spot-checked spec files exercise real wiring, not mock theater: `mission-service.spec.ts` runs actual `git init` in a tmpdir; `sandbox-execution-e2e.spec.ts` uses real `execFileSync`; `codemind-agent-endpoint.spec.ts` starts the real `codemind serve` HTTP server and drives it over real sockets — a genuine server-level E2E test exists and is real.
+482 spec files (confirmed by direct count in this audit: `find src -name '*.spec.ts' | wc -l` → 482). Coverage thresholds in `vitest.config.ts` (statements/branches/functions/lines: 85/80/85/85) match the CHANGELOG claim. Zero genuine skipped tests were found via source grep (`.skip(`, `it.skip`, `describe.skip`, `xit`, `xdescribe` — the only regex hits were `process.exit(1)` substrings inside fixture strings, not real skips). **Direct runtime confirmation in this audit:** `npm test` → **482/482 test files passed, 3524/3525 individual tests passed, 1 skipped**, full suite in 50.8 s (Section 39) — a materially better real-world number than the CHANGELOG's own historical "249/249 files" note, reflecting continued healthy growth. Spot-checked spec files exercise real wiring, not mock theater: `mission-service.spec.ts` runs actual `git init` in a tmpdir; `sandbox-execution-e2e.spec.ts` uses real `execFileSync`; `symbolwright-agent-endpoint.spec.ts` starts the real `codemind serve` HTTP server and drives it over real sockets — a genuine server-level E2E test exists and is real.
 
 No `continue-on-error` anywhere in any of the four GitHub Actions workflows. The one CI/config drift found (Node 20 still present in `node-compatibility.yml` despite an `engines >=22.5.0` floor) is noted in Section 5.
 
@@ -253,8 +253,8 @@ Summarized and separated per the mission's own taxonomy:
 - V2 — Symlink-escape gap in every write path (`edit_file`, `local_file_write`, the Docker sandbox's file-writer script) — lexical containment only, no `realpath`/`lstat` (Section 10). **Severity: Medium-High** — requires a symlink to already exist inside the workspace (e.g., planted by ingesting an untrusted external repo per Bundle #8, or by a prior compromised mission step), but once present it defeats the workspace-containment guarantee the rest of the policy model depends on.
 
 **Hardening opportunities (not exploitable as-is, but weaken defense-in-depth):**
-- No prompt-injection mitigation anywhere in `src/` — repository file content read by `read_file`-class tools flows into LLM context with no sanitization, quoting, or instruction-marking layer. Grep for "injection"/"prompt-injection" across `src/` returns nothing relevant; `docs/governance/CODEMIND_THREAT_MODEL.md` does not cover this threat.
-- Two divergent protected-path/permission systems: the widely-wired `DEFAULT_RUNTIME_PROTECTED_PATHS` (`runtime-policy.ts:6-14`, referenced from 45 files) versus a narrower, separately-maintained list in `src/permissions/codemind-permission-policy.ts:44-59`, used by only the Ajna GitHub runtime bridge. Not currently a hole (the well-wired list is authoritative for the real write/read gate), but a real risk that a future bundle builds on the narrower list by mistake.
+- No prompt-injection mitigation anywhere in `src/` — repository file content read by `read_file`-class tools flows into LLM context with no sanitization, quoting, or instruction-marking layer. Grep for "injection"/"prompt-injection" across `src/` returns nothing relevant; `docs/governance/SYMBOLWRIGHT_THREAT_MODEL.md` does not cover this threat.
+- Two divergent protected-path/permission systems: the widely-wired `DEFAULT_RUNTIME_PROTECTED_PATHS` (`runtime-policy.ts:6-14`, referenced from 45 files) versus a narrower, separately-maintained list in `src/permissions/symbolwright-permission-policy.ts:44-59`, used by only the Ajna GitHub runtime bridge. Not currently a hole (the well-wired list is authoritative for the real write/read gate), but a real risk that a future bundle builds on the narrower list by mistake.
 - No atomic writes anywhere in the mutation path (Section 10) — a durability/corruption risk under crash, distinct from the symlink-escape confidentiality/integrity risk.
 
 **Accepted local-development risk, explicitly not a finding:** `src/mcp/mcp-stdio-transport.ts` spawning the MCP subprocess and `src/portability/portable-validation-runner.ts:52` spawning `docker` itself are both sandbox *entry points* by design, not bypasses.
@@ -265,7 +265,7 @@ Summarized and separated per the mission's own taxonomy:
 
 ## 19. Documentation-versus-Reality Findings
 
-`docs/ARCHITECTURE.md` is stale relative to ~8 bundles of growth (Section 4) — folded into the winning bundle's Definition of Done, not a standalone justification. `settings-view.ts`'s stale "Bundle 2 not yet built" copy (Section 15) is a one-line fix. `docs/API_REFERENCE.md`'s "Live" vs. "contract-only" route labeling was spot-checked against real route implementations and found accurate — no drift there. Port 8787 is consistent across `cli-serve.ts`, `docs/codespaces.md`, and `docs/runtime/CODEMIND_CHAT_SERVER.md`. No other material doc-vs-code drift was found on the sampled set.
+`docs/ARCHITECTURE.md` is stale relative to ~8 bundles of growth (Section 4) — folded into the winning bundle's Definition of Done, not a standalone justification. `settings-view.ts`'s stale "Bundle 2 not yet built" copy (Section 15) is a one-line fix. `docs/API_REFERENCE.md`'s "Live" vs. "contract-only" route labeling was spot-checked against real route implementations and found accurate — no drift there. Port 8787 is consistent across `cli-serve.ts`, `docs/codespaces.md`, and `docs/runtime/SYMBOLWRIGHT_CHAT_SERVER.md`. No other material doc-vs-code drift was found on the sampled set.
 
 ---
 
@@ -276,10 +276,10 @@ Summarized and separated per the mission's own taxonomy:
 | G1 | Unauthenticated JS-execution route | `src/app/api/workspace-routes.ts`, `src/workspace/code-runners.ts` | `/api/workspace/run` requires no auth, runs on the shared authenticated port | Require the same Bearer auth as every other route, or explicitly isolate/relabel the surface | Security, operator trust | **Yes** |
 | G2 | Symlink-blind, non-atomic writes | `edit-file-tool.ts`, `runtime-policy.ts`, sandbox file-writer script | Lexical path check only; direct `writeFileSync` everywhere | `lstat`-aware containment check; temp-file+rename on every write path | Security, reliability | **Yes** |
 | G3 | No prompt-injection boundary | Any tool reading repository file content into LLM context | Raw file content flows into context unmarked | Untrusted-content tagging/quoting boundary at the tool-read layer, at minimum for external-repo-intake missions | Security, autonomy trust | **Yes** |
-| G4 | Divergent protected-path policies | `runtime-policy.ts` vs `src/permissions/codemind-permission-policy.ts` | Two lists, one authoritative, one narrower and separately maintained | Consolidate to one source of truth | Maintainability, latent security | **Yes** |
+| G4 | Divergent protected-path policies | `runtime-policy.ts` vs `src/permissions/symbolwright-permission-policy.ts` | Two lists, one authoritative, one narrower and separately maintained | Consolidate to one source of truth | Maintainability, latent security | **Yes** |
 | G5 | Dead memory graph tables | `src/memory/storage/database.ts`, `retrieval-engine.ts` | Schema exists, read in production, never written outside tests | Populate from the real semantic index (Section 8) | Architecture, autonomous differentiation | No — future bundle (Section 38) |
 | G6 | Orphaned Ajna architecture-drift wiring | `ajna-architecture-drift.ts`, `pr-workflow.ts` | `importEdges` never supplied in production; PR-workflow gate has no live caller | Wire the real semantic index's import data in; connect the gate to the live agent loop | Autonomy, reliability | No — future bundle (Section 38) |
-| G7 | No boot-time mission/task recovery sweep | `codemind-chat-server.ts`, `mission-service.ts` | Recovery is 100% client-initiated | Automatic reconciliation pass at startup, surfaced to the operator | Reliability, autonomy | No — future bundle (Section 38) |
+| G7 | No boot-time mission/task recovery sweep | `symbolwright-chat-server.ts`, `mission-service.ts` | Recovery is 100% client-initiated | Automatic reconciliation pass at startup, surfaced to the operator | Reliability, autonomy | No — future bundle (Section 38) |
 | G8 | No repair-loop failure taxonomy | `persistent-mission-repair-controller.ts:394-402` | Every failure treated identically; flaky/infra failures burn real repair attempts | Classify failure category before consuming an attempt | Autonomy differentiation | No — future bundle (Section 38) |
 | G9 | Stale semantic index (no invalidation) | `repository-semantic-index-bootstrap.ts`, `autonomous-mission-runtime.ts:59-66` | Cached indefinitely per repository, no post-mutation rebuild trigger | Invalidate/rebuild after a mission's own edits, at minimum | Planning correctness | No — related to G5/G6, future bundle |
 | G10 | Stale ARCHITECTURE.md / settings-view copy | `docs/ARCHITECTURE.md`, `settings-view.ts:20` | Doc omits 8 bundles of subsystems; UI describes a shipped feature as unbuilt | Sync doc + UI copy | Trust, onboarding | Folded into winning bundle's DoD, not standalone |
@@ -292,7 +292,7 @@ Summarized and separated per the mission's own taxonomy:
 
 **Problem statement:** Bundle #8 made external, untrusted repository content a first-class input to the same write path and LLM-context pipeline used for the operator's own trusted repository, but that pipeline was never hardened for untrusted input (G1–G4).
 **Evidence:** Sections 10, 14, 18.
-**Vertical outcome:** CodeMind's autonomous edit/validate/repair loop is provably safe to run against untrusted external repository content end-to-end — no symlink escape, no unauthenticated code execution, no unmarked prompt-injection surface, one consolidated protected-path policy.
+**Vertical outcome:** SymbolWright's autonomous edit/validate/repair loop is provably safe to run against untrusted external repository content end-to-end — no symlink escape, no unauthenticated code execution, no unmarked prompt-injection surface, one consolidated protected-path policy.
 **Major workstreams:** atomic+symlink-safe write layer; auth (or isolation) for `/api/workspace/run`; untrusted-content tagging boundary for tool-read output; protected-path policy consolidation.
 **Architecture impact:** `src/runtime/policy/`, `src/runtime/tools/`, `src/checkpoint/`, `src/sandbox/`, `src/app/api/workspace-routes.ts`, `src/permissions/`.
 **Testing impact:** new symlink-escape regression tests, crash-mid-write tests, auth tests for `/api/workspace/run`, prompt-injection-marker tests, external-repo-intake integration test exercising the hardened path end-to-end.
@@ -322,7 +322,7 @@ Summarized and separated per the mission's own taxonomy:
 **Evidence:** Sections 6, 12, 13.
 **Vertical outcome:** a crashed server self-heals its mission state on the next boot without requiring the operator to notice and manually resume; repair attempts are spent only on genuine regressions.
 **Major workstreams:** boot-time reconciliation sweep; failure-category classifier (exit-code/timeout/network heuristics vs. genuine test/type/lint failures); consolidation of the two repair-loop implementations.
-**Architecture impact:** `src/server/codemind-chat-server.ts` (startup hook), `src/autonomy/persistent-mission-repair-controller.ts`, `src/autonomy/autonomous-repair-loop.ts` (removal candidate).
+**Architecture impact:** `src/server/symbolwright-chat-server.ts` (startup hook), `src/autonomy/persistent-mission-repair-controller.ts`, `src/autonomy/autonomous-repair-loop.ts` (removal candidate).
 **Testing impact:** simulated-crash-then-restart tests; failure-taxonomy unit tests against representative flaky/infra/real-failure fixtures.
 **Migration/compatibility:** boot sweep must not surprise-mutate missions a human is actively viewing — needs an explicit "reconciled, review me" surfaced state, not silent auto-resume of execution.
 **Risks:** an automatic sweep that resumes execution (not just marks state) could re-run a mutating validation command without operator awareness — must default to reconcile-and-surface, not reconcile-and-continue.
@@ -407,7 +407,7 @@ No penalty adjustments were needed for C1 (no duplicate capability, strong evide
 - Symlink-aware workspace containment: extend `isPathInsideWorkspace`/`resolveWorkspacePath` (and its Docker-script equivalent) to reject a resolved path whose real (`lstat`-resolved) location escapes the workspace root, not just its lexical path.
 - Authentication for `/api/workspace/run` and `/api/workspace/intelligence` (bring them behind the same Bearer check as every other `/api/*` route), or, if the operator explicitly wants the scratch-pad feature to remain casual/frictionless, an equally strong alternative: bind it to loopback-only regardless of the server's configured host, with a startup warning if that would silently disable the feature under Codespaces port-forwarding. (Sections 27–28 specify the recommended approach: require auth, matching every other mutating/executing route — consistency beats a bespoke carve-out.)
 - A minimal, real prompt-injection boundary: repository file content returned by `read_file`/`search`-class tools to the LLM is wrapped with an explicit untrusted-content delimiter and a short system-level instruction not to treat delimited content as instructions, applied at minimum whenever the active mission's repository originated from external intake (Bundle #8) — extendable to all missions once proven.
-- Consolidation of `DEFAULT_RUNTIME_PROTECTED_PATHS` (`runtime-policy.ts`) and `src/permissions/codemind-permission-policy.ts` into one authoritative source, with the narrower list either deleted or explicitly re-derived from the wide one.
+- Consolidation of `DEFAULT_RUNTIME_PROTECTED_PATHS` (`runtime-policy.ts`) and `src/permissions/symbolwright-permission-policy.ts` into one authoritative source, with the narrower list either deleted or explicitly re-derived from the wide one.
 - Required documentation sync: `docs/ARCHITECTURE.md` subsystem table gains the omitted directories (Section 4); `settings-view.ts`'s stale Bundle-2 copy is corrected (Section 15) — small, mechanical, folded into this bundle's Definition of Done rather than justifying its own PR.
 
 ### Out of scope
@@ -431,9 +431,9 @@ No penalty adjustments were needed for C1 (no duplicate capability, strong evide
 - `src/runtime/fs/atomic-write.ts` — a single shared `atomicWriteFile(path, content, options)` helper (temp-file in the same directory + `rename`), consumed by `edit-file-tool.ts`, `local-file-writer.ts` (per the earlier-cited `src/runtime/write/local-file-writer.spec.ts`), `checkpoint-service.ts`'s restore path, and the Docker sandbox's write script. This mirrors the pattern `repository-semantic-index-store.ts` and `mission-store.ts` already use — the fix is to lift their existing pattern into a shared helper rather than reimplementing it a fifth time.
 - `src/runtime/policy/workspace-containment.ts` (extension of `runtime-policy.ts`, not a new file if the team prefers to keep it inline) — adds an `lstat`-based real-path check alongside the existing lexical one; must handle the case where the target path does not yet exist (a write to a new file) by resolving the containment of its parent directory's real path instead.
 - `src/runtime/context/untrusted-content-boundary.ts` — a small wrapping function applied at the point tool results are assembled into LLM messages, emitting a fenced/delimited block with a clear marker (e.g., an XML-style tag distinct from anything already used in the transcript format) plus one line of guidance in the relevant system prompt. Consumes the same "did this mission originate from external intake" flag already present on mission records (`src/github/external-repository-intake.ts`) to start scoped, per the in-scope description.
-- `src/permissions/codemind-permission-policy.ts` — either deleted with call sites repointed at `DEFAULT_RUNTIME_PROTECTED_PATHS`, or reduced to a thin derivation (`export const NARROW_PROTECTED_PATHS = DEFAULT_RUNTIME_PROTECTED_PATHS.filter(...)`) if the narrower semantics genuinely need to persist for the Ajna GitHub runtime bridge.
+- `src/permissions/symbolwright-permission-policy.ts` — either deleted with call sites repointed at `DEFAULT_RUNTIME_PROTECTED_PATHS`, or reduced to a thin derivation (`export const NARROW_PROTECTED_PATHS = DEFAULT_RUNTIME_PROTECTED_PATHS.filter(...)`) if the narrower semantics genuinely need to persist for the Ajna GitHub runtime bridge.
 
-**Data model changes:** none require a schema/version bump for the atomic-write and symlink-check work (behavioral, not structural). The untrusted-content boundary requires no new persisted entity — it is a request-time transform. No migration is needed for existing `.codemind/` state.
+**Data model changes:** none require a schema/version bump for the atomic-write and symlink-check work (behavioral, not structural). The untrusted-content boundary requires no new persisted entity — it is a request-time transform. No migration is needed for existing `.symbolwright/` state.
 
 ---
 
@@ -453,10 +453,10 @@ No penalty adjustments were needed for C1 (no duplicate capability, strong evide
 ## 28. API and Dashboard Design
 
 **API contract changes (all additive or auth-tightening, no route renames):**
-- `POST /api/workspace/run`, `POST /api/workspace/intelligence`, `GET /api/workspace/languages`: now require `Authorization: Bearer <CODEMIND_API_KEY>`, matching every other `/api/*` route. Response on missing/invalid auth: existing `401` shape already used elsewhere in `codemind-chat-server.ts` (no new error format to design).
+- `POST /api/workspace/run`, `POST /api/workspace/intelligence`, `GET /api/workspace/languages`: now require `Authorization: Bearer <SYMBOLWRIGHT_API_KEY>`, matching every other `/api/*` route. Response on missing/invalid auth: existing `401` shape already used elsewhere in `symbolwright-chat-server.ts` (no new error format to design).
 - No new routes are introduced by the atomic-write/symlink-check/policy-consolidation workstreams — they are internal behavior changes underneath existing routes (`PUT /api/repository/file`, the `edit_file`/`local_file_write` tool handlers).
 
-**Dashboard changes:** the browser Workspace scratch-pad (already an authenticated-app-shell page) needs no new UI — it already sends the stored `codemind_api_key` on other calls (`settings-view.ts`); this bundle just stops `/api/workspace/run` from being the one endpoint that didn't require it. If the team wants a visible signal, a one-line "sandboxed, key-gated" note can replace the stale Bundle-2 copy already being corrected in this bundle (Section 15/25).
+**Dashboard changes:** the browser Workspace scratch-pad (already an authenticated-app-shell page) needs no new UI — it already sends the stored `symbolwright_api_key` on other calls (`settings-view.ts`); this bundle just stops `/api/workspace/run` from being the one endpoint that didn't require it. If the team wants a visible signal, a one-line "sandboxed, key-gated" note can replace the stale Bundle-2 copy already being corrected in this bundle (Section 15/25).
 
 ---
 
@@ -489,7 +489,7 @@ No penalty adjustments were needed for C1 (no duplicate capability, strong evide
 | Writes are atomic | New unit test: simulate a write interrupted between temp-write and rename (mock `rename` to throw), assert original file content unchanged | Test asserts byte-for-byte pre-image survives |
 | `/api/workspace/run` requires auth | New integration test: call without/with valid/invalid Bearer token, assert 401/200/401 | HTTP-level test against the real route table |
 | Untrusted-content boundary is applied for external-intake missions | New unit test on the message-assembly function: feed a mission flagged as external-origin, assert the delimiter wraps file content | Direct assertion on constructed message payload |
-| Protected-path policy is single-sourced | New unit test: assert `codemind-permission-policy`'s protected list is derived from (or identical to) `DEFAULT_RUNTIME_PROTECTED_PATHS` | Fails if the two lists silently diverge again |
+| Protected-path policy is single-sourced | New unit test: assert `symbolwright-permission-policy`'s protected list is derived from (or identical to) `DEFAULT_RUNTIME_PROTECTED_PATHS` | Fails if the two lists silently diverge again |
 | No regression in existing sandbox/checkpoint behavior | Full `npm test` (482 files) | 482/482 passing, matching this audit's baseline (Section 39) |
 | No regression in typecheck/lint/format/build | `npm run validate` | All gates green, matching this audit's baseline |
 | External-repo-intake mission still completes end-to-end with the hardened path | Existing `external-repository-mission.integration.spec.ts`, extended to assert the new boundary/atomic-write behavior fires | Integration test passes with new assertions added |
@@ -498,7 +498,7 @@ No penalty adjustments were needed for C1 (no duplicate capability, strong evide
 
 ## 31. Compatibility and Migration Plan
 
-- **Existing missions/persisted state:** no schema change; nothing to migrate. Existing `.codemind/` directories remain valid.
+- **Existing missions/persisted state:** no schema change; nothing to migrate. Existing `.symbolwright/` directories remain valid.
 - **API clients:** any external caller of `/api/workspace/run` without a Bearer token will start receiving `401` — this is an intentional, documented breaking change, called out explicitly in the PR description and CHANGELOG (the mission brief's "no placeholder delivery" principle argues for a clean break here rather than a silent, confusing dual-mode).
 - **Dashboard clients:** none — the app shell already sends the stored key on every other call.
 - **Startup scripts / Codespaces workflow:** unaffected — `scripts/codespaces-start.mjs` already generates and reports the API key needed to use the now-authenticated route.
@@ -514,7 +514,7 @@ No penalty adjustments were needed for C1 (no duplicate capability, strong evide
 | 2 — Write-path adoption | Wire `edit_file`, `local_file_write`, checkpoint restore, Docker write script onto the Phase-1 primitives | Phase 1 | Existing checkpoint/edit-tool specs still pass + new symlink/atomicity specs pass | Yes |
 | 3 — Route auth | Require Bearer auth on `/api/workspace/*` | None (independent of 1–2) | New auth integration test; existing workspace-route specs updated for the new auth requirement | Yes |
 | 4 — Untrusted-content boundary | Wrap tool-read output for external-intake missions | None (independent) | New message-assembly unit test; external-intake integration test extended | Yes |
-| 5 — Policy consolidation | Merge `permissions/codemind-permission-policy.ts` into `runtime-policy.ts`'s list | None (independent) | New single-source-of-truth test; Ajna GitHub runtime bridge specs still pass | Yes |
+| 5 — Policy consolidation | Merge `permissions/symbolwright-permission-policy.ts` into `runtime-policy.ts`'s list | None (independent) | New single-source-of-truth test; Ajna GitHub runtime bridge specs still pass | Yes |
 | 6 — Doc/UI sync | `docs/ARCHITECTURE.md` subsystem table; `settings-view.ts` copy fix | None | Manual read-through | Yes |
 | 7 — Full validation | `npm run validate` (audit, typecheck, lint, format, coverage, build, release-readiness) | All prior phases | Full gate green | Yes |
 
@@ -526,9 +526,9 @@ Phases 1–2 and 3–6 are independent and could be developed in parallel by dif
 
 1. A symlink created inside the workspace root pointing to a path outside it causes `edit_file` and `local_file_write` to throw the existing `"Access blocked outside workspace"` error class, verified by an automated test that fails against the pre-bundle code and passes after.
 2. A simulated failure between temp-file write and `rename` leaves the target file's original content byte-for-byte unchanged, verified by an automated test.
-3. `POST /api/workspace/run` returns `401` for a request with no `Authorization` header and `200` for a request with a valid `CODEMIND_API_KEY` Bearer token, verified by an automated HTTP-level test.
+3. `POST /api/workspace/run` returns `401` for a request with no `Authorization` header and `200` for a request with a valid `SYMBOLWRIGHT_API_KEY` Bearer token, verified by an automated HTTP-level test.
 4. A mission flagged as originating from external repository intake (Bundle #8) produces LLM-bound messages in which repository file content is wrapped in the new untrusted-content delimiter, verified by an automated unit test inspecting constructed message payloads.
-5. `src/permissions/codemind-permission-policy.ts`'s protected-path list is either removed or provably derived from `DEFAULT_RUNTIME_PROTECTED_PATHS` (no independent, divergent list remains), verified by an automated test.
+5. `src/permissions/symbolwright-permission-policy.ts`'s protected-path list is either removed or provably derived from `DEFAULT_RUNTIME_PROTECTED_PATHS` (no independent, divergent list remains), verified by an automated test.
 6. `docs/ARCHITECTURE.md`'s subsystem table includes `src/app`, `src/server`, `src/mission`, `src/autonomy`, `src/sandbox`, `src/github`, `src/mcp`, and `src/kernel`.
 7. `src/app/views/settings-view.ts` no longer describes the Repository tab as "planned for Large PR Bundle 2."
 8. `npm run validate` (audit, typecheck, lint, format:check, test:coverage, build, release-readiness) passes with zero new failures relative to this audit's baseline (Section 39).
@@ -557,7 +557,7 @@ Phases 1–2 and 3–6 are independent and could be developed in parallel by dif
 ## 35. Preliminary File Impact Map
 
 **Likely modified:**
-`src/runtime/policy/runtime-policy.ts`, `src/runtime/tools/edit-file-tool.ts`, `src/runtime/write/local-file-writer.ts`, `src/checkpoint/checkpoint-service.ts`, `src/runtime/sandbox/sandbox-runner.ts` (Docker write script), `src/app/api/workspace-routes.ts`, `src/permissions/codemind-permission-policy.ts`, `src/ajna/github/ajna-github-runtime-bridge.ts` (if it consumed the narrower list directly), `docs/ARCHITECTURE.md`, `src/app/views/settings-view.ts`, `CHANGELOG.md`.
+`src/runtime/policy/runtime-policy.ts`, `src/runtime/tools/edit-file-tool.ts`, `src/runtime/write/local-file-writer.ts`, `src/checkpoint/checkpoint-service.ts`, `src/runtime/sandbox/sandbox-runner.ts` (Docker write script), `src/app/api/workspace-routes.ts`, `src/permissions/symbolwright-permission-policy.ts`, `src/ajna/github/ajna-github-runtime-bridge.ts` (if it consumed the narrower list directly), `docs/ARCHITECTURE.md`, `src/app/views/settings-view.ts`, `CHANGELOG.md`.
 
 **Likely created:**
 `src/runtime/fs/atomic-write.ts` (or equivalent shared helper location), `src/runtime/context/untrusted-content-boundary.ts` (or equivalent), corresponding `*.spec.ts` files for each.
@@ -595,7 +595,7 @@ Phases 1–2 and 3–6 are independent and could be developed in parallel by dif
 
 **Candidate 2 (Repository Intelligence Unification)** — not rejected outright, sequenced next (Section 38). Scored second (60.5/100) primarily because its gaps, while real and evidence-backed, are quality/differentiation gaps rather than closures of a newly-live risk; Candidate 1's "why now" (Bundle #8 changing the trust model) is more concrete and time-sensitive than Candidate 2's "this would make Ajna and memory better."
 
-**Candidate 3 (Recovery/Repair Taxonomy)** — a strong, real reliability finding, but its two workstreams (boot-time recovery, failure taxonomy) are more separable than Candidate 1's four, and its architectural footprint (two files, `codemind-chat-server.ts` startup + `persistent-mission-repair-controller.ts`) is narrower than Candidate 1's cross-cutting write-path change. Insufficient operator-facing urgency to outrank a live security exposure.
+**Candidate 3 (Recovery/Repair Taxonomy)** — a strong, real reliability finding, but its two workstreams (boot-time recovery, failure taxonomy) are more separable than Candidate 1's four, and its architectural footprint (two files, `symbolwright-chat-server.ts` startup + `persistent-mission-repair-controller.ts`) is narrower than Candidate 1's cross-cutting write-path change. Insufficient operator-facing urgency to outrank a live security exposure.
 
 **Candidate 4 (SSE/Real-time updates)** — the lowest score (41.5/100). Genuinely useful, but scored low on every mission-brief-weighted axis that matters most (removes-critical-limitation: 3/10, architectural leverage: 4/10) — polling every 1.5 s is a UX rough edge, not a limitation blocking any capability. Explicitly the kind of "isolated UI polish" the mission brief instructs against selecting as the primary bundle (Section 3.5).
 
@@ -653,7 +653,7 @@ This order is non-binding (per the mission brief) and should be re-validated wit
 
 ### Objective
 
-Make CodeMind's autonomous edit, validation, and repair loop provably safe to run against untrusted repository content — closing the gap between Bundle #8's new ability to ingest and mutate arbitrary external GitHub repositories and the write/authentication/LLM-context layers that were never hardened for that assumption, without duplicating any of the platform's existing, already-solid sandbox, checkpoint, or mission infrastructure.
+Make SymbolWright's autonomous edit, validation, and repair loop provably safe to run against untrusted repository content — closing the gap between Bundle #8's new ability to ingest and mutate arbitrary external GitHub repositories and the write/authentication/LLM-context layers that were never hardened for that assumption, without duplicating any of the platform's existing, already-solid sandbox, checkpoint, or mission infrastructure.
 
 ### Why this is the highest-value next move
 

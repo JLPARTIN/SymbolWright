@@ -13,7 +13,7 @@ import type { AjnaGithubReadOnlyCollectorPort } from './ajna/ajna-github-readonl
 const tempDirs: string[] = []
 
 function writeRequestFile(input: unknown): string {
-  const rootDir = mkdtempSync(join(tmpdir(), 'codemind-ajna-readonly-collector-'))
+  const rootDir = mkdtempSync(join(tmpdir(), 'symbolwright-ajna-readonly-collector-'))
   tempDirs.push(rootDir)
   const inputPath = join(rootDir, 'collector-request.json')
   writeFileSync(inputPath, JSON.stringify(input), 'utf-8')
@@ -29,10 +29,10 @@ afterEach(() => {
 describe('parseAjnaGithubReadOnlyCollectorRequest', () => {
   it('accepts a local request fixture', () => {
     const request = parseAjnaGithubReadOnlyCollectorRequest(
-      JSON.stringify({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 63 }),
+      JSON.stringify({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 63 }),
     )
 
-    expect(request.repository).toBe('JLPARTIN/CodeMind')
+    expect(request.repository).toBe('JLPARTIN/SymbolWright')
     expect(request.pullRequestNumber).toBe(63)
   })
 
@@ -64,11 +64,11 @@ describe('buildAjnaGithubReadOnlyCollectorFixtureSnapshotForFile', () => {
     }
 
     const snapshot = await buildAjnaGithubReadOnlyCollectorFixtureSnapshotForFile(
-      writeRequestFile({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 63 }),
+      writeRequestFile({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 63 }),
       port,
     )
 
-    expect(snapshot.pullRequest.repository).toBe('JLPARTIN/CodeMind')
+    expect(snapshot.pullRequest.repository).toBe('JLPARTIN/SymbolWright')
     expect(snapshot.pullRequest.headRef).toBe('fake-head')
     expect(snapshot.changedFiles).toEqual([{ path: 'src/example.ts', status: 'modified' }])
   })
@@ -77,10 +77,10 @@ describe('buildAjnaGithubReadOnlyCollectorFixtureSnapshotForFile', () => {
 describe('renderAjnaGithubReadOnlyCollectorFixtureForFile', () => {
   it('renders a collector snapshot JSON document', async () => {
     const output = await renderAjnaGithubReadOnlyCollectorFixtureForFile(
-      writeRequestFile({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 63 }),
+      writeRequestFile({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 63 }),
     )
 
-    expect(output).toContain('"repository": "JLPARTIN/CodeMind"')
+    expect(output).toContain('"repository": "JLPARTIN/SymbolWright"')
     expect(output).toContain('"pullRequestNumber": 63')
     expect(output).toContain('github-readonly-collector-request.ready.json')
   })

@@ -1,6 +1,6 @@
-export const AJNA_PROOF_GATE_BLOCK_ID = 'CODEMIND-PROOF-HARNESS-10' as const
+export const AJNA_PROOF_GATE_BLOCK_ID = 'SYMBOLWRIGHT-PROOF-HARNESS-10' as const
 export const AJNA_PROOF_GATE_PR_ID = 'PR-CM-TEST-10' as const
-export const AJNA_PROOF_GATE_PHASE_ID = 'CODEMIND-TEST-10' as const
+export const AJNA_PROOF_GATE_PHASE_ID = 'SYMBOLWRIGHT-TEST-10' as const
 
 // Inline status unions — structurally compatible with proof modules on feature branches.
 // These will remain valid after those PRs merge to main.

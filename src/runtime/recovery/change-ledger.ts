@@ -58,11 +58,11 @@ export function renderRecoveryChangeLedger(ledger: RecoveryChangeLedger): string
   const records = ledger.list()
 
   if (records.length === 0) {
-    return 'CodeMind recovery change ledger\n\nNo changes recorded.'
+    return 'SymbolWright recovery change ledger\n\nNo changes recorded.'
   }
 
   return [
-    'CodeMind recovery change ledger',
+    'SymbolWright recovery change ledger',
     '',
     `Changes: ${records.length}`,
     '',

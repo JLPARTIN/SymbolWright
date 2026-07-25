@@ -1,4 +1,4 @@
-# CodeMind Zflow Report CLI
+# SymbolWright Zflow Report CLI
 
 PR Bundle AM-AP adds a fixture-based CLI renderer for Zflow reports.
 

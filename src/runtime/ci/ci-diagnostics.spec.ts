@@ -85,7 +85,7 @@ describe('renderCiDiagnosticReport', () => {
     const report = analyzeCiOutput('npm run typecheck', 0, 'OK', '')
     const output = renderCiDiagnosticReport(report)
 
-    expect(output).toContain('CodeMind CI Diagnostics')
+    expect(output).toContain('SymbolWright CI Diagnostics')
     expect(output).toContain('Exit code: 0')
     expect(output).toContain('No issues detected.')
   })

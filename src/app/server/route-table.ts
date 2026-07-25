@@ -7,7 +7,7 @@ import { sendHtmlDocument } from './request-helpers.js'
 /**
  * The new routes Large PR Bundle 1 adds on top of the existing, already
  * tested chat/provider/agent/readonly-registry dispatch in
- * `codemind-chat-server.ts`. Evaluated in order, first match wins; a
+ * `symbolwright-chat-server.ts`. Evaluated in order, first match wins; a
  * `false` return means "not one of these, try the next route table."
  *
  * `GET /api/status` is rewritten onto the existing authenticated

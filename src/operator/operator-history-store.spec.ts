@@ -16,7 +16,7 @@ afterEach(() => {
 
 describe('OperatorHistoryStore', () => {
   it('returns an empty list before history exists', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'codemind-history-'))
+    const dir = mkdtempSync(join(tmpdir(), 'symbolwright-history-'))
     tempDirs.push(dir)
     const store = OperatorHistoryStore.fromWorkspace(dir)
 
@@ -24,7 +24,7 @@ describe('OperatorHistoryStore', () => {
   })
 
   it('persists and reloads history entries', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'codemind-history-'))
+    const dir = mkdtempSync(join(tmpdir(), 'symbolwright-history-'))
     tempDirs.push(dir)
     const store = OperatorHistoryStore.fromWorkspace(dir)
 
@@ -38,7 +38,7 @@ describe('OperatorHistoryStore', () => {
   })
 
   it('clears persisted history', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'codemind-history-'))
+    const dir = mkdtempSync(join(tmpdir(), 'symbolwright-history-'))
     tempDirs.push(dir)
     const store = OperatorHistoryStore.fromWorkspace(dir)
 

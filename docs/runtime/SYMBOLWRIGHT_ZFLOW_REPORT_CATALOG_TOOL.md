@@ -1,4 +1,4 @@
-# CodeMind Zflow Report Catalog Tool
+# SymbolWright Zflow Report Catalog Tool
 
 PR Bundle AU-AX adds a runtime tool surface for Zflow report catalogs.
 

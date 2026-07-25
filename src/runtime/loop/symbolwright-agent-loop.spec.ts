@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { compactTranscript } from '../compaction/transcript-compactor.js'
 import { RuntimeSessionStore } from '../memory/session-store.js'
 import { createRuntimeSession } from '../session/runtime-session.js'
-import { runReadOnlyRuntimeLoop } from './codemind-agent-loop.js'
+import { runReadOnlyRuntimeLoop } from './symbolwright-agent-loop.js'
 
 describe('runReadOnlyRuntimeLoop', () => {
   it('runs bounded read-only tools and captures a transcript', async () => {

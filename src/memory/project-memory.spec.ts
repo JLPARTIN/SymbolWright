@@ -192,9 +192,9 @@ describe('ProjectMemory', () => {
 })
 
 describe('resolveProjectMemoryDir', () => {
-  it('resolves to .codemind/memory under workspace', () => {
+  it('resolves to .symbolwright/memory under workspace', () => {
     const dir = resolveProjectMemoryDir('/home/user/project')
-    expect(dir).toBe(join('/home/user/project', '.codemind', 'memory'))
+    expect(dir).toBe(join('/home/user/project', '.symbolwright', 'memory'))
   })
 })
 

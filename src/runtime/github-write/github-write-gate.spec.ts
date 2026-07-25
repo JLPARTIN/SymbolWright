@@ -112,7 +112,7 @@ describe('renderGitHubWriteGateResult', () => {
     )
     const output = renderGitHubWriteGateResult(result)
 
-    expect(output).toContain('CodeMind GitHub write gate')
+    expect(output).toContain('SymbolWright GitHub write gate')
     expect(output).toContain('Decision: ALLOWED')
     expect(output).toContain('Dry run: yes')
   })

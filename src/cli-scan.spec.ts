@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import type { CodemindRepoScan } from './cli-scan.js'
+import type { SymbolWrightRepoScan } from './cli-scan.js'
 import { renderScan, scanRepo } from './cli-scan.js'
 
-const FIXTURE: CodemindRepoScan = {
+const FIXTURE: SymbolWrightRepoScan = {
   rootDir: '/home/user/project',
   packageName: 'my-lib',
   packageVersion: '1.2.3',

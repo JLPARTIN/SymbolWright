@@ -1,4 +1,4 @@
-# CodeMind Zflow Workflow
+# SymbolWright Zflow Workflow
 
 Phase Z composes the local self-edit workflow with the fake-client GitHub PR creation and PR collaboration seams.
 
@@ -36,7 +36,7 @@ operator review gate
 Zflow now renders:
 
 ```txt
-CodeMind recovery change ledger
+SymbolWright recovery change ledger
 Rollback plan
 ```
 
@@ -47,9 +47,9 @@ The recovery output is reporting-only. It does not execute rollback steps.
 The handoff layer renders:
 
 ```txt
-CodeMind zflow handoff
+SymbolWright zflow handoff
 Readiness summary
-CodeMind operator review packet
+SymbolWright operator review packet
 Operator review gate result
 ```
 

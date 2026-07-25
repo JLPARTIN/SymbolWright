@@ -1,4 +1,4 @@
-# CodeMind Subagent Runtime v1
+# SymbolWright Subagent Runtime v1
 
 Three named, read-only worker subagents — `explorer`, `reviewer`,
 `test-planner` — dispatched from the top-level agent loop (or the CLI)
@@ -108,10 +108,10 @@ Same static-stub + `createWiredXTool()` pattern as `swarm_dispatch`:
   live dispatcher is required.
 - `createWiredSubagentRunTool(dispatcher, onResult)` produces the real
   tool, swapped in by `wireSubagentRunTool()` inside
-  `runActivatedAgent()` (`src/activation/codemind-activation.ts`).
+  `runActivatedAgent()` (`src/activation/symbolwright-activation.ts`).
   `activateSubsystems()` constructs one `SubagentDispatcher` per session,
   bound to the session's real provider, tool context, and session id.
-- `CodemindActivationResult.subagentDispatches` collects every dispatch's
+- `SymbolWrightActivationResult.subagentDispatches` collects every dispatch's
   evidence for the caller.
 
 ## CLI
@@ -136,7 +136,7 @@ node dist/cli.js subagent run explorer "find the auth code"
 Run for real while building this bundle: `subagent list` printed all three
 workers with their real allowed/governed tool lists straight from
 `SUBAGENT_DEFINITIONS`. `subagent run` without `ANTHROPIC_API_KEY`
-configured failed honestly with `Invalid CodeMind config: Missing API
+configured failed honestly with `Invalid SymbolWright config: Missing API
 key...` and a non-zero exit code — no fake success, no canned output —
 confirming the CLI is wired through the real config-resolution path
 before it ever reaches a provider or the dispatcher.

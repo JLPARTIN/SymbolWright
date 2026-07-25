@@ -1,15 +1,15 @@
-export const CODEMIND_PROOF_REPORT_RENDERER_BLOCK_ID = 'CODEMIND-PROOF-HARNESS-08' as const
-export const CODEMIND_PROOF_REPORT_RENDERER_PR_ID = 'PR-CM-TEST-08' as const
-export const CODEMIND_PROOF_REPORT_RENDERER_PHASE_ID = 'CODEMIND-TEST-08' as const
+export const SYMBOLWRIGHT_PROOF_REPORT_RENDERER_BLOCK_ID = 'SYMBOLWRIGHT-PROOF-HARNESS-08' as const
+export const SYMBOLWRIGHT_PROOF_REPORT_RENDERER_PR_ID = 'PR-CM-TEST-08' as const
+export const SYMBOLWRIGHT_PROOF_REPORT_RENDERER_PHASE_ID = 'SYMBOLWRIGHT-TEST-08' as const
 
-export const CODEMIND_PROOF_RENDER_FORMATS = ['plain', 'markdown', 'compact'] as const
-export type CodemindProofRenderFormat = (typeof CODEMIND_PROOF_RENDER_FORMATS)[number]
+export const SYMBOLWRIGHT_PROOF_RENDER_FORMATS = ['plain', 'markdown', 'compact'] as const
+export type SymbolWrightProofRenderFormat = (typeof SYMBOLWRIGHT_PROOF_RENDER_FORMATS)[number]
 
 /**
- * Minimal shape shared by every CODEMIND-PROOF-HARNESS-* report.
+ * Minimal shape shared by every SYMBOLWRIGHT-PROOF-HARNESS-* report.
  * Structurally compatible with all concrete proof report types.
  */
-export interface CodemindProofReportBase {
+export interface SymbolWrightProofReportBase {
   readonly blockId: string
   readonly prId: string
   readonly phaseId: string
@@ -28,18 +28,18 @@ export interface CodemindProofReportBase {
   readonly violations?: readonly string[]
 }
 
-export interface CodemindProofRenderInput {
-  readonly report: CodemindProofReportBase
-  readonly format: CodemindProofRenderFormat
+export interface SymbolWrightProofRenderInput {
+  readonly report: SymbolWrightProofReportBase
+  readonly format: SymbolWrightProofRenderFormat
   /** ISO timestamp string — omit for deterministic/timestamp-free output. */
   readonly renderedAt?: string
 }
 
-export interface CodemindProofRenderOutput {
-  readonly blockId: typeof CODEMIND_PROOF_REPORT_RENDERER_BLOCK_ID
-  readonly prId: typeof CODEMIND_PROOF_REPORT_RENDERER_PR_ID
-  readonly phaseId: typeof CODEMIND_PROOF_REPORT_RENDERER_PHASE_ID
-  readonly format: CodemindProofRenderFormat
+export interface SymbolWrightProofRenderOutput {
+  readonly blockId: typeof SYMBOLWRIGHT_PROOF_REPORT_RENDERER_BLOCK_ID
+  readonly prId: typeof SYMBOLWRIGHT_PROOF_REPORT_RENDERER_PR_ID
+  readonly phaseId: typeof SYMBOLWRIGHT_PROOF_REPORT_RENDERER_PHASE_ID
+  readonly format: SymbolWrightProofRenderFormat
   readonly text: string
   readonly lineCount: number
   readonly mutationAllowed: false
@@ -47,7 +47,7 @@ export interface CodemindProofRenderOutput {
   readonly providerInvocationAllowed: false
 }
 
-function collectIssues(report: CodemindProofReportBase): readonly string[] {
+function collectIssues(report: SymbolWrightProofReportBase): readonly string[] {
   return [
     ...(report.blockingNotes ?? []),
     ...(report.flagViolations ?? []),
@@ -59,7 +59,7 @@ function collectIssues(report: CodemindProofReportBase): readonly string[] {
   ]
 }
 
-function renderInvariants(report: CodemindProofReportBase): readonly string[] {
+function renderInvariants(report: SymbolWrightProofReportBase): readonly string[] {
   const lines: string[] = []
   if (report.mutationAllowed !== undefined) {
     lines.push(`mutationAllowed: ${String(report.mutationAllowed)}`)
@@ -73,7 +73,10 @@ function renderInvariants(report: CodemindProofReportBase): readonly string[] {
   return lines
 }
 
-function buildPlainLines(report: CodemindProofReportBase, renderedAt?: string): readonly string[] {
+function buildPlainLines(
+  report: SymbolWrightProofReportBase,
+  renderedAt?: string,
+): readonly string[] {
   const issues = collectIssues(report)
   const invariants = renderInvariants(report)
 
@@ -105,7 +108,7 @@ function buildPlainLines(report: CodemindProofReportBase, renderedAt?: string): 
 }
 
 function buildMarkdownLines(
-  report: CodemindProofReportBase,
+  report: SymbolWrightProofReportBase,
   renderedAt?: string,
 ): readonly string[] {
   const issues = collectIssues(report)
@@ -148,13 +151,13 @@ function buildMarkdownLines(
   return lines
 }
 
-function buildCompactLine(report: CodemindProofReportBase): string {
+function buildCompactLine(report: SymbolWrightProofReportBase): string {
   return `[${report.status}] ${report.blockId} | ${report.prId} | ${report.summary}`
 }
 
-export function renderCodemindProofReport(
-  input: CodemindProofRenderInput,
-): CodemindProofRenderOutput {
+export function renderSymbolWrightProofReport(
+  input: SymbolWrightProofRenderInput,
+): SymbolWrightProofRenderOutput {
   let lines: readonly string[]
 
   switch (input.format) {
@@ -172,9 +175,9 @@ export function renderCodemindProofReport(
   const text = lines.join('\n')
 
   return {
-    blockId: CODEMIND_PROOF_REPORT_RENDERER_BLOCK_ID,
-    prId: CODEMIND_PROOF_REPORT_RENDERER_PR_ID,
-    phaseId: CODEMIND_PROOF_REPORT_RENDERER_PHASE_ID,
+    blockId: SYMBOLWRIGHT_PROOF_REPORT_RENDERER_BLOCK_ID,
+    prId: SYMBOLWRIGHT_PROOF_REPORT_RENDERER_PR_ID,
+    phaseId: SYMBOLWRIGHT_PROOF_REPORT_RENDERER_PHASE_ID,
     format: input.format,
     text,
     lineCount: lines.length,

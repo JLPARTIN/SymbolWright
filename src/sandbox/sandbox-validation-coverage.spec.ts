@@ -121,7 +121,7 @@ describe('sandbox validation coverage', () => {
       languageId: 'javascript',
       mode: 'test',
       repository: {
-        rootPath: '/tmp/codemind-validation-repo',
+        rootPath: '/tmp/symbolwright-validation-repo',
         selectedPaths: ['src/main.js'],
       },
       requestedRunnerId: 'guarded-host-javascript',
@@ -149,7 +149,7 @@ describe('sandbox validation coverage', () => {
 
     const optedIn = createValidationService({
       PATH: process.env['PATH'] ?? '',
-      CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true',
+      SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true',
     })
 
     const readOnly = await optedIn.execute(

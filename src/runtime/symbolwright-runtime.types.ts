@@ -1,25 +1,25 @@
 import type {
-  CodemindPermissionDecision,
-  CodemindPermissionRequest,
-} from '../permissions/codemind-permission.types.js'
+  SymbolWrightPermissionDecision,
+  SymbolWrightPermissionRequest,
+} from '../permissions/symbolwright-permission.types.js'
 
-export const CODEMIND_RUNTIME_ADAPTER_KINDS = [
+export const SYMBOLWRIGHT_RUNTIME_ADAPTER_KINDS = [
   'GITHUB_PR_CONTEXT_READER',
   'AJNA_REVIEW_RUNTIME',
   'REPO_CONTEXT_READER',
   'UNKNOWN',
 ] as const
-export type CodemindRuntimeAdapterKind = (typeof CODEMIND_RUNTIME_ADAPTER_KINDS)[number]
+export type SymbolWrightRuntimeAdapterKind = (typeof SYMBOLWRIGHT_RUNTIME_ADAPTER_KINDS)[number]
 
-export const CODEMIND_RUNTIME_EXECUTION_MODES = [
+export const SYMBOLWRIGHT_RUNTIME_EXECUTION_MODES = [
   'CONTRACT_ONLY',
   'READ_ONLY',
   'APPROVAL_REQUIRED',
   'DENIED',
 ] as const
-export type CodemindRuntimeExecutionMode = (typeof CODEMIND_RUNTIME_EXECUTION_MODES)[number]
+export type SymbolWrightRuntimeExecutionMode = (typeof SYMBOLWRIGHT_RUNTIME_EXECUTION_MODES)[number]
 
-export interface CodemindRuntimeCapabilityFlags {
+export interface SymbolWrightRuntimeCapabilityFlags {
   readonly readEnabled: boolean
   readonly writeEnabled: boolean
   readonly commandExecutionEnabled: boolean
@@ -29,20 +29,20 @@ export interface CodemindRuntimeCapabilityFlags {
   readonly mergeEnabled: boolean
 }
 
-export interface CodemindRuntimeAdapterDescriptor {
+export interface SymbolWrightRuntimeAdapterDescriptor {
   readonly adapterId: string
-  readonly adapterKind: CodemindRuntimeAdapterKind
-  readonly executionMode: CodemindRuntimeExecutionMode
-  readonly capabilityFlags: CodemindRuntimeCapabilityFlags
-  readonly permissionRequest: CodemindPermissionRequest
+  readonly adapterKind: SymbolWrightRuntimeAdapterKind
+  readonly executionMode: SymbolWrightRuntimeExecutionMode
+  readonly capabilityFlags: SymbolWrightRuntimeCapabilityFlags
+  readonly permissionRequest: SymbolWrightPermissionRequest
 }
 
-export interface CodemindRuntimeBoundaryDecision {
+export interface SymbolWrightRuntimeBoundaryDecision {
   readonly adapterId: string
-  readonly adapterKind: CodemindRuntimeAdapterKind
-  readonly executionMode: CodemindRuntimeExecutionMode
+  readonly adapterKind: SymbolWrightRuntimeAdapterKind
+  readonly executionMode: SymbolWrightRuntimeExecutionMode
   readonly allowedToRun: boolean
-  readonly permissionDecision: CodemindPermissionDecision
+  readonly permissionDecision: SymbolWrightPermissionDecision
   readonly blockedReasons: readonly string[]
   readonly auditRequired: boolean
 }

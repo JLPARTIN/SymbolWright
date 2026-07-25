@@ -14,7 +14,7 @@ export interface PatchProposal {
 
 export function renderPatchProposal(proposal: PatchProposal): string {
   return [
-    'CodeMind patch proposal',
+    'SymbolWright patch proposal',
     '',
     `Goal: ${proposal.goal}`,
     '',

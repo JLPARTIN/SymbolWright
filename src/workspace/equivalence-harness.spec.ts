@@ -18,7 +18,7 @@ describe('cross-language equivalence harness', () => {
     ])
   })
 
-  it('creates a readable summary for CodeMind task context', () => {
+  it('creates a readable summary for SymbolWright task context', () => {
     const summary = createEquivalenceHarnessSummary()
 
     expect(summary).toContain('Factorial: javascript -> typescript')

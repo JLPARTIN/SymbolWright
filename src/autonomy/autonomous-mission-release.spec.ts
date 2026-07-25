@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { MissionService } from '../mission/mission-service.js'
 import { MissionStore } from '../mission/mission-store.js'
-import type { CodeMindMission } from '../mission/mission-types.js'
+import type { SymbolWrightMission } from '../mission/mission-types.js'
 import { createAutonomousMissionRuntime } from './autonomous-mission-runtime.js'
 import { planAutonomousRepositoryMission } from './autonomous-repository-planner.js'
 import type { MissionTaskExecutor } from './persistent-mission-executor.js'
@@ -19,7 +19,7 @@ const NOW = '2026-07-23T22:30:00.000Z'
 
 interface Fixture {
   readonly root: string
-  readonly mission: CodeMindMission
+  readonly mission: SymbolWrightMission
   readonly missionService: MissionService
   readonly index: RepositorySemanticIndexSnapshot
   readonly runtime: ReturnType<typeof createAutonomousMissionRuntime>
@@ -116,14 +116,14 @@ describe('end-to-end autonomous mission release', () => {
 })
 
 async function createFixture(): Promise<Fixture> {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-final-release-'))
+  const root = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-final-release-'))
   roots.push(root)
   const missionStore = new MissionStore({ workspaceRoot: root })
   const storedMission = mission(root)
   missionStore.createMission(storedMission)
   const missionService = new MissionService({ workspaceRoot: root, store: missionStore })
   const index = semanticIndex(root)
-  await new RepositorySemanticIndexStore(path.join(root, '.codemind')).save(root, index)
+  await new RepositorySemanticIndexStore(path.join(root, '.symbolwright')).save(root, index)
   const taskExecutor: MissionTaskExecutor = {
     async execute(task) {
       return {
@@ -148,7 +148,7 @@ async function createFixture(): Promise<Fixture> {
   return { root, mission: storedMission, missionService, index, runtime }
 }
 
-function mission(root: string): CodeMindMission {
+function mission(root: string): SymbolWrightMission {
   return {
     schemaVersion: 1,
     revision: 1,
@@ -194,7 +194,7 @@ function semanticIndex(root: string): RepositorySemanticIndexSnapshot {
         language: 'typescript',
         contentHash: 'feature-hash',
         generated: false,
-        packageOwner: 'codemind',
+        packageOwner: 'symbolwright',
         indexedAt: NOW,
       },
     ],
@@ -214,5 +214,5 @@ function semanticIndex(root: string): RepositorySemanticIndexSnapshot {
 }
 
 function releasePath(root: string): string {
-  return path.join(root, '.codemind', 'autonomy', 'releases', `${MISSION_ID}.json`)
+  return path.join(root, '.symbolwright', 'autonomy', 'releases', `${MISSION_ID}.json`)
 }

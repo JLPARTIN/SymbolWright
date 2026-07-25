@@ -10,7 +10,7 @@ import {
   activateSubsystems,
   verifySubsystemHealth,
   renderSubsystemHealthReport,
-} from '../activation/codemind-activation.js'
+} from '../activation/symbolwright-activation.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { bridgeToolsForProvider, extractProviderTools } from '../agent/tool-schema-bridge.js'
 import { createRuntimeSession } from '../runtime/session/runtime-session.js'

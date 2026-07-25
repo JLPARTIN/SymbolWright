@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   assessBrowserWorkspaceReadiness,
   buildBrowserWorkspaceContract,
-  CODEMIND_BROWSER_WORKSPACE_PANELS,
+  SYMBOLWRIGHT_BROWSER_WORKSPACE_PANELS,
   renderBrowserWorkspaceReadinessReport,
 } from './browser-workspace-contract.js'
 
@@ -21,7 +21,7 @@ describe('browser workspace contract', () => {
   it('reports every blocked browser-workspace boundary violation', () => {
     const contract = {
       ...buildBrowserWorkspaceContract(),
-      panels: CODEMIND_BROWSER_WORKSPACE_PANELS.slice(0, -1),
+      panels: SYMBOLWRIGHT_BROWSER_WORKSPACE_PANELS.slice(0, -1),
       publicApiRouteCount: 0,
       providerCount: 0,
       browserStoresProviderKeys: true,
@@ -35,7 +35,7 @@ describe('browser workspace contract', () => {
     expect(report.findings.join('\n')).toContain('complete public API route set')
     expect(report.findings.join('\n')).toContain('enough provider choices')
     expect(report.findings.join('\n')).toContain('must not persist provider key material')
-    expect(report.findings.join('\n')).toContain('must route through CodeMind')
+    expect(report.findings.join('\n')).toContain('must route through SymbolWright')
     expect(rendered).toContain('Findings:')
     expect(rendered).toContain('browser_to_provider_direct')
   })

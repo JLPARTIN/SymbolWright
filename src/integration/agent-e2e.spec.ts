@@ -63,10 +63,10 @@ afterEach(() => {
 })
 
 function createMemoryToolContext(): RuntimeToolContext {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-agent-e2e-memory-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-agent-e2e-memory-'))
   memoryRoots.push(root)
 
-  const db = new MemoryDatabase(path.join(root, 'codemind.db'))
+  const db = new MemoryDatabase(path.join(root, 'symbolwright.db'))
   const lexicalStore = new LocalLexicalStore(db)
   const proceduralMemory = new ProceduralMemory(path.join(root, 'procedures.yaml'))
   const budgeter = new ContextBudgeter()
@@ -145,7 +145,7 @@ describe('agent-e2e', () => {
       ])
 
       const events: AgentLoopEvent[] = []
-      const config: AgentLoopConfig = { maxIterations: 5, systemPrompt: 'You are CodeMind.' }
+      const config: AgentLoopConfig = { maxIterations: 5, systemPrompt: 'You are SymbolWright.' }
 
       const result = await runAgentLoop(
         provider,
@@ -167,7 +167,7 @@ describe('agent-e2e', () => {
   describe('cognitive memory tool integration', () => {
     it('recalls in a later turn what an earlier turn stored through the real memory tools', async () => {
       const toolContext = createMemoryToolContext()
-      const config: AgentLoopConfig = { maxIterations: 5, systemPrompt: 'You are CodeMind.' }
+      const config: AgentLoopConfig = { maxIterations: 5, systemPrompt: 'You are SymbolWright.' }
 
       const storeProvider = createMockProvider([
         [
@@ -247,7 +247,7 @@ describe('agent-e2e', () => {
     })
 
     it('reports memory as uninitialized when no memory session is attached to the context', async () => {
-      const config: AgentLoopConfig = { maxIterations: 5, systemPrompt: 'You are CodeMind.' }
+      const config: AgentLoopConfig = { maxIterations: 5, systemPrompt: 'You are SymbolWright.' }
       const provider = createMockProvider([
         [
           { type: 'tool_use_start', id: 't-recall', name: 'memory_recall' },

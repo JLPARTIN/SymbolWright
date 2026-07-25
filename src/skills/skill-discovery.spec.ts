@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { discoverSkills, requireSkillByName } from './skill-discovery.js'
 
 function tempWorkspace(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-skills-'))
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-skills-'))
 }
 
 describe('discoverSkills', () => {
@@ -26,7 +26,7 @@ describe('discoverSkills', () => {
   it('loads native project skills and lets them override bundled names', () => {
     const root = tempWorkspace()
     try {
-      const skillDir = path.join(root, '.codemind', 'skills', 'repo-forensics')
+      const skillDir = path.join(root, '.symbolwright', 'skills', 'repo-forensics')
       fs.mkdirSync(skillDir, { recursive: true })
       fs.writeFileSync(
         path.join(skillDir, 'SKILL.md'),

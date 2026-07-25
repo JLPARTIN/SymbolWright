@@ -1,4 +1,4 @@
-# CodeMind Repair Loop
+# SymbolWright Repair Loop
 
 This document describes the repair loop, which orchestrates the full lifecycle of an Ajna-detected finding through patch proposal, operator review, validation, and merge readiness assessment.
 

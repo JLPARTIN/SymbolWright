@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { ProviderRuntimeOverrideStore } from '../providers/provider-runtime-overrides.js'
-import { startChatServer, type StartedChatServer } from './codemind-chat-server.js'
+import { startChatServer, type StartedChatServer } from './symbolwright-chat-server.js'
 import { UnlimitedRateLimiter } from './rate-limiter.js'
 
 const API_KEY = 'mission-agent-key'
@@ -50,7 +50,7 @@ describe('mission-aware agent endpoint', () => {
   })
 
   it('keeps non-mission requests backward compatible and resumes mission conversation after restart', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'codemind-agent-mission-'))
+    const root = mkdtempSync(join(tmpdir(), 'symbolwright-agent-mission-'))
     roots.push(root)
     const upstream = await startFakeOpenAiServer()
     upstreams.push(upstream.server)

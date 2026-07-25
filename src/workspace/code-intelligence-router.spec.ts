@@ -17,7 +17,7 @@ describe('code intelligence task router', () => {
     expect(detectSourceLanguageId('fn main() { println!("hi"); }')).toBe('rust')
     expect(detectSourceLanguageId('package main\nfunc main() {}')).toBe('go')
     expect(detectSourceLanguageId('#include <iostream>')).toBe('cpp')
-    expect(detectSourceLanguageId('{"name":"CodeMind"}')).toBe('json')
+    expect(detectSourceLanguageId('{"name":"SymbolWright"}')).toBe('json')
     expect(detectSourceLanguageId('console.log("fallback")')).toBe('javascript')
   })
 

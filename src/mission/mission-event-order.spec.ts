@@ -5,10 +5,10 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { createMissionEvent } from './mission-events.js'
 import { MissionStore } from './mission-store.js'
-import type { CodeMindMission } from './mission-types.js'
+import type { SymbolWrightMission } from './mission-types.js'
 
 const ID = 'mission_11111111-1111-4111-8111-111111111111'
-const mission: CodeMindMission = {
+const mission: SymbolWrightMission = {
   schemaVersion: 1,
   revision: 1,
   id: ID,

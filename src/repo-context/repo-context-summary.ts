@@ -1,11 +1,11 @@
 import type {
-  CodemindChangedFileContext,
-  CodemindEvidenceState,
-  CodemindReadOnlyRepoContext,
-  CodemindRepoFileImpactLevel,
+  SymbolWrightChangedFileContext,
+  SymbolWrightEvidenceState,
+  SymbolWrightReadOnlyRepoContext,
+  SymbolWrightRepoFileImpactLevel,
 } from './repo-context.types.js'
 
-const IMPACT_RANK: Record<CodemindRepoFileImpactLevel, number> = {
+const IMPACT_RANK: Record<SymbolWrightRepoFileImpactLevel, number> = {
   LOW: 1,
   MEDIUM: 2,
   HIGH: 3,
@@ -14,44 +14,44 @@ const IMPACT_RANK: Record<CodemindRepoFileImpactLevel, number> = {
 }
 
 export function countProtectedChangedFiles(
-  changedFiles: readonly CodemindChangedFileContext[],
+  changedFiles: readonly SymbolWrightChangedFileContext[],
 ): number {
   return changedFiles.filter((file) => file.protectedPath).length
 }
 
 export function getHighestRepoImpactLevel(
-  changedFiles: readonly CodemindChangedFileContext[],
-): CodemindRepoFileImpactLevel {
+  changedFiles: readonly SymbolWrightChangedFileContext[],
+): SymbolWrightRepoFileImpactLevel {
   if (changedFiles.length === 0) {
     return 'UNKNOWN'
   }
 
-  return changedFiles.reduce<CodemindRepoFileImpactLevel>((highest, file) => {
+  return changedFiles.reduce<SymbolWrightRepoFileImpactLevel>((highest, file) => {
     return IMPACT_RANK[file.impactLevel] > IMPACT_RANK[highest] ? file.impactLevel : highest
   }, 'UNKNOWN')
 }
 
-export function hasRequiredEvidenceState(states: readonly CodemindEvidenceState[]): boolean {
+export function hasRequiredEvidenceState(states: readonly SymbolWrightEvidenceState[]): boolean {
   return (
     states.length > 0 && states.every((state) => state === 'PRESENT' || state === 'NOT_REQUIRED')
   )
 }
 
-export interface CodemindRepoContextSummary {
+export interface SymbolWrightRepoContextSummary {
   readonly repository: string
   readonly baseRef: string
   readonly headRef: string
   readonly changedFileCount: number
   readonly protectedChangedFileCount: number
-  readonly highestImpactLevel: CodemindRepoFileImpactLevel
+  readonly highestImpactLevel: SymbolWrightRepoFileImpactLevel
   readonly ciEvidenceSatisfied: boolean
   readonly testEvidenceSatisfied: boolean
   readonly readOnly: true
 }
 
 export function summarizeReadOnlyRepoContext(
-  context: CodemindReadOnlyRepoContext,
-): CodemindRepoContextSummary {
+  context: SymbolWrightReadOnlyRepoContext,
+): SymbolWrightRepoContextSummary {
   return {
     repository: context.repository.fullName,
     baseRef: context.baseRef.name,

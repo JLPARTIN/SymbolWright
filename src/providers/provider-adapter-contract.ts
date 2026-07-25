@@ -1,6 +1,6 @@
-export const CODEMIND_PROVIDER_ADAPTER_BLOCK_ID = 'CODEMIND-PROVIDER-ADAPTER-01' as const
+export const SYMBOLWRIGHT_PROVIDER_ADAPTER_BLOCK_ID = 'SYMBOLWRIGHT-PROVIDER-ADAPTER-01' as const
 
-export const CODEMIND_SUPPORTED_PROVIDER_IDS = [
+export const SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS = [
   'openai',
   'anthropic',
   'google-gemini',
@@ -12,7 +12,7 @@ export const CODEMIND_SUPPORTED_PROVIDER_IDS = [
   'custom',
 ] as const
 
-export const CODEMIND_PROVIDER_CAPABILITIES = [
+export const SYMBOLWRIGHT_PROVIDER_CAPABILITIES = [
   'chat',
   'streaming',
   'tool_use',
@@ -20,54 +20,55 @@ export const CODEMIND_PROVIDER_CAPABILITIES = [
   'local_runtime',
 ] as const
 
-export const CODEMIND_PROVIDER_KEY_HANDLING_MODES = [
+export const SYMBOLWRIGHT_PROVIDER_KEY_HANDLING_MODES = [
   'server_vault',
   'request_scoped',
   'local_runtime',
 ] as const
 
-export const CODEMIND_PROVIDER_ENDPOINT_OWNERSHIP_MODES = [
-  'codemind_server',
+export const SYMBOLWRIGHT_PROVIDER_ENDPOINT_OWNERSHIP_MODES = [
+  'symbolwright_server',
   'browser_client',
   'external_client',
 ] as const
 
-export type CodemindProviderId = (typeof CODEMIND_SUPPORTED_PROVIDER_IDS)[number]
-export type CodemindProviderCapability = (typeof CODEMIND_PROVIDER_CAPABILITIES)[number]
-export type CodemindProviderKeyHandling = (typeof CODEMIND_PROVIDER_KEY_HANDLING_MODES)[number]
-export type CodemindProviderEndpointOwnership =
-  (typeof CODEMIND_PROVIDER_ENDPOINT_OWNERSHIP_MODES)[number]
+export type SymbolWrightProviderId = (typeof SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS)[number]
+export type SymbolWrightProviderCapability = (typeof SYMBOLWRIGHT_PROVIDER_CAPABILITIES)[number]
+export type SymbolWrightProviderKeyHandling =
+  (typeof SYMBOLWRIGHT_PROVIDER_KEY_HANDLING_MODES)[number]
+export type SymbolWrightProviderEndpointOwnership =
+  (typeof SYMBOLWRIGHT_PROVIDER_ENDPOINT_OWNERSHIP_MODES)[number]
 
-export interface CodemindProviderAdapterContract {
-  readonly id: CodemindProviderId
+export interface SymbolWrightProviderAdapterContract {
+  readonly id: SymbolWrightProviderId
   readonly displayName: string
-  readonly credentialMode: CodemindProviderKeyHandling
-  readonly endpointOwnership: CodemindProviderEndpointOwnership
+  readonly credentialMode: SymbolWrightProviderKeyHandling
+  readonly endpointOwnership: SymbolWrightProviderEndpointOwnership
   readonly browserSafe: boolean
-  readonly capabilities: readonly CodemindProviderCapability[]
+  readonly capabilities: readonly SymbolWrightProviderCapability[]
   readonly defaultBaseUrl?: string
   readonly operatorNotes: readonly string[]
 }
 
-export interface CodemindProviderAdapterSecurityCheck {
-  readonly providerId: CodemindProviderId
+export interface SymbolWrightProviderAdapterSecurityCheck {
+  readonly providerId: SymbolWrightProviderId
   readonly status: 'PASS' | 'FAIL'
   readonly detail: string
 }
 
-export interface CodemindProviderAdapterContractReport {
-  readonly blockId: typeof CODEMIND_PROVIDER_ADAPTER_BLOCK_ID
+export interface SymbolWrightProviderAdapterContractReport {
+  readonly blockId: typeof SYMBOLWRIGHT_PROVIDER_ADAPTER_BLOCK_ID
   readonly status: 'READY' | 'BLOCKED'
   readonly providerCount: number
-  readonly checks: readonly CodemindProviderAdapterSecurityCheck[]
+  readonly checks: readonly SymbolWrightProviderAdapterSecurityCheck[]
 }
 
-export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContract[] = [
+export const SYMBOLWRIGHT_PROVIDER_ADAPTERS: readonly SymbolWrightProviderAdapterContract[] = [
   {
     id: 'openai',
     displayName: 'OpenAI',
     credentialMode: 'server_vault',
-    endpointOwnership: 'codemind_server',
+    endpointOwnership: 'symbolwright_server',
     browserSafe: false,
     capabilities: ['chat', 'streaming', 'tool_use', 'structured_output'],
     defaultBaseUrl: 'https://api.openai.com/v1',
@@ -80,17 +81,17 @@ export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContrac
     id: 'anthropic',
     displayName: 'Anthropic',
     credentialMode: 'server_vault',
-    endpointOwnership: 'codemind_server',
+    endpointOwnership: 'symbolwright_server',
     browserSafe: false,
     capabilities: ['chat', 'streaming', 'tool_use'],
     defaultBaseUrl: 'https://api.anthropic.com',
-    operatorNotes: ['Keep Anthropic credentials behind the CodeMind gateway.'],
+    operatorNotes: ['Keep Anthropic credentials behind the SymbolWright gateway.'],
   },
   {
     id: 'google-gemini',
     displayName: 'Google Gemini',
     credentialMode: 'server_vault',
-    endpointOwnership: 'codemind_server',
+    endpointOwnership: 'symbolwright_server',
     browserSafe: false,
     capabilities: ['chat', 'streaming', 'structured_output'],
     defaultBaseUrl: 'https://generativelanguage.googleapis.com',
@@ -100,17 +101,17 @@ export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContrac
     id: 'groq',
     displayName: 'Groq',
     credentialMode: 'server_vault',
-    endpointOwnership: 'codemind_server',
+    endpointOwnership: 'symbolwright_server',
     browserSafe: false,
     capabilities: ['chat', 'streaming'],
     defaultBaseUrl: 'https://api.groq.com/openai/v1',
-    operatorNotes: ['Route through CodeMind so browsers never hold credentials.'],
+    operatorNotes: ['Route through SymbolWright so browsers never hold credentials.'],
   },
   {
     id: 'openrouter',
     displayName: 'OpenRouter',
     credentialMode: 'server_vault',
-    endpointOwnership: 'codemind_server',
+    endpointOwnership: 'symbolwright_server',
     browserSafe: false,
     capabilities: ['chat', 'streaming', 'structured_output'],
     defaultBaseUrl: 'https://openrouter.ai/api/v1',
@@ -120,7 +121,7 @@ export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContrac
     id: 'github-models',
     displayName: 'GitHub Models',
     credentialMode: 'server_vault',
-    endpointOwnership: 'codemind_server',
+    endpointOwnership: 'symbolwright_server',
     browserSafe: false,
     capabilities: ['chat', 'streaming'],
     operatorNotes: ['Use repository-scoped credentials from the server runtime.'],
@@ -129,7 +130,7 @@ export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContrac
     id: 'ollama',
     displayName: 'Ollama',
     credentialMode: 'local_runtime',
-    endpointOwnership: 'codemind_server',
+    endpointOwnership: 'symbolwright_server',
     browserSafe: false,
     capabilities: ['chat', 'streaming', 'local_runtime'],
     defaultBaseUrl: 'http://localhost:11434',
@@ -139,43 +140,43 @@ export const CODEMIND_PROVIDER_ADAPTERS: readonly CodemindProviderAdapterContrac
     id: 'deepseek',
     displayName: 'DeepSeek',
     credentialMode: 'server_vault',
-    endpointOwnership: 'codemind_server',
+    endpointOwnership: 'symbolwright_server',
     browserSafe: false,
     capabilities: ['chat', 'streaming', 'tool_use'],
     defaultBaseUrl: 'https://api.deepseek.com',
     operatorNotes: [
-      'OpenAI-compatible wire format; route through CodeMind so browsers never hold credentials.',
+      'OpenAI-compatible wire format; route through SymbolWright so browsers never hold credentials.',
     ],
   },
   {
     id: 'custom',
     displayName: 'Custom provider',
     credentialMode: 'request_scoped',
-    endpointOwnership: 'codemind_server',
+    endpointOwnership: 'symbolwright_server',
     browserSafe: false,
     capabilities: ['chat', 'streaming'],
     operatorNotes: ['Custom providers must route through policy and redaction gates.'],
   },
 ] as const
 
-export function getCodemindProviderAdapterRegistry(): readonly CodemindProviderAdapterContract[] {
-  return CODEMIND_PROVIDER_ADAPTERS
+export function getSymbolWrightProviderAdapterRegistry(): readonly SymbolWrightProviderAdapterContract[] {
+  return SYMBOLWRIGHT_PROVIDER_ADAPTERS
 }
 
-export function findCodemindProviderAdapter(
+export function findSymbolWrightProviderAdapter(
   providerId: string,
-): CodemindProviderAdapterContract | undefined {
-  return CODEMIND_PROVIDER_ADAPTERS.find((adapter) => adapter.id === providerId)
+): SymbolWrightProviderAdapterContract | undefined {
+  return SYMBOLWRIGHT_PROVIDER_ADAPTERS.find((adapter) => adapter.id === providerId)
 }
 
 export function assertProviderKeyNeverLeavesServer(
-  adapter: CodemindProviderAdapterContract,
-): CodemindProviderAdapterSecurityCheck {
-  if (adapter.endpointOwnership !== 'codemind_server') {
+  adapter: SymbolWrightProviderAdapterContract,
+): SymbolWrightProviderAdapterSecurityCheck {
+  if (adapter.endpointOwnership !== 'symbolwright_server') {
     return {
       providerId: adapter.id,
       status: 'FAIL',
-      detail: `${adapter.displayName} is not owned by the CodeMind server endpoint`,
+      detail: `${adapter.displayName} is not owned by the SymbolWright server endpoint`,
     }
   }
 
@@ -190,29 +191,29 @@ export function assertProviderKeyNeverLeavesServer(
   return {
     providerId: adapter.id,
     status: 'PASS',
-    detail: `${adapter.displayName} credentials stay behind the CodeMind server gateway`,
+    detail: `${adapter.displayName} credentials stay behind the SymbolWright server gateway`,
   }
 }
 
-export function buildProviderAdapterContractReport(): CodemindProviderAdapterContractReport {
-  const checks = CODEMIND_PROVIDER_ADAPTERS.map((adapter) =>
+export function buildProviderAdapterContractReport(): SymbolWrightProviderAdapterContractReport {
+  const checks = SYMBOLWRIGHT_PROVIDER_ADAPTERS.map((adapter) =>
     assertProviderKeyNeverLeavesServer(adapter),
   )
   const hasFailures = checks.some((check) => check.status === 'FAIL')
 
   return {
-    blockId: CODEMIND_PROVIDER_ADAPTER_BLOCK_ID,
+    blockId: SYMBOLWRIGHT_PROVIDER_ADAPTER_BLOCK_ID,
     status: hasFailures ? 'BLOCKED' : 'READY',
-    providerCount: CODEMIND_PROVIDER_ADAPTERS.length,
+    providerCount: SYMBOLWRIGHT_PROVIDER_ADAPTERS.length,
     checks,
   }
 }
 
 export function renderProviderAdapterContractReport(
-  report: CodemindProviderAdapterContractReport,
+  report: SymbolWrightProviderAdapterContractReport,
 ): string {
   return [
-    'CodeMind Provider Adapter Contract',
+    'SymbolWright Provider Adapter Contract',
     '',
     `Block: ${report.blockId}`,
     `Status: ${report.status}`,

@@ -60,7 +60,7 @@ export function createWiredSwarmDispatchTool(
       onResult?.(result)
 
       return [
-        'CodeMind swarm dispatch',
+        'SymbolWright swarm dispatch',
         '',
         `Agent: ${result.agentId} (${parsed.agentType})`,
         `Status: ${result.status.toUpperCase()}`,
@@ -80,7 +80,7 @@ export const swarmDispatchTool: RuntimeToolDefinition = {
     const parsed = parseSwarmDispatchInput(input)
 
     return [
-      'CodeMind swarm dispatch',
+      'SymbolWright swarm dispatch',
       '',
       `Agent type: ${parsed.agentType}`,
       `Goal: ${parsed.goal}`,

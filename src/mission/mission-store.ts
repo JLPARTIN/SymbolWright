@@ -20,7 +20,7 @@ import { isValidMissionId } from './mission-id.js'
 import { migrateMissionRecord } from './mission-migration.js'
 import { redactMissionRecord } from './mission-redaction.js'
 import type {
-  CodeMindMission,
+  SymbolWrightMission,
   MissionEvent,
   MissionListResult,
   MissionListSummary,
@@ -43,7 +43,7 @@ export class MissionCorruptError extends Error {
 }
 
 export interface MissionReadResult {
-  readonly mission?: CodeMindMission
+  readonly mission?: SymbolWrightMission
   readonly warnings: readonly MissionStoreWarning[]
 }
 
@@ -53,7 +53,7 @@ export interface MissionStoreOptions {
   readonly now?: () => Date
 }
 
-function missionSummary(mission: CodeMindMission): MissionListSummary {
+function missionSummary(mission: SymbolWrightMission): MissionListSummary {
   const latestValidation = mission.evidence.validationRuns.at(-1)
   const latestPr = mission.references.pullRequestUrls.at(-1)
   return {
@@ -104,7 +104,7 @@ export class MissionStore {
 
   public constructor(options: MissionStoreOptions) {
     this.workspaceRoot = path.resolve(options.workspaceRoot)
-    this.missionsRoot = path.join(this.workspaceRoot, '.codemind', 'missions')
+    this.missionsRoot = path.join(this.workspaceRoot, '.symbolwright', 'missions')
     this.indexPath = path.join(this.missionsRoot, 'index.json')
     this.env = options.env ?? process.env
     this.now = options.now ?? (() => new Date())
@@ -115,7 +115,7 @@ export class MissionStore {
     return this.missionsRoot
   }
 
-  public createMission(mission: CodeMindMission): void {
+  public createMission(mission: SymbolWrightMission): void {
     const missionDir = this.resolveMissionDir(mission.id)
     if (existsSync(missionDir)) throw new Error(`Mission already exists: ${mission.id}`)
     mkdirSync(path.join(missionDir, 'artifacts'), { recursive: true, mode: 0o700 })
@@ -124,14 +124,14 @@ export class MissionStore {
     this.updateIndex((ids) => [...ids, mission.id])
   }
 
-  public writeMission(mission: CodeMindMission): void {
+  public writeMission(mission: SymbolWrightMission): void {
     const missionDir = this.resolveMissionDir(mission.id)
     if (!existsSync(missionDir)) throw new Error(`Mission not found: ${mission.id}`)
     this.writeMissionFiles(mission)
     this.updateIndex((ids) => (ids.includes(mission.id) ? ids : [...ids, mission.id]))
   }
 
-  public readMission(missionId: string): CodeMindMission | undefined {
+  public readMission(missionId: string): SymbolWrightMission | undefined {
     return this.readMissionResult(missionId).mission
   }
 
@@ -236,7 +236,7 @@ export class MissionStore {
     this.updateIndex((ids) => ids.filter((id) => id !== missionId))
   }
 
-  private writeMissionFiles(mission: CodeMindMission): void {
+  private writeMissionFiles(mission: SymbolWrightMission): void {
     const sanitized = redactMissionRecord(mission, this.env)
     this.atomicWriteJson(this.missionPath(mission.id), sanitized)
     this.atomicWriteJson(path.join(this.resolveMissionDir(mission.id), 'conversation.json'), {

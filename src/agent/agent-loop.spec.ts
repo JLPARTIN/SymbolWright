@@ -325,8 +325,8 @@ describe('agent-loop', () => {
       }
 
       const priorMessages = [
-        { role: 'user' as const, content: 'What is CodeMind?' },
-        { role: 'assistant' as const, content: 'CodeMind is a governed AI coding agent.' },
+        { role: 'user' as const, content: 'What is SymbolWright?' },
+        { role: 'assistant' as const, content: 'SymbolWright is a governed AI coding agent.' },
       ]
 
       const result = await runAgentLoop(
@@ -339,10 +339,10 @@ describe('agent-loop', () => {
 
       expect(result.status).toBe('completed')
       expect(capturedMessages).toHaveLength(3)
-      expect(capturedMessages[0]).toEqual({ role: 'user', content: 'What is CodeMind?' })
+      expect(capturedMessages[0]).toEqual({ role: 'user', content: 'What is SymbolWright?' })
       expect(capturedMessages[1]).toEqual({
         role: 'assistant',
-        content: 'CodeMind is a governed AI coding agent.',
+        content: 'SymbolWright is a governed AI coding agent.',
       })
       expect(capturedMessages[2]).toEqual({ role: 'user', content: 'Tell me more.' })
     })

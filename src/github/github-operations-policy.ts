@@ -118,7 +118,7 @@ export function createGitHubOperationsPolicy(
 }
 
 export function renderGitHubOperationsPolicyReport(policy: GitHubOperationsPolicy): string {
-  const lines = ['CodeMind GitHub operations policy', '']
+  const lines = ['SymbolWright GitHub operations policy', '']
   for (const evaluation of policy.evaluateAll()) {
     lines.push(`- ${evaluation.operation}: ${evaluation.allowed ? 'ALLOWED' : 'BLOCKED'}`)
     lines.push(`    ${evaluation.reason}`)

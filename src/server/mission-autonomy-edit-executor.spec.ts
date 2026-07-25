@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { CodeMindMission } from '../mission/mission-types.js'
+import type { SymbolWrightMission } from '../mission/mission-types.js'
 import { ProviderRuntimeOverrideStore } from '../providers/provider-runtime-overrides.js'
 import { createMissionAutonomyEditExecutor } from './mission-autonomy-edit-executor.js'
 
@@ -26,7 +26,7 @@ describe('createMissionAutonomyEditExecutor', () => {
     expect(executor?.execute).toBeTypeOf('function')
   })
 
-  it('rejects provider identifiers that are not supported by CodeMind', () => {
+  it('rejects provider identifiers that are not supported by SymbolWright', () => {
     expect(() =>
       createMissionAutonomyEditExecutor({
         mission: mission('unknown-provider'),
@@ -37,7 +37,7 @@ describe('createMissionAutonomyEditExecutor', () => {
   })
 })
 
-function mission(activeProviderId?: string): CodeMindMission {
+function mission(activeProviderId?: string): SymbolWrightMission {
   const timestamp = '2026-07-22T22:00:00.000Z'
   return {
     schemaVersion: 1,
@@ -50,7 +50,7 @@ function mission(activeProviderId?: string): CodeMindMission {
     updatedAt: timestamp,
     lastOpenedAt: timestamp,
     repository: {
-      rootPath: '/tmp/codemind-mission-provider-test',
+      rootPath: '/tmp/symbolwright-mission-provider-test',
       modifiedPaths: [],
     },
     agent: {

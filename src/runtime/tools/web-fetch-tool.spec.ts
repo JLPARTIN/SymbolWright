@@ -30,10 +30,10 @@ describe('web-fetch-tool', () => {
   })
 
   beforeEach(() => {
-    workspaceDir = mkdtempSync(join(tmpdir(), 'codemind-web-fetch-tool-'))
-    mkdirSync(join(workspaceDir, '.codemind'), { recursive: true })
+    workspaceDir = mkdtempSync(join(tmpdir(), 'symbolwright-web-fetch-tool-'))
+    mkdirSync(join(workspaceDir, '.symbolwright'), { recursive: true })
     writeFileSync(
-      join(workspaceDir, '.codemind', 'config.json'),
+      join(workspaceDir, '.symbolwright', 'config.json'),
       JSON.stringify({ web: { fetch: { allowPrivateNetwork: true } } }),
     )
   })

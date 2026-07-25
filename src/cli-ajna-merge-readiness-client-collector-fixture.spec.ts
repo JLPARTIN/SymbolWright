@@ -9,7 +9,7 @@ import { renderAjnaMergeReadinessClientCollectorFixtureForFile } from './cli-ajn
 const tempDirs: string[] = []
 
 function writeRequestFile(input: unknown): string {
-  const rootDir = mkdtempSync(join(tmpdir(), 'codemind-ajna-client-readiness-'))
+  const rootDir = mkdtempSync(join(tmpdir(), 'symbolwright-ajna-client-readiness-'))
   tempDirs.push(rootDir)
   const inputPath = join(rootDir, 'request.json')
   writeFileSync(inputPath, JSON.stringify(input), 'utf-8')
@@ -25,7 +25,7 @@ afterEach(() => {
 describe('renderAjnaMergeReadinessClientCollectorFixtureForFile', () => {
   it('renders merge-readiness through the default fake client bridge', async () => {
     const output = await renderAjnaMergeReadinessClientCollectorFixtureForFile(
-      writeRequestFile({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 72 }),
+      writeRequestFile({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 72 }),
     )
 
     expect(output).toContain('Ajna merge-readiness')
@@ -49,7 +49,7 @@ describe('renderAjnaMergeReadinessClientCollectorFixtureForFile', () => {
     }
 
     const output = await renderAjnaMergeReadinessClientCollectorFixtureForFile(
-      writeRequestFile({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 73 }),
+      writeRequestFile({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 73 }),
       client,
     )
 

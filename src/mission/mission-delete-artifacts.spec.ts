@@ -13,10 +13,10 @@ describe('mission deletion boundary', () => {
     const root = mkdtempSync(join(tmpdir(), 'mission-delete-boundary-'))
     roots.push(root)
     writeFileSync(join(root, 'repository.txt'), 'keep')
-    mkdirSync(join(root, '.codemind', 'checkpoints'), { recursive: true })
-    mkdirSync(join(root, '.codemind', 'memory'), { recursive: true })
-    writeFileSync(join(root, '.codemind', 'checkpoints', 'keep.json'), '{}')
-    writeFileSync(join(root, '.codemind', 'memory', 'keep.db'), 'memory')
+    mkdirSync(join(root, '.symbolwright', 'checkpoints'), { recursive: true })
+    mkdirSync(join(root, '.symbolwright', 'memory'), { recursive: true })
+    writeFileSync(join(root, '.symbolwright', 'checkpoints', 'keep.json'), '{}')
+    writeFileSync(join(root, '.symbolwright', 'memory', 'keep.db'), 'memory')
     const service = new MissionService({
       workspaceRoot: root,
       generateId: () => 'mission_11111111-1111-4111-8111-111111111111',
@@ -29,12 +29,12 @@ describe('mission deletion boundary', () => {
       runtimeMode: 'READ_ONLY',
       labels: [],
     })
-    const missionDir = join(root, '.codemind', 'missions', mission.id)
+    const missionDir = join(root, '.symbolwright', 'missions', mission.id)
     writeFileSync(join(missionDir, 'artifacts', 'export.json'), '{}')
     service.delete(mission.id, mission.revision, true)
     expect(existsSync(missionDir)).toBe(false)
     expect(existsSync(join(root, 'repository.txt'))).toBe(true)
-    expect(existsSync(join(root, '.codemind', 'checkpoints', 'keep.json'))).toBe(true)
-    expect(existsSync(join(root, '.codemind', 'memory', 'keep.db'))).toBe(true)
+    expect(existsSync(join(root, '.symbolwright', 'checkpoints', 'keep.json'))).toBe(true)
+    expect(existsSync(join(root, '.symbolwright', 'memory', 'keep.db'))).toBe(true)
   })
 })

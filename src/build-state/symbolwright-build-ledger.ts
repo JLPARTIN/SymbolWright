@@ -100,7 +100,7 @@ export function checkBuildLedgerConsistency(
     if (phase.state === 'COMPLETE') {
       if (!runtimeDocsContent.includes(`Phase ${phase.id}: COMPLETE`)) {
         findings.push({
-          source: 'docs/runtime/CODEMIND_RUNTIME_BUILD_STATE.md',
+          source: 'docs/runtime/SYMBOLWRIGHT_RUNTIME_BUILD_STATE.md',
           issue: `Runtime docs missing Phase ${phase.id} as COMPLETE`,
         })
       }
@@ -112,7 +112,7 @@ export function checkBuildLedgerConsistency(
       const nextPhaseSection = runtimeDocsContent.split('Next runtime phase')[1]
       if (nextPhaseSection !== undefined && nextPhaseSection.includes('Phase')) {
         findings.push({
-          source: 'docs/runtime/CODEMIND_RUNTIME_BUILD_STATE.md',
+          source: 'docs/runtime/SYMBOLWRIGHT_RUNTIME_BUILD_STATE.md',
           issue: 'Runtime docs claim a next phase exists but all phases are complete',
         })
       }
@@ -128,7 +128,7 @@ export function checkBuildLedgerConsistency(
 
 export function renderBuildLedgerSummary(summary: BuildLedgerSummary): string {
   const lines = [
-    'CodeMind Build Ledger',
+    'SymbolWright Build Ledger',
     '',
     `Total phases: ${summary.totalPhases}`,
     `Completed: ${summary.completedPhases}`,

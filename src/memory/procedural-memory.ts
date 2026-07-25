@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 
-const DEFAULT_PROCEDURES_PATH = resolve(process.cwd(), '.codemind/memory/procedures.yaml')
+const DEFAULT_PROCEDURES_PATH = resolve(process.cwd(), '.symbolwright/memory/procedures.yaml')
 
 export interface ProceduralSchema {
   readonly user_preferences: readonly string[]

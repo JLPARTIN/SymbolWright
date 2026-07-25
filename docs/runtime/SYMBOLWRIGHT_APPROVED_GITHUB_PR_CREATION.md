@@ -1,4 +1,4 @@
-# CodeMind Approved GitHub PR Creation
+# SymbolWright Approved GitHub PR Creation
 
 Phase X adds the first GitHub pull request creation execution seam.
 

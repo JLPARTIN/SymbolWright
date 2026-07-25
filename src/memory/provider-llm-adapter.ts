@@ -1,8 +1,8 @@
-import type { LLMProvider as CodemindLLMProvider } from '../provider/provider.types.js'
+import type { LLMProvider as SymbolWrightLLMProvider } from '../provider/provider.types.js'
 import type { LLMProvider as MemoryLLMProvider } from './consolidation-engine.js'
 
-/** Adapts CodeMind's streaming provider interface to memory's simple generate() contract. */
-export function createMemoryLlmAdapter(provider: CodemindLLMProvider): MemoryLLMProvider {
+/** Adapts SymbolWright's streaming provider interface to memory's simple generate() contract. */
+export function createMemoryLlmAdapter(provider: SymbolWrightLLMProvider): MemoryLLMProvider {
   return {
     async generate(prompt: string): Promise<string> {
       let text = ''

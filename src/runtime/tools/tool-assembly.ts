@@ -1,5 +1,9 @@
-import type { CodemindToolName, RuntimeToolCapability, RuntimeToolDefinition } from '../types.js'
-import { ALL_CODEMIND_TOOL_NAMES } from '../types.js'
+import type {
+  SymbolWrightToolName,
+  RuntimeToolCapability,
+  RuntimeToolDefinition,
+} from '../types.js'
+import { ALL_SYMBOLWRIGHT_TOOL_NAMES } from '../types.js'
 
 import { readFileTool } from './read-file-tool.js'
 import { listFilesTool } from './list-files-tool.js'
@@ -89,7 +93,7 @@ const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   sandboxExecuteTool,
 ]
 
-export const DYNAMICALLY_WIRED_TOOLS: readonly CodemindToolName[] = [
+export const DYNAMICALLY_WIRED_TOOLS: readonly SymbolWrightToolName[] = [
   'plan_goal',
   'github_live_read_pr',
   'github_live_read_ci',
@@ -126,19 +130,19 @@ export function assertToolAssemblyIntegrity(): void {
   }
 
   const dynamicSet = new Set<string>(DYNAMICALLY_WIRED_TOOLS)
-  const allNamesSet = new Set<string>(ALL_CODEMIND_TOOL_NAMES)
+  const allNamesSet = new Set<string>(ALL_SYMBOLWRIGHT_TOOL_NAMES)
 
-  for (const name of ALL_CODEMIND_TOOL_NAMES) {
+  for (const name of ALL_SYMBOLWRIGHT_TOOL_NAMES) {
     if (!dynamicSet.has(name) && !nameSet.has(name)) {
       throw new Error(
-        `CodemindToolName "${name}" is missing from tool assembly (and is not dynamically wired)`,
+        `SymbolWrightToolName "${name}" is missing from tool assembly (and is not dynamically wired)`,
       )
     }
   }
 
   for (const name of names) {
     if (!allNamesSet.has(name)) {
-      throw new Error(`Tool "${name}" in assembly is not a valid CodemindToolName`)
+      throw new Error(`Tool "${name}" in assembly is not a valid SymbolWrightToolName`)
     }
   }
 }

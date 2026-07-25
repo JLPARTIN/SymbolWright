@@ -49,7 +49,7 @@ export class JsonAutonomousMissionReleaseStore implements AutonomousMissionRelea
   readonly #root: string
 
   constructor(workspaceRoot: string) {
-    this.#root = path.resolve(workspaceRoot, '.codemind', 'autonomy', 'releases')
+    this.#root = path.resolve(workspaceRoot, '.symbolwright', 'autonomy', 'releases')
   }
 
   async load(missionId: string): Promise<AutonomousMissionReleaseRecord | undefined> {

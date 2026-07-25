@@ -19,7 +19,7 @@ describe('Missions view', () => {
     expect(script).toContain('switch-recorded-branch')
     expect(script).toContain('activeMissionReadOnly')
     expect(script).toContain('result.status === 409')
-    expect(script).toContain('codemind_active_mission_id')
+    expect(script).toContain('symbolwright_active_mission_id')
   })
 
   it('escapes mission-controlled content rather than injecting raw payload html', () => {

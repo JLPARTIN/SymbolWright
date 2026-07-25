@@ -1,4 +1,4 @@
-# CodeMind Read-only Runtime Loop
+# SymbolWright Read-only Runtime Loop
 
 This document records Phase C bounded read-only runtime loop activation.
 

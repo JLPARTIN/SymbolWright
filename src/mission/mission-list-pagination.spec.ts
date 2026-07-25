@@ -4,9 +4,9 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { MissionStore } from './mission-store.js'
-import type { CodeMindMission } from './mission-types.js'
+import type { SymbolWrightMission } from './mission-types.js'
 
-function mission(id: string, updatedAt: string): CodeMindMission {
+function mission(id: string, updatedAt: string): SymbolWrightMission {
   return {
     schemaVersion: 1,
     revision: 1,

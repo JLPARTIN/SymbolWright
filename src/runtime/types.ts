@@ -10,10 +10,14 @@ import type { SandboxService } from '../sandbox/sandbox-service.js'
 import type { SandboxExecutionRequest, SandboxExecutionResult } from '../sandbox/sandbox-types.js'
 
 /** Supported execution modes from plan-only to approved execution. */
-export type CodemindRuntimeMode = 'PLAN_ONLY' | 'READ_ONLY' | 'PROPOSAL_ONLY' | 'APPROVED_EXECUTION'
+export type SymbolWrightRuntimeMode =
+  | 'PLAN_ONLY'
+  | 'READ_ONLY'
+  | 'PROPOSAL_ONLY'
+  | 'APPROVED_EXECUTION'
 
 /** Union of all registered tool names in the runtime. */
-export type CodemindToolName =
+export type SymbolWrightToolName =
   | 'plan_goal'
   | 'list_files'
   | 'read_file'
@@ -132,7 +136,7 @@ export interface RuntimeApproval {
 
 /** Immutable snapshot of the active runtime policy governing tool access. */
 export interface RuntimePolicySnapshot {
-  readonly mode: CodemindRuntimeMode
+  readonly mode: SymbolWrightRuntimeMode
   readonly allowNetwork: boolean
   /**
    * Read-only info access — doc/package lookups, web fetch/search, repo context.
@@ -172,13 +176,13 @@ export interface RuntimeToolContext {
     result: SandboxExecutionResult,
   ) => void
   readonly memoryTools?: AgentMemoryTools
-  /** Groups checkpoints under `.codemind/checkpoints/<sessionId>/`. Auto-generated when absent. */
+  /** Groups checkpoints under `.symbolwright/checkpoints/<sessionId>/`. Auto-generated when absent. */
   readonly sessionId?: string
 }
 
 /** Defines a runtime tool with name, capability, and typed execute function. */
 export interface RuntimeToolDefinition<TInput = unknown> {
-  readonly name: CodemindToolName
+  readonly name: SymbolWrightToolName
   readonly description: string
   readonly capability: RuntimeToolCapability
   readonly execute: (input: TInput, context: RuntimeToolContext) => Promise<string>
@@ -205,8 +209,8 @@ export interface RuntimeLoopResult {
   readonly iterations: number
 }
 
-/** Compile-time-verified array of every CodemindToolName. */
-export const ALL_CODEMIND_TOOL_NAMES = [
+/** Compile-time-verified array of every SymbolWrightToolName. */
+export const ALL_SYMBOLWRIGHT_TOOL_NAMES = [
   'plan_goal',
   'list_files',
   'read_file',
@@ -255,8 +259,8 @@ export const ALL_CODEMIND_TOOL_NAMES = [
   'skill_run',
   'sandbox_list_runtimes',
   'sandbox_execute',
-] as const satisfies readonly CodemindToolName[]
+] as const satisfies readonly SymbolWrightToolName[]
 
-type _AssertAllToolNames = CodemindToolName extends (typeof ALL_CODEMIND_TOOL_NAMES)[number]
+type _AssertAllToolNames = SymbolWrightToolName extends (typeof ALL_SYMBOLWRIGHT_TOOL_NAMES)[number]
   ? true
   : never

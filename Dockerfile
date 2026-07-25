@@ -18,7 +18,7 @@ RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
 COPY --from=build /app/dist/ ./dist/
 
-RUN addgroup -S codemind && adduser -S codemind -G codemind
-USER codemind
+RUN addgroup -S symbolwright && adduser -S symbolwright -G symbolwright
+USER symbolwright
 
 ENTRYPOINT ["node", "dist/cli.js"]

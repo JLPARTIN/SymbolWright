@@ -7,7 +7,7 @@ export interface McpCallToolInput {
   readonly tool: string
   readonly arguments?: Readonly<Record<string, unknown>>
   readonly timeoutMs?: number
-  /** Overrides the default `.codemind/mcp.json` lookup — mainly for tests/fixtures. */
+  /** Overrides the default `.symbolwright/mcp.json` lookup — mainly for tests/fixtures. */
   readonly configPath?: string
 }
 
@@ -40,7 +40,7 @@ function parseMcpCallInput(input: unknown): McpCallToolInput {
 
 export function renderMcpCallEvidence(evidence: McpCallEvidence): string {
   const lines = [
-    'CodeMind mcp_call',
+    'SymbolWright mcp_call',
     '',
     `Server: ${evidence.server}`,
     `Tool: ${evidence.toolName}`,
@@ -90,7 +90,8 @@ export async function executeMcpCallTool(
 
 export const mcpCallTool: RuntimeToolDefinition = {
   name: 'mcp_call',
-  description: 'Invoke a tool on a configured MCP stdio server through the CodeMind policy gate.',
+  description:
+    'Invoke a tool on a configured MCP stdio server through the SymbolWright policy gate.',
   capability: 'MCP_TOOL',
   execute: async (input, context) => executeMcpCallTool(parseMcpCallInput(input), context),
 }

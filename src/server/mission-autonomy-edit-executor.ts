@@ -4,10 +4,10 @@ import { AgentLoopAutonomousEditExecutor } from '../autonomy/agent-loop-edit-exe
 import { RepositorySemanticIndexStore } from '../autonomy/repository-semantic-index-store.js'
 import type { AutonomousEditTaskExecutor } from '../autonomy/runtime-mission-task-executor.js'
 import { TransactionalRepositoryEdit } from '../autonomy/transactional-repository-edit.js'
-import type { CodeMindMission } from '../mission/mission-types.js'
+import type { SymbolWrightMission } from '../mission/mission-types.js'
 import {
-  CODEMIND_SUPPORTED_PROVIDER_IDS,
-  type CodemindProviderId,
+  SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS,
+  type SymbolWrightProviderId,
 } from '../providers/provider-adapter-contract.js'
 import { loadProviderGatewayConfig, type ProviderGatewayEnv } from '../providers/provider-config.js'
 import {
@@ -17,10 +17,10 @@ import {
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
 import type { RuntimeToolContext } from '../runtime/types.js'
-import { resolveAgentLlmProvider } from './codemind-agent-provider.js'
+import { resolveAgentLlmProvider } from './symbolwright-agent-provider.js'
 
 export interface MissionAutonomyEditExecutorOptions {
-  readonly mission: CodeMindMission
+  readonly mission: SymbolWrightMission
   readonly env: ProviderGatewayEnv
   readonly overrideStore: ProviderRuntimeOverrideStore
   readonly workspaceRoot?: string
@@ -37,11 +37,11 @@ export function createMissionAutonomyEditExecutor(
   const providerId = options.mission.agent.activeProviderId
   // Preserve blocked write-task behavior until the operator selects a real provider.
   if (providerId === undefined) return undefined
-  if (!(CODEMIND_SUPPORTED_PROVIDER_IDS as readonly string[]).includes(providerId)) {
+  if (!(SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS as readonly string[]).includes(providerId)) {
     throw new Error(`Unsupported mission provider: ${providerId}`)
   }
 
-  const typedProviderId = providerId as CodemindProviderId
+  const typedProviderId = providerId as SymbolWrightProviderId
   const config = applyProviderRuntimeOverrides(
     loadProviderGatewayConfig(options.env),
     options.overrideStore.snapshot(),
@@ -61,7 +61,7 @@ export function createMissionAutonomyEditExecutor(
     options.workspaceRoot === undefined
       ? undefined
       : new RepositorySemanticIndexStore(
-          path.join(path.resolve(options.workspaceRoot), '.codemind'),
+          path.join(path.resolve(options.workspaceRoot), '.symbolwright'),
         )
 
   return new AgentLoopAutonomousEditExecutor({

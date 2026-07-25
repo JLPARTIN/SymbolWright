@@ -1,4 +1,4 @@
-# CodeMind Ajna Docs Hub
+# SymbolWright Ajna Docs Hub
 
 This hub points operators to the current Ajna planning docs, build docs, and local fixture command docs.
 
@@ -7,8 +7,8 @@ Use it when you need one place to understand what Ajna is, what is already avail
 ## Start here
 
 ```text
-1. docs/ajna/CODEMIND_AJNA_ROADMAP.md
-2. docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
+1. docs/ajna/SYMBOLWRIGHT_AJNA_ROADMAP.md
+2. docs/ajna/SYMBOLWRIGHT_AJNA_BUILD_PLAN.md
 3. docs/ajna-fixture-command-index.md
 ```
 
@@ -53,4 +53,4 @@ merge actions
 uncontrolled repository mutation
 ```
 
-Future live integrations should remain behind CodeMind policy gates and explicit operator approval.
+Future live integrations should remain behind SymbolWright policy gates and explicit operator approval.

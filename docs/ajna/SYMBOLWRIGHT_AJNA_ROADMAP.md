@@ -1,28 +1,28 @@
-# CodeMind - Ajna Roadmap
+# SymbolWright - Ajna Roadmap
 
-**Capability name:** CodeMind - Ajna  
-**Internal label:** `CODEMIND_AJNA_REVIEW_CORTEX`  
+**Capability name:** SymbolWright - Ajna  
+**Internal label:** `SYMBOLWRIGHT_AJNA_REVIEW_CORTEX`  
 **Preferred display name:** Ajna Review Cortex  
 **Primary tagline:** See beyond the code.  
 **GitHub / PR subtitle:** Expand your vision beyond the diff.  
-**Purpose:** Define Ajna as CodeMind's third-eye PR insight and merge-readiness capability.
+**Purpose:** Define Ajna as SymbolWright's third-eye PR insight and merge-readiness capability.
 
 ---
 
 ## 1. Identity
 
-Ajna is a native CodeMind capability, not a separate agent and not the whole CodeMind product.
+Ajna is a native SymbolWright capability, not a separate agent and not the whole SymbolWright product.
 
-Ajna acts as CodeMind's review intelligence layer: the third eye that sees hidden risks across diffs, tests, architecture, security posture, dependency changes, and repository history before code is merged.
+Ajna acts as SymbolWright's review intelligence layer: the third eye that sees hidden risks across diffs, tests, architecture, security posture, dependency changes, and repository history before code is merged.
 
-CodeMind plans, writes, repairs, validates, and prepares code.
+SymbolWright plans, writes, repairs, validates, and prepares code.
 
 Ajna reviews, investigates, compares, and warns.
 
 Together they form the core coding-agent loop:
 
 ```txt
-CodeMind builds and repairs.
+SymbolWright builds and repairs.
 Ajna sees deeper before merge.
 ```
 
@@ -79,7 +79,7 @@ operator next-step recommendation
 Ajna is not:
 
 ```txt
-the whole CodeMind platform
+the whole SymbolWright platform
 a code writer by itself
 a merge authority
 a CI bypass
@@ -105,7 +105,7 @@ AJNA-6: CI/test evidence adapter
 AJNA-7: GitHub PR review draft renderer
 AJNA-8: Architecture drift detector
 AJNA-9: Security-sensitive path detector
-AJNA-10: CodeMind write/repair feedback loop
+AJNA-10: SymbolWright write/repair feedback loop
 AJNA-11: AELIB external adapter contract
 ```
 
@@ -147,24 +147,24 @@ UNKNOWN
 
 ---
 
-## 8. CodeMind Interaction
+## 8. SymbolWright Interaction
 
-Ajna should feed CodeMind with review intelligence.
+Ajna should feed SymbolWright with review intelligence.
 
 Example loop:
 
 ```txt
-operator asks CodeMind to fix a bug
+operator asks SymbolWright to fix a bug
   ↓
-CodeMind scans and plans
+SymbolWright scans and plans
   ↓
-CodeMind proposes or applies approved patch
+SymbolWright proposes or applies approved patch
   ↓
 Ajna reviews the patch/PR
   ↓
 Ajna flags hidden risks
   ↓
-CodeMind repairs or adds tests
+SymbolWright repairs or adds tests
   ↓
 Ajna reassesses merge-readiness
 ```
@@ -182,15 +182,15 @@ AELIB operator request
   ↓
 AELIB governed external capability adapter
   ↓
-CodeMind / Ajna review call
+SymbolWright / Ajna review call
   ↓
 AELIB receives review summary and evidence metadata
 ```
 
-AELIB remains the synthetic brain. CodeMind remains the coding-agent platform. Ajna remains CodeMind's review cortex.
+AELIB remains the synthetic brain. SymbolWright remains the coding-agent platform. Ajna remains SymbolWright's review cortex.
 
 ---
 
 ## 10. Final Rule
 
-Ajna must help CodeMind see what ordinary diff review misses, while preserving operator approval, evidence discipline, and merge safety.
+Ajna must help SymbolWright see what ordinary diff review misses, while preserving operator approval, evidence discipline, and merge safety.

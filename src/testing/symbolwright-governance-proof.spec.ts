@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  buildCodemindGovernanceProofReport,
-  CODEMIND_GOVERNANCE_PROOF_BLOCK_ID,
-  CODEMIND_GOVERNANCE_PROOF_PHASE_ID,
-  CODEMIND_GOVERNANCE_PROOF_PR_ID,
-} from './codemind-governance-proof.js'
-import type { CodemindPermissionRequest } from '../permissions/codemind-permission.types.js'
+  buildSymbolWrightGovernanceProofReport,
+  SYMBOLWRIGHT_GOVERNANCE_PROOF_BLOCK_ID,
+  SYMBOLWRIGHT_GOVERNANCE_PROOF_PHASE_ID,
+  SYMBOLWRIGHT_GOVERNANCE_PROOF_PR_ID,
+} from './symbolwright-governance-proof.js'
+import type { SymbolWrightPermissionRequest } from '../permissions/symbolwright-permission.types.js'
 
 function makeRequest(
-  overrides: Partial<CodemindPermissionRequest> = {},
-): CodemindPermissionRequest {
+  overrides: Partial<SymbolWrightPermissionRequest> = {},
+): SymbolWrightPermissionRequest {
   return {
     requestId: 'req-001',
     sessionId: 'sess-001',
@@ -24,9 +24,9 @@ function makeRequest(
   }
 }
 
-describe('CodeMind Governance Proof', () => {
+describe('SymbolWright Governance Proof', () => {
   it('emits canonical metadata and keeps mutation flags false', () => {
-    const report = buildCodemindGovernanceProofReport({
+    const report = buildSymbolWrightGovernanceProofReport({
       testCases: [
         {
           request: makeRequest(),
@@ -35,16 +35,16 @@ describe('CodeMind Governance Proof', () => {
       ],
     })
 
-    expect(report.blockId).toBe(CODEMIND_GOVERNANCE_PROOF_BLOCK_ID)
-    expect(report.prId).toBe(CODEMIND_GOVERNANCE_PROOF_PR_ID)
-    expect(report.phaseId).toBe(CODEMIND_GOVERNANCE_PROOF_PHASE_ID)
+    expect(report.blockId).toBe(SYMBOLWRIGHT_GOVERNANCE_PROOF_BLOCK_ID)
+    expect(report.prId).toBe(SYMBOLWRIGHT_GOVERNANCE_PROOF_PR_ID)
+    expect(report.phaseId).toBe(SYMBOLWRIGHT_GOVERNANCE_PROOF_PHASE_ID)
     expect(report.mutationAllowed).toBe(false)
     expect(report.githubWriteAllowed).toBe(false)
     expect(report.providerInvocationAllowed).toBe(false)
   })
 
   it('returns GOVERNANCE_PROOF_READY when all test cases pass', () => {
-    const report = buildCodemindGovernanceProofReport({
+    const report = buildSymbolWrightGovernanceProofReport({
       testCases: [
         {
           request: makeRequest({ toolCategory: 'FILE_READER', operatorApproved: false }),
@@ -68,7 +68,7 @@ describe('CodeMind Governance Proof', () => {
   })
 
   it('returns GOVERNANCE_PROOF_INVALID when a test case fails', () => {
-    const report = buildCodemindGovernanceProofReport({
+    const report = buildSymbolWrightGovernanceProofReport({
       testCases: [
         {
           request: makeRequest({ toolCategory: 'FILE_READER', operatorApproved: false }),
@@ -83,7 +83,7 @@ describe('CodeMind Governance Proof', () => {
   })
 
   it('returns GOVERNANCE_PROOF_BLOCKED when blocking notes are present', () => {
-    const report = buildCodemindGovernanceProofReport({
+    const report = buildSymbolWrightGovernanceProofReport({
       testCases: [
         {
           request: makeRequest(),
@@ -99,7 +99,7 @@ describe('CodeMind Governance Proof', () => {
   })
 
   it('repo mutation is blocked without operator approval', () => {
-    const report = buildCodemindGovernanceProofReport({
+    const report = buildSymbolWrightGovernanceProofReport({
       testCases: [
         {
           request: makeRequest({
@@ -116,7 +116,7 @@ describe('CodeMind Governance Proof', () => {
   })
 
   it('protected path hit escalates disposition', () => {
-    const report = buildCodemindGovernanceProofReport({
+    const report = buildSymbolWrightGovernanceProofReport({
       testCases: [
         {
           request: makeRequest({
@@ -135,7 +135,7 @@ describe('CodeMind Governance Proof', () => {
   })
 
   it('resolves the highest disposition across all case results', () => {
-    const report = buildCodemindGovernanceProofReport({
+    const report = buildSymbolWrightGovernanceProofReport({
       testCases: [
         {
           request: makeRequest({
@@ -162,8 +162,8 @@ describe('CodeMind Governance Proof', () => {
     const input = {
       testCases: [{ request: makeRequest(), expectedDisposition: 'ASK' as const }],
     }
-    const r1 = buildCodemindGovernanceProofReport(input)
-    const r2 = buildCodemindGovernanceProofReport(input)
+    const r1 = buildSymbolWrightGovernanceProofReport(input)
+    const r2 = buildSymbolWrightGovernanceProofReport(input)
 
     expect(r1.summary).toBe(r2.summary)
     expect(r1.status).toBe(r2.status)

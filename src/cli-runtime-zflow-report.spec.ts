@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { renderRuntimeZflowReport } from './cli-runtime-zflow-report.js'
 
 function makeWorkspace(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-zflow-report-cli-'))
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-zflow-report-cli-'))
 }
 
 function writeFixture(workspace: string, fixture: unknown): string {
@@ -22,9 +22,9 @@ const baseFixture = {
   result: {
     mode: 'prepare-pr',
     localOutput: 'completed',
-    prOutput: 'CodeMind GitHub PR creation\n\nOutcome: DRY_RUN',
-    collaborationOutput: 'CodeMind PR collaboration\n\nOutcome: DRY_RUN',
-    recoveryOutput: 'CodeMind recovery change ledger\n\nChanges: 1',
+    prOutput: 'SymbolWright GitHub PR creation\n\nOutcome: DRY_RUN',
+    collaborationOutput: 'SymbolWright PR collaboration\n\nOutcome: DRY_RUN',
+    recoveryOutput: 'SymbolWright recovery change ledger\n\nChanges: 1',
     rollbackOutput: 'Rollback plan: Recover Zflow preview\n\n1. src/generated.ts',
   },
   readiness: {
@@ -39,7 +39,7 @@ describe('renderRuntimeZflowReport', () => {
     const fixturePath = writeFixture(workspace, baseFixture)
     const output = await renderRuntimeZflowReport(fixturePath, workspace)
 
-    expect(output).toContain('# CodeMind Zflow Execution Report')
+    expect(output).toContain('# SymbolWright Zflow Execution Report')
     expect(output).toContain('Report ID: report-1')
     expect(output).toContain('Readiness: READY_FOR_OPERATOR_REVIEW')
   })

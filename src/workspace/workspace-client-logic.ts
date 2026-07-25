@@ -16,7 +16,7 @@ export function slugifyWorkspaceName(value: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9_.-]+/g, '-')
     .replace(/^-+|-+$/g, '')
-  return slug || 'codemind-workspace'
+  return slug || 'symbolwright-workspace'
 }
 
 export function safeWorkspaceProjectPath(path: string): string {

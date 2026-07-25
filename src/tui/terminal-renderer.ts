@@ -95,7 +95,7 @@ export function createTerminalRenderer(
 
           process.stderr.write(
             `\n${dim('---')}\n` +
-              `${cyan('CodeMind')} | ${statusText} in ${event.totalIterations} iteration${event.totalIterations === 1 ? '' : 's'}\n` +
+              `${cyan('SymbolWright')} | ${statusText} in ${event.totalIterations} iteration${event.totalIterations === 1 ? '' : 's'}\n` +
               `${formatUsageLine(totalUsage, model)}\n`,
           )
         }

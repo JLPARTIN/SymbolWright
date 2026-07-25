@@ -166,7 +166,7 @@ describe('local file write tool', () => {
       blockedContext,
     )
 
-    expect(output).toContain('CodeMind local file write gate')
+    expect(output).toContain('SymbolWright local file write gate')
     expect(output).toContain('Decision: BLOCKED')
   })
 
@@ -255,7 +255,7 @@ describe('local write registry and CLI', () => {
     try {
       const output = await renderRuntimeLocalWrite(fixturePath, tmpDir, hostBackedSandboxWriter)
 
-      expect(output).toContain('CodeMind local file write execution')
+      expect(output).toContain('SymbolWright local file write execution')
       expect(fs.readFileSync(path.join(tmpDir, 'src', 'cli.ts'), 'utf8')).toContain(
         'console.log("hello")',
       )

@@ -38,7 +38,7 @@ describe('mission import structural safety', () => {
   it('rejects events that could not be represented as structured mission evidence', () => {
     expect(() =>
       parseMissionExportBundle({
-        kind: 'codemind.mission.bundle',
+        kind: 'symbolwright.mission.bundle',
         schemaVersion: 1,
         exportedAt: '2026-07-20T00:00:00.000Z',
         mission,

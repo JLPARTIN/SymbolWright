@@ -155,7 +155,7 @@ export async function executeGrepTool(input: GrepToolInput, cwd: string): Promis
 
   if (matches.length === 0) {
     return [
-      'CodeMind grep',
+      'SymbolWright grep',
       '',
       `Pattern: ${input.pattern}`,
       'No matches found.',
@@ -165,7 +165,7 @@ export async function executeGrepTool(input: GrepToolInput, cwd: string): Promis
   }
 
   const lines: string[] = [
-    'CodeMind grep',
+    'SymbolWright grep',
     '',
     `Pattern: ${input.pattern}`,
     `Matches: ${matches.length}${matches.length >= maxResults ? ' (truncated)' : ''}`,

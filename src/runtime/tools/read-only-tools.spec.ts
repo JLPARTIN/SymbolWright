@@ -10,9 +10,9 @@ import {
 } from '../registry/fixture-registry-factory.js'
 
 function createFixtureWorkspace(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-runtime-'))
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-runtime-'))
   fs.mkdirSync(path.join(dir, 'src'))
-  fs.writeFileSync(path.join(dir, 'README.md'), '# Fixture\n\nCodeMind runtime fixture.\n')
+  fs.writeFileSync(path.join(dir, 'README.md'), '# Fixture\n\nSymbolWright runtime fixture.\n')
   fs.writeFileSync(path.join(dir, 'src', 'index.ts'), 'export const fixture = true\n')
   return dir
 }
@@ -35,7 +35,7 @@ describe('read-only runtime tools', () => {
     const tool = createFixtureRegistry('read_only').getOrThrow('read_file')
 
     await expect(tool.execute({ path: 'README.md' }, createFixtureContext(cwd))).resolves.toContain(
-      'CodeMind runtime fixture.',
+      'SymbolWright runtime fixture.',
     )
   })
 
@@ -65,7 +65,7 @@ describe('read-only runtime tools', () => {
 
     const output = await tool.execute({ focus: 'runtime activation' }, createFixtureContext(cwd))
 
-    expect(output).toContain('CodeMind validation plan')
+    expect(output).toContain('SymbolWright validation plan')
     expect(output).toContain('npm run typecheck')
     expect(output).toContain('does not run commands')
   })

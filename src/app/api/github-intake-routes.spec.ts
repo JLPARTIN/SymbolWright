@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { runGitCommand } from '../../runtime/git/git-command-runner.js'
-import { startChatServer, type StartedChatServer } from '../../server/codemind-chat-server.js'
+import { startChatServer, type StartedChatServer } from '../../server/symbolwright-chat-server.js'
 import { UnlimitedRateLimiter } from '../../server/rate-limiter.js'
 
 const API_KEY = 'github-intake-api-test-key'
@@ -17,7 +17,7 @@ function auth(): Record<string, string> {
 
 describe('GitHub intake API routes', () => {
   beforeEach(async () => {
-    root = mkdtempSync(join(tmpdir(), 'codemind-github-intake-api-'))
+    root = mkdtempSync(join(tmpdir(), 'symbolwright-github-intake-api-'))
     await runGitCommand(['init'], root)
     await runGitCommand(['config', 'user.email', 'test@example.com'], root)
     await runGitCommand(['config', 'user.name', 'Test'], root)
@@ -26,7 +26,7 @@ describe('GitHub intake API routes', () => {
     await runGitCommand(['commit', '-m', 'initial'], root)
     await runGitCommand(['branch', '-m', 'main'], root)
     await runGitCommand(
-      ['remote', 'add', 'origin', 'https://github.com/JLPARTIN/CodeMind.git'],
+      ['remote', 'add', 'origin', 'https://github.com/JLPARTIN/SymbolWright.git'],
       root,
     )
     started = await startChatServer({
@@ -48,7 +48,7 @@ describe('GitHub intake API routes', () => {
   it('requires authentication', async () => {
     const response = await fetch(`${started!.url}/api/github/intake`, {
       method: 'POST',
-      body: JSON.stringify({ target: 'JLPARTIN/CodeMind', mode: 'dry-run', objective: 'x' }),
+      body: JSON.stringify({ target: 'JLPARTIN/SymbolWright', mode: 'dry-run', objective: 'x' }),
     })
     expect(response.status).toBe(401)
   })
@@ -57,7 +57,7 @@ describe('GitHub intake API routes', () => {
     const response = await fetch(`${started!.url}/api/github/intake`, {
       method: 'POST',
       headers: auth(),
-      body: JSON.stringify({ target: 'JLPARTIN/CodeMind', mode: 'dry-run', objective: 'x' }),
+      body: JSON.stringify({ target: 'JLPARTIN/SymbolWright', mode: 'dry-run', objective: 'x' }),
     })
     expect(response.status).toBe(200)
     const body = (await response.json()) as {
@@ -66,7 +66,7 @@ describe('GitHub intake API routes', () => {
       mission?: unknown
     }
     expect(body.target.owner).toBe('JLPARTIN')
-    expect(body.target.repo).toBe('CodeMind')
+    expect(body.target.repo).toBe('SymbolWright')
     expect(body.acquisition.acquired).toBe(false)
     expect(body.mission).toBeUndefined()
   })
@@ -84,7 +84,7 @@ describe('GitHub intake API routes', () => {
     const response = await fetch(`${started!.url}/api/github/intake`, {
       method: 'POST',
       headers: auth(),
-      body: JSON.stringify({ target: 'JLPARTIN/CodeMind', mode: 'dry-run' }),
+      body: JSON.stringify({ target: 'JLPARTIN/SymbolWright', mode: 'dry-run' }),
     })
     expect(response.status).toBe(400)
   })
@@ -94,7 +94,7 @@ describe('GitHub intake API routes', () => {
       method: 'POST',
       headers: auth(),
       body: JSON.stringify({
-        target: 'JLPARTIN/CodeMind',
+        target: 'JLPARTIN/SymbolWright',
         mode: 'destroy-everything',
         objective: 'x',
       }),
@@ -107,7 +107,7 @@ describe('GitHub intake API routes', () => {
       method: 'POST',
       headers: auth(),
       body: JSON.stringify({
-        target: 'JLPARTIN/CodeMind',
+        target: 'JLPARTIN/SymbolWright',
         mode: 'dry-run',
         objective: 'x',
         enabledOperations: ['delete_the_universe'],
@@ -175,7 +175,7 @@ describe('GitHub intake API routes', () => {
         headers: auth(),
         body: JSON.stringify({
           packet: {
-            branchName: 'codemind/x',
+            branchName: 'symbolwright/x',
             baseBranch: 'main',
             prTitle: 't',
             prBody: 'b',
@@ -210,7 +210,7 @@ describe('GitHub intake API routes', () => {
         body: JSON.stringify({
           enabledOperations: ['push_branch', 'open_pull_request'],
           packet: {
-            branchName: 'codemind/x',
+            branchName: 'symbolwright/x',
             baseBranch: 'main',
             prTitle: 't',
             prBody: 'b',

@@ -1,6 +1,8 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 
+import { readEnvWithLegacyFallback } from '../config/env-compat.js'
+
 /**
  * developer — default; public web works immediately, no allowlist/approval required.
  * ask       — public web allowed, but each call needs an approval ticket with the web:access scope.
@@ -147,7 +149,7 @@ export function mergeWebConfig(raw: unknown, envMode?: string): WebConfig {
 }
 
 /**
- * Loads the `web` section of `.codemind/config.json`. Missing file, missing
+ * Loads the `web` section of `.symbolwright/config.json`. Missing file, missing
  * `web` key, or unparsable JSON all fall back to documented defaults --
  * web access works out of the box with zero setup.
  */
@@ -155,7 +157,7 @@ export function loadWebConfig(
   workspaceRoot: string,
   options: { readonly configPath?: string; readonly env?: NodeJS.ProcessEnv } = {},
 ): WebConfig {
-  const configPath = options.configPath ?? join(workspaceRoot, '.codemind', 'config.json')
+  const configPath = options.configPath ?? join(workspaceRoot, '.symbolwright', 'config.json')
   const env = options.env ?? process.env
 
   let rawWeb: unknown
@@ -168,5 +170,8 @@ export function loadWebConfig(
     }
   }
 
-  return mergeWebConfig(rawWeb, env['CODEMIND_WEB_MODE'])
+  return mergeWebConfig(
+    rawWeb,
+    readEnvWithLegacyFallback('SYMBOLWRIGHT_WEB_MODE', 'CODEMIND_WEB_MODE', { env }),
+  )
 }

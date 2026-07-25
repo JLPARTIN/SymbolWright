@@ -109,7 +109,7 @@ describe('validateServedHtml', () => {
   })
 })
 
-describe('served CodeMind app shell regression coverage', () => {
+describe('served SymbolWright app shell regression coverage', () => {
   it('serves valid syntax for the Repository view client script (regression: nested \\n escaping)', () => {
     const wrapped = `<script>(function () {${buildRepositoryViewClientScript()}})();</script>`
     const result = validateServedHtml(wrapped)

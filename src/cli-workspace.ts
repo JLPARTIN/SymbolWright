@@ -116,7 +116,7 @@ export function buildWorkspaceState(cwd: string): WorkspaceState {
 
 export function renderWorkspaceState(state: WorkspaceState): string {
   return [
-    'CodeMind Workspace',
+    'SymbolWright Workspace',
     '',
     `Primary: ${state.primaryName} (${state.primaryPath})`,
     `Repos: ${state.repoCount}`,
@@ -131,7 +131,7 @@ export function renderWorkspaceState(state: WorkspaceState): string {
 export function renderWorkspaceJson(state: WorkspaceState, mission?: string): string {
   return JSON.stringify(
     {
-      command: 'codemind-workspace',
+      command: 'symbolwright-workspace',
       cwd: state.cwd,
       primary: {
         displayName: state.primaryName,
@@ -155,7 +155,7 @@ export function renderWorkspaceServePlan(options: WorkspaceCommandOptions): stri
   const host = options.host ?? DEFAULT_WORKSPACE_WEB_HOST
   const port = options.port ?? DEFAULT_WORKSPACE_WEB_PORT
   return [
-    'CodeMind Workspace Web Surface',
+    'SymbolWright Workspace Web Surface',
     '',
     `URL: http://${host}:${port}`,
     '',

@@ -80,7 +80,7 @@ export async function executeListFilesTool(
   collectWorkspaceFiles(context.cwd, resolvedDir, context.policy.noisyDirs, limit, collected)
 
   return [
-    'CodeMind list-files',
+    'SymbolWright list-files',
     '',
     `Directory: ${requestedDir}`,
     `Limit: ${limit}`,

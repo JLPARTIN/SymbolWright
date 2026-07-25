@@ -4,7 +4,7 @@ import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 
 export interface WebFetchToolInput {
   readonly url: string
-  /** Overrides the default `.codemind/config.json` lookup — mainly for tests/fixtures. */
+  /** Overrides the default `.symbolwright/config.json` lookup — mainly for tests/fixtures. */
   readonly configPath?: string
 }
 
@@ -26,7 +26,7 @@ function parseWebFetchInput(input: unknown): WebFetchToolInput {
 
 export function renderWebFetchEvidence(evidence: WebFetchEvidence): string {
   const lines = [
-    'CodeMind web_fetch',
+    'SymbolWright web_fetch',
     '',
     `URL: ${evidence.url}`,
     ...(evidence.finalUrl !== evidence.url ? [`Final URL: ${evidence.finalUrl}`] : []),
@@ -85,7 +85,7 @@ export async function executeWebFetchTool(
 export const webFetchTool: RuntimeToolDefinition = {
   name: 'web_fetch',
   description:
-    'Fetch a public web page or API resource through the CodeMind policy gate. Works out of the box for public URLs; private/internal targets are blocked by default.',
+    'Fetch a public web page or API resource through the SymbolWright policy gate. Works out of the box for public URLs; private/internal targets are blocked by default.',
   capability: 'WEB_ACCESS',
   execute: async (input, context) => executeWebFetchTool(parseWebFetchInput(input), context),
 }

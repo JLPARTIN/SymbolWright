@@ -14,7 +14,7 @@ export async function runPreflightCommand(
   if (changedFiles.length === 0) {
     return {
       output: [
-        'CodeMind PR Preflight',
+        'SymbolWright PR Preflight',
         '',
         'Verdict: READY',
         'Confidence: 100',

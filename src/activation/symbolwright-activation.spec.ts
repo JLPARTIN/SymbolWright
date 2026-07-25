@@ -11,13 +11,13 @@ import {
   runActivatedAgent,
   verifySubsystemHealth,
   renderSubsystemHealthReport,
-  type CodemindActivationConfig,
-} from './codemind-activation.js'
+  type SymbolWrightActivationConfig,
+} from './symbolwright-activation.js'
 
 function createMockProvider(responses?: ProviderStreamEvent[][]): LLMProvider {
   let callIndex = 0
   const defaultResponse: ProviderStreamEvent[] = [
-    { type: 'text_delta', text: 'Hello from CodeMind.' },
+    { type: 'text_delta', text: 'Hello from SymbolWright.' },
     { type: 'message_stop', stopReason: 'end_turn', usage: { inputTokens: 100, outputTokens: 50 } },
   ]
 
@@ -71,7 +71,9 @@ function createTestTools(): RuntimeToolDefinition[] {
   ]
 }
 
-function createTestConfig(overrides?: Partial<CodemindActivationConfig>): CodemindActivationConfig {
+function createTestConfig(
+  overrides?: Partial<SymbolWrightActivationConfig>,
+): SymbolWrightActivationConfig {
   return {
     provider: createMockProvider(),
     tools: createTestTools(),
@@ -142,7 +144,7 @@ describe('runActivatedAgent', () => {
     const result = await runActivatedAgent(config, 'Read the README')
 
     expect(result.agentResult.status).toBe('completed')
-    expect(result.agentResult.finalText).toBe('Hello from CodeMind.')
+    expect(result.agentResult.finalText).toBe('Hello from SymbolWright.')
     expect(result.tuiState).toBeDefined()
   })
 
@@ -447,7 +449,7 @@ describe('activateSubsystems GitHub wiring', () => {
 describe('runActivatedAgent GitHub dynamic tool wiring', () => {
   it('includes dynamic live-read tools in agent loop when token is provided', async () => {
     // wireGitHubClients() builds a real DefaultGitHubHttpClient whenever a token is present
-    // (see codemind-activation.ts), so the github_live_read_pr call below is a genuine outbound
+    // (see symbolwright-activation.ts), so the github_live_read_pr call below is a genuine outbound
     // request with a fake token. Under a network-isolated sandbox (--network none) this blocks
     // on DNS resolution for several seconds before failing, rather than failing fast — this test
     // only asserts the tool dispatched (not that the API call succeeded), so a longer timeout is

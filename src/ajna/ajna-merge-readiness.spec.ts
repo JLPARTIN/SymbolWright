@@ -11,7 +11,7 @@ function makeRequest(overrides: Partial<AjnaReviewRequest> = {}): AjnaReviewRequ
   return {
     requestId: 'ajna-req-1',
     subject: {
-      repository: 'JLPARTIN/JLPARTIN-CodeMind',
+      repository: 'JLPARTIN/JLPARTIN-SymbolWright',
       pullRequestNumber: 4,
       baseRef: 'main',
       headRef: 'pr4-ajna-review-contracts',

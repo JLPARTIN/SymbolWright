@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { homedir } from 'node:os'
+
 import { renderAjnaClientCollectorFixtureForFile } from './cli-ajna-client-collector-fixture.js'
 import { renderAjnaClientPipelineCheck } from './cli-ajna-client-pipeline-check.js'
 import { renderAjnaClientPipelineManifest } from './cli-ajna-client-pipeline-manifest.js'
@@ -69,12 +71,28 @@ import { renderWebFetchCommand, renderWebSearchCommand } from './cli-web.js'
 import { runOperatorCommand } from './operator/operator-console.js'
 import { SessionPersistence } from './storage/session-persistence.js'
 import { resolveStoragePaths } from './storage/storage-paths.js'
+import { migrateLegacyStateDir } from './storage/state-dir-migration.js'
 
 const NOT_YET_ACTIVE = new Set<string>()
 
 const [, , command, ...rest] = process.argv
 
+function ensureStateDirsMigrated(): void {
+  for (const root of [homedir(), process.cwd()]) {
+    const result = migrateLegacyStateDir(root)
+    if (result.status === 'migrated') {
+      console.error(`[symbolwright] ${result.message}`)
+    } else if (result.status === 'conflict' || result.status === 'failed') {
+      console.error(`[symbolwright] warning: ${result.message}`)
+    }
+  }
+}
+
 async function main(): Promise<void> {
+  if (command !== undefined && !['help', '--help', '-h', '--version', '-v'].includes(command)) {
+    ensureStateDirsMigrated()
+  }
+
   switch (command) {
     case undefined:
     case 'help':

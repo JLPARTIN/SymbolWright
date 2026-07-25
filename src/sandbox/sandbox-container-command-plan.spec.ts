@@ -20,7 +20,7 @@ function planWith(overrides: Partial<Parameters<typeof buildSandboxContainerComm
   return buildSandboxContainerCommandPlan({
     image: IMAGE,
     engine: AVAILABLE_ENGINE,
-    hostWorkspacePath: '/tmp/codemind-sandbox/workspace-1',
+    hostWorkspacePath: '/tmp/symbolwright-sandbox/workspace-1',
     entrypoint: ['node', '/workspace/main.js'],
     limits: {
       maxMemoryMb: 128,
@@ -86,7 +86,7 @@ describe('sandbox container command planner', () => {
       buildSandboxContainerCommandPlan({
         image: IMAGE,
         engine: AVAILABLE_ENGINE,
-        hostWorkspacePath: '/tmp/codemind-sandbox/workspace-1',
+        hostWorkspacePath: '/tmp/symbolwright-sandbox/workspace-1',
         entrypoint: ['node', '/workspace/main.js'],
         containerArgs: ['--privileged'],
       } as never),
@@ -96,7 +96,7 @@ describe('sandbox container command planner', () => {
       buildSandboxContainerCommandPlan({
         image: IMAGE,
         engine: AVAILABLE_ENGINE,
-        hostWorkspacePath: '/tmp/codemind-sandbox/workspace-1',
+        hostWorkspacePath: '/tmp/symbolwright-sandbox/workspace-1',
         entrypoint: ['node', '/workspace/main.js'],
         imageName: 'registry.example.invalid/anything:latest',
       } as never),

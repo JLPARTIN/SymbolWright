@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { startChatServer, type StartedChatServer } from './codemind-chat-server.js'
+import { startChatServer, type StartedChatServer } from './symbolwright-chat-server.js'
 import { UnlimitedRateLimiter } from './rate-limiter.js'
 
 const API_KEY = 'sandbox-server-test-key'
@@ -33,9 +33,9 @@ async function createMission(): Promise<{ readonly id: string }> {
   return body.mission
 }
 
-describe('codemind chat server sandbox routes', () => {
+describe('symbolwright chat server sandbox routes', () => {
   beforeEach(async () => {
-    root = mkdtempSync(join(tmpdir(), 'codemind-sandbox-server-'))
+    root = mkdtempSync(join(tmpdir(), 'symbolwright-sandbox-server-'))
     started = await startChatServer({
       apiKey: API_KEY,
       host: '127.0.0.1',

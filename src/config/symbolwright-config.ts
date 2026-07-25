@@ -2,23 +2,25 @@ import { readFileSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 
-import type { CodemindProviderId } from '../providers/provider-adapter-contract.js'
+import type { SymbolWrightProviderId } from '../providers/provider-adapter-contract.js'
 import { parseProviderId } from '../providers/provider-config.js'
-import type { CodemindRuntimeMode } from '../runtime/types.js'
-import { normalizeCodemindRuntimeMode } from '../runtime/policy/runtime-policy.js'
+import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
+import { normalizeSymbolWrightRuntimeMode } from '../runtime/policy/runtime-policy.js'
+
+import { readEnvWithLegacyFallback } from './env-compat.js'
 
 export type EmbeddingProviderType = 'voyage' | 'hash'
 
-export interface CodemindConfig {
+export interface SymbolWrightConfig {
   readonly anthropicApiKey?: string
   readonly githubToken?: string
-  readonly provider?: CodemindProviderId
+  readonly provider?: SymbolWrightProviderId
   readonly model?: string
   readonly maxTokens?: number
   readonly baseURL?: string
   readonly embeddingProvider?: EmbeddingProviderType
   readonly voyageApiKey?: string
-  readonly runtimeMode?: CodemindRuntimeMode
+  readonly runtimeMode?: SymbolWrightRuntimeMode
 }
 
 interface RawConfigFile {
@@ -62,18 +64,20 @@ function positiveIntOrUndefined(value: unknown): number | undefined {
   return undefined
 }
 
-export interface CodemindConfigSources {
-  readonly cliFlags?: Partial<CodemindConfig>
+export interface SymbolWrightConfigSources {
+  readonly cliFlags?: Partial<SymbolWrightConfig>
   readonly env?: Record<string, string | undefined>
   readonly homeConfigPath?: string
   readonly projectConfigPath?: string
 }
 
-export function resolveCodemindConfig(sources: CodemindConfigSources = {}): CodemindConfig {
+export function resolveSymbolWrightConfig(
+  sources: SymbolWrightConfigSources = {},
+): SymbolWrightConfig {
   const env = sources.env ?? process.env
-  const homeConfigPath = sources.homeConfigPath ?? join(homedir(), '.codemind', 'config.json')
+  const homeConfigPath = sources.homeConfigPath ?? join(homedir(), '.symbolwright', 'config.json')
   const projectConfigPath =
-    sources.projectConfigPath ?? join(process.cwd(), '.codemind', 'config.json')
+    sources.projectConfigPath ?? join(process.cwd(), '.symbolwright', 'config.json')
 
   const homeConfig = loadJsonConfig(homeConfigPath)
   const projectConfig = loadJsonConfig(projectConfigPath)
@@ -93,31 +97,41 @@ export function resolveCodemindConfig(sources: CodemindConfigSources = {}): Code
 
   const provider =
     parseProviderId(stringOrUndefined(cli.provider)) ??
-    parseProviderId(env['CODEMIND_PROVIDER']) ??
+    parseProviderId(
+      readEnvWithLegacyFallback('SYMBOLWRIGHT_PROVIDER', 'CODEMIND_PROVIDER', { env }),
+    ) ??
     parseProviderId(stringOrUndefined(homeConfig?.provider)) ??
     parseProviderId(stringOrUndefined(projectConfig?.provider))
 
   const model =
     stringOrUndefined(cli.model) ??
-    stringOrUndefined(env['CODEMIND_MODEL']) ??
+    stringOrUndefined(readEnvWithLegacyFallback('SYMBOLWRIGHT_MODEL', 'CODEMIND_MODEL', { env })) ??
     stringOrUndefined(homeConfig?.model) ??
     stringOrUndefined(projectConfig?.model)
 
   const maxTokens =
     positiveIntOrUndefined(cli.maxTokens) ??
-    positiveIntOrUndefined(env['CODEMIND_MAX_TOKENS']) ??
+    positiveIntOrUndefined(
+      readEnvWithLegacyFallback('SYMBOLWRIGHT_MAX_TOKENS', 'CODEMIND_MAX_TOKENS', { env }),
+    ) ??
     positiveIntOrUndefined(homeConfig?.maxTokens) ??
     positiveIntOrUndefined(projectConfig?.maxTokens)
 
   const baseURL =
     stringOrUndefined(cli.baseURL) ??
-    stringOrUndefined(env['CODEMIND_BASE_URL']) ??
+    stringOrUndefined(
+      readEnvWithLegacyFallback('SYMBOLWRIGHT_BASE_URL', 'CODEMIND_BASE_URL', { env }),
+    ) ??
     stringOrUndefined(homeConfig?.baseURL) ??
     stringOrUndefined(projectConfig?.baseURL)
 
   const embeddingProviderRaw =
     stringOrUndefined(cli.embeddingProvider) ??
-    stringOrUndefined(env['CODEMIND_EMBEDDING_PROVIDER']) ??
+    stringOrUndefined(
+      readEnvWithLegacyFallback('SYMBOLWRIGHT_EMBEDDING_PROVIDER', 'CODEMIND_EMBEDDING_PROVIDER', {
+        env,
+      }),
+    ) ??
     stringOrUndefined(homeConfig?.embeddingProvider) ??
     stringOrUndefined(projectConfig?.embeddingProvider)
 
@@ -133,10 +147,12 @@ export function resolveCodemindConfig(sources: CodemindConfigSources = {}): Code
     stringOrUndefined(projectConfig?.voyageApiKey)
 
   const runtimeMode =
-    normalizeCodemindRuntimeMode(cli.runtimeMode) ??
-    normalizeCodemindRuntimeMode(env['CODEMIND_RUNTIME_MODE']) ??
-    normalizeCodemindRuntimeMode(homeConfig?.runtimeMode) ??
-    normalizeCodemindRuntimeMode(projectConfig?.runtimeMode)
+    normalizeSymbolWrightRuntimeMode(cli.runtimeMode) ??
+    normalizeSymbolWrightRuntimeMode(
+      readEnvWithLegacyFallback('SYMBOLWRIGHT_RUNTIME_MODE', 'CODEMIND_RUNTIME_MODE', { env }),
+    ) ??
+    normalizeSymbolWrightRuntimeMode(homeConfig?.runtimeMode) ??
+    normalizeSymbolWrightRuntimeMode(projectConfig?.runtimeMode)
 
   return {
     ...(anthropicApiKey !== undefined ? { anthropicApiKey } : {}),
@@ -158,7 +174,7 @@ export function redactApiKey(key: string): string {
   return key.slice(0, 4) + '...' + key.slice(-4)
 }
 
-export interface CodemindConfigValidationResult {
+export interface SymbolWrightConfigValidationResult {
   readonly valid: boolean
   readonly errors: readonly string[]
   readonly warnings: readonly string[]
@@ -167,17 +183,19 @@ export interface CodemindConfigValidationResult {
     readonly apiKeyPreview?: string
     readonly hasGitHubToken: boolean
     readonly githubTokenPreview?: string
-    readonly provider?: CodemindProviderId
+    readonly provider?: SymbolWrightProviderId
     readonly model?: string
     readonly maxTokens?: number
     readonly baseURL?: string
     readonly embeddingProvider?: EmbeddingProviderType
     readonly hasVoyageApiKey: boolean
-    readonly runtimeMode?: CodemindRuntimeMode
+    readonly runtimeMode?: SymbolWrightRuntimeMode
   }
 }
 
-export function validateCodemindConfig(config: CodemindConfig): CodemindConfigValidationResult {
+export function validateSymbolWrightConfig(
+  config: SymbolWrightConfig,
+): SymbolWrightConfigValidationResult {
   const errors: string[] = []
   const warnings: string[] = []
 

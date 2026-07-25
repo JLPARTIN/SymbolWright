@@ -6,24 +6,24 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { MissionService } from '../mission/mission-service.js'
 import { MissionStore } from '../mission/mission-store.js'
-import type { CodeMindMission } from '../mission/mission-types.js'
+import type { SymbolWrightMission } from '../mission/mission-types.js'
 import { createAutonomousMissionRuntime } from './autonomous-mission-runtime.js'
 import type { MissionTaskExecutor } from './persistent-mission-executor.js'
 import { RepositorySemanticIndexStore } from './repository-semantic-index-store.js'
 
 const roots: string[] = []
 const MISSION_ID = 'mission_33333333-3333-4333-8333-333333333333'
-const MARKER = '// CodeMind post-Bundle #6 repository trial marker'
+const MARKER = '// SymbolWright post-Bundle #6 repository trial marker'
 
 afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
 })
 
-describe('post-Bundle #6 CodeMind repository trial', () => {
-  it('indexes real CodeMind source, mutates a safe copy, validates it, and generates release evidence', async () => {
+describe('post-Bundle #6 SymbolWright repository trial', () => {
+  it('indexes real SymbolWright source, mutates a safe copy, validates it, and generates release evidence', async () => {
     const sourceRoot = process.cwd()
-    const workspaceRoot = await temporaryRoot('codemind-repository-trial-workspace-')
-    const repositoryRoot = await temporaryRoot('codemind-repository-trial-copy-')
+    const workspaceRoot = await temporaryRoot('symbolwright-repository-trial-workspace-')
+    const repositoryRoot = await temporaryRoot('symbolwright-repository-trial-copy-')
     const releasePath = 'src/autonomy/autonomous-mission-release.ts'
     await copyText(sourceRoot, repositoryRoot, 'package.json')
     await copyText(sourceRoot, repositoryRoot, releasePath)
@@ -32,7 +32,9 @@ describe('post-Bundle #6 CodeMind repository trial', () => {
     const storedMission = mission(repositoryRoot)
     missionStore.createMission(storedMission)
     const missionService = new MissionService({ workspaceRoot, store: missionStore })
-    const semanticStore = new RepositorySemanticIndexStore(path.join(workspaceRoot, '.codemind'))
+    const semanticStore = new RepositorySemanticIndexStore(
+      path.join(workspaceRoot, '.symbolwright'),
+    )
     await expect(semanticStore.load(repositoryRoot)).resolves.toBeUndefined()
 
     const taskExecutor: MissionTaskExecutor = {
@@ -108,7 +110,7 @@ async function validateTrialTask(
       passed,
       id: 'trial-validation-source-marker',
       diagnostic: 'The repository trial edit marker was not found.',
-      summary: 'Validated the real copied CodeMind release-service source mutation.',
+      summary: 'Validated the real copied SymbolWright release-service source mutation.',
     }
   }
   if (objective === 'Run trial:package-json') {
@@ -122,7 +124,7 @@ async function validateTrialTask(
       passed,
       id: 'trial-validation-package-json',
       diagnostic: 'The copied repository package identity is not codemind.',
-      summary: 'Validated the copied CodeMind package manifest.',
+      summary: 'Validated the copied SymbolWright package manifest.',
     }
   }
   return {
@@ -133,13 +135,13 @@ async function validateTrialTask(
   }
 }
 
-function mission(repositoryRoot: string): CodeMindMission {
+function mission(repositoryRoot: string): SymbolWrightMission {
   const now = '2026-07-23T23:20:00.000Z'
   return {
     schemaVersion: 1,
     revision: 1,
     id: MISSION_ID,
-    name: 'CodeMind repository forensic mission trial',
+    name: 'SymbolWright repository forensic mission trial',
     objective: 'Harden AutonomousMissionReleaseService behavior',
     status: 'ACTIVE',
     createdAt: now,

@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  buildCodemindRepoContextProofReport,
-  CODEMIND_REPO_CONTEXT_PROOF_BLOCK_ID,
-  CODEMIND_REPO_CONTEXT_PROOF_PHASE_ID,
-  CODEMIND_REPO_CONTEXT_PROOF_PR_ID,
-} from './codemind-repo-context-proof.js'
-import type { CodemindReadOnlyRepoContext } from '../repo-context/repo-context.types.js'
+  buildSymbolWrightRepoContextProofReport,
+  SYMBOLWRIGHT_REPO_CONTEXT_PROOF_BLOCK_ID,
+  SYMBOLWRIGHT_REPO_CONTEXT_PROOF_PHASE_ID,
+  SYMBOLWRIGHT_REPO_CONTEXT_PROOF_PR_ID,
+} from './symbolwright-repo-context-proof.js'
+import type { SymbolWrightReadOnlyRepoContext } from '../repo-context/repo-context.types.js'
 
 function makeRepoContext(
-  overrides: Partial<CodemindReadOnlyRepoContext> = {},
-): CodemindReadOnlyRepoContext {
+  overrides: Partial<SymbolWrightReadOnlyRepoContext> = {},
+): SymbolWrightReadOnlyRepoContext {
   return {
     repository: {
       owner: 'jlpartin',
-      name: 'codemind',
-      fullName: 'jlpartin/codemind',
+      name: 'symbolwright',
+      fullName: 'jlpartin/symbolwright',
       defaultBranch: 'main',
     },
     baseRef: { name: 'main' },
@@ -40,22 +40,22 @@ function makeRepoContext(
   }
 }
 
-describe('CodeMind Repo Context Proof', () => {
+describe('SymbolWright Repo Context Proof', () => {
   it('emits canonical metadata and keeps mutation flags false', () => {
-    const report = buildCodemindRepoContextProofReport({
+    const report = buildSymbolWrightRepoContextProofReport({
       repoContext: makeRepoContext(),
     })
 
-    expect(report.blockId).toBe(CODEMIND_REPO_CONTEXT_PROOF_BLOCK_ID)
-    expect(report.prId).toBe(CODEMIND_REPO_CONTEXT_PROOF_PR_ID)
-    expect(report.phaseId).toBe(CODEMIND_REPO_CONTEXT_PROOF_PHASE_ID)
+    expect(report.blockId).toBe(SYMBOLWRIGHT_REPO_CONTEXT_PROOF_BLOCK_ID)
+    expect(report.prId).toBe(SYMBOLWRIGHT_REPO_CONTEXT_PROOF_PR_ID)
+    expect(report.phaseId).toBe(SYMBOLWRIGHT_REPO_CONTEXT_PROOF_PHASE_ID)
     expect(report.mutationAllowed).toBe(false)
     expect(report.githubWriteAllowed).toBe(false)
     expect(report.providerInvocationAllowed).toBe(false)
   })
 
   it('returns REPO_CONTEXT_PROOF_READY when CI and test evidence are satisfied', () => {
-    const report = buildCodemindRepoContextProofReport({
+    const report = buildSymbolWrightRepoContextProofReport({
       repoContext: makeRepoContext(),
     })
 
@@ -67,7 +67,7 @@ describe('CodeMind Repo Context Proof', () => {
   })
 
   it('returns REPO_CONTEXT_PROOF_PARTIAL when CI evidence is missing', () => {
-    const report = buildCodemindRepoContextProofReport({
+    const report = buildSymbolWrightRepoContextProofReport({
       repoContext: makeRepoContext({
         ciEvidence: [{ state: 'MISSING', provider: 'github-actions', notes: [] }],
       }),
@@ -80,7 +80,7 @@ describe('CodeMind Repo Context Proof', () => {
   })
 
   it('returns REPO_CONTEXT_PROOF_PARTIAL when test evidence is missing', () => {
-    const report = buildCodemindRepoContextProofReport({
+    const report = buildSymbolWrightRepoContextProofReport({
       repoContext: makeRepoContext({
         testEvidence: [{ state: 'MISSING', notes: [] }],
       }),
@@ -91,7 +91,7 @@ describe('CodeMind Repo Context Proof', () => {
   })
 
   it('returns REPO_CONTEXT_PROOF_BLOCKED when blocking notes are present', () => {
-    const report = buildCodemindRepoContextProofReport({
+    const report = buildSymbolWrightRepoContextProofReport({
       repoContext: makeRepoContext(),
       blockingNotes: ['Protected path hit requires operator review.'],
     })
@@ -102,7 +102,7 @@ describe('CodeMind Repo Context Proof', () => {
   })
 
   it('returns REPO_CONTEXT_PROOF_INVALID when no changed files exist', () => {
-    const report = buildCodemindRepoContextProofReport({
+    const report = buildSymbolWrightRepoContextProofReport({
       repoContext: makeRepoContext({ changedFiles: [] }),
     })
 
@@ -112,7 +112,7 @@ describe('CodeMind Repo Context Proof', () => {
   })
 
   it('correctly counts protected files and highest impact level', () => {
-    const report = buildCodemindRepoContextProofReport({
+    const report = buildSymbolWrightRepoContextProofReport({
       repoContext: makeRepoContext({
         changedFiles: [
           {
@@ -144,8 +144,8 @@ describe('CodeMind Repo Context Proof', () => {
 
   it('produces a deterministic summary across identical calls', () => {
     const input = { repoContext: makeRepoContext() }
-    const r1 = buildCodemindRepoContextProofReport(input)
-    const r2 = buildCodemindRepoContextProofReport(input)
+    const r1 = buildSymbolWrightRepoContextProofReport(input)
+    const r2 = buildSymbolWrightRepoContextProofReport(input)
 
     expect(r1.summary).toBe(r2.summary)
     expect(r1.status).toBe(r2.status)

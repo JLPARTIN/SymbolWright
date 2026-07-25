@@ -1,4 +1,4 @@
-# CodeMind Zflow Report Catalog
+# SymbolWright Zflow Report Catalog
 
 PR Bundle AQ-AT adds a catalog and artifact manifest layer for Zflow reports.
 

@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  resolveCodemindConfig,
+  resolveSymbolWrightConfig,
   redactApiKey,
-  validateCodemindConfig,
-  type CodemindConfig,
-} from './codemind-config.js'
+  validateSymbolWrightConfig,
+  type SymbolWrightConfig,
+} from './symbolwright-config.js'
 
-describe('codemind-config', () => {
-  describe('resolveCodemindConfig', () => {
+describe('symbolwright-config', () => {
+  describe('resolveSymbolWrightConfig', () => {
     it('returns empty config when no sources provided', () => {
-      const config = resolveCodemindConfig({
+      const config = resolveSymbolWrightConfig({
         env: {},
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
@@ -23,7 +23,7 @@ describe('codemind-config', () => {
     })
 
     it('reads API key from env', () => {
-      const config = resolveCodemindConfig({
+      const config = resolveSymbolWrightConfig({
         env: { ANTHROPIC_API_KEY: 'sk-test-key-12345678' },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
@@ -33,8 +33,8 @@ describe('codemind-config', () => {
     })
 
     it('reads model from env', () => {
-      const config = resolveCodemindConfig({
-        env: { CODEMIND_MODEL: 'claude-opus-4-20250514' },
+      const config = resolveSymbolWrightConfig({
+        env: { SYMBOLWRIGHT_MODEL: 'claude-opus-4-20250514' },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
       })
@@ -43,8 +43,8 @@ describe('codemind-config', () => {
     })
 
     it('reads maxTokens from env', () => {
-      const config = resolveCodemindConfig({
-        env: { CODEMIND_MAX_TOKENS: '4096' },
+      const config = resolveSymbolWrightConfig({
+        env: { SYMBOLWRIGHT_MAX_TOKENS: '4096' },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
       })
@@ -53,7 +53,7 @@ describe('codemind-config', () => {
     })
 
     it('reads GitHub token from env', () => {
-      const config = resolveCodemindConfig({
+      const config = resolveSymbolWrightConfig({
         env: { GITHUB_TOKEN: 'ghp_test1234567890abcdef' },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
@@ -63,7 +63,7 @@ describe('codemind-config', () => {
     })
 
     it('CLI flags override env for GitHub token', () => {
-      const config = resolveCodemindConfig({
+      const config = resolveSymbolWrightConfig({
         cliFlags: { githubToken: 'cli-token-abcdef1234' },
         env: { GITHUB_TOKEN: 'env-token-xyz' },
         homeConfigPath: '/nonexistent/config.json',
@@ -74,7 +74,7 @@ describe('codemind-config', () => {
     })
 
     it('ignores empty GitHub token', () => {
-      const config = resolveCodemindConfig({
+      const config = resolveSymbolWrightConfig({
         env: { GITHUB_TOKEN: '' },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
@@ -84,8 +84,8 @@ describe('codemind-config', () => {
     })
 
     it('reads baseURL from env', () => {
-      const config = resolveCodemindConfig({
-        env: { CODEMIND_BASE_URL: 'https://custom.api.example.com' },
+      const config = resolveSymbolWrightConfig({
+        env: { SYMBOLWRIGHT_BASE_URL: 'https://custom.api.example.com' },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
       })
@@ -94,7 +94,7 @@ describe('codemind-config', () => {
     })
 
     it('CLI flags take highest priority over env', () => {
-      const config = resolveCodemindConfig({
+      const config = resolveSymbolWrightConfig({
         cliFlags: {
           anthropicApiKey: 'cli-key',
           model: 'cli-model',
@@ -102,8 +102,8 @@ describe('codemind-config', () => {
         },
         env: {
           ANTHROPIC_API_KEY: 'env-key',
-          CODEMIND_MODEL: 'env-model',
-          CODEMIND_MAX_TOKENS: '8192',
+          SYMBOLWRIGHT_MODEL: 'env-model',
+          SYMBOLWRIGHT_MAX_TOKENS: '8192',
         },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
@@ -115,8 +115,8 @@ describe('codemind-config', () => {
     })
 
     it('ignores empty string env values', () => {
-      const config = resolveCodemindConfig({
-        env: { ANTHROPIC_API_KEY: '', CODEMIND_MODEL: '' },
+      const config = resolveSymbolWrightConfig({
+        env: { ANTHROPIC_API_KEY: '', SYMBOLWRIGHT_MODEL: '' },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
       })
@@ -126,8 +126,8 @@ describe('codemind-config', () => {
     })
 
     it('ignores invalid maxTokens values', () => {
-      const config = resolveCodemindConfig({
-        env: { CODEMIND_MAX_TOKENS: 'not-a-number' },
+      const config = resolveSymbolWrightConfig({
+        env: { SYMBOLWRIGHT_MAX_TOKENS: 'not-a-number' },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
       })
@@ -136,8 +136,8 @@ describe('codemind-config', () => {
     })
 
     it('ignores negative maxTokens values', () => {
-      const config = resolveCodemindConfig({
-        env: { CODEMIND_MAX_TOKENS: '-100' },
+      const config = resolveSymbolWrightConfig({
+        env: { SYMBOLWRIGHT_MAX_TOKENS: '-100' },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
       })
@@ -146,7 +146,7 @@ describe('codemind-config', () => {
     })
 
     it('handles non-existent config files gracefully', () => {
-      const config = resolveCodemindConfig({
+      const config = resolveSymbolWrightConfig({
         env: {},
         homeConfigPath: '/tmp/definitely-does-not-exist-xyz/config.json',
         projectConfigPath: '/tmp/definitely-does-not-exist-abc/config.json',
@@ -174,15 +174,15 @@ describe('codemind-config', () => {
     })
   })
 
-  describe('validateCodemindConfig', () => {
+  describe('validateSymbolWrightConfig', () => {
     it('valid config with API key', () => {
-      const config: CodemindConfig = {
+      const config: SymbolWrightConfig = {
         anthropicApiKey: 'sk-test-key-12345678',
         model: 'claude-sonnet-4-20250514',
         maxTokens: 8192,
       }
 
-      const result = validateCodemindConfig(config)
+      const result = validateSymbolWrightConfig(config)
       expect(result.valid).toBe(true)
       expect(result.errors).toHaveLength(0)
       expect(result.redactedSummary.hasApiKey).toBe(true)
@@ -190,9 +190,9 @@ describe('codemind-config', () => {
     })
 
     it('invalid when API key missing', () => {
-      const config: CodemindConfig = {}
+      const config: SymbolWrightConfig = {}
 
-      const result = validateCodemindConfig(config)
+      const result = validateSymbolWrightConfig(config)
       expect(result.valid).toBe(false)
       expect(result.errors.length).toBeGreaterThan(0)
       expect(result.errors[0]).toContain('API key')
@@ -201,132 +201,132 @@ describe('codemind-config', () => {
     })
 
     it('warns when maxTokens exceeds 200000', () => {
-      const config: CodemindConfig = {
+      const config: SymbolWrightConfig = {
         anthropicApiKey: 'sk-test-key-12345678',
         maxTokens: 300000,
       }
 
-      const result = validateCodemindConfig(config)
+      const result = validateSymbolWrightConfig(config)
       expect(result.valid).toBe(true)
       expect(result.warnings.length).toBeGreaterThan(0)
       expect(result.warnings[0]).toContain('200000')
     })
 
     it('warns when baseURL does not start with http', () => {
-      const config: CodemindConfig = {
+      const config: SymbolWrightConfig = {
         anthropicApiKey: 'sk-test-key-12345678',
         baseURL: 'ftp://weird.example.com',
       }
 
-      const result = validateCodemindConfig(config)
+      const result = validateSymbolWrightConfig(config)
       expect(result.valid).toBe(true)
       expect(result.warnings.some((w) => w.includes('http'))).toBe(true)
     })
 
     it('includes model and maxTokens in redacted summary', () => {
-      const config: CodemindConfig = {
+      const config: SymbolWrightConfig = {
         anthropicApiKey: 'sk-test-key-12345678',
         model: 'claude-sonnet-4-20250514',
         maxTokens: 4096,
         baseURL: 'https://api.anthropic.com',
       }
 
-      const result = validateCodemindConfig(config)
+      const result = validateSymbolWrightConfig(config)
       expect(result.redactedSummary.model).toBe('claude-sonnet-4-20250514')
       expect(result.redactedSummary.maxTokens).toBe(4096)
       expect(result.redactedSummary.baseURL).toBe('https://api.anthropic.com')
     })
 
     it('includes GitHub token status in redacted summary', () => {
-      const config: CodemindConfig = {
+      const config: SymbolWrightConfig = {
         anthropicApiKey: 'sk-test-key-12345678',
         githubToken: 'ghp_test1234567890abcdef',
       }
 
-      const result = validateCodemindConfig(config)
+      const result = validateSymbolWrightConfig(config)
       expect(result.redactedSummary.hasGitHubToken).toBe(true)
       expect(result.redactedSummary.githubTokenPreview).toBeDefined()
       expect(result.redactedSummary.githubTokenPreview).not.toContain('ghp_test')
     })
 
     it('reports no GitHub token when absent', () => {
-      const config: CodemindConfig = {
+      const config: SymbolWrightConfig = {
         anthropicApiKey: 'sk-test-key-12345678',
       }
 
-      const result = validateCodemindConfig(config)
+      const result = validateSymbolWrightConfig(config)
       expect(result.redactedSummary.hasGitHubToken).toBe(false)
       expect(result.redactedSummary.githubTokenPreview).toBeUndefined()
     })
 
     it('valid with only API key (everything else optional)', () => {
-      const config: CodemindConfig = {
+      const config: SymbolWrightConfig = {
         anthropicApiKey: 'sk-minimal-key-1234',
       }
 
-      const result = validateCodemindConfig(config)
+      const result = validateSymbolWrightConfig(config)
       expect(result.valid).toBe(true)
       expect(result.errors).toHaveLength(0)
     })
 
     it('warns when GitHub token is missing', () => {
-      const config: CodemindConfig = {
+      const config: SymbolWrightConfig = {
         anthropicApiKey: 'sk-test-key-12345678',
       }
 
-      const result = validateCodemindConfig(config)
+      const result = validateSymbolWrightConfig(config)
       expect(result.warnings.some((w) => w.includes('GITHUB_TOKEN'))).toBe(true)
     })
 
     it('no GitHub token warning when token is present', () => {
-      const config: CodemindConfig = {
+      const config: SymbolWrightConfig = {
         anthropicApiKey: 'sk-test-key-12345678',
         githubToken: 'ghp_test1234567890abcdef',
       }
 
-      const result = validateCodemindConfig(config)
+      const result = validateSymbolWrightConfig(config)
       expect(result.warnings.every((w) => !w.includes('GITHUB_TOKEN'))).toBe(true)
     })
 
     it('warns when voyage provider set without API key', () => {
-      const config: CodemindConfig = {
+      const config: SymbolWrightConfig = {
         anthropicApiKey: 'sk-test-key-12345678',
         embeddingProvider: 'voyage',
       }
 
-      const result = validateCodemindConfig(config)
+      const result = validateSymbolWrightConfig(config)
       expect(result.warnings.some((w) => w.includes('VOYAGE_API_KEY'))).toBe(true)
       expect(result.redactedSummary.embeddingProvider).toBe('voyage')
       expect(result.redactedSummary.hasVoyageApiKey).toBe(false)
     })
 
     it('no warning when voyage provider set with API key', () => {
-      const config: CodemindConfig = {
+      const config: SymbolWrightConfig = {
         anthropicApiKey: 'sk-test-key-12345678',
         embeddingProvider: 'voyage',
         voyageApiKey: 'pa-test-voyage-key-1234',
       }
 
-      const result = validateCodemindConfig(config)
+      const result = validateSymbolWrightConfig(config)
       expect(result.warnings.every((w) => !w.includes('VOYAGE_API_KEY'))).toBe(true)
       expect(result.redactedSummary.hasVoyageApiKey).toBe(true)
     })
 
     it('includes hash embedding provider in summary', () => {
-      const config: CodemindConfig = {
+      const config: SymbolWrightConfig = {
         anthropicApiKey: 'sk-test-key-12345678',
         embeddingProvider: 'hash',
       }
 
-      const result = validateCodemindConfig(config)
+      const result = validateSymbolWrightConfig(config)
       expect(result.redactedSummary.embeddingProvider).toBe('hash')
     })
   })
 
-  describe('resolveCodemindConfig embedding fields', () => {
+  describe('resolveSymbolWrightConfig embedding fields', () => {
     it('reads embeddingProvider from env', () => {
-      const config = resolveCodemindConfig({
-        env: { CODEMIND_EMBEDDING_PROVIDER: 'voyage' },
+      const config = resolveSymbolWrightConfig({
+        env: { SYMBOLWRIGHT_EMBEDDING_PROVIDER: 'voyage' },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
       })
@@ -335,7 +335,7 @@ describe('codemind-config', () => {
     })
 
     it('reads voyageApiKey from env', () => {
-      const config = resolveCodemindConfig({
+      const config = resolveSymbolWrightConfig({
         env: { VOYAGE_API_KEY: 'pa-test-key-abcdef' },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
@@ -345,8 +345,8 @@ describe('codemind-config', () => {
     })
 
     it('ignores invalid embedding provider values', () => {
-      const config = resolveCodemindConfig({
-        env: { CODEMIND_EMBEDDING_PROVIDER: 'invalid' },
+      const config = resolveSymbolWrightConfig({
+        env: { SYMBOLWRIGHT_EMBEDDING_PROVIDER: 'invalid' },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
       })
@@ -355,9 +355,9 @@ describe('codemind-config', () => {
     })
 
     it('CLI flags override env for embeddingProvider', () => {
-      const config = resolveCodemindConfig({
+      const config = resolveSymbolWrightConfig({
         cliFlags: { embeddingProvider: 'hash' },
-        env: { CODEMIND_EMBEDDING_PROVIDER: 'voyage' },
+        env: { SYMBOLWRIGHT_EMBEDDING_PROVIDER: 'voyage' },
         homeConfigPath: '/nonexistent/config.json',
         projectConfigPath: '/nonexistent/config.json',
       })

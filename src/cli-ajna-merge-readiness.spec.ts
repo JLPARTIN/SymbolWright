@@ -8,7 +8,7 @@ import {
   parseAjnaMergeReadinessInput,
   renderAjnaMergeReadinessForFile,
 } from './cli-ajna-merge-readiness.js'
-import type { CodemindAjnaMergeReadinessInput } from './cli-ajna-merge-readiness.js'
+import type { SymbolWrightAjnaMergeReadinessInput } from './cli-ajna-merge-readiness.js'
 import type { AjnaReviewFinding, AjnaReviewRequest } from './ajna/ajna-review.types.js'
 
 const tempDirs: string[] = []
@@ -17,7 +17,7 @@ function makeRequest(overrides: Partial<AjnaReviewRequest> = {}): AjnaReviewRequ
   return {
     requestId: 'cli-ajna-readiness-1',
     subject: {
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       pullRequestNumber: 54,
       baseRef: 'main',
       headRef: 'feat-ajna-merge-readiness-cli',
@@ -50,8 +50,8 @@ function makeFinding(overrides: Partial<AjnaReviewFinding> = {}): AjnaReviewFind
 }
 
 function makeInput(
-  overrides: Partial<CodemindAjnaMergeReadinessInput> = {},
-): CodemindAjnaMergeReadinessInput {
+  overrides: Partial<SymbolWrightAjnaMergeReadinessInput> = {},
+): SymbolWrightAjnaMergeReadinessInput {
   return {
     request: makeRequest(),
     findings: [],
@@ -59,8 +59,8 @@ function makeInput(
   }
 }
 
-function writeInputFile(input: CodemindAjnaMergeReadinessInput): string {
-  const rootDir = mkdtempSync(join(tmpdir(), 'codemind-ajna-merge-readiness-'))
+function writeInputFile(input: SymbolWrightAjnaMergeReadinessInput): string {
+  const rootDir = mkdtempSync(join(tmpdir(), 'symbolwright-ajna-merge-readiness-'))
   tempDirs.push(rootDir)
   const inputPath = join(rootDir, 'readiness.json')
   writeFileSync(inputPath, JSON.stringify(input), 'utf-8')
@@ -137,7 +137,7 @@ describe('parseAjnaMergeReadinessInput', () => {
   it('rejects malformed request subjects', () => {
     const request: Record<string, unknown> = {
       ...makeRequest(),
-      subject: { repository: 'JLPARTIN/CodeMind' },
+      subject: { repository: 'JLPARTIN/SymbolWright' },
     }
 
     expect(() => parseAjnaMergeReadinessInput(JSON.stringify({ request, findings: [] }))).toThrow(

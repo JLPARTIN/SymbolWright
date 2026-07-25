@@ -1,4 +1,4 @@
-# CodeMind Approved Local File Write Execution
+# SymbolWright Approved Local File Write Execution
 
 **Phase:** T
 **Status:** COMPLETE
@@ -6,7 +6,7 @@
 
 ## Purpose
 
-Phase T converts the local file write gate from an evaluator-only tool into an actual approved local file writer. This is the first true write-active milestone in the CodeMind runtime.
+Phase T converts the local file write gate from an evaluator-only tool into an actual approved local file writer. This is the first true write-active milestone in the SymbolWright runtime.
 
 ## Behavior
 

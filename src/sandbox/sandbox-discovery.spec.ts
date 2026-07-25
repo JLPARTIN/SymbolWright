@@ -42,7 +42,7 @@ describe('sandbox runtime discovery probes', () => {
       {
         now: atNow,
         timeoutMs: 250,
-        env: { PATH: '/usr/bin', CODEMIND_API_KEY: 'do-not-pass' },
+        env: { PATH: '/usr/bin', SYMBOLWRIGHT_API_KEY: 'do-not-pass' },
         spawnSync,
       },
     )

@@ -27,7 +27,7 @@ or agent — knows how much latitude it carries:
 | Tag | Meaning |
 | --- | --- |
 | **[INVARIANT]** | A principle that holds regardless of repository — would still apply if this were a different codebase entirely. |
-| **[CODEMIND]** | A concrete adaptation of that principle to *this* repository's actual manifests, scripts, and architecture, as verified by inspection (never invented). |
+| **[SYMBOLWRIGHT]** | A concrete adaptation of that principle to *this* repository's actual manifests, scripts, and architecture, as verified by inspection (never invented). |
 | **[OPTIONAL]** | An action taken opportunistically when useful, not required for completion. |
 | **[GATE]** | A mandatory condition that must hold before a change can be reported complete or a PR moved out of draft. |
 | **[AUTH-REQUIRED]** | An action this process must not take without an explicit, in-scope human instruction, even if a tool technically permits it. |
@@ -88,7 +88,7 @@ This session's actual task fell into the documentation-only row: the mission
 statement is explicit that no issue is being solved and no feature is being
 implemented, so classification here drove the entire Part V/Part VI
 treatment — no source code under `src/` is touched, only `docs/`,
-`README.md`, and `CHANGELOG.md` (**[CODEMIND]**, since which files count as
+`README.md`, and `CHANGELOG.md` (**[SYMBOLWRIGHT]**, since which files count as
 "docs vs. source" is repository-specific — this repo's own convention, drawn
 from `POST_BUNDLE7_FORENSIC_AUDIT.md` and `CHANGELOG.md`, is that new
 capability and process docs live under `docs/` and get a one-line pointer in
@@ -130,12 +130,12 @@ questions were needed — the only judgment calls were *placement* (where in
 the repo's existing doc taxonomy this belongs) and *worked-example grounding*
 (Part XIII), both resolved by repository inspection, not by asking.
 
-### Determining the target repository, branch, PR, issue, worktree **[INVARIANT / CODEMIND]**
+### Determining the target repository, branch, PR, issue, worktree **[INVARIANT / SYMBOLWRIGHT]**
 
 Target resolution order, each checked before falling back to the next:
 
 1. An explicit repository/branch named in the task (this session's task
-   named `JLPARTIN/CodeMind`, branch `claude/agent-forensic-process-docs-2hxedg` explicitly).
+   named `JLPARTIN/SymbolWright`, branch `claude/agent-forensic-process-docs-2hxedg` explicitly).
 2. The current checkout's `git status` / `git branch --show-current`, if no
    explicit target was given.
 3. An open PR or issue number referenced in the task, resolved via the
@@ -144,7 +144,7 @@ Target resolution order, each checked before falling back to the next:
 4. If none of the above resolve unambiguously, ask.
 
 For this session, step 1 fully resolved the target: repository
-`jlpartin/codemind`, branch `claude/agent-forensic-process-docs-2hxedg` (already existed locally and on
+`jlpartin/symbolwright`, branch `claude/agent-forensic-process-docs-2hxedg` (already existed locally and on
 `origin` at task start — confirmed by `git branch -a` and `git status`
 showing a clean tree on that exact branch, so no branch creation was
 required, only continuation on it).
@@ -193,22 +193,22 @@ raises a warning sign that changes what happens next.
 | 6 | Open PR context | GitHub MCP `pull_request_read` / `list_pull_requests` | Is there already an open PR for this branch | An open PR exists needing update, not creation | Push to existing PR instead of creating a duplicate |
 | 7 | Issue context | GitHub MCP `issue_read` / `search_issues` | Linked issue's acceptance criteria | Issue text conflicts with task text | Task text wins; note the discrepancy in the PR body |
 | 8 | README and contributor instructions | `Read README.md` | Project purpose, doc index, contribution conventions | No "Getting Started"/doc index at all | Determines whether a new doc needs a README listing |
-| 9 | AGENTS.md / CLAUDE.md | `Glob`/`Grep` repo-wide | Repo-specific agent instructions overriding defaults | File doesn't exist | **[CODEMIND]** Confirmed absent in this repo (checked root, `docs/`, two levels deep) — no override to honor, default process applies unmodified |
-| 10 | Project manifests | `Read package.json` | Language/ecosystem, scripts, dependencies | Multiple manifests (polyglot) | **[CODEMIND]** Single Node/TypeScript project (`"type": "module"`, `tsc`, `vitest`, `eslint`, `prettier`) — no polyglot handling needed for this task |
+| 9 | AGENTS.md / CLAUDE.md | `Glob`/`Grep` repo-wide | Repo-specific agent instructions overriding defaults | File doesn't exist | **[SYMBOLWRIGHT]** Confirmed absent in this repo (checked root, `docs/`, two levels deep) — no override to honor, default process applies unmodified |
+| 10 | Project manifests | `Read package.json` | Language/ecosystem, scripts, dependencies | Multiple manifests (polyglot) | **[SYMBOLWRIGHT]** Single Node/TypeScript project (`"type": "module"`, `tsc`, `vitest`, `eslint`, `prettier`) — no polyglot handling needed for this task |
 | 11 | Lockfiles | `ls package-lock.json` | Pinned dependency graph exists | Lockfile missing or out of sync with manifest | Never hand-edit; only `npm install`/`npm ci` may touch it |
 | 12 | Build configuration | `Read tsconfig.json` | Compiler target, strictness | `strict: false` or path-mapping surprises | Affects whether a change needs a build check at all |
 | 13 | Test configuration | `Read vitest.config.ts` | Test file glob, coverage thresholds | Include pattern that silently excludes a directory (this repo's own CHANGELOG records exactly this class of bug: forensics tests under `tests/forensics/*.test.ts` never matched `src/**/*.spec.ts` and silently never ran) | Verify new/changed tests actually match the include pattern before trusting a green run |
 | 14 | Linting/formatting config | `Read eslint.config.js` | Style rules enforced in CI | Rules stricter than they look (e.g. no-floating-promises) | Anticipate lint failures before writing code |
-| 15 | CI workflow files | `Read .github/workflows/*.yml` | Exact gate sequence CI runs | A step the local `npm run validate` doesn't cover, or vice versa | **[CODEMIND]** `ci.yml`'s `validate` job runs, in order: `npm ci` → `npm run audit` → `npm run typecheck` → `npm run lint` → `npm run format:check` → sandbox contract tests → `npm run test:coverage` → `npm run build` → PR preflight (`node dist/cli.js preflight <changed-files>`) → `npm run validate` (an aggregate re-run). For a docs-only change, most of these are no-ops (no `src/` files changed) but PR preflight still classifies the changed files, so it's still worth being aware of. |
+| 15 | CI workflow files | `Read .github/workflows/*.yml` | Exact gate sequence CI runs | A step the local `npm run validate` doesn't cover, or vice versa | **[SYMBOLWRIGHT]** `ci.yml`'s `validate` job runs, in order: `npm ci` → `npm run audit` → `npm run typecheck` → `npm run lint` → `npm run format:check` → sandbox contract tests → `npm run test:coverage` → `npm run build` → PR preflight (`node dist/cli.js preflight <changed-files>`) → `npm run validate` (an aggregate re-run). For a docs-only change, most of these are no-ops (no `src/` files changed) but PR preflight still classifies the changed files, so it's still worth being aware of. |
 | 16 | Deployment configuration | `Read Dockerfile`, `.github/workflows/deploy.yml` | Whether this task touches anything deploy-relevant | N/A for docs work | Not exercised this session — no deploy surface touched |
 | 17 | Source tree structure | `ls src/`, targeted `Glob` | Module boundaries, where a new file belongs | An existing directory that already covers the topic | Prevents creating a second implementation beside an existing one |
 | 18 | Existing architecture documents | `Read docs/ARCHITECTURE.md`, relevant `docs/autonomy/*.md` | House style for docs, what's already documented | A near-duplicate doc already exists | Reuse/extend instead of duplicating; this session read both `POST_BUNDLE6_FORENSIC_AUDIT.md` and `POST_BUNDLE7_FORENSIC_AUDIT.md` in full specifically to match section structure and tone before writing anything new |
 | 19 | Existing tests | `Glob **/*.spec.ts` near a target module | What behavior is already pinned down | A test that already covers the "bug" being reported (means it's not actually reproducible, or is a regression in behavior the test doesn't assert) | Never write a fix that a passing test should have caught without first checking why the test didn't catch it |
 | 20 | Generated files | Recognize `dist/`, `*.d.ts` build output | Files that must never be hand-edited | A generated file that looks editable | Edit the source, rebuild, never patch output directly |
 | 21 | Vendored files | Recognize `node_modules/`, any `vendor/`-style tree | Third-party code, not ours to change | A bug that appears to be "in" vendored code | Fix belongs upstream or in how we call it, not in the vendored copy |
-| 22 | Ignored files | `Read .gitignore` when relevant | What's intentionally untracked (`.codemind/` state, build output) | An ignored file the task seems to expect tracked | Don't `git add -A` blindly; add exact intended files by name |
+| 22 | Ignored files | `Read .gitignore` when relevant | What's intentionally untracked (`.symbolwright/` state, build output) | An ignored file the task seems to expect tracked | Don't `git add -A` blindly; add exact intended files by name |
 | 23 | Security policies | `Grep` for `SECURITY.md`, governance docs | Disclosure process, security-sensitive paths | A change touching an auth/secrets path | Escalates handling per Part IX |
-| 24 | Release/versioning files | `Read package.json` version field, `CHANGELOG.md` | Current version, whether this change needs a changelog entry | Version already bumped ahead of unreleased work | **[CODEMIND]** `CHANGELOG.md` has an active `[Unreleased]` section — new entries append there, not to a new version header |
+| 24 | Release/versioning files | `Read package.json` version field, `CHANGELOG.md` | Current version, whether this change needs a changelog entry | Version already bumped ahead of unreleased work | **[SYMBOLWRIGHT]** `CHANGELOG.md` has an active `[Unreleased]` section — new entries append there, not to a new version header |
 
 **Avoiding wrong-target edits [INVARIANT]**: the repo-root check (step 1) and
 branch check (step 3) run before any write; `git status` before and after
@@ -244,13 +244,13 @@ How each element gets identified, generically:
   chains the way `POST_BUNDLE7_FORENSIC_AUDIT.md`'s "Verification trial"
   section does (`mission-routes.ts` → `createServerAutonomyRuntime` → …).
 - **State ownership / persistence** — grep for the storage primitive in use
-  (this repo uses an atomic-write JSON-on-disk store under `.codemind/`, per
+  (this repo uses an atomic-write JSON-on-disk store under `.symbolwright/`, per
   `mission-store.ts`, `mission-atomic-temp.spec.ts`, and the Bundle #6 doc's
-  `.codemind/autonomy/releases/<missionId>.json` convention) rather than
+  `.symbolwright/autonomy/releases/<missionId>.json` convention) rather than
   assuming a database exists.
 - **Background jobs / network boundaries / security boundaries** — CI-defined
   (`--network none` in the sandbox runner, policy gates named
-  `CODEMIND_APPROVED_*` in `docs/runtime/`) rather than inferred.
+  `SYMBOLWRIGHT_APPROVED_*` in `docs/runtime/`) rather than inferred.
 - **UI/backend boundaries** — `src/app/views/*.ts` (browser-rendered) vs.
   `src/app/api/*-routes.ts` (server) is the concrete split in this repo.
 - **Test boundaries** — this repo colocates unit/contract tests as
@@ -424,17 +424,17 @@ fix (e.g. Bundle #7's audit fixing the missing `maxFiles` bound alongside
 its primary finding, because both were found by the same inspection and both
 are small).
 
-### D. Implementation **[INVARIANT / CODEMIND]**
+### D. Implementation **[INVARIANT / SYMBOLWRIGHT]**
 
 Files to edit are exactly the ones root-cause analysis identified — no
 speculative "while I'm here" edits. Edits are sequenced from the most
 foundational change outward (type/interface changes before their call
 sites, so intermediate states type-check as each file lands, using
-`npm run typecheck` **[CODEMIND]** as the sequencing checkpoint in this repo).
+`npm run typecheck` **[SYMBOLWRIGHT]** as the sequencing checkpoint in this repo).
 Existing style is matched by reading 1–2 neighboring files/functions before
 writing new code — this repo's own style is enforced mechanically by
 `eslint.config.js` and `prettier` (`npm run format` / `format:check`
-**[CODEMIND]**), so "preserve style" here concretely means "the diff passes
+**[SYMBOLWRIGHT]**), so "preserve style" here concretely means "the diff passes
 `format:check` and `lint` without needing hand-tuning." Repository utilities
 are reused instead of duplicated — e.g. this repo already has a canonical
 `MISSION_EVENT_FILTERS` list; a new feature needing an event-category filter
@@ -457,7 +457,7 @@ state and re-diagnosing is usually cheaper). This is bounded: see the
 autonomous repair loop discipline in Part V.G and Part XIV, which applies to
 bug fixes too, not only Large PR Bundles.
 
-### E. Validation **[INVARIANT / CODEMIND]**
+### E. Validation **[INVARIANT / SYMBOLWRIGHT]**
 
 Order and rationale, cheapest/fastest signal first:
 
@@ -468,24 +468,24 @@ Order and rationale, cheapest/fastest signal first:
    on the pre-fix code and pass on the post-fix code.
 3. **Existing nearby tests** in the same file/module — catches
    collateral breakage in logic adjacent to the change.
-4. **Typecheck** (`npm run typecheck` **[CODEMIND]**) — cheap, catches an
+4. **Typecheck** (`npm run typecheck` **[SYMBOLWRIGHT]**) — cheap, catches an
    entire class of errors before running anything.
 5. **Lint** and **format** (`npm run lint`, `npm run format:check`
-   **[CODEMIND]**) — style/correctness rules, cheap.
-6. **Build** (`npm run build` **[CODEMIND]**) — confirms the change compiles
+   **[SYMBOLWRIGHT]**) — style/correctness rules, cheap.
+6. **Build** (`npm run build` **[SYMBOLWRIGHT]**) — confirms the change compiles
    as a package, not just as loose files.
-7. **Full test suite with coverage** (`npm run test:coverage` **[CODEMIND]**)
+7. **Full test suite with coverage** (`npm run test:coverage` **[SYMBOLWRIGHT]**)
    — broader regression signal; this repo enforces coverage thresholds as
    part of this command.
 8. **Integration/E2E tests**, where they exist for the touched surface (this
    repo's `*.integration.spec.ts` files, e.g.
    `server-autonomy-portability.integration.spec.ts`).
-9. **Security scan / dependency audit** (`npm run audit` **[CODEMIND]**) —
+9. **Security scan / dependency audit** (`npm run audit` **[SYMBOLWRIGHT]**) —
    run when the change touches dependencies or a security-sensitive path.
 10. **Runtime/API/browser smoke test** — for anything with a live surface
     (an HTTP route, a UI view), exercised the way a real caller would use
     it, not only through a unit test double.
-11. **CI-equivalent aggregate command** (`npm run validate` **[CODEMIND]** —
+11. **CI-equivalent aggregate command** (`npm run validate` **[SYMBOLWRIGHT]** —
     audit → typecheck → lint → format:check → test:coverage → build →
     release-readiness) — the final local gate before pushing, matching what
     `ci.yml`'s `validate` job runs.
@@ -582,7 +582,7 @@ shape; a small, single-module feature addition can go straight to
 implementation with the design held implicitly and verified via `git diff`
 review at the end instead.
 
-### D. Task Graph and Sequencing **[INVARIANT / CODEMIND example order]**
+### D. Task Graph and Sequencing **[INVARIANT / SYMBOLWRIGHT example order]**
 
 Each task in the graph is assessed for: dependencies (what must exist
 first), blocking relationships, safe parallelism (independent files with no
@@ -625,7 +625,7 @@ gap Bundle #7's audit was written to check for.
 
 The file set is planned before the first edit (from the task graph above).
 Internal consistency is maintained by editing in dependency order (types
-before their consumers) and running `npm run typecheck` **[CODEMIND]** after
+before their consumers) and running `npm run typecheck` **[SYMBOLWRIGHT]** after
 each slice rather than only at the end, so a broken import or a renamed
 symbol is caught within one edit's blast radius instead of accumulating.
 Renamed symbols are tracked by `Grep`ping the old name across the whole tree
@@ -651,12 +651,12 @@ is used continuously during implementation, not only at the end — reading it
 after each logical slice is how style drift, accidental unrelated edits, and
 incomplete migrations get caught while they're still cheap to fix.
 
-### F. Continuous Validation During the Bundle **[INVARIANT / CODEMIND]**
+### F. Continuous Validation During the Bundle **[INVARIANT / SYMBOLWRIGHT]**
 
 After each logical slice: targeted test for the slice, `npm run typecheck`.
 After a few slices land together (e.g. domain model + persistence): `npm run
 lint`, a broader targeted test run. Before considering any major section
-(e.g. "the API layer") done: a build (`npm run build` **[CODEMIND]**) and
+(e.g. "the API layer") done: a build (`npm run build` **[SYMBOLWRIGHT]**) and
 the integration tests touching that layer. Full suite (`npm run
 test:coverage`) and the aggregate `npm run validate` **[GATE]** run at least
 once before the bundle is reported complete, and again after the final diff
@@ -754,7 +754,7 @@ risk/follow-up notes are prepared per Part VII.
 
 ## Part VI — Git and Branch Management
 
-**[CODEMIND]** for this session's concrete decisions, **[INVARIANT]** for the
+**[SYMBOLWRIGHT]** for this session's concrete decisions, **[INVARIANT]** for the
 underlying rules.
 
 - **Base branch**: identified as `main` (confirmed via `git branch -a`
@@ -914,7 +914,7 @@ rather than silent>
 - [ ] Coverage thresholds still met
 ```
 
-**[CODEMIND]**: this repo's actual `.github/pull_request_template.md` is
+**[SYMBOLWRIGHT]**: this repo's actual `.github/pull_request_template.md` is
 shorter (`Summary` / `Changes` / `Test plan` with four fixed checkboxes /
 `Safety checklist` with three fixed checkboxes) — the templates above are a
 superset used to structure the PR body's *content*; the repository's own
@@ -1005,8 +1005,8 @@ defines would be respected as a hard stop pending explicit authorization.
 necessary, from a reputable source, and is run through `npm run audit`
 before being considered safe to ship. **Permission/authentication/
 authorization changes**: treated as high-blast-radius by default — reviewed
-against this repo's own `docs/governance/CODEMIND_PERMISSION_MODEL.md` and
-`CODEMIND_THREAT_MODEL.md` when a change touches that surface. **Input
+against this repo's own `docs/governance/SYMBOLWRIGHT_PERMISSION_MODEL.md` and
+`SYMBOLWRIGHT_THREAT_MODEL.md` when a change touches that surface. **Input
 validation, path traversal, command injection, SSRF, XSS, CSRF, unsafe
 deserialization**: this repo already encodes hard invariants against several
 of these classes concretely (e.g. `isSafePortableValidationCommand`
@@ -1244,7 +1244,7 @@ analysis, no others.
 > unconditionally whenever the resolved user has no passwd entry.
 > **Action**: implement the fix, re-run the same targeted spec file.
 > **Result**: the new test passes, but an *existing* test in the same file
-> now fails — it asserts that an explicit `CODEMIND_SANDBOX_USER` override's
+> now fails — it asserts that an explicit `SYMBOLWRIGHT_SANDBOX_USER` override's
 > own `$HOME` is respected when an operator has deliberately set one, and
 > the unconditional fallback now overwrites that override.
 > **Next decision**: this is a failed first attempt, not a dead end — the
@@ -1257,7 +1257,7 @@ analysis, no others.
 > **Evidence**: the failing existing test's assertion and the runner's
 > override-handling branch, re-read together.
 > **Decision**: scope the `HOME` fallback to apply only when no explicit
-> `CODEMIND_SANDBOX_USER` override is set, matching the precedent the
+> `SYMBOLWRIGHT_SANDBOX_USER` override is set, matching the precedent the
 > runner already establishes elsewhere for override-vs-default handling.
 > **Action**: narrow the conditional, re-run `vitest run
 > <sandbox-runner>.spec.ts`.
@@ -1309,7 +1309,7 @@ reaches `COMPLETE`.
 
 ---
 
-## Part XIII — Worked Example: CodeMind-Style Large PR Bundle
+## Part XIII — Worked Example: SymbolWright-Style Large PR Bundle
 
 *(Realistic simulation. Grounded entirely in this repository's real,
 inspected architecture — Bundle #6's `persistent-mission-executor.ts` /

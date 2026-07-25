@@ -1,16 +1,16 @@
-# CodeMind - Ajna Build Plan
+# SymbolWright - Ajna Build Plan
 
 **Capability:** Ajna Review Cortex  
-**Internal label:** `CODEMIND_AJNA_REVIEW_CORTEX`  
+**Internal label:** `SYMBOLWRIGHT_AJNA_REVIEW_CORTEX`  
 **Primary tagline:** See beyond the code.  
 **PR subtitle:** Expand your vision beyond the diff.  
-**Purpose:** Build Ajna as CodeMind's deep PR analysis and merge-readiness feature.
+**Purpose:** Build Ajna as SymbolWright's deep PR analysis and merge-readiness feature.
 
 ---
 
 ## 1. Build Goal
 
-Ajna should become the CodeMind capability that reviews pull requests with deeper context than a normal diff review.
+Ajna should become the SymbolWright capability that reviews pull requests with deeper context than a normal diff review.
 
 It should answer:
 
@@ -20,7 +20,7 @@ What hidden systems could be affected?
 What tests prove this is safe?
 What risks remain?
 Is this ready to merge?
-What should CodeMind fix next?
+What should SymbolWright fix next?
 ```
 
 ---
@@ -33,13 +33,13 @@ Files:
 
 ```txt
 README.md
-docs/migration/AELIB_CODEMIND_EXTRACTION_NOTES.md
-docs/roadmap/CODEMIND_PLATFORM_ROADMAP.md
-docs/governance/CODEMIND_PERMISSION_MODEL.md
-docs/governance/CODEMIND_THREAT_MODEL.md
-docs/cli/CODEMIND_CLI_TERMINAL_UX_PLAN.md
-docs/ajna/CODEMIND_AJNA_ROADMAP.md
-docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
+docs/migration/AELIB_SYMBOLWRIGHT_EXTRACTION_NOTES.md
+docs/roadmap/SYMBOLWRIGHT_PLATFORM_ROADMAP.md
+docs/governance/SYMBOLWRIGHT_PERMISSION_MODEL.md
+docs/governance/SYMBOLWRIGHT_THREAT_MODEL.md
+docs/cli/SYMBOLWRIGHT_CLI_TERMINAL_UX_PLAN.md
+docs/ajna/SYMBOLWRIGHT_AJNA_ROADMAP.md
+docs/ajna/SYMBOLWRIGHT_AJNA_BUILD_PLAN.md
 ```
 
 No runtime execution should be added in PR-1.
@@ -201,20 +201,20 @@ no merge
 
 ---
 
-## 10. PR-9 Scope — CodeMind Repair Loop
+## 10. PR-9 Scope — SymbolWright Repair Loop
 
-Connect Ajna findings back to CodeMind planning.
+Connect Ajna findings back to SymbolWright planning.
 
 Example:
 
 ```txt
 Ajna finds missing test coverage
   ↓
-CodeMind drafts test plan
+SymbolWright drafts test plan
   ↓
 operator approves implementation
   ↓
-CodeMind applies patch
+SymbolWright applies patch
   ↓
 Ajna reassesses PR
 ```
@@ -225,9 +225,9 @@ Ajna reassesses PR
 
 AELIB integration should be a client adapter, not a code absorption.
 
-AELIB should call CodeMind/Ajna as an external governed capability.
+AELIB should call SymbolWright/Ajna as an external governed capability.
 
-No AELIB internal runtime should be moved into CodeMind.
+No AELIB internal runtime should be moved into SymbolWright.
 
 ---
 
@@ -247,4 +247,4 @@ No AELIB-only coupling in the core Ajna package.
 
 ## 13. Final Build Rule
 
-Build Ajna as CodeMind's third eye: calm, evidence-driven, deeply contextual, and always review-safe.
+Build Ajna as SymbolWright's third eye: calm, evidence-driven, deeply contextual, and always review-safe.

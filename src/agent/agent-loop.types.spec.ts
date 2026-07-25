@@ -33,10 +33,10 @@ describe('agent-loop.types', () => {
     it('has required fields', () => {
       const config: AgentLoopConfig = {
         maxIterations: 50,
-        systemPrompt: 'You are CodeMind.',
+        systemPrompt: 'You are SymbolWright.',
       }
       expect(config.maxIterations).toBe(50)
-      expect(config.systemPrompt).toContain('CodeMind')
+      expect(config.systemPrompt).toContain('SymbolWright')
     })
 
     it('supports optional fields', () => {

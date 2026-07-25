@@ -1,29 +1,29 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  buildCodemindAjnaProofMatrixReport,
-  CODEMIND_AJNA_PROOF_MATRIX_BLOCK_ID,
-  CODEMIND_AJNA_PROOF_MATRIX_PHASE_ID,
-  CODEMIND_AJNA_PROOF_MATRIX_PR_ID,
-} from './codemind-ajna-proof-matrix.js'
+  buildSymbolWrightAjnaProofMatrixReport,
+  SYMBOLWRIGHT_AJNA_PROOF_MATRIX_BLOCK_ID,
+  SYMBOLWRIGHT_AJNA_PROOF_MATRIX_PHASE_ID,
+  SYMBOLWRIGHT_AJNA_PROOF_MATRIX_PR_ID,
+} from './symbolwright-ajna-proof-matrix.js'
 
-describe('CodeMind Ajna Proof Matrix', () => {
+describe('SymbolWright Ajna Proof Matrix', () => {
   it('emits canonical metadata and keeps mutation flags false', () => {
-    const report = buildCodemindAjnaProofMatrixReport({
+    const report = buildSymbolWrightAjnaProofMatrixReport({
       ajnaSpecFiles: ['src/ajna/ajna-merge-readiness.spec.ts'],
       requiredSpecFiles: ['src/ajna/ajna-merge-readiness.spec.ts'],
     })
 
-    expect(report.blockId).toBe(CODEMIND_AJNA_PROOF_MATRIX_BLOCK_ID)
-    expect(report.prId).toBe(CODEMIND_AJNA_PROOF_MATRIX_PR_ID)
-    expect(report.phaseId).toBe(CODEMIND_AJNA_PROOF_MATRIX_PHASE_ID)
+    expect(report.blockId).toBe(SYMBOLWRIGHT_AJNA_PROOF_MATRIX_BLOCK_ID)
+    expect(report.prId).toBe(SYMBOLWRIGHT_AJNA_PROOF_MATRIX_PR_ID)
+    expect(report.phaseId).toBe(SYMBOLWRIGHT_AJNA_PROOF_MATRIX_PHASE_ID)
     expect(report.mutationAllowed).toBe(false)
     expect(report.githubWriteAllowed).toBe(false)
     expect(report.providerInvocationAllowed).toBe(false)
   })
 
   it('returns AJNA_PROOF_READY and allows merge when all required specs exist', () => {
-    const report = buildCodemindAjnaProofMatrixReport({
+    const report = buildSymbolWrightAjnaProofMatrixReport({
       ajnaSpecFiles: [
         'src/ajna/ajna-merge-readiness.spec.ts',
         'src/ajna/ajna-review-renderer.spec.ts',
@@ -41,7 +41,7 @@ describe('CodeMind Ajna Proof Matrix', () => {
   })
 
   it('returns AJNA_PROOF_PARTIAL when some required specs are missing', () => {
-    const report = buildCodemindAjnaProofMatrixReport({
+    const report = buildSymbolWrightAjnaProofMatrixReport({
       ajnaSpecFiles: ['src/ajna/ajna-merge-readiness.spec.ts'],
       requiredSpecFiles: [
         'src/ajna/ajna-merge-readiness.spec.ts',
@@ -56,7 +56,7 @@ describe('CodeMind Ajna Proof Matrix', () => {
   })
 
   it('returns AJNA_PROOF_BLOCKED when blocking findings are present', () => {
-    const report = buildCodemindAjnaProofMatrixReport({
+    const report = buildSymbolWrightAjnaProofMatrixReport({
       ajnaSpecFiles: [
         'src/ajna/ajna-merge-readiness.spec.ts',
         'src/ajna/ajna-review-renderer.spec.ts',
@@ -75,7 +75,7 @@ describe('CodeMind Ajna Proof Matrix', () => {
   })
 
   it('returns AJNA_PROOF_BLOCKED when kernel trace proof is TRACE_PROOF_BLOCKED', () => {
-    const report = buildCodemindAjnaProofMatrixReport({
+    const report = buildSymbolWrightAjnaProofMatrixReport({
       ajnaSpecFiles: ['src/ajna/ajna-merge-readiness.spec.ts'],
       requiredSpecFiles: ['src/ajna/ajna-merge-readiness.spec.ts'],
       kernelTraceProofStatus: 'TRACE_PROOF_BLOCKED',
@@ -86,7 +86,7 @@ describe('CodeMind Ajna Proof Matrix', () => {
   })
 
   it('returns AJNA_PROOF_INVALID when kernel trace proof is TRACE_PROOF_INVALID', () => {
-    const report = buildCodemindAjnaProofMatrixReport({
+    const report = buildSymbolWrightAjnaProofMatrixReport({
       ajnaSpecFiles: [
         'src/ajna/ajna-merge-readiness.spec.ts',
         'src/ajna/ajna-review-renderer.spec.ts',
@@ -104,7 +104,7 @@ describe('CodeMind Ajna Proof Matrix', () => {
   })
 
   it('sorts and deduplicates required spec paths deterministically', () => {
-    const report = buildCodemindAjnaProofMatrixReport({
+    const report = buildSymbolWrightAjnaProofMatrixReport({
       ajnaSpecFiles: [
         'src/ajna/ajna-review-renderer.spec.ts',
         'src/ajna/ajna-merge-readiness.spec.ts',
@@ -133,8 +133,8 @@ describe('CodeMind Ajna Proof Matrix', () => {
         'src/ajna/ajna-review-renderer.spec.ts',
       ],
     }
-    const r1 = buildCodemindAjnaProofMatrixReport(input)
-    const r2 = buildCodemindAjnaProofMatrixReport(input)
+    const r1 = buildSymbolWrightAjnaProofMatrixReport(input)
+    const r2 = buildSymbolWrightAjnaProofMatrixReport(input)
 
     expect(r1.summary).toBe(r2.summary)
     expect(r1.status).toBe(r2.status)

@@ -4,7 +4,7 @@ import type { ProviderResolvedConfig } from '../providers/provider-gateway.types
 import {
   AgentProviderMissingCredentialsError,
   resolveAgentLlmProvider,
-} from './codemind-agent-provider.js'
+} from './symbolwright-agent-provider.js'
 
 function config(overrides: Partial<ProviderResolvedConfig> = {}): ProviderResolvedConfig {
   return {

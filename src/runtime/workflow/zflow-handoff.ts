@@ -24,7 +24,7 @@ export interface ZflowHandoffPacket {
 export function summarizeZflowReadiness(result: ZflowResult): ZflowReadinessSummary {
   const reasons: string[] = []
 
-  if (!result.recoveryOutput.includes('CodeMind recovery change ledger')) {
+  if (!result.recoveryOutput.includes('SymbolWright recovery change ledger')) {
     reasons.push('Missing recovery ledger output.')
   }
 
@@ -81,7 +81,7 @@ export function renderZflowHandoffPacket(handoff: ZflowHandoffPacket): string {
   const gateResult = evaluateOperatorReviewGate(handoff.packet)
 
   return [
-    'CodeMind zflow handoff',
+    'SymbolWright zflow handoff',
     '',
     `Readiness: ${handoff.summary.readiness}`,
     '',

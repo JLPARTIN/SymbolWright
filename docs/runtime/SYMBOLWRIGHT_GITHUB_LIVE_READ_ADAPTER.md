@@ -1,4 +1,4 @@
-# CodeMind GitHub Live Read Adapter
+# SymbolWright GitHub Live Read Adapter
 
 This document records Phase H GitHub live read adapter behind policy.
 
@@ -26,7 +26,7 @@ CLI fixture -> GitHubLiveReadPolicyWrapper -> RuntimeLiveReadClient -> evidence 
 
 ### Activation wiring
 
-When `githubToken` is present in `CodemindActivationConfig`, `activateSubsystems()` creates dynamic `github_live_read_pr` and `github_live_read_ci` tools backed by a policy-wrapped `GitHubLiveReadClient`. These dynamic tools are included in `subsystems.tools` and passed through `wireSwarmDispatchTool()` into the agent loop, ensuring the running agent can execute live GitHub reads.
+When `githubToken` is present in `SymbolWrightActivationConfig`, `activateSubsystems()` creates dynamic `github_live_read_pr` and `github_live_read_ci` tools backed by a policy-wrapped `GitHubLiveReadClient`. These dynamic tools are included in `subsystems.tools` and passed through `wireSwarmDispatchTool()` into the agent loop, ensuring the running agent can execute live GitHub reads.
 
 When no token is configured, the dynamic tools are not created and the agent loop operates with static tools only.
 

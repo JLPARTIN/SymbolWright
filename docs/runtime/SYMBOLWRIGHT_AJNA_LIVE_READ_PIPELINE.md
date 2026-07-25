@@ -1,4 +1,4 @@
-# CodeMind Ajna Live-Read Review Pipeline
+# SymbolWright Ajna Live-Read Review Pipeline
 
 This document records Phase I Ajna live-read review pipeline.
 

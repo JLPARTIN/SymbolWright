@@ -141,15 +141,23 @@ export function resolveDockerSandboxRunnerOptionsFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): DockerSandboxRunnerOptions {
   const options: MutableDockerSandboxRunnerOptions = {}
-  const dockerBinary = firstEnvValue(env, ['CODEMIND_SANDBOX_DOCKER_BINARY'])
-  const image = firstEnvValue(env, ['CODEMIND_SANDBOX_IMAGE'])
-  const memory = firstEnvValue(env, ['CODEMIND_SANDBOX_MEMORY'])
-  const cpus = firstEnvValue(env, ['CODEMIND_SANDBOX_CPUS'])
-  const user = firstEnvValue(env, ['CODEMIND_SANDBOX_USER'])
-  const network = firstEnvValue(env, ['CODEMIND_SANDBOX_NETWORK'])
-  const timeoutMs = parsePositiveInteger(firstEnvValue(env, ['CODEMIND_SANDBOX_TIMEOUT_MS']))
+  const dockerBinary = firstEnvValue(env, [
+    'SYMBOLWRIGHT_SANDBOX_DOCKER_BINARY',
+    'CODEMIND_SANDBOX_DOCKER_BINARY',
+  ])
+  const image = firstEnvValue(env, ['SYMBOLWRIGHT_SANDBOX_IMAGE', 'CODEMIND_SANDBOX_IMAGE'])
+  const memory = firstEnvValue(env, ['SYMBOLWRIGHT_SANDBOX_MEMORY', 'CODEMIND_SANDBOX_MEMORY'])
+  const cpus = firstEnvValue(env, ['SYMBOLWRIGHT_SANDBOX_CPUS', 'CODEMIND_SANDBOX_CPUS'])
+  const user = firstEnvValue(env, ['SYMBOLWRIGHT_SANDBOX_USER', 'CODEMIND_SANDBOX_USER'])
+  const network = firstEnvValue(env, ['SYMBOLWRIGHT_SANDBOX_NETWORK', 'CODEMIND_SANDBOX_NETWORK'])
+  const timeoutMs = parsePositiveInteger(
+    firstEnvValue(env, ['SYMBOLWRIGHT_SANDBOX_TIMEOUT_MS', 'CODEMIND_SANDBOX_TIMEOUT_MS']),
+  )
   const maxOutputBytes = parsePositiveInteger(
-    firstEnvValue(env, ['CODEMIND_SANDBOX_MAX_OUTPUT_BYTES']),
+    firstEnvValue(env, [
+      'SYMBOLWRIGHT_SANDBOX_MAX_OUTPUT_BYTES',
+      'CODEMIND_SANDBOX_MAX_OUTPUT_BYTES',
+    ]),
   )
 
   if (dockerBinary !== undefined) options.dockerBinary = dockerBinary

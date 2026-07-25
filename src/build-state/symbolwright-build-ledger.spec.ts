@@ -7,7 +7,7 @@ import {
   createBuildLedgerSummary,
   renderBuildLedgerConsistencyReport,
   renderBuildLedgerSummary,
-} from './codemind-build-ledger.js'
+} from './symbolwright-build-ledger.js'
 
 describe('createBuildLedgerEntry', () => {
   it('maps a runtime phase to a ledger entry', () => {
@@ -94,7 +94,7 @@ describe('checkBuildLedgerConsistency', () => {
     expect(
       report.findings.some(
         (f) =>
-          f.source === 'docs/runtime/CODEMIND_RUNTIME_BUILD_STATE.md' &&
+          f.source === 'docs/runtime/SYMBOLWRIGHT_RUNTIME_BUILD_STATE.md' &&
           f.issue.includes('Phase C'),
       ),
     ).toBe(true)
@@ -115,7 +115,7 @@ describe('checkBuildLedgerConsistency', () => {
   })
 
   it('detects README missing phase count entirely', () => {
-    const readme = 'CodeMind is a platform.'
+    const readme = 'SymbolWright is a platform.'
     const docs = allPhasesComplete
 
     const report = checkBuildLedgerConsistency(readme, docs)

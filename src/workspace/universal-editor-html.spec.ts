@@ -33,7 +33,7 @@ describe('universal editor html', () => {
     expect(html).toContain('delete-file-button')
     expect(html).toContain('export-session-button')
     expect(html).toContain('import-session-json')
-    expect(html).toContain('codemind.workspace.session.v1')
+    expect(html).toContain('symbolwright.workspace.session.v1')
     expect(html).toContain('window.localStorage.setItem')
   })
 
@@ -45,7 +45,7 @@ describe('universal editor html', () => {
     expect(html).toContain('load-project-bundle-button')
     expect(html).toContain('import-project-bundle-json')
     expect(html).toContain('Project bundles are browser-local JSON project structures')
-    expect(html).toContain('codemind.workspace.project-bundle')
+    expect(html).toContain('symbolwright.workspace.project-bundle')
   })
 
   it('embeds only registered runner ids in the client payload', () => {
@@ -71,7 +71,7 @@ describe('universal editor html', () => {
     expect(payload.defaultSession.schemaVersion).toBe(1)
     expect(payload.defaultSession.files).toHaveLength(1)
     expect(payload.defaultSession.activeFileId).toBe(payload.defaultSession.files[0]?.id)
-    expect(payload.projectBundleKind).toBe('codemind.workspace.project-bundle')
+    expect(payload.projectBundleKind).toBe('symbolwright.workspace.project-bundle')
   })
 
   it('embeds the sql.js worker source and SQL runner limits in the payload', () => {

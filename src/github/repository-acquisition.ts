@@ -14,9 +14,9 @@ import type { GitHubRepositoryTarget } from './github-repository-target.js'
  * Real repository acquisition: clones an external GitHub repository (public,
  * anonymous HTTPS only — see limitations below) or duplicates an
  * already-local repository into a controlled workspace directory under
- * `.codemind/external-repos/`. Every destination is computed by this
+ * `.symbolwright/external-repos/`. Every destination is computed by this
  * module, never accepted as a caller-supplied path, so acquisition can
- * never write outside the CodeMind workspace.
+ * never write outside the SymbolWright workspace.
  *
  * Known limitation: this module does not authenticate git clone with a
  * GitHub token. Embedding a token in a clone URL or command argument would
@@ -72,7 +72,7 @@ function shortHash(value: string): string {
 
 /** Root directory for every acquired external/duplicated repository. Always inside workspaceRoot. */
 export function resolveAcquisitionRoot(workspaceRoot: string): string {
-  return path.join(path.resolve(workspaceRoot), '.codemind', 'external-repos')
+  return path.join(path.resolve(workspaceRoot), '.symbolwright', 'external-repos')
 }
 
 function resolveAcquisitionDestination(workspaceRoot: string, slugSeed: string): string {

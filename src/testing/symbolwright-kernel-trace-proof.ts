@@ -4,30 +4,31 @@ import {
   type AgentKernelTraceFrame,
 } from '../kernel/agent-kernel-trace.types.js'
 
-export const CODEMIND_KERNEL_TRACE_PROOF_BLOCK_ID = 'CODEMIND-PROOF-HARNESS-02' as const
-export const CODEMIND_KERNEL_TRACE_PROOF_PR_ID = 'PR-CM-TEST-02' as const
-export const CODEMIND_KERNEL_TRACE_PROOF_PHASE_ID = 'CODEMIND-TEST-02' as const
+export const SYMBOLWRIGHT_KERNEL_TRACE_PROOF_BLOCK_ID = 'SYMBOLWRIGHT-PROOF-HARNESS-02' as const
+export const SYMBOLWRIGHT_KERNEL_TRACE_PROOF_PR_ID = 'PR-CM-TEST-02' as const
+export const SYMBOLWRIGHT_KERNEL_TRACE_PROOF_PHASE_ID = 'SYMBOLWRIGHT-TEST-02' as const
 
-export const CODEMIND_KERNEL_TRACE_PROOF_STATUSES = [
+export const SYMBOLWRIGHT_KERNEL_TRACE_PROOF_STATUSES = [
   'TRACE_PROOF_READY',
   'TRACE_PROOF_PARTIAL',
   'TRACE_PROOF_BLOCKED',
   'TRACE_PROOF_INVALID',
 ] as const
-export type CodemindKernelTraceProofStatus = (typeof CODEMIND_KERNEL_TRACE_PROOF_STATUSES)[number]
+export type SymbolWrightKernelTraceProofStatus =
+  (typeof SYMBOLWRIGHT_KERNEL_TRACE_PROOF_STATUSES)[number]
 
-export interface CodemindKernelTraceProofInput {
+export interface SymbolWrightKernelTraceProofInput {
   readonly executionId: string
   readonly requiredBlockIds: readonly AgentKernelBlockId[]
   readonly evidenceFrames: readonly AgentKernelTraceFrame[]
   readonly blockingNotes?: readonly string[]
 }
 
-export interface CodemindKernelTraceProofReport {
-  readonly blockId: typeof CODEMIND_KERNEL_TRACE_PROOF_BLOCK_ID
-  readonly prId: typeof CODEMIND_KERNEL_TRACE_PROOF_PR_ID
-  readonly phaseId: typeof CODEMIND_KERNEL_TRACE_PROOF_PHASE_ID
-  readonly status: CodemindKernelTraceProofStatus
+export interface SymbolWrightKernelTraceProofReport {
+  readonly blockId: typeof SYMBOLWRIGHT_KERNEL_TRACE_PROOF_BLOCK_ID
+  readonly prId: typeof SYMBOLWRIGHT_KERNEL_TRACE_PROOF_PR_ID
+  readonly phaseId: typeof SYMBOLWRIGHT_KERNEL_TRACE_PROOF_PHASE_ID
+  readonly status: SymbolWrightKernelTraceProofStatus
   readonly coveredBlockIds: readonly AgentKernelBlockId[]
   readonly missingBlockIds: readonly AgentKernelBlockId[]
   readonly blockingNotes: readonly string[]
@@ -47,7 +48,7 @@ function resolveStatus(
   replayErrors: readonly string[],
   coveredCount: number,
   requiredCount: number,
-): CodemindKernelTraceProofStatus {
+): SymbolWrightKernelTraceProofStatus {
   if (blockingNotes.length > 0) {
     return 'TRACE_PROOF_BLOCKED'
   }
@@ -63,9 +64,9 @@ function resolveStatus(
   return 'TRACE_PROOF_PARTIAL'
 }
 
-export function buildCodemindKernelTraceProofReport(
-  input: CodemindKernelTraceProofInput,
-): CodemindKernelTraceProofReport {
+export function buildSymbolWrightKernelTraceProofReport(
+  input: SymbolWrightKernelTraceProofInput,
+): SymbolWrightKernelTraceProofReport {
   const blockingNotes = [...(input.blockingNotes ?? [])].sort((a, b) => a.localeCompare(b))
 
   // Pre-filter to matching executionId so dropped-frame noise doesn't become replay errors.
@@ -104,9 +105,9 @@ export function buildCodemindKernelTraceProofReport(
         : `${coveredBlockIds.length}/${input.requiredBlockIds.length} kernel trace blocks covered.`
 
   return {
-    blockId: CODEMIND_KERNEL_TRACE_PROOF_BLOCK_ID,
-    prId: CODEMIND_KERNEL_TRACE_PROOF_PR_ID,
-    phaseId: CODEMIND_KERNEL_TRACE_PROOF_PHASE_ID,
+    blockId: SYMBOLWRIGHT_KERNEL_TRACE_PROOF_BLOCK_ID,
+    prId: SYMBOLWRIGHT_KERNEL_TRACE_PROOF_PR_ID,
+    phaseId: SYMBOLWRIGHT_KERNEL_TRACE_PROOF_PHASE_ID,
     status,
     coveredBlockIds,
     missingBlockIds,

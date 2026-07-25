@@ -7,7 +7,7 @@ It is not a live GitHub client. It only accepts already-provided local data shap
 ## Pipeline
 
 ```text
-local GitHub-shaped payload -> collector snapshot -> AjnaGithubPullRequestPayload -> CodemindAjnaReviewPrInput -> Ajna review report
+local GitHub-shaped payload -> collector snapshot -> AjnaGithubPullRequestPayload -> SymbolWrightAjnaReviewPrInput -> Ajna review report
 ```
 
 ## Boundary

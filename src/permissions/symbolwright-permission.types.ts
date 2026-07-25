@@ -1,10 +1,11 @@
-export const CODEMIND_PERMISSION_DISPOSITIONS = ['ALLOW', 'ASK', 'DENY'] as const
-export type CodemindPermissionDisposition = (typeof CODEMIND_PERMISSION_DISPOSITIONS)[number]
+export const SYMBOLWRIGHT_PERMISSION_DISPOSITIONS = ['ALLOW', 'ASK', 'DENY'] as const
+export type SymbolWrightPermissionDisposition =
+  (typeof SYMBOLWRIGHT_PERMISSION_DISPOSITIONS)[number]
 
-export const CODEMIND_RISK_LEVELS = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL', 'DENIED'] as const
-export type CodemindRiskLevel = (typeof CODEMIND_RISK_LEVELS)[number]
+export const SYMBOLWRIGHT_RISK_LEVELS = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL', 'DENIED'] as const
+export type SymbolWrightRiskLevel = (typeof SYMBOLWRIGHT_RISK_LEVELS)[number]
 
-export const CODEMIND_MODES = [
+export const SYMBOLWRIGHT_MODES = [
   'PLAN',
   'READ_ONLY',
   'PATCH_PROPOSAL',
@@ -14,9 +15,9 @@ export const CODEMIND_MODES = [
   'APPROVED_COMMAND',
   'RESTRICTED_AUTOMATION',
 ] as const
-export type CodemindMode = (typeof CODEMIND_MODES)[number]
+export type SymbolWrightMode = (typeof SYMBOLWRIGHT_MODES)[number]
 
-export const CODEMIND_TOOL_CATEGORIES = [
+export const SYMBOLWRIGHT_TOOL_CATEGORIES = [
   'NO_TOOL',
   'PLANNER',
   'REPO_METADATA_READER',
@@ -36,14 +37,16 @@ export const CODEMIND_TOOL_CATEGORIES = [
   'PROJECT_DOC_WRITER',
   'AJNA_REVIEWER',
 ] as const
-export type CodemindToolCategory = (typeof CODEMIND_TOOL_CATEGORIES)[number]
+export type SymbolWrightToolCategory = (typeof SYMBOLWRIGHT_TOOL_CATEGORIES)[number]
 
-export const CODEMIND_TRUST_ZONES = [
+export const SYMBOLWRIGHT_TRUST_ZONES = [
   'OPERATOR_SESSION',
   'GOVERNANCE_CONTRACT',
   'POLICY_FILE',
   'REPO_METADATA',
   'REPO_FILE_CONTENT',
+  'SYMBOLWRIGHT_MD',
+  /** A target repository's own legacy `CODEMIND.md` file, recognized permanently alongside `SYMBOLWRIGHT.md` -- this classifies files in repos being analyzed, not this repo's own identity. */
   'CODEMIND_MD',
   'PROJECT_DOC',
   'CI_LOG',
@@ -53,9 +56,9 @@ export const CODEMIND_TRUST_ZONES = [
   'GENERATED_PLAN',
   'UNKNOWN',
 ] as const
-export type CodemindTrustZone = (typeof CODEMIND_TRUST_ZONES)[number]
+export type SymbolWrightTrustZone = (typeof SYMBOLWRIGHT_TRUST_ZONES)[number]
 
-export const CODEMIND_PROTECTED_PATH_CLASSES = [
+export const SYMBOLWRIGHT_PROTECTED_PATH_CLASSES = [
   'SENSITIVE_CONFIG',
   'GOVERNANCE_POLICY',
   'AUDIT_LOG',
@@ -65,9 +68,9 @@ export const CODEMIND_PROTECTED_PATH_CLASSES = [
   'ENVIRONMENT_CONFIG',
   'UNKNOWN_PROTECTED',
 ] as const
-export type CodemindProtectedPathClass = (typeof CODEMIND_PROTECTED_PATH_CLASSES)[number]
+export type SymbolWrightProtectedPathClass = (typeof SYMBOLWRIGHT_PROTECTED_PATH_CLASSES)[number]
 
-export const CODEMIND_TARGET_KINDS = [
+export const SYMBOLWRIGHT_TARGET_KINDS = [
   'file',
   'directory',
   'command',
@@ -77,50 +80,50 @@ export const CODEMIND_TARGET_KINDS = [
   'project-doc',
   'unknown',
 ] as const
-export type CodemindTargetKind = (typeof CODEMIND_TARGET_KINDS)[number]
+export type SymbolWrightTargetKind = (typeof SYMBOLWRIGHT_TARGET_KINDS)[number]
 
-export interface CodemindTarget {
-  readonly kind: CodemindTargetKind
+export interface SymbolWrightTarget {
+  readonly kind: SymbolWrightTargetKind
   readonly value: string
   readonly normalizedValue?: string
-  readonly protectedPathClass?: CodemindProtectedPathClass
-  readonly trustZone?: CodemindTrustZone
+  readonly protectedPathClass?: SymbolWrightProtectedPathClass
+  readonly trustZone?: SymbolWrightTrustZone
 }
 
-export interface CodemindProtectedPathHit {
+export interface SymbolWrightProtectedPathHit {
   readonly target: string
   readonly normalizedTarget: string
-  readonly protectedClass: CodemindProtectedPathClass
+  readonly protectedClass: SymbolWrightProtectedPathClass
   readonly matchedPattern: string
-  readonly disposition: Extract<CodemindPermissionDisposition, 'ASK' | 'DENY'>
+  readonly disposition: Extract<SymbolWrightPermissionDisposition, 'ASK' | 'DENY'>
   readonly reason: string
 }
 
-export interface CodemindPermissionRequest {
+export interface SymbolWrightPermissionRequest {
   readonly requestId: string
   readonly sessionId: string
   readonly operatorId?: string
-  readonly mode: CodemindMode
-  readonly toolCategory: CodemindToolCategory
+  readonly mode: SymbolWrightMode
+  readonly toolCategory: SymbolWrightToolCategory
   readonly action: string
-  readonly targets: readonly CodemindTarget[]
-  readonly sourceTrustZone: CodemindTrustZone
+  readonly targets: readonly SymbolWrightTarget[]
+  readonly sourceTrustZone: SymbolWrightTrustZone
   readonly operatorApproved: boolean
   readonly approvalRecordId?: string
   readonly contextSummary?: string
 }
 
-export interface CodemindPermissionDecision {
+export interface SymbolWrightPermissionDecision {
   readonly requestId: string
-  readonly disposition: CodemindPermissionDisposition
-  readonly risk: CodemindRiskLevel
-  readonly toolCategory: CodemindToolCategory
+  readonly disposition: SymbolWrightPermissionDisposition
+  readonly risk: SymbolWrightRiskLevel
+  readonly toolCategory: SymbolWrightToolCategory
   readonly reasons: readonly string[]
   readonly operatorApprovalRequired: boolean
   readonly auditRequired: boolean
   readonly policyVersion: string
   readonly policyId: string
-  readonly protectedPathHits: readonly CodemindProtectedPathHit[]
+  readonly protectedPathHits: readonly SymbolWrightProtectedPathHit[]
   readonly trustBoundaryNotes: readonly string[]
   readonly deniedByInvariant: boolean
   readonly expiresAt?: string

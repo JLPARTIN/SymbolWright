@@ -4,11 +4,11 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { MissionStore } from './mission-store.js'
-import type { CodeMindMission } from './mission-types.js'
+import type { SymbolWrightMission } from './mission-types.js'
 
 const ID = 'mission_11111111-1111-4111-8111-111111111111'
 
-function mission(revision = 1): CodeMindMission {
+function mission(revision = 1): SymbolWrightMission {
   return {
     schemaVersion: 1,
     revision,
@@ -47,8 +47,11 @@ describe('MissionStore', () => {
   let store: MissionStore
 
   beforeEach(() => {
-    root = mkdtempSync(join(tmpdir(), 'codemind-mission-store-'))
-    store = new MissionStore({ workspaceRoot: root, env: { CODEMIND_API_KEY: 'never-persist-me' } })
+    root = mkdtempSync(join(tmpdir(), 'symbolwright-mission-store-'))
+    store = new MissionStore({
+      workspaceRoot: root,
+      env: { SYMBOLWRIGHT_API_KEY: 'never-persist-me' },
+    })
   })
 
   afterEach(() => rmSync(root, { recursive: true, force: true }))
@@ -65,7 +68,7 @@ describe('MissionStore', () => {
 
   it('writes split records and an append-only event file', () => {
     store.createMission(mission())
-    const dir = join(root, '.codemind', 'missions', ID)
+    const dir = join(root, '.symbolwright', 'missions', ID)
     expect(existsSync(join(dir, 'mission.json'))).toBe(true)
     expect(existsSync(join(dir, 'conversation.json'))).toBe(true)
     expect(existsSync(join(dir, 'workspace.json'))).toBe(true)
@@ -79,14 +82,14 @@ describe('MissionStore', () => {
 
   it('skips corrupt records without crashing listing', () => {
     store.createMission(mission())
-    writeFileSync(join(root, '.codemind', 'missions', ID, 'mission.json'), '{broken', 'utf8')
+    writeFileSync(join(root, '.symbolwright', 'missions', ID, 'mission.json'), '{broken', 'utf8')
     const result = store.listMissions()
     expect(result.warnings.some((warning) => warning.code === 'CORRUPT_RECORD')).toBe(true)
   })
 
   it('recovers an index from mission directories', () => {
     store.createMission(mission())
-    writeFileSync(join(root, '.codemind', 'missions', 'index.json'), '{broken', 'utf8')
+    writeFileSync(join(root, '.symbolwright', 'missions', 'index.json'), '{broken', 'utf8')
     const result = store.listMissions()
     expect(result.missions).toHaveLength(1)
     expect(result.warnings.some((warning) => warning.code === 'INDEX_RECOVERED')).toBe(true)
@@ -95,7 +98,7 @@ describe('MissionStore', () => {
   it('retains a previous valid mission record for atomic-write recovery', () => {
     store.createMission(mission())
     store.writeMission({ ...mission(2), name: 'Second' })
-    const dir = join(root, '.codemind', 'missions', ID)
+    const dir = join(root, '.symbolwright', 'missions', ID)
     expect(JSON.parse(readFileSync(join(dir, 'mission.json.previous'), 'utf8')).revision).toBe(1)
   })
 
@@ -105,7 +108,7 @@ describe('MissionStore', () => {
       notes: 'Authorization: Bearer never-persist-me',
       agent: { ...mission().agent, activeProviderId: 'anthropic' },
     })
-    const dir = join(root, '.codemind', 'missions', ID)
+    const dir = join(root, '.symbolwright', 'missions', ID)
     for (const file of ['mission.json', 'conversation.json', 'workspace.json']) {
       expect(readFileSync(join(dir, file), 'utf8')).not.toContain('never-persist-me')
     }

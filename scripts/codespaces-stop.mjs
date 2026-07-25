@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Stops the CodeMind Codespaces server started by codespaces-start.mjs.
+// Stops the SymbolWright Codespaces server started by codespaces-start.mjs.
 // Only ever signals a PID whose /proc/<pid>/environ carries the exact
 // marker this repo's start script set when it launched it -- an unrelated
 // process (even another `node`, even a PID that got reused after a reboot)
@@ -9,7 +9,7 @@ import { pathToFileURL } from 'node:url'
 import {
   PID_FILE,
   isProcessAlive,
-  isTrackedCodemindProcess,
+  isTrackedSymbolWrightProcess,
   readPidRecord,
   removePidFile,
 } from './lib/codespaces-common.mjs'
@@ -31,7 +31,7 @@ export async function stopTrackedServer({ quiet = false } = {}) {
 
   const record = readPidRecord()
   if (record === undefined) {
-    say('No tracked CodeMind server is recorded.')
+    say('No tracked SymbolWright server is recorded.')
     return { stopped: false, reason: 'not-tracked' }
   }
 
@@ -41,16 +41,16 @@ export async function stopTrackedServer({ quiet = false } = {}) {
     return { stopped: false, reason: 'already-stopped' }
   }
 
-  if (!isTrackedCodemindProcess(record.pid, record.marker)) {
+  if (!isTrackedSymbolWrightProcess(record.pid, record.marker)) {
     say(
-      `PID ${record.pid} is alive but is not the CodeMind server this repo started (marker mismatch, ` +
+      `PID ${record.pid} is alive but is not the SymbolWright server this repo started (marker mismatch, ` +
         `likely PID reuse). Not sending it any signal. Clearing the stale PID record.`,
     )
     removePidFile()
     return { stopped: false, reason: 'marker-mismatch' }
   }
 
-  say(`Stopping CodeMind server (PID ${record.pid})...`)
+  say(`Stopping SymbolWright server (PID ${record.pid})...`)
   process.kill(record.pid, 'SIGTERM')
   const exitedCleanly = await waitForExit(record.pid, 8_000)
 

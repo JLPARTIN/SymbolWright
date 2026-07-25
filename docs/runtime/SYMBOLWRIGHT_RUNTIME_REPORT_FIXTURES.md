@@ -1,4 +1,4 @@
-# CodeMind Runtime Report Fixtures
+# SymbolWright Runtime Report Fixtures
 
 All CLI renderers read JSON fixture files as input. This document describes the shared fixture format.
 

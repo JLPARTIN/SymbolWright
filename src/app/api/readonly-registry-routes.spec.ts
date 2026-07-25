@@ -7,16 +7,16 @@ import { bridgeToolsForProvider } from '../../agent/tool-schema-bridge.js'
 import { createCheckpoint } from '../../checkpoint/checkpoint-service.js'
 import { createRuntimePolicyForMode } from '../../runtime/policy/runtime-policy.js'
 import { assembleAgentTools } from '../../runtime/tools/tool-assembly.js'
-import { startChatServer, type StartedChatServer } from '../../server/codemind-chat-server.js'
+import { startChatServer, type StartedChatServer } from '../../server/symbolwright-chat-server.js'
 import { UnlimitedRateLimiter } from '../../server/rate-limiter.js'
 
-const API_KEY = 'test-codemind-key'
+const API_KEY = 'test-symbolwright-key'
 
 let started: StartedChatServer | undefined
 let cwd: string
 
 beforeEach(() => {
-  cwd = mkdtempSync(join(tmpdir(), 'codemind-readonly-registry-'))
+  cwd = mkdtempSync(join(tmpdir(), 'symbolwright-readonly-registry-'))
 })
 
 afterEach(async () => {

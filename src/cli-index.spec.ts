@@ -13,9 +13,9 @@ import { VectorStore } from './memory/vector-store.js'
 const TEST_DIR = join(process.cwd(), '.test-cli-index')
 
 describe('resolveVectorStorePath', () => {
-  it('resolves to .codemind/memory/vector-store.json', () => {
+  it('resolves to .symbolwright/memory/vector-store.json', () => {
     const path = resolveVectorStorePath('/project')
-    expect(path).toBe(join('/project', '.codemind', 'memory', 'vector-store.json'))
+    expect(path).toBe(join('/project', '.symbolwright', 'memory', 'vector-store.json'))
   })
 })
 
@@ -54,7 +54,7 @@ describe('saveVectorStore and loadVectorStore', () => {
 
   it('loadVectorStore returns undefined for malformed JSON', () => {
     const storePath = resolveVectorStorePath(TEST_DIR)
-    mkdirSync(join(TEST_DIR, '.codemind', 'memory'), { recursive: true })
+    mkdirSync(join(TEST_DIR, '.symbolwright', 'memory'), { recursive: true })
     writeFileSync(storePath, 'not json', 'utf-8')
 
     const loaded = loadVectorStore(TEST_DIR)
@@ -63,7 +63,7 @@ describe('saveVectorStore and loadVectorStore', () => {
 
   it('loadVectorStore returns undefined for missing dimensions', () => {
     const storePath = resolveVectorStorePath(TEST_DIR)
-    mkdirSync(join(TEST_DIR, '.codemind', 'memory'), { recursive: true })
+    mkdirSync(join(TEST_DIR, '.symbolwright', 'memory'), { recursive: true })
     writeFileSync(storePath, JSON.stringify({ entries: [] }), 'utf-8')
 
     const loaded = loadVectorStore(TEST_DIR)
@@ -90,7 +90,7 @@ describe('runIndexCommand', () => {
   it('indexes repository and returns summary', async () => {
     const output = await runIndexCommand([TEST_DIR])
 
-    expect(output).toContain('CodeMind Index')
+    expect(output).toContain('SymbolWright Index')
     expect(output).toContain(TEST_DIR)
     expect(output).toContain('Files scanned:')
     expect(output).toContain('Chunks indexed:')

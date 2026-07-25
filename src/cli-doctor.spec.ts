@@ -89,7 +89,7 @@ describe('renderDoctorReport', () => {
     const report = runDoctor(WORKSPACE)
     const output = renderDoctorReport(report)
 
-    expect(output).toContain('CodeMind Doctor')
+    expect(output).toContain('SymbolWright Doctor')
     expect(output).toContain('HEALTHY')
     expect(output).toContain('[PASS]')
     expect(output).toContain('passed')

@@ -14,7 +14,7 @@ function makeRepo(options: {
   readonly ledger?: unknown
   readonly lockfile?: string
 }): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-preflight-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-preflight-'))
   roots.push(root)
   fs.writeFileSync(
     path.join(root, 'package.json'),
@@ -22,9 +22,9 @@ function makeRepo(options: {
   )
   fs.writeFileSync(path.join(root, options.lockfile ?? 'package-lock.json'), 'lock')
   if (options.ledger !== undefined) {
-    fs.mkdirSync(path.join(root, '.codemind'), { recursive: true })
+    fs.mkdirSync(path.join(root, '.symbolwright'), { recursive: true })
     fs.writeFileSync(
-      path.join(root, '.codemind', 'ci-failure-ledger.json'),
+      path.join(root, '.symbolwright', 'ci-failure-ledger.json'),
       JSON.stringify(options.ledger),
     )
   }
@@ -129,7 +129,7 @@ describe('runPreflight', () => {
   })
 
   it('treats an unparsable package.json as having no available scripts', async () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-preflight-broken-'))
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-preflight-broken-'))
     roots.push(root)
     fs.writeFileSync(path.join(root, 'package.json'), '{ not valid json')
     fs.writeFileSync(path.join(root, 'package-lock.json'), 'lock')

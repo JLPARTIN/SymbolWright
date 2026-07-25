@@ -1,25 +1,25 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  buildCodemindProofHarnessReport,
-  CODEMIND_PROOF_HARNESS_BLOCK_ID,
-  CODEMIND_PROOF_HARNESS_PHASE_ID,
-  CODEMIND_PROOF_HARNESS_PR_ID,
-} from './codemind-proof-harness.js'
+  buildSymbolWrightProofHarnessReport,
+  SYMBOLWRIGHT_PROOF_HARNESS_BLOCK_ID,
+  SYMBOLWRIGHT_PROOF_HARNESS_PHASE_ID,
+  SYMBOLWRIGHT_PROOF_HARNESS_PR_ID,
+} from './symbolwright-proof-harness.js'
 
-describe('CodeMind Proof Harness', () => {
+describe('SymbolWright Proof Harness', () => {
   it('emits canonical metadata and keeps runtime mutation disabled', () => {
-    const report = buildCodemindProofHarnessReport([
+    const report = buildSymbolWrightProofHarnessReport([
       {
         domain: 'FOUNDATION',
-        requiredSpecs: ['src/codemind-foundation.spec.ts'],
-        existingSpecs: ['src/codemind-foundation.spec.ts'],
+        requiredSpecs: ['src/symbolwright-foundation.spec.ts'],
+        existingSpecs: ['src/symbolwright-foundation.spec.ts'],
       },
     ])
 
-    expect(report.blockId).toBe(CODEMIND_PROOF_HARNESS_BLOCK_ID)
-    expect(report.prId).toBe(CODEMIND_PROOF_HARNESS_PR_ID)
-    expect(report.phaseId).toBe(CODEMIND_PROOF_HARNESS_PHASE_ID)
+    expect(report.blockId).toBe(SYMBOLWRIGHT_PROOF_HARNESS_BLOCK_ID)
+    expect(report.prId).toBe(SYMBOLWRIGHT_PROOF_HARNESS_PR_ID)
+    expect(report.phaseId).toBe(SYMBOLWRIGHT_PROOF_HARNESS_PHASE_ID)
     expect(report.testCommand).toBe('npm test')
     expect(report.typecheckCommand).toBe('npm run typecheck')
     expect(report.buildCommand).toBe('npm run build')
@@ -29,7 +29,7 @@ describe('CodeMind Proof Harness', () => {
   })
 
   it('marks a domain covered when every required spec exists', () => {
-    const report = buildCodemindProofHarnessReport([
+    const report = buildSymbolWrightProofHarnessReport([
       {
         domain: 'AJNA_REVIEW_CORTEX',
         requiredSpecs: [
@@ -53,7 +53,7 @@ describe('CodeMind Proof Harness', () => {
   })
 
   it('marks a domain partial when only some required specs exist', () => {
-    const report = buildCodemindProofHarnessReport([
+    const report = buildSymbolWrightProofHarnessReport([
       {
         domain: 'AGENT_KERNEL',
         requiredSpecs: [
@@ -73,7 +73,7 @@ describe('CodeMind Proof Harness', () => {
   })
 
   it('marks a domain blocked when blocking notes are present', () => {
-    const report = buildCodemindProofHarnessReport([
+    const report = buildSymbolWrightProofHarnessReport([
       {
         domain: 'GITHUB_ADAPTERS',
         requiredSpecs: ['src/github/github-comment-adapter.spec.ts'],
@@ -92,7 +92,7 @@ describe('CodeMind Proof Harness', () => {
   })
 
   it('sorts and deduplicates spec paths for deterministic reports', () => {
-    const report = buildCodemindProofHarnessReport([
+    const report = buildSymbolWrightProofHarnessReport([
       {
         domain: 'REPO_CONTEXT',
         requiredSpecs: [

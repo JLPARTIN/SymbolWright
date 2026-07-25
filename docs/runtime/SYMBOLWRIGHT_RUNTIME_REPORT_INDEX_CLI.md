@@ -1,4 +1,4 @@
-# CodeMind Runtime Report Index CLI
+# SymbolWright Runtime Report Index CLI
 
 PR Bundle BO-BR adds a fixture-based CLI renderer for the runtime report index.
 

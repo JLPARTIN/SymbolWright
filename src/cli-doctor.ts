@@ -1,19 +1,22 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { getCodemindFoundationSnapshot } from './codemind-foundation.js'
+import { getSymbolWrightFoundationSnapshot } from './symbolwright-foundation.js'
 import {
   getCompletedRuntimeBuildPhaseCount,
   RUNTIME_BUILD_PHASES,
 } from './runtime/runtime-build-state.js'
-import { resolveCodemindConfig, validateCodemindConfig } from './config/codemind-config.js'
+import {
+  resolveSymbolWrightConfig,
+  validateSymbolWrightConfig,
+} from './config/symbolwright-config.js'
 import { ProviderGateway } from './providers/provider-gateway.js'
 import { runSandboxReadinessCheck } from './runtime/sandbox/sandbox-diagnostics.js'
 import { renderDockerSandboxConfig } from './runtime/sandbox/sandbox-runner.js'
 import { assembleAgentTools } from './runtime/tools/tool-assembly.js'
 import { resolveStoragePaths } from './storage/storage-paths.js'
 
-export const DOCTOR_BLOCK_ID = 'CODEMIND-DOCTOR-01' as const
+export const DOCTOR_BLOCK_ID = 'SYMBOLWRIGHT-DOCTOR-01' as const
 
 export type DoctorCheckStatus = 'PASS' | 'FAIL' | 'WARN'
 
@@ -91,7 +94,7 @@ function checkRuntimePhases(): DoctorCheck {
 }
 
 function checkSafetyPosture(): DoctorCheck {
-  const snap = getCodemindFoundationSnapshot()
+  const snap = getSymbolWrightFoundationSnapshot()
   const violations: string[] = []
   if (snap.mutationEnabled) violations.push('mutation')
   if (snap.githubWriteEnabled) violations.push('githubWrite')
@@ -117,8 +120,8 @@ function checkSourceDirectory(workspaceRoot: string): DoctorCheck {
 }
 
 function checkApiKey(): DoctorCheck {
-  const config = resolveCodemindConfig()
-  const validation = validateCodemindConfig(config)
+  const config = resolveSymbolWrightConfig()
+  const validation = validateSymbolWrightConfig(config)
   if (validation.redactedSummary.hasApiKey) {
     return {
       name: 'API key',
@@ -241,9 +244,13 @@ function checkSessionsDir(workspaceRoot: string): DoctorCheck {
 }
 
 function checkWorkspaceConfig(workspaceRoot: string): DoctorCheck {
-  const configPath = path.join(workspaceRoot, '.codemind', 'workspace.json')
+  const configPath = path.join(workspaceRoot, '.symbolwright', 'workspace.json')
   if (!fs.existsSync(configPath)) {
-    return { name: 'Workspace config', status: 'WARN', detail: 'No .codemind/workspace.json found' }
+    return {
+      name: 'Workspace config',
+      status: 'WARN',
+      detail: 'No .symbolwright/workspace.json found',
+    }
   }
   try {
     JSON.parse(fs.readFileSync(configPath, 'utf8'))
@@ -252,13 +259,13 @@ function checkWorkspaceConfig(workspaceRoot: string): DoctorCheck {
     return {
       name: 'Workspace config',
       status: 'FAIL',
-      detail: 'Invalid JSON in .codemind/workspace.json',
+      detail: 'Invalid JSON in .symbolwright/workspace.json',
     }
   }
 }
 
 function checkMemoryDir(workspaceRoot: string): DoctorCheck {
-  const memDir = path.join(workspaceRoot, '.codemind', 'memory')
+  const memDir = path.join(workspaceRoot, '.symbolwright', 'memory')
   if (fs.existsSync(memDir)) {
     return { name: 'Project memory', status: 'PASS', detail: memDir }
   }
@@ -315,7 +322,7 @@ export function renderDoctorReport(report: DoctorReport): string {
   }
 
   const lines = [
-    'CodeMind Doctor',
+    'SymbolWright Doctor',
     '',
     `Block: ${report.blockId}`,
     `Health: ${report.healthy ? 'HEALTHY' : 'UNHEALTHY'}`,

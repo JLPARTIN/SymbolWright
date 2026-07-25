@@ -42,8 +42,8 @@ import { DefaultGitHubPrCreationClient } from '../runtime/github-write/default-g
 import { DefaultGitHubWriteExecutorClient } from '../runtime/github-write/default-github-write-executor-client.js'
 import { DefaultPrCollaborationClient } from '../runtime/github-write/default-pr-collaboration-client.js'
 
-/** Configuration for activating all CodeMind subsystems. */
-export interface CodemindActivationConfig {
+/** Configuration for activating all SymbolWright subsystems. */
+export interface SymbolWrightActivationConfig {
   readonly provider: LLMProvider
   readonly tools: readonly RuntimeToolDefinition[]
   readonly toolContext: RuntimeToolContext
@@ -57,7 +57,7 @@ export interface CodemindActivationConfig {
 }
 
 /** Result of running the activated agent — includes agent result, dispatches, and TUI state. */
-export interface CodemindActivationResult {
+export interface SymbolWrightActivationResult {
   readonly agentResult: AgentLoopResult
   readonly swarmDispatches: readonly SwarmDispatchResult[]
   readonly subagentDispatches: readonly SubagentDispatchEvidence[]
@@ -66,7 +66,7 @@ export interface CodemindActivationResult {
 }
 
 /** All wired subsystems produced by activation. */
-export interface CodemindSubsystems {
+export interface SymbolWrightSubsystems {
   readonly provider: LLMProvider
   readonly registry: HiveMindRegistry
   readonly dispatcher: HiveMindDispatcher
@@ -79,7 +79,7 @@ export interface CodemindSubsystems {
 }
 
 /** Validates policy, wires registry/dispatcher/TUI/event-bus, and returns subsystems. */
-export function activateSubsystems(config: CodemindActivationConfig): CodemindSubsystems {
+export function activateSubsystems(config: SymbolWrightActivationConfig): SymbolWrightSubsystems {
   assertValidPolicy(config.toolContext.policy)
   const sessionId = config.sessionId ?? `cm-${Date.now()}`
   const registry = new HiveMindRegistry()
@@ -135,9 +135,9 @@ export function activateSubsystems(config: CodemindActivationConfig): CodemindSu
 
 /** Activates subsystems and runs the full agent loop with TUI tracking. */
 export async function runActivatedAgent(
-  config: CodemindActivationConfig,
+  config: SymbolWrightActivationConfig,
   userMessage: string,
-): Promise<CodemindActivationResult> {
+): Promise<SymbolWrightActivationResult> {
   const subsystems = activateSubsystems(config)
   const swarmDispatches: SwarmDispatchResult[] = []
   const subagentDispatches: SubagentDispatchEvidence[] = []
@@ -219,7 +219,7 @@ export async function runActivatedAgent(
 
 /** Dispatches a swarm task through the HiveMind dispatcher with TUI events. */
 export async function dispatchSwarmTask(
-  subsystems: CodemindSubsystems,
+  subsystems: SymbolWrightSubsystems,
   request: SwarmDispatchRequest,
   onTuiEvent?: (event: TuiEvent) => void,
 ): Promise<SwarmDispatchResult> {
@@ -316,7 +316,7 @@ function estimateCost(inputTokens: number, outputTokens: number): number {
 }
 
 /** Runs health checks on all subsystems and returns a report. */
-export function verifySubsystemHealth(subsystems: CodemindSubsystems): SubsystemHealthReport {
+export function verifySubsystemHealth(subsystems: SymbolWrightSubsystems): SubsystemHealthReport {
   const checks: SubsystemHealthCheck[] = []
 
   checks.push({

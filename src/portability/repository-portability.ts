@@ -49,7 +49,8 @@ interface RepositoryInventory {
 
 const IGNORED_DIRECTORIES = new Set([
   '.git',
-  '.codemind',
+  '.symbolwright',
+  '.symbolwright',
   'node_modules',
   'dist',
   'build',

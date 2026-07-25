@@ -1,4 +1,4 @@
-# CodeMind Live Read Client Seam
+# SymbolWright Live Read Client Seam
 
 This document records Phase G live read adapter client seam.
 

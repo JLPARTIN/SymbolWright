@@ -1,4 +1,4 @@
-# CodeMind Workspace Console
+# SymbolWright Workspace Console
 
 This bundle begins the post-CM-200 operator workspace track. It turns the TUI pieces from the Come-Alive phase into a single deterministic workspace render surface that can be embedded by future CLI, web, or CodeMode shells.
 

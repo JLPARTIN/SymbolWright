@@ -7,13 +7,13 @@ import {
   summarizeReadOnlyRepoContext,
 } from './repo-context-summary.js'
 import type {
-  CodemindChangedFileContext,
-  CodemindReadOnlyRepoContext,
+  SymbolWrightChangedFileContext,
+  SymbolWrightReadOnlyRepoContext,
 } from './repo-context.types.js'
 
 function makeChangedFile(
-  overrides: Partial<CodemindChangedFileContext> = {},
-): CodemindChangedFileContext {
+  overrides: Partial<SymbolWrightChangedFileContext> = {},
+): SymbolWrightChangedFileContext {
   return {
     path: 'src/example.ts',
     changeType: 'MODIFIED',
@@ -27,13 +27,13 @@ function makeChangedFile(
 }
 
 function makeContext(
-  overrides: Partial<CodemindReadOnlyRepoContext> = {},
-): CodemindReadOnlyRepoContext {
+  overrides: Partial<SymbolWrightReadOnlyRepoContext> = {},
+): SymbolWrightReadOnlyRepoContext {
   return {
     repository: {
       owner: 'JLPARTIN',
-      name: 'JLPARTIN-CodeMind',
-      fullName: 'JLPARTIN/JLPARTIN-CodeMind',
+      name: 'JLPARTIN-SymbolWright',
+      fullName: 'JLPARTIN/JLPARTIN-SymbolWright',
       defaultBranch: 'main',
     },
     baseRef: { name: 'main' },
@@ -110,7 +110,7 @@ describe('read-only repo context summary', () => {
     const summary = summarizeReadOnlyRepoContext(context)
 
     expect(summary).toEqual({
-      repository: 'JLPARTIN/JLPARTIN-CodeMind',
+      repository: 'JLPARTIN/JLPARTIN-SymbolWright',
       baseRef: 'main',
       headRef: 'pr5-read-only-repo-context-model',
       changedFileCount: 2,

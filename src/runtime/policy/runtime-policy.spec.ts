@@ -15,9 +15,9 @@ import {
   assertWriteApproved,
   createDefaultRuntimePolicy,
   createRuntimePolicyForMode,
-  isCodemindRuntimeMode,
+  isSymbolWrightRuntimeMode,
   isPathInsideWorkspace,
-  normalizeCodemindRuntimeMode,
+  normalizeSymbolWrightRuntimeMode,
   resolveWorkspacePath,
 } from './runtime-policy.js'
 
@@ -68,24 +68,24 @@ describe('runtime policy', () => {
   })
 
   it('normalizes runtime mode aliases onto the existing mode union', () => {
-    expect(normalizeCodemindRuntimeMode('direct')).toBe('APPROVED_EXECUTION')
-    expect(normalizeCodemindRuntimeMode('off')).toBe('APPROVED_EXECUTION')
-    expect(normalizeCodemindRuntimeMode('approved')).toBe('APPROVED_EXECUTION')
-    expect(normalizeCodemindRuntimeMode('read-only')).toBe('READ_ONLY')
-    expect(normalizeCodemindRuntimeMode('proposal only')).toBe('PROPOSAL_ONLY')
-    expect(normalizeCodemindRuntimeMode('invalid')).toBeUndefined()
+    expect(normalizeSymbolWrightRuntimeMode('direct')).toBe('APPROVED_EXECUTION')
+    expect(normalizeSymbolWrightRuntimeMode('off')).toBe('APPROVED_EXECUTION')
+    expect(normalizeSymbolWrightRuntimeMode('approved')).toBe('APPROVED_EXECUTION')
+    expect(normalizeSymbolWrightRuntimeMode('read-only')).toBe('READ_ONLY')
+    expect(normalizeSymbolWrightRuntimeMode('proposal only')).toBe('PROPOSAL_ONLY')
+    expect(normalizeSymbolWrightRuntimeMode('invalid')).toBeUndefined()
   })
 
   it('recognizes canonical runtime modes', () => {
-    expect(isCodemindRuntimeMode('PLAN_ONLY')).toBe(true)
-    expect(isCodemindRuntimeMode('READ_ONLY')).toBe(true)
-    expect(isCodemindRuntimeMode('PROPOSAL_ONLY')).toBe(true)
-    expect(isCodemindRuntimeMode('APPROVED_EXECUTION')).toBe(true)
-    expect(isCodemindRuntimeMode('DIRECT')).toBe(false)
+    expect(isSymbolWrightRuntimeMode('PLAN_ONLY')).toBe(true)
+    expect(isSymbolWrightRuntimeMode('READ_ONLY')).toBe(true)
+    expect(isSymbolWrightRuntimeMode('PROPOSAL_ONLY')).toBe(true)
+    expect(isSymbolWrightRuntimeMode('APPROVED_EXECUTION')).toBe(true)
+    expect(isSymbolWrightRuntimeMode('DIRECT')).toBe(false)
   })
 
   it('resolves paths inside the workspace', () => {
-    const workspace = path.resolve('/workspace/codemind')
+    const workspace = path.resolve('/workspace/symbolwright')
     const resolved = resolveWorkspacePath(workspace, 'src/index.ts')
 
     expect(resolved).toBe(path.join(workspace, 'src/index.ts'))
@@ -93,7 +93,7 @@ describe('runtime policy', () => {
   })
 
   it('blocks path traversal outside the workspace', () => {
-    const workspace = path.resolve('/workspace/codemind')
+    const workspace = path.resolve('/workspace/symbolwright')
 
     expect(() => resolveWorkspacePath(workspace, '../outside.txt')).toThrow(
       'Access blocked outside workspace',
@@ -101,7 +101,7 @@ describe('runtime policy', () => {
   })
 
   it('blocks readable protected paths', () => {
-    const workspace = path.resolve('/workspace/codemind')
+    const workspace = path.resolve('/workspace/symbolwright')
     const policy = createDefaultRuntimePolicy()
     const resolved = path.join(workspace, '.git', 'config')
 

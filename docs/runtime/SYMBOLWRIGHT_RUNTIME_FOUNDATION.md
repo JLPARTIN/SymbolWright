@@ -1,8 +1,8 @@
-# CodeMind Runtime Foundation
+# SymbolWright Runtime Foundation
 
-This document describes the first CodeMind runtime foundation layer.
+This document describes the first SymbolWright runtime foundation layer.
 
-The runtime foundation exists to give CodeMind a typed place to grow from command placeholders into governed agent behavior without weakening the current safety posture.
+The runtime foundation exists to give SymbolWright a typed place to grow from command placeholders into governed agent behavior without weakening the current safety posture.
 
 ## Current PR Scope
 
@@ -41,7 +41,7 @@ The policy accepts approval-shaped data as a type, but approval data does not by
 
 ## Registry Role
 
-The runtime registry is a typed catalog for future CodeMind runtime entries. It does not execute work by itself. It only stores runtime entry definitions, rejects duplicate names, and gives callers a predictable way to retrieve registered entries.
+The runtime registry is a typed catalog for future SymbolWright runtime entries. It does not execute work by itself. It only stores runtime entry definitions, rejects duplicate names, and gives callers a predictable way to retrieve registered entries.
 
 Future PRs can add read-only entries for:
 

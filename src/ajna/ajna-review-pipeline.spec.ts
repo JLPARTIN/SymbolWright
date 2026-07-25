@@ -10,7 +10,7 @@ import { createAjnaGovernanceOverride } from './governance/ajna-overrides.js'
 import type { AjnaReviewPanelViewModel } from './ui/ajna-ui.types.js'
 
 const IDENTITY = {
-  repository: 'JLPARTIN/JLPARTIN-CodeMind',
+  repository: 'JLPARTIN/JLPARTIN-SymbolWright',
   pullRequestNumber: 45,
   headSha: 'abc1234567890def',
   baseSha: 'def1234567890abc',
@@ -27,7 +27,7 @@ const ALL_READY_STATUSES = {
 
 function makeReview(overrides: Partial<AjnaReviewPanelViewModel> = {}): AjnaReviewPanelViewModel {
   return {
-    repository: 'JLPARTIN/CodeMind',
+    repository: 'JLPARTIN/SymbolWright',
     pullRequestNumber: 45,
     readiness: {
       ruling: 'READY_TO_REVIEW',

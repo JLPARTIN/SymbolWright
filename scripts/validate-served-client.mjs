@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Fetches CodeMind's served root HTML, extracts every inline <script> block,
+// Fetches SymbolWright's served root HTML, extracts every inline <script> block,
 // and syntax-checks the executable ones with the real V8 parser. Catches the
 // class of bug where TypeScript compiles cleanly but the emitted browser
 // JavaScript is invalid (e.g. an unescaped newline landing inside a
@@ -86,7 +86,7 @@ async function main() {
   const urlArgIndex = process.argv.indexOf('--url')
   const url = urlArgIndex === -1 ? undefined : process.argv[urlArgIndex + 1]
 
-  console.log(url === undefined ? 'Validating served CodeMind browser client (ephemeral server)...' : `Validating served CodeMind browser client at ${url} ...`)
+  console.log(url === undefined ? 'Validating served SymbolWright browser client (ephemeral server)...' : `Validating served SymbolWright browser client at ${url} ...`)
 
   const result = url === undefined ? await runAgainstEphemeralServer() : await fetchAndValidate(url)
   console.log(formatValidationReport(result))

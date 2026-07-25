@@ -1,6 +1,6 @@
 /**
- * JSON-RPC 2.0 dispatch for CodeMind acting as an MCP *server* — the reverse
- * direction of `mcp-stdio-transport.ts`, which is CodeMind acting as an MCP
+ * JSON-RPC 2.0 dispatch for SymbolWright acting as an MCP *server* — the reverse
+ * direction of `mcp-stdio-transport.ts`, which is SymbolWright acting as an MCP
  * *client*. Wire format (newline-delimited JSON-RPC, `initialize` /
  * `notifications/initialized` / `tools/list` / `tools/call`) follows the MCP
  * 2025-11-25 specification, negotiated down to older versions a client may

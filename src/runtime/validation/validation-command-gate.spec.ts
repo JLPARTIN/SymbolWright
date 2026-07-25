@@ -161,7 +161,7 @@ describe('validation command gate renderer', () => {
     const result = evaluateValidationCommandGate(request, shellPolicy, validApproval)
     const output = renderValidationCommandGateResult(result)
 
-    expect(output).toContain('CodeMind validation command gate')
+    expect(output).toContain('SymbolWright validation command gate')
     expect(output).toContain('Decision: ALLOWED')
     expect(output).toContain('Dry run: yes')
     expect(output).toContain('Dry-run preview: command would be allowed.')
@@ -247,7 +247,7 @@ describe('validation command gate tool', () => {
       testContext,
     )
 
-    expect(output).toContain('CodeMind validation command gate')
+    expect(output).toContain('SymbolWright validation command gate')
     expect(output).toContain('Decision: BLOCKED')
   })
 
@@ -329,7 +329,7 @@ describe('CLI validation command', () => {
 
     const output = await renderRuntimeValidationCommand(fixturePath, tmpDir)
 
-    expect(output).toContain('CodeMind validation command gate')
+    expect(output).toContain('SymbolWright validation command gate')
     expect(output).toContain('Command: npm run typecheck')
 
     fs.rmSync(tmpDir, { recursive: true })

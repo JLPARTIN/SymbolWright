@@ -1,4 +1,4 @@
-# CodeMind Zflow Reports
+# SymbolWright Zflow Reports
 
 PR Bundle AE-AH adds operator-facing report export surfaces for Zflow.
 

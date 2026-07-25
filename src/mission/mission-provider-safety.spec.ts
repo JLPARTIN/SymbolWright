@@ -28,7 +28,7 @@ describe('mission provider safety', () => {
       labels: [],
     })
     const persisted = readFileSync(
-      join(root, '.codemind', 'missions', mission.id, 'mission.json'),
+      join(root, '.symbolwright', 'missions', mission.id, 'mission.json'),
       'utf8',
     )
     expect(persisted).toContain('anthropic')

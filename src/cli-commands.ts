@@ -1,15 +1,15 @@
-import { getCodemindFoundationSnapshot } from './codemind-foundation.js'
+import { getSymbolWrightFoundationSnapshot } from './symbolwright-foundation.js'
 import {
   getCompletedRuntimeBuildPhaseCount,
   getNextRuntimeBuildPhase,
 } from './runtime/runtime-build-state.js'
 
-export const CODEMIND_CLI_COMMANDS = [
+export const SYMBOLWRIGHT_CLI_COMMANDS = [
   { name: 'help', description: 'Show available command surface' },
-  { name: 'status', description: 'Report CodeMind mode, policy, and runtime build state' },
+  { name: 'status', description: 'Report SymbolWright mode, policy, and runtime build state' },
   {
     name: 'operator [mission]',
-    description: 'Open the CodeMind Operator Workspace console',
+    description: 'Open the SymbolWright Operator Workspace console',
   },
   {
     name: 'agent [message] [--mode <mode>]',
@@ -144,11 +144,11 @@ export const CODEMIND_CLI_COMMANDS = [
   },
   {
     name: 'doctor',
-    description: 'Run health checks on the CodeMind workspace and report diagnostics',
+    description: 'Run health checks on the SymbolWright workspace and report diagnostics',
   },
   {
     name: 'version',
-    description: 'Show CodeMind version, platform identity, and runtime phase count',
+    description: 'Show SymbolWright version, platform identity, and runtime phase count',
   },
   {
     name: 'release-readiness',
@@ -226,7 +226,7 @@ export const CODEMIND_CLI_COMMANDS = [
   },
   {
     name: 'mcp list',
-    description: 'List configured MCP servers from .codemind/mcp.json and probe reachability',
+    description: 'List configured MCP servers from .symbolwright/mcp.json and probe reachability',
   },
   {
     name: 'mcp tools [server]',
@@ -239,7 +239,7 @@ export const CODEMIND_CLI_COMMANDS = [
   {
     name: 'mcp-server [--mode <mode>]',
     description:
-      'Run CodeMind itself as an MCP server over stdio (default READ_ONLY) so any MCP-compatible LLM client can use it as a plugin',
+      'Run SymbolWright itself as an MCP server over stdio (default READ_ONLY) so any MCP-compatible LLM client can use it as a plugin',
   },
   {
     name: 'web fetch <url> [--json] [--allow-private] [--mode <mode>]',
@@ -271,7 +271,7 @@ export const CODEMIND_CLI_COMMANDS = [
   },
   {
     name: 'skill list',
-    description: 'List bundled, project, and Claude-compatible CodeMind Skills',
+    description: 'List bundled, project, and Claude-compatible SymbolWright Skills',
   },
   {
     name: 'skill show <name>',
@@ -279,23 +279,25 @@ export const CODEMIND_CLI_COMMANDS = [
   },
   {
     name: 'skill run <name> [args] [--enable-governed] [--json]',
-    description: 'Run a file-based CodeMind Skill; forked skills use the subagent runtime',
+    description: 'Run a file-based SymbolWright Skill; forked skills use the subagent runtime',
   },
   {
     name: 'serve [--host <host>] [--port <port>] [--cors-origin <origin>]',
     description:
-      'Start the CodeMind Chat API + browser UI, routed through the provider gateway (requires CODEMIND_API_KEY)',
+      'Start the SymbolWright Chat API + browser UI, routed through the provider gateway (requires SYMBOLWRIGHT_API_KEY)',
   },
 ] as const
 
 export function renderHelp(): string {
   const lines = [
-    'CodeMind — direct execution AI coding agent',
+    'SymbolWright — direct execution AI coding agent',
     '',
-    'Usage: codemind <command> [args]',
+    'Usage: symbolwright <command> [args]',
     '',
     'Commands:',
-    ...CODEMIND_CLI_COMMANDS.map(({ name, description }) => `  ${name.padEnd(56)} ${description}`),
+    ...SYMBOLWRIGHT_CLI_COMMANDS.map(
+      ({ name, description }) => `  ${name.padEnd(56)} ${description}`,
+    ),
     '',
     'Run "codemind agent --mode APPROVED_EXECUTION" for direct agent work.',
     'Run "codemind status" to see platform posture and active policy.',
@@ -304,7 +306,7 @@ export function renderHelp(): string {
 }
 
 export function renderStatus(): string {
-  const snap = getCodemindFoundationSnapshot()
+  const snap = getSymbolWrightFoundationSnapshot()
   const nextPhase = getNextRuntimeBuildPhase()
   const lines = [
     `Platform:           ${snap.platform}`,
@@ -324,7 +326,7 @@ export function renderNotYetActive(command: string): string {
   return [
     `Command not active yet: ${command}`,
     '',
-    'This command is reserved for a later CodeMind runtime phase.',
+    'This command is reserved for a later SymbolWright runtime phase.',
     'Run "codemind status" to see the current activation surface.',
   ].join('\n')
 }

@@ -20,7 +20,7 @@ export const DEFAULT_APP_SHELL_ROUTE: AppShellRouteId = 'dashboard'
  * view's markup is already present in the DOM as a sibling
  * `<section data-view="...">`; the router only toggles visibility and calls
  * a per-view init hook on first (or repeat) entry — no virtual DOM, no
- * bundler, consistent with the rest of CodeMind's zero-dependency
+ * bundler, consistent with the rest of SymbolWright's zero-dependency
  * server-rendered client scripts.
  *
  * Hash-based routing (not the History API) was chosen deliberately: the

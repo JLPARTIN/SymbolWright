@@ -53,7 +53,7 @@ describe('renderAppShellHtml', () => {
     const html = renderAppShellHtml()
     expect(html).toContain("registerRouterViewInit('autonomy'")
     expect(html).toContain("'/api/missions/' + encodeURIComponent(missionId) + '/autonomy'")
-    expect(html).toContain("authorization: 'Bearer ' + appState.codemindKey")
+    expect(html).toContain("authorization: 'Bearer ' + appState.symbolWrightKey")
     expect(html).toContain("'release'")
   })
 
@@ -74,16 +74,16 @@ describe('renderAppShellHtml', () => {
 
   it('serves a single application shell document', () => {
     const html = renderAppShellHtml()
-    expect(html).toContain('<title>CodeMind</title>')
+    expect(html).toContain('<title>SymbolWright</title>')
     expect(html.match(/<!doctype html>/gi)?.length).toBe(1)
   })
 
   it('wires the embedded workspace-to-agent handoff instead of only the separate-page draft link', () => {
     const html = renderAppShellHtml()
     // The fallback <a id="chat-draft-link"> markup is still present (workspace-client-script.ts
-    // only uses it when window.codemindHandleWorkspaceDraft is undefined), but the shell defines
+    // only uses it when window.symbolWrightHandleWorkspaceDraft is undefined), but the shell defines
     // that hook, so the in-page handoff is what actually fires when a user clicks an AI task button.
-    expect(html).toContain('window.codemindHandleWorkspaceDraft = function')
+    expect(html).toContain('window.symbolWrightHandleWorkspaceDraft = function')
     expect(html).toContain("registerRouterViewInit('agent', applyPendingAgentDraftToAgentView)")
   })
 

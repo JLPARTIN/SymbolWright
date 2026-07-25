@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import {
   createReadOnlyRuntimeCapabilityFlags,
-  evaluateCodemindRuntimeBoundary,
-} from './codemind-runtime-boundary.js'
-import type { CodemindRuntimeAdapterDescriptor } from './codemind-runtime.types.js'
+  evaluateSymbolWrightRuntimeBoundary,
+} from './symbolwright-runtime-boundary.js'
+import type { SymbolWrightRuntimeAdapterDescriptor } from './symbolwright-runtime.types.js'
 
 function makeDescriptor(
-  overrides: Partial<CodemindRuntimeAdapterDescriptor> = {},
-): CodemindRuntimeAdapterDescriptor {
+  overrides: Partial<SymbolWrightRuntimeAdapterDescriptor> = {},
+): SymbolWrightRuntimeAdapterDescriptor {
   return {
     adapterId: 'runtime-adapter-1',
     adapterKind: 'GITHUB_PR_CONTEXT_READER',
@@ -23,7 +23,7 @@ function makeDescriptor(
       targets: [
         {
           kind: 'github-resource',
-          value: 'JLPARTIN/JLPARTIN-CodeMind/pull/8',
+          value: 'JLPARTIN/JLPARTIN-SymbolWright/pull/8',
         },
       ],
       sourceTrustZone: 'OPERATOR_SESSION',
@@ -33,9 +33,9 @@ function makeDescriptor(
   }
 }
 
-describe('CodeMind runtime boundary', () => {
+describe('SymbolWright runtime boundary', () => {
   it('allows approved read-only adapter descriptors', () => {
-    const decision = evaluateCodemindRuntimeBoundary(makeDescriptor())
+    const decision = evaluateSymbolWrightRuntimeBoundary(makeDescriptor())
 
     expect(decision.allowedToRun).toBe(true)
     expect(decision.permissionDecision.disposition).toBe('ALLOW')
@@ -44,7 +44,7 @@ describe('CodeMind runtime boundary', () => {
   })
 
   it('does not allow unapproved adapter descriptors', () => {
-    const decision = evaluateCodemindRuntimeBoundary(
+    const decision = evaluateSymbolWrightRuntimeBoundary(
       makeDescriptor({
         permissionRequest: {
           ...makeDescriptor().permissionRequest,
@@ -59,7 +59,7 @@ describe('CodeMind runtime boundary', () => {
   })
 
   it('does not allow descriptors with write-style capability flags enabled', () => {
-    const decision = evaluateCodemindRuntimeBoundary(
+    const decision = evaluateSymbolWrightRuntimeBoundary(
       makeDescriptor({
         capabilityFlags: {
           ...createReadOnlyRuntimeCapabilityFlags(),
@@ -76,7 +76,7 @@ describe('CodeMind runtime boundary', () => {
   })
 
   it('does not allow merge capability in the runtime boundary', () => {
-    const decision = evaluateCodemindRuntimeBoundary(
+    const decision = evaluateSymbolWrightRuntimeBoundary(
       makeDescriptor({
         capabilityFlags: {
           ...createReadOnlyRuntimeCapabilityFlags(),
@@ -90,7 +90,7 @@ describe('CodeMind runtime boundary', () => {
   })
 
   it('requires read-only execution mode when network runtime is enabled', () => {
-    const decision = evaluateCodemindRuntimeBoundary(
+    const decision = evaluateSymbolWrightRuntimeBoundary(
       makeDescriptor({
         executionMode: 'APPROVAL_REQUIRED',
         capabilityFlags: {

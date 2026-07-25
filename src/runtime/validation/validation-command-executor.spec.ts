@@ -76,7 +76,7 @@ const sandboxRunner: SandboxRunner = {
 }
 
 function makeWorkspace(): string {
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-exec-'))
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-exec-'))
   fs.writeFileSync(
     path.join(workspace, 'package.json'),
     JSON.stringify({
@@ -176,7 +176,7 @@ describe('runValidationCommand', () => {
   })
 
   it('redacts secrets in output', async () => {
-    const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-exec-redact-'))
+    const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-exec-redact-'))
     fs.writeFileSync(
       path.join(workspace, 'package.json'),
       JSON.stringify({
@@ -281,7 +281,7 @@ describe('renderValidationExecutorResult', () => {
     )
     const output = renderValidationExecutorResult(result)
 
-    expect(output).toContain('CodeMind Validation Command Executor')
+    expect(output).toContain('SymbolWright Validation Command Executor')
     expect(output).toContain('Outcome: PASS')
     expect(output).toContain('Recommended: Validation passed')
   })

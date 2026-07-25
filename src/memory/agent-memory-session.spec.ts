@@ -10,7 +10,7 @@ import { initializeAgentMemorySession } from './agent-memory-session.js'
 const roots: string[] = []
 
 function makeWorkspace(): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-agent-memory-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-agent-memory-'))
   roots.push(root)
   return root
 }
@@ -48,9 +48,9 @@ describe('initializeAgentMemorySession', () => {
 
   it('migrates an existing legacy ci-failure-ledger.json into episodic memory', () => {
     const cwd = makeWorkspace()
-    fs.mkdirSync(path.join(cwd, '.codemind'), { recursive: true })
+    fs.mkdirSync(path.join(cwd, '.symbolwright'), { recursive: true })
     fs.writeFileSync(
-      path.join(cwd, '.codemind', 'ci-failure-ledger.json'),
+      path.join(cwd, '.symbolwright', 'ci-failure-ledger.json'),
       JSON.stringify({
         failures: [
           {
@@ -67,7 +67,7 @@ describe('initializeAgentMemorySession', () => {
     const session = initializeAgentMemorySession(cwd, mockProvider())
     try {
       expect(session.migrationResult).toEqual({ status: 'migrated', migratedCount: 1 })
-      expect(fs.existsSync(path.join(cwd, '.codemind', 'ci-failure-ledger.json'))).toBe(false)
+      expect(fs.existsSync(path.join(cwd, '.symbolwright', 'ci-failure-ledger.json'))).toBe(false)
 
       const recalled = session.tools.memory_recall('FORMAT_CHECK_FAILURE')
       expect(recalled).toContain('FORMAT_CHECK_FAILURE')

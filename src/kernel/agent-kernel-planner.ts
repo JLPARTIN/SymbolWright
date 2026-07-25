@@ -29,7 +29,7 @@ function buildWorkflowSteps(
       stepId: 'ak-01-governance-preflight',
       kind: 'plan-only',
       role: 'orchestrator',
-      summary: 'Evaluate the request against CodeMind permission doctrine.',
+      summary: 'Evaluate the request against SymbolWright permission doctrine.',
       approvalCheckpoint: true,
       allowedToMutate: false,
     },
@@ -136,7 +136,7 @@ export function planAgentKernel01(
       .map((step) => step.stepId),
     blockedReasons,
     doctrineNotes: [
-      'AGENT-KERNEL-01 imports the X1YA0I-A-O-S planning substrate into CodeMind-native contracts.',
+      'AGENT-KERNEL-01 imports the X1YA0I-A-O-S planning substrate into SymbolWright-native contracts.',
       'This block is planning-only and does not introduce external side effects.',
       'Patch work is represented as proposal planning until the governed execution spine is introduced.',
       'Role memory scopes remain isolated, shared-read-only, or export-only.',
@@ -145,7 +145,7 @@ export function planAgentKernel01(
       'X1YA0I-A-O-S AGENT-OS-14 multi-agent role layer',
       'X1YA0I-A-O-S governed skill registry doctrine',
       'X1YA0I-A-O-S workflow validation and memory capsule planning doctrine',
-      'CodeMind Phase-16G-AK-01 runtime spine integration lineage',
+      'SymbolWright Phase-16G-AK-01 runtime spine integration lineage',
     ],
   }
 }

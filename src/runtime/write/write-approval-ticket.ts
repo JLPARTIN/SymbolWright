@@ -39,7 +39,7 @@ export function createWriteApprovalTicket(
 
 export function renderWriteApprovalTicket(ticket: WriteApprovalTicket): string {
   const sections: string[] = [
-    'CodeMind write approval ticket',
+    'SymbolWright write approval ticket',
     '',
     `Ticket ID: ${ticket.ticketId}`,
     `Intent ID: ${ticket.intentId}`,

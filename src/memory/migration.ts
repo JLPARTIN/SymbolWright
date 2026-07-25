@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 
 import type { MemoryDatabase } from './storage/database.js'
 
-const DEFAULT_LEGACY_PATH = resolve(process.cwd(), '.codemind/ci-failure-ledger.json')
+const DEFAULT_LEGACY_PATH = resolve(process.cwd(), '.symbolwright/ci-failure-ledger.json')
 
 export interface LegacyFailureRecord {
   readonly failureClass: string

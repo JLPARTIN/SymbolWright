@@ -12,7 +12,7 @@ import {
 const tempDirs: string[] = []
 
 function writeRequestFile(input: unknown): string {
-  const rootDir = mkdtempSync(join(tmpdir(), 'codemind-ajna-client-collector-'))
+  const rootDir = mkdtempSync(join(tmpdir(), 'symbolwright-ajna-client-collector-'))
   tempDirs.push(rootDir)
   const inputPath = join(rootDir, 'request.json')
   writeFileSync(inputPath, JSON.stringify(input), 'utf-8')
@@ -28,10 +28,10 @@ afterEach(() => {
 describe('parseAjnaClientCollectorFixtureRequest', () => {
   it('accepts a local request object', () => {
     const request = parseAjnaClientCollectorFixtureRequest(
-      JSON.stringify({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 70 }),
+      JSON.stringify({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 70 }),
     )
 
-    expect(request.repository).toBe('JLPARTIN/CodeMind')
+    expect(request.repository).toBe('JLPARTIN/SymbolWright')
     expect(request.pullRequestNumber).toBe(70)
   })
 
@@ -50,13 +50,13 @@ describe('parseAjnaClientCollectorFixtureRequest', () => {
 describe('renderAjnaClientCollectorFixtureForFile', () => {
   it('renders a collector snapshot JSON document from the default fake client', async () => {
     const output = await renderAjnaClientCollectorFixtureForFile(
-      writeRequestFile({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 70 }),
+      writeRequestFile({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 70 }),
     )
 
-    expect(output).toContain('"repository": "JLPARTIN/CodeMind"')
+    expect(output).toContain('"repository": "JLPARTIN/SymbolWright"')
     expect(output).toContain('"pullRequestNumber": 70')
     expect(output).toContain('fixture-client-pr-70')
-    expect(output).toContain('Fixture Validate CodeMind')
+    expect(output).toContain('Fixture Validate SymbolWright')
   })
 
   it('accepts an injected fake client', async () => {
@@ -72,7 +72,7 @@ describe('renderAjnaClientCollectorFixtureForFile', () => {
     }
 
     const output = await renderAjnaClientCollectorFixtureForFile(
-      writeRequestFile({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 71 }),
+      writeRequestFile({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 71 }),
       client,
     )
 

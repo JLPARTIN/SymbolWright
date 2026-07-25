@@ -95,7 +95,12 @@ function parseChangedFiles(statusOutput: string): readonly PrOperationChangedFil
       path: line.slice(3).trim(),
       changeType: changeTypeForStatusCode(line.slice(0, 2)),
     }))
-    .filter((entry) => entry.path.length > 0 && !entry.path.startsWith('.codemind/'))
+    .filter(
+      (entry) =>
+        entry.path.length > 0 &&
+        !entry.path.startsWith('.symbolwright/') &&
+        !entry.path.startsWith('.symbolwright/'),
+    )
 }
 
 /**
@@ -179,7 +184,7 @@ export async function handleGitHubIntakeRoute(
     if (!isPublish) {
       const status = await runGitCommand(['status', '--porcelain=v1'], mission.repository.rootPath)
       const changedFiles = parseChangedFiles(status.stdout)
-      const branchName = `codemind/${mission.id}`
+      const branchName = `symbolwright/${mission.id}`
       const packet = await preparePrOperationPacket({
         repositoryRoot: mission.repository.rootPath,
         branchName,

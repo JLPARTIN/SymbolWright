@@ -28,7 +28,7 @@ const executeFile = promisify(execFile)
 const roots: string[] = []
 
 async function fixture(): Promise<string> {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-bundle5-proof-'))
+  const root = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-bundle5-proof-'))
   roots.push(root)
   await writeFile(
     path.join(root, 'package.json'),

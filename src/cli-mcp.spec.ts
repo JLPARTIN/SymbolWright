@@ -14,10 +14,10 @@ describe('cli-mcp', () => {
   let workspaceDir: string
 
   beforeEach(() => {
-    workspaceDir = mkdtempSync(join(tmpdir(), 'codemind-cli-mcp-'))
-    mkdirSync(join(workspaceDir, '.codemind'), { recursive: true })
+    workspaceDir = mkdtempSync(join(tmpdir(), 'symbolwright-cli-mcp-'))
+    mkdirSync(join(workspaceDir, '.symbolwright'), { recursive: true })
     writeFileSync(
-      join(workspaceDir, '.codemind', 'mcp.json'),
+      join(workspaceDir, '.symbolwright', 'mcp.json'),
       JSON.stringify({
         servers: { fixture: { command: 'node', args: [FIXTURE_SERVER_PATH] } },
       }),
@@ -30,7 +30,7 @@ describe('cli-mcp', () => {
 
   describe('renderMcpListCommand', () => {
     it('reports no servers configured when mcp.json is absent', async () => {
-      const emptyDir = mkdtempSync(join(tmpdir(), 'codemind-cli-mcp-empty-'))
+      const emptyDir = mkdtempSync(join(tmpdir(), 'symbolwright-cli-mcp-empty-'))
       try {
         const output = await renderMcpListCommand([], emptyDir)
         expect(output).toContain('No servers configured')

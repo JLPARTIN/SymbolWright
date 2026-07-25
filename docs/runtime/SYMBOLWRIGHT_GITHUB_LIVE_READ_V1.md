@@ -1,4 +1,4 @@
-# CodeMind GitHub Live Read Adapter v1
+# SymbolWright GitHub Live Read Adapter v1
 
 This document describes the v1 live GitHub read adapter, which converts the existing "not yet wired" seam into a real read-only adapter behind policy.
 

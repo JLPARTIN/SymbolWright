@@ -99,9 +99,9 @@ describe('DockerPortableValidationRunner', () => {
   })
 
   it('uses configured Docker resource limits and binary overrides', async () => {
-    vi.stubEnv('CODEMIND_SANDBOX_DOCKER_BINARY', 'custom-docker')
-    vi.stubEnv('CODEMIND_SANDBOX_MEMORY', '512m')
-    vi.stubEnv('CODEMIND_SANDBOX_CPUS', '2')
+    vi.stubEnv('SYMBOLWRIGHT_SANDBOX_DOCKER_BINARY', 'custom-docker')
+    vi.stubEnv('SYMBOLWRIGHT_SANDBOX_MEMORY', '512m')
+    vi.stubEnv('SYMBOLWRIGHT_SANDBOX_CPUS', '2')
     const { spawnProcess } = completedProcess({ code: 0 })
     const runner = new DockerPortableValidationRunner(undefined, spawnProcess)
 

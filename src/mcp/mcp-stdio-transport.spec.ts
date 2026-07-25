@@ -51,7 +51,7 @@ describe('McpStdioTransport', () => {
   })
 
   it('rejects pending requests when the command does not exist', async () => {
-    transport = new McpStdioTransport({ command: 'codemind-nonexistent-binary-xyz', args: [] })
+    transport = new McpStdioTransport({ command: 'symbolwright-nonexistent-binary-xyz', args: [] })
 
     await expect(transport.request('initialize', {}, 2000)).rejects.toThrow()
     expect(transport.spawnFailure).toBeDefined()

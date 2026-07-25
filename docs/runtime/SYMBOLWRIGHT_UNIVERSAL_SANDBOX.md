@@ -1,12 +1,12 @@
-# CodeMind Universal Sandbox Runtime
+# SymbolWright Universal Sandbox Runtime
 
-This document tracks the Bundle #4 sandbox runtime rollout. The current implementation is intentionally conservative: CodeMind can discover runtimes, expose sandbox inventory, persist sandbox evidence, and show image policy diagnostics, but it does not yet execute host or container code through the new sandbox backend.
+This document tracks the Bundle #4 sandbox runtime rollout. The current implementation is intentionally conservative: SymbolWright can discover runtimes, expose sandbox inventory, persist sandbox evidence, and show image policy diagnostics, but it does not yet execute host or container code through the new sandbox backend.
 
 ## Current implemented slices
 
 - Shared sandbox request/result/policy model.
 - Authenticated `/api/sandbox/*` routes in the unified server.
-- Local `.codemind/sandbox/` execution history records.
+- Local `.symbolwright/sandbox/` execution history records.
 - Runtime discovery probes for common language commands and container engines.
 - Explicit container image allowlist.
 - Read-only sandbox doctor and image diagnostics renderer.
@@ -18,12 +18,12 @@ This document tracks the Bundle #4 sandbox runtime rollout. The current implemen
 
 ## Trust classes
 
-CodeMind distinguishes these runtime trust classes:
+SymbolWright distinguishes these runtime trust classes:
 
 - `browser-isolated`: browser worker, Pyodide, sql.js, or sandboxed preview style execution.
 - `container-isolated`: reserved for a future container backend that enforces real isolation controls.
 - `wasm-isolated`: reserved for constrained WebAssembly runtimes.
-- `guarded-host`: local child-process execution on the CodeMind host. This is not a strong sandbox and remains disabled by default.
+- `guarded-host`: local child-process execution on the SymbolWright host. This is not a strong sandbox and remains disabled by default.
 - `unavailable`: no runtime is available or allowed.
 
 ## Runtime discovery
@@ -77,7 +77,7 @@ The generated plan includes safety controls such as:
 - controlled temporary workspace mount only;
 - minimal environment variables.
 
-The planner rejects request-shaped attempts to supply arbitrary container options, arbitrary image names, unsafe workspace paths, host home paths, Git directories, and container-engine socket paths. The plan remains `executionEnabled: false`; it is not an execution backend and CodeMind does not run the generated argv in this slice.
+The planner rejects request-shaped attempts to supply arbitrary container options, arbitrary image names, unsafe workspace paths, host home paths, Git directories, and container-engine socket paths. The plan remains `executionEnabled: false`; it is not an execution backend and SymbolWright does not run the generated argv in this slice.
 
 ## Sandbox doctor
 
@@ -90,7 +90,7 @@ The sandbox doctor report is read-only. It reports:
 - operator-reviewed image preparation command hints;
 - warnings about unsupported or future execution behavior.
 
-Preparation commands are advisory. CodeMind does not run them automatically.
+Preparation commands are advisory. SymbolWright does not run them automatically.
 
 ## Image command contracts
 
@@ -103,7 +103,7 @@ codemind sandbox inspect node-22-bookworm-slim
 codemind sandbox prepare python-3-12-slim
 ```
 
-Inspection is read-only. It may call the detected container engine to inspect an allowlisted image already present in the local image store. It does not acquire images, execute containers, mount volumes, pass arbitrary image names, or mutate the host. Preparation renders a review-only command plan when Docker or Podman has been detected. CodeMind does not run that command, download the image, execute containers, or mutate the host in this slice.
+Inspection is read-only. It may call the detected container engine to inspect an allowlisted image already present in the local image store. It does not acquire images, execute containers, mount volumes, pass arbitrary image names, or mutate the host. Preparation renders a review-only command plan when Docker or Podman has been detected. SymbolWright does not run that command, download the image, execute containers, or mutate the host in this slice.
 
 Raw image names such as `node:22-bookworm-slim` or registry paths are rejected because browser and CLI requests must not select arbitrary container images.
 

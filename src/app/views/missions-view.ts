@@ -7,8 +7,8 @@ export function renderMissionsViewHtml(): string {
 
   return `<section data-view="missions" class="app-view" style="display:none">
     <h2>Missions</h2>
-    <p class="muted">Durable local coding objectives. Missions persist conversation, repository context, evidence, checkpoint and memory references, and Git/PR progress under <code>.codemind/missions/</code>.</p>
-    <div id="mission-connection-warning" class="mission-warning" style="display:none">Connect with your CodeMind access key before opening missions.</div>
+    <p class="muted">Durable local coding objectives. Missions persist conversation, repository context, evidence, checkpoint and memory references, and Git/PR progress under <code>.symbolwright/missions/</code>.</p>
+    <div id="mission-connection-warning" class="mission-warning" style="display:none">Connect with your SymbolWright access key before opening missions.</div>
 
     <div class="mission-layout">
       <div class="card mission-sidebar">
@@ -35,13 +35,13 @@ export function renderMissionsViewHtml(): string {
         <div id="mission-create-status" class="muted"></div>
 
         <h3>External Repository Intake</h3>
-        <p class="muted">Acquire a GitHub repository into an isolated CodeMind workspace, detect its ecosystem, and optionally create a mission against it. GitHub writes stay blocked unless explicitly allowed below.</p>
+        <p class="muted">Acquire a GitHub repository into an isolated SymbolWright workspace, detect its ecosystem, and optionally create a mission against it. GitHub writes stay blocked unless explicitly allowed below.</p>
         <label for="intake-target">Repository URL or owner/repo</label>
         <input id="intake-target" placeholder="https://github.com/owner/repo or owner/repo" />
         <label for="intake-ref">Branch/ref (optional)</label>
         <input id="intake-ref" placeholder="main" />
         <label for="intake-objective">Objective</label>
-        <textarea id="intake-objective" maxlength="32000" placeholder="What should CodeMind do in this repository?"></textarea>
+        <textarea id="intake-objective" maxlength="32000" placeholder="What should SymbolWright do in this repository?"></textarea>
         <label for="intake-mode">Intake mode</label>
         <select id="intake-mode">
           <option value="dry-run">Analyze only (no clone)</option>
@@ -82,7 +82,7 @@ export function renderMissionsViewHtml(): string {
         <div class="card">
           <h3>Import Mission Bundle</h3>
           <p class="muted">Imported missions receive a new local ID and begin PAUSED. Repository files, credentials, and checkpoint contents are never imported by default.</p>
-          <textarea id="mission-import-json" class="mission-import" placeholder="Paste codemind.mission.bundle JSON"></textarea>
+          <textarea id="mission-import-json" class="mission-import" placeholder="Paste symbolwright.mission.bundle JSON"></textarea>
           <button type="button" class="secondary" id="mission-import-btn">Import Paused Copy</button>
           <div id="mission-import-status" class="muted"></div>
         </div>
@@ -96,7 +96,7 @@ export function buildMissionsViewClientScript(): string {
     const missionUiState = { selectedId: null, selected: null, reconciliation: null, loaded: false };
 
     function missionAuthHeaders(extra) {
-      return Object.assign({ authorization: 'Bearer ' + appState.codemindKey }, extra || {});
+      return Object.assign({ authorization: 'Bearer ' + appState.symbolWrightKey }, extra || {});
     }
 
     async function missionFetchJson(url, options) {
@@ -122,14 +122,14 @@ export function buildMissionsViewClientScript(): string {
         activeMission: mission || null,
         activeMissionReadOnly: false,
       });
-      if (mission) localStorage.setItem('codemind_active_mission_id', mission.id);
-      else localStorage.removeItem('codemind_active_mission_id');
+      if (mission) localStorage.setItem('symbolwright_active_mission_id', mission.id);
+      else localStorage.removeItem('symbolwright_active_mission_id');
       missionRenderActiveHeader();
-      if (typeof window.codemindApplyMissionToAgent === 'function' && mission) {
-        window.codemindApplyMissionToAgent(mission);
+      if (typeof window.symbolWrightApplyMissionToAgent === 'function' && mission) {
+        window.symbolWrightApplyMissionToAgent(mission);
       }
-      if (typeof window.codemindApplyMissionToRepository === 'function' && mission) {
-        window.codemindApplyMissionToRepository(mission, reconciliation || null);
+      if (typeof window.symbolWrightApplyMissionToRepository === 'function' && mission) {
+        window.symbolWrightApplyMissionToRepository(mission, reconciliation || null);
       }
     }
 
@@ -172,7 +172,7 @@ export function buildMissionsViewClientScript(): string {
     }
 
     async function missionLoadList() {
-      if (!appState.codemindKey) {
+      if (!appState.symbolWrightKey) {
         document.getElementById('mission-connection-warning').style.display = 'block';
         return;
       }
@@ -435,7 +435,7 @@ export function buildMissionsViewClientScript(): string {
       }
       if (action === 'attach-scratch') {
         if (!window.confirm('Attach the current browser Scratch Workspace structure to this mission? This is an explicit one-time link; no provider keys are included.')) return;
-        const scratchState = typeof window.codemindGetScratchMissionState === 'function' ? window.codemindGetScratchMissionState() : {};
+        const scratchState = typeof window.symbolWrightGetScratchMissionState === 'function' ? window.symbolWrightGetScratchMissionState() : {};
         const result = await missionFetchJson('/api/missions/' + encodeURIComponent(mission.id) + '/attach-scratch', {
           method: 'POST', headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ revision: mission.revision, scratchState: scratchState }),
@@ -491,7 +491,7 @@ export function buildMissionsViewClientScript(): string {
       await missionOpen(result.body.mission.id);
     }
 
-    window.codemindRecordMissionEvent = async function (record) {
+    window.symbolWrightRecordMissionEvent = async function (record) {
       if (!appState.activeMissionId || appState.activeMissionReadOnly) return null;
       const result = await missionFetchJson('/api/missions/' + encodeURIComponent(appState.activeMissionId) + '/record', {
         method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(record),
@@ -506,12 +506,12 @@ export function buildMissionsViewClientScript(): string {
       return result;
     };
 
-    window.codemindReloadActiveMission = async function () {
-      const id = appState.activeMissionId || localStorage.getItem('codemind_active_mission_id');
-      if (!id || !appState.codemindKey) return null;
+    window.symbolWrightReloadActiveMission = async function () {
+      const id = appState.activeMissionId || localStorage.getItem('symbolwright_active_mission_id');
+      if (!id || !appState.symbolWrightKey) return null;
       const result = await missionFetchJson('/api/missions/' + encodeURIComponent(id));
       if (result.status !== 200 || result.body.mission.status !== 'ACTIVE') {
-        if (result.status === 404) localStorage.removeItem('codemind_active_mission_id');
+        if (result.status === 404) localStorage.removeItem('symbolwright_active_mission_id');
         return null;
       }
       missionSetActive(result.body.mission, result.body.reconciliation);
@@ -529,7 +529,7 @@ export function buildMissionsViewClientScript(): string {
       void missionLoadList();
       if (!missionUiState.loaded) {
         missionUiState.loaded = true;
-        const activeId = appState.activeMissionId || localStorage.getItem('codemind_active_mission_id');
+        const activeId = appState.activeMissionId || localStorage.getItem('symbolwright_active_mission_id');
         if (activeId) void missionOpen(activeId);
       }
     });

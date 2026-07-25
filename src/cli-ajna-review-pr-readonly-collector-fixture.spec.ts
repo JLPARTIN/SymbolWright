@@ -12,7 +12,7 @@ import {
 const tempDirs: string[] = []
 
 function writeRequestFile(input: unknown): string {
-  const rootDir = mkdtempSync(join(tmpdir(), 'codemind-ajna-readonly-review-'))
+  const rootDir = mkdtempSync(join(tmpdir(), 'symbolwright-ajna-readonly-review-'))
   tempDirs.push(rootDir)
   const inputPath = join(rootDir, 'collector-request.json')
   writeFileSync(inputPath, JSON.stringify(input), 'utf-8')
@@ -28,10 +28,10 @@ afterEach(() => {
 describe('parseAjnaReadOnlyCollectorReviewRequest', () => {
   it('accepts a local request fixture', () => {
     const request = parseAjnaReadOnlyCollectorReviewRequest(
-      JSON.stringify({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 64 }),
+      JSON.stringify({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 64 }),
     )
 
-    expect(request.repository).toBe('JLPARTIN/CodeMind')
+    expect(request.repository).toBe('JLPARTIN/SymbolWright')
     expect(request.pullRequestNumber).toBe(64)
   })
 
@@ -41,7 +41,7 @@ describe('parseAjnaReadOnlyCollectorReviewRequest', () => {
     )
     expect(() =>
       parseAjnaReadOnlyCollectorReviewRequest(
-        JSON.stringify({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 0 }),
+        JSON.stringify({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 0 }),
       ),
     ).toThrow('pullRequestNumber must be a positive integer')
   })
@@ -50,13 +50,13 @@ describe('parseAjnaReadOnlyCollectorReviewRequest', () => {
 describe('renderAjnaReviewPrReadOnlyCollectorFixtureForFile', () => {
   it('renders the default fake collector output through Ajna review-pr', async () => {
     const output = await renderAjnaReviewPrReadOnlyCollectorFixtureForFile(
-      writeRequestFile({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 64 }),
+      writeRequestFile({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 64 }),
     )
 
     expect(output).toContain('# Ajna Review Cortex Report')
     expect(output).toContain('GitHub diff evidence captured')
     expect(output).toContain('GitHub CI evidence captured')
-    expect(output).toContain('Fixture Validate CodeMind')
+    expect(output).toContain('Fixture Validate SymbolWright')
   })
 
   it('accepts an injected fake collector port', async () => {
@@ -74,7 +74,7 @@ describe('renderAjnaReviewPrReadOnlyCollectorFixtureForFile', () => {
     }
 
     const output = await renderAjnaReviewPrReadOnlyCollectorFixtureForFile(
-      writeRequestFile({ repository: 'JLPARTIN/CodeMind', pullRequestNumber: 65 }),
+      writeRequestFile({ repository: 'JLPARTIN/SymbolWright', pullRequestNumber: 65 }),
       port,
     )
 

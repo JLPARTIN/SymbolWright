@@ -15,10 +15,10 @@ function target(): GitHubRepositoryTarget {
   return {
     host: 'github.com',
     owner: 'JLPARTIN',
-    repo: 'CodeMind',
+    repo: 'SymbolWright',
     targetType: 'repository',
-    sourceUrl: 'https://github.com/JLPARTIN/CodeMind',
-    canonicalHttpsUrl: 'https://github.com/JLPARTIN/CodeMind',
+    sourceUrl: 'https://github.com/JLPARTIN/SymbolWright',
+    canonicalHttpsUrl: 'https://github.com/JLPARTIN/SymbolWright',
   }
 }
 
@@ -30,7 +30,7 @@ function acquisition(
     mode: 'writable',
     acquired: true,
     workspacePath: '/tmp/does-not-matter',
-    sourceUrl: 'https://github.com/JLPARTIN/CodeMind',
+    sourceUrl: 'https://github.com/JLPARTIN/SymbolWright',
     evidence: ['Clone completed.'],
     ...overrides,
   }
@@ -40,7 +40,7 @@ describe('buildRepositoryIntakeProfile', () => {
   let workspacePath: string
 
   beforeEach(() => {
-    workspacePath = mkdtempSync(join(tmpdir(), 'codemind-intake-profile-'))
+    workspacePath = mkdtempSync(join(tmpdir(), 'symbolwright-intake-profile-'))
     writeFileSync(
       join(workspacePath, 'package.json'),
       JSON.stringify({ name: 'x', scripts: { test: 'vitest run', build: 'tsc' } }),
@@ -76,7 +76,7 @@ describe('buildRepositoryIntakeProfile', () => {
   })
 
   it('flags a repository with no discovered validation commands', async () => {
-    const emptyWorkspace = mkdtempSync(join(tmpdir(), 'codemind-intake-empty-'))
+    const emptyWorkspace = mkdtempSync(join(tmpdir(), 'symbolwright-intake-empty-'))
     try {
       const profile = await buildRepositoryIntakeProfile({
         target: target(),
@@ -169,7 +169,7 @@ describe('buildRepositoryIntakeProfile', () => {
   })
 
   it('renders resolved ref, metadata, CI workflow evidence, and risk flags when present', async () => {
-    const ciWorkspace = mkdtempSync(join(tmpdir(), 'codemind-intake-ci-'))
+    const ciWorkspace = mkdtempSync(join(tmpdir(), 'symbolwright-intake-ci-'))
     try {
       writeFileSync(
         join(ciWorkspace, 'package.json'),

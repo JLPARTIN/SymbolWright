@@ -143,7 +143,7 @@ describe('renderAuditLedgerPersistResult', () => {
     const result = persistAuditLedger([baseEvent], '2026-06-26T00:00:00Z')
     const output = renderAuditLedgerPersistResult(result)
 
-    expect(output).toContain('CodeMind Audit Ledger')
+    expect(output).toContain('SymbolWright Audit Ledger')
     expect(output).toContain('Outcome: PERSISTED')
     expect(output).toContain('Entries written: 1')
   })
@@ -155,7 +155,7 @@ describe('renderAuditLedgerReplayResult', () => {
     const result = replayAuditLedger(lines)
     const output = renderAuditLedgerReplayResult(result)
 
-    expect(output).toContain('CodeMind Audit Ledger Replay')
+    expect(output).toContain('SymbolWright Audit Ledger Replay')
     expect(output).toContain('Outcome: REPLAYED')
     expect(output).toContain('Valid entries: 1')
   })

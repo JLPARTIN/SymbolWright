@@ -2,8 +2,8 @@
 export function renderMemoryViewHtml(): string {
   return `<section data-view="memory" class="app-view" style="display:none">
     <h2>Memory</h2>
-    <p class="muted">Read-only view of this workspace's local memory database (<code>.codemind/memory/</code>). No write actions here — memory is learned during real agent sessions.</p>
-    <div id="memory-status" class="muted">Connect with your CodeMind API key in Settings to load memory.</div>
+    <p class="muted">Read-only view of this workspace's local memory database (<code>.symbolwright/memory/</code>). No write actions here — memory is learned during real agent sessions.</p>
+    <div id="memory-status" class="muted">Connect with your SymbolWright API key in Settings to load memory.</div>
     <div id="memory-episodic"></div>
     <div id="memory-procedural"></div>
   </section>`
@@ -15,15 +15,15 @@ export function buildMemoryViewClientScript(): string {
       const statusEl = document.getElementById('memory-status');
       const episodicEl = document.getElementById('memory-episodic');
       const proceduralEl = document.getElementById('memory-procedural');
-      if (!appState.codemindKey) {
-        statusEl.textContent = 'Connect with your CodeMind API key in Settings to load memory.';
+      if (!appState.symbolWrightKey) {
+        statusEl.textContent = 'Connect with your SymbolWright API key in Settings to load memory.';
         episodicEl.innerHTML = '';
         proceduralEl.innerHTML = '';
         return;
       }
       statusEl.textContent = 'Loading memory...';
       try {
-        const headers = { authorization: 'Bearer ' + appState.codemindKey };
+        const headers = { authorization: 'Bearer ' + appState.symbolWrightKey };
         const [recentResponse, proceduralResponse] = await Promise.all([
           fetch('/api/memory/recent', { headers }),
           fetch('/api/memory/procedural', { headers }),

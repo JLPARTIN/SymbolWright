@@ -13,7 +13,7 @@ codemind ajna review-pr-collector-fixture examples/ajna/github-collector-snapsho
 ## Pipeline
 
 ```text
-collector snapshot JSON -> AjnaGithubPullRequestPayload -> CodemindAjnaReviewPrInput -> Ajna Review Cortex report
+collector snapshot JSON -> AjnaGithubPullRequestPayload -> SymbolWrightAjnaReviewPrInput -> Ajna Review Cortex report
 ```
 
 The command uses:

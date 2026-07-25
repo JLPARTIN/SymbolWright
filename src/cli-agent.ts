@@ -3,31 +3,31 @@ import { stdin, stdout } from 'node:process'
 import { mkdirSync } from 'node:fs'
 
 import {
-  resolveCodemindConfig,
-  validateCodemindConfig,
-  type CodemindConfig,
-} from './config/codemind-config.js'
+  resolveSymbolWrightConfig,
+  validateSymbolWrightConfig,
+  type SymbolWrightConfig,
+} from './config/symbolwright-config.js'
 import {
   createRuntimePolicyForMode,
-  DEFAULT_CODEMIND_RUNTIME_MODE,
-  normalizeCodemindRuntimeMode,
+  DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE,
+  normalizeSymbolWrightRuntimeMode,
 } from './runtime/policy/runtime-policy.js'
 import { createAnthropicProvider } from './provider/anthropic-provider.js'
 import type { LLMProvider } from './provider/provider.types.js'
-import type { CodemindProviderId } from './providers/provider-adapter-contract.js'
+import type { SymbolWrightProviderId } from './providers/provider-adapter-contract.js'
 import { loadProviderGatewayConfig, parseProviderId } from './providers/provider-config.js'
 import { createProviderGatewayLlmProvider } from './providers/provider-gateway-llm-provider.js'
 import { assembleAgentTools } from './runtime/tools/tool-assembly.js'
 import type {
-  CodemindRuntimeMode,
+  SymbolWrightRuntimeMode,
   RuntimeToolContext,
   RuntimePolicySnapshot,
   RuntimeApproval,
 } from './runtime/types.js'
 import {
   runActivatedAgent,
-  type CodemindActivationConfig,
-} from './activation/codemind-activation.js'
+  type SymbolWrightActivationConfig,
+} from './activation/symbolwright-activation.js'
 import { createTerminalRenderer } from './tui/terminal-renderer.js'
 import {
   classifyError,
@@ -56,22 +56,22 @@ import { loadVectorStore } from './cli-index.js'
 
 interface ParsedAgentArgs {
   readonly resumeSessionId?: string
-  readonly runtimeMode?: CodemindRuntimeMode
-  readonly provider?: CodemindProviderId
+  readonly runtimeMode?: SymbolWrightRuntimeMode
+  readonly provider?: SymbolWrightProviderId
   readonly model?: string
   readonly attachApprovalTicket: boolean
   readonly userArgs: readonly string[]
 }
 
 function buildPolicy(
-  mode: CodemindRuntimeMode,
+  mode: SymbolWrightRuntimeMode,
   hasGitHubToken: boolean = false,
 ): RuntimePolicySnapshot {
   return createRuntimePolicyForMode(mode, { hasGitHubToken })
 }
 
-function parseModeFlag(value: string): CodemindRuntimeMode {
-  const mode = normalizeCodemindRuntimeMode(value)
+function parseModeFlag(value: string): SymbolWrightRuntimeMode {
+  const mode = normalizeSymbolWrightRuntimeMode(value)
   if (mode === undefined) {
     throw new Error(
       `Invalid runtime mode: ${value}. Expected PLAN_ONLY, READ_ONLY, PROPOSAL_ONLY, or APPROVED_EXECUTION.`,
@@ -80,7 +80,7 @@ function parseModeFlag(value: string): CodemindRuntimeMode {
   return mode
 }
 
-function parseProviderFlag(value: string): CodemindProviderId {
+function parseProviderFlag(value: string): SymbolWrightProviderId {
   const provider = parseProviderId(value)
   if (provider === undefined) {
     throw new Error(`Invalid provider: ${value}. Run "codemind providers" for supported providers.`)
@@ -90,8 +90,8 @@ function parseProviderFlag(value: string): CodemindProviderId {
 
 function parseAgentArgs(args: readonly string[]): ParsedAgentArgs {
   let resumeSessionId: string | undefined
-  let runtimeMode: CodemindRuntimeMode | undefined
-  let provider: CodemindProviderId | undefined
+  let runtimeMode: SymbolWrightRuntimeMode | undefined
+  let provider: SymbolWrightProviderId | undefined
   let model: string | undefined
   let attachApprovalTicket = false
   const userArgs: string[] = []
@@ -185,12 +185,12 @@ function parseAgentArgs(args: readonly string[]): ParsedAgentArgs {
   }
 }
 
-export function createProvider(config: CodemindConfig): LLMProvider {
+export function createProvider(config: SymbolWrightConfig): LLMProvider {
   if (config.provider !== undefined && config.provider !== 'anthropic') {
     const gatewayConfig = loadProviderGatewayConfig({
       ...process.env,
-      CODEMIND_PROVIDER: config.provider,
-      ...(config.model === undefined ? {} : { CODEMIND_MODEL: config.model }),
+      SYMBOLWRIGHT_PROVIDER: config.provider,
+      ...(config.model === undefined ? {} : { SYMBOLWRIGHT_MODEL: config.model }),
     })
     return createProviderGatewayLlmProvider({ config: gatewayConfig })
   }
@@ -207,14 +207,14 @@ function ensureDir(dir: string): void {
   mkdirSync(dir, { recursive: true })
 }
 
-function resolveEmbeddingProvider(config: CodemindConfig): EmbeddingProvider {
+function resolveEmbeddingProvider(config: SymbolWrightConfig): EmbeddingProvider {
   if (config.embeddingProvider === 'voyage' && config.voyageApiKey !== undefined) {
     return createVoyageEmbeddingProvider({ apiKey: config.voyageApiKey })
   }
   return createHashEmbeddingProvider()
 }
 
-function resolveDisplayModel(config: CodemindConfig): string {
+function resolveDisplayModel(config: SymbolWrightConfig): string {
   if (config.model !== undefined) {
     return config.model
   }
@@ -237,7 +237,7 @@ async function runOneShot(
   provider: LLMProvider,
   toolContext: RuntimeToolContext,
   userMessage: string,
-  config: CodemindConfig,
+  config: SymbolWrightConfig,
   costTracker: CostTracker,
   persistence: SessionPersistence,
   memoryContext: string,
@@ -248,7 +248,7 @@ async function runOneShot(
   const renderer = createTerminalRenderer({ model })
   const sessionId = `cm-${Date.now()}`
 
-  const activationConfig: CodemindActivationConfig = {
+  const activationConfig: SymbolWrightActivationConfig = {
     provider,
     tools,
     toolContext,
@@ -290,7 +290,7 @@ async function recordMemoryTurns(
 async function runInteractive(
   provider: LLMProvider,
   toolContext: RuntimeToolContext,
-  config: CodemindConfig,
+  config: SymbolWrightConfig,
   costTracker: CostTracker,
   persistence: SessionPersistence,
   memoryContext: string,
@@ -313,7 +313,7 @@ async function runInteractive(
 
   const rl = createInterface({ input: stdin, output: stdout })
 
-  console.log('\x1b[36mCodeMind\x1b[0m interactive mode')
+  console.log('\x1b[36mSymbolWright\x1b[0m interactive mode')
   console.log(`\x1b[2mSession: ${sessionId}\x1b[0m`)
   console.log(`\x1b[2mRuntime mode: ${toolContext.policy.mode}\x1b[0m`)
   console.log(`\x1b[2mProvider: ${provider.displayName}\x1b[0m`)
@@ -360,7 +360,7 @@ async function runInteractive(
       const trimmedHistory = trimConversationToFit(conversationHistory)
       const priorMessages = conversationMessagesToProviderMessages(trimmedHistory)
 
-      const activationConfig: CodemindActivationConfig = {
+      const activationConfig: SymbolWrightActivationConfig = {
         provider,
         tools,
         toolContext,
@@ -407,7 +407,7 @@ export function renderSessionsList(persistence: SessionPersistence): string {
   if (sessions.length === 0) {
     return 'No saved sessions.'
   }
-  const lines = ['CodeMind Sessions', '']
+  const lines = ['SymbolWright Sessions', '']
   for (const s of sessions) {
     const goalPreview = s.goal !== undefined ? ` — ${s.goal}` : ''
     lines.push(`  ${s.sessionId}  (${s.messageCount} messages, ${s.updatedAt})${goalPreview}`)
@@ -417,13 +417,13 @@ export function renderSessionsList(persistence: SessionPersistence): string {
 
 export async function runAgentCommand(args: readonly string[]): Promise<void> {
   const parsedArgs = parseAgentArgs(args)
-  const cliFlags: Partial<CodemindConfig> = {
+  const cliFlags: Partial<SymbolWrightConfig> = {
     ...(parsedArgs.runtimeMode !== undefined ? { runtimeMode: parsedArgs.runtimeMode } : {}),
     ...(parsedArgs.provider !== undefined ? { provider: parsedArgs.provider } : {}),
     ...(parsedArgs.model !== undefined ? { model: parsedArgs.model } : {}),
   }
-  const config = resolveCodemindConfig({ cliFlags })
-  const validation = validateCodemindConfig(config)
+  const config = resolveSymbolWrightConfig({ cliFlags })
+  const validation = validateSymbolWrightConfig(config)
 
   if (!validation.valid) {
     for (const error of validation.errors) {
@@ -466,7 +466,7 @@ export async function runAgentCommand(args: readonly string[]): Promise<void> {
     memorySession = undefined
   }
 
-  const runtimeMode = config.runtimeMode ?? DEFAULT_CODEMIND_RUNTIME_MODE
+  const runtimeMode = config.runtimeMode ?? DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE
   const hasGitHubToken = config.githubToken !== undefined
   const policy = buildPolicy(runtimeMode, hasGitHubToken)
   const scopes: RuntimeApproval['scopes'][number][] = [

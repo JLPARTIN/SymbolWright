@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { renderRuntimeZflowReportCatalog } from './cli-runtime-zflow-report-catalog.js'
 
 function makeWorkspace(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-zflow-report-catalog-cli-'))
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-zflow-report-catalog-cli-'))
 }
 
 function writeFixture(workspace: string, fixture: unknown): string {
@@ -22,9 +22,9 @@ const report = {
   result: {
     mode: 'prepare-pr',
     localOutput: 'completed',
-    prOutput: 'CodeMind GitHub PR creation\n\nOutcome: DRY_RUN',
-    collaborationOutput: 'CodeMind PR collaboration\n\nOutcome: DRY_RUN',
-    recoveryOutput: 'CodeMind recovery change ledger\n\nChanges: 1',
+    prOutput: 'SymbolWright GitHub PR creation\n\nOutcome: DRY_RUN',
+    collaborationOutput: 'SymbolWright PR collaboration\n\nOutcome: DRY_RUN',
+    recoveryOutput: 'SymbolWright recovery change ledger\n\nChanges: 1',
     rollbackOutput: 'Rollback plan: Recover Zflow preview\n\n1. src/generated.ts',
   },
   readiness: {

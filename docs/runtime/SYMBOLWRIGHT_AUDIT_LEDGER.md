@@ -1,4 +1,4 @@
-# CodeMind Audit Ledger Store
+# SymbolWright Audit Ledger Store
 
 The Audit Ledger Store provides durable JSONL-based persistence and replay for runtime audit events.
 

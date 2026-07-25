@@ -5,7 +5,7 @@ import { normalizeGithubPullRequestForAjnaReview } from './ajna-github-review-no
 
 function makePayload() {
   return {
-    repository: 'JLPARTIN/CodeMind',
+    repository: 'JLPARTIN/SymbolWright',
     pullRequestNumber: 58,
     baseRef: 'main',
     headRef: 'ajna-live-input-plan',
@@ -24,7 +24,7 @@ describe('normalizeGithubPullRequestForAjnaReview', () => {
     })
 
     expect(input.request.requestId).toBe('mock-github-pr-58')
-    expect(input.request.subject.repository).toBe('JLPARTIN/CodeMind')
+    expect(input.request.subject.repository).toBe('JLPARTIN/SymbolWright')
     expect(input.request.subject.pullRequestNumber).toBe(58)
     expect(input.request.subject.commitSha).toBe('abc123')
     expect(input.request.changedFiles).toEqual(['docs/ajna-live-github-input-plan.md'])

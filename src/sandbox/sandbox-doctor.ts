@@ -8,7 +8,7 @@ import type {
   SandboxRunnerDefinition,
 } from './sandbox-types.js'
 
-export const SANDBOX_DOCTOR_BLOCK_ID = 'CODEMIND-SANDBOX-DOCTOR-01' as const
+export const SANDBOX_DOCTOR_BLOCK_ID = 'SYMBOLWRIGHT-SANDBOX-DOCTOR-01' as const
 
 export interface SandboxRuntimeDoctorEntry {
   readonly id: string
@@ -121,7 +121,7 @@ export async function buildSandboxDoctorReport(
     generatedAt: now().toISOString(),
     readOnly: true,
     executionEnabled: false,
-    guardedHostOptIn: env['CODEMIND_ALLOW_GUARDED_HOST_EXECUTION'] === 'true',
+    guardedHostOptIn: env['SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION'] === 'true',
     containerEngine: imagePolicy.engine,
     runtimes: inventory.runners.map(runtimeEntry),
     images,
@@ -146,7 +146,7 @@ function renderImage(entry: SandboxImageDoctorEntry): string {
 
 export function renderSandboxDoctorReport(report: SandboxDoctorReport): string {
   const lines = [
-    'CodeMind Sandbox Doctor',
+    'SymbolWright Sandbox Doctor',
     '',
     `Block: ${report.blockId}`,
     `Generated: ${report.generatedAt}`,
@@ -187,13 +187,13 @@ export async function renderSandboxDoctorCommand(
 
 export function renderSandboxImagesReport(report: SandboxDoctorReport): string {
   return [
-    'CodeMind Sandbox Images',
+    'SymbolWright Sandbox Images',
     '',
     `Container engine: ${report.containerEngine.engine} (${report.containerEngine.status})`,
     'Images:',
     ...report.images.map(renderImage),
     '',
-    'Preparation commands are shown for operator review only. CodeMind does not pull images automatically.',
+    'Preparation commands are shown for operator review only. SymbolWright does not pull images automatically.',
   ].join('\n')
 }
 

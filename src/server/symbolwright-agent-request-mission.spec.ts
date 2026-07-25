@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { parseAgentRequestBody } from './codemind-agent-request.js'
+import { parseAgentRequestBody } from './symbolwright-agent-request.js'
 
 describe('agent mission request parsing', () => {
   it('accepts an optional mission id', () => {

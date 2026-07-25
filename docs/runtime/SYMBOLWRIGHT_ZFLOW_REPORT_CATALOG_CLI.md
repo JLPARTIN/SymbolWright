@@ -1,4 +1,4 @@
-# CodeMind Zflow Report Catalog CLI
+# SymbolWright Zflow Report Catalog CLI
 
 PR Bundle AY-BB adds a fixture-based CLI renderer for Zflow report catalogs.
 

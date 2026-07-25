@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createCheckpoint, listCheckpoints } from '../../checkpoint/checkpoint-service.js'
 import { FakeGitHubPrCreationClient } from '../../runtime/github-write/fake-github-pr-creation-client.js'
 import { runGitCommand } from '../../runtime/git/git-command-runner.js'
-import { startChatServer, type StartedChatServer } from '../../server/codemind-chat-server.js'
+import { startChatServer, type StartedChatServer } from '../../server/symbolwright-chat-server.js'
 import { UnlimitedRateLimiter } from '../../server/rate-limiter.js'
 import { parseGitHubRemoteUrl } from './repository-routes.js'
 
@@ -16,13 +16,13 @@ import { parseGitHubRemoteUrl } from './repository-routes.js'
 // exceed vitest's default 5000ms, independent of any logic bug.
 vi.setConfig({ testTimeout: 20_000 })
 
-const API_KEY = 'test-codemind-key'
+const API_KEY = 'test-symbolwright-key'
 
 let started: StartedChatServer | undefined
 let cwd: string
 
 beforeEach(async () => {
-  cwd = mkdtempSync(join(tmpdir(), 'codemind-repository-routes-'))
+  cwd = mkdtempSync(join(tmpdir(), 'symbolwright-repository-routes-'))
   await runGitCommand(['init'], cwd)
   await runGitCommand(['config', 'user.email', 'test@example.com'], cwd)
   await runGitCommand(['config', 'user.name', 'Test'], cwd)
@@ -358,8 +358,8 @@ describe('POST /api/repository/commit', () => {
     expect(response.status).toBe(400)
   })
 
-  it('never sweeps CodeMind checkpoint state (.codemind/) into a commit made with files omitted', async () => {
-    // A prior write through PUT /api/repository/file creates .codemind/checkpoints/... --
+  it('never sweeps SymbolWright checkpoint state (.symbolwright/) into a commit made with files omitted', async () => {
+    // A prior write through PUT /api/repository/file creates .symbolwright/checkpoints/... --
     // "commit everything" must not check that internal state into the user's real history.
     const putResponse = await fetch(`${(await launch()).url}/api/repository/file`, {
       method: 'PUT',
@@ -377,10 +377,10 @@ describe('POST /api/repository/commit', () => {
 
     const show = await runGitCommand(['show', '--stat', 'HEAD'], cwd)
     expect(show.stdout).toContain('a.ts')
-    expect(show.stdout).not.toContain('.codemind')
+    expect(show.stdout).not.toContain('.symbolwright')
 
     const status = await runGitCommand(['status', '--porcelain=v1'], cwd)
-    expect(status.stdout).toContain('.codemind')
+    expect(status.stdout).toContain('.symbolwright')
   })
 })
 
@@ -440,17 +440,21 @@ describe('POST /api/repository/checkpoints/:id/restore', () => {
 
 describe('parseGitHubRemoteUrl', () => {
   it('parses an SSH remote URL', () => {
-    expect(parseGitHubRemoteUrl('git@github.com:JLPARTIN/CodeMind.git')).toBe('JLPARTIN/CodeMind')
+    expect(parseGitHubRemoteUrl('git@github.com:JLPARTIN/SymbolWright.git')).toBe(
+      'JLPARTIN/SymbolWright',
+    )
   })
 
   it('parses an HTTPS remote URL', () => {
-    expect(parseGitHubRemoteUrl('https://github.com/JLPARTIN/CodeMind.git')).toBe(
-      'JLPARTIN/CodeMind',
+    expect(parseGitHubRemoteUrl('https://github.com/JLPARTIN/SymbolWright.git')).toBe(
+      'JLPARTIN/SymbolWright',
     )
   })
 
   it('parses an HTTPS remote URL without the .git suffix', () => {
-    expect(parseGitHubRemoteUrl('https://github.com/JLPARTIN/CodeMind')).toBe('JLPARTIN/CodeMind')
+    expect(parseGitHubRemoteUrl('https://github.com/JLPARTIN/SymbolWright')).toBe(
+      'JLPARTIN/SymbolWright',
+    )
   })
 
   it('returns undefined for a non-GitHub remote', () => {
@@ -462,7 +466,7 @@ describe('POST /api/repository/push', () => {
   let remoteDir: string
 
   beforeEach(async () => {
-    remoteDir = mkdtempSync(join(tmpdir(), 'codemind-repository-push-remote-'))
+    remoteDir = mkdtempSync(join(tmpdir(), 'symbolwright-repository-push-remote-'))
     await runGitCommand(['init', '--bare'], remoteDir)
   })
 
@@ -602,7 +606,7 @@ describe('POST /api/repository/pull-request', () => {
       host: '127.0.0.1',
       port: 0,
       // GITHUB_TOKEN drives repositoryContext.policy.allowGitHubWrites in
-      // codemind-chat-server.ts; the actual REST calls go through the
+      // symbolwright-chat-server.ts; the actual REST calls go through the
       // injected fakeClient below, not a real GitHub client.
       env: { GITHUB_TOKEN: 'fake-value-for-policy' },
       cwd,
@@ -634,7 +638,7 @@ describe('POST /api/repository/pull-request', () => {
     }
   })
 
-  it('never auto-includes CodeMind checkpoint state (.codemind/) when deriving PR files from git status', async () => {
+  it('never auto-includes SymbolWright checkpoint state (.symbolwright/) when deriving PR files from git status', async () => {
     const fakeClient = new FakeGitHubPrCreationClient()
     started = await startChatServer({
       apiKey: API_KEY,
@@ -646,7 +650,7 @@ describe('POST /api/repository/pull-request', () => {
       githubPrCreationClient: fakeClient,
     })
 
-    // A prior write creates .codemind/checkpoints/... as untracked content.
+    // A prior write creates .symbolwright/checkpoints/... as untracked content.
     const putResponse = await fetch(`${started.url}/api/repository/file`, {
       method: 'PUT',
       headers: { ...auth(), 'content-type': 'application/json' },
@@ -670,7 +674,7 @@ describe('POST /api/repository/pull-request', () => {
     const commitOp = fakeClient.operations.find((op) => op.type === 'commitFiles')
     expect(commitOp?.type).toBe('commitFiles')
     if (commitOp?.type === 'commitFiles') {
-      expect(commitOp.files.some((file) => file.path.startsWith('.codemind'))).toBe(false)
+      expect(commitOp.files.some((file) => file.path.startsWith('.symbolwright'))).toBe(false)
     }
   })
 

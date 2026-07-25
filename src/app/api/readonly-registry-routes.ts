@@ -16,8 +16,8 @@ import {
 } from '../../memory/memory-browse.js'
 import { createRuntimePolicyForMode } from '../../runtime/policy/runtime-policy.js'
 import { assembleAgentTools, DYNAMICALLY_WIRED_TOOLS } from '../../runtime/tools/tool-assembly.js'
-import type { CodemindRuntimeMode } from '../../runtime/types.js'
-import { CODEMIND_RUNTIME_MODES } from '../../runtime/policy/runtime-policy.js'
+import type { SymbolWrightRuntimeMode } from '../../runtime/types.js'
+import { SYMBOLWRIGHT_RUNTIME_MODES } from '../../runtime/policy/runtime-policy.js'
 
 export interface ReadonlyRegistryContext {
   readonly cwd: string
@@ -54,15 +54,15 @@ export function handleToolsRegistry(res: ServerResponse): void {
     (name) => ({ name }),
   )
 
-  const modes: Record<CodemindRuntimeMode, readonly string[]> = Object.fromEntries(
-    CODEMIND_RUNTIME_MODES.map((mode) => {
+  const modes: Record<SymbolWrightRuntimeMode, readonly string[]> = Object.fromEntries(
+    SYMBOLWRIGHT_RUNTIME_MODES.map((mode) => {
       const policy = createRuntimePolicyForMode(mode, { hasGitHubToken: false })
       const reachable = bridgeToolsForProvider(assembleAgentTools(), policy).map(
         (bridged) => bridged.providerTool.name,
       )
       return [mode, reachable] as const
     }),
-  ) as unknown as Record<CodemindRuntimeMode, readonly string[]>
+  ) as unknown as Record<SymbolWrightRuntimeMode, readonly string[]>
 
   sendJson(res, 200, { staticTools, dynamicTools, modes })
 }

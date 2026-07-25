@@ -13,7 +13,7 @@ export function createMissionExportBundle(
   env: NodeJS.ProcessEnv = process.env,
 ): MissionExportBundle {
   const bundle: MissionExportBundle = {
-    kind: 'codemind.mission.bundle',
+    kind: 'symbolwright.mission.bundle',
     schemaVersion: 1,
     exportedAt: options.exportedAt ?? new Date().toISOString(),
     mission,
@@ -51,7 +51,7 @@ export function parseMissionExportBundle(
     throw new MissionValidationError('Mission import must be a JSON object')
   }
   const record = parsed as Record<string, unknown>
-  if (record['kind'] !== 'codemind.mission.bundle' || record['schemaVersion'] !== 1) {
+  if (record['kind'] !== 'symbolwright.mission.bundle' || record['schemaVersion'] !== 1) {
     throw new MissionValidationError('Unsupported mission bundle kind or schema version')
   }
   if (typeof record['exportedAt'] !== 'string' || Number.isNaN(Date.parse(record['exportedAt']))) {
@@ -102,7 +102,7 @@ export function parseMissionExportBundle(
 
   return redactMissionRecord(
     {
-      kind: 'codemind.mission.bundle',
+      kind: 'symbolwright.mission.bundle',
       schemaVersion: 1,
       exportedAt: record['exportedAt'],
       mission,

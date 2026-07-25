@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { resolveCodemindConfig, validateCodemindConfig } from './codemind-config.js'
+import { resolveSymbolWrightConfig, validateSymbolWrightConfig } from './symbolwright-config.js'
 
-describe('CodeMind provider selection config', () => {
+describe('SymbolWright provider selection config', () => {
   it('resolves provider and model from CLI flags before env', () => {
-    const config = resolveCodemindConfig({
+    const config = resolveSymbolWrightConfig({
       cliFlags: { provider: 'google-gemini', model: 'gemini-test' },
-      env: { CODEMIND_PROVIDER: 'openai', CODEMIND_MODEL: 'gpt-test' },
+      env: { SYMBOLWRIGHT_PROVIDER: 'openai', SYMBOLWRIGHT_MODEL: 'gpt-test' },
       homeConfigPath: '/missing-home-config.json',
       projectConfigPath: '/missing-project-config.json',
     })
@@ -16,8 +16,8 @@ describe('CodeMind provider selection config', () => {
   })
 
   it('resolves provider and model from env', () => {
-    const config = resolveCodemindConfig({
-      env: { CODEMIND_PROVIDER: 'openai', CODEMIND_MODEL: 'gpt-test' },
+    const config = resolveSymbolWrightConfig({
+      env: { SYMBOLWRIGHT_PROVIDER: 'openai', SYMBOLWRIGHT_MODEL: 'gpt-test' },
       homeConfigPath: '/missing-home-config.json',
       projectConfigPath: '/missing-project-config.json',
     })
@@ -27,7 +27,7 @@ describe('CodeMind provider selection config', () => {
   })
 
   it('does not require Anthropic credentials when a gateway provider is selected', () => {
-    const result = validateCodemindConfig({ provider: 'openai' })
+    const result = validateSymbolWrightConfig({ provider: 'openai' })
 
     expect(result.valid).toBe(true)
     expect(result.errors).toEqual([])
@@ -35,7 +35,7 @@ describe('CodeMind provider selection config', () => {
   })
 
   it('still requires Anthropic credentials for default agent mode', () => {
-    const result = validateCodemindConfig({})
+    const result = validateSymbolWrightConfig({})
 
     expect(result.valid).toBe(false)
     expect(result.errors[0]).toContain('ANTHROPIC_API_KEY')

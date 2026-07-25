@@ -13,7 +13,7 @@ const tempDirs: string[] = []
 function makeFixture(): unknown {
   return {
     pullRequest: {
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       number: 67,
       base: { ref: 'main' },
       head: {
@@ -22,12 +22,12 @@ function makeFixture(): unknown {
       },
     },
     files: [{ filename: 'src/cli-ajna-review-pr-github-api-fixture.ts', status: 'added' }],
-    checkRuns: [{ name: 'Validate CodeMind', status: 'completed', conclusion: 'success' }],
+    checkRuns: [{ name: 'Validate SymbolWright', status: 'completed', conclusion: 'success' }],
   }
 }
 
 function writeFixtureFile(input: unknown): string {
-  const rootDir = mkdtempSync(join(tmpdir(), 'codemind-ajna-api-snapshot-'))
+  const rootDir = mkdtempSync(join(tmpdir(), 'symbolwright-ajna-api-snapshot-'))
   tempDirs.push(rootDir)
   const inputPath = join(rootDir, 'api-payload.json')
   writeFileSync(inputPath, JSON.stringify(input), 'utf-8')
@@ -44,7 +44,7 @@ describe('parseAjnaGithubApiSnapshotFixture', () => {
   it('accepts an object fixture', () => {
     const parsed = parseAjnaGithubApiSnapshotFixture(JSON.stringify(makeFixture()))
 
-    expect(parsed.pullRequest.repository).toBe('JLPARTIN/CodeMind')
+    expect(parsed.pullRequest.repository).toBe('JLPARTIN/SymbolWright')
     expect(parsed.pullRequest.number).toBe(67)
   })
 
@@ -59,7 +59,7 @@ describe('renderAjnaGithubApiSnapshotFixtureForFile', () => {
   it('renders collector snapshot JSON from a local API-shaped payload', () => {
     const output = renderAjnaGithubApiSnapshotFixtureForFile(writeFixtureFile(makeFixture()))
 
-    expect(output).toContain('"repository": "JLPARTIN/CodeMind"')
+    expect(output).toContain('"repository": "JLPARTIN/SymbolWright"')
     expect(output).toContain('"pullRequestNumber": 67')
     expect(output).toContain('"path": "src/cli-ajna-review-pr-github-api-fixture.ts"')
     expect(output).toContain('"conclusion": "success"')

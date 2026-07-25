@@ -216,7 +216,7 @@ export function buildAgentKernelMissionPacket(
 
 export function renderAgentKernelMissionPacket(packet: AgentKernelMissionPacket): string {
   const lines = [
-    'CodeMind Agent Kernel Mission Packet',
+    'SymbolWright Agent Kernel Mission Packet',
     '',
     `Mission ID: ${packet.missionId}`,
     `Block: ${packet.blockId}`,

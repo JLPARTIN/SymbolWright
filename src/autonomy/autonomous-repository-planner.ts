@@ -51,7 +51,7 @@ export function planAutonomousRepositoryMission(
       'semantic-index',
       [],
       {
-        reads: ['.codemind/repository-indexes/*'],
+        reads: ['.symbolwright/repository-indexes/*'],
         writes: [],
       },
     ),

@@ -401,14 +401,15 @@ export async function handleRepositoryCommit(
     ? files.filter((entry): entry is string => typeof entry === 'string')
     : undefined
 
-  // `.codemind/` is CodeMind's own checkpoint/session state, not user content --
-  // exclude it from the default "stage everything" sweep regardless of whether
-  // the target repository's own .gitignore happens to cover it, so committing
-  // from this view can never accidentally check in checkpoint snapshots.
+  // `.symbolwright/` is SymbolWright's own checkpoint/session state, not user
+  // content -- exclude it (and the legacy `.symbolwright/` name) from the default
+  // "stage everything" sweep regardless of whether the target repository's
+  // own .gitignore happens to cover it, so committing from this view can
+  // never accidentally check in checkpoint snapshots.
   const addArgs =
     fileList !== undefined && fileList.length > 0
       ? ['add', '--', ...fileList]
-      : ['add', '-A', '--', '.', ':!.codemind']
+      : ['add', '-A', '--', '.', ':!.symbolwright', ':!.symbolwright']
   const addResult = await runGitCommand(addArgs, context.cwd)
   if (addResult.exitCode !== 0) {
     sendJson(res, 500, { error: addResult.stderr || 'git add failed' })
@@ -564,7 +565,7 @@ export async function handleRepositoryPullRequestCreate(
   context: RepositoryRouteContext,
 ): Promise<void> {
   // In this route's wiring, context.policy.allowGitHubWrites is always exactly
-  // "GITHUB_TOKEN is set" (see repositoryContext in codemind-chat-server.ts),
+  // "GITHUB_TOKEN is set" (see repositoryContext in symbolwright-chat-server.ts),
   // so checking token/client presence first gives a strictly more actionable
   // message than the generic policy-disabled error would.
   if (
@@ -693,9 +694,15 @@ async function resolvePrFiles(
 
   for (const entry of entries) {
     if (entry.indexStatus === 'D' || entry.worktreeStatus === 'D') continue
-    // Same reasoning as the commit route: never auto-include CodeMind's own
+    // Same reasoning as the commit route: never auto-include SymbolWright's own
     // checkpoint/session state in a PR built from "everything that changed".
-    if (entry.path === '.codemind' || entry.path.startsWith('.codemind/')) continue
+    if (
+      entry.path === '.symbolwright' ||
+      entry.path.startsWith('.symbolwright/') ||
+      entry.path === '.symbolwright' ||
+      entry.path.startsWith('.symbolwright/')
+    )
+      continue
     try {
       const resolved = resolveWorkspacePath(context.cwd, entry.path)
       assertReadablePath(context.policy, context.cwd, resolved)

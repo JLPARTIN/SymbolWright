@@ -7,7 +7,7 @@ import {
   assertToolAssemblyIntegrity,
   DYNAMICALLY_WIRED_TOOLS,
 } from './tool-assembly.js'
-import { ALL_CODEMIND_TOOL_NAMES } from '../types.js'
+import { ALL_SYMBOLWRIGHT_TOOL_NAMES } from '../types.js'
 
 describe('tool-assembly', () => {
   describe('assembleAgentTools', () => {
@@ -83,12 +83,12 @@ describe('tool-assembly', () => {
       expect(() => assertToolAssemblyIntegrity()).not.toThrow()
     })
 
-    it('ALL_TOOLS covers every non-dynamic CodemindToolName', () => {
+    it('ALL_TOOLS covers every non-dynamic SymbolWrightToolName', () => {
       const tools = assembleAgentTools()
       const assembledNames = new Set(tools.map((t) => t.name))
       const dynamicSet = new Set<string>(DYNAMICALLY_WIRED_TOOLS)
 
-      for (const name of ALL_CODEMIND_TOOL_NAMES) {
+      for (const name of ALL_SYMBOLWRIGHT_TOOL_NAMES) {
         if (!dynamicSet.has(name)) {
           expect(assembledNames.has(name), `Missing tool: ${name}`).toBe(true)
         }
@@ -107,8 +107,8 @@ describe('tool-assembly', () => {
       }
     })
 
-    it('DYNAMICALLY_WIRED_TOOLS are valid CodemindToolNames', () => {
-      const allNamesSet = new Set<string>(ALL_CODEMIND_TOOL_NAMES)
+    it('DYNAMICALLY_WIRED_TOOLS are valid SymbolWrightToolNames', () => {
+      const allNamesSet = new Set<string>(ALL_SYMBOLWRIGHT_TOOL_NAMES)
       for (const name of DYNAMICALLY_WIRED_TOOLS) {
         expect(allNamesSet.has(name), `Invalid dynamic tool: ${name}`).toBe(true)
       }

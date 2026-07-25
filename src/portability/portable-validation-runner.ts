@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
 import path from 'node:path'
 
+import { readEnvWithLegacyFallback } from '../config/env-compat.js'
 import { redactValidationOutput } from '../runtime/validation/validation-output-redactor.js'
 import type { RuntimePolicySnapshot } from '../runtime/types.js'
 import {
@@ -59,7 +60,11 @@ export class DockerPortableValidationRunner implements PortableValidationRunner 
   readonly #spawn: PortableSpawn
 
   constructor(
-    dockerBinary = process.env['CODEMIND_SANDBOX_DOCKER_BINARY']?.trim() || 'docker',
+    dockerBinary = readEnvWithLegacyFallback(
+      'SYMBOLWRIGHT_SANDBOX_DOCKER_BINARY',
+      'CODEMIND_SANDBOX_DOCKER_BINARY',
+      { env: process.env },
+    )?.trim() || 'docker',
     spawnProcess: PortableSpawn = defaultPortableSpawn,
   ) {
     this.#dockerBinary = dockerBinary
@@ -98,9 +103,13 @@ export class DockerPortableValidationRunner implements PortableValidationRunner 
       '--network',
       'none',
       '--memory',
-      process.env['CODEMIND_SANDBOX_MEMORY']?.trim() || '2048m',
+      readEnvWithLegacyFallback('SYMBOLWRIGHT_SANDBOX_MEMORY', 'CODEMIND_SANDBOX_MEMORY', {
+        env: process.env,
+      })?.trim() || '2048m',
       '--cpus',
-      process.env['CODEMIND_SANDBOX_CPUS']?.trim() || '1',
+      readEnvWithLegacyFallback('SYMBOLWRIGHT_SANDBOX_CPUS', 'CODEMIND_SANDBOX_CPUS', {
+        env: process.env,
+      })?.trim() || '1',
       '--user',
       user,
       '--env',

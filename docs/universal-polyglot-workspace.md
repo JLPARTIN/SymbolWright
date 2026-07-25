@@ -1,9 +1,9 @@
-# CodeMind Universal Polyglot Workspace
+# SymbolWright Universal Polyglot Workspace
 
 This workspace separates three different meanings of “multilingual”:
 
 1. **Programming-language support** — the editor can load starter code, syntax/editor ids, extensions, and honest capability metadata for many languages.
-2. **Code intelligence** — CodeMind can route generate, explain, review, test-proposal, translation, and semantic-drift tasks without claiming execution proof that did not happen.
+2. **Code intelligence** — SymbolWright can route generate, explain, review, test-proposal, translation, and semantic-drift tasks without claiming execution proof that did not happen.
 3. **Human-language UI localization** — the workspace UI has real i18n resources. The UI language selector changes editor labels only; it does not change programming-language support.
 
 ## Supported language capability table
@@ -71,7 +71,7 @@ The `/workspace` page supports:
 - per-file language selection;
 - per-file output/errors/diagnostics preservation;
 - dirty-state marker on edited files;
-- autosave to browser `localStorage` under `codemind.workspace.session.v1`;
+- autosave to browser `localStorage` under `symbolwright.workspace.session.v1`;
 - export session JSON;
 - import session JSON.
 
@@ -85,12 +85,12 @@ A project bundle is not a ZIP file and does not write to a Git repository. It is
 
 ```json
 {
-  "kind": "codemind.workspace.project-bundle",
+  "kind": "symbolwright.workspace.project-bundle",
   "schemaVersion": 1,
   "manifest": {
     "schemaVersion": 1,
-    "projectId": "codemind-default-session",
-    "name": "CodeMind Workspace Session",
+    "projectId": "symbolwright-default-session",
+    "name": "SymbolWright Workspace Session",
     "exportedAt": "2026-07-09T12:00:00.000Z",
     "files": [
       { "path": "main.js", "languageId": "javascript", "sizeBytes": 123 }
@@ -113,7 +113,7 @@ The bundle implementation:
 - rejects unsafe paths such as absolute paths, backslashes, and `..` traversal;
 - rejects duplicate paths, unknown languages, mismatched manifests, oversized files, and oversized projects.
 
-This keeps the browser workspace portable without pretending that CodeMind has full repository write access from the browser.
+This keeps the browser workspace portable without pretending that SymbolWright has full repository write access from the browser.
 
 ## Browser runner limitations
 
@@ -128,7 +128,7 @@ SQL runs through the installed `sql.js` package in a browser Worker. The web ser
 
 The SQL runner creates a fresh in-memory SQLite database for each run. It does not expose persistent filesystem access. The Worker is terminated after the configured timeout, and result rows/cell sizes are capped before rendering. SQL output is rendered as a table in the workspace preview panel.
 
-Python runs through Pyodide in a browser Worker. The Worker downloads the Pyodide browser runtime from the configured Pyodide distribution URL on first use, captures stdout/stderr, runs code through `runPythonAsync`, caps output, and is terminated if it exceeds the configured timeout. CodeMind does not expose server-side Python execution in this runner.
+Python runs through Pyodide in a browser Worker. The Worker downloads the Pyodide browser runtime from the configured Pyodide distribution URL on first use, captures stdout/stderr, runs code through `runPythonAsync`, caps output, and is terminated if it exceeds the configured timeout. SymbolWright does not expose server-side Python execution in this runner.
 
 HTML/CSS renders through a sandboxed iframe preview. It is a visual preview, not command execution.
 
@@ -165,7 +165,7 @@ The code-intelligence router uses a structured translation flow:
 6. Show semantic risks and assumptions.
 7. Mark the result as `UNVERIFIED`, `TESTED`, or `FAILED`.
 
-CodeMind must never present translated code as proven equivalent unless tests actually run.
+SymbolWright must never present translated code as proven equivalent unless tests actually run.
 
 ## Workspace-to-chat intelligence bridge
 
@@ -180,11 +180,11 @@ The endpoint accepts the selected code, source language, optional target languag
 - the structured code-intelligence task plan;
 - a chat-ready prompt containing the selected code and workspace context;
 - the suggested agent mode, either `READ_ONLY` or `PROPOSAL_ONLY`;
-- a draft message payload that can be opened in the existing CodeMind Chat UI.
+- a draft message payload that can be opened in the existing SymbolWright Chat UI.
 
-The bridge does not call a provider by itself. It prepares the prompt and hands it to the real chat/agent surface, where the operator still connects with `CODEMIND_API_KEY`, chooses browser-only or API-backed mode, and decides whether to send the draft through `/api/chat` or `/api/agent`.
+The bridge does not call a provider by itself. It prepares the prompt and hands it to the real chat/agent surface, where the operator still connects with `SYMBOLWRIGHT_API_KEY`, chooses browser-only or API-backed mode, and decides whether to send the draft through `/api/chat` or `/api/agent`.
 
-The CodeMind Chat UI accepts workspace drafts through query parameters:
+The SymbolWright Chat UI accepts workspace drafts through query parameters:
 
 ```txt
 ?draft=<encoded prompt>&agentMode=READ_ONLY
@@ -220,7 +220,7 @@ npm run lint
 npm test
 npm run build
 
-export CODEMIND_API_KEY=$(openssl rand -hex 16)
+export SYMBOLWRIGHT_API_KEY=$(openssl rand -hex 16)
 npm run serve
 ```
 
@@ -259,7 +259,7 @@ Use **Export session JSON** before clearing storage or switching devices.
 
 Project bundle imports can fail when:
 
-- the JSON is not a `codemind.workspace.project-bundle` bundle;
+- the JSON is not a `symbolwright.workspace.project-bundle` bundle;
 - the manifest file list does not match the bundle file list;
 - a path is unsafe or duplicated;
 - a language id is unknown;

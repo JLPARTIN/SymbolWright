@@ -4,7 +4,7 @@ import path from 'node:path'
 import {
   createBuildLedgerSummary,
   type BuildLedgerSummary,
-} from '../build-state/codemind-build-ledger.js'
+} from '../build-state/symbolwright-build-ledger.js'
 import { loadProjectInstructionSet } from './project-instructions-loader.js'
 import type { ProjectInstructionSet } from './project-instructions.js'
 
@@ -138,7 +138,7 @@ export function buildProjectContextPacket(rootDir: string): ProjectContextPacket
 
 export function renderProjectContextPacket(packet: ProjectContextPacket): string {
   const lines = [
-    'CodeMind Project Context Packet',
+    'SymbolWright Project Context Packet',
     '',
     `Root: ${packet.rootDir}`,
     `Generated: ${packet.generatedAt}`,

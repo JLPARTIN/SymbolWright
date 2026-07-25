@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { ChatRequestValidationError } from './codemind-chat-request.js'
-import { parseAgentRequestBody } from './codemind-agent-request.js'
+import { ChatRequestValidationError } from './symbolwright-chat-request.js'
+import { parseAgentRequestBody } from './symbolwright-agent-request.js'
 
 describe('parseAgentRequestBody', () => {
   it('parses a minimal valid request with sensible defaults', () => {

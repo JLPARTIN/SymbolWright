@@ -211,7 +211,7 @@ export class MultiAgentMissionStore {
   readonly #root: string
 
   constructor(workspaceRoot: string) {
-    this.#root = path.join(workspaceRoot, '.codemind', 'multi-agent-missions')
+    this.#root = path.join(workspaceRoot, '.symbolwright', 'multi-agent-missions')
   }
 
   async save(state: MultiAgentMissionState): Promise<void> {

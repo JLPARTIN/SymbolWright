@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { buildSandboxInventory, runnerAvailability } from '../../sandbox/sandbox-registry.js'
 import { SandboxService } from '../../sandbox/sandbox-service.js'
 import type { SandboxRunnerAvailability } from '../../sandbox/sandbox-types.js'
-import type { CodemindRuntimeMode, RuntimeToolContext } from '../types.js'
+import type { SymbolWrightRuntimeMode, RuntimeToolContext } from '../types.js'
 import { sandboxExecuteTool, sandboxListRuntimesTool } from './sandbox-tools.js'
 
 const CHECKED_AT = '2026-07-21T00:00:00.000Z'
@@ -15,7 +15,7 @@ function availability(command: string): SandboxRunnerAvailability {
 function createService(): SandboxService {
   const env = {
     PATH: process.env['PATH'] ?? '',
-    CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true',
+    SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true',
   }
   const commandAvailability = new Map<string, SandboxRunnerAvailability>([
     ['node', availability('node')],
@@ -35,7 +35,7 @@ function createService(): SandboxService {
 }
 
 function context(
-  mode: CodemindRuntimeMode,
+  mode: SymbolWrightRuntimeMode,
   overrides: Partial<RuntimeToolContext> = {},
 ): RuntimeToolContext {
   return {
@@ -47,8 +47,8 @@ function context(
       allowShell: mode === 'APPROVED_EXECUTION',
       allowWrites: mode === 'APPROVED_EXECUTION',
       allowGitHubWrites: false,
-      protectedPaths: ['.git', '.codemind'],
-      noisyDirs: ['.git', '.codemind', 'node_modules'],
+      protectedPaths: ['.git', '.symbolwright'],
+      noisyDirs: ['.git', '.symbolwright', 'node_modules'],
     },
     sandboxService: createService(),
     ...overrides,

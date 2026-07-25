@@ -1,5 +1,5 @@
-import { CODEMIND_SUPPORTED_PROVIDER_IDS } from '../providers/provider-adapter-contract.js'
-import type { CodemindProviderId } from '../providers/provider-adapter-contract.js'
+import { SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS } from '../providers/provider-adapter-contract.js'
+import type { SymbolWrightProviderId } from '../providers/provider-adapter-contract.js'
 import type {
   ProviderGatewayMessage,
   ProviderGatewayRole,
@@ -12,10 +12,10 @@ const MESSAGE_ROLES: readonly ProviderGatewayRole[] = ['system', 'user', 'assist
 const MAX_MESSAGES = 200
 const MAX_MESSAGE_CHARS = 32_000
 
-function isSupportedProviderId(value: unknown): value is CodemindProviderId {
+function isSupportedProviderId(value: unknown): value is SymbolWrightProviderId {
   return (
     typeof value === 'string' &&
-    (CODEMIND_SUPPORTED_PROVIDER_IDS as readonly string[]).includes(value)
+    (SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS as readonly string[]).includes(value)
   )
 }
 
@@ -26,18 +26,18 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>
 }
 
-export function resolveRequestedProviderId(body: Record<string, unknown>): CodemindProviderId {
+export function resolveRequestedProviderId(body: Record<string, unknown>): SymbolWrightProviderId {
   const candidate = body['providerId'] ?? body['provider']
   if (!isSupportedProviderId(candidate)) {
     throw new ChatRequestValidationError(
-      `providerId must be one of: ${CODEMIND_SUPPORTED_PROVIDER_IDS.join(', ')}`,
+      `providerId must be one of: ${SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS.join(', ')}`,
     )
   }
   return candidate
 }
 
 export interface ParsedChatRequest {
-  readonly providerId: CodemindProviderId
+  readonly providerId: SymbolWrightProviderId
   readonly model?: string
   readonly systemPrompt?: string
   readonly messages: readonly ProviderGatewayMessage[]

@@ -1,5 +1,5 @@
 import type { AjnaReviewFinding, AjnaReviewRequest } from './ajna-review.types.js'
-import type { CodemindAjnaReviewPrInput } from '../cli-ajna-review-pr.js'
+import type { SymbolWrightAjnaReviewPrInput } from '../cli-ajna-review-pr.js'
 import {
   detectAjnaArchitectureDrift,
   type AjnaArchitecturePolicy,
@@ -163,7 +163,7 @@ function createEvidenceFindings(
 export function normalizeGithubPullRequestForAjnaReview(
   payload: AjnaGithubPullRequestPayload,
   options: AjnaGithubReviewNormalizerOptions = {},
-): CodemindAjnaReviewPrInput {
+): SymbolWrightAjnaReviewPrInput {
   assertNonEmptyString(payload.repository, 'repository')
   assertPositiveInteger(payload.pullRequestNumber, 'pullRequestNumber')
   assertNonEmptyString(payload.baseRef, 'baseRef')
@@ -180,7 +180,7 @@ export function normalizeGithubPullRequestForAjnaReview(
   }
   assertImportEdges(payload.importEdges, 'importEdges')
 
-  const baseInput: CodemindAjnaReviewPrInput = {
+  const baseInput: SymbolWrightAjnaReviewPrInput = {
     request: createRequest(payload, options),
     findings: createEvidenceFindings(payload, options),
   }

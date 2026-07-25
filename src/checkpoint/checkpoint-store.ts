@@ -12,7 +12,7 @@ import path from 'node:path'
 import type { CheckpointMetadata } from './checkpoint-types.js'
 
 export function resolveCheckpointsRoot(workspaceRoot: string): string {
-  return path.join(workspaceRoot, '.codemind', 'checkpoints')
+  return path.join(workspaceRoot, '.symbolwright', 'checkpoints')
 }
 
 export function resolveSessionDir(workspaceRoot: string, sessionId: string): string {

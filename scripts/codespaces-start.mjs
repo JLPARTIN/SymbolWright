@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// One-command Codespaces startup: stops any stale tracked CodeMind server,
+// One-command Codespaces startup: stops any stale tracked SymbolWright server,
 // installs deps and builds only when needed, generates a local access key,
 // launches the unified server on port 8787, waits for it to be healthy,
 // validates the actual served browser JavaScript (not just tsc), and prints
@@ -65,7 +65,7 @@ function runStep(label, command, args) {
 async function main() {
   ensureRuntimeDir()
 
-  // 1. Stop any stale, previously tracked CodeMind server (mobile-friendly restart: no Ctrl+C needed).
+  // 1. Stop any stale, previously tracked SymbolWright server (mobile-friendly restart: no Ctrl+C needed).
   await stopTrackedServer({ quiet: false })
 
   // 2. Refuse to touch a port occupied by something we didn't start.
@@ -73,7 +73,7 @@ async function main() {
   if (foreignPids.length > 0) {
     throw new Error(
       `Port ${DEFAULT_PORT} is already in use by untracked process(es) [${foreignPids.join(', ')}]. ` +
-        `CodeMind only stops servers it started itself (tracked via ${PID_FILE}) -- it will not kill an ` +
+        `SymbolWright only stops servers it started itself (tracked via ${PID_FILE}) -- it will not kill an ` +
         `unrelated process. Stop it manually, then re-run "npm run codespaces:start".`,
     )
   }
@@ -86,34 +86,34 @@ async function main() {
   }
 
   // 4. Always build current source.
-  runStep('Building CodeMind', 'npm', ['run', 'build'])
+  runStep('Building SymbolWright', 'npm', ['run', 'build'])
 
   // 5. Resolve environment: preserve anything the user explicitly set.
-  const explicitApiKey = process.env.CODEMIND_API_KEY
+  const explicitApiKey = process.env.SYMBOLWRIGHT_API_KEY
   const { apiKey, source } =
     typeof explicitApiKey === 'string' && explicitApiKey.trim().length > 0
       ? { apiKey: explicitApiKey.trim(), source: 'env' }
       : loadOrCreateApiKey()
 
-  const runtimeMode = process.env.CODEMIND_RUNTIME_MODE ?? 'APPROVED_EXECUTION'
-  const host = process.env.CODEMIND_CHAT_HOST ?? DEFAULT_HOST
-  const port = Number.parseInt(process.env.CODEMIND_CHAT_PORT ?? String(DEFAULT_PORT), 10)
+  const runtimeMode = process.env.SYMBOLWRIGHT_RUNTIME_MODE ?? 'APPROVED_EXECUTION'
+  const host = process.env.SYMBOLWRIGHT_CHAT_HOST ?? DEFAULT_HOST
+  const port = Number.parseInt(process.env.SYMBOLWRIGHT_CHAT_PORT ?? String(DEFAULT_PORT), 10)
   const marker = randomBytes(16).toString('hex')
 
   const childEnv = {
     ...process.env,
-    CODEMIND_API_KEY: apiKey,
-    CODEMIND_RUNTIME_MODE: runtimeMode,
-    CODEMIND_CHAT_HOST: host,
-    CODEMIND_CHAT_PORT: String(port),
-    CODEMIND_CODESPACES_MARKER: marker,
+    SYMBOLWRIGHT_API_KEY: apiKey,
+    SYMBOLWRIGHT_RUNTIME_MODE: runtimeMode,
+    SYMBOLWRIGHT_CHAT_HOST: host,
+    SYMBOLWRIGHT_CHAT_PORT: String(port),
+    SYMBOLWRIGHT_CODESPACES_MARKER: marker,
   }
 
   // 6. Launch the server, detached, logging to a stable file (mobile-friendly: no foreground terminal required).
   ensureRuntimeDir()
   const logFd = openSync(LOG_FILE, 'a')
   chmodSecret(LOG_FILE)
-  log(`\n> Starting CodeMind server on ${host}:${port} (log: ${LOG_FILE})`)
+  log(`\n> Starting SymbolWright server on ${host}:${port} (log: ${LOG_FILE})`)
   const child = spawn(process.execPath, [join(REPO_ROOT, 'dist', 'cli.js'), 'serve'], {
     cwd: REPO_ROOT,
     env: childEnv,
@@ -160,7 +160,7 @@ async function main() {
   const providers = detectProviders()
   const detected = providers.filter((provider) => provider.detected)
 
-  log('\nCodeMind Codespaces startup complete\n')
+  log('\nSymbolWright Codespaces startup complete\n')
   log('Server:')
   log('  Healthy\n')
   log('Port:')
@@ -178,11 +178,11 @@ async function main() {
   log('')
   log('Open:')
   log(`  ${openUrl}\n`)
-  log('CodeMind access key:')
+  log('SymbolWright access key:')
   log(`  ${apiKey}`)
   log(
     source === 'env'
-      ? '  (from CODEMIND_API_KEY)'
+      ? '  (from SYMBOLWRIGHT_API_KEY)'
       : source === 'persisted'
         ? '  (reused from the previous start in this Codespace session)'
         : '  (generated for this Codespace session; reused on restart)',

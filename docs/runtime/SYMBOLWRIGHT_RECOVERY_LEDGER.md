@@ -1,4 +1,4 @@
-# CodeMind Recovery Ledger
+# SymbolWright Recovery Ledger
 
 Phase AA adds a read-only recovery planning layer.
 

@@ -3,38 +3,38 @@ import {
   createReadOnlyGithubPrContextResponse,
 } from '../github/github-pr-context-contract.js'
 import type {
-  CodemindGithubPrAdapterMode,
-  CodemindGithubPrContextAdapterRequest,
-  CodemindGithubPullRequestIdentity,
+  SymbolWrightGithubPrAdapterMode,
+  SymbolWrightGithubPrContextAdapterRequest,
+  SymbolWrightGithubPullRequestIdentity,
 } from '../github/github-pr-context.types.js'
-import type { CodemindReadOnlyRepoContext } from '../repo-context/repo-context.types.js'
+import type { SymbolWrightReadOnlyRepoContext } from '../repo-context/repo-context.types.js'
 
-export const CODEMIND_GITHUB_ADAPTER_PROOF_BLOCK_ID = 'CODEMIND-PROOF-HARNESS-07' as const
-export const CODEMIND_GITHUB_ADAPTER_PROOF_PR_ID = 'PR-CM-TEST-07' as const
-export const CODEMIND_GITHUB_ADAPTER_PROOF_PHASE_ID = 'CODEMIND-TEST-07' as const
+export const SYMBOLWRIGHT_GITHUB_ADAPTER_PROOF_BLOCK_ID = 'SYMBOLWRIGHT-PROOF-HARNESS-07' as const
+export const SYMBOLWRIGHT_GITHUB_ADAPTER_PROOF_PR_ID = 'PR-CM-TEST-07' as const
+export const SYMBOLWRIGHT_GITHUB_ADAPTER_PROOF_PHASE_ID = 'SYMBOLWRIGHT-TEST-07' as const
 
-export const CODEMIND_GITHUB_ADAPTER_PROOF_STATUSES = [
+export const SYMBOLWRIGHT_GITHUB_ADAPTER_PROOF_STATUSES = [
   'GITHUB_ADAPTER_PROOF_READY',
   'GITHUB_ADAPTER_PROOF_PARTIAL',
   'GITHUB_ADAPTER_PROOF_BLOCKED',
   'GITHUB_ADAPTER_PROOF_INVALID',
 ] as const
-export type CodemindGithubAdapterProofStatus =
-  (typeof CODEMIND_GITHUB_ADAPTER_PROOF_STATUSES)[number]
+export type SymbolWrightGithubAdapterProofStatus =
+  (typeof SYMBOLWRIGHT_GITHUB_ADAPTER_PROOF_STATUSES)[number]
 
-export interface CodemindGithubAdapterProofInput {
-  readonly adapterMode: CodemindGithubPrAdapterMode
-  readonly pullRequest: CodemindGithubPullRequestIdentity
-  readonly repoContext: CodemindReadOnlyRepoContext
+export interface SymbolWrightGithubAdapterProofInput {
+  readonly adapterMode: SymbolWrightGithubPrAdapterMode
+  readonly pullRequest: SymbolWrightGithubPullRequestIdentity
+  readonly repoContext: SymbolWrightReadOnlyRepoContext
   readonly blockingNotes?: readonly string[]
 }
 
-export interface CodemindGithubAdapterProofReport {
-  readonly blockId: typeof CODEMIND_GITHUB_ADAPTER_PROOF_BLOCK_ID
-  readonly prId: typeof CODEMIND_GITHUB_ADAPTER_PROOF_PR_ID
-  readonly phaseId: typeof CODEMIND_GITHUB_ADAPTER_PROOF_PHASE_ID
-  readonly status: CodemindGithubAdapterProofStatus
-  readonly adapterMode: CodemindGithubPrAdapterMode
+export interface SymbolWrightGithubAdapterProofReport {
+  readonly blockId: typeof SYMBOLWRIGHT_GITHUB_ADAPTER_PROOF_BLOCK_ID
+  readonly prId: typeof SYMBOLWRIGHT_GITHUB_ADAPTER_PROOF_PR_ID
+  readonly phaseId: typeof SYMBOLWRIGHT_GITHUB_ADAPTER_PROOF_PHASE_ID
+  readonly status: SymbolWrightGithubAdapterProofStatus
+  readonly adapterMode: SymbolWrightGithubPrAdapterMode
   readonly isReadOnly: boolean
   readonly violations: readonly string[]
   readonly blockingNotes: readonly string[]
@@ -44,11 +44,11 @@ export interface CodemindGithubAdapterProofReport {
   readonly summary: string
 }
 
-const ALLOWED_MODES: ReadonlySet<CodemindGithubPrAdapterMode> = new Set(['READ_ONLY_CONTRACT'])
+const ALLOWED_MODES: ReadonlySet<SymbolWrightGithubPrAdapterMode> = new Set(['READ_ONLY_CONTRACT'])
 
 function collectViolations(
-  adapterMode: CodemindGithubPrAdapterMode,
-  pullRequest: CodemindGithubPullRequestIdentity,
+  adapterMode: SymbolWrightGithubPrAdapterMode,
+  pullRequest: SymbolWrightGithubPullRequestIdentity,
   isReadOnly: boolean,
 ): readonly string[] {
   const violations: string[] = []
@@ -71,7 +71,7 @@ function collectViolations(
 function resolveStatus(
   blockingNotes: readonly string[],
   violations: readonly string[],
-): CodemindGithubAdapterProofStatus {
+): SymbolWrightGithubAdapterProofStatus {
   if (blockingNotes.length > 0) {
     return 'GITHUB_ADAPTER_PROOF_BLOCKED'
   }
@@ -81,12 +81,12 @@ function resolveStatus(
   return 'GITHUB_ADAPTER_PROOF_READY'
 }
 
-export function buildCodemindGithubAdapterProofReport(
-  input: CodemindGithubAdapterProofInput,
-): CodemindGithubAdapterProofReport {
+export function buildSymbolWrightGithubAdapterProofReport(
+  input: SymbolWrightGithubAdapterProofInput,
+): SymbolWrightGithubAdapterProofReport {
   const blockingNotes = [...(input.blockingNotes ?? [])].sort((a, b) => a.localeCompare(b))
 
-  const request: CodemindGithubPrContextAdapterRequest = {
+  const request: SymbolWrightGithubPrContextAdapterRequest = {
     requestId: `proof-${input.pullRequest.pullRequestNumber}`,
     adapterMode: input.adapterMode,
     pullRequest: input.pullRequest,
@@ -110,9 +110,9 @@ export function buildCodemindGithubAdapterProofReport(
         : 'GitHub adapter proof ready: read-only contract verified.'
 
   return {
-    blockId: CODEMIND_GITHUB_ADAPTER_PROOF_BLOCK_ID,
-    prId: CODEMIND_GITHUB_ADAPTER_PROOF_PR_ID,
-    phaseId: CODEMIND_GITHUB_ADAPTER_PROOF_PHASE_ID,
+    blockId: SYMBOLWRIGHT_GITHUB_ADAPTER_PROOF_BLOCK_ID,
+    prId: SYMBOLWRIGHT_GITHUB_ADAPTER_PROOF_PR_ID,
+    phaseId: SYMBOLWRIGHT_GITHUB_ADAPTER_PROOF_PHASE_ID,
     status,
     adapterMode: input.adapterMode,
     isReadOnly,

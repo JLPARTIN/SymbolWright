@@ -1,4 +1,4 @@
-# CodeMind Runtime Report Index
+# SymbolWright Runtime Report Index
 
 PR Bundle BK-BN adds a runtime report index for the Zflow report surfaces.
 

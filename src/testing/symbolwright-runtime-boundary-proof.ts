@@ -1,18 +1,18 @@
-export const CODEMIND_RUNTIME_BOUNDARY_PROOF_BLOCK_ID = 'CODEMIND-PROOF-HARNESS-06' as const
-export const CODEMIND_RUNTIME_BOUNDARY_PROOF_PR_ID = 'PR-CM-TEST-06' as const
-export const CODEMIND_RUNTIME_BOUNDARY_PROOF_PHASE_ID = 'CODEMIND-TEST-06' as const
+export const SYMBOLWRIGHT_RUNTIME_BOUNDARY_PROOF_BLOCK_ID = 'SYMBOLWRIGHT-PROOF-HARNESS-06' as const
+export const SYMBOLWRIGHT_RUNTIME_BOUNDARY_PROOF_PR_ID = 'PR-CM-TEST-06' as const
+export const SYMBOLWRIGHT_RUNTIME_BOUNDARY_PROOF_PHASE_ID = 'SYMBOLWRIGHT-TEST-06' as const
 
-export const CODEMIND_RUNTIME_BOUNDARY_PROOF_STATUSES = [
+export const SYMBOLWRIGHT_RUNTIME_BOUNDARY_PROOF_STATUSES = [
   'RUNTIME_BOUNDARY_PROOF_READY',
   'RUNTIME_BOUNDARY_PROOF_PARTIAL',
   'RUNTIME_BOUNDARY_PROOF_BLOCKED',
   'RUNTIME_BOUNDARY_PROOF_INVALID',
 ] as const
-export type CodemindRuntimeBoundaryProofStatus =
-  (typeof CODEMIND_RUNTIME_BOUNDARY_PROOF_STATUSES)[number]
+export type SymbolWrightRuntimeBoundaryProofStatus =
+  (typeof SYMBOLWRIGHT_RUNTIME_BOUNDARY_PROOF_STATUSES)[number]
 
 /** All seven boundary flags that must remain false at runtime. */
-export interface CodemindRuntimeBoundaryFlags {
+export interface SymbolWrightRuntimeBoundaryFlags {
   readonly providerInvocationAllowed: boolean
   readonly repoMutationAllowed: boolean
   readonly commandExecutionAllowed: boolean
@@ -22,8 +22,8 @@ export interface CodemindRuntimeBoundaryFlags {
   readonly automaticSkillPromotionAllowed: boolean
 }
 
-export interface CodemindRuntimeBoundaryProofInput {
-  readonly flags: CodemindRuntimeBoundaryFlags
+export interface SymbolWrightRuntimeBoundaryProofInput {
+  readonly flags: SymbolWrightRuntimeBoundaryFlags
   /** Names of operator-approval gates that must be present. */
   readonly requiredGates: readonly string[]
   /** Names of gates actually registered in the runtime. */
@@ -31,11 +31,11 @@ export interface CodemindRuntimeBoundaryProofInput {
   readonly blockingNotes?: readonly string[]
 }
 
-export interface CodemindRuntimeBoundaryProofReport {
-  readonly blockId: typeof CODEMIND_RUNTIME_BOUNDARY_PROOF_BLOCK_ID
-  readonly prId: typeof CODEMIND_RUNTIME_BOUNDARY_PROOF_PR_ID
-  readonly phaseId: typeof CODEMIND_RUNTIME_BOUNDARY_PROOF_PHASE_ID
-  readonly status: CodemindRuntimeBoundaryProofStatus
+export interface SymbolWrightRuntimeBoundaryProofReport {
+  readonly blockId: typeof SYMBOLWRIGHT_RUNTIME_BOUNDARY_PROOF_BLOCK_ID
+  readonly prId: typeof SYMBOLWRIGHT_RUNTIME_BOUNDARY_PROOF_PR_ID
+  readonly phaseId: typeof SYMBOLWRIGHT_RUNTIME_BOUNDARY_PROOF_PHASE_ID
+  readonly status: SymbolWrightRuntimeBoundaryProofStatus
   readonly flagViolations: readonly string[]
   readonly missingGates: readonly string[]
   readonly blockingNotes: readonly string[]
@@ -45,7 +45,7 @@ export interface CodemindRuntimeBoundaryProofReport {
   readonly summary: string
 }
 
-const FLAG_NAMES: ReadonlyArray<keyof CodemindRuntimeBoundaryFlags> = [
+const FLAG_NAMES: ReadonlyArray<keyof SymbolWrightRuntimeBoundaryFlags> = [
   'providerInvocationAllowed',
   'repoMutationAllowed',
   'commandExecutionAllowed',
@@ -55,7 +55,7 @@ const FLAG_NAMES: ReadonlyArray<keyof CodemindRuntimeBoundaryFlags> = [
   'automaticSkillPromotionAllowed',
 ]
 
-function collectFlagViolations(flags: CodemindRuntimeBoundaryFlags): readonly string[] {
+function collectFlagViolations(flags: SymbolWrightRuntimeBoundaryFlags): readonly string[] {
   return FLAG_NAMES.filter((name) => flags[name] === true).map(
     (name) => `${name} must be false but is true.`,
   )
@@ -65,7 +65,7 @@ function resolveStatus(
   blockingNotes: readonly string[],
   flagViolations: readonly string[],
   missingGates: readonly string[],
-): CodemindRuntimeBoundaryProofStatus {
+): SymbolWrightRuntimeBoundaryProofStatus {
   if (blockingNotes.length > 0) {
     return 'RUNTIME_BOUNDARY_PROOF_BLOCKED'
   }
@@ -78,9 +78,9 @@ function resolveStatus(
   return 'RUNTIME_BOUNDARY_PROOF_READY'
 }
 
-export function buildCodemindRuntimeBoundaryProofReport(
-  input: CodemindRuntimeBoundaryProofInput,
-): CodemindRuntimeBoundaryProofReport {
+export function buildSymbolWrightRuntimeBoundaryProofReport(
+  input: SymbolWrightRuntimeBoundaryProofInput,
+): SymbolWrightRuntimeBoundaryProofReport {
   const blockingNotes = [...(input.blockingNotes ?? [])].sort((a, b) => a.localeCompare(b))
 
   const flagViolations = collectFlagViolations(input.flags)
@@ -100,9 +100,9 @@ export function buildCodemindRuntimeBoundaryProofReport(
           : 'Runtime boundary proof ready: all flags false and all required gates present.'
 
   return {
-    blockId: CODEMIND_RUNTIME_BOUNDARY_PROOF_BLOCK_ID,
-    prId: CODEMIND_RUNTIME_BOUNDARY_PROOF_PR_ID,
-    phaseId: CODEMIND_RUNTIME_BOUNDARY_PROOF_PHASE_ID,
+    blockId: SYMBOLWRIGHT_RUNTIME_BOUNDARY_PROOF_BLOCK_ID,
+    prId: SYMBOLWRIGHT_RUNTIME_BOUNDARY_PROOF_PR_ID,
+    phaseId: SYMBOLWRIGHT_RUNTIME_BOUNDARY_PROOF_PHASE_ID,
     status,
     flagViolations,
     missingGates,

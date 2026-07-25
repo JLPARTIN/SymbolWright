@@ -137,7 +137,7 @@ export class MissionAcceptancePacketStore {
   readonly #root: string
 
   constructor(workspaceRoot: string) {
-    this.#root = path.resolve(workspaceRoot, '.codemind', 'autonomy', 'acceptance')
+    this.#root = path.resolve(workspaceRoot, '.symbolwright', 'autonomy', 'acceptance')
   }
 
   async save(packet: MissionAcceptancePacket): Promise<string> {
@@ -230,7 +230,7 @@ function pullRequestBody(packet: Omit<MissionAcceptancePacket, 'pullRequest'>): 
     '',
     '## Evidence',
     '',
-    'Generated from CodeMind persisted mission execution state. Completion is not inferred from agent narration.',
+    'Generated from SymbolWright persisted mission execution state. Completion is not inferred from agent narration.',
   ].join('\n')
 }
 

@@ -14,14 +14,14 @@ The command performs this local-only pipeline:
 
 1. Read a mocked GitHub pull request payload JSON file.
 2. Validate and normalize it with `normalizeGithubPullRequestForAjnaReview()`.
-3. Convert the payload into `CodemindAjnaReviewPrInput`.
+3. Convert the payload into `SymbolWrightAjnaReviewPrInput`.
 4. Render through the existing `buildAjnaReviewPrForInput()` path.
 
 ## Input shape
 
 ```json
 {
-  "repository": "JLPARTIN/CodeMind",
+  "repository": "JLPARTIN/SymbolWright",
   "pullRequestNumber": 59,
   "baseRef": "main",
   "headRef": "ajna-github-payload-normalizer",

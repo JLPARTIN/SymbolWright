@@ -99,7 +99,7 @@ export class SandboxHistoryStore {
   private readonly now: () => Date
 
   public constructor(options: SandboxHistoryStoreOptions) {
-    this.root = path.join(path.resolve(options.workspaceRoot), '.codemind', 'sandbox')
+    this.root = path.join(path.resolve(options.workspaceRoot), '.symbolwright', 'sandbox')
     this.executionsRoot = path.join(this.root, EXECUTIONS_DIR)
     this.indexPath = path.join(this.root, INDEX_FILE)
     this.now = options.now ?? (() => new Date())

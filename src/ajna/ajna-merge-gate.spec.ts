@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import type { CodemindChangedFileContext } from '../repo-context/repo-context.types.js'
+import type { SymbolWrightChangedFileContext } from '../repo-context/repo-context.types.js'
 import { evaluateAjnaMergeGate } from './ajna-merge-gate.js'
 
-function makeFile(overrides: Partial<CodemindChangedFileContext> = {}): CodemindChangedFileContext {
+function makeFile(
+  overrides: Partial<SymbolWrightChangedFileContext> = {},
+): SymbolWrightChangedFileContext {
   return {
     path: 'src/example.ts',
     changeType: 'MODIFIED',

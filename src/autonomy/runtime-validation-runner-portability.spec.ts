@@ -17,8 +17,8 @@ describe('RuntimeAutonomousValidationRunner portability', () => {
       stderr: '',
       durationMs: 27,
     }))
-    const repositoryRoot = path.resolve('/tmp/codemind-mixed-repository')
-    const command = 'codemind-cwd:services/api::python -m pytest'
+    const repositoryRoot = path.resolve('/tmp/symbolwright-mixed-repository')
+    const command = 'symbolwright-cwd:services/api::python -m pytest'
     const runner = new RuntimeAutonomousValidationRunner({
       policy: createRuntimePolicyForMode('APPROVED_EXECUTION'),
       portableRunner: { run },
@@ -50,9 +50,9 @@ describe('RuntimeAutonomousValidationRunner portability', () => {
     })
 
     const result = await runner.run({
-      repositoryRoot: '/tmp/codemind-mixed-repository',
+      repositoryRoot: '/tmp/symbolwright-mixed-repository',
       phase: 'test',
-      command: 'codemind-cwd:services/api',
+      command: 'symbolwright-cwd:services/api',
     })
 
     expect(result.passed).toBe(false)

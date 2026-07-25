@@ -1,15 +1,15 @@
-# CodeMind CLI / Terminal UX Plan
+# SymbolWright CLI / Terminal UX Plan
 
 **Status:** Foundation UX Contract  
 **Version:** v1.0  
-**Track:** CODEMIND-3  
+**Track:** SYMBOLWRIGHT-3  
 **Purpose:** Define the operator-facing terminal command surface before expanding runtime tools.
 
 ---
 
 ## 1. Purpose
 
-CodeMind should become a terminal-first coding assistant while remaining permission-gated, audit-aware, and operator-controlled.
+SymbolWright should become a terminal-first coding assistant while remaining permission-gated, audit-aware, and operator-controlled.
 
 This document defines the planned command surface only.
 
@@ -28,7 +28,7 @@ autonomous repo changes
 
 ## 2. UX Principles
 
-CodeMind must follow these principles:
+SymbolWright must follow these principles:
 
 ```txt
 plan before action
@@ -86,7 +86,7 @@ These commands are UX contracts. They do not prove that runtime execution is act
 | `/codemind validation-plan` | Propose validation commands | PLAN | No | No |
 | `/codemind ci-review` | Diagnose CI failures from available logs/context | CI_REVIEW | No | Approval required for external actions |
 | `/codemind pr-notes` | Draft PR summary or review notes | PR_REVIEW | No | No |
-| `/codemind status` | Report CodeMind mode and policy status | READ_ONLY | No | No |
+| `/codemind status` | Report SymbolWright mode and policy status | READ_ONLY | No | No |
 | `/codemind help` | Show available command surface | PLAN | No | No |
 | `/codemind ajna review-pr <pr>` | Produce an Ajna PR review report | PR_REVIEW | No | No |
 | `/codemind ajna merge-readiness <pr>` | Assess merge-readiness from evidence | PR_REVIEW | No | No |
@@ -95,7 +95,7 @@ These commands are UX contracts. They do not prove that runtime execution is act
 
 ## 5. Output Contract
 
-Every CodeMind command should eventually return:
+Every SymbolWright command should eventually return:
 
 ```txt
 intent
@@ -129,7 +129,7 @@ recommended next action
 
 ## 6. Terminal Interaction Pattern
 
-CodeMind should use this terminal pattern:
+SymbolWright should use this terminal pattern:
 
 ```txt
 operator request
@@ -157,7 +157,7 @@ audit / project note
 
 ## 7. Non-Goals
 
-CodeMind must not provide:
+SymbolWright must not provide:
 
 ```txt
 autonomous merge
@@ -176,16 +176,16 @@ network ingestion by default
 
 | UX Contract | Future Runtime Phase |
 |---|---|
-| `/codemind plan` | CODEMIND-R1 / CODEMIND-R5 |
-| `/codemind scan` | CODEMIND-R2 |
-| `/codemind read` | CODEMIND-R7 |
-| `/codemind search` | CODEMIND-R2 / CODEMIND-R7 |
-| `/codemind propose-patch` | CODEMIND-R5 |
-| `/codemind validation-plan` | CODEMIND-R5 |
-| `/codemind ci-review` | CODEMIND-R9 |
-| `/codemind pr-notes` | CODEMIND-R8 |
-| `/codemind status` | CODEMIND-R1 |
-| `/codemind help` | CODEMIND-R1 |
+| `/codemind plan` | SYMBOLWRIGHT-R1 / SYMBOLWRIGHT-R5 |
+| `/codemind scan` | SYMBOLWRIGHT-R2 |
+| `/codemind read` | SYMBOLWRIGHT-R7 |
+| `/codemind search` | SYMBOLWRIGHT-R2 / SYMBOLWRIGHT-R7 |
+| `/codemind propose-patch` | SYMBOLWRIGHT-R5 |
+| `/codemind validation-plan` | SYMBOLWRIGHT-R5 |
+| `/codemind ci-review` | SYMBOLWRIGHT-R9 |
+| `/codemind pr-notes` | SYMBOLWRIGHT-R8 |
+| `/codemind status` | SYMBOLWRIGHT-R1 |
+| `/codemind help` | SYMBOLWRIGHT-R1 |
 | `/codemind ajna review-pr` | AJNA-3 / AJNA-4 |
 | `/codemind ajna merge-readiness` | AJNA-5 |
 

@@ -9,7 +9,7 @@ describe('forensic file classifier', () => {
     )
   })
 
-  it('classifies required CodeMind paths deterministically', () => {
+  it('classifies required SymbolWright paths deterministically', () => {
     expect(classifyChangedFile('src/runtime/sandbox/sandbox-runner.ts').kind).toBe('source')
     expect(classifyChangedFile('src/runtime/sandbox/sandbox-runner.spec.ts').kind).toBe('test')
     expect(classifyChangedFile('package.json').kind).toBe('package-metadata')

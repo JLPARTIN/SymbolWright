@@ -79,7 +79,7 @@ describe('operator review packet', () => {
     const packet = createOperatorReviewPacket(makePacketInput())
     const output = renderOperatorReviewPacket(packet)
 
-    expect(output).toContain('CodeMind operator review packet')
+    expect(output).toContain('SymbolWright operator review packet')
     expect(output).toContain('Packet ID: PKT-001')
     expect(output).toContain('Proposed action: post_pr_comment')
     expect(output).toContain('Detail: Post a summary comment on PR #42')
@@ -104,7 +104,7 @@ describe('operator review packet', () => {
     )
     const output = renderOperatorReviewPacket(packet)
 
-    expect(output).toContain('CodeMind operator review packet')
+    expect(output).toContain('SymbolWright operator review packet')
     expect(output).not.toContain('Source evidence:')
     expect(output).not.toContain('Risks:')
     expect(output).not.toContain('Validation:')
@@ -146,7 +146,7 @@ describe('operator review gate', () => {
     const result = evaluateOperatorReviewGate(packet)
     const output = renderOperatorReviewGateResult(result)
 
-    expect(output).toContain('CodeMind operator review gate')
+    expect(output).toContain('SymbolWright operator review gate')
     expect(output).toContain('Decision: PENDING')
     expect(output).toContain('No automatic approval is granted')
     expect(output).toContain('Operator must review')
@@ -172,8 +172,8 @@ describe('operator review packet tool', () => {
     const input = makePacketInput()
     const output = await operatorReviewPacketTool.execute(input, testContext)
 
-    expect(output).toContain('CodeMind operator review packet')
-    expect(output).toContain('CodeMind operator review gate')
+    expect(output).toContain('SymbolWright operator review packet')
+    expect(output).toContain('SymbolWright operator review gate')
     expect(output).toContain('Packet ID: PKT-001')
     expect(output).toContain('Decision: PENDING')
   })
@@ -259,10 +259,10 @@ describe('CLI operator review', () => {
 
     const output = await renderRuntimeOperatorReview(fixturePath, tmpDir)
 
-    expect(output).toContain('CodeMind operator review packet')
+    expect(output).toContain('SymbolWright operator review packet')
     expect(output).toContain('Packet ID: PKT-CLI-001')
     expect(output).toContain('Proposed action: apply_label')
-    expect(output).toContain('CodeMind operator review gate')
+    expect(output).toContain('SymbolWright operator review gate')
     expect(output).toContain('Decision: PENDING')
 
     fs.rmSync(tmpDir, { recursive: true })

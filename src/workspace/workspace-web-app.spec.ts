@@ -22,7 +22,7 @@ const AELIB_STATUS: AelibConnectorStatus = {
   connectorId: 'AELIB-X1YA0I',
   state: 'NOT_CONFIGURED',
   tokenState: 'missing',
-  detail: 'Set CODEMIND_AELIB_ENDPOINT to enable the AELIB-X1YA0I connector health check.',
+  detail: 'Set SYMBOLWRIGHT_AELIB_ENDPOINT to enable the AELIB-X1YA0I connector health check.',
   checkedAt: '2026-06-29T00:00:00.000Z',
 }
 
@@ -30,7 +30,7 @@ describe('workspace web app', () => {
   it('renders a browser page backed by local API endpoints', () => {
     const html = renderWorkspaceWebHtml()
 
-    expect(html).toContain('CodeMind Workspace')
+    expect(html).toContain('SymbolWright Workspace')
     expect(html).toContain('/api/health')
     expect(html).toContain('/api/providers')
     expect(html).toContain('/api/aelib')
@@ -121,7 +121,7 @@ describe('workspace web app', () => {
       const missing = await fetch(`${started.url}/missing`)
 
       expect(root.status).toBe(200)
-      expect(await root.text()).toContain('CodeMind Workspace')
+      expect(await root.text()).toContain('SymbolWright Workspace')
       expect((await health.json()).workspace.primary.displayName).toBe('project')
       expect((await providers.json()).statuses.length).toBeGreaterThan(0)
       expect((await aelib.json()).state).toBe('NOT_CONFIGURED')

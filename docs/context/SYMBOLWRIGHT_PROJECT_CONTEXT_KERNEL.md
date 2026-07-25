@@ -1,10 +1,10 @@
-# CodeMind Project Context Kernel
+# SymbolWright Project Context Kernel
 
-The project context kernel makes CodeMind repo-aware by loading project instructions, build state, package scripts, workflows, and documentation into a deterministic context packet.
+The project context kernel makes SymbolWright repo-aware by loading project instructions, build state, package scripts, workflows, and documentation into a deterministic context packet.
 
 ## Purpose
 
-Before CodeMind can plan work, generate mission packets, or hand off to other agents, it needs a reliable snapshot of the repository's configuration and instructions. The project context kernel produces this snapshot.
+Before SymbolWright can plan work, generate mission packets, or hand off to other agents, it needs a reliable snapshot of the repository's configuration and instructions. The project context kernel produces this snapshot.
 
 ## CLI command
 
@@ -21,7 +21,7 @@ The context packet includes:
 ### Instructions
 Detects and summarizes standard project instruction files:
 - `README.md`
-- `CODEMIND.md`
+- `SYMBOLWRIGHT.md`
 - `CLAUDE.md`
 - `AGENTS.md`
 - `.github/copilot-instructions.md`
@@ -44,7 +44,7 @@ Checks for known CI/CD workflow files under `.github/workflows/`.
 Scans `docs/roadmap` and `docs/pr-plans` for markdown files.
 
 ### Operator directives
-Default operator directives enforced by CodeMind:
+Default operator directives enforced by SymbolWright:
 - Plan-first by default
 - Read-only before writes
 - Approval ticket required for mutations

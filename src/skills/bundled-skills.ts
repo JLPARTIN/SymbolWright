@@ -124,7 +124,7 @@ Run or prepare to run this project target: $ARGUMENTS
 
 1. Inspect package scripts, README, Makefile, and documented launch paths.
 2. Prefer the smallest working command.
-3. If execution is allowed by runtime policy, run the command through CodeMind tooling.
+3. If execution is allowed by runtime policy, run the command through SymbolWright tooling.
 4. Report ports, URLs, and next verification steps.
 `,
   },

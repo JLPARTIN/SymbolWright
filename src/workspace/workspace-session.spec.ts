@@ -71,7 +71,7 @@ describe('workspace session model', () => {
     const serialized = serializeWorkspaceSession(session, now)
     const parsed = parseWorkspaceSessionJson(serialized)
 
-    expect(parsed.name).toBe('CodeMind Workspace Session')
+    expect(parsed.name).toBe('SymbolWright Workspace Session')
     expect(parsed.activeFileId).toBe('file-md')
     expect(parsed.files.map((file) => file.languageId)).toEqual(['javascript', 'markdown'])
   })

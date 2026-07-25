@@ -18,7 +18,7 @@ const roots: string[] = []
 const NOW = '2026-07-23T22:00:00.000Z'
 
 async function workspace(): Promise<string> {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-persistent-repair-'))
+  const root = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-persistent-repair-'))
   roots.push(root)
   return root
 }

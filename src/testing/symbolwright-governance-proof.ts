@@ -1,53 +1,54 @@
 import {
-  evaluateCodemindPermissionRequest,
+  evaluateSymbolWrightPermissionRequest,
   resolveHighestDisposition,
-} from '../permissions/codemind-permission-policy.js'
+} from '../permissions/symbolwright-permission-policy.js'
 import type {
-  CodemindPermissionDecision,
-  CodemindPermissionDisposition,
-  CodemindPermissionRequest,
-} from '../permissions/codemind-permission.types.js'
+  SymbolWrightPermissionDecision,
+  SymbolWrightPermissionDisposition,
+  SymbolWrightPermissionRequest,
+} from '../permissions/symbolwright-permission.types.js'
 
-export const CODEMIND_GOVERNANCE_PROOF_BLOCK_ID = 'CODEMIND-PROOF-HARNESS-05' as const
-export const CODEMIND_GOVERNANCE_PROOF_PR_ID = 'PR-CM-TEST-05' as const
-export const CODEMIND_GOVERNANCE_PROOF_PHASE_ID = 'CODEMIND-TEST-05' as const
+export const SYMBOLWRIGHT_GOVERNANCE_PROOF_BLOCK_ID = 'SYMBOLWRIGHT-PROOF-HARNESS-05' as const
+export const SYMBOLWRIGHT_GOVERNANCE_PROOF_PR_ID = 'PR-CM-TEST-05' as const
+export const SYMBOLWRIGHT_GOVERNANCE_PROOF_PHASE_ID = 'SYMBOLWRIGHT-TEST-05' as const
 
-export const CODEMIND_GOVERNANCE_PROOF_STATUSES = [
+export const SYMBOLWRIGHT_GOVERNANCE_PROOF_STATUSES = [
   'GOVERNANCE_PROOF_READY',
   'GOVERNANCE_PROOF_PARTIAL',
   'GOVERNANCE_PROOF_BLOCKED',
   'GOVERNANCE_PROOF_INVALID',
 ] as const
-export type CodemindGovernanceProofStatus = (typeof CODEMIND_GOVERNANCE_PROOF_STATUSES)[number]
+export type SymbolWrightGovernanceProofStatus =
+  (typeof SYMBOLWRIGHT_GOVERNANCE_PROOF_STATUSES)[number]
 
-export interface CodemindGovernanceProofCase {
-  readonly request: CodemindPermissionRequest
-  readonly expectedDisposition: CodemindPermissionDisposition
+export interface SymbolWrightGovernanceProofCase {
+  readonly request: SymbolWrightPermissionRequest
+  readonly expectedDisposition: SymbolWrightPermissionDisposition
 }
 
-export interface CodemindGovernanceProofInput {
-  readonly testCases: readonly CodemindGovernanceProofCase[]
+export interface SymbolWrightGovernanceProofInput {
+  readonly testCases: readonly SymbolWrightGovernanceProofCase[]
   readonly blockingNotes?: readonly string[]
 }
 
-export interface CodemindGovernanceProofCaseResult {
+export interface SymbolWrightGovernanceProofCaseResult {
   readonly requestId: string
-  readonly expectedDisposition: CodemindPermissionDisposition
-  readonly actualDisposition: CodemindPermissionDisposition
+  readonly expectedDisposition: SymbolWrightPermissionDisposition
+  readonly actualDisposition: SymbolWrightPermissionDisposition
   readonly passed: boolean
-  readonly decision: CodemindPermissionDecision
+  readonly decision: SymbolWrightPermissionDecision
 }
 
-export interface CodemindGovernanceProofReport {
-  readonly blockId: typeof CODEMIND_GOVERNANCE_PROOF_BLOCK_ID
-  readonly prId: typeof CODEMIND_GOVERNANCE_PROOF_PR_ID
-  readonly phaseId: typeof CODEMIND_GOVERNANCE_PROOF_PHASE_ID
-  readonly status: CodemindGovernanceProofStatus
+export interface SymbolWrightGovernanceProofReport {
+  readonly blockId: typeof SYMBOLWRIGHT_GOVERNANCE_PROOF_BLOCK_ID
+  readonly prId: typeof SYMBOLWRIGHT_GOVERNANCE_PROOF_PR_ID
+  readonly phaseId: typeof SYMBOLWRIGHT_GOVERNANCE_PROOF_PHASE_ID
+  readonly status: SymbolWrightGovernanceProofStatus
   readonly passedCount: number
   readonly failedCount: number
-  readonly results: readonly CodemindGovernanceProofCaseResult[]
+  readonly results: readonly SymbolWrightGovernanceProofCaseResult[]
   readonly blockingNotes: readonly string[]
-  readonly highestDisposition: CodemindPermissionDisposition
+  readonly highestDisposition: SymbolWrightPermissionDisposition
   readonly mutationAllowed: false
   readonly githubWriteAllowed: false
   readonly providerInvocationAllowed: false
@@ -59,7 +60,7 @@ function resolveStatus(
   failedCount: number,
   passedCount: number,
   totalCount: number,
-): CodemindGovernanceProofStatus {
+): SymbolWrightGovernanceProofStatus {
   if (blockingNotes.length > 0) {
     return 'GOVERNANCE_PROOF_BLOCKED'
   }
@@ -72,13 +73,13 @@ function resolveStatus(
   return 'GOVERNANCE_PROOF_READY'
 }
 
-export function buildCodemindGovernanceProofReport(
-  input: CodemindGovernanceProofInput,
-): CodemindGovernanceProofReport {
+export function buildSymbolWrightGovernanceProofReport(
+  input: SymbolWrightGovernanceProofInput,
+): SymbolWrightGovernanceProofReport {
   const blockingNotes = [...(input.blockingNotes ?? [])].sort((a, b) => a.localeCompare(b))
 
-  const results: CodemindGovernanceProofCaseResult[] = input.testCases.map((testCase) => {
-    const decision = evaluateCodemindPermissionRequest(testCase.request)
+  const results: SymbolWrightGovernanceProofCaseResult[] = input.testCases.map((testCase) => {
+    const decision = evaluateSymbolWrightPermissionRequest(testCase.request)
     return {
       requestId: testCase.request.requestId,
       expectedDisposition: testCase.expectedDisposition,
@@ -106,9 +107,9 @@ export function buildCodemindGovernanceProofReport(
           : `Governance proof partial: ${passedCount}/${input.testCases.length} test case(s) passed.`
 
   return {
-    blockId: CODEMIND_GOVERNANCE_PROOF_BLOCK_ID,
-    prId: CODEMIND_GOVERNANCE_PROOF_PR_ID,
-    phaseId: CODEMIND_GOVERNANCE_PROOF_PHASE_ID,
+    blockId: SYMBOLWRIGHT_GOVERNANCE_PROOF_BLOCK_ID,
+    prId: SYMBOLWRIGHT_GOVERNANCE_PROOF_PR_ID,
+    phaseId: SYMBOLWRIGHT_GOVERNANCE_PROOF_PHASE_ID,
     status,
     passedCount,
     failedCount,

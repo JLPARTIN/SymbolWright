@@ -1,34 +1,35 @@
-export const CODEMIND_AJNA_PROOF_MATRIX_BLOCK_ID = 'CODEMIND-PROOF-HARNESS-03' as const
-export const CODEMIND_AJNA_PROOF_MATRIX_PR_ID = 'PR-CM-TEST-03' as const
-export const CODEMIND_AJNA_PROOF_MATRIX_PHASE_ID = 'CODEMIND-TEST-03' as const
+export const SYMBOLWRIGHT_AJNA_PROOF_MATRIX_BLOCK_ID = 'SYMBOLWRIGHT-PROOF-HARNESS-03' as const
+export const SYMBOLWRIGHT_AJNA_PROOF_MATRIX_PR_ID = 'PR-CM-TEST-03' as const
+export const SYMBOLWRIGHT_AJNA_PROOF_MATRIX_PHASE_ID = 'SYMBOLWRIGHT-TEST-03' as const
 
-export const CODEMIND_AJNA_PROOF_MATRIX_STATUSES = [
+export const SYMBOLWRIGHT_AJNA_PROOF_MATRIX_STATUSES = [
   'AJNA_PROOF_READY',
   'AJNA_PROOF_PARTIAL',
   'AJNA_PROOF_BLOCKED',
   'AJNA_PROOF_INVALID',
 ] as const
-export type CodemindAjnaProofMatrixStatus = (typeof CODEMIND_AJNA_PROOF_MATRIX_STATUSES)[number]
+export type SymbolWrightAjnaProofMatrixStatus =
+  (typeof SYMBOLWRIGHT_AJNA_PROOF_MATRIX_STATUSES)[number]
 
-// Structurally compatible with CodemindKernelTraceProofStatus from PR-CM-TEST-02.
+// Structurally compatible with SymbolWrightKernelTraceProofStatus from PR-CM-TEST-02.
 type KernelTraceStatus =
   | 'TRACE_PROOF_READY'
   | 'TRACE_PROOF_PARTIAL'
   | 'TRACE_PROOF_BLOCKED'
   | 'TRACE_PROOF_INVALID'
 
-export interface CodemindAjnaProofMatrixInput {
+export interface SymbolWrightAjnaProofMatrixInput {
   readonly ajnaSpecFiles: readonly string[]
   readonly requiredSpecFiles: readonly string[]
   readonly blockingFindings?: readonly string[]
   readonly kernelTraceProofStatus?: KernelTraceStatus
 }
 
-export interface CodemindAjnaProofMatrixReport {
-  readonly blockId: typeof CODEMIND_AJNA_PROOF_MATRIX_BLOCK_ID
-  readonly prId: typeof CODEMIND_AJNA_PROOF_MATRIX_PR_ID
-  readonly phaseId: typeof CODEMIND_AJNA_PROOF_MATRIX_PHASE_ID
-  readonly status: CodemindAjnaProofMatrixStatus
+export interface SymbolWrightAjnaProofMatrixReport {
+  readonly blockId: typeof SYMBOLWRIGHT_AJNA_PROOF_MATRIX_BLOCK_ID
+  readonly prId: typeof SYMBOLWRIGHT_AJNA_PROOF_MATRIX_PR_ID
+  readonly phaseId: typeof SYMBOLWRIGHT_AJNA_PROOF_MATRIX_PHASE_ID
+  readonly status: SymbolWrightAjnaProofMatrixStatus
   readonly coveredSpecs: readonly string[]
   readonly missingSpecs: readonly string[]
   readonly blockingFindings: readonly string[]
@@ -47,7 +48,7 @@ function resolveStatus(
   blockingFindings: readonly string[],
   kernelTraceProofStatus: KernelTraceStatus | undefined,
   missingSpecs: readonly string[],
-): CodemindAjnaProofMatrixStatus {
+): SymbolWrightAjnaProofMatrixStatus {
   if (kernelTraceProofStatus === 'TRACE_PROOF_INVALID') {
     return 'AJNA_PROOF_INVALID'
   }
@@ -60,9 +61,9 @@ function resolveStatus(
   return 'AJNA_PROOF_PARTIAL'
 }
 
-export function buildCodemindAjnaProofMatrixReport(
-  input: CodemindAjnaProofMatrixInput,
-): CodemindAjnaProofMatrixReport {
+export function buildSymbolWrightAjnaProofMatrixReport(
+  input: SymbolWrightAjnaProofMatrixInput,
+): SymbolWrightAjnaProofMatrixReport {
   const requiredSpecs = uniqueSorted(input.requiredSpecFiles)
   const ajnaSpecs = new Set(input.ajnaSpecFiles)
   const blockingFindings = uniqueSorted(input.blockingFindings ?? [])
@@ -82,9 +83,9 @@ export function buildCodemindAjnaProofMatrixReport(
         : `${coveredSpecs.length}/${requiredSpecs.length} Ajna proof specs covered.`
 
   return {
-    blockId: CODEMIND_AJNA_PROOF_MATRIX_BLOCK_ID,
-    prId: CODEMIND_AJNA_PROOF_MATRIX_PR_ID,
-    phaseId: CODEMIND_AJNA_PROOF_MATRIX_PHASE_ID,
+    blockId: SYMBOLWRIGHT_AJNA_PROOF_MATRIX_BLOCK_ID,
+    prId: SYMBOLWRIGHT_AJNA_PROOF_MATRIX_PR_ID,
+    phaseId: SYMBOLWRIGHT_AJNA_PROOF_MATRIX_PHASE_ID,
     status,
     coveredSpecs,
     missingSpecs,

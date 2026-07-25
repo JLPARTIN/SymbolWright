@@ -7,7 +7,7 @@ The contract is intentionally pure and local. It prepares the data shape that a 
 ## Pipeline
 
 ```text
-collector snapshot -> AjnaGithubPullRequestPayload -> CodemindAjnaReviewPrInput -> Ajna review report
+collector snapshot -> AjnaGithubPullRequestPayload -> SymbolWrightAjnaReviewPrInput -> Ajna review report
 ```
 
 Current pure helper:

@@ -6,7 +6,7 @@ function renderMissionAgentBridgeScript(): string {
     window.fetch = function (input, init) {
       const url = typeof input === 'string' ? input : (input && input.url) || '';
       if (url === '/api/agent' && init && typeof init.body === 'string') {
-        const missionId = localStorage.getItem('codemind_active_mission_id');
+        const missionId = localStorage.getItem('symbolwright_active_mission_id');
         if (missionId) {
           try {
             const body = JSON.parse(init.body);
@@ -35,7 +35,7 @@ function renderMissionAgentBridgeScript(): string {
       }).filter(Boolean).join('\\n');
     }
 
-    window.codemindApplyMissionToAgent = function (mission) {
+    window.symbolWrightApplyMissionToAgent = function (mission) {
       const header = document.getElementById('agent-mission-header');
       if (header) {
         header.innerHTML = '<strong>Mission: ' + appEscapeHtml(mission.name) + '</strong>' +

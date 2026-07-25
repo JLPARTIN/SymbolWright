@@ -1,11 +1,12 @@
 import path from 'node:path'
 
-import type { CodemindRuntimeMode, RuntimePolicySnapshot } from '../types.js'
+import type { SymbolWrightRuntimeMode, RuntimePolicySnapshot } from '../types.js'
 
 /** Paths blocked from read/write access by default policy. */
 export const DEFAULT_RUNTIME_PROTECTED_PATHS = [
   '.git',
-  '.codemind', // local mission/checkpoint state
+  '.symbolwright', // local mission/checkpoint state
+  '.symbolwright', // legacy local mission/checkpoint state (pre-rebrand)
   '.env',
   '.env.local',
   'node_modules',
@@ -16,7 +17,8 @@ export const DEFAULT_RUNTIME_PROTECTED_PATHS = [
 /** Directories excluded from file-listing to reduce noise. */
 export const DEFAULT_RUNTIME_NOISY_DIRS = [
   '.git',
-  '.codemind', // local mission/checkpoint state
+  '.symbolwright', // local mission/checkpoint state
+  '.symbolwright', // legacy local mission/checkpoint state (pre-rebrand)
   'node_modules',
   'dist',
   'coverage',
@@ -24,16 +26,16 @@ export const DEFAULT_RUNTIME_NOISY_DIRS = [
 ] as const
 
 /** Existing runtime modes are the single source of truth for strictness. */
-export const CODEMIND_RUNTIME_MODES = [
+export const SYMBOLWRIGHT_RUNTIME_MODES = [
   'PLAN_ONLY',
   'READ_ONLY',
   'PROPOSAL_ONLY',
   'APPROVED_EXECUTION',
-] as const satisfies readonly CodemindRuntimeMode[]
+] as const satisfies readonly SymbolWrightRuntimeMode[]
 
-export const DEFAULT_CODEMIND_RUNTIME_MODE: CodemindRuntimeMode = 'APPROVED_EXECUTION'
+export const DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE: SymbolWrightRuntimeMode = 'APPROVED_EXECUTION'
 
-const RUNTIME_MODE_ALIASES: Readonly<Record<string, CodemindRuntimeMode>> = {
+const RUNTIME_MODE_ALIASES: Readonly<Record<string, SymbolWrightRuntimeMode>> = {
   PLAN: 'PLAN_ONLY',
   PLAN_ONLY: 'PLAN_ONLY',
   READ: 'READ_ONLY',
@@ -55,7 +57,9 @@ export interface RuntimePolicyOptions {
 }
 
 /** Normalizes CLI/env/config aliases onto the existing runtime-mode union. */
-export function normalizeCodemindRuntimeMode(value: unknown): CodemindRuntimeMode | undefined {
+export function normalizeSymbolWrightRuntimeMode(
+  value: unknown,
+): SymbolWrightRuntimeMode | undefined {
   if (typeof value !== 'string') {
     return undefined
   }
@@ -69,13 +73,13 @@ export function normalizeCodemindRuntimeMode(value: unknown): CodemindRuntimeMod
 }
 
 /** Returns true when value is one of the canonical runtime modes. */
-export function isCodemindRuntimeMode(value: string): value is CodemindRuntimeMode {
-  return (CODEMIND_RUNTIME_MODES as readonly string[]).includes(value)
+export function isSymbolWrightRuntimeMode(value: string): value is SymbolWrightRuntimeMode {
+  return (SYMBOLWRIGHT_RUNTIME_MODES as readonly string[]).includes(value)
 }
 
 /** Creates a policy for the selected runtime mode without inventing another mode system. */
 export function createRuntimePolicyForMode(
-  mode: CodemindRuntimeMode,
+  mode: SymbolWrightRuntimeMode,
   options: RuntimePolicyOptions = {},
 ): RuntimePolicySnapshot {
   const base = {
@@ -129,7 +133,7 @@ export function createRuntimePolicyForMode(
 
 /** Creates an execution-ready policy with real local tools active by default. */
 export function createDefaultRuntimePolicy(): RuntimePolicySnapshot {
-  return createRuntimePolicyForMode(DEFAULT_CODEMIND_RUNTIME_MODE, { hasGitHubToken: true })
+  return createRuntimePolicyForMode(DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE, { hasGitHubToken: true })
 }
 
 /** Resolves a user path against the workspace root, blocking traversal. */
@@ -237,7 +241,7 @@ export function assertValidPolicy(policy: unknown): asserts policy is RuntimePol
   }
   const p = policy as Record<string, unknown>
 
-  if (typeof p['mode'] !== 'string' || !isCodemindRuntimeMode(p['mode'])) {
+  if (typeof p['mode'] !== 'string' || !isSymbolWrightRuntimeMode(p['mode'])) {
     throw new Error(`Invalid policy mode: ${String(p['mode'])}`)
   }
 

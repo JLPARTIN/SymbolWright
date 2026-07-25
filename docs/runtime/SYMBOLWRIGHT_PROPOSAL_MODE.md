@@ -1,4 +1,4 @@
-# CodeMind Proposal Mode
+# SymbolWright Proposal Mode
 
 This document records Phase B proposal-mode activation.
 
@@ -20,7 +20,7 @@ ci_review
 
 ## Purpose
 
-Proposal mode gives CodeMind useful coding-agent output without applying changes.
+Proposal mode gives SymbolWright useful coding-agent output without applying changes.
 
 It can render:
 

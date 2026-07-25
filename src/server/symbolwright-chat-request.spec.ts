@@ -5,7 +5,7 @@ import {
   parseChatRequestBody,
   parseRegisterRequestBody,
   parseResetRequestBody,
-} from './codemind-chat-request.js'
+} from './symbolwright-chat-request.js'
 
 describe('parseChatRequestBody', () => {
   it('parses a minimal valid request', () => {

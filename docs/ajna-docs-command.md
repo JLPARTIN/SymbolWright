@@ -5,10 +5,10 @@ The `codemind ajna docs` command prints the local Ajna documentation reference f
 It points to:
 
 ```text
-docs/ajna/CODEMIND_AJNA_DOCS_HUB.md
+docs/ajna/SYMBOLWRIGHT_AJNA_DOCS_HUB.md
 docs/ajna-fixture-command-index.md
-docs/ajna/CODEMIND_AJNA_ROADMAP.md
-docs/ajna/CODEMIND_AJNA_BUILD_PLAN.md
+docs/ajna/SYMBOLWRIGHT_AJNA_ROADMAP.md
+docs/ajna/SYMBOLWRIGHT_AJNA_BUILD_PLAN.md
 ```
 
 ## Boundary

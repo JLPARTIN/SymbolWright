@@ -1,4 +1,4 @@
-# CodeMind Approved Write Preparation
+# SymbolWright Approved Write Preparation
 
 This document records Phase K approved write preparation.
 

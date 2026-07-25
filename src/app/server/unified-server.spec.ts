@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { UnlimitedRateLimiter } from '../../server/rate-limiter.js'
 import { startUnifiedServer, type StartedUnifiedServer } from './unified-server.js'
 
-const API_KEY = 'test-codemind-key'
+const API_KEY = 'test-symbolwright-key'
 
 let started: StartedUnifiedServer | undefined
 
@@ -35,7 +35,7 @@ describe('GET /', () => {
     const response = await fetch(server.url)
     expect(response.status).toBe(200)
     const html = await response.text()
-    expect(html).toContain('<title>CodeMind</title>')
+    expect(html).toContain('<title>SymbolWright</title>')
     expect(html).toContain('data-view="workspace"')
     expect(html).toContain('data-view="agent"')
   })

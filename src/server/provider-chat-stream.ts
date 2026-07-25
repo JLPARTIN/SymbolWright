@@ -1,4 +1,4 @@
-import type { CodemindProviderId } from '../providers/provider-adapter-contract.js'
+import type { SymbolWrightProviderId } from '../providers/provider-adapter-contract.js'
 import { ProviderGatewayError } from '../providers/provider-errors.js'
 import type {
   ProviderGatewayMessage,
@@ -22,7 +22,7 @@ export interface ProviderStreamTransport {
   requestStream(request: ProviderStreamHttpRequest): Promise<ProviderStreamHttpResponse>
 }
 
-const REALTIME_STREAMING_PROVIDERS = new Set<CodemindProviderId>([
+const REALTIME_STREAMING_PROVIDERS = new Set<SymbolWrightProviderId>([
   'openai',
   'groq',
   'openrouter',
@@ -34,7 +34,7 @@ const REALTIME_STREAMING_PROVIDERS = new Set<CodemindProviderId>([
   'deepseek',
 ])
 
-export function supportsRealtimeStreaming(providerId: CodemindProviderId): boolean {
+export function supportsRealtimeStreaming(providerId: SymbolWrightProviderId): boolean {
   return REALTIME_STREAMING_PROVIDERS.has(providerId)
 }
 

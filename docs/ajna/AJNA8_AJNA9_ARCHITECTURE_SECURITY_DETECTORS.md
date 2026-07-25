@@ -1,6 +1,6 @@
 # AJNA-8 & AJNA-9 — Architecture Drift and Security-Sensitive Path Detectors
 
-`CODEMIND_AJNA_ROADMAP.md` listed `AJNA-8: Architecture drift detector` and
+`SYMBOLWRIGHT_AJNA_ROADMAP.md` listed `AJNA-8: Architecture drift detector` and
 `AJNA-9: Security-sensitive path detector` as review phases, and
 `ajna-review.types.ts` already had `ARCHITECTURE_DRIFT`/`SECURITY_SENSITIVE_CHANGE`
 finding categories and `BLOCKED_BY_ARCHITECTURE_DRIFT`/`BLOCKED_BY_SECURITY`

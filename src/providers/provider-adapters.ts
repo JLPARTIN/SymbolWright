@@ -1,4 +1,4 @@
-import type { CodemindProviderId } from './provider-adapter-contract.js'
+import type { SymbolWrightProviderId } from './provider-adapter-contract.js'
 import { ProviderGatewayError } from './provider-errors.js'
 import type {
   ProviderAdapterHttpPlan,
@@ -91,7 +91,7 @@ function parseUsage(rawUsage: unknown): ProviderGatewayUsage | undefined {
 }
 
 function parseOpenAiCompatibleResponse(
-  providerId: CodemindProviderId,
+  providerId: SymbolWrightProviderId,
   model: string,
   response: ProviderHttpResponse,
 ): ProviderGatewayResponse {
@@ -129,7 +129,7 @@ function parseOpenAiCompatibleResponse(
 }
 
 function buildOpenAiCompatiblePlan(
-  providerId: CodemindProviderId,
+  providerId: SymbolWrightProviderId,
   request: ProviderGatewayRequest,
   config: ProviderResolvedConfig,
   options: { readonly apiKeyRequired: boolean },
@@ -187,7 +187,7 @@ function buildAnthropicMessages(
 }
 
 function parseAnthropicResponse(
-  providerId: CodemindProviderId,
+  providerId: SymbolWrightProviderId,
   model: string,
   response: ProviderHttpResponse,
 ): ProviderGatewayResponse {
@@ -271,7 +271,7 @@ function createAnthropicAdapter(): ProviderGatewayAdapter {
 }
 
 function parseGoogleResponse(
-  providerId: CodemindProviderId,
+  providerId: SymbolWrightProviderId,
   model: string,
   response: ProviderHttpResponse,
 ): ProviderGatewayResponse {
@@ -362,7 +362,7 @@ function createGoogleAdapter(): ProviderGatewayAdapter {
 }
 
 function createOpenAiCompatibleAdapter(
-  providerId: CodemindProviderId,
+  providerId: SymbolWrightProviderId,
   displayName: string,
   apiKeyRequired: boolean,
 ): ProviderGatewayAdapter {
@@ -389,7 +389,7 @@ export const PROVIDER_GATEWAY_ADAPTERS: readonly ProviderGatewayAdapter[] = [
 ]
 
 export function findProviderGatewayAdapter(
-  providerId: CodemindProviderId,
+  providerId: SymbolWrightProviderId,
 ): ProviderGatewayAdapter | undefined {
   return PROVIDER_GATEWAY_ADAPTERS.find((adapter) => adapter.id === providerId)
 }

@@ -1,15 +1,15 @@
-# CodeMind Mission Sessions
+# SymbolWright Mission Sessions
 
-CodeMind Mission Sessions are durable, local-first records for one coding objective across repository work, Agent conversation, tool evidence, checkpoints, memory references, validation, Git commits, and pull requests.
+SymbolWright Mission Sessions are durable, local-first records for one coding objective across repository work, Agent conversation, tool evidence, checkpoints, memory references, validation, Git commits, and pull requests.
 
-A mission is not a second agent runtime, a checkpoint archive, or a copied memory database. It observes and connects the systems CodeMind already uses.
+A mission is not a second agent runtime, a checkpoint archive, or a copied memory database. It observes and connects the systems SymbolWright already uses.
 
 ## Storage
 
 Mission data is stored under the active workspace:
 
 ```text
-.codemind/missions/
+.symbolwright/missions/
 ├── index.json
 └── mission_<uuid>/
     ├── mission.json
@@ -23,7 +23,7 @@ The mission schema begins at version `1`. Every mission includes an optimistic-c
 
 Corrupt records are preserved for forensic recovery and reported as structured warnings rather than crashing mission listing. Missing or corrupt indexes are rebuilt from valid mission directories.
 
-`.codemind/` remains excluded from Repository Workspace commit-all and automatic pull-request file selection.
+`.symbolwright/` remains excluded from Repository Workspace commit-all and automatic pull-request file selection.
 
 ## Lifecycle
 
@@ -47,11 +47,11 @@ Mission persistence applies a mission-specific redaction layer before records or
 - bearer tokens
 - GitHub and provider token formats
 - API-key, token, secret, password, credential, and private-key fields
-- `CODEMIND_API_KEY` and secret-valued environment variables
+- `SYMBOLWRIGHT_API_KEY` and secret-valued environment variables
 - secret-looking URL query parameters
 - known private-key blocks
 
-Provider identity and model name may be persisted. Provider API keys, CodeMind access keys, GitHub tokens, raw authorization headers, provider registration bodies, and MCP server environment configurations are not persisted.
+Provider identity and model name may be persisted. Provider API keys, SymbolWright access keys, GitHub tokens, raw authorization headers, provider registration bodies, and MCP server environment configurations are not persisted.
 
 Tool output and validation output are stored only as redacted, size-limited excerpts with hashes. Unlimited raw command logs are not mission data.
 
@@ -59,7 +59,7 @@ Tool output and validation output are stored only as redacted, size-limited exce
 
 `POST /api/agent` accepts an optional `missionId`. Without it, behavior remains backward compatible.
 
-With an active mission, CodeMind:
+With an active mission, SymbolWright:
 
 1. loads the existing mission conversation when `priorMessages` is omitted;
 2. records the user message, runtime mode, provider identity, and model;
@@ -76,7 +76,7 @@ Existing SSE event names remain unchanged. Clients that ignore `mission_saved` c
 
 The repository remains the source of truth for files. Missions store paths, hashes, open-file selection, current branch, recorded HEAD, modified paths, commit SHAs, and pull-request URLs—not full repository contents.
 
-On resume, CodeMind compares the recorded branch and HEAD with the current repository. It never switches branches automatically. The UI offers explicit choices:
+On resume, SymbolWright compares the recorded branch and HEAD with the current repository. It never switches branches automatically. The UI offers explicit choices:
 
 - continue with current repository state;
 - switch to the recorded local branch only when the repository is clean and the branch still exists;
@@ -87,7 +87,7 @@ If the repository path is missing, Agent history, timeline, evidence, and refere
 
 ## Scratch Workspace
 
-Scratch Workspace remains browser-local and compatible with its existing `codemind.workspace.session.v1` localStorage record. Existing scratch state is never uploaded silently. The **Attach Scratch Workspace to Mission** action explicitly copies the current scratch session structure into mission state. The UI indicates whether scratch state remains local-only or is linked to the mission.
+Scratch Workspace remains browser-local and compatible with its existing `symbolwright.workspace.session.v1` localStorage record. Existing scratch state is never uploaded silently. The **Attach Scratch Workspace to Mission** action explicitly copies the current scratch session structure into mission state. The UI indicates whether scratch state remains local-only or is linked to the mission.
 
 ## Checkpoints and memory
 
@@ -97,19 +97,19 @@ Missions do not duplicate cognitive-memory content. They store stable memory ent
 
 ## Export and import
 
-A mission exports as a `codemind.mission.bundle` JSON object containing schema version `1`, a redacted mission, events, hashes/references, and warnings. Repository file content and checkpoint snapshots are excluded by default.
+A mission exports as a `symbolwright.mission.bundle` JSON object containing schema version `1`, a redacted mission, events, hashes/references, and warnings. Repository file content and checkpoint snapshots are excluded by default.
 
 Import validates kind, schema, total size, event count, and structured data. The imported mission always receives a new local mission ID and begins `PAUSED`, even when the original ID does not conflict. Imported-source metadata records the original ID and export time.
 
 ## Cross-device boundary
 
-Mission resume is browser-independent only while browsers connect to the same CodeMind server and workspace filesystem. Another browser tab or browser connected to the same running Codespaces instance can reopen the mission.
+Mission resume is browser-independent only while browsers connect to the same SymbolWright server and workspace filesystem. Another browser tab or browser connected to the same running Codespaces instance can reopen the mission.
 
-There is no cloud synchronization. A destroyed Codespace or a different machine does not contain the mission unless `.codemind/missions/` or an exported mission bundle is transferred manually.
+There is no cloud synchronization. A destroyed Codespace or a different machine does not contain the mission unless `.symbolwright/missions/` or an exported mission bundle is transferred manually.
 
 ## Authenticated API
 
-All routes require the CodeMind access key:
+All routes require the SymbolWright access key:
 
 ```text
 GET    /api/missions

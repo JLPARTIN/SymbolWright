@@ -6,7 +6,7 @@ import {
   renderBuildLedgerSummary,
   checkBuildLedgerConsistency,
   renderBuildLedgerConsistencyReport,
-} from './build-state/codemind-build-ledger.js'
+} from './build-state/symbolwright-build-ledger.js'
 
 export function renderBuildLedgerCommand(workspaceRoot: string): string {
   const summary = createBuildLedgerSummary()
@@ -22,7 +22,7 @@ export function renderBuildLedgerCommand(workspaceRoot: string): string {
   let runtimeDocsContent = ''
   try {
     runtimeDocsContent = fs.readFileSync(
-      path.join(workspaceRoot, 'docs/runtime/CODEMIND_RUNTIME_BUILD_STATE.md'),
+      path.join(workspaceRoot, 'docs/runtime/SYMBOLWRIGHT_RUNTIME_BUILD_STATE.md'),
       'utf8',
     )
   } catch {

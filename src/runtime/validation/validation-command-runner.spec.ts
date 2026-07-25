@@ -52,7 +52,7 @@ const successfulSandboxRunner: SandboxRunner = {
 }
 
 function makeWorkspace(): string {
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-validation-'))
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-validation-'))
   fs.writeFileSync(
     path.join(workspace, 'package.json'),
     JSON.stringify({
@@ -145,7 +145,7 @@ describe('executeValidationCommand', () => {
     )
     const output = renderValidationCommandExecutionResult(result)
 
-    expect(output).toContain('CodeMind validation command execution')
+    expect(output).toContain('SymbolWright validation command execution')
     expect(output).toContain('Outcome: DRY_RUN')
     expect(output).toContain('Dry-run only. No command has been executed.')
   })

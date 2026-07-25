@@ -1,13 +1,13 @@
 import type {
-  CodemindGithubPrContextAdapterRequest,
-  CodemindGithubPrContextAdapterResponse,
+  SymbolWrightGithubPrContextAdapterRequest,
+  SymbolWrightGithubPrContextAdapterResponse,
 } from './github-pr-context.types.js'
-import type { CodemindReadOnlyRepoContext } from '../repo-context/repo-context.types.js'
+import type { SymbolWrightReadOnlyRepoContext } from '../repo-context/repo-context.types.js'
 
 export function createReadOnlyGithubPrContextResponse(
-  request: CodemindGithubPrContextAdapterRequest,
-  context: CodemindReadOnlyRepoContext,
-): CodemindGithubPrContextAdapterResponse {
+  request: SymbolWrightGithubPrContextAdapterRequest,
+  context: SymbolWrightReadOnlyRepoContext,
+): SymbolWrightGithubPrContextAdapterResponse {
   return {
     requestId: request.requestId,
     pullRequest: request.pullRequest,
@@ -26,7 +26,7 @@ export function createReadOnlyGithubPrContextResponse(
 }
 
 export function assertGithubPrContextIsReadOnly(
-  response: CodemindGithubPrContextAdapterResponse,
+  response: SymbolWrightGithubPrContextAdapterResponse,
 ): boolean {
   return (
     response.readOnly &&

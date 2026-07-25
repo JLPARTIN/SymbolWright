@@ -2,7 +2,7 @@ import type { RuntimeToolContext } from '../runtime/types.js'
 import { executeBashTool } from '../runtime/tools/bash-tool.js'
 import type { RenderedSkill, SkillDefinition, SkillRenderInput } from './skill-types.js'
 
-const ESCAPED_DOLLAR_SENTINEL = '\u0000CODEMIND_ESCAPED_DOLLAR\u0000'
+const ESCAPED_DOLLAR_SENTINEL = '\u0000SYMBOLWRIGHT_ESCAPED_DOLLAR\u0000'
 const REGEXP_SPECIAL_CHARACTERS = new Set([
   '\\',
   '$',
@@ -65,11 +65,11 @@ function substituteArguments(input: SkillRenderInput): string {
       .replace(/\$ARGUMENTS\[(\d+)\]/gu, (_match, index: string) => parsedArgs[Number(index)] ?? '')
       .replace(/\$(\d+)/gu, (_match, index: string) => parsedArgs[Number(index)] ?? '')
       .replace(/\$ARGUMENTS/gu, rawArguments)
-      .replace(/\$\{CODEMIND_SESSION_ID\}/gu, input.sessionId)
+      .replace(/\$\{SYMBOLWRIGHT_SESSION_ID\}/gu, input.sessionId)
       .replace(/\$\{CLAUDE_SESSION_ID\}/gu, input.sessionId)
-      .replace(/\$\{CODEMIND_SKILL_DIR\}/gu, input.skill.skillDir)
+      .replace(/\$\{SYMBOLWRIGHT_SKILL_DIR\}/gu, input.skill.skillDir)
       .replace(/\$\{CLAUDE_SKILL_DIR\}/gu, input.skill.skillDir)
-      .replace(/\$\{CODEMIND_PROJECT_DIR\}/gu, input.projectDir)
+      .replace(/\$\{SYMBOLWRIGHT_PROJECT_DIR\}/gu, input.projectDir)
       .replace(/\$\{CLAUDE_PROJECT_DIR\}/gu, input.projectDir)
 
     for (const [name, value] of namedArgs.entries()) {
@@ -183,7 +183,7 @@ export async function renderSkillContent(
 
 export function renderSkillListing(skills: readonly SkillDefinition[]): string {
   return [
-    'CodeMind skills',
+    'SymbolWright skills',
     '',
     ...skills.map((skill) => {
       const invocation = skill.userInvocable
@@ -197,7 +197,7 @@ export function renderSkillListing(skills: readonly SkillDefinition[]): string {
 
 export function renderSkillDetails(skill: SkillDefinition): string {
   return [
-    'CodeMind skill',
+    'SymbolWright skill',
     '',
     `Name: ${skill.commandName}`,
     `Display: ${skill.displayName}`,

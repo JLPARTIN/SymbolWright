@@ -8,7 +8,7 @@ import {
   parseAjnaReviewPrInput,
   renderAjnaReviewPrForFile,
 } from './cli-ajna-review-pr.js'
-import type { CodemindAjnaReviewPrInput } from './cli-ajna-review-pr.js'
+import type { SymbolWrightAjnaReviewPrInput } from './cli-ajna-review-pr.js'
 import type { AjnaReviewFinding, AjnaReviewRequest } from './ajna/ajna-review.types.js'
 
 const tempDirs: string[] = []
@@ -17,7 +17,7 @@ function makeRequest(overrides: Partial<AjnaReviewRequest> = {}): AjnaReviewRequ
   return {
     requestId: 'cli-ajna-review-pr-1',
     subject: {
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       pullRequestNumber: 56,
       baseRef: 'main',
       headRef: 'ajna-review-pr-fixture-adapter',
@@ -49,7 +49,9 @@ function makeFinding(overrides: Partial<AjnaReviewFinding> = {}): AjnaReviewFind
   }
 }
 
-function makeInput(overrides: Partial<CodemindAjnaReviewPrInput> = {}): CodemindAjnaReviewPrInput {
+function makeInput(
+  overrides: Partial<SymbolWrightAjnaReviewPrInput> = {},
+): SymbolWrightAjnaReviewPrInput {
   return {
     request: makeRequest(),
     findings: [],
@@ -57,8 +59,8 @@ function makeInput(overrides: Partial<CodemindAjnaReviewPrInput> = {}): Codemind
   }
 }
 
-function writeInputFile(input: CodemindAjnaReviewPrInput): string {
-  const rootDir = mkdtempSync(join(tmpdir(), 'codemind-ajna-review-pr-'))
+function writeInputFile(input: SymbolWrightAjnaReviewPrInput): string {
+  const rootDir = mkdtempSync(join(tmpdir(), 'symbolwright-ajna-review-pr-'))
   tempDirs.push(rootDir)
   const inputPath = join(rootDir, 'review-pr.json')
   writeFileSync(inputPath, JSON.stringify(input), 'utf-8')
@@ -78,7 +80,7 @@ describe('buildAjnaReviewPrForInput', () => {
     expect(result.response.requestId).toBe('cli-ajna-review-pr-1')
     expect(result.response.tagline).toBe('See beyond the code.')
     expect(result.output).toContain('# Ajna Review Cortex Report')
-    expect(result.output).toContain('- **Repository:** JLPARTIN/CodeMind')
+    expect(result.output).toContain('- **Repository:** JLPARTIN/SymbolWright')
     expect(result.output).toContain('- **Status:** READY_TO_REVIEW')
   })
 

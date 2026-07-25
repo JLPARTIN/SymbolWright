@@ -21,7 +21,7 @@ describe('MissionService', () => {
   let idIndex: number
 
   beforeEach(async () => {
-    root = mkdtempSync(join(tmpdir(), 'codemind-mission-service-'))
+    root = mkdtempSync(join(tmpdir(), 'symbolwright-mission-service-'))
     await runGitCommand(['init'], root)
     await runGitCommand(['config', 'user.email', 'test@example.com'], root)
     await runGitCommand(['config', 'user.name', 'Test'], root)
@@ -76,7 +76,7 @@ describe('MissionService', () => {
     )
     service.delete(created.id, created.revision, true)
     expect(service.list().missions).toHaveLength(0)
-    expect(service.getStore().getRootPath()).toContain('.codemind/missions')
+    expect(service.getStore().getRootPath()).toContain('.symbolwright/missions')
   })
 
   it('records conversation, files, evidence, commits, PRs, checkpoints, and memory references', async () => {

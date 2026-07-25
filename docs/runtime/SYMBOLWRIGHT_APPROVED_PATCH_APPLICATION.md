@@ -1,4 +1,4 @@
-# CodeMind Approved Patch Application
+# SymbolWright Approved Patch Application
 
 Phase U adds an approved structured patch application runtime capability.
 

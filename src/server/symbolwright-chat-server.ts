@@ -9,9 +9,9 @@ import {
 import { createServer as createHttpsServer } from 'node:https'
 
 import {
-  CODEMIND_PROVIDER_ADAPTERS,
-  CODEMIND_SUPPORTED_PROVIDER_IDS,
-  type CodemindProviderId,
+  SYMBOLWRIGHT_PROVIDER_ADAPTERS,
+  SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS,
+  type SymbolWrightProviderId,
 } from '../providers/provider-adapter-contract.js'
 import { loadProviderGatewayConfig, type ProviderGatewayEnv } from '../providers/provider-config.js'
 import { ProviderGateway } from '../providers/provider-gateway.js'
@@ -52,7 +52,7 @@ import {
 } from '../app/api/repository-routes.js'
 import { handleSandboxRoute } from '../app/api/sandbox-routes.js'
 import { MissionNotFoundError, MissionService } from '../mission/mission-service.js'
-import type { CodeMindMission } from '../mission/mission-types.js'
+import type { SymbolWrightMission } from '../mission/mission-types.js'
 import type { GitHubPrCreationClient } from '../runtime/github-write/github-pr-creation.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
@@ -65,14 +65,14 @@ import { renderChatUiHtml } from './chat-ui-html.js'
 import {
   AgentProviderMissingCredentialsError,
   resolveAgentLlmProvider,
-} from './codemind-agent-provider.js'
-import { parseAgentRequestBody } from './codemind-agent-request.js'
+} from './symbolwright-agent-provider.js'
+import { parseAgentRequestBody } from './symbolwright-agent-request.js'
 import {
   ChatRequestValidationError,
   parseChatRequestBody,
   parseRegisterRequestBody,
   parseResetRequestBody,
-} from './codemind-chat-request.js'
+} from './symbolwright-chat-request.js'
 import {
   FetchProviderStreamTransport,
   streamProviderChat,
@@ -82,7 +82,7 @@ import {
 import { FixedWindowRateLimiter, type RateLimiter } from './rate-limiter.js'
 
 const DEFAULT_AGENT_SYSTEM_PROMPT =
-  'You are CodeMind, a direct-capable coding agent. Use the available tools to accomplish the request.'
+  'You are SymbolWright, a direct-capable coding agent. Use the available tools to accomplish the request.'
 
 const MAX_BODY_BYTES = 256 * 1024
 const DEFAULT_RATE_LIMIT_PER_MINUTE = 60
@@ -120,7 +120,7 @@ export interface StartedChatServer {
 export function assertChatServerCanStart(options: Pick<ChatServerOptions, 'apiKey'>): void {
   if (options.apiKey.trim().length === 0) {
     throw new ChatServerConfigError(
-      'CODEMIND_API_KEY is required to start the chat server. Set it before running "codemind serve".',
+      'SYMBOLWRIGHT_API_KEY is required to start the chat server. Set it before running "codemind serve" (the legacy CODEMIND_API_KEY name still works).',
     )
   }
 }
@@ -135,7 +135,7 @@ export function buildChatServerWarnings(
 
   if (!isLoopback && !hasTls) {
     warnings.push(
-      'Binding to a non-loopback host without CODEMIND_TLS_CERT_FILE/CODEMIND_TLS_KEY_FILE. ' +
+      'Binding to a non-loopback host without SYMBOLWRIGHT_TLS_CERT_FILE/SYMBOLWRIGHT_TLS_KEY_FILE. ' +
         'Put this server behind a TLS-terminating reverse proxy before exposing it publicly.',
     )
   }
@@ -219,7 +219,7 @@ function buildProviderCatalog(): readonly {
   readonly defaultBaseUrl: string | undefined
   readonly capabilities: readonly string[]
 }[] {
-  return CODEMIND_PROVIDER_ADAPTERS.map((adapter) => ({
+  return SYMBOLWRIGHT_PROVIDER_ADAPTERS.map((adapter) => ({
     id: adapter.id,
     displayName: adapter.displayName,
     defaultBaseUrl: adapter.defaultBaseUrl,
@@ -231,10 +231,10 @@ function clientIpFor(req: IncomingMessage): string {
   return req.socket.remoteAddress ?? 'unknown'
 }
 
-function isSupportedProviderId(value: unknown): value is CodemindProviderId {
+function isSupportedProviderId(value: unknown): value is SymbolWrightProviderId {
   return (
     typeof value === 'string' &&
-    (CODEMIND_SUPPORTED_PROVIDER_IDS as readonly string[]).includes(value)
+    (SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS as readonly string[]).includes(value)
   )
 }
 
@@ -296,7 +296,7 @@ export function createChatServerRequestListener(
     }
 
     if (req.method === 'GET' && url.pathname === '/api/health') {
-      sendJson(res, 200, { status: 'ok', name: 'CodeMind Chat API' })
+      sendJson(res, 200, { status: 'ok', name: 'SymbolWright Chat API' })
       return
     }
 
@@ -580,7 +580,7 @@ async function handleChat(
 function resolveAgentEffectiveConfig(
   env: ProviderGatewayEnv,
   overrideStore: ProviderRuntimeOverrideStore,
-  providerId: CodemindProviderId,
+  providerId: SymbolWrightProviderId,
 ) {
   const config = applyProviderRuntimeOverrides(
     loadProviderGatewayConfig(env),
@@ -626,7 +626,7 @@ async function handleAgent(
   defaultCwd: string,
 ): Promise<void> {
   const parsed = parseAgentRequestBody(await readJsonBody(req))
-  let mission: CodeMindMission | undefined
+  let mission: SymbolWrightMission | undefined
   if (parsed.missionId !== undefined) {
     try {
       mission = missionService.get(parsed.missionId)

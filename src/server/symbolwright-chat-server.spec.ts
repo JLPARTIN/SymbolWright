@@ -11,11 +11,11 @@ import {
   ChatServerConfigError,
   startChatServer,
   type StartedChatServer,
-} from './codemind-chat-server.js'
+} from './symbolwright-chat-server.js'
 import type { ProviderStreamHttpResponse, ProviderStreamTransport } from './provider-chat-stream.js'
 import { UnlimitedRateLimiter, type RateLimiter } from './rate-limiter.js'
 
-const API_KEY = 'test-codemind-key'
+const API_KEY = 'test-symbolwright-key'
 
 class FakeHttpTransport implements ProviderHttpTransport {
   public lastRequest: ProviderHttpRequest | undefined
@@ -101,7 +101,7 @@ describe('buildChatServerWarnings', () => {
   })
 })
 
-describe('codemind chat server routes', () => {
+describe('symbolwright chat server routes', () => {
   it('exposes /api/health without auth', async () => {
     const server = await launch()
     const response = await fetch(`${server.url}/api/health`)
@@ -119,7 +119,7 @@ describe('codemind chat server routes', () => {
     const server = await launch()
     const response = await fetch(`${server.url}/`)
     expect(response.status).toBe(200)
-    expect(await response.text()).toContain('CodeMind Chat')
+    expect(await response.text()).toContain('SymbolWright Chat')
   })
 
   it('rejects unauthenticated requests to /api/providers', async () => {

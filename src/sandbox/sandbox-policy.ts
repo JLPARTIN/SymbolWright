@@ -1,8 +1,8 @@
-import type { CodemindRuntimeMode } from '../runtime/types.js'
+import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
 import type { SandboxExecutionRequest, SandboxRunnerDefinition } from './sandbox-types.js'
 
 export interface SandboxPolicyContext {
-  readonly mode: CodemindRuntimeMode
+  readonly mode: SymbolWrightRuntimeMode
   readonly env?: NodeJS.ProcessEnv
 }
 
@@ -12,7 +12,7 @@ export interface SandboxPolicyDecision {
 }
 
 function guardedHostEnabled(env: NodeJS.ProcessEnv): boolean {
-  return env['CODEMIND_ALLOW_GUARDED_HOST_EXECUTION'] === 'true'
+  return env['SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION'] === 'true'
 }
 
 export function evaluateSandboxPolicy(
@@ -72,7 +72,7 @@ export function evaluateSandboxPolicy(
       return {
         allowed: false,
         reason:
-          'Guarded-host execution is disabled. Set CODEMIND_ALLOW_GUARDED_HOST_EXECUTION=true to opt in.',
+          'Guarded-host execution is disabled. Set SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION=true to opt in.',
       }
     }
     return {

@@ -228,7 +228,7 @@ describe('sandbox policy branch coverage', () => {
     })
     const guardedAllowed = evaluateSandboxPolicy(request(), guarded, {
       mode: 'APPROVED_EXECUTION',
-      env: { CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
+      env: { SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
     })
     expect(guardedBlocked.allowed).toBe(false)
     expect(guardedAllowed.allowed).toBe(true)

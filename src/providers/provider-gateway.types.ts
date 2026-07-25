@@ -1,4 +1,7 @@
-import type { CodemindProviderCapability, CodemindProviderId } from './provider-adapter-contract.js'
+import type {
+  SymbolWrightProviderCapability,
+  SymbolWrightProviderId,
+} from './provider-adapter-contract.js'
 
 export type ProviderGatewayRole = 'system' | 'user' | 'assistant'
 export type ProviderGatewayResponseFormat = 'text' | 'json'
@@ -16,7 +19,7 @@ export interface ProviderGatewayUsage {
 }
 
 export interface ProviderGatewayRequest {
-  readonly providerId?: CodemindProviderId
+  readonly providerId?: SymbolWrightProviderId
   readonly model?: string
   readonly systemPrompt?: string
   readonly messages: readonly ProviderGatewayMessage[]
@@ -26,7 +29,7 @@ export interface ProviderGatewayRequest {
 }
 
 export interface ProviderGatewayResponse {
-  readonly providerId: CodemindProviderId
+  readonly providerId: SymbolWrightProviderId
   readonly model: string
   readonly text: string
   readonly usage?: ProviderGatewayUsage
@@ -51,44 +54,44 @@ export interface ProviderHttpTransport {
 }
 
 export interface ProviderResolvedConfig {
-  readonly id: CodemindProviderId
+  readonly id: SymbolWrightProviderId
   readonly displayName: string
   readonly enabled: boolean
   readonly baseUrl: string
   readonly apiKey?: string
   readonly defaultModel?: string
-  readonly capabilities: readonly CodemindProviderCapability[]
+  readonly capabilities: readonly SymbolWrightProviderCapability[]
 }
 
 export interface RedactedProviderConfig {
-  readonly id: CodemindProviderId
+  readonly id: SymbolWrightProviderId
   readonly displayName: string
   readonly enabled: boolean
   readonly baseUrl: string
   readonly apiKey: 'configured' | 'missing'
   readonly defaultModel?: string
-  readonly capabilities: readonly CodemindProviderCapability[]
+  readonly capabilities: readonly SymbolWrightProviderCapability[]
 }
 
 export interface ProviderGatewayConfig {
-  readonly activeProvider?: CodemindProviderId
+  readonly activeProvider?: SymbolWrightProviderId
   readonly activeModel?: string
-  readonly fallbackProviders: readonly CodemindProviderId[]
-  readonly providers: Readonly<Record<CodemindProviderId, ProviderResolvedConfig>>
+  readonly fallbackProviders: readonly SymbolWrightProviderId[]
+  readonly providers: Readonly<Record<SymbolWrightProviderId, ProviderResolvedConfig>>
 }
 
 export interface RedactedProviderGatewayConfig {
-  readonly activeProvider?: CodemindProviderId
+  readonly activeProvider?: SymbolWrightProviderId
   readonly activeModel?: string
-  readonly fallbackProviders: readonly CodemindProviderId[]
+  readonly fallbackProviders: readonly SymbolWrightProviderId[]
   readonly providers: readonly RedactedProviderConfig[]
 }
 
 export interface ProviderStatusReport {
-  readonly providerId: CodemindProviderId
+  readonly providerId: SymbolWrightProviderId
   readonly status: ProviderGatewayStatus
   readonly detail: string
-  readonly capabilities: readonly CodemindProviderCapability[]
+  readonly capabilities: readonly SymbolWrightProviderCapability[]
 }
 
 export interface ProviderAdapterHttpPlan {
@@ -97,7 +100,7 @@ export interface ProviderAdapterHttpPlan {
 }
 
 export interface ProviderGatewayAdapter {
-  readonly id: CodemindProviderId
+  readonly id: SymbolWrightProviderId
   readonly displayName: string
   readonly requiredApiKey: boolean
   buildHttpPlan(

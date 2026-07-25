@@ -136,11 +136,11 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 
-# CodeMind local runtime state
-.codemind/sandbox/
-.codemind/ci-failure-ledger.json
-.codemind/memory/
-.codemind/sessions/
-.codemind/autonomy/
-.codemind/runtime/
+# SymbolWright local runtime state
+.symbolwright/sandbox/
+.symbolwright/ci-failure-ledger.json
+.symbolwright/memory/
+.symbolwright/sessions/
+.symbolwright/autonomy/
+.symbolwright/runtime/
 pr-*-starter-*.patch

@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { buildAjnaFileInsights, computeAjnaFileRiskScore } from './ajna-file-insights.js'
-import type { CodemindChangedFileContext } from '../../repo-context/repo-context.types.js'
+import type { SymbolWrightChangedFileContext } from '../../repo-context/repo-context.types.js'
 
-function makeFile(overrides: Partial<CodemindChangedFileContext> = {}): CodemindChangedFileContext {
+function makeFile(
+  overrides: Partial<SymbolWrightChangedFileContext> = {},
+): SymbolWrightChangedFileContext {
   return {
     path: 'src/ajna/analysis/ajna-file-insights.ts',
     changeType: 'MODIFIED',

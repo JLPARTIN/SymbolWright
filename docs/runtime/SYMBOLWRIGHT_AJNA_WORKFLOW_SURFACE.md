@@ -1,4 +1,4 @@
-# CodeMind Read-Only Ajna Workflow Surface
+# SymbolWright Read-Only Ajna Workflow Surface
 
 **Phase:** R
 **Status:** COMPLETE

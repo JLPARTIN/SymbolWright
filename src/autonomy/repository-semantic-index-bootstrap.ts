@@ -10,7 +10,8 @@ import type { RepositorySemanticIndexSnapshot } from './repository-semantic-inde
 
 const DEFAULT_MAX_FILE_BYTES = 1_000_000
 const IGNORED_DIRECTORIES = new Set([
-  '.codemind',
+  '.symbolwright',
+  '.symbolwright',
   '.git',
   '.hg',
   '.svn',
@@ -76,7 +77,9 @@ export async function ensureRepositorySemanticIndex(
   const repositoryRoot = path.resolve(options.repositoryRoot)
   const store =
     options.store ??
-    new RepositorySemanticIndexStore(path.join(path.resolve(options.workspaceRoot), '.codemind'))
+    new RepositorySemanticIndexStore(
+      path.join(path.resolve(options.workspaceRoot), '.symbolwright'),
+    )
   if (options.force !== true) {
     const existing = await store.load(repositoryRoot)
     if (existing !== undefined) return existing

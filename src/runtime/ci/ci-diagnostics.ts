@@ -160,7 +160,7 @@ export function analyzeCiOutput(
 
 export function renderCiDiagnosticReport(report: CiDiagnosticReport): string {
   const lines = [
-    'CodeMind CI Diagnostics',
+    'SymbolWright CI Diagnostics',
     '',
     `Command: ${report.command}`,
     `Exit code: ${report.exitCode}`,

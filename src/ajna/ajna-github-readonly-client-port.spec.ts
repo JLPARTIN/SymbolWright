@@ -28,24 +28,24 @@ describe('collectAjnaGithubApiPayloadFromReadOnlyClient', () => {
       },
       listCheckRunsForRef: async (request) => {
         calls.push(`checks:${request.repository}@${request.ref}`)
-        return [{ name: 'Validate CodeMind', status: 'completed', conclusion: 'success' }]
+        return [{ name: 'Validate SymbolWright', status: 'completed', conclusion: 'success' }]
       },
     }
 
     const payload = await collectAjnaGithubApiPayloadFromReadOnlyClient(port, {
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       pullRequestNumber: 68,
     })
 
-    expect(payload.pullRequest.repository).toBe('JLPARTIN/CodeMind')
+    expect(payload.pullRequest.repository).toBe('JLPARTIN/SymbolWright')
     expect(payload.files).toEqual([
       { filename: 'src/cli-ajna-github-api-snapshot-fixture.ts', status: 'added' },
     ])
     expect(payload.checkRuns?.[0]?.conclusion).toBe('success')
     expect(calls).toEqual([
-      'pull:JLPARTIN/CodeMind#68',
-      'files:JLPARTIN/CodeMind#68',
-      'checks:JLPARTIN/CodeMind@a00217e91f8404384335d39ade7f54ff58317844',
+      'pull:JLPARTIN/SymbolWright#68',
+      'files:JLPARTIN/SymbolWright#68',
+      'checks:JLPARTIN/SymbolWright@a00217e91f8404384335d39ade7f54ff58317844',
     ])
   })
 
@@ -62,7 +62,7 @@ describe('collectAjnaGithubApiPayloadFromReadOnlyClient', () => {
     }
 
     const payload = await collectAjnaGithubApiPayloadFromReadOnlyClient(port, {
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       pullRequestNumber: 68,
     })
     const snapshot = buildAjnaGithubCollectorSnapshotFromApiPayload(payload)

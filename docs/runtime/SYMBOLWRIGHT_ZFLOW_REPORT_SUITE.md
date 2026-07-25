@@ -1,4 +1,4 @@
-# CodeMind Zflow Report Suite
+# SymbolWright Zflow Report Suite
 
 PR Bundle BC-BF adds a suite layer for Zflow reports.
 

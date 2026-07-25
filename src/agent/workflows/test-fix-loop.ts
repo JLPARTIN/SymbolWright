@@ -156,7 +156,7 @@ export function buildTestFixLoopResult(
 
 export function renderTestFixLoopResult(result: TestFixLoopResult): string {
   const lines = [
-    'CodeMind Test-Fix Loop',
+    'SymbolWright Test-Fix Loop',
     '',
     `Outcome: ${result.outcome}`,
     `Iterations: ${result.totalIterations}`,

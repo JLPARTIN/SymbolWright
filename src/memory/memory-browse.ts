@@ -16,7 +16,7 @@ import { MemoryDatabase } from './storage/database.js'
  */
 export function openMemoryDatabaseReadOnly(cwd: string): MemoryDatabase {
   const memoryDir = resolveProjectMemoryDir(cwd)
-  return new MemoryDatabase(join(memoryDir, 'codemind.db'))
+  return new MemoryDatabase(join(memoryDir, 'symbolwright.db'))
 }
 
 export interface EpisodicSummary {

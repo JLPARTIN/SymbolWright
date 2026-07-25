@@ -1,4 +1,4 @@
-export interface CodeMindPlan {
+export interface SymbolWrightPlan {
   readonly goal: string
   readonly posture: readonly string[]
   readonly steps: readonly string[]
@@ -6,7 +6,7 @@ export interface CodeMindPlan {
   readonly boundary: readonly string[]
 }
 
-export function buildCodeMindPlan(goal: string): CodeMindPlan {
+export function buildSymbolWrightPlan(goal: string): SymbolWrightPlan {
   const trimmedGoal = goal.trim()
   if (trimmedGoal.length === 0) {
     throw new Error('Missing goal: codemind plan <goal>')
@@ -39,11 +39,11 @@ export function buildCodeMindPlan(goal: string): CodeMindPlan {
   }
 }
 
-export function renderCodeMindPlan(goal: string): string {
-  const plan = buildCodeMindPlan(goal)
+export function renderSymbolWrightPlan(goal: string): string {
+  const plan = buildSymbolWrightPlan(goal)
 
   return [
-    'CodeMind plan',
+    'SymbolWright plan',
     '',
     `Goal: ${plan.goal}`,
     '',

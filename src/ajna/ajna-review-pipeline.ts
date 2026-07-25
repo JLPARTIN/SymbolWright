@@ -22,9 +22,9 @@ export type {
   AjnaReviewReport,
 }
 
-export const AJNA_REVIEW_PIPELINE_BLOCK_ID = 'CODEMIND-AJNA-REVIEW-09' as const
+export const AJNA_REVIEW_PIPELINE_BLOCK_ID = 'SYMBOLWRIGHT-AJNA-REVIEW-09' as const
 export const AJNA_REVIEW_PIPELINE_PR_ID = 'PR-CM-AJNA-09' as const
-export const AJNA_REVIEW_PIPELINE_PHASE_ID = 'CODEMIND-AJNA-09' as const
+export const AJNA_REVIEW_PIPELINE_PHASE_ID = 'SYMBOLWRIGHT-AJNA-09' as const
 
 export interface AjnaRuntimeBoundarySnapshot {
   readonly providerInvocationAllowed: false

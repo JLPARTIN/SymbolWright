@@ -4,10 +4,10 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { MissionStore } from './mission-store.js'
-import type { CodeMindMission } from './mission-types.js'
+import type { SymbolWrightMission } from './mission-types.js'
 
 const ID = 'mission_11111111-1111-4111-8111-111111111111'
-function value(): CodeMindMission {
+function value(): SymbolWrightMission {
   return {
     schemaVersion: 1,
     revision: 1,
@@ -50,7 +50,7 @@ describe('mission interrupted atomic write recovery', () => {
     roots.push(root)
     const store = new MissionStore({ workspaceRoot: root })
     store.createMission(value())
-    const missionPath = join(root, '.codemind', 'missions', ID, 'mission.json')
+    const missionPath = join(root, '.symbolwright', 'missions', ID, 'mission.json')
     const content = readFileSync(missionPath, 'utf8')
     renameSync(missionPath, `${missionPath}.tmp-999-valid`)
     writeFileSync(`${missionPath}.tmp-1000-broken`, '{broken', 'utf8')

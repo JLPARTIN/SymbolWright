@@ -1,6 +1,6 @@
-# CodeMind Operator Workspace
+# SymbolWright Operator Workspace
 
-The CodeMind Operator Workspace is the first real cockpit layer for running CodeMind like an interactive coding agent instead of a static command list.
+The SymbolWright Operator Workspace is the first real cockpit layer for running SymbolWright like an interactive coding agent instead of a static command list.
 
 ## Start it
 
@@ -20,7 +20,7 @@ codemind operator "inspect this repo and propose the next safest PR bundle"
 ## Prompt model
 
 ```txt
-CodeMind >
+SymbolWright >
 ```
 
 Plain text is treated as a mission. The current CM-400 boundary routes mission text into read-only planning first.
@@ -59,7 +59,7 @@ CM-400 is intentionally read-first and approval-first.
 
 ## Terminal layout in Codespaces
 
-Use this layout while developing CodeMind itself:
+Use this layout while developing SymbolWright itself:
 
 ```txt
 Terminal 1: codemind operator

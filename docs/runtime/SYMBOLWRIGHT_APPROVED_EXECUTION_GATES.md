@@ -1,4 +1,4 @@
-# CodeMind Retired Approval-Era Gates
+# SymbolWright Retired Approval-Era Gates
 
 This document is now a migration note for an older Phase D runtime surface.
 

@@ -2,7 +2,7 @@ import path from 'node:path'
 
 import type { RepositoryValidationCommand } from './repository-portability.js'
 
-const PREFIX = 'codemind-cwd:'
+const PREFIX = 'symbolwright-cwd:'
 const SEPARATOR = '::'
 
 export interface PortableValidationInvocation {

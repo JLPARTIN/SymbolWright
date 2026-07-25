@@ -21,7 +21,7 @@ describe('session-e2e', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = join(tmpdir(), `codemind-test-${Date.now()}`)
+    tempDir = join(tmpdir(), `symbolwright-test-${Date.now()}`)
     mkdirSync(tempDir, { recursive: true })
   })
 
@@ -36,7 +36,7 @@ describe('session-e2e', () => {
       const persistence = new SessionPersistence(tempDir)
       const sessionId = 'test-session-1'
 
-      const msg1 = createMessage('user', 'Hello CodeMind')
+      const msg1 = createMessage('user', 'Hello SymbolWright')
       const msg2 = createMessage('assistant', 'Hello! How can I help?')
 
       persistence.appendMessage(sessionId, msg1)
@@ -44,7 +44,7 @@ describe('session-e2e', () => {
 
       const loaded = persistence.load(sessionId)
       expect(loaded).toHaveLength(2)
-      expect(loaded[0]?.content).toBe('Hello CodeMind')
+      expect(loaded[0]?.content).toBe('Hello SymbolWright')
       expect(loaded[1]?.content).toBe('Hello! How can I help?')
     })
 

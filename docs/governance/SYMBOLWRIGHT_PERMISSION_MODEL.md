@@ -1,15 +1,15 @@
-# CodeMind Permission Model
+# SymbolWright Permission Model
 
 **Status:** Current Governance Reference  
 **Version:** v2.0  
 **Track:** Runtime Truth Alignment  
-**Purpose:** Define how CodeMind separates runtime modes, hard safety rails, and optional governance/forensic controls.
+**Purpose:** Define how SymbolWright separates runtime modes, hard safety rails, and optional governance/forensic controls.
 
 ---
 
 ## 1. Current Principle
 
-CodeMind permissions should make useful direct work possible while making dangerous actions obvious and bounded.
+SymbolWright permissions should make useful direct work possible while making dangerous actions obvious and bounded.
 
 Governance is a feature, not the default personality. The active runtime mode controls strictness:
 
@@ -26,7 +26,7 @@ APPROVED_EXECUTION
 
 Governance gates *mutation*, not *information*. Read-only network access — fetching docs, package pages, and error references, or running a search — carries none of the risk that shell execution, file writes, or GitHub writes do, so it is not gated behind runtime mode the way those are. The policy snapshot exposes this as `allowReadOnlyNetwork`, which is `true` in all four runtime modes. It is distinct from `allowNetwork`, which continues to gate the provider/LLM invocation channel and mutating network use, and remains mode-dependent (`false` outside `APPROVED_EXECUTION`).
 
-The `web_fetch` and `web_search` tools build on this: they work immediately for public URLs with no allowlist or approval setup, and block only private/internal network targets and non-http(s) schemes by default — both overridable. See `docs/runtime/CODEMIND_WEB_TOOLS.md` for the full config, modes, and safety rails.
+The `web_fetch` and `web_search` tools build on this: they work immediately for public URLs with no allowlist or approval setup, and block only private/internal network targets and non-http(s) schemes by default — both overridable. See `docs/runtime/SYMBOLWRIGHT_WEB_TOOLS.md` for the full config, modes, and safety rails.
 
 ---
 
@@ -250,7 +250,7 @@ Audit is evidence and traceability. It should not turn every routine action into
 
 ## 8. Ajna and Governance Role
 
-Ajna and governance features remain important CodeMind capabilities:
+Ajna and governance features remain important SymbolWright capabilities:
 
 ```txt
 risk review
@@ -263,10 +263,10 @@ release proof
 
 They should be invoked when the operator asks for them, when the workflow requires them, or when hard safety rails detect risky behavior.
 
-They should not make CodeMind act read-only by default when `APPROVED_EXECUTION` is active.
+They should not make SymbolWright act read-only by default when `APPROVED_EXECUTION` is active.
 
 ---
 
 ## 9. Final Rule
 
-CodeMind should be direct-capable by runtime mode, forensic when requested, and always bounded by hard safety rails.
+SymbolWright should be direct-capable by runtime mode, forensic when requested, and always bounded by hard safety rails.

@@ -70,7 +70,7 @@ describe('runOperatorInput', () => {
     const result = await runOperatorInput('/bogus', session, handlers)
 
     expect(result.output).toContain('Unknown operator command: /bogus')
-    expect(result.output).toContain('CodeMind Operator Commands')
+    expect(result.output).toContain('SymbolWright Operator Commands')
   })
 
   it('returns an exit result for /exit', async () => {
@@ -78,7 +78,7 @@ describe('runOperatorInput', () => {
     const result = await runOperatorInput('/exit', session, handlers)
 
     expect(result.exit).toBe(true)
-    expect(result.output).toContain('Exiting CodeMind Operator Workspace')
+    expect(result.output).toContain('Exiting SymbolWright Operator Workspace')
   })
 })
 
@@ -88,7 +88,7 @@ describe('runOperatorInput — full command coverage', () => {
     const result = await runOperatorInput('/help', session, handlers)
 
     expect(result.exit).toBe(false)
-    expect(result.output).toContain('CodeMind Operator Commands')
+    expect(result.output).toContain('SymbolWright Operator Commands')
     expect(result.output).toContain('/status')
     expect(result.output).toContain('/plan')
     expect(result.output).toContain('/exit')
@@ -310,14 +310,14 @@ describe('runOperatorInput — command aliases', () => {
     const session = createOperatorSession('/repo')
     const result = await runOperatorInput('/?', session, handlers)
 
-    expect(result.output).toContain('CodeMind Operator Commands')
+    expect(result.output).toContain('SymbolWright Operator Commands')
   })
 
   it('/h aliases to /help', async () => {
     const session = createOperatorSession('/repo')
     const result = await runOperatorInput('/h', session, handlers)
 
-    expect(result.output).toContain('CodeMind Operator Commands')
+    expect(result.output).toContain('SymbolWright Operator Commands')
   })
 })
 
@@ -377,13 +377,13 @@ describe('runOperatorInput — history tracking', () => {
 })
 
 describe('runOperatorInput — workspace parity', () => {
-  it('/workspace renders same workspace model as codemind-workspace', async () => {
+  it('/workspace renders same workspace model as symbolwright-workspace', async () => {
     const cwd = process.cwd()
     const session = createOperatorSession(cwd)
     const realHandlers = createDefaultOperatorConsoleHandlers()
     const result = await runOperatorInput('/workspace', session, realHandlers)
 
-    expect(result.output).toContain('CodeMind Workspace')
+    expect(result.output).toContain('SymbolWright Workspace')
     expect(result.output).toContain('Primary:')
     expect(result.output).toContain(cwd)
     expect(result.output).toContain('Repos: 1')

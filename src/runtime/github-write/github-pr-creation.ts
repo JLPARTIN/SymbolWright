@@ -152,7 +152,7 @@ export async function executeGitHubPrCreation(
 
 export function renderGitHubPrCreationResult(result: GitHubPrCreationResult): string {
   const lines = [
-    'CodeMind GitHub PR creation',
+    'SymbolWright GitHub PR creation',
     '',
     `Outcome: ${result.outcome}`,
     `Decision: ${result.gateResult.decision}`,

@@ -1,8 +1,8 @@
-export const CODEMIND_WORKSPACE_LOCALES = ['en', 'es'] as const
+export const SYMBOLWRIGHT_WORKSPACE_LOCALES = ['en', 'es'] as const
 
-export type WorkspaceLocale = (typeof CODEMIND_WORKSPACE_LOCALES)[number]
+export type WorkspaceLocale = (typeof SYMBOLWRIGHT_WORKSPACE_LOCALES)[number]
 
-export const CODEMIND_WORKSPACE_TRANSLATION_KEYS = [
+export const SYMBOLWRIGHT_WORKSPACE_TRANSLATION_KEYS = [
   'title',
   'subtitle',
   'languageLabel',
@@ -27,10 +27,10 @@ export const CODEMIND_WORKSPACE_TRANSLATION_KEYS = [
   'driftTask',
 ] as const
 
-export type WorkspaceTranslationKey = (typeof CODEMIND_WORKSPACE_TRANSLATION_KEYS)[number]
+export type WorkspaceTranslationKey = (typeof SYMBOLWRIGHT_WORKSPACE_TRANSLATION_KEYS)[number]
 export type WorkspaceTranslations = Record<WorkspaceTranslationKey, string>
 
-export const CODEMIND_WORKSPACE_I18N: Record<WorkspaceLocale, WorkspaceTranslations> = {
+export const SYMBOLWRIGHT_WORKSPACE_I18N: Record<WorkspaceLocale, WorkspaceTranslations> = {
   en: {
     title: 'Universal Polyglot Workspace',
     subtitle: 'Edit, inspect, preview, and run only the languages with real registered runners.',
@@ -85,11 +85,11 @@ export const CODEMIND_WORKSPACE_I18N: Record<WorkspaceLocale, WorkspaceTranslati
 }
 
 export function isWorkspaceLocale(value: string): value is WorkspaceLocale {
-  return CODEMIND_WORKSPACE_LOCALES.some((locale) => locale === value)
+  return SYMBOLWRIGHT_WORKSPACE_LOCALES.some((locale) => locale === value)
 }
 
 export function translateWorkspace(locale: WorkspaceLocale, key: WorkspaceTranslationKey): string {
-  return CODEMIND_WORKSPACE_I18N[locale][key]
+  return SYMBOLWRIGHT_WORKSPACE_I18N[locale][key]
 }
 
 export function resolveWorkspaceLocale(value: string | undefined): WorkspaceLocale {

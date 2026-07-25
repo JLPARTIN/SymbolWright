@@ -22,7 +22,7 @@ describe('mission directory secret proof', () => {
     const root = mkdtempSync(join(tmpdir(), 'mission-secret-proof-'))
     roots.push(root)
     const secrets = {
-      CODEMIND_API_KEY: 'codemind-local-secret-value',
+      SYMBOLWRIGHT_API_KEY: 'symbolwright-local-secret-value',
       OPENAI_API_KEY: 'sk-openai-super-secret-value',
       GITHUB_TOKEN: 'ghp_abcdefghijklmnopqrstuvwxyz123456',
     }
@@ -33,7 +33,7 @@ describe('mission directory secret proof', () => {
     })
     const mission = await service.create({
       name: 'Secret proof',
-      objective: 'Authorization: Bearer codemind-local-secret-value',
+      objective: 'Authorization: Bearer symbolwright-local-secret-value',
       workspaceKind: 'repository',
       repositoryPath: '.',
       runtimeMode: 'READ_ONLY',
@@ -45,11 +45,11 @@ describe('mission directory secret proof', () => {
     })
     service.appendEvent(mission.id, 'mcp.call.completed', 'MCP completed', {
       environment: { OPENAI_API_KEY: secrets.OPENAI_API_KEY },
-      Authorization: `Bearer ${secrets.CODEMIND_API_KEY}`,
+      Authorization: `Bearer ${secrets.SYMBOLWRIGHT_API_KEY}`,
     })
 
-    const persisted = readAllFiles(join(root, '.codemind', 'missions'))
-    expect(persisted).not.toContain(secrets.CODEMIND_API_KEY)
+    const persisted = readAllFiles(join(root, '.symbolwright', 'missions'))
+    expect(persisted).not.toContain(secrets.SYMBOLWRIGHT_API_KEY)
     expect(persisted).not.toContain(secrets.OPENAI_API_KEY)
     expect(persisted).not.toContain(secrets.GITHUB_TOKEN)
     expect(persisted).not.toContain('BEGIN PRIVATE KEY')

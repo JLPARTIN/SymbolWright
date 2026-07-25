@@ -26,7 +26,7 @@ import type { SandboxInventory, SandboxRunnerAvailability } from './sandbox-type
 const CHECKED_AT = '2026-07-21T00:00:00.000Z'
 const EXECUTION_ENV: NodeJS.ProcessEnv = {
   PATH: process.env['PATH'] ?? '',
-  CODEMIND_ALLOW_GUARDED_HOST_EXECUTION: 'true',
+  SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true',
 }
 
 const workspaces: string[] = []
@@ -43,7 +43,7 @@ function availability(command: string, version = `${command} test`): SandboxRunn
 }
 
 async function tempWorkspace(): Promise<string> {
-  const workspace = await mkdtemp(path.join(os.tmpdir(), 'codemind-sandbox-coverage-'))
+  const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-sandbox-coverage-'))
   workspaces.push(workspace)
   return workspace
 }
@@ -108,7 +108,7 @@ describe('sandbox completion coverage', () => {
       discoverCommandAvailability: async () => new Map([['node', availability('node')]]),
     })
 
-    expect(rendered).toContain('CodeMind Sandbox Execution')
+    expect(rendered).toContain('SymbolWright Sandbox Execution')
     expect(rendered).toContain('Status: passed')
     expect(rendered).toContain('cli-run-ok')
   })
@@ -275,7 +275,7 @@ describe('sandbox completion coverage', () => {
     expect(relaxed.maxCpuPercent).toBe(DEFAULT_SANDBOX_LIMITS.maxCpuPercent)
 
     const redacted = redactSandboxText(
-      'Bearer abcdefghijklmnopqrstuvwxyz123456 CODEMIND_API_KEY=supersecret token=value',
+      'Bearer abcdefghijklmnopqrstuvwxyz123456 SYMBOLWRIGHT_API_KEY=supersecret token=value',
     )
     expect(redacted).toContain('[REDACTED]')
     expect(redacted).not.toContain('supersecret')
@@ -295,7 +295,7 @@ describe('sandbox completion coverage', () => {
     const plan = buildSandboxContainerCommandPlan({
       image: IMAGE,
       engine: AVAILABLE_ENGINE,
-      hostWorkspacePath: '/tmp/codemind-sandbox/workspace-coverage',
+      hostWorkspacePath: '/tmp/symbolwright-sandbox/workspace-coverage',
       containerWorkspacePath: '/workspace/custom',
       entrypoint: ['node', 'main.js'],
     })
@@ -307,7 +307,7 @@ describe('sandbox completion coverage', () => {
       buildSandboxContainerCommandPlan({
         image: IMAGE,
         engine: AVAILABLE_ENGINE,
-        hostWorkspacePath: '/tmp/codemind-sandbox/root-path',
+        hostWorkspacePath: '/tmp/symbolwright-sandbox/root-path',
         entrypoint: [],
       }),
     ).toThrow('requires an entrypoint')
@@ -316,7 +316,7 @@ describe('sandbox completion coverage', () => {
       buildSandboxContainerCommandPlan({
         image: IMAGE,
         engine: AVAILABLE_ENGINE,
-        hostWorkspacePath: '/tmp/codemind-sandbox/null-path',
+        hostWorkspacePath: '/tmp/symbolwright-sandbox/null-path',
         entrypoint: ['node', 'bad\0arg'],
       }),
     ).toThrow('null-byte free')
@@ -325,7 +325,7 @@ describe('sandbox completion coverage', () => {
       buildSandboxContainerCommandPlan({
         image: IMAGE,
         engine: AVAILABLE_ENGINE,
-        hostWorkspacePath: '/tmp/codemind-sandbox/bad\0path',
+        hostWorkspacePath: '/tmp/symbolwright-sandbox/bad\0path',
         entrypoint: ['node', 'main.js'],
       }),
     ).toThrow('null bytes')

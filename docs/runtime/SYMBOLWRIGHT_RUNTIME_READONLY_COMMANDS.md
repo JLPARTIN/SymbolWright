@@ -1,4 +1,4 @@
-# CodeMind Runtime Read-only Commands
+# SymbolWright Runtime Read-only Commands
 
 This document records Phase A read-only runtime activation.
 

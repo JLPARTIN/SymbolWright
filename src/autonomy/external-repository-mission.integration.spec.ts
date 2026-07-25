@@ -63,8 +63,8 @@ describe('external repository mission integration — Bundle #8 full flow', () =
   let missionService: MissionService
 
   beforeEach(() => {
-    fixtureRoot = mkdtempSync(join(tmpdir(), 'codemind-bundle8-mission-fixture-'))
-    workspaceRoot = mkdtempSync(join(tmpdir(), 'codemind-bundle8-mission-workspace-'))
+    fixtureRoot = mkdtempSync(join(tmpdir(), 'symbolwright-bundle8-mission-fixture-'))
+    workspaceRoot = mkdtempSync(join(tmpdir(), 'symbolwright-bundle8-mission-workspace-'))
     missionService = new MissionService({ workspaceRoot })
   })
 
@@ -100,7 +100,7 @@ describe('external repository mission integration — Bundle #8 full flow', () =
 
     const packet = await preparePrOperationPacket({
       repositoryRoot: mission.repository.rootPath,
-      branchName: `codemind/${mission.id}`,
+      branchName: `symbolwright/${mission.id}`,
       baseBranch: mission.repository.branch ?? 'main',
       objective: mission.objective,
       changedFiles: [{ path: 'index.js', changeType: 'modified' }],

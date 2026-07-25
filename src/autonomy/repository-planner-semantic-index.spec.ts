@@ -70,7 +70,7 @@ describe('repository planner and semantic index', () => {
   })
 
   it('persists and reloads an index atomically', async () => {
-    const stateRoot = await mkdtemp(join(tmpdir(), 'codemind-index-'))
+    const stateRoot = await mkdtemp(join(tmpdir(), 'symbolwright-index-'))
     const store = new RepositorySemanticIndexStore(stateRoot)
     const index = buildRepositorySemanticIndex('/repo', [
       { absolutePath: '/repo/src/index.ts', content: 'export function run() {}' },

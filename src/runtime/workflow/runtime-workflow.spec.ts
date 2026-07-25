@@ -213,7 +213,7 @@ describe('renderWorkflowResult', () => {
     const result = await runRuntimeWorkflow(request, createTestRegistry(), createTestContext())
     const output = renderWorkflowResult(result)
 
-    expect(output).toContain('CodeMind runtime workflow result')
+    expect(output).toContain('SymbolWright runtime workflow result')
     expect(output).toContain('render-test')
     expect(output).toContain('COMPLETED')
     expect(output).toContain('1 executed')
@@ -266,7 +266,7 @@ describe('renderRuntimeWorkflow (CLI)', () => {
 
     const output = await renderRuntimeWorkflow(fixturePath)
 
-    expect(output).toContain('CodeMind runtime workflow result')
+    expect(output).toContain('SymbolWright runtime workflow result')
     expect(output).toContain('cli-test-workflow')
     expect(output).toContain('COMPLETED')
   })

@@ -3,14 +3,14 @@ import path from 'node:path'
 
 import type { ProviderMessage } from '../provider/provider.types.js'
 import { runGitCommand } from '../runtime/git/git-command-runner.js'
-import type { CodemindRuntimeMode } from '../runtime/types.js'
+import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
 import { createMissionEvent, recoverInterruptedMissionEvents } from './mission-events.js'
 import { createMissionExportBundle, parseMissionExportBundle } from './mission-export.js'
 import { generateMissionId } from './mission-id.js'
 import { redactMissionText, sha256Text } from './mission-redaction.js'
 import { MissionStore } from './mission-store.js'
 import type {
-  CodeMindMission,
+  SymbolWrightMission,
   MissionCheckpointReference,
   MissionEvent,
   MissionExportBundle,
@@ -27,7 +27,7 @@ import type { CreateMissionInput, PatchMissionInput } from './mission-validation
 export class MissionNotFoundError extends Error {}
 
 export class MissionRevisionConflictError extends Error {
-  public constructor(public readonly current: CodeMindMission) {
+  public constructor(public readonly current: SymbolWrightMission) {
     super('Mission changed since it was loaded')
   }
 }
@@ -85,11 +85,11 @@ export class MissionService {
     return this.store
   }
 
-  public async create(input: CreateMissionInput): Promise<CodeMindMission> {
+  public async create(input: CreateMissionInput): Promise<SymbolWrightMission> {
     const repositoryRoot = this.resolveRepositoryRoot(input.repositoryPath)
     const repository = await this.readRepositoryState(repositoryRoot)
     const now = this.now().toISOString()
-    const mission: CodeMindMission = {
+    const mission: SymbolWrightMission = {
       schemaVersion: 1,
       revision: 1,
       id: this.generateId(),
@@ -151,7 +151,7 @@ export class MissionService {
     return mission
   }
 
-  public get(missionId: string): CodeMindMission {
+  public get(missionId: string): SymbolWrightMission {
     const mission = this.store.readMission(missionId)
     if (mission === undefined) throw new MissionNotFoundError(`Mission not found: ${missionId}`)
     return mission
@@ -163,7 +163,7 @@ export class MissionService {
     return this.store.listMissions(options)
   }
 
-  public patch(missionId: string, input: PatchMissionInput): CodeMindMission {
+  public patch(missionId: string, input: PatchMissionInput): SymbolWrightMission {
     return this.update(missionId, input.revision, (mission) => {
       const repositoryPatch = input.repository
       const repository = {
@@ -248,11 +248,11 @@ export class MissionService {
     })
   }
 
-  public pause(missionId: string, revision: number): CodeMindMission {
+  public pause(missionId: string, revision: number): SymbolWrightMission {
     return this.transition(missionId, revision, 'PAUSED', 'mission.paused', 'Mission paused.')
   }
 
-  public resume(missionId: string, revision: number): CodeMindMission {
+  public resume(missionId: string, revision: number): SymbolWrightMission {
     const mission = this.get(missionId)
     if (mission.status !== 'PAUSED') {
       throw new MissionStateConflictError('Only a paused mission can be resumed')
@@ -272,7 +272,7 @@ export class MissionService {
     return resumed
   }
 
-  public reopenCompleted(missionId: string, revision: number): CodeMindMission {
+  public reopenCompleted(missionId: string, revision: number): SymbolWrightMission {
     const mission = this.get(missionId)
     if (mission.status !== 'COMPLETED') {
       throw new MissionStateConflictError('Only a completed mission can be explicitly reopened')
@@ -286,7 +286,7 @@ export class MissionService {
     return reopened
   }
 
-  public complete(missionId: string, revision: number): CodeMindMission {
+  public complete(missionId: string, revision: number): SymbolWrightMission {
     return this.transition(
       missionId,
       revision,
@@ -296,7 +296,7 @@ export class MissionService {
     )
   }
 
-  public abandon(missionId: string, revision: number): CodeMindMission {
+  public abandon(missionId: string, revision: number): SymbolWrightMission {
     return this.transition(
       missionId,
       revision,
@@ -306,7 +306,7 @@ export class MissionService {
     )
   }
 
-  public fail(missionId: string, revision: number, summary: string): CodeMindMission {
+  public fail(missionId: string, revision: number, summary: string): SymbolWrightMission {
     return this.transition(missionId, revision, 'FAILED', 'mission.failed', summary)
   }
 
@@ -347,10 +347,10 @@ export class MissionService {
   public recordAgentUserMessage(
     missionId: string,
     message: string,
-    runtimeMode: CodemindRuntimeMode,
+    runtimeMode: SymbolWrightRuntimeMode,
     providerId: string,
     model?: string,
-  ): CodeMindMission {
+  ): SymbolWrightMission {
     const mission = this.updateLatest(missionId, (current) => ({
       ...current,
       agent: {
@@ -375,7 +375,7 @@ export class MissionService {
     finalMessages: readonly ProviderMessage[] | undefined,
     finalText: string,
     status: string,
-  ): CodeMindMission {
+  ): SymbolWrightMission {
     const updated = this.updateLatest(missionId, (current) => ({
       ...current,
       agent: {
@@ -537,7 +537,7 @@ export class MissionService {
       readonly headSha?: string
       readonly modifiedPaths?: readonly string[]
     },
-  ): CodeMindMission {
+  ): SymbolWrightMission {
     return this.updateLatest(missionId, (mission) => ({
       ...mission,
       repository: {
@@ -615,7 +615,11 @@ export class MissionService {
     )
   }
 
-  public labelCheckpoint(missionId: string, checkpointId: string, label: string): CodeMindMission {
+  public labelCheckpoint(
+    missionId: string,
+    checkpointId: string,
+    label: string,
+  ): SymbolWrightMission {
     return this.updateLatest(missionId, (mission) => ({
       ...mission,
       references: {
@@ -661,7 +665,7 @@ export class MissionService {
     missionId: string,
     revision: number,
     scratchState: Record<string, unknown>,
-  ): CodeMindMission {
+  ): SymbolWrightMission {
     const updated = this.update(missionId, revision, (mission) => ({
       ...mission,
       workspace: {
@@ -689,11 +693,11 @@ export class MissionService {
     )
   }
 
-  public import(raw: unknown): CodeMindMission {
+  public import(raw: unknown): SymbolWrightMission {
     const bundle = parseMissionExportBundle(raw, this.env)
     const now = this.now().toISOString()
     const newId = this.generateId()
-    const imported: CodeMindMission = {
+    const imported: SymbolWrightMission = {
       ...bundle.mission,
       id: newId,
       revision: 1,
@@ -793,7 +797,7 @@ export class MissionService {
     status: MissionStatus,
     eventType: string,
     summary: string,
-  ): CodeMindMission {
+  ): SymbolWrightMission {
     const current = this.get(missionId)
     if (current.status === 'COMPLETED' || current.status === 'ABANDONED') {
       throw new MissionStateConflictError(
@@ -808,12 +812,12 @@ export class MissionService {
   private update(
     missionId: string,
     expectedRevision: number,
-    mutator: (mission: CodeMindMission) => CodeMindMission,
-  ): CodeMindMission {
+    mutator: (mission: SymbolWrightMission) => SymbolWrightMission,
+  ): SymbolWrightMission {
     const current = this.get(missionId)
     if (current.revision !== expectedRevision) throw new MissionRevisionConflictError(current)
     const updated = mutator(current)
-    const finalMission: CodeMindMission = {
+    const finalMission: SymbolWrightMission = {
       ...updated,
       revision: current.revision + 1,
       updatedAt: this.now().toISOString(),
@@ -824,8 +828,8 @@ export class MissionService {
 
   private updateLatest(
     missionId: string,
-    mutator: (mission: CodeMindMission) => CodeMindMission,
-  ): CodeMindMission {
+    mutator: (mission: SymbolWrightMission) => SymbolWrightMission,
+  ): SymbolWrightMission {
     const current = this.get(missionId)
     return this.update(missionId, current.revision, mutator)
   }
@@ -836,7 +840,9 @@ export class MissionService {
       resolved !== this.workspaceRoot &&
       !resolved.startsWith(`${this.workspaceRoot}${path.sep}`)
     ) {
-      throw new MissionStateConflictError('Repository path must stay inside the CodeMind workspace')
+      throw new MissionStateConflictError(
+        'Repository path must stay inside the SymbolWright workspace',
+      )
     }
     return resolved
   }
@@ -863,7 +869,12 @@ export class MissionService {
         ? status.stdout
             .split('\n')
             .map((line) => line.slice(3).trim())
-            .filter((entry) => entry.length > 0 && !entry.startsWith('.codemind/'))
+            .filter(
+              (entry) =>
+                entry.length > 0 &&
+                !entry.startsWith('.symbolwright/') &&
+                !entry.startsWith('.symbolwright/'),
+            )
         : []
     return {
       ...(remoteUrl === undefined || remoteUrl.length === 0 ? {} : { remoteUrl }),

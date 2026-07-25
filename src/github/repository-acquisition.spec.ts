@@ -16,10 +16,10 @@ function target(overrides: Partial<GitHubRepositoryTarget> = {}): GitHubReposito
   return {
     host: 'github.com',
     owner: 'JLPARTIN',
-    repo: 'CodeMind',
+    repo: 'SymbolWright',
     targetType: 'repository',
-    sourceUrl: 'https://github.com/JLPARTIN/CodeMind',
-    canonicalHttpsUrl: 'https://github.com/JLPARTIN/CodeMind',
+    sourceUrl: 'https://github.com/JLPARTIN/SymbolWright',
+    canonicalHttpsUrl: 'https://github.com/JLPARTIN/SymbolWright',
     ...overrides,
   }
 }
@@ -29,8 +29,8 @@ describe('repository acquisition', () => {
   let sourceRepo: string
 
   beforeEach(async () => {
-    workspaceRoot = mkdtempSync(join(tmpdir(), 'codemind-acquisition-workspace-'))
-    sourceRepo = mkdtempSync(join(tmpdir(), 'codemind-acquisition-source-'))
+    workspaceRoot = mkdtempSync(join(tmpdir(), 'symbolwright-acquisition-workspace-'))
+    sourceRepo = mkdtempSync(join(tmpdir(), 'symbolwright-acquisition-source-'))
     await runGitCommand(['init'], sourceRepo)
     await runGitCommand(['config', 'user.email', 'test@example.com'], sourceRepo)
     await runGitCommand(['config', 'user.name', 'Test'], sourceRepo)
@@ -110,7 +110,7 @@ describe('repository acquisition', () => {
     })
 
     it('does not misreport a broken default-branch checkout as an empty repository when real commits exist', async () => {
-      const bareRoot = mkdtempSync(join(tmpdir(), 'codemind-acquisition-bare-'))
+      const bareRoot = mkdtempSync(join(tmpdir(), 'symbolwright-acquisition-bare-'))
       try {
         await runGitCommand(['init', '--bare'], bareRoot)
         await runGitCommand(['remote', 'add', 'origin', bareRoot], sourceRepo)
@@ -209,7 +209,7 @@ describe('repository acquisition', () => {
     })
 
     it('reports a repository with zero commits honestly rather than as a hidden failure', async () => {
-      const emptyRepo = mkdtempSync(join(tmpdir(), 'codemind-acquisition-empty-'))
+      const emptyRepo = mkdtempSync(join(tmpdir(), 'symbolwright-acquisition-empty-'))
       await runGitCommand(['init'], emptyRepo)
       try {
         const result = await duplicateLocalRepository({
@@ -238,7 +238,7 @@ describe('repository acquisition', () => {
     })
 
     it('rejects a source path that is not a git repository', async () => {
-      const notARepo = mkdtempSync(join(tmpdir(), 'codemind-acquisition-notrepo-'))
+      const notARepo = mkdtempSync(join(tmpdir(), 'symbolwright-acquisition-notrepo-'))
       try {
         await expect(
           duplicateLocalRepository({

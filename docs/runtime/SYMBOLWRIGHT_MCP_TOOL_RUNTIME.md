@@ -1,6 +1,6 @@
-# CodeMind MCP + External Tool Runtime
+# SymbolWright MCP + External Tool Runtime
 
-Gives CodeMind a real substrate for local stdio Model Context Protocol (MCP)
+Gives SymbolWright a real substrate for local stdio Model Context Protocol (MCP)
 servers: config, process lifecycle, tool discovery, policy-gated invocation,
 timeout handling, output capture, and redaction before anything reaches an
 audit log or the CLI.
@@ -8,7 +8,7 @@ audit log or the CLI.
 Scope is intentionally tight: **local stdio servers only**. No HTTP/WebSocket
 transport, no fake connectors, no "future provider" placeholders.
 
-## Config: `.codemind/mcp.json`
+## Config: `.symbolwright/mcp.json`
 
 ```json
 {
@@ -28,9 +28,9 @@ transport, no fake connectors, no "future provider" placeholders.
 - `args` defaults to `[]`, `env` to `{}`.
 - `timeoutMs` defaults to 15000 and applies to `initialize`, `tools/list`, and
   `tools/call` unless a call overrides it.
-- `.codemind/` is git-ignored, so this file is local/per-checkout — see
+- `.symbolwright/` is git-ignored, so this file is local/per-checkout — see
   [Try it](#try-it-the-real-fixture-server) below to set one up.
-- A missing `.codemind/mcp.json` is not an error: `loadMcpConfig` returns an
+- A missing `.symbolwright/mcp.json` is not an error: `loadMcpConfig` returns an
   empty server map, so MCP stays fully optional until a repo opts in.
 
 Parser: `src/mcp/mcp-config.ts` (`parseMcpConfig`, `loadMcpConfig`,
@@ -101,7 +101,7 @@ Registered in `src/runtime/tools/tool-assembly.ts` with capability
 { "server": "fixture", "tool": "echo", "arguments": { "text": "hi" }, "timeoutMs": 5000 }
 ```
 
-It loads `.codemind/mcp.json` from `context.cwd`, runs it through
+It loads `.symbolwright/mcp.json` from `context.cwd`, runs it through
 `callMcpTool`, and renders the evidence (status, content, stderr, audit
 trace) as text.
 
@@ -113,7 +113,7 @@ codemind mcp tools [server]                # discover tools for one server, or a
 codemind mcp call <server.tool> [json-args] # invoke a tool through the policy gate
 ```
 
-Shared flags: `--config <path>` (override the default `.codemind/mcp.json`
+Shared flags: `--config <path>` (override the default `.symbolwright/mcp.json`
 lookup), `--mode <MODE>` (defaults to `APPROVED_EXECUTION`), `--timeout <ms>`
 (`mcp call` only). When exactly one server is configured, `mcp call` accepts
 a bare tool name (e.g. `echo`) instead of the qualified `fixture.echo` form.
@@ -125,27 +125,27 @@ tools: `echo`, `sum`, `sleep`) used by the unit/integration tests and this
 walkthrough — not a mock. From the repo root:
 
 ```sh
-mkdir -p .codemind
-cp examples/mcp/mcp.json .codemind/mcp.json
+mkdir -p .symbolwright
+cp examples/mcp/mcp.json .symbolwright/mcp.json
 
 npm run build
 
 node dist/cli.js mcp list
 node dist/cli.js mcp tools
-node dist/cli.js mcp call fixture.echo '{"text":"CodeMind MCP runtime is live"}'
+node dist/cli.js mcp call fixture.echo '{"text":"SymbolWright MCP runtime is live"}'
 ```
 
 Expected output for the last command:
 
 ```txt
-CodeMind mcp_call
+SymbolWright mcp_call
 
 Server: fixture
 Tool: echo
 Status: ok
 Duration: <n>ms
 
-CodeMind MCP runtime is live
+SymbolWright MCP runtime is live
 
 stderr:
 fixture-server: ready

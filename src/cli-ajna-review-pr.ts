@@ -10,13 +10,13 @@ import type {
 } from './ajna/ajna-review.types.js'
 import { parseAjnaMergeReadinessInput } from './cli-ajna-merge-readiness.js'
 
-export interface CodemindAjnaReviewPrInput {
+export interface SymbolWrightAjnaReviewPrInput {
   readonly request: AjnaReviewRequest
   readonly findings: readonly AjnaReviewFinding[]
   readonly recommendedNextAction?: string
 }
 
-export interface CodemindAjnaReviewPrCommandResult {
+export interface SymbolWrightAjnaReviewPrCommandResult {
   readonly inputPath: string | null
   readonly response: AjnaReviewResponse
   readonly output: string
@@ -92,7 +92,7 @@ function defaultRecommendedNextAction(mergeReadiness: AjnaMergeReadiness): strin
   return 'Review the Ajna report and provide any required CI or test evidence before merge.'
 }
 
-export function parseAjnaReviewPrInput(jsonText: string): CodemindAjnaReviewPrInput {
+export function parseAjnaReviewPrInput(jsonText: string): SymbolWrightAjnaReviewPrInput {
   const parsed = JSON.parse(jsonText) as { findings?: unknown; recommendedNextAction?: unknown }
   const base = parseAjnaMergeReadinessInput(jsonText)
 
@@ -120,14 +120,14 @@ export function parseAjnaReviewPrInput(jsonText: string): CodemindAjnaReviewPrIn
   return base
 }
 
-export function readAjnaReviewPrInput(inputPath: string): CodemindAjnaReviewPrInput {
+export function readAjnaReviewPrInput(inputPath: string): SymbolWrightAjnaReviewPrInput {
   return parseAjnaReviewPrInput(readFileSync(inputPath, 'utf-8'))
 }
 
 export function buildAjnaReviewPrForInput(
-  input: CodemindAjnaReviewPrInput,
+  input: SymbolWrightAjnaReviewPrInput,
   inputPath: string | null = null,
-): CodemindAjnaReviewPrCommandResult {
+): SymbolWrightAjnaReviewPrCommandResult {
   const mergeReadiness = deriveAjnaMergeReadiness(input.request, input.findings)
   const response: AjnaReviewResponse = {
     requestId: input.request.requestId,

@@ -7,13 +7,13 @@ import {
 } from './server-autonomy-runtime.js'
 
 function service(): MissionService {
-  return new MissionService({ workspaceRoot: '/tmp/codemind-autonomy-runtime-test', env: {} })
+  return new MissionService({ workspaceRoot: '/tmp/symbolwright-autonomy-runtime-test', env: {} })
 }
 
 describe('createServerAutonomyRuntime', () => {
   it('assembles coordinator, controls, execution persistence, and executor', () => {
     const runtime = createServerAutonomyRuntime({
-      workspaceRoot: '/tmp/codemind-autonomy-runtime-test',
+      workspaceRoot: '/tmp/symbolwright-autonomy-runtime-test',
       missionService: service(),
       hasGitHubToken: false,
     })
@@ -35,7 +35,7 @@ describe('createServerAutonomyRuntime', () => {
 
   it('accepts a real edit executor and custom validation commands', () => {
     const runtime = createServerAutonomyRuntime({
-      workspaceRoot: '/tmp/codemind-autonomy-runtime-test',
+      workspaceRoot: '/tmp/symbolwright-autonomy-runtime-test',
       missionService: service(),
       hasGitHubToken: true,
       validationCommands: ['npm run validate'],

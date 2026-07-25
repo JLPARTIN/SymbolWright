@@ -69,7 +69,7 @@ describe('renderSandboxReadinessReport', () => {
     })
     const output = renderSandboxReadinessReport(runSandboxReadinessCheck({}, probe))
 
-    expect(output).toContain('CodeMind sandbox readiness')
+    expect(output).toContain('SymbolWright sandbox readiness')
     expect(output).toContain('Ready: yes')
     expect(output).toContain('Docker availability')
     expect(output).toContain('Summary:')

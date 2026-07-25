@@ -92,7 +92,7 @@ export class JsonAutonomousRepairLoopStore implements AutonomousRepairLoopStore 
   readonly #root: string
 
   constructor(workspaceRoot: string) {
-    this.#root = path.resolve(workspaceRoot, '.codemind', 'autonomy', 'repair-loops')
+    this.#root = path.resolve(workspaceRoot, '.symbolwright', 'autonomy', 'repair-loops')
   }
 
   async load(loopId: string): Promise<AutonomousRepairLoopRecord | undefined> {

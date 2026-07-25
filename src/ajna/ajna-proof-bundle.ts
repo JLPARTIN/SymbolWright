@@ -1,6 +1,6 @@
-export const AJNA_PROOF_BUNDLE_BLOCK_ID = 'CODEMIND-AJNA-REVIEW-09' as const
+export const AJNA_PROOF_BUNDLE_BLOCK_ID = 'SYMBOLWRIGHT-AJNA-REVIEW-09' as const
 export const AJNA_PROOF_BUNDLE_PR_ID = 'PR-CM-AJNA-09' as const
-export const AJNA_PROOF_BUNDLE_PHASE_ID = 'CODEMIND-AJNA-09' as const
+export const AJNA_PROOF_BUNDLE_PHASE_ID = 'SYMBOLWRIGHT-AJNA-09' as const
 
 export const AJNA_PROOF_GATE_STATUSES = ['PROOF_GATE_OPEN', 'PROOF_GATE_CLOSED'] as const
 export type AjnaProofGateStatus = (typeof AJNA_PROOF_GATE_STATUSES)[number]

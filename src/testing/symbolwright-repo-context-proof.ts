@@ -4,35 +4,36 @@ import {
   summarizeReadOnlyRepoContext,
 } from '../repo-context/repo-context-summary.js'
 import type {
-  CodemindReadOnlyRepoContext,
-  CodemindRepoFileImpactLevel,
+  SymbolWrightReadOnlyRepoContext,
+  SymbolWrightRepoFileImpactLevel,
 } from '../repo-context/repo-context.types.js'
 
-export const CODEMIND_REPO_CONTEXT_PROOF_BLOCK_ID = 'CODEMIND-PROOF-HARNESS-04' as const
-export const CODEMIND_REPO_CONTEXT_PROOF_PR_ID = 'PR-CM-TEST-04' as const
-export const CODEMIND_REPO_CONTEXT_PROOF_PHASE_ID = 'CODEMIND-TEST-04' as const
+export const SYMBOLWRIGHT_REPO_CONTEXT_PROOF_BLOCK_ID = 'SYMBOLWRIGHT-PROOF-HARNESS-04' as const
+export const SYMBOLWRIGHT_REPO_CONTEXT_PROOF_PR_ID = 'PR-CM-TEST-04' as const
+export const SYMBOLWRIGHT_REPO_CONTEXT_PROOF_PHASE_ID = 'SYMBOLWRIGHT-TEST-04' as const
 
-export const CODEMIND_REPO_CONTEXT_PROOF_STATUSES = [
+export const SYMBOLWRIGHT_REPO_CONTEXT_PROOF_STATUSES = [
   'REPO_CONTEXT_PROOF_READY',
   'REPO_CONTEXT_PROOF_PARTIAL',
   'REPO_CONTEXT_PROOF_BLOCKED',
   'REPO_CONTEXT_PROOF_INVALID',
 ] as const
-export type CodemindRepoContextProofStatus = (typeof CODEMIND_REPO_CONTEXT_PROOF_STATUSES)[number]
+export type SymbolWrightRepoContextProofStatus =
+  (typeof SYMBOLWRIGHT_REPO_CONTEXT_PROOF_STATUSES)[number]
 
-export interface CodemindRepoContextProofInput {
-  readonly repoContext: CodemindReadOnlyRepoContext
+export interface SymbolWrightRepoContextProofInput {
+  readonly repoContext: SymbolWrightReadOnlyRepoContext
   readonly blockingNotes?: readonly string[]
 }
 
-export interface CodemindRepoContextProofReport {
-  readonly blockId: typeof CODEMIND_REPO_CONTEXT_PROOF_BLOCK_ID
-  readonly prId: typeof CODEMIND_REPO_CONTEXT_PROOF_PR_ID
-  readonly phaseId: typeof CODEMIND_REPO_CONTEXT_PROOF_PHASE_ID
-  readonly status: CodemindRepoContextProofStatus
+export interface SymbolWrightRepoContextProofReport {
+  readonly blockId: typeof SYMBOLWRIGHT_REPO_CONTEXT_PROOF_BLOCK_ID
+  readonly prId: typeof SYMBOLWRIGHT_REPO_CONTEXT_PROOF_PR_ID
+  readonly phaseId: typeof SYMBOLWRIGHT_REPO_CONTEXT_PROOF_PHASE_ID
+  readonly status: SymbolWrightRepoContextProofStatus
   readonly changedFileCount: number
   readonly protectedFileCount: number
-  readonly highestImpactLevel: CodemindRepoFileImpactLevel
+  readonly highestImpactLevel: SymbolWrightRepoFileImpactLevel
   readonly ciEvidenceSatisfied: boolean
   readonly testEvidenceSatisfied: boolean
   readonly blockingNotes: readonly string[]
@@ -47,7 +48,7 @@ function resolveStatus(
   ciEvidenceSatisfied: boolean,
   testEvidenceSatisfied: boolean,
   changedFileCount: number,
-): CodemindRepoContextProofStatus {
+): SymbolWrightRepoContextProofStatus {
   if (blockingNotes.length > 0) {
     return 'REPO_CONTEXT_PROOF_BLOCKED'
   }
@@ -60,9 +61,9 @@ function resolveStatus(
   return 'REPO_CONTEXT_PROOF_PARTIAL'
 }
 
-export function buildCodemindRepoContextProofReport(
-  input: CodemindRepoContextProofInput,
-): CodemindRepoContextProofReport {
+export function buildSymbolWrightRepoContextProofReport(
+  input: SymbolWrightRepoContextProofInput,
+): SymbolWrightRepoContextProofReport {
   const blockingNotes = [...(input.blockingNotes ?? [])].sort((a, b) => a.localeCompare(b))
 
   const summary = summarizeReadOnlyRepoContext(input.repoContext)
@@ -87,9 +88,9 @@ export function buildCodemindRepoContextProofReport(
           : `Repo context proof partial: ${changedFileCount} file(s) changed, evidence incomplete (CI: ${ciEvidenceSatisfied}, tests: ${testEvidenceSatisfied}).`
 
   return {
-    blockId: CODEMIND_REPO_CONTEXT_PROOF_BLOCK_ID,
-    prId: CODEMIND_REPO_CONTEXT_PROOF_PR_ID,
-    phaseId: CODEMIND_REPO_CONTEXT_PROOF_PHASE_ID,
+    blockId: SYMBOLWRIGHT_REPO_CONTEXT_PROOF_BLOCK_ID,
+    prId: SYMBOLWRIGHT_REPO_CONTEXT_PROOF_PR_ID,
+    phaseId: SYMBOLWRIGHT_REPO_CONTEXT_PROOF_PHASE_ID,
     status,
     changedFileCount,
     protectedFileCount,

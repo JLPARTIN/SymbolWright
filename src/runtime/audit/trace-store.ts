@@ -281,7 +281,7 @@ export function serializeTraceFrames(
 
 export function renderTraceStorePersistResult(result: TraceStorePersistResult): string {
   const lines = [
-    'CodeMind Trace Store',
+    'SymbolWright Trace Store',
     '',
     `Block: ${result.blockId}`,
     `Outcome: ${result.outcome}`,
@@ -300,7 +300,7 @@ export function renderTraceStorePersistResult(result: TraceStorePersistResult): 
 
 export function renderTraceStoreReplayResult(result: TraceStoreReplayResult): string {
   const lines = [
-    'CodeMind Trace Store Replay',
+    'SymbolWright Trace Store Replay',
     '',
     `Block: ${result.blockId}`,
     `Outcome: ${result.outcome}`,

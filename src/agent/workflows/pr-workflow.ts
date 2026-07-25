@@ -1,7 +1,7 @@
 import type { AjnaMergeGateResult } from '../../ajna/ajna-merge-gate.js'
 import type { AjnaLiveReviewInput } from '../../ajna/ajna-live-review.js'
 import { evaluateAjnaMergeGate } from '../../ajna/ajna-merge-gate.js'
-import type { CodemindChangedFileContext } from '../../repo-context/repo-context.types.js'
+import type { SymbolWrightChangedFileContext } from '../../repo-context/repo-context.types.js'
 
 export type PrWorkflowStage =
   | 'INVESTIGATE'
@@ -19,7 +19,7 @@ export interface PrWorkflowState {
   readonly baseRef: string
   readonly headSha: string
   readonly baseSha: string
-  readonly changedFiles: readonly CodemindChangedFileContext[]
+  readonly changedFiles: readonly SymbolWrightChangedFileContext[]
   readonly ajnaGateResult: AjnaMergeGateResult | undefined
   readonly blockReasons: readonly string[]
   readonly stageHistory: readonly PrWorkflowStage[]
@@ -51,7 +51,7 @@ export function createPrWorkflowState(config: PrWorkflowConfig): PrWorkflowState
 
 export function advancePrWorkflow(
   state: PrWorkflowState,
-  changedFiles: readonly CodemindChangedFileContext[],
+  changedFiles: readonly SymbolWrightChangedFileContext[],
 ): PrWorkflowState {
   const reviewInput: AjnaLiveReviewInput = {
     repository: state.repository,
@@ -98,7 +98,7 @@ export function completePrWorkflow(state: PrWorkflowState): PrWorkflowState {
 
 export function renderPrWorkflowState(state: PrWorkflowState): string {
   const lines = [
-    'CodeMind PR Workflow',
+    'SymbolWright PR Workflow',
     '',
     `Stage: ${state.stage}`,
     `Repository: ${state.repository}`,

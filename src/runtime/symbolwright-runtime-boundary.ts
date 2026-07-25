@@ -1,10 +1,10 @@
-import { evaluateCodemindPermissionRequest } from '../permissions/codemind-permission-policy.js'
+import { evaluateSymbolWrightPermissionRequest } from '../permissions/symbolwright-permission-policy.js'
 import type {
-  CodemindRuntimeAdapterDescriptor,
-  CodemindRuntimeBoundaryDecision,
-} from './codemind-runtime.types.js'
+  SymbolWrightRuntimeAdapterDescriptor,
+  SymbolWrightRuntimeBoundaryDecision,
+} from './symbolwright-runtime.types.js'
 
-function collectCapabilityNotes(descriptor: CodemindRuntimeAdapterDescriptor): string[] {
+function collectCapabilityNotes(descriptor: SymbolWrightRuntimeAdapterDescriptor): string[] {
   const notes: string[] = []
   const flags = descriptor.capabilityFlags
 
@@ -39,10 +39,10 @@ function collectCapabilityNotes(descriptor: CodemindRuntimeAdapterDescriptor): s
   return notes
 }
 
-export function evaluateCodemindRuntimeBoundary(
-  descriptor: CodemindRuntimeAdapterDescriptor,
-): CodemindRuntimeBoundaryDecision {
-  const permissionDecision = evaluateCodemindPermissionRequest(descriptor.permissionRequest)
+export function evaluateSymbolWrightRuntimeBoundary(
+  descriptor: SymbolWrightRuntimeAdapterDescriptor,
+): SymbolWrightRuntimeBoundaryDecision {
+  const permissionDecision = evaluateSymbolWrightPermissionRequest(descriptor.permissionRequest)
   const blockedReasons = collectCapabilityNotes(descriptor)
   const allowedToRun = permissionDecision.disposition === 'ALLOW' && blockedReasons.length === 0
 

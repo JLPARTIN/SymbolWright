@@ -1,10 +1,10 @@
 ## Current Runtime Posture
 
-CodeMind now defaults to direct execution for normal coding-agent workflows. Runtime policy remains responsible for workspace boundaries, protected paths, allowlisted validation commands, sandboxed execution, and destructive-operation safeguards.
+SymbolWright now defaults to direct execution for normal coding-agent workflows. Runtime policy remains responsible for workspace boundaries, protected paths, allowlisted validation commands, sandboxed execution, and destructive-operation safeguards.
 
 The runtime is no longer governed, read-only, or approval-first by default for normal coding-agent work.
 
-# CodeMind Runtime Build State
+# SymbolWright Runtime Build State
 
 This document records the post-Phase T runtime state. All 20 runtime phases are complete.
 

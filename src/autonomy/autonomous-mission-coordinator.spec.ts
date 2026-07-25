@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { MissionService } from '../mission/mission-service.js'
 import { MissionStore } from '../mission/mission-store.js'
-import type { CodeMindMission } from '../mission/mission-types.js'
+import type { SymbolWrightMission } from '../mission/mission-types.js'
 import { AutonomousMissionCoordinator } from './autonomous-mission-coordinator.js'
 import {
   JsonMissionExecutionStore,
@@ -17,7 +17,7 @@ import type { RepositorySemanticIndexSnapshot } from './repository-semantic-inde
 
 const roots: string[] = []
 
-function mission(root: string): CodeMindMission {
+function mission(root: string): SymbolWrightMission {
   return {
     schemaVersion: 1,
     revision: 1,
@@ -64,7 +64,7 @@ function semanticIndex(root: string): RepositorySemanticIndexSnapshot {
         language: 'typescript',
         contentHash: 'hash-a',
         generated: false,
-        packageOwner: 'codemind',
+        packageOwner: 'symbolwright',
         indexedAt: now,
       },
       {
@@ -72,7 +72,7 @@ function semanticIndex(root: string): RepositorySemanticIndexSnapshot {
         language: 'typescript',
         contentHash: 'hash-b',
         generated: false,
-        packageOwner: 'codemind',
+        packageOwner: 'symbolwright',
         indexedAt: now,
       },
     ],
@@ -103,7 +103,7 @@ afterEach(async () => {
 
 describe('AutonomousMissionCoordinator', () => {
   it('plans, executes, persists dashboard state, and records mission evidence', async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-autonomy-coordinator-'))
+    const root = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-autonomy-coordinator-'))
     roots.push(root)
     const missionStore = new MissionStore({ workspaceRoot: root })
     const storedMission = mission(root)

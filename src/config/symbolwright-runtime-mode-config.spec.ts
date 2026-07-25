@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { resolveCodemindConfig, validateCodemindConfig } from './codemind-config.js'
+import { resolveSymbolWrightConfig, validateSymbolWrightConfig } from './symbolwright-config.js'
 
 describe('runtime mode config', () => {
-  it('reads CODEMIND_RUNTIME_MODE from env', () => {
-    const config = resolveCodemindConfig({
-      env: { CODEMIND_RUNTIME_MODE: 'READ_ONLY' },
+  it('reads SYMBOLWRIGHT_RUNTIME_MODE from env', () => {
+    const config = resolveSymbolWrightConfig({
+      env: { SYMBOLWRIGHT_RUNTIME_MODE: 'READ_ONLY' },
       homeConfigPath: '/nonexistent/config.json',
       projectConfigPath: '/nonexistent/config.json',
     })
@@ -14,13 +14,13 @@ describe('runtime mode config', () => {
   })
 
   it('normalizes direct/off aliases onto APPROVED_EXECUTION', () => {
-    const direct = resolveCodemindConfig({
-      env: { CODEMIND_RUNTIME_MODE: 'direct' },
+    const direct = resolveSymbolWrightConfig({
+      env: { SYMBOLWRIGHT_RUNTIME_MODE: 'direct' },
       homeConfigPath: '/nonexistent/config.json',
       projectConfigPath: '/nonexistent/config.json',
     })
-    const off = resolveCodemindConfig({
-      env: { CODEMIND_RUNTIME_MODE: 'off' },
+    const off = resolveSymbolWrightConfig({
+      env: { SYMBOLWRIGHT_RUNTIME_MODE: 'off' },
       homeConfigPath: '/nonexistent/config.json',
       projectConfigPath: '/nonexistent/config.json',
     })
@@ -30,9 +30,9 @@ describe('runtime mode config', () => {
   })
 
   it('lets CLI runtime mode override env mode', () => {
-    const config = resolveCodemindConfig({
+    const config = resolveSymbolWrightConfig({
       cliFlags: { runtimeMode: 'PROPOSAL_ONLY' },
-      env: { CODEMIND_RUNTIME_MODE: 'READ_ONLY' },
+      env: { SYMBOLWRIGHT_RUNTIME_MODE: 'READ_ONLY' },
       homeConfigPath: '/nonexistent/config.json',
       projectConfigPath: '/nonexistent/config.json',
     })
@@ -41,8 +41,8 @@ describe('runtime mode config', () => {
   })
 
   it('ignores invalid runtime mode values instead of creating a second mode system', () => {
-    const config = resolveCodemindConfig({
-      env: { CODEMIND_RUNTIME_MODE: 'LOCKDOWN' },
+    const config = resolveSymbolWrightConfig({
+      env: { SYMBOLWRIGHT_RUNTIME_MODE: 'LOCKDOWN' },
       homeConfigPath: '/nonexistent/config.json',
       projectConfigPath: '/nonexistent/config.json',
     })
@@ -51,7 +51,7 @@ describe('runtime mode config', () => {
   })
 
   it('includes runtime mode in validation summary', () => {
-    const result = validateCodemindConfig({
+    const result = validateSymbolWrightConfig({
       anthropicApiKey: 'sk-test-key-12345678',
       runtimeMode: 'APPROVED_EXECUTION',
     })

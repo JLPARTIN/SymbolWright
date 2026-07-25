@@ -1,4 +1,4 @@
-# CodeMind Zflow Report Rollup Tool
+# SymbolWright Zflow Report Rollup Tool
 
 PR Bundle BG-BJ adds a report rollup renderer for Zflow report suites.
 

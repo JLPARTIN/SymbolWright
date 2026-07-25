@@ -1,10 +1,10 @@
 # Provider Key Boundary
 
-CodeMind uses two different key classes.
+SymbolWright uses two different key classes.
 
-## 1. CodeMind access key
+## 1. SymbolWright access key
 
-`CODEMIND_API_KEY` controls access to CodeMind itself. Browsers, external LLMs, coding agents, and API clients may send this key to the CodeMind API.
+`SYMBOLWRIGHT_API_KEY` controls access to SymbolWright itself. Browsers, external LLMs, coding agents, and API clients may send this key to the SymbolWright API.
 
 ## 2. Provider credentials
 
@@ -14,9 +14,9 @@ These keys must not live in the browser. They must be handled in one of these se
 
 | Mode | Meaning |
 | --- | --- |
-| `server_vault` | CodeMind stores the provider key server-side and routes requests through the provider adapter. |
-| `request_scoped` | CodeMind receives a short-lived provider credential on the server side and does not persist it. |
-| `local_runtime` | CodeMind reaches a local provider such as Ollama from the server runtime. |
+| `server_vault` | SymbolWright stores the provider key server-side and routes requests through the provider adapter. |
+| `request_scoped` | SymbolWright receives a short-lived provider credential on the server side and does not persist it. |
+| `local_runtime` | SymbolWright reaches a local provider such as Ollama from the server runtime. |
 
 ## Hard rule
 
@@ -29,15 +29,15 @@ Browser → Provider API
 Use this pattern instead:
 
 ```txt
-Browser → CodeMind API → Provider Adapter → Provider API
+Browser → SymbolWright API → Provider Adapter → Provider API
 ```
 
-That keeps provider switching, audit logs, redaction, mission state, tool policy, and PR governance under CodeMind control.
+That keeps provider switching, audit logs, redaction, mission state, tool policy, and PR governance under SymbolWright control.
 
 ## Registering a provider at runtime
 
 `codemind serve` (see
-[`runtime/CODEMIND_CHAT_SERVER.md`](runtime/CODEMIND_CHAT_SERVER.md)) accepts
+[`runtime/SYMBOLWRIGHT_CHAT_SERVER.md`](runtime/SYMBOLWRIGHT_CHAT_SERVER.md)) accepts
 `POST /api/providers/register` to set or override a provider's `baseUrl`,
 `apiKey`, and `model` while the server is running — this is how you "put an
 API from wherever you want" without redeploying. Registered keys are held in

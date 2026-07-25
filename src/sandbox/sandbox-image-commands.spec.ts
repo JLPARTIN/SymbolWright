@@ -38,7 +38,7 @@ describe('sandbox image command contracts', () => {
   it('inspects only built-in allowlisted image IDs', async () => {
     const rendered = await renderSandboxImageInspectCommand(['python-3-12-slim'], DOCKER_OPTIONS)
 
-    expect(rendered).toContain('CodeMind Sandbox Image Inspection')
+    expect(rendered).toContain('SymbolWright Sandbox Image Inspection')
     expect(rendered).toContain('Image ID: python-3-12-slim')
     expect(rendered).toContain('Image: python:3.12-slim')
     expect(rendered).toContain('Container engine: docker (available)')
@@ -67,10 +67,10 @@ describe('sandbox image command contracts', () => {
       DOCKER_OPTIONS,
     )
 
-    expect(rendered).toContain('CodeMind Sandbox Image Preparation Plan')
+    expect(rendered).toContain('SymbolWright Sandbox Image Preparation Plan')
     expect(rendered).toContain('Status: REVIEW_REQUIRED')
     expect(rendered).toContain('prepare this allowlisted image manually')
-    expect(rendered).toContain('CodeMind does not execute this plan automatically')
+    expect(rendered).toContain('SymbolWright does not execute this plan automatically')
   })
 
   it('blocks preparation when no container engine is detected', async () => {

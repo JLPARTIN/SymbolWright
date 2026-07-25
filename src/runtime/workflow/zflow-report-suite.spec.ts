@@ -18,9 +18,9 @@ function makeReport(
     result: {
       mode: 'prepare-pr',
       localOutput: readiness === 'BLOCKED' ? 'blocked' : 'completed',
-      prOutput: 'CodeMind GitHub PR creation\n\nOutcome: DRY_RUN',
-      collaborationOutput: 'CodeMind PR collaboration\n\nOutcome: DRY_RUN',
-      recoveryOutput: 'CodeMind recovery change ledger\n\nChanges: 1',
+      prOutput: 'SymbolWright GitHub PR creation\n\nOutcome: DRY_RUN',
+      collaborationOutput: 'SymbolWright PR collaboration\n\nOutcome: DRY_RUN',
+      recoveryOutput: 'SymbolWright recovery change ledger\n\nChanges: 1',
       rollbackOutput: 'Rollback plan: Recover Zflow preview\n\n1. src/generated.ts',
     },
     readiness: {

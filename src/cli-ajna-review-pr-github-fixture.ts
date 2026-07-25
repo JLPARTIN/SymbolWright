@@ -6,10 +6,10 @@ import {
 } from './ajna/ajna-github-review-normalizer.js'
 import {
   buildAjnaReviewPrForInput,
-  type CodemindAjnaReviewPrCommandResult,
+  type SymbolWrightAjnaReviewPrCommandResult,
 } from './cli-ajna-review-pr.js'
 
-export interface CodemindAjnaReviewPrGithubFixtureCommandResult extends CodemindAjnaReviewPrCommandResult {
+export interface SymbolWrightAjnaReviewPrGithubFixtureCommandResult extends SymbolWrightAjnaReviewPrCommandResult {
   readonly githubFixturePath: string
 }
 
@@ -32,7 +32,7 @@ export function readAjnaGithubPullRequestFixture(inputPath: string): AjnaGithubP
 export function buildAjnaReviewPrForGithubFixture(
   payload: AjnaGithubPullRequestPayload,
   inputPath: string | null = null,
-): CodemindAjnaReviewPrCommandResult {
+): SymbolWrightAjnaReviewPrCommandResult {
   return buildAjnaReviewPrForInput(normalizeGithubPullRequestForAjnaReview(payload), inputPath)
 }
 

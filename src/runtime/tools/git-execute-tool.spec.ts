@@ -19,7 +19,7 @@ function makeContext(overrides: Partial<RuntimeToolContext> = {}): RuntimeToolCo
 }
 
 function makeGitWorkspace(): string {
-  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'codemind-git-'))
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-git-'))
   spawnSync('git', ['init'], { cwd: workspace })
   fs.writeFileSync(path.join(workspace, 'file.txt'), 'hello')
   return workspace

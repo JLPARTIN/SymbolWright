@@ -1,7 +1,7 @@
-# CodeMind Checkpoint + Rewind
+# SymbolWright Checkpoint + Rewind
 
 The safety spine: every mutating write goes through a snapshot first, so any
-edit CodeMind makes can be undone file-by-file, with the restore verified
+edit SymbolWright makes can be undone file-by-file, with the restore verified
 against a recorded hash — never a blind overwrite, never a global `git
 reset`.
 
@@ -24,8 +24,8 @@ checkpoint covering every file that call actually wrote.
 ## Layout
 
 ```txt
-.codemind/checkpoints/<session-id>/<checkpoint-id>/checkpoint.json
-.codemind/checkpoints/<session-id>/<checkpoint-id>/files/<mirrored target path>
+.symbolwright/checkpoints/<session-id>/<checkpoint-id>/checkpoint.json
+.symbolwright/checkpoints/<session-id>/<checkpoint-id>/files/<mirrored target path>
 ```
 
 `checkpoint.json`:

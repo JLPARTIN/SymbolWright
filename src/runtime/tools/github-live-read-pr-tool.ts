@@ -48,7 +48,7 @@ export function createGitHubLiveReadPrTool(client: RuntimeLiveReadClient): Runti
       const ajna = bridgeRuntimeEvidenceToAjna({ pr: summary })
 
       return [
-        'CodeMind GitHub live read PR',
+        'SymbolWright GitHub live read PR',
         '',
         `Repository: ${parsed.owner}/${parsed.repo}`,
         summary.title,

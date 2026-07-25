@@ -18,9 +18,9 @@ describe('portable validation invocation', () => {
         command: 'python -m pytest',
         workingDirectory: 'services/api',
       }),
-    ).toBe('codemind-cwd:services/api::python -m pytest')
+    ).toBe('symbolwright-cwd:services/api::python -m pytest')
     expect(
-      parsePortableValidationInvocation('codemind-cwd:services/api::python -m pytest'),
+      parsePortableValidationInvocation('symbolwright-cwd:services/api::python -m pytest'),
     ).toEqual({
       command: 'python -m pytest',
       workingDirectory: 'services/api',
@@ -28,14 +28,14 @@ describe('portable validation invocation', () => {
   })
 
   it('resolves nested roots inside the repository and blocks traversal', () => {
-    const root = path.resolve('/tmp/codemind-portable-root')
+    const root = path.resolve('/tmp/symbolwright-portable-root')
     expect(resolvePortableValidationRoot(root, 'services/api')).toBe(
       path.join(root, 'services/api'),
     )
     expect(() => resolvePortableValidationRoot(root, '../outside')).toThrow(
       'Unsafe portable validation working directory',
     )
-    expect(() => parsePortableValidationInvocation('codemind-cwd:services/api')).toThrow(
+    expect(() => parsePortableValidationInvocation('symbolwright-cwd:services/api')).toThrow(
       'malformed',
     )
   })

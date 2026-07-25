@@ -5,8 +5,8 @@ import {
   mapGithubContextToAjnaReviewRequest,
 } from './ajna-github-runtime-bridge.js'
 import type {
-  CodemindGithubReadAdapterResult,
-  CodemindGithubReadClient,
+  SymbolWrightGithubReadAdapterResult,
+  SymbolWrightGithubReadClient,
   GithubPullRequestApiPayload,
   GithubPullRequestFileApiPayload,
 } from '../../github/github-read-adapter.types.js'
@@ -18,8 +18,8 @@ const prPayload: GithubPullRequestApiPayload = {
     sha: 'base-sha',
     repo: {
       default_branch: 'main',
-      full_name: 'JLPARTIN/JLPARTIN-CodeMind',
-      name: 'JLPARTIN-CodeMind',
+      full_name: 'JLPARTIN/JLPARTIN-SymbolWright',
+      name: 'JLPARTIN-SymbolWright',
       owner: {
         login: 'JLPARTIN',
       },
@@ -40,14 +40,14 @@ const filesPayload: readonly GithubPullRequestFileApiPayload[] = [
     patch: '@@ bridge patch',
   },
   {
-    filename: 'docs/codemind/ajna/CODEMIND_AJNA_BUILD_PLAN.md',
+    filename: 'docs/symbolwright/ajna/SYMBOLWRIGHT_AJNA_BUILD_PLAN.md',
     status: 'modified',
     additions: 4,
     deletions: 1,
   },
 ]
 
-function makeClient(): CodemindGithubReadClient {
+function makeClient(): SymbolWrightGithubReadClient {
   return {
     async getJson<T>(path: string): Promise<T> {
       if (path.endsWith('/pulls/10')) {
@@ -63,17 +63,17 @@ function makeClient(): CodemindGithubReadClient {
   }
 }
 
-function makeGithubContext(): CodemindGithubReadAdapterResult {
+function makeGithubContext(): SymbolWrightGithubReadAdapterResult {
   return {
     target: {
-      repositoryFullName: 'JLPARTIN/JLPARTIN-CodeMind',
+      repositoryFullName: 'JLPARTIN/JLPARTIN-SymbolWright',
       pullRequestNumber: 10,
     },
     context: {
       repository: {
         owner: 'JLPARTIN',
-        name: 'JLPARTIN-CodeMind',
-        fullName: 'JLPARTIN/JLPARTIN-CodeMind',
+        name: 'JLPARTIN-SymbolWright',
+        fullName: 'JLPARTIN/JLPARTIN-SymbolWright',
         defaultBranch: 'main',
       },
       baseRef: {
@@ -115,7 +115,7 @@ describe('Ajna GitHub runtime bridge', () => {
     })
 
     expect(ajnaRequest.requestId).toBe('ajna-github-10')
-    expect(ajnaRequest.subject.repository).toBe('JLPARTIN/JLPARTIN-CodeMind')
+    expect(ajnaRequest.subject.repository).toBe('JLPARTIN/JLPARTIN-SymbolWright')
     expect(ajnaRequest.subject.pullRequestNumber).toBe(10)
     expect(ajnaRequest.subject.baseRef).toBe('main')
     expect(ajnaRequest.subject.headRef).toBe('pr10-ajna-github-runtime-bridge')
@@ -129,7 +129,7 @@ describe('Ajna GitHub runtime bridge', () => {
       requestId: 'ajna-github-10',
       sessionId: 'session-10',
       target: {
-        repositoryFullName: 'JLPARTIN/JLPARTIN-CodeMind',
+        repositoryFullName: 'JLPARTIN/JLPARTIN-SymbolWright',
         pullRequestNumber: 10,
       },
       operatorApproved: true,
@@ -139,7 +139,7 @@ describe('Ajna GitHub runtime bridge', () => {
 
     expect(result.runtimeDecision.allowedToRun).toBe(true)
     expect(result.githubContext.context.readOnly).toBe(true)
-    expect(result.ajnaReviewRequest.subject.repository).toBe('JLPARTIN/JLPARTIN-CodeMind')
+    expect(result.ajnaReviewRequest.subject.repository).toBe('JLPARTIN/JLPARTIN-SymbolWright')
     expect(result.ajnaReviewRequest.changedFiles).toHaveLength(2)
   })
 
@@ -149,13 +149,13 @@ describe('Ajna GitHub runtime bridge', () => {
         requestId: 'ajna-github-10',
         sessionId: 'session-10',
         target: {
-          repositoryFullName: 'JLPARTIN/JLPARTIN-CodeMind',
+          repositoryFullName: 'JLPARTIN/JLPARTIN-SymbolWright',
           pullRequestNumber: 10,
         },
         operatorApproved: false,
         requireCiEvidence: false,
         requireTestEvidence: false,
       }),
-    ).rejects.toThrow('GitHub PR read adapter did not pass the CodeMind runtime boundary.')
+    ).rejects.toThrow('GitHub PR read adapter did not pass the SymbolWright runtime boundary.')
   })
 })

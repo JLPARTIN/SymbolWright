@@ -1,6 +1,7 @@
 import { startUnifiedServer } from './app/server/unified-server.js'
 import type { StartedUnifiedServer, UnifiedServerOptions } from './app/server/route-types.js'
 import type { ProviderGatewayEnv } from './providers/provider-config.js'
+import { readEnvWithLegacyFallback } from './config/env-compat.js'
 
 const DEFAULT_HOST = '127.0.0.1'
 const DEFAULT_PORT = 8787
@@ -64,8 +65,13 @@ export function parseServeArgs(args: readonly string[]): ServeCommandArgs {
   }
 }
 
-function readEnv(env: ProviderGatewayEnv, key: string): string | undefined {
-  const value = env[key]
+function readCompatEnv(
+  env: ProviderGatewayEnv,
+  canonicalKey: string,
+  legacyKey: string,
+  sensitive = false,
+): string | undefined {
+  const value = readEnvWithLegacyFallback(canonicalKey, legacyKey, { env, sensitive })
   return value === undefined || value.trim().length === 0 ? undefined : value.trim()
 }
 
@@ -73,13 +79,15 @@ export function resolveChatServerOptions(
   args: ServeCommandArgs,
   env: ProviderGatewayEnv,
 ): UnifiedServerOptions {
-  const apiKey = readEnv(env, 'CODEMIND_API_KEY') ?? ''
-  const host = args.host ?? readEnv(env, 'CODEMIND_CHAT_HOST') ?? DEFAULT_HOST
-  const portFromEnv = readEnv(env, 'CODEMIND_CHAT_PORT')
+  const apiKey = readCompatEnv(env, 'SYMBOLWRIGHT_API_KEY', 'CODEMIND_API_KEY', true) ?? ''
+  const host =
+    args.host ?? readCompatEnv(env, 'SYMBOLWRIGHT_CHAT_HOST', 'CODEMIND_CHAT_HOST') ?? DEFAULT_HOST
+  const portFromEnv = readCompatEnv(env, 'SYMBOLWRIGHT_CHAT_PORT', 'CODEMIND_CHAT_PORT')
   const port = args.port ?? (portFromEnv === undefined ? DEFAULT_PORT : parsePort(portFromEnv))
-  const corsOrigin = args.corsOrigin ?? readEnv(env, 'CODEMIND_CORS_ORIGIN')
-  const tlsCertFile = readEnv(env, 'CODEMIND_TLS_CERT_FILE')
-  const tlsKeyFile = readEnv(env, 'CODEMIND_TLS_KEY_FILE')
+  const corsOrigin =
+    args.corsOrigin ?? readCompatEnv(env, 'SYMBOLWRIGHT_CORS_ORIGIN', 'CODEMIND_CORS_ORIGIN')
+  const tlsCertFile = readCompatEnv(env, 'SYMBOLWRIGHT_TLS_CERT_FILE', 'CODEMIND_TLS_CERT_FILE')
+  const tlsKeyFile = readCompatEnv(env, 'SYMBOLWRIGHT_TLS_KEY_FILE', 'CODEMIND_TLS_KEY_FILE')
 
   return {
     apiKey,
@@ -93,7 +101,7 @@ export function resolveChatServerOptions(
 
 export function renderServeBanner(server: StartedUnifiedServer): string {
   const lines = [
-    'CodeMind',
+    'SymbolWright',
     '',
     `Listening: ${server.url}`,
     '',

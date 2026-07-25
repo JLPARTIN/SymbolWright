@@ -1,4 +1,4 @@
-# CodeMind Runtime Report Safety Boundary
+# SymbolWright Runtime Report Safety Boundary
 
 All runtime report surfaces maintain a strict read-only posture.
 

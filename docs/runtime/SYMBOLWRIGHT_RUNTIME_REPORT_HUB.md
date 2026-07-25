@@ -1,4 +1,4 @@
-# CodeMind Runtime Report Hub
+# SymbolWright Runtime Report Hub
 
 The runtime report hub is the central integration surface for all report layers.
 

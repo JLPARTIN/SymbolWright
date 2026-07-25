@@ -1,4 +1,4 @@
-# CodeMind Runtime Status Dashboard
+# SymbolWright Runtime Status Dashboard
 
 **Phase:** S
 **Status:** COMPLETE

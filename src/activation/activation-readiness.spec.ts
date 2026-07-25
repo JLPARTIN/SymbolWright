@@ -77,7 +77,7 @@ describe('renderActivationReadiness', () => {
     const checks = runActivationReadinessChecks(WORKSPACE)
     const output = renderActivationReadiness(checks)
 
-    expect(output).toContain('CodeMind Activation Readiness')
+    expect(output).toContain('SymbolWright Activation Readiness')
     expect(output).toContain('[PASS]')
     expect(output).toContain('Summary:')
   })

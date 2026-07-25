@@ -1,6 +1,6 @@
-# CodeMind Web Access Runtime (`web_fetch` / `web_search`)
+# SymbolWright Web Access Runtime (`web_fetch` / `web_search`)
 
-Real web access for CodeMind as a coding agent — reachable immediately after
+Real web access for SymbolWright as a coding agent — reachable immediately after
 install, no allowlist setup, no approval prompts. Governance here means
 *controllable*, not *disabled by default*: normal public web access works out
 of the box; the surfaces that are actually risky (private/internal network
@@ -17,13 +17,13 @@ Off switch: available
 ```
 
 `web_fetch` and `web_search` are gated the same way as every other read-only
-info tool in CodeMind (see `docs/governance/CODEMIND_PERMISSION_MODEL.md`):
+info tool in SymbolWright (see `docs/governance/SYMBOLWRIGHT_PERMISSION_MODEL.md`):
 `RuntimePolicySnapshot.allowReadOnlyNetwork` is `true` in every runtime mode.
 On top of that coarse gate, this bundle adds a **web-specific** control layer
 (`web.mode`, domain lists, private-network blocking) — the finer knobs live
 here, not in the runtime mode system.
 
-## Config: `.codemind/config.json`
+## Config: `.symbolwright/config.json`
 
 ```json
 {
@@ -60,10 +60,10 @@ here, not in the runtime mode system.
 ```
 
 Every field is optional and defaults to the values above — a repo with no
-`.codemind/config.json` at all gets full `developer`-mode web access with
+`.symbolwright/config.json` at all gets full `developer`-mode web access with
 zero setup. Parser: `src/web/web-config.ts` (`loadWebConfig`, `mergeWebConfig`).
 
-`CODEMIND_WEB_MODE` (`developer`/`ask`/`strict`/`off`) overrides `web.mode`
+`SYMBOLWRIGHT_WEB_MODE` (`developer`/`ask`/`strict`/`off`) overrides `web.mode`
 from the environment, taking precedence over the config file.
 
 ## Modes

@@ -11,11 +11,11 @@ import {
 describe('validateAjnaGithubReadOnlyCollectorRequest', () => {
   it('accepts a repository and pull request number', () => {
     const request = validateAjnaGithubReadOnlyCollectorRequest({
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       pullRequestNumber: 62,
     })
 
-    expect(request.repository).toBe('JLPARTIN/CodeMind')
+    expect(request.repository).toBe('JLPARTIN/SymbolWright')
     expect(request.pullRequestNumber).toBe(62)
   })
 
@@ -29,7 +29,7 @@ describe('validateAjnaGithubReadOnlyCollectorRequest', () => {
 
     expect(() =>
       validateAjnaGithubReadOnlyCollectorRequest({
-        repository: 'JLPARTIN/CodeMind',
+        repository: 'JLPARTIN/SymbolWright',
         pullRequestNumber: 0,
       }),
     ).toThrow('pullRequestNumber must be a positive integer')
@@ -57,7 +57,7 @@ describe('collectAjnaGithubReadOnlySnapshot', () => {
         ],
         checkRuns: [
           {
-            name: 'Validate CodeMind',
+            name: 'Validate SymbolWright',
             status: 'completed',
             conclusion: 'success',
           },
@@ -66,11 +66,11 @@ describe('collectAjnaGithubReadOnlySnapshot', () => {
     }
 
     const snapshot = await collectAjnaGithubReadOnlySnapshot(port, {
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       pullRequestNumber: 62,
     })
 
-    expect(snapshot.pullRequest.repository).toBe('JLPARTIN/CodeMind')
+    expect(snapshot.pullRequest.repository).toBe('JLPARTIN/SymbolWright')
     expect(snapshot.changedFiles.map((file) => file.path)).toEqual([
       'src/cli-ajna-review-pr-collector-fixture.ts',
     ])
@@ -95,13 +95,13 @@ describe('collectAjnaGithubReadOnlySnapshot', () => {
     }
 
     const snapshot = await collectAjnaGithubReadOnlySnapshot(port, {
-      repository: 'JLPARTIN/CodeMind',
+      repository: 'JLPARTIN/SymbolWright',
       pullRequestNumber: 62,
     })
     const payload = buildAjnaGithubPullRequestPayloadFromCollectorSnapshot(snapshot)
     const input = normalizeGithubPullRequestForAjnaReview(payload)
 
-    expect(input.request.subject.repository).toBe('JLPARTIN/CodeMind')
+    expect(input.request.subject.repository).toBe('JLPARTIN/SymbolWright')
     expect(input.request.changedFiles).toEqual(['docs/ajna-review-pr-collector-fixture.md'])
     expect(input.findings.map((finding) => finding.id)).toEqual(['github-diff-evidence'])
   })

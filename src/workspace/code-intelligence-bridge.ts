@@ -128,7 +128,7 @@ export function buildWorkspaceIntelligencePrompt(
   plan: CodeIntelligenceTaskPlan,
 ): string {
   const sections = [
-    '# CodeMind Workspace Code Intelligence Task',
+    '# SymbolWright Workspace Code Intelligence Task',
     '',
     `Task kind: ${plan.kind}`,
     `Source language: ${plan.sourceLanguage.label} (${plan.sourceLanguage.id})`,
@@ -186,7 +186,7 @@ export function buildWorkspaceIntelligencePrompt(
     '## Selected code',
     fenced(request.code, plan.sourceLanguage.editorLanguageId),
     '',
-    'Do not claim execution success or translation equivalence unless a real CodeMind runner or test harness has produced evidence in this conversation.',
+    'Do not claim execution success or translation equivalence unless a real SymbolWright runner or test harness has produced evidence in this conversation.',
   )
 
   return sections.join('\n')

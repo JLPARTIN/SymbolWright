@@ -121,7 +121,7 @@ export function renderTuiWorkspace(
   const mission = normalizeMission(options.mission)
   const commandHistory = options.commandHistory ?? []
   const lines = [
-    'CodeMind Workspace',
+    'SymbolWright Workspace',
     divider,
     renderTuiStatusBar(state),
     divider,

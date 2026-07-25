@@ -1,24 +1,26 @@
-import { CODEMIND_SUPPORTED_PROVIDER_IDS } from '../providers/provider-adapter-contract.js'
-import type { CodemindProviderId } from '../providers/provider-adapter-contract.js'
+import { SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS } from '../providers/provider-adapter-contract.js'
+import type { SymbolWrightProviderId } from '../providers/provider-adapter-contract.js'
 import type { ProviderContentBlock, ProviderMessage } from '../provider/provider.types.js'
-import { CODEMIND_RUNTIME_MODES } from '../runtime/policy/runtime-policy.js'
-import type { CodemindRuntimeMode } from '../runtime/types.js'
-import { ChatRequestValidationError } from './codemind-chat-request.js'
+import { SYMBOLWRIGHT_RUNTIME_MODES } from '../runtime/policy/runtime-policy.js'
+import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
+import { ChatRequestValidationError } from './symbolwright-chat-request.js'
 
 const MAX_PRIOR_MESSAGES = 500
 const MAX_MESSAGE_TEXT_CHARS = 64_000
 const DEFAULT_MAX_ITERATIONS = 25
 const MAX_ALLOWED_ITERATIONS = 100
 
-function isSupportedProviderId(value: unknown): value is CodemindProviderId {
+function isSupportedProviderId(value: unknown): value is SymbolWrightProviderId {
   return (
     typeof value === 'string' &&
-    (CODEMIND_SUPPORTED_PROVIDER_IDS as readonly string[]).includes(value)
+    (SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS as readonly string[]).includes(value)
   )
 }
 
-function isRuntimeMode(value: unknown): value is CodemindRuntimeMode {
-  return typeof value === 'string' && (CODEMIND_RUNTIME_MODES as readonly string[]).includes(value)
+function isRuntimeMode(value: unknown): value is SymbolWrightRuntimeMode {
+  return (
+    typeof value === 'string' && (SYMBOLWRIGHT_RUNTIME_MODES as readonly string[]).includes(value)
+  )
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -115,10 +117,10 @@ function parsePriorMessages(raw: unknown): readonly ProviderMessage[] | undefine
 }
 
 export interface ParsedAgentRequest {
-  readonly providerId: CodemindProviderId
+  readonly providerId: SymbolWrightProviderId
   readonly model?: string
   readonly systemPrompt?: string
-  readonly mode: CodemindRuntimeMode
+  readonly mode: SymbolWrightRuntimeMode
   readonly missionId?: string
   readonly message: string
   readonly priorMessages?: readonly ProviderMessage[]
@@ -134,7 +136,7 @@ export function parseAgentRequestBody(raw: unknown): ParsedAgentRequest {
   const providerId = body['providerId'] ?? body['provider']
   if (!isSupportedProviderId(providerId)) {
     throw new ChatRequestValidationError(
-      `providerId must be one of: ${CODEMIND_SUPPORTED_PROVIDER_IDS.join(', ')}`,
+      `providerId must be one of: ${SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS.join(', ')}`,
     )
   }
 
@@ -151,7 +153,7 @@ export function parseAgentRequestBody(raw: unknown): ParsedAgentRequest {
   const modeRaw = body['mode']
   if (modeRaw !== undefined && !isRuntimeMode(modeRaw)) {
     throw new ChatRequestValidationError(
-      `mode must be one of: ${CODEMIND_RUNTIME_MODES.join(', ')}`,
+      `mode must be one of: ${SYMBOLWRIGHT_RUNTIME_MODES.join(', ')}`,
     )
   }
 

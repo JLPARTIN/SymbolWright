@@ -38,7 +38,7 @@ describe('DefaultGitHubHttpClient', () => {
       headers: {
         Accept: 'application/vnd.github.v3+json',
         Authorization: 'Bearer ghp_testtoken123',
-        'User-Agent': 'CodeMind/0.1.0',
+        'User-Agent': 'SymbolWright/0.1.0',
       },
     })
   })
@@ -105,7 +105,7 @@ describe('DefaultGitHubHttpClient', () => {
       headers: {
         Accept: 'application/vnd.github.v3+json',
         Authorization: 'Bearer ghp_posttoken',
-        'User-Agent': 'CodeMind/0.1.0',
+        'User-Agent': 'SymbolWright/0.1.0',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ title: 'My PR', head: 'feature', base: 'main' }),

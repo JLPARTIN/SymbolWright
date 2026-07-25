@@ -4,7 +4,7 @@ import { join } from 'node:path'
 /** Default timeout applied to any MCP request that doesn't set its own. */
 export const DEFAULT_MCP_TIMEOUT_MS = 15_000
 
-/** A single stdio MCP server entry resolved from `.codemind/mcp.json`. */
+/** A single stdio MCP server entry resolved from `.symbolwright/mcp.json`. */
 export interface McpServerConfig {
   readonly name: string
   readonly command: string
@@ -21,9 +21,9 @@ export interface McpConfig {
 
 export const EMPTY_MCP_CONFIG: McpConfig = { servers: {} }
 
-/** Resolves the default `.codemind/mcp.json` path for a workspace root. */
+/** Resolves the default `.symbolwright/mcp.json` path for a workspace root. */
 export function resolveMcpConfigPath(workspaceRoot: string): string {
-  return join(workspaceRoot, '.codemind', 'mcp.json')
+  return join(workspaceRoot, '.symbolwright', 'mcp.json')
 }
 
 function assertRecord(value: unknown, label: string): Record<string, unknown> {
@@ -89,7 +89,7 @@ function parseServerEntry(name: string, raw: unknown): McpServerConfig {
   }
 }
 
-/** Parses and validates raw `.codemind/mcp.json` content. Throws on malformed config. */
+/** Parses and validates raw `.symbolwright/mcp.json` content. Throws on malformed config. */
 export function parseMcpConfig(raw: string): McpConfig {
   let parsed: unknown
   try {
@@ -115,7 +115,7 @@ export function parseMcpConfig(raw: string): McpConfig {
 }
 
 /**
- * Loads `.codemind/mcp.json` from a workspace root (or an explicit path override).
+ * Loads `.symbolwright/mcp.json` from a workspace root (or an explicit path override).
  * Returns an empty config — not an error — when no file exists, so MCP stays
  * fully optional for repos that haven't opted in.
  */

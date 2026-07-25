@@ -1,4 +1,4 @@
-# CodeMind Runtime Report Surface Registry
+# SymbolWright Runtime Report Surface Registry
 
 The surface registry provides static discovery metadata for all report surfaces.
 

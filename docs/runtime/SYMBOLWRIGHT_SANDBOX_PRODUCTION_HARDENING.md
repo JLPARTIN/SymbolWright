@@ -1,6 +1,6 @@
-# CodeMind Sandbox Production Hardening
+# SymbolWright Sandbox Production Hardening
 
-CodeMind routes risky local execution through the Docker sandbox runner. The sandbox is designed to stop when Docker is unavailable instead of falling back to direct host execution.
+SymbolWright routes risky local execution through the Docker sandbox runner. The sandbox is designed to stop when Docker is unavailable instead of falling back to direct host execution.
 
 ## Runtime boundary
 
@@ -29,17 +29,17 @@ The Debian-based default is intentional: preflight validation runs npm test suit
 Optional environment variables:
 
 ```bash
-CODEMIND_SANDBOX_DOCKER_BINARY=docker
-CODEMIND_SANDBOX_IMAGE=node:22-bookworm
-CODEMIND_SANDBOX_MEMORY=2048m
-CODEMIND_SANDBOX_CPUS=1
-CODEMIND_SANDBOX_NETWORK=none
-CODEMIND_SANDBOX_USER=node
-CODEMIND_SANDBOX_TIMEOUT_MS=300000
-CODEMIND_SANDBOX_MAX_OUTPUT_BYTES=1048576
+SYMBOLWRIGHT_SANDBOX_DOCKER_BINARY=docker
+SYMBOLWRIGHT_SANDBOX_IMAGE=node:22-bookworm
+SYMBOLWRIGHT_SANDBOX_MEMORY=2048m
+SYMBOLWRIGHT_SANDBOX_CPUS=1
+SYMBOLWRIGHT_SANDBOX_NETWORK=none
+SYMBOLWRIGHT_SANDBOX_USER=node
+SYMBOLWRIGHT_SANDBOX_TIMEOUT_MS=300000
+SYMBOLWRIGHT_SANDBOX_MAX_OUTPUT_BYTES=1048576
 ```
 
-`CODEMIND_SANDBOX_NETWORK` is intentionally constrained to `none`. Do not add network-enabled sandbox execution unless there is a separate reviewed design and tests.
+`SYMBOLWRIGHT_SANDBOX_NETWORK` is intentionally constrained to `none`. Do not add network-enabled sandbox execution unless there is a separate reviewed design and tests.
 
 ## Doctor diagnostics
 
@@ -87,12 +87,12 @@ docker run --rm --network none node:22-bookworm node --version
 Common failures:
 
 ```text
-Docker command missing       install/start Docker or set CODEMIND_SANDBOX_DOCKER_BINARY
+Docker command missing       install/start Docker or set SYMBOLWRIGHT_SANDBOX_DOCKER_BINARY
 Docker daemon unavailable    start Docker or restart Codespaces
 Image missing                docker pull node:22-bookworm
 Permission denied            verify workspace mount permissions and user setting
-Output limit exceeded        raise CODEMIND_SANDBOX_MAX_OUTPUT_BYTES for trusted validation runs
-Timeout exceeded             raise CODEMIND_SANDBOX_TIMEOUT_MS for trusted validation runs
+Output limit exceeded        raise SYMBOLWRIGHT_SANDBOX_MAX_OUTPUT_BYTES for trusted validation runs
+Timeout exceeded             raise SYMBOLWRIGHT_SANDBOX_TIMEOUT_MS for trusted validation runs
 ```
 
 ## Regression rule

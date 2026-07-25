@@ -1,8 +1,8 @@
-import type { CodemindToolName, RuntimeToolDefinition } from '../types.js'
+import type { SymbolWrightToolName, RuntimeToolDefinition } from '../types.js'
 
 /** Map-based registry of runtime tools with fail-fast getOrThrow. */
 export class RuntimeRegistry {
-  private readonly entries = new Map<CodemindToolName, RuntimeToolDefinition>()
+  private readonly entries = new Map<SymbolWrightToolName, RuntimeToolDefinition>()
 
   add(entry: RuntimeToolDefinition): void {
     if (this.entries.has(entry.name)) {
@@ -12,11 +12,11 @@ export class RuntimeRegistry {
     this.entries.set(entry.name, entry)
   }
 
-  get(name: CodemindToolName): RuntimeToolDefinition | undefined {
+  get(name: SymbolWrightToolName): RuntimeToolDefinition | undefined {
     return this.entries.get(name)
   }
 
-  getOrThrow(name: CodemindToolName): RuntimeToolDefinition {
+  getOrThrow(name: SymbolWrightToolName): RuntimeToolDefinition {
     const entry = this.entries.get(name)
 
     if (entry === undefined) {
@@ -26,7 +26,7 @@ export class RuntimeRegistry {
     return entry
   }
 
-  has(name: CodemindToolName): boolean {
+  has(name: SymbolWrightToolName): boolean {
     return this.entries.has(name)
   }
 

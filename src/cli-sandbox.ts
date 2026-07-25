@@ -144,7 +144,7 @@ function renderSandboxHistoryCommand(options: SandboxCliOptions): string {
   const workspaceRoot = path.resolve(options.workspaceRoot ?? process.cwd())
   const history = new SandboxHistoryStore({ workspaceRoot }).list(50)
   return [
-    'CodeMind Sandbox History',
+    'SymbolWright Sandbox History',
     '',
     ...history.executions.map(
       (execution) =>
@@ -158,12 +158,12 @@ function renderSandboxHistoryCommand(options: SandboxCliOptions): string {
 function renderSandboxCleanupCommand(options: SandboxCliOptions): string {
   const workspaceRoot = path.resolve(options.workspaceRoot ?? process.cwd())
   new SandboxHistoryStore({ workspaceRoot }).cleanup()
-  return 'CodeMind Sandbox Cleanup\n\nRemoved local .codemind/sandbox execution history and artifacts.'
+  return 'SymbolWright Sandbox Cleanup\n\nRemoved local .symbolwright/sandbox execution history and artifacts.'
 }
 
 function renderSandboxExecutionResult(result: SandboxExecutionResult): string {
   return [
-    'CodeMind Sandbox Execution',
+    'SymbolWright Sandbox Execution',
     '',
     `Execution ID: ${result.executionId}`,
     `Status: ${result.status}`,

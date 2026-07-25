@@ -1,4 +1,4 @@
-# CodeMind Agent Kernel Mission Packet Generator (AGENT-KERNEL-08)
+# SymbolWright Agent Kernel Mission Packet Generator (AGENT-KERNEL-08)
 
 This document describes the mission packet generator, which assembles a governed mission packet from the validated agent kernel pipeline outputs.
 

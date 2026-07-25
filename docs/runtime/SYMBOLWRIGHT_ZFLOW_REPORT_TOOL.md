@@ -1,4 +1,4 @@
-# CodeMind Zflow Report Tool
+# SymbolWright Zflow Report Tool
 
 PR Bundle AI-AL adds a runtime tool surface for Zflow reports.
 

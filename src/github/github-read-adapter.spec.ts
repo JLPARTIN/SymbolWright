@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { readGithubPullRequestContext } from './github-read-adapter.js'
 import type {
-  CodemindGithubReadClient,
+  SymbolWrightGithubReadClient,
   GithubPullRequestApiPayload,
   GithubPullRequestFileApiPayload,
 } from './github-read-adapter.types.js'
@@ -14,8 +14,8 @@ const prPayload: GithubPullRequestApiPayload = {
     sha: 'base-sha',
     repo: {
       default_branch: 'main',
-      full_name: 'JLPARTIN/JLPARTIN-CodeMind',
-      name: 'JLPARTIN-CodeMind',
+      full_name: 'JLPARTIN/JLPARTIN-SymbolWright',
+      name: 'JLPARTIN-SymbolWright',
       owner: {
         login: 'JLPARTIN',
       },
@@ -43,7 +43,7 @@ const filesPayload: readonly GithubPullRequestFileApiPayload[] = [
   },
 ]
 
-function makeClient(): CodemindGithubReadClient {
+function makeClient(): SymbolWrightGithubReadClient {
   return {
     async getJson<T>(path: string): Promise<T> {
       if (path.endsWith('/pulls/9')) {
@@ -62,13 +62,13 @@ function makeClient(): CodemindGithubReadClient {
 describe('GitHub read adapter v0', () => {
   it('maps pull request metadata and files into read-only repo context', async () => {
     const result = await readGithubPullRequestContext(makeClient(), {
-      repositoryFullName: 'JLPARTIN/JLPARTIN-CodeMind',
+      repositoryFullName: 'JLPARTIN/JLPARTIN-SymbolWright',
       pullRequestNumber: 9,
     })
 
     expect(result.readOnly).toBe(true)
     expect(result.context.readOnly).toBe(true)
-    expect(result.context.repository.fullName).toBe('JLPARTIN/JLPARTIN-CodeMind')
+    expect(result.context.repository.fullName).toBe('JLPARTIN/JLPARTIN-SymbolWright')
     expect(result.context.baseRef).toEqual({ name: 'main', sha: 'base-sha' })
     expect(result.context.headRef).toEqual({ name: 'phase9-reader', sha: 'head-sha' })
     expect(result.context.changedFiles).toHaveLength(2)
@@ -76,7 +76,7 @@ describe('GitHub read adapter v0', () => {
 
   it('marks workflow files as protected high-impact changes', async () => {
     const result = await readGithubPullRequestContext(makeClient(), {
-      repositoryFullName: 'JLPARTIN/JLPARTIN-CodeMind',
+      repositoryFullName: 'JLPARTIN/JLPARTIN-SymbolWright',
       pullRequestNumber: 9,
     })
 

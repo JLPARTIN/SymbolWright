@@ -1,4 +1,4 @@
-# CodeMind Provider Gateway
+# SymbolWright Provider Gateway
 
 **Status:** Provider Gateway Foundation  
 **Scope:** Multi-provider AI request configuration, routing, request mapping, response normalization, and secret-safe reporting
@@ -7,7 +7,7 @@
 
 ## What exists now
 
-CodeMind now has a real provider gateway foundation under `src/providers/`.
+SymbolWright now has a real provider gateway foundation under `src/providers/`.
 
 It supports these provider IDs through one internal gateway interface:
 
@@ -49,11 +49,11 @@ GOOGLE_API_KEY=
 GROQ_API_KEY=
 OPENROUTER_API_KEY=
 GITHUB_TOKEN=
-CODEMIND_PROVIDER=
-CODEMIND_MODEL=
-CODEMIND_PROVIDER_FALLBACKS=
-CODEMIND_OPENAI_COMPATIBLE_BASE_URL=
-CODEMIND_OPENAI_COMPATIBLE_API_KEY=
+SYMBOLWRIGHT_PROVIDER=
+SYMBOLWRIGHT_MODEL=
+SYMBOLWRIGHT_PROVIDER_FALLBACKS=
+SYMBOLWRIGHT_OPENAI_COMPATIBLE_BASE_URL=
+SYMBOLWRIGHT_OPENAI_COMPATIBLE_API_KEY=
 ```
 
 Secrets must stay server-side. Redacted config output may report whether a key is configured or missing, but it must not print key material.
@@ -66,8 +66,8 @@ The gateway resolves providers in this order:
 
 ```txt
 request.providerId
-CODEMIND_PROVIDER
-CODEMIND_PROVIDER_FALLBACKS
+SYMBOLWRIGHT_PROVIDER
+SYMBOLWRIGHT_PROVIDER_FALLBACKS
 built-in safe fallback order
 ```
 
@@ -88,7 +88,7 @@ ollama
 custom
 ```
 
-They map internal CodeMind messages to:
+They map internal SymbolWright messages to:
 
 ```txt
 POST /chat/completions
@@ -97,8 +97,8 @@ POST /chat/completions
 The custom provider uses:
 
 ```bash
-CODEMIND_OPENAI_COMPATIBLE_BASE_URL=
-CODEMIND_OPENAI_COMPATIBLE_API_KEY=
+SYMBOLWRIGHT_OPENAI_COMPATIBLE_BASE_URL=
+SYMBOLWRIGHT_OPENAI_COMPATIBLE_API_KEY=
 ```
 
 This makes future providers easy to add when they expose an OpenAI-compatible API.
@@ -107,7 +107,7 @@ This makes future providers easy to add when they expose an OpenAI-compatible AP
 
 ## Anthropic provider
 
-The Anthropic adapter maps CodeMind messages to:
+The Anthropic adapter maps SymbolWright messages to:
 
 ```txt
 POST /v1/messages
@@ -119,7 +119,7 @@ System messages are folded into Anthropic's `system` field. User and assistant m
 
 ## Google Gemini provider
 
-The Google Gemini adapter maps CodeMind messages to:
+The Google Gemini adapter maps SymbolWright messages to:
 
 ```txt
 POST /v1beta/models/{model}:generateContent

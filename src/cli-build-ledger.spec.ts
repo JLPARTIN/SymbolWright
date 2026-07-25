@@ -11,7 +11,7 @@ describe('renderBuildLedgerCommand', () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'bl-test-'))
     const output = renderBuildLedgerCommand(tempDir)
 
-    expect(output).toContain('CodeMind Build Ledger')
+    expect(output).toContain('SymbolWright Build Ledger')
     expect(output).toContain('Total phases: 20')
     expect(output).toContain('Completed: 20')
     expect(output).toContain('Phase A:')
@@ -31,7 +31,10 @@ describe('renderBuildLedgerCommand', () => {
     writeFileSync(join(tempDir, 'README.md'), 'Runtime phases:     20 complete')
     mkdirSync(join(tempDir, 'docs', 'runtime'), { recursive: true })
     const docsContent = RUNTIME_BUILD_PHASES.map((p) => `Phase ${p.id}: COMPLETE`).join('\n')
-    writeFileSync(join(tempDir, 'docs', 'runtime', 'CODEMIND_RUNTIME_BUILD_STATE.md'), docsContent)
+    writeFileSync(
+      join(tempDir, 'docs', 'runtime', 'SYMBOLWRIGHT_RUNTIME_BUILD_STATE.md'),
+      docsContent,
+    )
 
     const output = renderBuildLedgerCommand(tempDir)
 
@@ -43,7 +46,10 @@ describe('renderBuildLedgerCommand', () => {
     writeFileSync(join(tempDir, 'README.md'), 'Runtime phases:     5 complete')
     mkdirSync(join(tempDir, 'docs', 'runtime'), { recursive: true })
     const docsContent = RUNTIME_BUILD_PHASES.map((p) => `Phase ${p.id}: COMPLETE`).join('\n')
-    writeFileSync(join(tempDir, 'docs', 'runtime', 'CODEMIND_RUNTIME_BUILD_STATE.md'), docsContent)
+    writeFileSync(
+      join(tempDir, 'docs', 'runtime', 'SYMBOLWRIGHT_RUNTIME_BUILD_STATE.md'),
+      docsContent,
+    )
 
     const output = renderBuildLedgerCommand(tempDir)
 
@@ -54,7 +60,7 @@ describe('renderBuildLedgerCommand', () => {
   it('handles missing workspace gracefully', () => {
     const output = renderBuildLedgerCommand('/nonexistent/path')
 
-    expect(output).toContain('CodeMind Build Ledger')
+    expect(output).toContain('SymbolWright Build Ledger')
     expect(output).toContain('Build Ledger Consistency Check')
   })
 })

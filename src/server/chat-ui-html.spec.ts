@@ -6,7 +6,7 @@ describe('renderChatUiHtml', () => {
   it('renders a page that talks to the real chat API endpoints', () => {
     const html = renderChatUiHtml()
 
-    expect(html).toContain('CodeMind Chat')
+    expect(html).toContain('SymbolWright Chat')
     expect(html).toContain('/api/providers')
     expect(html).toContain('/api/providers/register')
     expect(html).toContain('/api/providers/test')
@@ -34,7 +34,7 @@ describe('renderChatUiHtml', () => {
     expect(html).not.toMatch(/bubble\.innerHTML/)
   })
 
-  it('never bakes a provider or CodeMind key into the static page', () => {
+  it('never bakes a provider or SymbolWright key into the static page', () => {
     const html = renderChatUiHtml()
 
     expect(html).not.toMatch(/sk-[a-zA-Z0-9]/)
@@ -68,19 +68,19 @@ describe('renderChatUiHtml', () => {
     expect(html).toContain('Invalid config:')
   })
 
-  it('submits the CodeMind access key and the provider API key on Enter', () => {
+  it('submits the SymbolWright access key and the provider API key on Enter', () => {
     const html = renderChatUiHtml()
 
-    const codemindKeyBlock = html.slice(
-      html.indexOf("el('codemind-key').addEventListener('keydown'"),
+    const symbolWrightKeyBlock = html.slice(
+      html.indexOf("el('symbolwright-key').addEventListener('keydown'"),
     )
-    expect(codemindKeyBlock.slice(0, 200)).toContain('connect()')
+    expect(symbolWrightKeyBlock.slice(0, 200)).toContain('connect()')
 
     const apiKeyBlock = html.slice(html.indexOf("el('api-key-field').addEventListener('keydown'"))
     expect(apiKeyBlock.slice(0, 200)).toContain('saveProvider()')
   })
 
-  it('warns that the CodeMind access key is stored in browser local storage', () => {
+  it('warns that the SymbolWright access key is stored in browser local storage', () => {
     const html = renderChatUiHtml()
 
     expect(html).toContain('local storage')

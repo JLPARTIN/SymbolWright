@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { startChatServer, type StartedChatServer } from '../../server/codemind-chat-server.js'
+import { startChatServer, type StartedChatServer } from '../../server/symbolwright-chat-server.js'
 import { UnlimitedRateLimiter } from '../../server/rate-limiter.js'
 
 const API_KEY = 'mission-api-test-key'
@@ -32,7 +32,7 @@ async function createMission() {
 
 describe('mission API routes', () => {
   beforeEach(async () => {
-    root = mkdtempSync(join(tmpdir(), 'codemind-mission-api-'))
+    root = mkdtempSync(join(tmpdir(), 'symbolwright-mission-api-'))
     started = await startChatServer({
       apiKey: API_KEY,
       host: '127.0.0.1',

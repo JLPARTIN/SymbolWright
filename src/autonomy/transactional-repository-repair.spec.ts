@@ -17,7 +17,7 @@ afterEach(async () => {
 
 describe('nested repository repair transactions', () => {
   it('restores mission-owned baseline content after a failed repair', async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-repair-transaction-'))
+    const root = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-repair-transaction-'))
     roots.push(root)
     const target = path.join(root, 'src/result.ts')
     await mkdir(path.dirname(target), { recursive: true })
@@ -44,7 +44,7 @@ describe('nested repository repair transactions', () => {
   })
 
   it('continues to block overlapping operator changes that are not mission-owned', async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), 'codemind-operator-conflict-'))
+    const root = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-operator-conflict-'))
     roots.push(root)
     const target = path.join(root, 'src/result.ts')
     await mkdir(path.dirname(target), { recursive: true })

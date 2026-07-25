@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  evaluateCodemindPermissionRequest,
+  evaluateSymbolWrightPermissionRequest,
   resolveHighestDisposition,
-} from './codemind-permission-policy.js'
-import type { CodemindPermissionRequest } from './codemind-permission.types.js'
+} from './symbolwright-permission-policy.js'
+import type { SymbolWrightPermissionRequest } from './symbolwright-permission.types.js'
 
 function makeRequest(
-  overrides: Partial<CodemindPermissionRequest> = {},
-): CodemindPermissionRequest {
+  overrides: Partial<SymbolWrightPermissionRequest> = {},
+): SymbolWrightPermissionRequest {
   return {
     requestId: 'req-1',
     sessionId: 'session-1',
@@ -22,7 +22,7 @@ function makeRequest(
   }
 }
 
-describe('CodeMind permission policy', () => {
+describe('SymbolWright permission policy', () => {
   it('resolves DENY over ASK over ALLOW', () => {
     expect(resolveHighestDisposition(['ALLOW', 'ASK'])).toBe('ASK')
     expect(resolveHighestDisposition(['ALLOW', 'DENY'])).toBe('DENY')
@@ -34,7 +34,7 @@ describe('CodeMind permission policy', () => {
   })
 
   it('keeps unapproved requests behind an ASK decision for non-mutating tools', () => {
-    const decision = evaluateCodemindPermissionRequest(makeRequest())
+    const decision = evaluateSymbolWrightPermissionRequest(makeRequest())
 
     expect(decision.disposition).toBe('ASK')
     expect(decision.operatorApprovalRequired).toBe(true)
@@ -42,7 +42,7 @@ describe('CodeMind permission policy', () => {
   })
 
   it('allows approved read-only requests without protected targets', () => {
-    const decision = evaluateCodemindPermissionRequest(
+    const decision = evaluateSymbolWrightPermissionRequest(
       makeRequest({
         toolCategory: 'FILE_READER',
         operatorApproved: true,
@@ -56,7 +56,7 @@ describe('CodeMind permission policy', () => {
   })
 
   it('denies unapproved mutating tools', () => {
-    const decision = evaluateCodemindPermissionRequest(
+    const decision = evaluateSymbolWrightPermissionRequest(
       makeRequest({
         toolCategory: 'GITHUB_MUTATOR',
         action: 'open pull request',
@@ -68,7 +68,7 @@ describe('CodeMind permission policy', () => {
   })
 
   it('blocks protected environment config targets by default', () => {
-    const decision = evaluateCodemindPermissionRequest(
+    const decision = evaluateSymbolWrightPermissionRequest(
       makeRequest({
         toolCategory: 'FILE_READER',
         operatorApproved: true,
@@ -82,7 +82,7 @@ describe('CodeMind permission policy', () => {
   })
 
   it('requires explicit review for workflow targets', () => {
-    const decision = evaluateCodemindPermissionRequest(
+    const decision = evaluateSymbolWrightPermissionRequest(
       makeRequest({
         toolCategory: 'PROJECT_DOC_WRITER',
         operatorApproved: true,

@@ -5,7 +5,7 @@ import {
 } from './checkpoint/checkpoint-service.js'
 import {
   createRuntimePolicyForMode,
-  DEFAULT_CODEMIND_RUNTIME_MODE,
+  DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE,
 } from './runtime/policy/runtime-policy.js'
 
 interface ParsedCheckpointFlags {
@@ -50,14 +50,14 @@ export function renderCheckpointListCommand(
 
   if (checkpoints.length === 0) {
     return [
-      'CodeMind checkpoints',
+      'SymbolWright checkpoints',
       '',
       'No checkpoints found. Checkpoints are created automatically before edit_file,',
       'local_file_write, and apply_patch mutate a file.',
     ].join('\n')
   }
 
-  const lines = ['CodeMind checkpoints', '']
+  const lines = ['SymbolWright checkpoints', '']
   for (const checkpoint of checkpoints) {
     lines.push(
       `- ${checkpoint.checkpointId}  [${checkpoint.tool}]  ${checkpoint.createdAt}  ` +
@@ -89,7 +89,7 @@ export function renderCheckpointShowCommand(
   }
 
   const lines = [
-    'CodeMind checkpoint',
+    'SymbolWright checkpoint',
     '',
     `Checkpoint: ${metadata.checkpointId}`,
     `Session:    ${metadata.sessionId}`,
@@ -131,7 +131,7 @@ export function renderCheckpointRestoreCommand(
     throw new Error('Usage: codemind checkpoint restore <id> [--json]')
   }
 
-  const policy = createRuntimePolicyForMode(DEFAULT_CODEMIND_RUNTIME_MODE)
+  const policy = createRuntimePolicyForMode(DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE)
   const evidence = restoreCheckpoint({ workspaceRoot: cwd, checkpointId, policy })
 
   if (flags.json) {
@@ -139,7 +139,7 @@ export function renderCheckpointRestoreCommand(
   }
 
   const lines = [
-    'CodeMind checkpoint restore',
+    'SymbolWright checkpoint restore',
     '',
     `Checkpoint: ${evidence.checkpointId}`,
     `Status:     ${evidence.status}`,

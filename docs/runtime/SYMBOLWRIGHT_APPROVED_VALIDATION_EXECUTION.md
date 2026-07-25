@@ -1,4 +1,4 @@
-# CodeMind Approved Validation Command Execution
+# SymbolWright Approved Validation Command Execution
 
 This document describes the validation command executor, which turns the existing validation command gate into a safe, governed executor for allowlisted commands.
 

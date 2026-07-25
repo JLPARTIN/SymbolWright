@@ -2,8 +2,8 @@
 export function renderToolsViewHtml(): string {
   return `<section data-view="tools" class="app-view" style="display:none">
     <h2>Tool registry</h2>
-    <p class="muted">The same static tool registry (<code>tool-assembly.ts</code>) and runtime-mode gating (<code>tool-schema-bridge.ts</code>) every CodeMind entry point uses — CLI agent, HTTP agent, and MCP server.</p>
-    <div id="tools-status" class="muted">Connect with your CodeMind API key in Settings to load the tool registry.</div>
+    <p class="muted">The same static tool registry (<code>tool-assembly.ts</code>) and runtime-mode gating (<code>tool-schema-bridge.ts</code>) every SymbolWright entry point uses — CLI agent, HTTP agent, and MCP server.</p>
+    <div id="tools-status" class="muted">Connect with your SymbolWright API key in Settings to load the tool registry.</div>
     <div id="tools-content"></div>
   </section>`
 }
@@ -13,14 +13,14 @@ export function buildToolsViewClientScript(): string {
     async function loadToolsView() {
       const statusEl = document.getElementById('tools-status');
       const contentEl = document.getElementById('tools-content');
-      if (!appState.codemindKey) {
-        statusEl.textContent = 'Connect with your CodeMind API key in Settings to load the tool registry.';
+      if (!appState.symbolWrightKey) {
+        statusEl.textContent = 'Connect with your SymbolWright API key in Settings to load the tool registry.';
         contentEl.innerHTML = '';
         return;
       }
       statusEl.textContent = 'Loading tool registry...';
       try {
-        const response = await fetch('/api/tools', { headers: { authorization: 'Bearer ' + appState.codemindKey } });
+        const response = await fetch('/api/tools', { headers: { authorization: 'Bearer ' + appState.symbolWrightKey } });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const data = await response.json();
         statusEl.textContent = data.staticTools.length + ' statically-wired tools, ' + data.dynamicTools.length + ' dynamically-wired tools.';

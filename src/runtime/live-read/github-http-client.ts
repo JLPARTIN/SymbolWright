@@ -31,7 +31,7 @@ export class DefaultGitHubHttpClient implements GitHubHttpClient {
       headers: {
         Accept: 'application/vnd.github.v3+json',
         Authorization: `Bearer ${this.token}`,
-        'User-Agent': 'CodeMind/0.1.0',
+        'User-Agent': 'SymbolWright/0.1.0',
       },
     })
 
@@ -50,7 +50,7 @@ export class DefaultGitHubHttpClient implements GitHubHttpClient {
       headers: {
         Accept: 'application/vnd.github.v3+json',
         Authorization: `Bearer ${this.token}`,
-        'User-Agent': 'CodeMind/0.1.0',
+        'User-Agent': 'SymbolWright/0.1.0',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),

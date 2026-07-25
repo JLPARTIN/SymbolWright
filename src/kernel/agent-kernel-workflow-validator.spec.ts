@@ -14,7 +14,7 @@ function makeRequest(
     requestId: 'ak-02-req-1',
     sessionId: 'session-1',
     operatorIntent: 'Validate the Agent Kernel workflow.',
-    targetRepository: 'JLPARTIN/JLPARTIN-CodeMind',
+    targetRepository: 'JLPARTIN/JLPARTIN-SymbolWright',
     targetRef: 'main',
     requestedMode: 'PLAN',
     requestedRoles: ['orchestrator', 'researcher', 'coder', 'validator'],

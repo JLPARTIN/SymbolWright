@@ -56,7 +56,7 @@ export function assessLiveReadMergeReadiness(
 
 export function renderLiveReadAjnaMergeReadiness(result: LiveReadAjnaMergeReadinessResult): string {
   const sections: string[] = [
-    'CodeMind Ajna live-read merge readiness',
+    'SymbolWright Ajna live-read merge readiness',
     '',
     `Ready: ${result.ready ? 'YES' : 'NO'}`,
   ]

@@ -28,7 +28,7 @@ function parseBashInput(input: unknown): BashToolInput {
 
 function renderBlockedCommand(command: string, reason: string): string {
   return [
-    'CodeMind bash',
+    'SymbolWright bash',
     '',
     `Command: ${command}`,
     'Status: BLOCKED',
@@ -40,7 +40,7 @@ function renderBlockedCommand(command: string, reason: string): string {
 
 function renderSandboxResult(result: SandboxRunnerResult): string {
   const lines = [
-    'CodeMind bash',
+    'SymbolWright bash',
     '',
     `Command: ${result.command}`,
     `Runner: ${result.runner}`,

@@ -175,7 +175,7 @@ export async function runZflowWorkflow(
 
 export function renderZflowResult(result: ZflowResult): string {
   return [
-    'CodeMind zflow workflow',
+    'SymbolWright zflow workflow',
     '',
     `Mode: ${result.mode}`,
     `Local result: ${result.localOutput}`,

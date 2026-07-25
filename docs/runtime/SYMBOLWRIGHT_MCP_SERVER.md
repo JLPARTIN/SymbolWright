@@ -1,15 +1,15 @@
-# CodeMind as an MCP Server (`codemind mcp-server`)
+# SymbolWright as an MCP Server (`codemind mcp-server`)
 
-`docs/runtime/CODEMIND_MCP_TOOL_RUNTIME.md` covers CodeMind acting as an MCP
+`docs/runtime/SYMBOLWRIGHT_MCP_TOOL_RUNTIME.md` covers SymbolWright acting as an MCP
 **client** (spawning and calling *other* MCP servers). This is the reverse
-direction: CodeMind itself acting as an MCP **server**, so any MCP-compatible
+direction: SymbolWright itself acting as an MCP **server**, so any MCP-compatible
 LLM client — Claude Desktop, Claude Code, or another agent framework — can
-add CodeMind as a plugin/connector and call its real tools directly.
+add SymbolWright as a plugin/connector and call its real tools directly.
 
 ```txt
 Claude Desktop / any MCP client  →  spawns "codemind mcp-server" as a subprocess
         ↓  stdio, newline-delimited JSON-RPC 2.0
-CodeMind MCP server  →  runtime tool registry (same tools codemind agent uses)
+SymbolWright MCP server  →  runtime tool registry (same tools codemind agent uses)
 ```
 
 ## Start it
@@ -19,7 +19,7 @@ Point your MCP client at:
 ```json
 {
   "mcpServers": {
-    "codemind": {
+    "symbolwright": {
       "command": "codemind",
       "args": ["mcp-server"]
     }
@@ -34,7 +34,7 @@ local MCP server.
 ## Runtime mode — read this before changing it
 
 `codemind mcp-server` defaults to **`READ_ONLY`**, not
-`APPROVED_EXECUTION` (the default everywhere else in CodeMind, including
+`APPROVED_EXECUTION` (the default everywhere else in SymbolWright, including
 `codemind agent`). That's a deliberate, narrower default: `codemind agent` is
 a session an operator drives turn-by-turn from their own terminal;
 `mcp-server` is a background process that *any* connected MCP client can
@@ -47,7 +47,7 @@ codemind mcp-server --mode APPROVED_EXECUTION # + bash, file writes, git, GitHub
 ```
 
 Same aliases as everywhere else (`--mode approved`, `--mode read-only`, etc. — see
-`docs/runtime/CODEMIND_RUNTIME_FOUNDATION.md`).
+`docs/runtime/SYMBOLWRIGHT_RUNTIME_FOUNDATION.md`).
 
 ## What's exposed
 
@@ -88,11 +88,11 @@ wiring), `src/cli-mcp-server.ts` (the `mcp-server` CLI command).
 
 ## What this is not (yet)
 
-This exposes CodeMind's tool surface, not the full `codemind agent`
+This exposes SymbolWright's tool surface, not the full `codemind agent`
 multi-turn conversational loop — an MCP client calls tools directly (e.g.
 `read_file`, then `edit_file`, then `run_tests`); it does not get a single
-"chat with CodeMind" tool that runs an entire agent turn internally. Combined
-with `codemind serve` (see `docs/runtime/CODEMIND_CHAT_SERVER.md`), CodeMind
+"chat with SymbolWright" tool that runs an entire agent turn internally. Combined
+with `codemind serve` (see `docs/runtime/SYMBOLWRIGHT_CHAT_SERVER.md`), SymbolWright
 is now usable from a browser (bring-your-own provider key) and from any
 MCP-compatible LLM client (this document) — see
-`docs/USING_CODEMIND_FROM_ANY_LLM.md` for the full picture across both.
+`docs/USING_SYMBOLWRIGHT_FROM_ANY_LLM.md` for the full picture across both.

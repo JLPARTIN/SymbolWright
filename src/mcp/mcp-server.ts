@@ -1,12 +1,12 @@
 import { createInterface } from 'node:readline'
 import type { Readable, Writable } from 'node:stream'
 
-import type { CodemindRuntimeMode } from '../runtime/types.js'
+import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
 import { handleMcpServerMessage, type McpServerInfo } from './mcp-server-protocol.js'
-import { createCodemindMcpToolHandler } from './mcp-server-tools.js'
+import { createSymbolWrightMcpToolHandler } from './mcp-server-tools.js'
 
 export interface McpServerRuntimeOptions {
-  readonly mode: CodemindRuntimeMode
+  readonly mode: SymbolWrightRuntimeMode
   readonly cwd: string
   readonly hasGitHubToken?: boolean
   readonly serverInfo?: McpServerInfo
@@ -29,8 +29,8 @@ const DEFAULT_SERVER_INFO: McpServerInfo = { name: 'codemind', version: '0.1.0' 
  * `McpStdioTransport` (the client side) expects when CodeMind itself is the
  * server being spawned by another MCP client.
  */
-export function runCodemindMcpServer(options: McpServerRuntimeOptions): RunningMcpServer {
-  const handler = createCodemindMcpToolHandler({
+export function runSymbolWrightMcpServer(options: McpServerRuntimeOptions): RunningMcpServer {
+  const handler = createSymbolWrightMcpToolHandler({
     mode: options.mode,
     cwd: options.cwd,
     ...(options.hasGitHubToken === undefined ? {} : { hasGitHubToken: options.hasGitHubToken }),
