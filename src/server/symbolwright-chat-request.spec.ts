@@ -98,6 +98,16 @@ describe('parseChatRequestBody', () => {
       messages: [{ role: 'user', content: 'hi' }],
     })
   })
+
+  it('rejects maxTokens outside the allowed range', () => {
+    const base = { providerId: 'openai', messages: [{ role: 'user', content: 'hi' }] }
+    expect(() => parseChatRequestBody({ ...base, maxTokens: 0 })).toThrow(
+      ChatRequestValidationError,
+    )
+    expect(() => parseChatRequestBody({ ...base, maxTokens: 1_000_000 })).toThrow(
+      ChatRequestValidationError,
+    )
+  })
 })
 
 describe('parseRegisterRequestBody', () => {

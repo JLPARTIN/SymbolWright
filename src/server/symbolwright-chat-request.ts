@@ -11,6 +11,8 @@ export class ChatRequestValidationError extends Error {}
 const MESSAGE_ROLES: readonly ProviderGatewayRole[] = ['system', 'user', 'assistant']
 const MAX_MESSAGES = 200
 const MAX_MESSAGE_CHARS = 32_000
+const MIN_MAX_TOKENS = 1
+const MAX_MAX_TOKENS = 64_000
 
 function isSupportedProviderId(value: unknown): value is SymbolWrightProviderId {
   return (
@@ -97,8 +99,13 @@ export function parseChatRequestBody(raw: unknown): ParsedChatRequest {
   if (temperature !== undefined && typeof temperature !== 'number') {
     throw new ChatRequestValidationError('temperature must be a number')
   }
-  if (maxTokens !== undefined && typeof maxTokens !== 'number') {
-    throw new ChatRequestValidationError('maxTokens must be a number')
+  if (
+    maxTokens !== undefined &&
+    (typeof maxTokens !== 'number' || maxTokens < MIN_MAX_TOKENS || maxTokens > MAX_MAX_TOKENS)
+  ) {
+    throw new ChatRequestValidationError(
+      `maxTokens must be a number between ${MIN_MAX_TOKENS} and ${MAX_MAX_TOKENS}`,
+    )
   }
 
   return {

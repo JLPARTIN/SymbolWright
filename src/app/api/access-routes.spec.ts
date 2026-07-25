@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { AccessRuntime } from '../../access/access-runtime.js'
 import { UnlimitedRateLimiter } from '../../server/rate-limiter.js'
 import { startChatServer, type StartedChatServer } from '../../server/symbolwright-chat-server.js'
 
@@ -242,6 +243,174 @@ describe('device authorization operator routes', () => {
       body: JSON.stringify({}),
     })
     expect(poll.status).toBe(400)
+  })
+})
+
+describe('POST /api/v1/access-grants — session/execution limits and approval policy', () => {
+  it('accepts executionLimits, sessionLimits, clientConstraints, and approvalPolicy', async () => {
+    const server = await launch()
+    const created = await createGrant(server, {
+      executionLimits: { maxConcurrentMissions: 2, maxFilesChanged: 10 },
+      sessionLimits: { inactivityTimeoutMinutes: 15, maxConcurrentSessions: 1 },
+      clientConstraints: { allowedIpCidrs: ['10.0.0.0/24'] },
+      approvalPolicy: { rules: [{ match: '*', requirement: 'before-first-write' }] },
+    })
+
+    const detail = await fetch(`${server.url}/api/v1/access-grants/${created.grantId}`, {
+      headers: operatorAuth(),
+    })
+    const body = (await detail.json()) as {
+      grant: {
+        executionLimits: { maxConcurrentMissions?: number; maxFilesChanged?: number }
+        sessionLimits: { inactivityTimeoutMinutes?: number; maxConcurrentSessions?: number }
+        clientConstraints?: { allowedIpCidrs?: readonly string[] }
+        approvalPolicy: { rules: readonly { match: string; requirement: string }[] }
+      }
+    }
+    expect(body.grant.executionLimits.maxConcurrentMissions).toBe(2)
+    expect(body.grant.executionLimits.maxFilesChanged).toBe(10)
+    expect(body.grant.sessionLimits.inactivityTimeoutMinutes).toBe(15)
+    expect(body.grant.clientConstraints?.allowedIpCidrs).toEqual(['10.0.0.0/24'])
+    expect(body.grant.approvalPolicy.rules).toEqual([
+      { match: '*', requirement: 'before-first-write' },
+    ])
+  })
+
+  it('rejects an invalid executionLimits field with a validation error', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/v1/access-grants`, {
+      method: 'POST',
+      headers: operatorAuth(),
+      body: JSON.stringify({
+        principalType: 'coding-agent',
+        displayName: 'Bad limits',
+        profileId: 'coding-agent',
+        repositoryScope: { mode: 'installation', repositories: [], organizations: [] },
+        executionLimits: { maxFilesChanged: -5 },
+      }),
+    })
+    expect(response.status).toBe(400)
+    const body = (await response.json()) as { error: string }
+    expect(body.error).toBe('validation_error')
+  })
+})
+
+describe('PATCH /api/v1/access-grants/:id — session/execution limits and client constraints', () => {
+  it('narrows executionLimits, sessionLimits, and clientConstraints', async () => {
+    const server = await launch()
+    const { grantId } = await createGrant(server, {
+      executionLimits: { maxConcurrentMissions: 5 },
+      sessionLimits: { maxConcurrentSessions: 5 },
+    })
+
+    const patch = await fetch(`${server.url}/api/v1/access-grants/${grantId}`, {
+      method: 'PATCH',
+      headers: operatorAuth(),
+      body: JSON.stringify({
+        executionLimits: { maxConcurrentMissions: 1 },
+        sessionLimits: { maxConcurrentSessions: 1, inactivityTimeoutMinutes: 20 },
+        clientConstraints: { allowedIpCidrs: ['192.168.1.0/24'] },
+      }),
+    })
+    expect(patch.status).toBe(200)
+    const body = (await patch.json()) as {
+      grant: {
+        executionLimits: { maxConcurrentMissions?: number }
+        sessionLimits: { maxConcurrentSessions?: number; inactivityTimeoutMinutes?: number }
+        clientConstraints?: { allowedIpCidrs?: readonly string[] }
+      }
+    }
+    expect(body.grant.executionLimits.maxConcurrentMissions).toBe(1)
+    expect(body.grant.sessionLimits.maxConcurrentSessions).toBe(1)
+    expect(body.grant.sessionLimits.inactivityTimeoutMinutes).toBe(20)
+    expect(body.grant.clientConstraints?.allowedIpCidrs).toEqual(['192.168.1.0/24'])
+  })
+})
+
+describe('approval approve/deny routes', () => {
+  it('lists, approves, and denies pending approvals for a grant', async () => {
+    const accessRuntimeRoot = mkdtempSync(join(tmpdir(), 'symbolwright-access-routes-runtime-'))
+    const accessRuntime = new AccessRuntime({ workspaceRoot: accessRuntimeRoot })
+    root = accessRuntimeRoot
+    started = await startChatServer({
+      apiKey: API_KEY,
+      host: '127.0.0.1',
+      port: 0,
+      cwd: accessRuntimeRoot,
+      env: {},
+      rateLimiter: new UnlimitedRateLimiter(),
+      accessRuntime,
+    })
+    const server = started
+
+    const { grant } = accessRuntime.grantService.createGrant({
+      principalType: 'automation',
+      displayName: 'Maintainer',
+      issuedBy: 'operator',
+      profileId: 'maintainer-agent',
+      repositoryScope: { mode: 'installation', repositories: [], organizations: [] },
+      enableMerge: true,
+      issueTokenNow: false,
+    })
+    const grantId = grant.id
+
+    // Directly evaluate the gated capability to create a pending approval — mirrors what would
+    // happen inside a real repository-mutation route once `repo.pull_request.merge` is wired to one.
+    await accessRuntime.authorizationService.evaluate({
+      principalId: grant.principalId,
+      grantId: grant.id,
+      capability: 'repo.pull_request.merge',
+      repository: 'JLPARTIN/SymbolWright',
+      missionId: 'mission-1',
+    })
+
+    const listed = await fetch(`${server.url}/api/v1/access-grants/${grantId}/approvals`, {
+      headers: operatorAuth(),
+    })
+    expect(listed.status).toBe(200)
+    const listedBody = (await listed.json()) as {
+      approvals: readonly { id: string; status: string }[]
+    }
+    const pending = listedBody.approvals.find((entry) => entry.status === 'pending')
+    expect(pending).toBeDefined()
+
+    const approve = await fetch(
+      `${server.url}/api/v1/access-grants/${grantId}/approvals/${pending?.id}/approve`,
+      {
+        method: 'POST',
+        headers: operatorAuth(),
+        body: JSON.stringify({ comment: 'ok' }),
+      },
+    )
+    expect(approve.status).toBe(200)
+    const approveBody = (await approve.json()) as { approval: { status: string } }
+    expect(approveBody.approval.status).toBe('approved')
+
+    const alreadyDecided = await fetch(
+      `${server.url}/api/v1/access-grants/${grantId}/approvals/${pending?.id}/deny`,
+      { method: 'POST', headers: operatorAuth() },
+    )
+    expect(alreadyDecided.status).toBe(400)
+  })
+
+  it('404s approving an unknown approval id', async () => {
+    const server = await launch()
+    const { grantId } = await createGrant(server)
+    const response = await fetch(
+      `${server.url}/api/v1/access-grants/${grantId}/approvals/does-not-exist/approve`,
+      { method: 'POST', headers: operatorAuth() },
+    )
+    expect(response.status).toBe(404)
+  })
+
+  it('denies an agent principal from approving its own request', async () => {
+    const server = await launch()
+    const { grantId, token } = await createGrant(server)
+    const response = await fetch(
+      `${server.url}/api/v1/access-grants/${grantId}/approvals/anything/approve`,
+      { method: 'POST', headers: { authorization: `Bearer ${token}` } },
+    )
+    expect(response.status).toBe(403)
   })
 })
 

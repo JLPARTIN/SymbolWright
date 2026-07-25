@@ -263,6 +263,19 @@ describe('symbolwright chat server routes', () => {
     expect(response.status).toBe(429)
   })
 
+  it('rate-limits the unauthenticated device-authorization route independently of the main limiter', async () => {
+    const server = await launch({ deviceFlowRateLimiter: new DenyingRateLimiter() })
+    const response = await fetch(`${server.url}/api/v1/device-authorization`, {
+      method: 'POST',
+      body: JSON.stringify({ principalType: 'coding-agent' }),
+    })
+    expect(response.status).toBe(429)
+
+    // The main (unrelated) limiter is unaffected — an authenticated route still works.
+    const authed = await fetch(`${server.url}/api/providers`, { headers: auth() })
+    expect(authed.status).toBe(200)
+  })
+
   it('answers CORS preflight requests when an origin is configured', async () => {
     const server = await launch({ corsOrigin: 'https://my-frontend.example.com' })
     const response = await fetch(`${server.url}/api/chat`, { method: 'OPTIONS' })

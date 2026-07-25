@@ -9,6 +9,7 @@ import {
   verifySecret,
 } from './access-credential.js'
 import { getPermissionProfile } from './access-profiles.js'
+import { checkClientConstraints, type ClientContext } from './client-constraints-match.js'
 import type { AccessStore, StoredCredential } from './access-store.js'
 import type {
   AgentAccessGrant,
@@ -29,6 +30,8 @@ export class StepUpRequiredError extends Error {}
 export class GrantNotFoundError extends Error {}
 export class InvalidCredentialError extends Error {}
 export class SessionLimitExceededError extends Error {}
+export class ClientConstraintViolationError extends Error {}
+export class SessionInactivityTimeoutError extends Error {}
 
 export interface CreateGrantInput {
   readonly principalId?: string
@@ -384,6 +387,7 @@ export class AccessGrantService {
       readonly expiresAt?: string
       readonly executionLimits?: MissionExecutionLimits
       readonly sessionLimits?: SessionLimits
+      readonly clientConstraints?: ClientConstraints
     },
   ): AgentAccessGrant {
     const grant = this.requireGrant(grantId)
@@ -430,6 +434,9 @@ export class AccessGrantService {
       ...(patch.sessionLimits === undefined
         ? {}
         : { sessionLimits: { ...grant.sessionLimits, ...patch.sessionLimits } }),
+      ...(patch.clientConstraints === undefined
+        ? {}
+        : { clientConstraints: { ...grant.clientConstraints, ...patch.clientConstraints } }),
     }
     this.store.writeGrant(updated)
     this.store.appendAuditEvent({
@@ -484,6 +491,17 @@ export class AccessGrantService {
       throw new InvalidCredentialError('Grant has expired.')
     }
 
+    const clientContext: ClientContext = {
+      ...(clientMetadata?.['ip'] === undefined ? {} : { ip: clientMetadata['ip'] }),
+      ...(clientMetadata?.['clientId'] === undefined
+        ? {}
+        : { clientId: clientMetadata['clientId'] }),
+    }
+    const constraintViolation = checkClientConstraints(clientContext, grant.clientConstraints)
+    if (constraintViolation !== undefined) {
+      throw new ClientConstraintViolationError(constraintViolation)
+    }
+
     const now = this.now()
     const activeSessions = this.store
       .listSessionsForGrant(grant.id)
@@ -491,6 +509,26 @@ export class AccessGrantService {
         (session) => !session.revoked && new Date(session.expiresAt).getTime() > now.getTime(),
       )
     const existing = activeSessions.find((session) => session.credentialId === credential.id)
+
+    const inactivityTimeoutMinutes = grant.sessionLimits.inactivityTimeoutMinutes
+    if (existing !== undefined && inactivityTimeoutMinutes !== undefined) {
+      const idleMs = now.getTime() - new Date(existing.lastActiveAt).getTime()
+      if (idleMs > inactivityTimeoutMinutes * 60_000) {
+        this.store.writeSession({ ...existing, revoked: true })
+        this.store.appendAuditEvent({
+          id: randomUUID(),
+          type: 'session.ended',
+          timestamp: now.toISOString(),
+          grantId: grant.id,
+          principalId: grant.principalId,
+          sessionId: existing.id,
+          reasonCode: 'INACTIVITY_TIMEOUT',
+        })
+        throw new SessionInactivityTimeoutError(
+          'Session exceeded its inactivity timeout and was ended; re-authenticate to continue.',
+        )
+      }
+    }
 
     const maxConcurrent = grant.sessionLimits.maxConcurrentSessions
     if (

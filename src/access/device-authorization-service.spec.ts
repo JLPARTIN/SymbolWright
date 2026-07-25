@@ -36,7 +36,10 @@ describe('DeviceAuthorizationService', () => {
   })
 
   it('runs the full request -> approve -> poll -> token cycle for a terminal agent', () => {
-    const request = device.requestDeviceAuthorization({
+    let currentTime = Date.now()
+    const clockedDevice = new DeviceAuthorizationService(store, grants, () => new Date(currentTime))
+
+    const request = clockedDevice.requestDeviceAuthorization({
       principalType: 'coding-agent',
       displayName: 'Claude Code (terminal)',
       requestedProfileId: 'coding-agent',
@@ -44,13 +47,16 @@ describe('DeviceAuthorizationService', () => {
     })
     expect(request.userCode).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/)
 
-    expect(device.poll(request.deviceCode)).toEqual({ status: 'authorization_pending' })
+    expect(clockedDevice.poll(request.deviceCode)).toEqual({ status: 'authorization_pending' })
 
-    const approved = device.approve(request.userCode, 'operator-1')
+    const approved = clockedDevice.approve(request.userCode, 'operator-1')
     expect(approved.status).toBe('approved')
     expect(approved.grantId).toBeDefined()
 
-    const polled = device.poll(request.deviceCode)
+    // Respect the advertised poll interval before the next poll — otherwise it's throttled below.
+    currentTime += (request.pollIntervalSeconds + 1) * 1000
+
+    const polled = clockedDevice.poll(request.deviceCode)
     expect(polled.status).toBe('ok')
     if (polled.status !== 'ok') throw new Error('expected ok')
     expect(polled.token.startsWith('sw_agent_')).toBe(true)
@@ -59,7 +65,26 @@ describe('DeviceAuthorizationService', () => {
     expect(authenticated.grant.id).toBe(approved.grantId)
 
     // The token can only be handed off once — a second poll after delivery must not repeat it.
-    expect(device.poll(request.deviceCode)).toEqual({ status: 'access_denied' })
+    currentTime += (request.pollIntervalSeconds + 1) * 1000
+    expect(clockedDevice.poll(request.deviceCode)).toEqual({ status: 'access_denied' })
+  })
+
+  it('returns slow_down when the client polls faster than the advertised interval', () => {
+    let currentTime = Date.now()
+    const clockedDevice = new DeviceAuthorizationService(store, grants, () => new Date(currentTime))
+    const request = clockedDevice.requestDeviceAuthorization({
+      principalType: 'coding-agent',
+      displayName: 'Fast poller',
+      requestedProfileId: 'coding-agent',
+      requestedRepositoryScope: REPO_SCOPE,
+    })
+
+    expect(clockedDevice.poll(request.deviceCode)).toEqual({ status: 'authorization_pending' })
+    // Immediately poll again, faster than pollIntervalSeconds.
+    expect(clockedDevice.poll(request.deviceCode)).toEqual({ status: 'slow_down' })
+
+    currentTime += (request.pollIntervalSeconds + 1) * 1000
+    expect(clockedDevice.poll(request.deviceCode)).toEqual({ status: 'authorization_pending' })
   })
 
   it('denies the device flow when the operator denies it', () => {

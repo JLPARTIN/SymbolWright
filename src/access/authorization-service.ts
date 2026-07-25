@@ -54,6 +54,9 @@ export class ApprovalRequiredError extends Error {
   }
 }
 
+export class ApprovalNotFoundError extends Error {}
+export class ApprovalStateError extends Error {}
+
 const BRANCH_SENSITIVE_CAPABILITIES: ReadonlySet<string> = new Set([
   'repo.branch.create',
   'repo.branch.update',
@@ -126,6 +129,60 @@ export class AuthorizationService {
     if (result.requiresApproval) throw new ApprovalRequiredError(result)
     if (!result.allowed) throw new AuthorizationDeniedError(result)
     return result
+  }
+
+  /**
+   * The operator-facing completion of a pending approval created by `checkApprovalPolicy` — the
+   * only supported production route for turning `requiresApproval: true` into a decision. Approving
+   * does not itself authorize the original operation: the next matching request re-evaluates policy
+   * and consumes this record via the bound-operation-key check in `checkApprovalPolicy`.
+   */
+  public decideApproval(
+    grantId: string,
+    approvalId: string,
+    outcome: 'approved' | 'denied',
+    actor: string,
+    operatorComment?: string,
+  ): ApprovalRequest {
+    const approval = this.store.readApproval(approvalId)
+    if (approval === undefined || approval.grantId !== grantId) {
+      throw new ApprovalNotFoundError(`No such approval request: ${approvalId}`)
+    }
+
+    const now = new Date()
+    if (approval.status !== 'pending') {
+      throw new ApprovalStateError(`Approval request is already ${approval.status}.`)
+    }
+    if (new Date(approval.expiresAt).getTime() <= now.getTime()) {
+      this.store.writeApproval({ ...approval, status: 'expired' })
+      throw new ApprovalStateError('Approval request has expired.')
+    }
+
+    const updated: ApprovalRequest = {
+      ...approval,
+      status: outcome,
+      approverId: actor,
+      decidedAt: now.toISOString(),
+      ...(operatorComment === undefined ? {} : { operatorComment }),
+    }
+    this.store.writeApproval(updated)
+    this.store.appendAuditEvent({
+      id: randomUUID(),
+      type: outcome === 'approved' ? 'approval.approved' : 'approval.denied',
+      timestamp: now.toISOString(),
+      grantId,
+      capability: approval.capability,
+      approvalId,
+      ...(approval.repository === undefined ? {} : { repository: approval.repository }),
+      ...(approval.branch === undefined ? {} : { branch: approval.branch }),
+      ...(approval.missionId === undefined ? {} : { missionId: approval.missionId }),
+      metadata: { actor },
+    })
+    return updated
+  }
+
+  public listApprovalsForGrant(grantId: string): readonly ApprovalRequest[] {
+    return this.store.listApprovalsForGrant(grantId)
   }
 
   private evaluateInternal(

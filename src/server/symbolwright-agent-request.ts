@@ -9,6 +9,8 @@ const MAX_PRIOR_MESSAGES = 500
 const MAX_MESSAGE_TEXT_CHARS = 64_000
 const DEFAULT_MAX_ITERATIONS = 25
 const MAX_ALLOWED_ITERATIONS = 100
+const MIN_MAX_TOKENS = 1
+const MAX_MAX_TOKENS = 64_000
 
 function isSupportedProviderId(value: unknown): value is SymbolWrightProviderId {
   return (
@@ -182,8 +184,13 @@ export function parseAgentRequestBody(raw: unknown): ParsedAgentRequest {
   if (temperature !== undefined && typeof temperature !== 'number') {
     throw new ChatRequestValidationError('temperature must be a number')
   }
-  if (maxTokens !== undefined && typeof maxTokens !== 'number') {
-    throw new ChatRequestValidationError('maxTokens must be a number')
+  if (
+    maxTokens !== undefined &&
+    (typeof maxTokens !== 'number' || maxTokens < MIN_MAX_TOKENS || maxTokens > MAX_MAX_TOKENS)
+  ) {
+    throw new ChatRequestValidationError(
+      `maxTokens must be a number between ${MIN_MAX_TOKENS} and ${MAX_MAX_TOKENS}`,
+    )
   }
   if (
     maxIterationsRaw !== undefined &&
