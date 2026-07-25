@@ -12,20 +12,30 @@ Ajna Review Cortex is the native forensic review capability. Ajna gives SymbolWr
 
 ## Codespaces Quick Start
 
-Already in a GitHub Codespace (or any container with Node 20+)? Skip everything below and run:
+Already in a GitHub Codespace (or any container with Node 20+)? Copy-paste this — it's the whole setup:
 
 ```bash
+# 1. (optional) connect a real provider -- skip this to stay in
+#    browser-only mode (local diagnostics, no AI features)
+export ANTHROPIC_API_KEY=sk-ant-...   # any key from docs/PROVIDER_KEYS.md works
+
+# 2. install (only if needed), build, start on port 8787, wait for
+#    health, and print the forwarded URL + a generated access key
 npm run codespaces:start
 ```
 
-This installs dependencies only if needed, builds current source, generates a local `SYMBOLWRIGHT_API_KEY` if you didn't set one, starts SymbolWright on port `8787`, waits for it to be healthy, and validates that the served browser JavaScript actually parses — then prints one summary with the real forwarded URL and the access key. From there:
+Then:
 
 1. Open the printed URL — it already points at `#/settings`.
 2. Paste the printed **SymbolWright access key** into Settings.
-3. Want AI-backed features instead of browser-only diagnostics? Set a provider key (e.g. `export ANTHROPIC_API_KEY=sk-ant-...`, see [`docs/PROVIDER_KEYS.md`](docs/PROVIDER_KEYS.md)) *before* running `codespaces:start`.
-4. `npm run codespaces:stop` stops it; `npm run codespaces:status` reports whether it's healthy, which provider (if any) is detected, and where its logs are — no secrets in either.
+3. Stop it with `npm run codespaces:stop`; check on it with `npm run codespaces:status` (health, PID, detected provider — no secrets in either).
 
-Re-running `npm run codespaces:start` is also how you restart after changing code or env vars — no `Ctrl+C` needed. Full details, including the manual step-by-step path, are in [`docs/codespaces.md`](docs/codespaces.md).
+```bash
+npm run codespaces:stop     # stop the server
+npm run codespaces:status   # check health / provider / logs
+```
+
+Re-running `npm run codespaces:start` is also how you restart after changing code or env vars — no `Ctrl+C` needed. Full details, including the manual step-by-step bash path, are in [`docs/codespaces.md`](docs/codespaces.md).
 
 ## Getting Started
 
