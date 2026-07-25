@@ -128,11 +128,24 @@ existing clones, bookmarks, and CI configs referencing the old location
 keep working — but update your `git remote` to the new URL when
 convenient, since GitHub's redirect isn't guaranteed to be permanent.
 
+## AELIB connector (Phase 7)
+
+The outbound health-check header sent to the external AELIB-X1YA0I system
+is now `x-symbolwright-connector` (was `x-codemind-connector`). This was
+verified safe to rename outright, with no dual-send transition period:
+AELIB-X1YA0I's `/health` endpoint is `@Public()` and its auth guard only
+inspects `x-api-key`, so the old header name was never actually read on
+the receiving end.
+
+The connector's configuration env vars also gained canonical
+`SYMBOLWRIGHT_AELIB_*` forms, with a two-step legacy fallback:
+`SYMBOLWRIGHT_AELIB_ENDPOINT` → `CODEMIND_AELIB_ENDPOINT` → bare
+`AELIB_ENDPOINT` (and the same pattern for `_HEALTH_PATH` and `_TOKEN`).
+Existing `CODEMIND_AELIB_*` or bare `AELIB_*` values keep working
+unchanged.
+
 ## What hasn't changed (still deferred)
 
-- **The `x-codemind-connector` HTTP header** used by the external AELIB
-  integration — this needs coordination with that system before it can
-  be renamed, and hasn't happened yet.
 - **The `cm-` session-ID filename prefix** — cosmetic, not addressed.
 
 ## Troubleshooting

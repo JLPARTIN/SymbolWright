@@ -274,7 +274,7 @@ All run against the final state of this branch:
 - Phase 6 (GitHub repository rename, npm package/CLI binary rename, GHCR
   image path follow-through) — explicitly deferred, see §9.
 - `x-codemind-connector` header rename — needs external AELIB coordination
-  first, per the original audit.
+  first, per the original audit. (Resolved in Phase 7, see §13.)
 - `cm-` session-ID prefix — not renamed (see §9).
 - `docs/PROVIDER_KEYS.md`'s pre-existing gap (doesn't document several real
   `SYMBOLWRIGHT_SANDBOX_*`/`SYMBOLWRIGHT_TLS_*`/`SYMBOLWRIGHT_OPENAI_COMPATIBLE_*`
@@ -365,3 +365,45 @@ but this is a concrete illustration of why the migration logic is
 filesystem-mutating and why manual CLI verification of this specific repo
 should be done in an isolated temp copy, not the repo root, going
 forward.
+
+## 13. Phase 7: AELIB Connector Header Rename and Sibling-Repo Check
+
+Implemented per operator instruction to "proceed with #7," after the
+operator confirmed ownership of `AELIB-X1YA0I`, `HiveMind`, `CodeLoop`, and
+`PromptOps-Sentinel` (the four repos referenced in
+`.devcontainer/devcontainer.json`), removing the external-coordination
+blocker noted in §11/§12.
+
+**Investigation first:** rather than assume a dual-send transition was
+required, `AELIB-X1YA0I`'s actual receiving code was read directly —
+`src/nest/presentation/nest-health.controller.ts` (the `/health` endpoint
+is `@Public()` and `@SkipThrottle()`, returns a generic status) and
+`src/auth/api-key.guard.ts` (only inspects `request.headers['x-api-key']`).
+Neither reads `x-codemind-connector` or any connector-identity header at
+all. This meant the header could be renamed outright in
+`src/aelib/aelib-connector.ts` with no transition window and no need for
+any change on the `AELIB-X1YA0I` side.
+
+**Changed in `src/aelib/aelib-connector.ts`:**
+- Outbound header: `x-codemind-connector` → `x-symbolwright-connector`.
+- Added canonical `SYMBOLWRIGHT_AELIB_ENDPOINT` / `_HEALTH_PATH` / `_TOKEN`
+  env vars (these three were missed in the original Phase 1 env-compat
+  pass). Resolution order is now three-tier:
+  `SYMBOLWRIGHT_AELIB_*` → `CODEMIND_AELIB_*` → bare `AELIB_*`, so
+  existing deployments using either older form keep working unchanged.
+- `NOT_CONFIGURED` error message now points at `SYMBOLWRIGHT_AELIB_ENDPOINT`
+  as the canonical variable to set.
+
+**`src/aelib/aelib-connector.spec.ts`:** rewritten with tests for the
+canonical vars, the `CODEMIND_AELIB_*` fallback, the bare `AELIB_*`
+fallback, precedence across all three tiers, and updated assertions for
+the new header name and error message.
+
+**Sibling repos (`HiveMind`, `CodeLoop`, `PromptOps-Sentinel`):** checked
+for hardcoded references back to the old `JLPARTIN/CodeMind` slug that
+would need updating on their side now that the repo lives at
+`JLPARTIN/SymbolWright`; see each repo's own PR (if any) for details.
+
+**Validation:** `npm run typecheck` clean; `npx vitest run
+src/aelib/aelib-connector.spec.ts` — 10/10 passed; full suite re-run
+before merge.

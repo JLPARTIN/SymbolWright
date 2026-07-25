@@ -4,6 +4,17 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ## [Unreleased]
 
+### Changed
+
+- **AELIB connector rebrand (Phase 7)**: the outbound health-check header
+  sent to the external AELIB-X1YA0I integration is now
+  `x-symbolwright-connector` (was `x-codemind-connector`) — verified safe
+  to rename outright since AELIB-X1YA0I's receiving endpoint never reads
+  that header. Added canonical `SYMBOLWRIGHT_AELIB_ENDPOINT`/
+  `SYMBOLWRIGHT_AELIB_HEALTH_PATH`/`SYMBOLWRIGHT_AELIB_TOKEN` env vars,
+  falling back to `CODEMIND_AELIB_*` and then the original bare `AELIB_*`
+  form. See `docs/rebrand/SYMBOLWRIGHT_MIGRATION_GUIDE.md`.
+
 ## [0.2.0] - 2026-07-25
 
 ### Changed
