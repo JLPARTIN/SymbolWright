@@ -173,4 +173,25 @@ describe('ProviderGateway', () => {
       gateway.runWithProvider('openai', { messages: [{ role: 'user', content: 'hello' }] }),
     ).rejects.toBeInstanceOf(ProviderGatewayError)
   })
+
+  it('includes the provider error body detail in the thrown HTTP error message', async () => {
+    const gateway = new ProviderGateway({
+      config: loadProviderGatewayConfig({ ANTHROPIC_API_KEY: 'anthropic-secret' }),
+      transport: new RecordingTransport({
+        status: 401,
+        headers: {},
+        body: {
+          type: 'error',
+          error: { type: 'authentication_error', message: 'invalid x-api-key' },
+        },
+      }),
+    })
+
+    await expect(
+      gateway.runWithProvider('anthropic', { messages: [{ role: 'user', content: 'hello' }] }),
+    ).rejects.toMatchObject({
+      code: 'HTTP_ERROR',
+      message: 'anthropic returned HTTP 401: invalid x-api-key',
+    })
+  })
 })

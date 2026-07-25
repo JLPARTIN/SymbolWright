@@ -193,4 +193,24 @@ describe('createOpenAiCompatibleLlmProvider', () => {
     const events = await drain(provider.complete([{ role: 'user', content: 'hi' }]))
     expect(events).toEqual([{ type: 'error', error: 'OpenAI returned HTTP 401' }])
   })
+
+  it('includes the provider error body detail in the yielded error message', async () => {
+    const transport = new RecordingTransport(401, [
+      '{"error":{"message":"Incorrect API key provided","type":"invalid_request_error"}}',
+    ])
+    const provider = createOpenAiCompatibleLlmProvider(
+      {
+        providerId: 'openai',
+        displayName: 'OpenAI',
+        baseUrl: 'https://api.openai.com/v1',
+        model: 'gpt-4o-mini',
+      },
+      transport,
+    )
+
+    const events = await drain(provider.complete([{ role: 'user', content: 'hi' }]))
+    expect(events).toEqual([
+      { type: 'error', error: 'OpenAI returned HTTP 401: Incorrect API key provided' },
+    ])
+  })
 })

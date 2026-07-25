@@ -230,6 +230,24 @@ describe('createGeminiLlmProvider', () => {
     expect(events).toEqual([{ type: 'error', error: 'Google Gemini returned HTTP 401' }])
   })
 
+  it('includes the provider error body detail in the yielded error message', async () => {
+    const transport = new RecordingTransport(400, [
+      '{"error":{"code":400,"message":"API key not valid","status":"INVALID_ARGUMENT"}}',
+    ])
+    const provider = createGeminiLlmProvider(
+      {
+        baseUrl: 'https://generativelanguage.googleapis.com',
+        apiKey: 'gem-test',
+        model: 'gemini-1.5-flash',
+      },
+      transport,
+    )
+    const events = await drain(provider.complete([{ role: 'user', content: 'hi' }]))
+    expect(events).toEqual([
+      { type: 'error', error: 'Google Gemini returned HTTP 400: API key not valid' },
+    ])
+  })
+
   it('maps MAX_TOKENS finish reason to max_tokens when no tool call occurred', async () => {
     const transport = new RecordingTransport(200, [
       'data: {"candidates":[{"content":{"parts":[{"text":"partial"}]},"finishReason":"MAX_TOKENS"}]}\n\n',

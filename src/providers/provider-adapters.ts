@@ -24,6 +24,41 @@ function readString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined
 }
 
+/**
+ * Every provider we call sends a JSON error body describing *why* a non-2xx
+ * happened (bad key, unknown model, malformed request, ...). Without this,
+ * callers only ever see a bare status code, which is why "why does anthropic
+ * keep returning 401" is unanswerable from the gateway's error alone.
+ */
+function extractProviderErrorDetail(body: unknown): string | undefined {
+  if (typeof body === 'string') {
+    const trimmed = body.trim()
+    return trimmed.length > 0 ? trimmed.slice(0, 500) : undefined
+  }
+  if (typeof body !== 'object' || body === null) {
+    return undefined
+  }
+  const record = body as JsonRecord
+  const error = record['error']
+  if (typeof error === 'string') {
+    return error
+  }
+  if (typeof error === 'object' && error !== null) {
+    const message = readString((error as JsonRecord)['message'])
+    if (message !== undefined) {
+      return message
+    }
+  }
+  return readString(record['message'])
+}
+
+function httpErrorMessage(providerId: string, response: ProviderHttpResponse): string {
+  const detail = extractProviderErrorDetail(response.body)
+  return detail === undefined
+    ? `${providerId} returned HTTP ${response.status}`
+    : `${providerId} returned HTTP ${response.status}: ${detail}`
+}
+
 function buildUsage(
   inputTokens: number | undefined,
   outputTokens: number | undefined,
@@ -96,7 +131,7 @@ function parseOpenAiCompatibleResponse(
   response: ProviderHttpResponse,
 ): ProviderGatewayResponse {
   if (response.status < 200 || response.status >= 300) {
-    throw new ProviderGatewayError('HTTP_ERROR', `${providerId} returned HTTP ${response.status}`, {
+    throw new ProviderGatewayError('HTTP_ERROR', httpErrorMessage(providerId, response), {
       providerId,
       status: response.status,
     })
@@ -192,7 +227,7 @@ function parseAnthropicResponse(
   response: ProviderHttpResponse,
 ): ProviderGatewayResponse {
   if (response.status < 200 || response.status >= 300) {
-    throw new ProviderGatewayError('HTTP_ERROR', `${providerId} returned HTTP ${response.status}`, {
+    throw new ProviderGatewayError('HTTP_ERROR', httpErrorMessage(providerId, response), {
       providerId,
       status: response.status,
     })
@@ -276,7 +311,7 @@ function parseGoogleResponse(
   response: ProviderHttpResponse,
 ): ProviderGatewayResponse {
   if (response.status < 200 || response.status >= 300) {
-    throw new ProviderGatewayError('HTTP_ERROR', `${providerId} returned HTTP ${response.status}`, {
+    throw new ProviderGatewayError('HTTP_ERROR', httpErrorMessage(providerId, response), {
       providerId,
       status: response.status,
     })

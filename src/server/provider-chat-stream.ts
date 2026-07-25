@@ -38,6 +38,56 @@ export function supportsRealtimeStreaming(providerId: SymbolWrightProviderId): b
   return REALTIME_STREAMING_PROVIDERS.has(providerId)
 }
 
+async function readAllText(body: AsyncIterable<string>): Promise<string> {
+  let text = ''
+  for await (const chunk of body) {
+    text += chunk
+  }
+  return text
+}
+
+/**
+ * On a non-2xx status the body is a plain JSON (or text) error payload, not
+ * an SSE stream, so it's read in full and inspected instead of being parsed
+ * line-by-line. This is what lets a surfaced "returned HTTP 401" also say
+ * *why* (bad key, unknown model, ...) instead of leaving that as a guess.
+ */
+async function readStreamErrorDetail(body: AsyncIterable<string>): Promise<string | undefined> {
+  const raw = (await readAllText(body)).trim()
+  if (raw.length === 0) {
+    return undefined
+  }
+  try {
+    const parsed = JSON.parse(raw) as { error?: { message?: string } | string; message?: string }
+    if (typeof parsed.error === 'string') {
+      return parsed.error
+    }
+    if (typeof parsed.error === 'object' && parsed.error !== null) {
+      const message = parsed.error.message
+      if (typeof message === 'string') {
+        return message
+      }
+    }
+    if (typeof parsed.message === 'string') {
+      return parsed.message
+    }
+  } catch {
+    // Not JSON – fall through to the raw text below.
+  }
+  return raw.slice(0, 500)
+}
+
+async function buildHttpErrorMessage(
+  label: string,
+  status: number,
+  body: AsyncIterable<string>,
+): Promise<string> {
+  const detail = await readStreamErrorDetail(body)
+  return detail === undefined
+    ? `${label} returned HTTP ${status}`
+    : `${label} returned HTTP ${status}: ${detail}`
+}
+
 async function* readLines(body: AsyncIterable<string>): AsyncGenerator<string> {
   let buffer = ''
   for await (const chunk of body) {
@@ -269,10 +319,11 @@ async function* streamGemini(
   const httpRequest = buildGeminiStreamRequest(request, config, model)
   const response = await transport.requestStream(httpRequest)
   if (response.status < 200 || response.status >= 300) {
-    throw new ProviderGatewayError('HTTP_ERROR', `google-gemini returned HTTP ${response.status}`, {
-      providerId: config.id,
-      status: response.status,
-    })
+    throw new ProviderGatewayError(
+      'HTTP_ERROR',
+      await buildHttpErrorMessage('google-gemini', response.status, response.body),
+      { providerId: config.id, status: response.status },
+    )
   }
 
   for await (const line of readLines(response.body)) {
@@ -305,10 +356,11 @@ async function* streamOpenAiCompatible(
   const httpRequest = buildOpenAiCompatibleStreamRequest(request, config, model)
   const response = await transport.requestStream(httpRequest)
   if (response.status < 200 || response.status >= 300) {
-    throw new ProviderGatewayError('HTTP_ERROR', `${config.id} returned HTTP ${response.status}`, {
-      providerId: config.id,
-      status: response.status,
-    })
+    throw new ProviderGatewayError(
+      'HTTP_ERROR',
+      await buildHttpErrorMessage(config.id, response.status, response.body),
+      { providerId: config.id, status: response.status },
+    )
   }
 
   for await (const line of readLines(response.body)) {
@@ -328,10 +380,11 @@ async function* streamAnthropic(
   const httpRequest = buildAnthropicStreamRequest(request, config, model)
   const response = await transport.requestStream(httpRequest)
   if (response.status < 200 || response.status >= 300) {
-    throw new ProviderGatewayError('HTTP_ERROR', `anthropic returned HTTP ${response.status}`, {
-      providerId: config.id,
-      status: response.status,
-    })
+    throw new ProviderGatewayError(
+      'HTTP_ERROR',
+      await buildHttpErrorMessage('anthropic', response.status, response.body),
+      { providerId: config.id, status: response.status },
+    )
   }
 
   let pendingEvent: string | undefined
