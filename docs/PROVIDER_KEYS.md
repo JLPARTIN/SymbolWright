@@ -4,7 +4,7 @@ SymbolWright uses two different key classes.
 
 ## 1. SymbolWright access key
 
-`SYMBOLWRIGHT_API_KEY` controls access to SymbolWright itself. Browsers, external LLMs, coding agents, and API clients may send this key to the SymbolWright API.
+`SYMBOLWRIGHT_API_KEY` controls access to SymbolWright itself, as the **local operator's** unrestricted credential — it is what the operator's own browser/dashboard/CLI use. It is not the credential to hand to an external LLM, coding agent, or automation: since Large PR Bundle #10 ("Delegated Agent Access"), external agents should instead be issued a scoped, expiring, revocable `sw_agent_...` credential (see [`docs/security/DELEGATED_AGENT_ACCESS.md`](security/DELEGATED_AGENT_ACCESS.md)) rather than the shared operator key. `SYMBOLWRIGHT_AGENT_TOKEN` is a related, agent-side-only environment variable — it holds one such scoped token and is read by `symbolwright mcp-server` to scope that MCP connection to the token's grant (see `docs/runtime/SYMBOLWRIGHT_MCP_SERVER.md`); it is never set on the server side and never controls what the server itself accepts.
 
 ## 2. Provider credentials
 

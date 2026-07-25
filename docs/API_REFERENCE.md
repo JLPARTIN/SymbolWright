@@ -12,7 +12,14 @@ Governed tool execution is live today over two transports: `POST /api/agent` (HT
 
 ## Security model
 
-External clients authenticate to SymbolWright with a `SYMBOLWRIGHT_API_KEY`.
+External clients authenticate to SymbolWright with a `SYMBOLWRIGHT_API_KEY`, which grants full,
+unrestricted local-operator access — intended for the operator's own tools and dashboard, not for
+handing to an external LLM or coding agent. External agents should instead be issued a scoped
+`sw_agent_...` credential through the delegated-agent-access system (below) — see
+[`docs/security/DELEGATED_AGENT_ACCESS.md`](security/DELEGATED_AGENT_ACCESS.md) for the full
+capability/scope/approval model. Every `/api/*` route accepts either credential in the same
+`Authorization: Bearer ...` header; an agent token is restricted to its grant's exact capabilities,
+repositories, and branch patterns, re-checked on every request.
 
 Provider credentials stay behind SymbolWright:
 
@@ -67,6 +74,36 @@ Provider Adapter
 | `POST` | `/api/tools/run` | Yes | Contract only | Run a governed tool through policy, approval, audit, and redaction gates. |
 | `GET` | `/api/sessions/:id` | Yes | Contract only | Read a persisted mission session and audit-safe state. |
 | `GET` | `/api/missions/:id/events` | Yes | Contract only | Stream mission events, tool output, terminal-safe logs, and PR readiness updates. |
+
+## Delegated Agent Access routes
+
+Full model: [`docs/security/DELEGATED_AGENT_ACCESS.md`](security/DELEGATED_AGENT_ACCESS.md). Grant
+management routes require the operator's `SYMBOLWRIGHT_API_KEY`; an agent token cannot manage
+grants, including its own.
+
+| Method | Path | Auth | Status | Purpose |
+| --- | --- | --- | --- | --- |
+| `POST` | `/api/v1/access-grants` | Operator | Live | Create a scoped agent grant; returns the plaintext credential once. |
+| `GET` | `/api/v1/access-grants` | Operator | Live | List all grants. |
+| `GET` | `/api/v1/access-grants/:id` | Operator | Live | Grant detail: effective permissions, credentials (metadata only), pending approvals. |
+| `PATCH` | `/api/v1/access-grants/:id` | Operator | Live | Narrow a grant only — add denied capabilities, shorten (never extend) `expiresAt`, tighten limits, update `displayName`/`reason`. Cannot add a capability or widen scope. |
+| `POST` | `/api/v1/access-grants/:id/pause` | Operator | Live | Pause a grant — every session invalidated immediately, reversible. |
+| `POST` | `/api/v1/access-grants/:id/resume` | Operator | Live | Resume a paused (not revoked, not expired) grant. |
+| `POST` | `/api/v1/access-grants/:id/revoke` | Operator | Live | Revoke permanently — every session and credential invalidated immediately, irreversible. |
+| `POST` | `/api/v1/access-grants/:id/rotate` | Operator | Live | Revoke the current credential and issue a new one (returned once). |
+| `DELETE` | `/api/v1/access-grants/:id` | Operator | Live | Delete a grant record. |
+| `POST` | `/api/v1/device-authorization` | No (device-flow) | Live | Agent requests a device code + short operator-facing `userCode`. |
+| `POST` | `/api/v1/device-authorization/approve` | Operator | Live | Approve a pending device request by `userCode`, issuing a grant. |
+| `POST` | `/api/v1/device-authorization/deny` | Operator | Live | Deny a pending device request. |
+| `GET` | `/api/v1/device-authorization/pending` | Operator | Live | List pending device requests. |
+| `POST` | `/api/v1/oauth/token` | No (device-flow) | Live | Agent polls with `{ device_code }`; returns the token once approved. |
+| `GET` | `/api/v1/permissions/catalog` | Operator or agent | Live | The full capability taxonomy with risk levels. |
+| `GET` | `/api/v1/permissions/profiles` | Operator or agent | Live | The built-in permission profiles. |
+| `GET` | `/api/v1/audit/agent-access` | Operator | Live | Audit event log, optionally filtered by `?grantId=`. |
+
+An agent-token-authenticated request to any other route not explicitly capability-mapped in
+`src/access/route-capability-map.ts` receives `403 { reasonCode: 'ROUTE_NOT_PERMITTED' }` — new
+routes are unreachable by agents until deliberately added to that allowlist.
 
 ## Mission request shape
 

@@ -160,6 +160,20 @@ export interface GitHubClientRegistry {
   readonly collaborationClient?: PrCollaborationClient
 }
 
+/**
+ * Per-request delegated-agent-access enforcement hook. Present only when the caller authenticated
+ * with a scoped agent token (see `src/access/`) rather than the legacy operator API key. Callers
+ * close over the real `AuthorizationService` and the request's repository/branch/mission context;
+ * `requireAuthorized` rejects when the capability is not granted, scope is exceeded, or an
+ * operator approval is still pending — see `src/runtime/tools/authorized-tool-execution.ts`.
+ */
+export interface ToolAccessControl {
+  readonly principalId: string
+  readonly grantId: string
+  readonly sessionId?: string
+  readonly requireAuthorized: (capability: string, toolName: string) => Promise<void>
+}
+
 /** Context passed to every tool execution — cwd, policy, and optional execution adapters. */
 export interface RuntimeToolContext {
   readonly cwd: string
@@ -186,6 +200,7 @@ export interface RuntimeToolContext {
    * `src/runtime/context/untrusted-content-boundary.ts`).
    */
   readonly untrustedRepositoryContent?: boolean
+  readonly accessControl?: ToolAccessControl
 }
 
 /** Defines a runtime tool with name, capability, and typed execute function. */

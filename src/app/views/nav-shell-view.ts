@@ -13,6 +13,7 @@ export const APP_NAV_ENTRIES: readonly AppNavEntry[] = [
   { id: 'tools', label: 'Tools' },
   { id: 'memory', label: 'Memory' },
   { id: 'checkpoints', label: 'Checkpoints' },
+  { id: 'agent-access', label: 'Agent Access' },
   { id: 'settings', label: 'Settings' },
 ]
 

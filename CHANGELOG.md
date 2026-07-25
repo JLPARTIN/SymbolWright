@@ -4,6 +4,35 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ## [Unreleased]
 
+### Added
+
+- **Delegated Agent Access (Large PR Bundle #10)**: a secure, auditable, revocable
+  capability-grant system so an operator can authorize an external LLM, coding agent, MCP
+  client, or automation to use SymbolWright directly — without sharing `SYMBOLWRIGHT_API_KEY`
+  or a GitHub credential. New `src/access/` subsystem: a ~50-capability taxonomy with fixed
+  risk levels (`access-capability-catalog.ts`), five built-in permission profiles — Repository
+  Analyst, Coding Agent (recommended default), Maintainer Agent, Temporary Administrator
+  (step-up-gated, 1-hour max), Custom (`access-profiles.ts`) — repository/branch-pattern scoping
+  (`access-branch-match.ts`), a single `AuthorizationService` evaluator every enforcement point
+  shares (`authorization-service.ts`), scoped `sw_agent_...` bearer credentials hashed at rest
+  with `scrypt` (`access-credential.ts`), an OAuth-style device-authorization flow for terminal
+  agents and CI workers (`device-authorization-service.ts`), and an append-only audit log
+  (`.symbolwright/access/audit.jsonl`). Enforced at every real production entry point, not just
+  new routes: the HTTP request dispatcher (`symbolwright-chat-server.ts`, fail-closed route
+  allowlist for agent-token principals), the real LLM tool-execution loop
+  (`runAuthorizedTool()` in `src/runtime/tools/authorized-tool-execution.ts`, shared by
+  `agent-loop.ts`'s `executeToolCall` and MCP's `call()`), and MCP tool discovery
+  (`SYMBOLWRIGHT_AGENT_TOKEN` scopes `tools/list`/`tools/call` to the grant's exact
+  capabilities). New versioned REST surface: `/api/v1/access-grants*` (create/list/get/pause/
+  resume/revoke/rotate/delete), `/api/v1/device-authorization*` + `/api/v1/oauth/token`,
+  `/api/v1/permissions/{catalog,profiles}`, `/api/v1/audit/agent-access`. New "Agent Access"
+  Settings-UI section (`src/app/views/agent-access-view.ts`): create-grant form, pending
+  device-authorization approvals, grant list with pause/resume/revoke/rotate/inspect, and a
+  one-time credential-reveal box. The legacy `SYMBOLWRIGHT_API_KEY` local-operator path is
+  fully preserved — every existing test and workflow using it is unaffected; it is never
+  silently treated as unrestricted agent authorization. Full model, threat model, capability
+  reference, and operator examples: `docs/security/DELEGATED_AGENT_ACCESS.md`.
+
 ### Changed
 
 - **Trust boundary hardening for autonomous execution (Large PR Bundle #9)**:

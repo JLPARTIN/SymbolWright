@@ -9,6 +9,7 @@ import {
   UNTRUSTED_CONTENT_SYSTEM_NOTICE,
   wrapUntrustedContent,
 } from '../runtime/context/untrusted-content-boundary.js'
+import { runAuthorizedTool } from '../runtime/tools/authorized-tool-execution.js'
 import type {
   AgentLoopConfig,
   AgentLoopEvent,
@@ -111,7 +112,7 @@ async function executeToolCall(
 
   const startTime = Date.now()
   try {
-    const rawOutput = await bridged.runtimeTool.execute(call.input, toolContext)
+    const rawOutput = await runAuthorizedTool(bridged.runtimeTool, call.input, toolContext)
     const output =
       toolContext.untrustedRepositoryContent === true &&
       (bridged.runtimeTool.capability === 'READ' || bridged.runtimeTool.capability === 'SEARCH')

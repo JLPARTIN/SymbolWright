@@ -61,10 +61,13 @@ export async function runMcpServerCommand(
   // stdout is the JSON-RPC wire — all diagnostics must go to stderr.
   console.error(`SymbolWright MCP server starting in ${mode} mode (stdio)`)
 
+  const agentToken = process.env['SYMBOLWRIGHT_AGENT_TOKEN']
+
   const server = runSymbolWrightMcpServer({
     mode,
     cwd,
     hasGitHubToken: process.env['GITHUB_TOKEN'] !== undefined,
+    ...(agentToken === undefined || agentToken.trim().length === 0 ? {} : { agentToken }),
   })
 
   await server.closed

@@ -229,6 +229,7 @@ sandboxed command execution with fail-closed behavior
 protected branch and force-push blocking
 GitHub write credential checks
 bounded validation and release-readiness gates
+scoped, revocable, auditable delegated agent access grants (no shared credential for external agents)
 ```
 
 These rails are not approval theater. They prevent accidental repo damage while keeping SymbolWright useful as a direct coding agent.
@@ -261,6 +262,7 @@ run sandboxed PR preflight evidence checks and block pushes on regression
 serve a real browser chat UI + HTTP API against any registered provider (`symbolwright serve`, see docs/runtime/SYMBOLWRIGHT_CHAT_SERVER.md)
 run the real tool-execution agent loop over HTTP for Anthropic and any OpenAI-compatible provider, mode-gated (`POST /api/agent` on `symbolwright serve`)
 run itself as a real MCP server so any MCP-compatible LLM client can use its tools as a plugin (`symbolwright mcp-server`, see docs/runtime/SYMBOLWRIGHT_MCP_SERVER.md)
+authorize an external LLM/coding agent/MCP client/CI workflow with a scoped, expiring, revocable capability grant instead of a shared API key (Settings -> Agent Access, or `/api/v1/access-grants`, see docs/security/DELEGATED_AGENT_ACCESS.md)
 ```
 
 Ajna remains evidence-first:
@@ -314,6 +316,7 @@ Normal PR validation runs on Node 22 for one clear required signal. Node 20 and 
 
 ```txt
 docs/migration/AELIB_SYMBOLWRIGHT_EXTRACTION_NOTES.md
+docs/security/DELEGATED_AGENT_ACCESS.md
 docs/governance/SYMBOLWRIGHT_PERMISSION_MODEL.md
 docs/governance/SYMBOLWRIGHT_THREAT_MODEL.md
 docs/cli/SYMBOLWRIGHT_CLI_TERMINAL_UX_PLAN.md

@@ -84,3 +84,4 @@ User input → CLI → Activation (policy validation, registry, dispatcher, TUI)
 | **GitHub** | External repository target parsing, acquisition, operations policy, PR-packet generation | `src/github/` |
 | **MCP** | stdio MCP server and client, sharing the agent loop's tool registry | `src/mcp/` |
 | **Kernel** | Agent-kernel context/mission packets, planning, and provider routing | `src/kernel/` |
+| **Access** | Delegated agent access: principals, capability grants, credentials, sessions, approvals, authorization service, audit — see `docs/security/DELEGATED_AGENT_ACCESS.md` | `src/access/` |

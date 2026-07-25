@@ -476,7 +476,10 @@ export function parseGitHubRemoteUrl(remoteUrl: string): string | undefined {
   return undefined
 }
 
-async function detectGitHubRepository(cwd: string): Promise<string | undefined> {
+/** Exported for delegated-agent-access repository-scope resolution (`symbolwright-chat-server.ts`) —
+ * the "repository" a grant's `repositoryScope` is checked against, for a server process that is
+ * always bound to exactly one local working tree. */
+export async function detectGitHubRepository(cwd: string): Promise<string | undefined> {
   const result = await runGitCommand(['remote', 'get-url', 'origin'], cwd)
   if (result.exitCode !== 0) return undefined
   return parseGitHubRemoteUrl(result.stdout)
