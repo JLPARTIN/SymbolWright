@@ -11,7 +11,12 @@ describe('renderRuntimeSearch', () => {
   })
 
   it('includes matching filenames', async () => {
-    const output = await renderRuntimeSearch('SymbolWright')
+    // The default 50-match cap combined with directory-listing order (which is filesystem- and
+    // environment-dependent, not guaranteed alphabetical) means a broad query like "SymbolWright"
+    // can exhaust its budget before the walk reaches the repository root's README.md, purely as
+    // the codebase grows. A generous explicit limit keeps this assertion about "does search find
+    // an obviously relevant file" rather than "does directory-listing order favor README.md".
+    const output = await renderRuntimeSearch('SymbolWright', process.cwd(), 500)
 
     expect(output).toContain('README.md')
   })
