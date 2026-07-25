@@ -143,4 +143,9 @@ vite.config.ts.timestamp-*
 .symbolwright/sessions/
 .symbolwright/autonomy/
 .symbolwright/runtime/
+
+# Legacy .codemind state dir (pre-rebrand runtime state; read only by
+# migrateLegacyStateDir for one-time migration, never written to — must
+# never be committed)
+.codemind/
 pr-*-starter-*.patch
