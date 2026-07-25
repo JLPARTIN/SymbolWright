@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { DEFAULT_RUNTIME_PROTECTED_PATHS } from '../runtime/policy/runtime-policy.js'
 import {
   evaluateSymbolWrightPermissionRequest,
   resolveHighestDisposition,
@@ -93,5 +94,35 @@ describe('SymbolWright permission policy', () => {
     expect(decision.disposition).toBe('ASK')
     expect(decision.auditRequired).toBe(true)
     expect(decision.protectedPathHits[0]?.protectedClass).toBe('CI_WORKFLOW')
+  })
+})
+
+describe('protected-path single source of truth', () => {
+  it('denies every path DEFAULT_RUNTIME_PROTECTED_PATHS blocks, so the two policies cannot silently diverge', () => {
+    for (const protectedPath of DEFAULT_RUNTIME_PROTECTED_PATHS) {
+      const decision = evaluateSymbolWrightPermissionRequest(
+        makeRequest({
+          toolCategory: 'FILE_READER',
+          operatorApproved: true,
+          targets: [{ kind: 'file', value: protectedPath }],
+        }),
+      )
+
+      expect(decision.disposition, `expected ${protectedPath} to be denied`).toBe('DENY')
+      expect(decision.protectedPathHits).toHaveLength(1)
+    }
+  })
+
+  it('does not let an unrelated path that merely contains a protected segment name collide', () => {
+    // ".github" contains the substring ".git", but is not the ".git" directory.
+    const decision = evaluateSymbolWrightPermissionRequest(
+      makeRequest({
+        toolCategory: 'FILE_READER',
+        operatorApproved: true,
+        targets: [{ kind: 'file', value: '.github/ISSUE_TEMPLATE/bug.md' }],
+      }),
+    )
+
+    expect(decision.protectedPathHits).toHaveLength(0)
   })
 })

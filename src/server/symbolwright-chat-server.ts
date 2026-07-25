@@ -61,7 +61,6 @@ import { SandboxHistoryStore } from '../sandbox/sandbox-history.js'
 import { SandboxService } from '../sandbox/sandbox-service.js'
 import { collectStatus } from '../web/status-runner.js'
 import type { RuntimeStatusView } from '../web/status.js'
-import { renderChatUiHtml } from './chat-ui-html.js'
 import {
   AgentProviderMissingCredentialsError,
   resolveAgentLlmProvider,
@@ -152,7 +151,7 @@ function timingSafeEqualStrings(a: string, b: string): boolean {
   return timingSafeEqual(bufferA, bufferB)
 }
 
-function isAuthorized(req: IncomingMessage, apiKey: string): boolean {
+export function isAuthorized(req: IncomingMessage, apiKey: string): boolean {
   const header = req.headers.authorization
   if (header === undefined || !header.startsWith('Bearer ')) {
     return false
@@ -286,12 +285,6 @@ export function createChatServerRequestListener(
     if (req.method === 'OPTIONS') {
       res.writeHead(204)
       res.end()
-      return
-    }
-
-    if (req.method === 'GET' && url.pathname === '/') {
-      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-      res.end(renderChatUiHtml())
       return
     }
 

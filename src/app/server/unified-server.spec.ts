@@ -81,30 +81,68 @@ describe('GET /api/status', () => {
   })
 })
 
-describe('Workspace API stays unauthenticated', () => {
-  it('GET /api/workspace/languages works without a Bearer header', async () => {
+describe('Workspace API requires the same Bearer auth as every other /api/* route', () => {
+  it('GET /api/workspace/languages returns 401 without a Bearer header', async () => {
     const server = await launch()
     const response = await fetch(`${server.url}/api/workspace/languages`)
+    expect(response.status).toBe(401)
+    const body = (await response.json()) as { error: string }
+    expect(body.error).toBe('unauthorized')
+  })
+
+  it('GET /api/workspace/languages succeeds with a valid Bearer header', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/workspace/languages`, { headers: auth() })
     expect(response.status).toBe(200)
     const body = (await response.json()) as { languages: unknown[] }
     expect(Array.isArray(body.languages)).toBe(true)
   })
 
-  it('POST /api/workspace/run works without a Bearer header', async () => {
+  it('POST /api/workspace/run returns 401 without a Bearer header', async () => {
     const server = await launch()
     const response = await fetch(`${server.url}/api/workspace/run`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ languageId: 'typescript', code: 'console.log(1)' }),
     })
+    expect(response.status).toBe(401)
+  })
+
+  it('POST /api/workspace/run returns 401 with an invalid Bearer header', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/workspace/run`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer wrong-key' },
+      body: JSON.stringify({ languageId: 'typescript', code: 'console.log(1)' }),
+    })
+    expect(response.status).toBe(401)
+  })
+
+  it('POST /api/workspace/run succeeds with a valid Bearer header', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/workspace/run`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...auth() },
+      body: JSON.stringify({ languageId: 'typescript', code: 'console.log(1)' }),
+    })
     expect(response.status).toBe(200)
   })
 
-  it('POST /api/workspace/intelligence works without a Bearer header', async () => {
+  it('POST /api/workspace/intelligence returns 401 without a Bearer header', async () => {
     const server = await launch()
     const response = await fetch(`${server.url}/api/workspace/intelligence`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ kind: 'review', code: 'const a = 1', sourceLanguageId: 'typescript' }),
+    })
+    expect(response.status).toBe(401)
+  })
+
+  it('POST /api/workspace/intelligence succeeds with a valid Bearer header', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/workspace/intelligence`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...auth() },
       body: JSON.stringify({ kind: 'review', code: 'const a = 1', sourceLanguageId: 'typescript' }),
     })
     expect(response.status).toBe(200)

@@ -152,6 +152,26 @@ describe('edit-file-tool', () => {
       ),
     ).rejects.toThrow('Write blocked')
   })
+
+  it('rejects a symlink inside the workspace whose target resolves outside it', async () => {
+    const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'symbolwright-test-outside-'))
+    try {
+      const secretOutside = path.join(outsideDir, 'secret.ts')
+      fs.writeFileSync(secretOutside, 'export const secret = "Hello"\n')
+      fs.symlinkSync(secretOutside, path.join(tempDir, 'evil-link.ts'))
+
+      await expect(
+        executeEditFileTool(
+          { path: 'evil-link.ts', oldText: '"Hello"', newText: '"Hi"' },
+          tempDir,
+          allowWrite,
+        ),
+      ).rejects.toThrow('Access blocked outside workspace')
+      expect(fs.readFileSync(secretOutside, 'utf-8')).toContain('"Hello"')
+    } finally {
+      fs.rmSync(outsideDir, { recursive: true, force: true })
+    }
+  })
 })
 
 describe('bash-tool', () => {

@@ -5,6 +5,7 @@ import { resolveWorkspacePath, assertWriteApproved } from '../policy/runtime-pol
 import type { RuntimeToolDefinition } from '../types.js'
 import { renderRuntimeBoundary } from '../renderers/runtime-renderers.js'
 import { checkpointBeforeWrite } from '../../checkpoint/checkpoint-tool-hook.js'
+import { atomicWriteFile } from '../fs/atomic-write.js'
 
 export interface EditFileInput {
   readonly path: string
@@ -81,7 +82,7 @@ export async function executeEditFileTool(
     : originalContent.replace(input.oldText, input.newText)
 
   onBeforeWrite?.(resolvedPath, input.path, originalContent)
-  fs.writeFileSync(resolvedPath, newContent, 'utf-8')
+  atomicWriteFile(resolvedPath, newContent)
 
   const relativePath = path.relative(cwd, resolvedPath) || path.basename(resolvedPath)
   const replacements = input.replaceAll ? originalContent.split(input.oldText).length - 1 : 1

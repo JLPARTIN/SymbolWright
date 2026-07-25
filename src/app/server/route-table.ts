@@ -21,6 +21,7 @@ export async function tryHandleUnifiedRoute(
   req: IncomingMessage,
   res: ServerResponse,
   url: URL,
+  apiKey: string,
 ): Promise<boolean> {
   if (req.method === 'GET' && url.pathname === '/') {
     sendHtmlDocument(res, renderAppShellHtml())
@@ -38,7 +39,7 @@ export async function tryHandleUnifiedRoute(
     return false
   }
 
-  if (await tryHandleWorkspaceRoute(req, res, url)) {
+  if (await tryHandleWorkspaceRoute(req, res, url, apiKey)) {
     return true
   }
 

@@ -56,6 +56,7 @@ export function createMissionAutonomyEditExecutor(
     cwd: repositoryRoot,
     policy,
     sessionId: options.mission.id,
+    untrustedRepositoryContent: options.mission.labels.includes('external-repository'),
   }
   const semanticIndexStore =
     options.workspaceRoot === undefined

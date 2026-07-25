@@ -178,6 +178,14 @@ export interface RuntimeToolContext {
   readonly memoryTools?: AgentMemoryTools
   /** Groups checkpoints under `.symbolwright/checkpoints/<sessionId>/`. Auto-generated when absent. */
   readonly sessionId?: string
+  /**
+   * True when the active mission's repository was acquired from external,
+   * untrusted intake (Bundle #8) rather than being the operator's own
+   * trusted checkout. When set, `READ`/`SEARCH` tool output is wrapped in
+   * an untrusted-content delimiter before it reaches the LLM (see
+   * `src/runtime/context/untrusted-content-boundary.ts`).
+   */
+  readonly untrustedRepositoryContent?: boolean
 }
 
 /** Defines a runtime tool with name, capability, and typed execute function. */

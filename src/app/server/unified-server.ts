@@ -46,7 +46,7 @@ export function createUnifiedRequestListener(
   async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const url = new URL(req.url ?? '/', 'http://localhost')
 
-    if (await tryHandleUnifiedRoute(req, res, url)) {
+    if (await tryHandleUnifiedRoute(req, res, url, options.apiKey)) {
       return
     }
 

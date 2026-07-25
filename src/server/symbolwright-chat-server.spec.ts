@@ -115,11 +115,14 @@ describe('symbolwright chat server routes', () => {
     expect(response.status).toBe(204)
   })
 
-  it('serves the chat UI at /', async () => {
+  it('requires authentication at / (the app shell owns serving it in production)', async () => {
+    // `symbolwright-chat-server.ts`'s own request listener is never started
+    // standalone in production -- `unified-server.ts` always serves `GET /`
+    // (the real app shell) via `route-table.ts` before this listener ever
+    // runs, so this listener has no special-cased `/` route of its own.
     const server = await launch()
     const response = await fetch(`${server.url}/`)
-    expect(response.status).toBe(200)
-    expect(await response.text()).toContain('SymbolWright Chat')
+    expect(response.status).toBe(401)
   })
 
   it('rejects unauthenticated requests to /api/providers', async () => {

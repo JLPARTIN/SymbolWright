@@ -366,7 +366,7 @@ export function buildWorkspaceClientScript(options: {
       }
       const response = await fetch('/api/workspace/run', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', authorization: 'Bearer ' + appState.symbolWrightKey },
         body: JSON.stringify({ languageId: language.id, code: editor.value }),
       });
       const result = await response.json();
@@ -490,7 +490,7 @@ export function buildWorkspaceClientScript(options: {
       try {
         const response = await fetch('/api/workspace/intelligence', {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: { 'content-type': 'application/json', authorization: 'Bearer ' + appState.symbolWrightKey },
           body: JSON.stringify({
             kind: task,
             code: editor.value,

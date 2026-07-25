@@ -17,7 +17,7 @@ export function renderSettingsViewHtml(): string {
     <p class="muted">This key is stored in this browser's local storage, the same entry the Agent view's connect flow uses. It gates every authenticated SymbolWright API (Status, Tools, Memory, Checkpoints, Providers, Chat, Agent). Do not use it on a shared or public computer — clear it when you're done.</p>
 
     <h3>Scratch Workspace</h3>
-    <p class="muted">The Workspace editor currently persists sessions only in this browser's local storage — it does not read or write the checked-out repository on disk. Real repository-backed editing (open the actual working tree, diffs, commits, PRs) is planned for Large PR Bundle 2.</p>
+    <p class="muted">The Workspace tab's editor persists sessions only in this browser's local storage — it does not read or write the checked-out repository on disk. It is an intentionally separate scratch pad; for real repository-backed editing (the actual working tree, diffs, commits, PRs), use the Repository tab.</p>
   </section>`
 }
 

@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -273,6 +273,27 @@ describe('PUT /api/repository/file', () => {
       body: JSON.stringify({ path: '../../etc/passwd', content: 'x' }),
     })
     expect(response.status).toBe(400)
+  })
+
+  it('rejects a write through a symlink inside the workspace that resolves outside it', async () => {
+    const outsideDir = mkdtempSync(join(tmpdir(), 'symbolwright-repository-routes-outside-'))
+    try {
+      const secretOutside = join(outsideDir, 'secret.ts')
+      writeFileSync(secretOutside, 'export const secret = 1\n')
+      symlinkSync(secretOutside, join(cwd, 'evil-link.ts'))
+
+      const server = await launch()
+      const response = await fetch(`${server.url}/api/repository/file`, {
+        method: 'PUT',
+        headers: { ...auth(), 'content-type': 'application/json' },
+        body: JSON.stringify({ path: 'evil-link.ts', content: 'export const secret = 2\n' }),
+      })
+
+      expect(response.status).toBe(400)
+      expect(readFileSync(secretOutside, 'utf-8')).toBe('export const secret = 1\n')
+    } finally {
+      rmSync(outsideDir, { recursive: true, force: true })
+    }
   })
 })
 

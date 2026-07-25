@@ -73,6 +73,14 @@ User input → CLI → Activation (policy validation, registry, dispatcher, TUI)
 | **TUI** | Terminal UI state machine | `src/tui/` |
 | **Storage** | Session persistence, audit ledger | `src/storage/` |
 | **Telemetry** | Cost tracking, usage summaries | `src/telemetry/` |
-| **Workspace** | Multi-repo workspace management | `src/workspace/` |
+| **Workspace** | Multi-repo workspace management, browser-facing polyglot code runner | `src/workspace/` |
 | **Activation** | Subsystem wiring and health verification | `src/activation/` |
 | **Observability** | Structured event bus for cross-cutting telemetry | `src/runtime/observability/` |
+| **App** | Unified dashboard shell, views, and API route tables | `src/app/` |
+| **Server** | Chat/provider/agent HTTP dispatcher the unified server wraps | `src/server/` |
+| **Mission** | Workspace-facing mission CRUD/lifecycle state machine, events, store | `src/mission/` |
+| **Autonomy** | Autonomous task-graph planner, coordinator, persistent executor, repair controller, semantic index | `src/autonomy/` |
+| **Sandbox** | Docker-hardened validation/write sandbox; separate guarded-host code-playground backend | `src/sandbox/` |
+| **GitHub** | External repository target parsing, acquisition, operations policy, PR-packet generation | `src/github/` |
+| **MCP** | stdio MCP server and client, sharing the agent loop's tool registry | `src/mcp/` |
+| **Kernel** | Agent-kernel context/mission packets, planning, and provider routing | `src/kernel/` |

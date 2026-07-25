@@ -24,6 +24,7 @@ import type {
   RuntimePolicySnapshot,
   RuntimeToolContext,
 } from '../../runtime/types.js'
+import { atomicWriteFile } from '../../runtime/fs/atomic-write.js'
 
 export interface RepositoryRouteContext {
   readonly cwd: string
@@ -307,8 +308,7 @@ export async function handleRepositoryFileWrite(
     }
 
     const snapshot = snapshotFileBeforeWrite(resolved, targetPath)
-    fs.mkdirSync(path.dirname(resolved), { recursive: true })
-    fs.writeFileSync(resolved, content, 'utf-8')
+    atomicWriteFile(resolved, content)
 
     checkpointBeforeWrite(
       toToolContext(context, sessionId),

@@ -139,6 +139,27 @@ describe('external repository mission integration — Bundle #8 full flow', () =
     expect(events.some((event) => event.type === 'github.intake.acquired')).toBe(true)
   })
 
+  it('labels the mission as external-repository, the flag that activates the untrusted-content boundary for its edit executor', async () => {
+    const originPath = await createBareOriginWithNodeFixture(fixtureRoot)
+
+    const intake = await performExternalRepositoryIntake({
+      target: target(`file://${originPath}`),
+      workspaceRoot,
+      missionService,
+      mode: 'writable',
+      objective: 'Add a new exported constant',
+      runtimeMode: 'READ_ONLY',
+    })
+
+    // `createMissionAutonomyEditExecutor` (src/server/mission-autonomy-edit-executor.ts)
+    // reads exactly this label to decide whether repository content read by
+    // this mission's tool calls gets wrapped in the untrusted-content
+    // boundary (src/runtime/context/untrusted-content-boundary.ts) before
+    // reaching the LLM -- this is the hardened trust-boundary path this
+    // bundle added, proven wired end-to-end from a real external intake.
+    expect(intake.mission?.labels).toContain('external-repository')
+  })
+
   it('never creates a mission or touches the origin when the intake mode is dry-run', async () => {
     const originPath = await createBareOriginWithNodeFixture(fixtureRoot)
     const originRefsBefore = await runGitCommand(['show-ref'], originPath)

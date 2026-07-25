@@ -110,6 +110,30 @@ describe('local file write gate', () => {
     expect(result.blockReasons).toContain('Write actions are disabled by runtime policy.')
   })
 
+  it('blocks a symlink inside the workspace whose target resolves outside it', () => {
+    const workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'local-write-gate-workspace-'))
+    const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'local-write-gate-outside-'))
+
+    try {
+      const secretOutside = path.join(outsideDir, 'secret.txt')
+      fs.writeFileSync(secretOutside, 'top secret', 'utf8')
+      fs.symlinkSync(secretOutside, path.join(workspace, 'evil-link.txt'))
+
+      const result = evaluateLocalFileWriteGate(
+        makeRequest({ targetPath: 'evil-link.txt' }),
+        workspace,
+        writePolicy,
+        undefined,
+      )
+
+      expect(result.decision).toBe('BLOCKED')
+      expect(result.blockReasons.some((reason) => reason.includes('outside workspace'))).toBe(true)
+    } finally {
+      fs.rmSync(workspace, { recursive: true, force: true })
+      fs.rmSync(outsideDir, { recursive: true, force: true })
+    }
+  })
+
   it('blocks protected targets and missing request notes', () => {
     const protectedPath = evaluateLocalFileWriteGate(
       makeRequest({ targetPath: '.git/config', reason: '', rollbackNote: '' }),

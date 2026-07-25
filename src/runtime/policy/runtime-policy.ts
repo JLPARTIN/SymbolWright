@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'node:path'
 
 import type { SymbolWrightRuntimeMode, RuntimePolicySnapshot } from '../types.js'
@@ -6,7 +7,7 @@ import type { SymbolWrightRuntimeMode, RuntimePolicySnapshot } from '../types.js
 export const DEFAULT_RUNTIME_PROTECTED_PATHS = [
   '.git',
   '.symbolwright', // local mission/checkpoint state
-  '.symbolwright', // legacy local mission/checkpoint state (pre-rebrand)
+  '.codemind', // legacy local mission/checkpoint state (pre-rebrand)
   '.env',
   '.env.local',
   'node_modules',
@@ -18,7 +19,7 @@ export const DEFAULT_RUNTIME_PROTECTED_PATHS = [
 export const DEFAULT_RUNTIME_NOISY_DIRS = [
   '.git',
   '.symbolwright', // local mission/checkpoint state
-  '.symbolwright', // legacy local mission/checkpoint state (pre-rebrand)
+  '.codemind', // legacy local mission/checkpoint state (pre-rebrand)
   'node_modules',
   'dist',
   'coverage',
@@ -148,13 +149,55 @@ export function resolveWorkspacePath(workspaceRoot: string, userPath: string): s
   return resolvedPath
 }
 
-/** Returns true if the resolved path is within the workspace root. */
+function isLexicallyInside(root: string, candidate: string): boolean {
+  const relative = path.relative(root, candidate)
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative))
+}
+
+/**
+ * Resolves `candidate` to its real, symlink-followed location. Walks up to
+ * the nearest ancestor that actually exists on disk (so a write target that
+ * doesn't exist yet is validated via its real parent directory), then
+ * appends any trailing segments that don't exist yet -- those can't be
+ * symlinks, so they don't need real-path resolution. Falls back to the
+ * lexical path if no ancestor can be resolved at all (e.g. a permissions
+ * error walking up to the filesystem root), which only ever narrows back to
+ * the pre-existing lexical-only check, never widens it.
+ */
+function realContainingPath(candidate: string): string {
+  const trailingSegments: string[] = []
+  let current = candidate
+
+  for (;;) {
+    try {
+      const real = fs.realpathSync(current)
+      return trailingSegments.length === 0 ? real : path.join(real, ...trailingSegments.reverse())
+    } catch {
+      const parent = path.dirname(current)
+      if (parent === current) {
+        return candidate
+      }
+      trailingSegments.push(path.basename(current))
+      current = parent
+    }
+  }
+}
+
+/**
+ * Returns true if the resolved path is within the workspace root, checking
+ * both the lexical path and the real (symlink-resolved) location. A symlink
+ * whose textual path sits inside the workspace but whose target resolves
+ * outside it fails this check even though it passes the lexical one.
+ */
 export function isPathInsideWorkspace(workspaceRoot: string, resolvedPath: string): boolean {
   const root = path.resolve(workspaceRoot)
   const candidate = path.resolve(resolvedPath)
-  const relative = path.relative(root, candidate)
 
-  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative))
+  if (!isLexicallyInside(root, candidate)) {
+    return false
+  }
+
+  return isLexicallyInside(realContainingPath(root), realContainingPath(candidate))
 }
 
 /** Throws if the path is outside the workspace or hits a protected path. */
