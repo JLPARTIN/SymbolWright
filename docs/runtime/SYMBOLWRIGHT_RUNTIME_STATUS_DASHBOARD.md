@@ -2,7 +2,7 @@
 
 **Phase:** S
 **Status:** COMPLETE
-**Command:** `codemind runtime-status`
+**Command:** `symbolwright runtime-status`
 
 ## Purpose
 
@@ -21,7 +21,7 @@ Phase S adds a runtime status dashboard that provides a comprehensive view of th
 ## CLI
 
 ```bash
-codemind runtime-status
+symbolwright runtime-status
 ```
 
 ## Boundary

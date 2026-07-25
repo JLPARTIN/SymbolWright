@@ -79,7 +79,7 @@ export async function runSubagentRunCommand(
 
   if (subagentArg === undefined || goal.length === 0) {
     throw new Error(
-      `Usage: codemind subagent run <${SUBAGENT_NAMES.join('|')}> "<goal>" [--enable-governed] [--json]`,
+      `Usage: symbolwright subagent run <${SUBAGENT_NAMES.join('|')}> "<goal>" [--enable-governed] [--json]`,
     )
   }
 

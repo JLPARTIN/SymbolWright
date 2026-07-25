@@ -574,7 +574,7 @@ export async function handleRepositoryPullRequestCreate(
   ) {
     sendJson(res, 400, {
       error:
-        'GitHub PR creation requires GITHUB_TOKEN to be configured on the server. Set it and restart codemind serve.',
+        'GitHub PR creation requires GITHUB_TOKEN to be configured on the server. Set it and restart symbolwright serve.',
     })
     return
   }

@@ -33,7 +33,7 @@ describe('runDoctor', () => {
 
     expect(pkgCheck).toBeDefined()
     expect(pkgCheck?.status).toBe('PASS')
-    expect(pkgCheck?.detail).toContain('codemind')
+    expect(pkgCheck?.detail).toContain('symbolwright')
   })
 
   it('checks runtime phases', () => {

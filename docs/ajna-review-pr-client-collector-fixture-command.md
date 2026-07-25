@@ -1,6 +1,6 @@
 # Ajna review-pr client collector fixture command
 
-The `codemind ajna review-pr-client-collector-fixture <json-file>` command reads a local request and renders an Ajna review report through a fake injected client bridge.
+The `symbolwright ajna review-pr-client-collector-fixture <json-file>` command reads a local request and renders an Ajna review report through a fake injected client bridge.
 
 It proves this local-only chain:
 

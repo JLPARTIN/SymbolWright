@@ -5,7 +5,7 @@ This document records Phase G live read adapter client seam.
 ## Active command
 
 ```text
-codemind live-read-client-fixture <json-file>
+symbolwright live-read-client-fixture <json-file>
 ```
 
 ## Purpose

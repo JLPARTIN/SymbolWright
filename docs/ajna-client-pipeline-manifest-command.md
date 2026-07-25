@@ -1,6 +1,6 @@
 # Ajna client pipeline manifest command
 
-The `codemind ajna client-pipeline-manifest` command prints the local fixture pipeline for the Ajna client collector bridge.
+The `symbolwright ajna client-pipeline-manifest` command prints the local fixture pipeline for the Ajna client collector bridge.
 
 It lists the three local steps:
 

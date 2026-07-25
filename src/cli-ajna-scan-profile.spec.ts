@@ -39,7 +39,7 @@ afterEach(() => {
 })
 
 describe('buildAjnaScanProfileForRepo', () => {
-  it('builds a read-only Ajna profile from existing codemind scan facts', () => {
+  it('builds a read-only Ajna profile from existing symbolwright scan facts', () => {
     const result = buildAjnaScanProfileForRepo(makeRepoFixture())
 
     expect(result.profile.status).toBe('READY')

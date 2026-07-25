@@ -1,6 +1,6 @@
 {
-  "name": "codemind",
-  "version": "0.1.0",
+  "name": "symbolwright",
+  "version": "0.2.0",
   "description": "Standalone AI coding-agent platform for repo intelligence, code generation, bug fixing, planning, PR review, and merge-readiness.",
   "type": "module",
   "main": "dist/index.js",
@@ -16,6 +16,8 @@
     }
   },
   "bin": {
+    "symbolwright": "dist/cli.js",
+    "symbolwright-workspace": "dist/cli-workspace-bin.js",
     "codemind": "dist/cli.js",
     "codemind-workspace": "dist/cli-workspace-bin.js"
   },
@@ -47,6 +49,7 @@
     "serve": "npm run build && node dist/cli.js serve"
   },
   "keywords": [
+    "symbolwright",
     "codemind",
     "coding-agent",
     "repo-intelligence",
@@ -57,7 +60,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jlpartin/codemind.git"
+    "url": "https://github.com/jlpartin/symbolwright.git"
   },
   "publishConfig": {
     "access": "public",

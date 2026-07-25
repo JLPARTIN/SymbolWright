@@ -47,7 +47,7 @@ No approval ticket is required for proposals.
 ## CLI Command
 
 ```txt
-codemind github-write-proposal <json-file>
+symbolwright github-write-proposal <json-file>
 ```
 
 The fixture JSON must include:

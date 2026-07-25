@@ -11,7 +11,7 @@ export async function renderRuntimeRun(
   const options = parseRuntimeRunArgs(args)
 
   if (!options.readOnly) {
-    throw new Error('Missing required flag: codemind runtime run <goal> --read-only')
+    throw new Error('Missing required flag: symbolwright runtime run <goal> --read-only')
   }
 
   const result = await runReadOnlyRuntimeLoop(
@@ -50,7 +50,7 @@ export async function renderRuntimeRun(
 function renderRuntimeRunJson(result: ReadOnlyRuntimeRunResult): string {
   return JSON.stringify(
     {
-      command: 'codemind runtime run',
+      command: 'symbolwright runtime run',
       status: result.status,
       goal: result.session.goal,
       mode: result.session.mode,

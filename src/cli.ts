@@ -163,70 +163,80 @@ async function main(): Promise<void> {
 
     case 'ajna-live-read':
       console.log(
-        await renderRuntimeAjnaLiveRead(requireInput('codemind ajna-live-read <json-file>')),
+        await renderRuntimeAjnaLiveRead(requireInput('symbolwright ajna-live-read <json-file>')),
       )
       break
 
     case 'github-live-read':
       console.log(
-        await renderRuntimeGitHubLiveRead(requireInput('codemind github-live-read <json-file>')),
+        await renderRuntimeGitHubLiveRead(
+          requireInput('symbolwright github-live-read <json-file>'),
+        ),
       )
       break
 
     case 'live-read-client-fixture':
       console.log(
         await renderRuntimeLiveReadClientFixture(
-          requireInput('codemind live-read-client-fixture <json-file>'),
+          requireInput('symbolwright live-read-client-fixture <json-file>'),
         ),
       )
       break
 
     case 'live-read-policy':
       console.log(
-        await renderRuntimeLiveReadPolicy(requireInput('codemind live-read-policy <json-file>')),
+        await renderRuntimeLiveReadPolicy(
+          requireInput('symbolwright live-read-policy <json-file>'),
+        ),
       )
       break
 
     case 'operator-review':
       console.log(
-        await renderRuntimeOperatorReview(requireInput('codemind operator-review <json-file>')),
+        await renderRuntimeOperatorReview(requireInput('symbolwright operator-review <json-file>')),
       )
       break
 
     case 'write-intent':
-      console.log(await renderRuntimeWriteIntent(requireInput('codemind write-intent <json-file>')))
+      console.log(
+        await renderRuntimeWriteIntent(requireInput('symbolwright write-intent <json-file>')),
+      )
       break
 
     case 'local-write':
-      console.log(await renderRuntimeLocalWrite(requireInput('codemind local-write <json-file>')))
+      console.log(
+        await renderRuntimeLocalWrite(requireInput('symbolwright local-write <json-file>')),
+      )
       break
 
     case 'apply-patch':
-      console.log(await renderRuntimeApplyPatch(requireInput('codemind apply-patch <json-file>')))
+      console.log(
+        await renderRuntimeApplyPatch(requireInput('symbolwright apply-patch <json-file>')),
+      )
       break
 
     case 'repair-loop':
-      console.log(renderRepairLoopCommand(requireInput('codemind repair-loop <json-file>')))
+      console.log(renderRepairLoopCommand(requireInput('symbolwright repair-loop <json-file>')))
       break
 
     case 'validation-command':
       console.log(
         await renderRuntimeValidationCommand(
-          requireInput('codemind validation-command <json-file>'),
+          requireInput('symbolwright validation-command <json-file>'),
         ),
       )
       break
 
     case 'pr-preparation':
       console.log(
-        await renderRuntimePrPreparation(requireInput('codemind pr-preparation <json-file>')),
+        await renderRuntimePrPreparation(requireInput('symbolwright pr-preparation <json-file>')),
       )
       break
 
     case 'github-write-proposal':
       console.log(
         await renderRuntimeGitHubWriteProposal(
-          requireInput('codemind github-write-proposal <json-file>'),
+          requireInput('symbolwright github-write-proposal <json-file>'),
         ),
       )
       break
@@ -234,27 +244,31 @@ async function main(): Promise<void> {
     case 'github-write-executor':
       console.log(
         await renderGitHubWriteExecutorCommand(
-          requireInput('codemind github-write-executor <json-file>'),
+          requireInput('symbolwright github-write-executor <json-file>'),
         ),
       )
       break
 
     case 'github-write-gate':
       console.log(
-        await renderRuntimeGitHubWriteGate(requireInput('codemind github-write-gate <json-file>')),
+        await renderRuntimeGitHubWriteGate(
+          requireInput('symbolwright github-write-gate <json-file>'),
+        ),
       )
       break
 
     case 'mission-packet':
-      console.log(renderMissionPacketCommand(requireInput('codemind mission-packet <json-file>')))
+      console.log(
+        renderMissionPacketCommand(requireInput('symbolwright mission-packet <json-file>')),
+      )
       break
 
     case 'audit-ledger':
-      console.log(renderAuditLedgerCommand(requireInput('codemind audit-ledger <json-file>')))
+      console.log(renderAuditLedgerCommand(requireInput('symbolwright audit-ledger <json-file>')))
       break
 
     case 'trace-store':
-      console.log(renderTraceStoreCommand(requireInput('codemind trace-store <json-file>')))
+      console.log(renderTraceStoreCommand(requireInput('symbolwright trace-store <json-file>')))
       break
 
     case 'build-ledger':
@@ -285,12 +299,12 @@ async function main(): Promise<void> {
 
     case 'ajna-workflow':
       console.log(
-        await renderRuntimeAjnaWorkflow(requireInput('codemind ajna-workflow <json-file>')),
+        await renderRuntimeAjnaWorkflow(requireInput('symbolwright ajna-workflow <json-file>')),
       )
       break
 
     case 'workflow':
-      console.log(await renderRuntimeWorkflow(requireInput('codemind workflow <json-file>')))
+      console.log(await renderRuntimeWorkflow(requireInput('symbolwright workflow <json-file>')))
       break
 
     case 'runtime':
@@ -411,7 +425,7 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'review-pr') {
     console.log(
       renderAjnaReviewPrForFile(
-        requireAjnaInput(maybeInput, 'codemind ajna review-pr <json-file>'),
+        requireAjnaInput(maybeInput, 'symbolwright ajna review-pr <json-file>'),
       ),
     )
     return
@@ -420,7 +434,7 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'review-pr-github-fixture') {
     console.log(
       renderAjnaReviewPrGithubFixtureForFile(
-        requireAjnaInput(maybeInput, 'codemind ajna review-pr-github-fixture <json-file>'),
+        requireAjnaInput(maybeInput, 'symbolwright ajna review-pr-github-fixture <json-file>'),
       ),
     )
     return
@@ -429,7 +443,7 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'review-pr-github-api-fixture') {
     console.log(
       renderAjnaReviewPrGithubApiFixtureForFile(
-        requireAjnaInput(maybeInput, 'codemind ajna review-pr-github-api-fixture <json-file>'),
+        requireAjnaInput(maybeInput, 'symbolwright ajna review-pr-github-api-fixture <json-file>'),
       ),
     )
     return
@@ -438,7 +452,7 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'github-api-snapshot-fixture') {
     console.log(
       renderAjnaGithubApiSnapshotFixtureForFile(
-        requireAjnaInput(maybeInput, 'codemind ajna github-api-snapshot-fixture <json-file>'),
+        requireAjnaInput(maybeInput, 'symbolwright ajna github-api-snapshot-fixture <json-file>'),
       ),
     )
     return
@@ -447,7 +461,7 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'client-collector-fixture') {
     console.log(
       await renderAjnaClientCollectorFixtureForFile(
-        requireAjnaInput(maybeInput, 'codemind ajna client-collector-fixture <json-file>'),
+        requireAjnaInput(maybeInput, 'symbolwright ajna client-collector-fixture <json-file>'),
       ),
     )
     return
@@ -458,7 +472,7 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
       await renderAjnaReviewPrClientCollectorFixtureForFile(
         requireAjnaInput(
           maybeInput,
-          'codemind ajna review-pr-client-collector-fixture <json-file>',
+          'symbolwright ajna review-pr-client-collector-fixture <json-file>',
         ),
       ),
     )
@@ -470,7 +484,7 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
       await renderAjnaMergeReadinessClientCollectorFixtureForFile(
         requireAjnaInput(
           maybeInput,
-          'codemind ajna merge-readiness-client-collector-fixture <json-file>',
+          'symbolwright ajna merge-readiness-client-collector-fixture <json-file>',
         ),
       ),
     )
@@ -480,7 +494,7 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'review-pr-collector-fixture') {
     console.log(
       renderAjnaReviewPrCollectorFixtureForFile(
-        requireAjnaInput(maybeInput, 'codemind ajna review-pr-collector-fixture <json-file>'),
+        requireAjnaInput(maybeInput, 'symbolwright ajna review-pr-collector-fixture <json-file>'),
       ),
     )
     return
@@ -491,7 +505,7 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
       await renderAjnaReviewPrReadOnlyCollectorFixtureForFile(
         requireAjnaInput(
           maybeInput,
-          'codemind ajna review-pr-readonly-collector-fixture <json-file>',
+          'symbolwright ajna review-pr-readonly-collector-fixture <json-file>',
         ),
       ),
     )
@@ -501,7 +515,10 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'github-readonly-collector-fixture') {
     console.log(
       await renderAjnaGithubReadOnlyCollectorFixtureForFile(
-        requireAjnaInput(maybeInput, 'codemind ajna github-readonly-collector-fixture <json-file>'),
+        requireAjnaInput(
+          maybeInput,
+          'symbolwright ajna github-readonly-collector-fixture <json-file>',
+        ),
       ),
     )
     return
@@ -510,7 +527,7 @@ async function handleAjnaCommand(args: readonly string[]): Promise<void> {
   if (subcommand === 'merge-readiness') {
     console.log(
       renderAjnaMergeReadinessForFile(
-        requireAjnaInput(maybeInput, 'codemind ajna merge-readiness <json-file>'),
+        requireAjnaInput(maybeInput, 'symbolwright ajna merge-readiness <json-file>'),
       ),
     )
     return
@@ -628,7 +645,7 @@ function handleUnknownCommand(unknownCommand: string, args: readonly string[]): 
   }
 
   console.error(`Unknown command: ${unknownCommand}`)
-  console.error('Run "codemind help" for available commands.')
+  console.error('Run "symbolwright help" for available commands.')
   process.exit(1)
 }
 

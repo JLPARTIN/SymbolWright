@@ -11,12 +11,12 @@ export interface ReadFileInput {
 
 function parseReadFileInput(input: unknown): ReadFileInput {
   if (typeof input !== 'object' || input === null || !('path' in input)) {
-    throw new Error('Missing path: codemind read <path>')
+    throw new Error('Missing path: symbolwright read <path>')
   }
 
   const pathValue = (input as { readonly path: unknown }).path
   if (typeof pathValue !== 'string') {
-    throw new Error('Missing path: codemind read <path>')
+    throw new Error('Missing path: symbolwright read <path>')
   }
 
   return { path: pathValue }
@@ -28,7 +28,7 @@ export async function executeReadFileTool(
 ): Promise<string> {
   const requestedPath = input.path.trim()
   if (requestedPath.length === 0) {
-    throw new Error('Missing path: codemind read <path>')
+    throw new Error('Missing path: symbolwright read <path>')
   }
 
   const resolvedPath = resolveWorkspacePath(context.cwd, requestedPath)

@@ -75,12 +75,12 @@ Live reads require:
 
 Default mode (fixture/offline):
 ```text
-codemind github-live-read fixtures/github-live-read-fixture.json
+symbolwright github-live-read fixtures/github-live-read-fixture.json
 ```
 
 Live mode (opt-in, requires token):
 ```text
-codemind github-live-read fixtures/github-live-read-fixture.json --live
+symbolwright github-live-read fixtures/github-live-read-fixture.json --live
 ```
 
 The CLI defaults to fixture/offline mode. Live mode must be explicitly requested.

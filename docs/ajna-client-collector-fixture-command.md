@@ -1,6 +1,6 @@
 # Ajna client collector fixture command
 
-The `codemind ajna client-collector-fixture <json-file>` command reads a local collector request and renders collector snapshot JSON through a fake injected client bridge.
+The `symbolwright ajna client-collector-fixture <json-file>` command reads a local collector request and renders collector snapshot JSON through a fake injected client bridge.
 
 It proves this local-only chain:
 

@@ -78,7 +78,7 @@ export function renderSkillShowCommand(
 ): string {
   const skillName = args[0]
   if (skillName === undefined) {
-    throw new Error('Usage: codemind skill show <name>')
+    throw new Error('Usage: symbolwright skill show <name>')
   }
   return renderSkillDetails(requireSkillByName(skillName, cwd))
 }
@@ -92,7 +92,7 @@ export async function runSkillRunCommand(
   const rawArguments = flags.positionals.slice(1).join(' ').trim()
 
   if (skillName === undefined) {
-    throw new Error('Usage: codemind skill run <name> [arguments] [--enable-governed] [--json]')
+    throw new Error('Usage: symbolwright skill run <name> [arguments] [--enable-governed] [--json]')
   }
 
   const policy = createRuntimePolicyForMode(flags.mode)

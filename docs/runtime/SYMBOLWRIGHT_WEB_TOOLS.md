@@ -110,8 +110,8 @@ dev: fetching `http://localhost:3000` or a Codespaces-forwarded port needs an
 explicit override —
 
 ```sh
-codemind web fetch http://localhost:3000 --allow-private
-codemind web fetch http://localhost:3005 --allow-private
+symbolwright web fetch http://localhost:3000 --allow-private
+symbolwright web fetch http://localhost:3005 --allow-private
 ```
 
 — or `"web": { "fetch": { "allowPrivateNetwork": true } }` in config.
@@ -137,7 +137,7 @@ a redirect can't smuggle a request into a blocked target.
 ## web_fetch
 
 ```sh
-codemind web fetch <url> [--json] [--allow-private] [--mode <mode>] [--config <path>]
+symbolwright web fetch <url> [--json] [--allow-private] [--mode <mode>] [--config <path>]
 ```
 
 Execution: `src/web/web-fetch-client.ts` (raw HTTP: manual redirect loop
@@ -172,7 +172,7 @@ or `transport_error` (timeout, DNS/connection failure).
 ## web_search
 
 ```sh
-codemind web search "<query>" [--json] [--mode <mode>] [--config <path>]
+symbolwright web search "<query>" [--json] [--mode <mode>] [--config <path>]
 ```
 
 Default provider: `src/web/web-search-provider.ts`'s `DuckDuckGoSearchProvider`

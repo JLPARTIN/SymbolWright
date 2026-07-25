@@ -63,7 +63,7 @@ describe('renderScan', () => {
 describe('scanRepo', () => {
   it('returns the correct package name for this project', () => {
     const scan = scanRepo(process.cwd())
-    expect(scan.packageName).toBe('codemind')
+    expect(scan.packageName).toBe('symbolwright')
   })
 
   it('detects TypeScript config', () => {

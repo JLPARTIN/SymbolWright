@@ -5,7 +5,7 @@ This document records Phase J operator review gate for live outputs.
 ## Active command
 
 ```text
-codemind operator-review <json-file>
+symbolwright operator-review <json-file>
 ```
 
 ## Purpose

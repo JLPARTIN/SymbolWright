@@ -87,7 +87,9 @@ export async function renderWebFetchCommand(
   const flags = parseWebFlags(args)
   const url = flags.positionals[0]
   if (url === undefined) {
-    throw new Error('Usage: codemind web fetch <url> [--json] [--allow-private] [--mode <mode>]')
+    throw new Error(
+      'Usage: symbolwright web fetch <url> [--json] [--allow-private] [--mode <mode>]',
+    )
   }
 
   const webConfig = resolveWebConfig(cwd, flags)
@@ -105,7 +107,7 @@ export async function renderWebSearchCommand(
   const flags = parseWebFlags(args)
   const query = flags.positionals.join(' ').trim()
   if (query.length === 0) {
-    throw new Error('Usage: codemind web search "<query>" [--json] [--mode <mode>]')
+    throw new Error('Usage: symbolwright web search "<query>" [--json] [--mode <mode>]')
   }
 
   const webConfig = resolveWebConfig(cwd, flags)

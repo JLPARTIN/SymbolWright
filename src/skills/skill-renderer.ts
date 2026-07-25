@@ -187,7 +187,7 @@ export function renderSkillListing(skills: readonly SkillDefinition[]): string {
     '',
     ...skills.map((skill) => {
       const invocation = skill.userInvocable
-        ? `codemind skill run ${skill.commandName}`
+        ? `symbolwright skill run ${skill.commandName}`
         : '(agent-only)'
       const auto = skill.disableModelInvocation ? 'manual' : 'auto/manual'
       return `- ${skill.commandName} [${skill.source}; ${auto}]\n  ${skill.description}\n  Invoke: ${invocation}`

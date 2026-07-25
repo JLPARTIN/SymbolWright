@@ -4,8 +4,8 @@ This note records the README alignment bundle for the Ajna docs command.
 
 ## Updated references
 
-- `codemind ajna docs` is listed in the README CLI surface.
-- `codemind ajna docs` is included with the local fixture pipeline helper commands.
+- `symbolwright ajna docs` is listed in the README CLI surface.
+- `symbolwright ajna docs` is included with the local fixture pipeline helper commands.
 - The current foundation docs list includes the Ajna docs command page and recent client collector command docs.
 
 ## Boundary

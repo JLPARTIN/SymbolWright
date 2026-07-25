@@ -38,7 +38,7 @@ GitHubWriteExecutorRequest
 ## CLI usage
 
 ```bash
-codemind github-write-executor <json-file>
+symbolwright github-write-executor <json-file>
 ```
 
 ## Fixture format

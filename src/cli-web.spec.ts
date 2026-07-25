@@ -85,7 +85,7 @@ describe('cli-web', () => {
 
     it('throws when no URL is given', async () => {
       await expect(renderWebFetchCommand([], workspaceDir)).rejects.toThrow(
-        /Usage: codemind web fetch/,
+        /Usage: symbolwright web fetch/,
       )
     })
 
@@ -104,7 +104,7 @@ describe('cli-web', () => {
   describe('renderWebSearchCommand', () => {
     it('throws when no query is given', async () => {
       await expect(renderWebSearchCommand([], workspaceDir)).rejects.toThrow(
-        /Usage: codemind web search/,
+        /Usage: symbolwright web search/,
       )
     })
 

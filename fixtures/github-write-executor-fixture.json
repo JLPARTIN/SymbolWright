@@ -1,6 +1,6 @@
 {
   "action": "post_comment",
-  "repository": "JLPARTIN/CodeMind",
+  "repository": "JLPARTIN/SymbolWright",
   "targetRef": "42",
   "content": "CI passed — all 1072 tests green, lint clean, build clean.",
   "reason": "Notify reviewer of CI results after validation executor run",

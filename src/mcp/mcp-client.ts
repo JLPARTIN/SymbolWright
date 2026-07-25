@@ -21,7 +21,7 @@ export interface McpToolCallResult {
 }
 
 const CLIENT_PROTOCOL_VERSION = '2024-11-05'
-const CLIENT_INFO = { name: 'codemind', version: '0.1.0' } as const
+const CLIENT_INFO = { name: 'symbolwright', version: '0.2.0' } as const
 
 function unwrapResult(response: JsonRpcResponse, method: string): unknown {
   if ('error' in response) {

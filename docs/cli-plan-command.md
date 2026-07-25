@@ -1,11 +1,11 @@
 # SymbolWright plan command
 
-The `codemind plan <goal>` command renders a non-mutating implementation plan for an operator-provided goal.
+The `symbolwright plan <goal>` command renders a non-mutating implementation plan for an operator-provided goal.
 
 ## Usage
 
 ```bash
-codemind plan "add guarded patch proposal"
+symbolwright plan "add guarded patch proposal"
 ```
 
 ## Output

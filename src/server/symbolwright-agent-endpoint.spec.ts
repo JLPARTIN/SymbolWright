@@ -169,7 +169,7 @@ describe('POST /api/agent', () => {
     expect(result.totalIterations).toBe(2)
     expect(result.iterations[0]?.toolCalls[0]?.name).toBe('read_file')
     expect(result.iterations[0]?.toolResults[0]?.isError).toBe(false)
-    expect(result.iterations[0]?.toolResults[0]?.output).toContain('"name": "codemind"')
+    expect(result.iterations[0]?.toolResults[0]?.output).toContain('"name": "symbolwright"')
     expect(result.finalMessages.length).toBeGreaterThan(0)
     expect(fake.callCount()).toBe(2)
   })

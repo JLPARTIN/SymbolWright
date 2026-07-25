@@ -5,7 +5,7 @@ This document records Phase H GitHub live read adapter behind policy.
 ## Active command
 
 ```text
-codemind github-live-read <json-file>
+symbolwright github-live-read <json-file>
 ```
 
 ## Purpose

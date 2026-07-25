@@ -12,7 +12,7 @@ describe('renderRuntimeRead', () => {
   it('includes file content', async () => {
     const output = await renderRuntimeRead('package.json')
 
-    expect(output).toContain('codemind')
+    expect(output).toContain('symbolwright')
   })
 
   it('includes boundary markers', async () => {

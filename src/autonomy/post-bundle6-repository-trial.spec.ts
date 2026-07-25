@@ -119,11 +119,11 @@ async function validateTrialTask(
     ) as {
       name?: unknown
     }
-    const passed = parsed.name === 'codemind'
+    const passed = parsed.name === 'symbolwright'
     return {
       passed,
       id: 'trial-validation-package-json',
-      diagnostic: 'The copied repository package identity is not codemind.',
+      diagnostic: 'The copied repository package identity is not symbolwright.',
       summary: 'Validated the copied SymbolWright package manifest.',
     }
   }

@@ -13,7 +13,7 @@ export interface RuntimeSession {
 export function createRuntimeSession(goal: string, maxIterations = 4): RuntimeSession {
   const trimmedGoal = goal.trim()
   if (trimmedGoal.length === 0) {
-    throw new Error('Missing goal: codemind runtime run <goal> --read-only')
+    throw new Error('Missing goal: symbolwright runtime run <goal> --read-only')
   }
 
   return {

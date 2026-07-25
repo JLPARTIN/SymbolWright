@@ -1,6 +1,6 @@
 # Ajna merge-readiness client collector fixture command
 
-The `codemind ajna merge-readiness-client-collector-fixture <json-file>` command reads a local request and renders Ajna merge-readiness through a fake injected client bridge.
+The `symbolwright ajna merge-readiness-client-collector-fixture <json-file>` command reads a local request and renders Ajna merge-readiness through a fake injected client bridge.
 
 It proves this local-only chain:
 

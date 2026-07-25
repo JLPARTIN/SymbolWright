@@ -1,13 +1,13 @@
 # Ajna review-pr collector fixture command
 
-The `codemind ajna review-pr-collector-fixture <json-file>` command renders a local collector snapshot through the existing deterministic Ajna review-pr path.
+The `symbolwright ajna review-pr-collector-fixture <json-file>` command renders a local collector snapshot through the existing deterministic Ajna review-pr path.
 
 This command is local-only. It does not fetch GitHub data, post comments, mutate repositories, call providers, run validation commands, or make merge decisions.
 
 ## Usage
 
 ```bash
-codemind ajna review-pr-collector-fixture examples/ajna/github-collector-snapshot.ready.json
+symbolwright ajna review-pr-collector-fixture examples/ajna/github-collector-snapshot.ready.json
 ```
 
 ## Pipeline

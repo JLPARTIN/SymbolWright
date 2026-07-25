@@ -6,10 +6,10 @@ SymbolWright should be callable from any LLM or coding environment that can make
 
 Two real integration paths exist now, covering different kinds of "any LLM":
 
-- **HTTP** — `codemind serve` (see [`runtime/SYMBOLWRIGHT_CHAT_SERVER.md`](runtime/SYMBOLWRIGHT_CHAT_SERVER.md)) runs a real `/api/chat` endpoint (plain streaming chat) and a real `/api/agent` endpoint (the full tool-execution loop — read/search/edit files, run commands, mode-gated), both with bearer-token auth and provider registration. Any HTTP-capable client (browser, script, GPT action, agent framework) can drive them.
-- **MCP** — `codemind mcp-server` (see [`runtime/SYMBOLWRIGHT_MCP_SERVER.md`](runtime/SYMBOLWRIGHT_MCP_SERVER.md)) runs SymbolWright as a real Model Context Protocol server over stdio. Any MCP-compatible client — Claude Desktop, Claude Code, or another agent framework — can add it as a plugin/connector and call its actual tools (`read_file`, `search_files`, and, in more permissive modes, `edit_file`, `bash`, `git`, GitHub write tools, and more).
+- **HTTP** — `symbolwright serve` (see [`runtime/SYMBOLWRIGHT_CHAT_SERVER.md`](runtime/SYMBOLWRIGHT_CHAT_SERVER.md)) runs a real `/api/chat` endpoint (plain streaming chat) and a real `/api/agent` endpoint (the full tool-execution loop — read/search/edit files, run commands, mode-gated), both with bearer-token auth and provider registration. Any HTTP-capable client (browser, script, GPT action, agent framework) can drive them.
+- **MCP** — `symbolwright mcp-server` (see [`runtime/SYMBOLWRIGHT_MCP_SERVER.md`](runtime/SYMBOLWRIGHT_MCP_SERVER.md)) runs SymbolWright as a real Model Context Protocol server over stdio. Any MCP-compatible client — Claude Desktop, Claude Code, or another agent framework — can add it as a plugin/connector and call its actual tools (`read_file`, `search_files`, and, in more permissive modes, `edit_file`, `bash`, `git`, GitHub write tools, and more).
 
-The mission/event-stream contract below (`/api/missions`, `/api/missions/:id/events`) describes a further target shape — a single "mission" abstraction spanning both transports — that isn't built yet; today, drive SymbolWright through `codemind serve`'s `/api/chat` or `codemind mcp-server`'s tool calls directly.
+The mission/event-stream contract below (`/api/missions`, `/api/missions/:id/events`) describes a further target shape — a single "mission" abstraction spanning both transports — that isn't built yet; today, drive SymbolWright through `symbolwright serve`'s `/api/chat` or `symbolwright mcp-server`'s tool calls directly.
 
 ## Client pattern
 

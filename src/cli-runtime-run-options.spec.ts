@@ -92,7 +92,7 @@ describe('renderRuntimeRun', () => {
       readonly transcript: { readonly entries: readonly unknown[] }
     }
 
-    expect(parsed.command).toBe('codemind runtime run')
+    expect(parsed.command).toBe('symbolwright runtime run')
     expect(parsed.status).toBe('iteration_limit')
     expect(parsed.goal).toBe('prepare json')
     expect(parsed.iterations).toBe(1)

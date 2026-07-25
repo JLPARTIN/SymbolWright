@@ -37,7 +37,7 @@ Parses JSONL lines back into structured trace entries with:
 ## CLI Usage
 
 ```bash
-codemind trace-store fixtures/trace-store-fixture.json
+symbolwright trace-store fixtures/trace-store-fixture.json
 ```
 
 ## Finding Codes

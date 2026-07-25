@@ -9,7 +9,7 @@ Before SymbolWright can plan work, generate mission packets, or hand off to othe
 ## CLI command
 
 ```text
-codemind project-context [dir]
+symbolwright project-context [dir]
 ```
 
 When `dir` is omitted, defaults to the current working directory.

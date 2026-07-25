@@ -41,7 +41,7 @@ The repair loop defines seven ordered checkpoints. Each checkpoint represents a 
 ## CLI usage
 
 ```bash
-codemind repair-loop <json-file>
+symbolwright repair-loop <json-file>
 ```
 
 Reads a JSON fixture containing a full repair loop request and renders the result.

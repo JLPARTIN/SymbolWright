@@ -5,7 +5,7 @@ This document records Phase I Ajna live-read review pipeline.
 ## Active command
 
 ```text
-codemind ajna-live-read <json-file>
+symbolwright ajna-live-read <json-file>
 ```
 
 ## Purpose

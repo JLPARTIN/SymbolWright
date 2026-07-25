@@ -94,6 +94,20 @@ function readPackageLockJson(workspaceRoot: string): PackageLockJson {
   return JSON.parse(fs.readFileSync(lockPath, 'utf8')) as PackageLockJson
 }
 
+/** Order-independent bin-map equality -- npm doesn't guarantee key order in package-lock.json matches package.json. */
+function binMapsMatch(
+  a: Record<string, string> | undefined,
+  b: Record<string, string> | undefined,
+): boolean {
+  const aEntries = Object.entries(a ?? {}).sort(([x], [y]) => x.localeCompare(y))
+  const bEntries = Object.entries(b ?? {}).sort(([x], [y]) => x.localeCompare(y))
+  if (aEntries.length !== bEntries.length) return false
+  return aEntries.every(([key, value], index) => {
+    const other = bEntries[index]
+    return other !== undefined && other[0] === key && other[1] === value
+  })
+}
+
 function checkAllPhasesComplete(): ReleaseGate {
   const completed = getCompletedRuntimeBuildPhaseCount()
   const total = RUNTIME_BUILD_PHASES.length
@@ -238,8 +252,8 @@ function checkPublicApiContract(workspaceRoot: string): ReleaseGate {
     const universalApiExport = pkg.exports?.['./universal-api']
     const issues: string[] = []
 
-    if (pkg.name !== 'codemind') {
-      issues.push('package name must be codemind')
+    if (pkg.name !== 'symbolwright') {
+      issues.push('package name must be symbolwright')
     }
     if (pkg.main !== 'dist/index.js') {
       issues.push('main must resolve to dist/index.js')
@@ -281,6 +295,16 @@ function checkPackageBinContract(workspaceRoot: string): ReleaseGate {
   try {
     const pkg = readPackageJson(workspaceRoot)
     const requiredBins = [
+      {
+        name: 'symbolwright',
+        dist: 'dist/cli.js',
+        source: path.join('src', 'cli.ts'),
+      },
+      {
+        name: 'symbolwright-workspace',
+        dist: 'dist/cli-workspace-bin.js',
+        source: path.join('src', 'cli-workspace-bin.ts'),
+      },
       {
         name: 'codemind',
         dist: 'dist/cli.js',
@@ -345,7 +369,7 @@ function checkPackageLockContract(workspaceRoot: string): ReleaseGate {
     if (root?.version !== pkg.version) {
       issues.push('install plan root version must match package.json version')
     }
-    if (JSON.stringify(root?.bin ?? {}) !== JSON.stringify(pkg.bin ?? {})) {
+    if (!binMapsMatch(root?.bin, pkg.bin)) {
       issues.push('install plan root bin map must match package.json bin map')
     }
 

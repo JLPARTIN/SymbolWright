@@ -120,7 +120,7 @@ export interface StartedChatServer {
 export function assertChatServerCanStart(options: Pick<ChatServerOptions, 'apiKey'>): void {
   if (options.apiKey.trim().length === 0) {
     throw new ChatServerConfigError(
-      'SYMBOLWRIGHT_API_KEY is required to start the chat server. Set it before running "codemind serve" (the legacy CODEMIND_API_KEY name still works).',
+      'SYMBOLWRIGHT_API_KEY is required to start the chat server. Set it before running "symbolwright serve" (the legacy CODEMIND_API_KEY name still works).',
     )
   }
 }

@@ -1,6 +1,6 @@
 {
   "pullRequest": {
-    "repository": "JLPARTIN/CodeMind",
+    "repository": "JLPARTIN/SymbolWright",
     "pullRequestNumber": 60,
     "baseRef": "main",
     "headRef": "ajna-github-review-input-bundle",
@@ -22,7 +22,7 @@
   ],
   "checkRuns": [
     {
-      "name": "Validate CodeMind",
+      "name": "Validate SymbolWright",
       "status": "completed",
       "conclusion": "success"
     }

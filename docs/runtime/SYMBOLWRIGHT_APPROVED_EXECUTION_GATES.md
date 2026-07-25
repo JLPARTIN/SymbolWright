@@ -16,11 +16,11 @@ command_dry_run_gated  retired
 Use the current runtime surfaces instead:
 
 ```text
-codemind agent --mode APPROVED_EXECUTION "implement the requested fix"
-codemind local-write <json-file>
-codemind apply-patch <json-file>
-codemind validation-command <json-file>
-codemind workflow <json-file>
+symbolwright agent --mode APPROVED_EXECUTION "implement the requested fix"
+symbolwright local-write <json-file>
+symbolwright apply-patch <json-file>
+symbolwright validation-command <json-file>
+symbolwright workflow <json-file>
 ```
 
 ## Current boundary

@@ -1,5 +1,5 @@
 {
-  "description": "Project context kernel fixture for testing codemind project-context command",
+  "description": "Project context kernel fixture for testing symbolwright project-context command",
   "rootDir": ".",
   "expectedInstructionFiles": [
     "README.md",

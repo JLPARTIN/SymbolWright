@@ -1,6 +1,6 @@
 # Ajna GitHub API snapshot fixture command
 
-The `codemind ajna github-api-snapshot-fixture <json-file>` command reads a local GitHub-shaped API payload and renders the collector snapshot JSON produced by the offline adapter.
+The `symbolwright ajna github-api-snapshot-fixture <json-file>` command reads a local GitHub-shaped API payload and renders the collector snapshot JSON produced by the offline adapter.
 
 It proves this local-only chain:
 

@@ -117,13 +117,13 @@ Same static-stub + `createWiredXTool()` pattern as `swarm_dispatch`:
 ## CLI
 
 ```sh
-codemind subagent list
-codemind subagent run <explorer|reviewer|test-planner> "<goal>" [--enable-governed] [--json] [--mode <mode>]
+symbolwright subagent list
+symbolwright subagent run <explorer|reviewer|test-planner> "<goal>" [--enable-governed] [--json] [--mode <mode>]
 ```
 
 `subagent list` is fully static — no provider, no API key, just reads
 `SUBAGENT_DEFINITIONS`. `subagent run` resolves a real provider through
-the same config path as `codemind agent` and dispatches for real.
+the same config path as `symbolwright agent` and dispatches for real.
 
 ## Try it
 

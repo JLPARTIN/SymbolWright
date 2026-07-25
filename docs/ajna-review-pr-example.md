@@ -5,7 +5,7 @@ This document shows how to render a local, read-only Ajna PR review report from 
 ## Command
 
 ```bash
-codemind ajna review-pr examples/ajna/review-pr.ready.json
+symbolwright ajna review-pr examples/ajna/review-pr.ready.json
 ```
 
 ## Expected behavior

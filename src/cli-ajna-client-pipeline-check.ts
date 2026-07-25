@@ -17,19 +17,19 @@ const EXPECTED_STEPS: readonly AjnaClientPipelineStep[] = [
   {
     order: 1,
     name: 'Snapshot fixture',
-    cli: 'codemind ajna client-collector-fixture <json-file>',
+    cli: 'symbolwright ajna client-collector-fixture <json-file>',
     result: 'collector snapshot JSON',
   },
   {
     order: 2,
     name: 'Review fixture',
-    cli: 'codemind ajna review-pr-client-collector-fixture <json-file>',
+    cli: 'symbolwright ajna review-pr-client-collector-fixture <json-file>',
     result: 'Ajna review report',
   },
   {
     order: 3,
     name: 'Readiness fixture',
-    cli: 'codemind ajna merge-readiness-client-collector-fixture <json-file>',
+    cli: 'symbolwright ajna merge-readiness-client-collector-fixture <json-file>',
     result: 'Ajna merge-readiness report',
   },
 ]

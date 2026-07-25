@@ -55,7 +55,7 @@ describe('checkBuildLedgerConsistency', () => {
   })
 
   it('accepts the README 20/20 runtime build phases complete wording', () => {
-    const readme = '`codemind status` reports 20/20 runtime build phases complete.'
+    const readme = '`symbolwright status` reports 20/20 runtime build phases complete.'
     const docs = allPhasesComplete
 
     const report = checkBuildLedgerConsistency(readme, docs)

@@ -1,8 +1,31 @@
 # Changelog
 
-All notable changes to CodeMind are documented in this file.
+All notable changes to SymbolWright (formerly CodeMind) are documented in this file.
 
 ## [Unreleased]
+
+## [0.2.0] - 2026-07-25
+
+### Changed
+
+- **Product rebrand: CodeMind → SymbolWright.** The published npm package is
+  now `symbolwright` and its canonical CLI binaries are `symbolwright`/
+  `symbolwright-workspace`; the previous `codemind`/`codemind-workspace`
+  binaries and the `codemind` package name keep working as compatibility
+  aliases pointing at the exact same entry points. The MCP server/client
+  handshake identity (`serverInfo.name`/`clientInfo.name`) is now
+  `symbolwright`. The canonical environment-variable prefix is now
+  `SYMBOLWRIGHT_*` (e.g. `SYMBOLWRIGHT_API_KEY`); every existing
+  `CODEMIND_*` variable is still read as a fallback, with a one-line
+  warning (never including the secret value) if both are set to
+  conflicting values. Local persisted state moves from `.codemind/` to
+  `.symbolwright/`, migrated automatically and non-destructively on first
+  run (the original directory is renamed aside, never deleted). Browser-
+  stored settings (API key, mode, active mission) are forward-migrated
+  from their old `codemind_*` localStorage keys the same way. See
+  `docs/rebrand/SYMBOLWRIGHT_MIGRATION_GUIDE.md` for the full migration
+  guide and `docs/rebrand/CODEMIND_TO_SYMBOLWRIGHT_FINAL_FORENSIC_AUDIT.md`
+  for the complete forensic record of this rename.
 
 ### Added
 

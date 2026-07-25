@@ -5,10 +5,10 @@ This document records Phase A read-only runtime activation.
 ## Active commands
 
 ```text
-codemind plan <goal>
-codemind read <path>
-codemind search <query>
-codemind validation-plan [focus]
+symbolwright plan <goal>
+symbolwright read <path>
+symbolwright search <query>
+symbolwright validation-plan [focus]
 ```
 
 ## Runtime tools

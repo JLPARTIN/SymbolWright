@@ -22,12 +22,12 @@ export interface RunningMcpServer {
   stop(): void
 }
 
-const DEFAULT_SERVER_INFO: McpServerInfo = { name: 'codemind', version: '0.1.0' }
+const DEFAULT_SERVER_INFO: McpServerInfo = { name: 'symbolwright', version: '0.2.0' }
 
 /**
  * Speaks newline-delimited JSON-RPC 2.0 over stdio, mirroring the wire format
- * `McpStdioTransport` (the client side) expects when CodeMind itself is the
- * server being spawned by another MCP client.
+ * `McpStdioTransport` (the client side) expects when SymbolWright itself is
+ * the server being spawned by another MCP client.
  */
 export function runSymbolWrightMcpServer(options: McpServerRuntimeOptions): RunningMcpServer {
   const handler = createSymbolWrightMcpToolHandler({

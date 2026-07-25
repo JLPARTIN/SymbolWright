@@ -96,9 +96,9 @@ checkpoint touched.
 ## CLI
 
 ```sh
-codemind checkpoint list [--session <id>] [--json]
-codemind checkpoint show <checkpoint-id> [--json]
-codemind checkpoint restore <checkpoint-id> [--json]
+symbolwright checkpoint list [--session <id>] [--json]
+symbolwright checkpoint show <checkpoint-id> [--json]
+symbolwright checkpoint restore <checkpoint-id> [--json]
 ```
 
 `checkpoint list` with no `--session` lists across every session in the

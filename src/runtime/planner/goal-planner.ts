@@ -7,12 +7,12 @@ export interface PlanGoalInput {
 
 function parsePlanGoalInput(input: unknown): PlanGoalInput {
   if (typeof input !== 'object' || input === null || !('goal' in input)) {
-    throw new Error('Missing goal: codemind plan <goal>')
+    throw new Error('Missing goal: symbolwright plan <goal>')
   }
 
   const goal = (input as { readonly goal: unknown }).goal
   if (typeof goal !== 'string') {
-    throw new Error('Missing goal: codemind plan <goal>')
+    throw new Error('Missing goal: symbolwright plan <goal>')
   }
 
   return { goal }
@@ -21,7 +21,7 @@ function parsePlanGoalInput(input: unknown): PlanGoalInput {
 export function buildGoalPlan(goal: string): GoalPlan {
   const trimmedGoal = goal.trim()
   if (trimmedGoal.length === 0) {
-    throw new Error('Missing goal: codemind plan <goal>')
+    throw new Error('Missing goal: symbolwright plan <goal>')
   }
 
   const steps: readonly GoalPlanStep[] = [

@@ -299,8 +299,8 @@ export function renderHelp(): string {
       ({ name, description }) => `  ${name.padEnd(56)} ${description}`,
     ),
     '',
-    'Run "codemind agent --mode APPROVED_EXECUTION" for direct agent work.',
-    'Run "codemind status" to see platform posture and active policy.',
+    'Run "symbolwright agent --mode APPROVED_EXECUTION" for direct agent work.',
+    'Run "symbolwright status" to see platform posture and active policy.',
   ]
   return lines.join('\n')
 }
@@ -327,6 +327,6 @@ export function renderNotYetActive(command: string): string {
     `Command not active yet: ${command}`,
     '',
     'This command is reserved for a later SymbolWright runtime phase.',
-    'Run "codemind status" to see the current activation surface.',
+    'Run "symbolwright status" to see the current activation surface.',
   ].join('\n')
 }

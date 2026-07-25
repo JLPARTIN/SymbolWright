@@ -2,7 +2,7 @@
   "request": {
     "requestId": "example-ajna-review-pr-ready",
     "subject": {
-      "repository": "JLPARTIN/CodeMind",
+      "repository": "JLPARTIN/SymbolWright",
       "pullRequestNumber": 56,
       "baseRef": "main",
       "headRef": "ajna-review-pr-fixture-adapter"

@@ -12,7 +12,7 @@ export interface McpServerToolsOptions {
 
 /**
  * Bridges SymbolWright's real runtime tool registry (the same tools
- * `codemind agent` uses) into an MCP tool handler, gated by the same
+ * `symbolwright agent` uses) into an MCP tool handler, gated by the same
  * runtime-mode policy as every other SymbolWright entry point — a `READ_ONLY`
  * server only advertises read/search/plan tools; `APPROVED_EXECUTION`
  * advertises the full set, including file writes and shell execution.

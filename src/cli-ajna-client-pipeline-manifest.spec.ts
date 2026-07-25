@@ -21,9 +21,9 @@ describe('getAjnaClientPipelineManifest', () => {
     const manifest = getAjnaClientPipelineManifest()
 
     expect(manifest.steps.map((step) => step.cli)).toEqual([
-      'codemind ajna client-collector-fixture <json-file>',
-      'codemind ajna review-pr-client-collector-fixture <json-file>',
-      'codemind ajna merge-readiness-client-collector-fixture <json-file>',
+      'symbolwright ajna client-collector-fixture <json-file>',
+      'symbolwright ajna review-pr-client-collector-fixture <json-file>',
+      'symbolwright ajna merge-readiness-client-collector-fixture <json-file>',
     ])
   })
 })
