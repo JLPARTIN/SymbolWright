@@ -57,6 +57,14 @@ export interface ExternalRepositoryIntakeOptions {
   readonly policy?: GitHubOperationsPolicy
   readonly targetOptions?: ParseGitHubRepositoryTargetOptions
   readonly metadata?: RepositoryMetadataSummary
+  /**
+   * The delegated grant this intake is acting on behalf of, if any -- forwarded to
+   * `MissionService.create` so the resulting mission is attributed to that grant, exactly like a
+   * normal `/api/missions` creation. Never parsed from the request body; must come from the
+   * server's authenticated principal (see `github-intake-routes.ts`'s call site), or a client
+   * could claim any grant's identity to dodge `executionLimits.maxConcurrentMissions`.
+   */
+  readonly grantId?: string
 }
 
 export interface ExternalRepositoryIntakeResult {
@@ -113,14 +121,17 @@ export async function performExternalRepositoryIntake(
     path.resolve(options.workspaceRoot),
     acquisition.workspacePath,
   )
-  const mission = await options.missionService.create({
-    name: options.name ?? defaultMissionName(target, ref),
-    objective: options.objective,
-    workspaceKind: 'repository',
-    repositoryPath: relativeRepositoryPath,
-    runtimeMode: options.runtimeMode,
-    labels: ['external-repository', `origin:${target.host}`, `strategy:${acquisition.strategy}`],
-  })
+  const mission = await options.missionService.create(
+    {
+      name: options.name ?? defaultMissionName(target, ref),
+      objective: options.objective,
+      workspaceKind: 'repository',
+      repositoryPath: relativeRepositoryPath,
+      runtimeMode: options.runtimeMode,
+      labels: ['external-repository', `origin:${target.host}`, `strategy:${acquisition.strategy}`],
+    },
+    options.grantId === undefined ? {} : { grantId: options.grantId },
+  )
 
   options.missionService.appendEvent(
     mission.id,

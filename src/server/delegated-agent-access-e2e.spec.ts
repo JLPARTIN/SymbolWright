@@ -456,6 +456,42 @@ describe('Delegated Agent Access — end-to-end', () => {
     expect(write.status).toBe(403)
   })
 
+  it('a Repository Analyst grant (no symbolwright.mission.create) can dry-run GitHub intake but cannot create a mission through it', async () => {
+    // Regression test: intake's route-level capability is the lower `symbolwright.repository.index`
+    // (so a read-only grant can still reconnoiter a target), but acquiring a repository and
+    // creating a real mission -- non-`dry-run` modes -- must additionally require
+    // `symbolwright.mission.create`, exactly like `POST /api/missions` does. Without that check, a
+    // read-only grant could spin up real missions with real disk/Git footprint purely through intake.
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/v1/access-grants`, {
+      method: 'POST',
+      headers: { ...operatorAuth(), 'content-type': 'application/json' },
+      body: JSON.stringify({
+        principalType: 'llm',
+        displayName: 'Analyst',
+        profileId: 'repository-analyst',
+        repositoryScope: { mode: 'installation', repositories: [], organizations: [] },
+      }),
+    })
+    const body = (await response.json()) as { plaintextToken: string }
+
+    const dryRun = await fetch(`${server.url}/api/github/intake`, {
+      method: 'POST',
+      headers: { ...agentAuth(body.plaintextToken), 'content-type': 'application/json' },
+      body: JSON.stringify({ target: 'JLPARTIN/SymbolWright', mode: 'dry-run', objective: 'x' }),
+    })
+    expect(dryRun.status).toBe(200)
+
+    const writable = await fetch(`${server.url}/api/github/intake`, {
+      method: 'POST',
+      headers: { ...agentAuth(body.plaintextToken), 'content-type': 'application/json' },
+      body: JSON.stringify({ target: 'JLPARTIN/SymbolWright', mode: 'writable', objective: 'x' }),
+    })
+    expect(writable.status).toBe(403)
+    const writableBody = (await writable.json()) as { reasonCode?: string }
+    expect(writableBody.reasonCode).not.toBe('MAX_CONCURRENT_MISSIONS_EXCEEDED')
+  })
+
   it('enforces executionLimits.maxConcurrentMissions at mission creation, and records the creating grant', async () => {
     const server = await launch()
     const { token } = await createCodingAgentGrant(server, {

@@ -66,6 +66,19 @@ describe('performExternalRepositoryIntake', () => {
     expect(result.mission?.labels).toContain('origin:github.com')
   })
 
+  it('attributes the created mission to the caller-supplied grantId', async () => {
+    const result = await performExternalRepositoryIntake({
+      target: target({ canonicalHttpsUrl: `file://${sourceRepo}` }),
+      workspaceRoot,
+      missionService,
+      mode: 'writable',
+      objective: 'Fix the bug',
+      runtimeMode: 'READ_ONLY',
+      grantId: 'grant_intake-attribution-test',
+    })
+    expect(result.mission?.grantId).toBe('grant_intake-attribution-test')
+  })
+
   it('records acquisition evidence as a mission event visible in the git/github filter bucket', async () => {
     const result = await performExternalRepositoryIntake({
       target: target({ canonicalHttpsUrl: `file://${sourceRepo}` }),

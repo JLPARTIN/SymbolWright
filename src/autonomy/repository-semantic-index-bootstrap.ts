@@ -11,7 +11,7 @@ import type { RepositorySemanticIndexSnapshot } from './repository-semantic-inde
 const DEFAULT_MAX_FILE_BYTES = 1_000_000
 const IGNORED_DIRECTORIES = new Set([
   '.symbolwright',
-  '.symbolwright',
+  '.codemind',
   '.git',
   '.hg',
   '.svn',

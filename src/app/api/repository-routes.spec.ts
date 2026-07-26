@@ -403,6 +403,30 @@ describe('POST /api/repository/commit', () => {
     const status = await runGitCommand(['status', '--porcelain=v1'], cwd)
     expect(status.stdout).toContain('.symbolwright')
   })
+
+  it('never sweeps legacy CodeMind state (.codemind/) into a commit made with files omitted', async () => {
+    // Regression test: the default "stage everything" exclusion previously repeated
+    // `:!.symbolwright` twice instead of also excluding `:!.codemind`, so a repository still
+    // carrying pre-rebrand `.codemind/` state would have it swept into a real commit.
+    mkdirSync(join(cwd, '.codemind'), { recursive: true })
+    writeFileSync(join(cwd, '.codemind', 'legacy-state.json'), '{}')
+    writeFileSync(join(cwd, 'a.ts'), 'const a = 1\n')
+
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/repository/commit`, {
+      method: 'POST',
+      headers: { ...auth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'add a.ts' }),
+    })
+    expect(response.status).toBe(200)
+
+    const show = await runGitCommand(['show', '--stat', 'HEAD'], cwd)
+    expect(show.stdout).toContain('a.ts')
+    expect(show.stdout).not.toContain('.codemind')
+
+    const status = await runGitCommand(['status', '--porcelain=v1'], cwd)
+    expect(status.stdout).toContain('.codemind')
+  })
 })
 
 describe('POST /api/repository/checkpoints/:id/restore', () => {
