@@ -1,5 +1,6 @@
 import path from 'node:path'
 
+import type { AccessRuntime } from '../access/access-runtime.js'
 import type { MissionService } from '../mission/mission-service.js'
 import { AutonomousMissionControl } from './autonomous-mission-control.js'
 import { AutonomousMissionCoordinator } from './autonomous-mission-coordinator.js'
@@ -28,6 +29,11 @@ export interface AutonomousMissionRuntimeOptions {
     missionId: string,
     repositoryRoot: string,
   ) => Promise<readonly string[]>
+  /** Global fallback mission-duration cap (minutes), and the runtime used to source a per-grant
+   * `executionLimits.maxMissionDurationMinutes` override — see
+   * `AutonomousMissionCoordinatorOptions` for the resolution rule. */
+  readonly maxDurationMinutes?: number
+  readonly accessRuntime?: AccessRuntime
   readonly now?: () => Date
 }
 
@@ -79,6 +85,10 @@ export function createAutonomousMissionRuntime(
     ...(options.resolveValidationCommands === undefined
       ? {}
       : { resolveValidationCommands: options.resolveValidationCommands }),
+    ...(options.maxDurationMinutes === undefined
+      ? {}
+      : { maxDurationMinutes: options.maxDurationMinutes }),
+    ...(options.accessRuntime === undefined ? {} : { accessRuntime: options.accessRuntime }),
     multiAgentTracker,
     ...clockOptions,
   })

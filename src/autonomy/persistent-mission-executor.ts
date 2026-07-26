@@ -68,21 +68,35 @@ export class JsonMissionExecutionStore implements MissionExecutionStore {
   }
 }
 
+export interface MissionExecutionRunOptions {
+  /** When set, `run()` stops launching further tasks once this many minutes have elapsed since
+   * `execution.startedAt`, failing every remaining non-terminal task with a clear diagnostic
+   * instead of continuing indefinitely. Checked between tasks, not by pre-empting one already in
+   * flight — the executor has no way to interrupt an arbitrary in-progress tool/sandbox call. */
+  readonly maxDurationMinutes?: number
+}
+
 export class PersistentMissionExecutor {
   readonly #store: MissionExecutionStore
   readonly #executor: MissionTaskExecutor
+  readonly #now: () => Date
 
   constructor(input: {
     readonly store: MissionExecutionStore
     readonly executor: MissionTaskExecutor
+    readonly now?: () => Date
   }) {
     this.#store = input.store
     this.#executor = input.executor
+    this.#now = input.now ?? (() => new Date())
   }
 
-  async start(graph: AutonomousTaskGraph): Promise<PersistedMissionExecution> {
+  async start(
+    graph: AutonomousTaskGraph,
+    options: MissionExecutionRunOptions = {},
+  ): Promise<PersistedMissionExecution> {
     await this.#executor.prepare?.(graph)
-    const now = new Date().toISOString()
+    const now = this.#now().toISOString()
     const execution: PersistedMissionExecution = {
       schemaVersion: 1,
       graph: reconcileGraph(graph),
@@ -91,27 +105,42 @@ export class PersistentMissionExecutor {
       updatedAt: now,
     }
     await this.#store.save(execution)
-    return this.run(execution)
+    return this.run(execution, options)
   }
 
-  async resume(missionId: string): Promise<PersistedMissionExecution> {
+  async resume(
+    missionId: string,
+    options: MissionExecutionRunOptions = {},
+  ): Promise<PersistedMissionExecution> {
     const persisted = await this.#store.load(missionId)
     if (!persisted) throw new Error(`Mission execution ${missionId} was not found.`)
     if (persisted.completedAt !== undefined) return persisted
     await this.#executor.prepare?.(persisted.graph)
     const resumed = { ...persisted, graph: reconcileGraph(persisted.graph) }
     await this.#store.save(resumed)
-    return this.run(resumed)
+    return this.run(resumed, options)
   }
 
-  async run(initial: PersistedMissionExecution): Promise<PersistedMissionExecution> {
+  async run(
+    initial: PersistedMissionExecution,
+    options: MissionExecutionRunOptions = {},
+  ): Promise<PersistedMissionExecution> {
     let current = initial
     while (true) {
+      if (
+        options.maxDurationMinutes !== undefined &&
+        this.#exceedsDuration(current, options.maxDurationMinutes)
+      ) {
+        current = this.#failRemainingTasksForDurationLimit(current, options.maxDurationMinutes)
+        await this.#store.save(current)
+        return current
+      }
+
       const next = findNextTask(current.graph)
       if (next === undefined) {
         const unfinished = current.graph.tasks.some((task) => !isTerminal(task.state))
         if (unfinished) return current
-        const completedAt = new Date().toISOString()
+        const completedAt = this.#now().toISOString()
         current = {
           ...current,
           updatedAt: completedAt,
@@ -122,6 +151,35 @@ export class PersistentMissionExecutor {
       }
 
       current = await this.#executeTask(current, next)
+    }
+  }
+
+  #exceedsDuration(execution: PersistedMissionExecution, maxDurationMinutes: number): boolean {
+    const elapsedMs = this.#now().getTime() - new Date(execution.startedAt).getTime()
+    return elapsedMs > maxDurationMinutes * 60_000
+  }
+
+  #failRemainingTasksForDurationLimit(
+    execution: PersistedMissionExecution,
+    maxDurationMinutes: number,
+  ): PersistedMissionExecution {
+    const updatedAt = this.#now().toISOString()
+    const reason = `Mission exceeded its configured duration limit of ${maxDurationMinutes} minute(s).`
+    const tasks = execution.graph.tasks.map((task) =>
+      isTerminal(task.state)
+        ? task
+        : {
+            ...task,
+            state: 'failed' as const,
+            failureDiagnostics: [...task.failureDiagnostics, reason],
+            updatedAt,
+          },
+    )
+    return {
+      ...execution,
+      graph: { ...execution.graph, tasks, updatedAt },
+      updatedAt,
+      completedAt: updatedAt,
     }
   }
 

@@ -1,4 +1,6 @@
+import type { AccessRuntime } from '../access/access-runtime.js'
 import type { MissionService } from '../mission/mission-service.js'
+import type { SymbolWrightMission } from '../mission/mission-types.js'
 import type { AutonomousRepairLoopRecord } from './autonomous-repair-loop.js'
 import {
   planAutonomousRepositoryMission,
@@ -33,7 +35,37 @@ export interface AutonomousMissionCoordinatorOptions {
     repositoryRoot: string,
   ) => Promise<readonly string[]>
   readonly multiAgentTracker?: MultiAgentExecutionTracker
+  /** Global fallback mission-duration cap (minutes). When a mission was created by a
+   * delegated-access grant (has `grantId`) and `accessRuntime` is supplied, the effective cap is
+   * the smaller of this and that grant's `executionLimits.maxMissionDurationMinutes`. */
+  readonly maxDurationMinutes?: number
+  /** Used to look up a mission's owning grant (via `mission.grantId`) to source a per-grant
+   * `executionLimits.maxMissionDurationMinutes`. Absent for local-operator-only deployments. */
+  readonly accessRuntime?: AccessRuntime
   readonly now?: () => Date
+}
+
+/**
+ * The effective mission-duration cap is the smaller of the global option and the mission's
+ * owning grant's `executionLimits.maxMissionDurationMinutes`, when both apply — a grant can only
+ * tighten the global default, never loosen it. Mirrors `resolveMaxRepairAttempts` in
+ * `server-autonomy-runtime.ts`; kept separate since it resolves a different field for a different
+ * caller, not because the logic differs. Exported as a standalone pure function for direct testing.
+ */
+export function resolveMaxMissionDurationMinutes(
+  mission: SymbolWrightMission,
+  options: Pick<AutonomousMissionCoordinatorOptions, 'maxDurationMinutes' | 'accessRuntime'>,
+): number | undefined {
+  const globalCap = options.maxDurationMinutes
+  const grant =
+    mission.grantId === undefined || options.accessRuntime === undefined
+      ? undefined
+      : options.accessRuntime.grantService.getGrant(mission.grantId)
+  const grantCap = grant?.executionLimits.maxMissionDurationMinutes
+
+  if (grantCap === undefined) return globalCap
+  if (globalCap === undefined) return grantCap
+  return Math.min(globalCap, grantCap)
 }
 
 export interface AutonomousMissionStartResult {
@@ -53,6 +85,8 @@ export class AutonomousMissionCoordinator {
     | AutonomousMissionCoordinatorOptions['resolveValidationCommands']
     | undefined
   readonly #multiAgentTracker: MultiAgentExecutionTracker | undefined
+  readonly #maxDurationMinutes: number | undefined
+  readonly #accessRuntime: AccessRuntime | undefined
   readonly #now: () => Date
 
   constructor(options: AutonomousMissionCoordinatorOptions) {
@@ -64,6 +98,8 @@ export class AutonomousMissionCoordinator {
     this.#validationCommands = [...(options.validationCommands ?? [])]
     this.#resolveValidationCommands = options.resolveValidationCommands
     this.#multiAgentTracker = options.multiAgentTracker
+    this.#maxDurationMinutes = options.maxDurationMinutes
+    this.#accessRuntime = options.accessRuntime
     this.#now = options.now ?? (() => new Date())
   }
 
@@ -95,7 +131,11 @@ export class AutonomousMissionCoordinator {
       },
     )
 
-    const execution = await this.#executor.start(plan.graph)
+    const maxDurationMinutes = this.#resolveMaxDurationMinutes(mission)
+    const execution = await this.#executor.start(
+      plan.graph,
+      maxDurationMinutes === undefined ? {} : { maxDurationMinutes },
+    )
     await this.#synchronizeSpecialists(execution)
     this.#recordExecutionEvents(missionId, execution)
     return {
@@ -107,7 +147,11 @@ export class AutonomousMissionCoordinator {
 
   async resume(missionId: string): Promise<AutonomousMissionStartResult> {
     const mission = this.#missionService.get(missionId)
-    const execution = await this.#executor.resume(missionId)
+    const maxDurationMinutes = this.#resolveMaxDurationMinutes(mission)
+    const execution = await this.#executor.resume(
+      missionId,
+      maxDurationMinutes === undefined ? {} : { maxDurationMinutes },
+    )
     await this.#synchronizeSpecialists(execution)
     this.#recordExecutionEvents(missionId, execution)
     const index = await this.#loadSemanticIndex(mission.repository.rootPath)
@@ -153,6 +197,15 @@ export class AutonomousMissionCoordinator {
       ...(repairLoop === undefined ? {} : { repairLoop }),
       intelligence: createMissionImpactIntelligence({ execution, semanticIndex: index }),
       now: this.#now().toISOString(),
+    })
+  }
+
+  #resolveMaxDurationMinutes(mission: SymbolWrightMission): number | undefined {
+    return resolveMaxMissionDurationMinutes(mission, {
+      ...(this.#maxDurationMinutes === undefined
+        ? {}
+        : { maxDurationMinutes: this.#maxDurationMinutes }),
+      ...(this.#accessRuntime === undefined ? {} : { accessRuntime: this.#accessRuntime }),
     })
   }
 
