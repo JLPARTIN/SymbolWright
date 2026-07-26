@@ -418,7 +418,7 @@ export function createChatServerRequestListener(
       ? { githubPrCreationClient: options.githubPrCreationClient }
       : {}),
   }
-  const missionContext = { service: missionService, cwd }
+  const missionContext = { service: missionService, cwd, accessRuntime }
   const sandboxContext = { service: sandboxService, missionService }
   // Resolved once per server process: the `owner/repo` identity a grant's `repositoryScope` is
   // checked against. A SymbolWright server process is always bound to exactly one working tree,

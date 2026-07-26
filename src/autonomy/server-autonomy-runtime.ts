@@ -1,5 +1,7 @@
+import type { AccessRuntime } from '../access/access-runtime.js'
 import { ProjectMemory, resolveProjectMemoryDir } from '../memory/project-memory.js'
 import type { MissionService } from '../mission/mission-service.js'
+import type { SymbolWrightMission } from '../mission/mission-types.js'
 import { encodePortableValidationInvocation } from '../portability/portable-validation-invocation.js'
 import type { PortableValidationRunner } from '../portability/portable-validation-runner.js'
 import { researchRepositoryPortability } from '../portability/repository-portability-research.js'
@@ -44,7 +46,13 @@ export interface ServerAutonomyRuntimeOptions {
   readonly portableRunner?: PortableValidationRunner
   readonly editExecutor?: AutonomousEditTaskExecutor
   readonly validationCommands?: readonly string[]
+  /** Global fallback repair-attempt cap. When a mission was created by a delegated-access grant
+   * (has `grantId`) and `accessRuntime` is supplied, the effective cap is the smaller of this and
+   * that grant's `executionLimits.maxRepairAttempts`. */
   readonly maxRepairAttempts?: number
+  /** Used to look up a mission's owning grant (via `mission.grantId`) to source a per-grant
+   * `executionLimits.maxRepairAttempts`. Absent for local-operator-only deployments. */
+  readonly accessRuntime?: AccessRuntime
   readonly enablePortabilityWebResearch?: boolean
   readonly webSearchProvider?: WebSearchProvider
   readonly env?: ProviderGatewayEnv
@@ -115,6 +123,34 @@ export function createServerAutonomyRuntime(
   })
 }
 
+/**
+ * The effective repair-attempt cap is the smaller of the global option and the mission's owning
+ * grant's `executionLimits.maxRepairAttempts`, when both apply — a grant can only tighten the
+ * global default, never loosen it. Clamped to `PersistentMissionRepairController`'s accepted
+ * [0, 10] range so an out-of-range value an operator set on a grant can't crash mission
+ * preparation. Exported as a standalone pure function so it's testable without constructing the
+ * full autonomy runtime.
+ */
+export function resolveMaxRepairAttempts(
+  mission: SymbolWrightMission,
+  options: Pick<ServerAutonomyRuntimeOptions, 'maxRepairAttempts' | 'accessRuntime'>,
+): number | undefined {
+  const globalCap = options.maxRepairAttempts
+  const grant =
+    mission.grantId === undefined || options.accessRuntime === undefined
+      ? undefined
+      : options.accessRuntime.grantService.getGrant(mission.grantId)
+  const grantCap = grant?.executionLimits.maxRepairAttempts
+
+  const effective =
+    grantCap === undefined
+      ? globalCap
+      : globalCap === undefined
+        ? grantCap
+        : Math.min(globalCap, grantCap)
+  return effective === undefined ? undefined : Math.min(10, Math.max(0, Math.trunc(effective)))
+}
+
 class MissionBoundTaskExecutor implements MissionTaskExecutor {
   readonly #options: ServerAutonomyRuntimeOptions
   readonly #env: ProviderGatewayEnv
@@ -154,6 +190,7 @@ class MissionBoundTaskExecutor implements MissionTaskExecutor {
         workspaceRoot: this.#options.workspaceRoot,
         validationCommands,
       })
+    const maxRepairAttempts = this.#resolveMaxRepairAttempts(mission)
     const repairController =
       editExecutor === undefined
         ? undefined
@@ -165,9 +202,7 @@ class MissionBoundTaskExecutor implements MissionTaskExecutor {
             objective: mission.objective,
             repositoryRoot: mission.repository.rootPath,
             validationCommands,
-            ...(this.#options.maxRepairAttempts === undefined
-              ? {}
-              : { maxRepairAttempts: this.#options.maxRepairAttempts }),
+            ...(maxRepairAttempts === undefined ? {} : { maxRepairAttempts }),
             recordEvent: (type, summary, payload) => {
               this.#options.missionService.appendEvent(mission.id, type, summary, payload)
             },
@@ -194,6 +229,10 @@ class MissionBoundTaskExecutor implements MissionTaskExecutor {
       throw new Error('Autonomous task executor was not prepared for a mission.')
     }
     return this.#delegate
+  }
+
+  #resolveMaxRepairAttempts(mission: SymbolWrightMission): number | undefined {
+    return resolveMaxRepairAttempts(mission, this.#options)
   }
 }
 

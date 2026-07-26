@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
+import type { AccessRuntime } from '../../access/access-runtime.js'
 import { createServerAutonomyRuntime } from '../../autonomy/server-autonomy-runtime.js'
 import {
   MISSION_EVENT_FILTERS,
@@ -38,6 +39,11 @@ export interface MissionRouteContext {
    * per-request by `symbolwright-chat-server.ts`, never parsed from the request body. Recorded on
    * created missions and used to enforce `executionLimits.maxConcurrentMissions`. */
   readonly grantId?: string
+  /** Stable (not per-request) reference used to look up a mission's owning grant during
+   * autonomous execution — e.g. to source `executionLimits.maxRepairAttempts` for that specific
+   * mission's repair loop. Distinct from `grantId` above, which is per-request and only used at
+   * mission-creation time. */
+  readonly accessRuntime?: AccessRuntime
 }
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
@@ -52,6 +58,7 @@ function autonomyRuntime(context: MissionRouteContext) {
     workspaceRoot: context.cwd,
     missionService: context.service,
     hasGitHubToken: process.env['GITHUB_TOKEN'] !== undefined,
+    ...(context.accessRuntime === undefined ? {} : { accessRuntime: context.accessRuntime }),
   })
   AUTONOMY_RUNTIMES.set(context.service, runtime)
   return runtime
