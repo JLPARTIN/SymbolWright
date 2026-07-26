@@ -332,6 +332,13 @@ export async function handleGitHubIntakeRoute(
       `Publish attempt for branch "${packet.branchName}": ${branchResult.status}.`,
       { branchResult, prResult },
     )
+    // Only this real, verified path (a GitHub API call that actually succeeded) may attribute a
+    // pull request to the mission -- `executionLimits.requirePullRequest` enforcement at mission
+    // completion (`MissionService.complete`) trusts `references.pullRequestUrls`, so a caller
+    // must never be able to satisfy that gate by self-reporting an unverified URL here.
+    if (prResult?.status === 'ok' && prResult.data !== undefined) {
+      context.service.recordPullRequest(missionId, prResult.data.url)
+    }
     sendJson(res, 200, { branchResult, prResult })
     return true
   } catch (error) {

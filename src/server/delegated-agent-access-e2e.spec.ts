@@ -529,6 +529,59 @@ describe('Delegated Agent Access — end-to-end', () => {
     expect(detailBody.mission.grantId).toBeDefined()
   })
 
+  it('enforces executionLimits.requirePullRequest by refusing to complete a mission with no recorded pull request', async () => {
+    // Regression test: `requirePullRequest` was a declared execution limit with zero enforcement
+    // anywhere -- a mission owned by a grant that requires a PR could be marked COMPLETED with no
+    // PR ever having been created. The Coding Agent profile defaults `requirePullRequest: true`.
+    const server = await launch()
+    const { token } = await createCodingAgentGrant(server)
+
+    const created = await fetch(`${server.url}/api/missions`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Mission',
+        objective: 'Do the thing',
+        workspaceKind: 'repository',
+        repositoryPath: '.',
+        runtimeMode: 'READ_ONLY',
+      }),
+    })
+    expect(created.status).toBe(201)
+    const createdBody = (await created.json()) as { mission: { id: string; revision: number } }
+    const missionId = createdBody.mission.id
+
+    const blocked = await fetch(`${server.url}/api/missions/${missionId}/complete`, {
+      method: 'POST',
+      headers: { ...operatorAuth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ revision: createdBody.mission.revision }),
+    })
+    expect(blocked.status).toBe(403)
+    const blockedBody = (await blocked.json()) as { reasonCode?: string }
+    expect(blockedBody.reasonCode).toBe('PULL_REQUEST_REQUIRED')
+
+    // Recording a real pull request against the mission satisfies the gate.
+    const recorded = await fetch(`${server.url}/api/missions/${missionId}/record`, {
+      method: 'POST',
+      headers: { ...operatorAuth(), 'content-type': 'application/json' },
+      body: JSON.stringify({
+        kind: 'pr-created',
+        pullRequestUrl: 'https://github.com/acme/widgets/pull/1',
+      }),
+    })
+    expect(recorded.status).toBe(200)
+    const recordedBody = (await recorded.json()) as { mission: { revision: number } }
+
+    const completed = await fetch(`${server.url}/api/missions/${missionId}/complete`, {
+      method: 'POST',
+      headers: { ...operatorAuth(), 'content-type': 'application/json' },
+      body: JSON.stringify({ revision: recordedBody.mission.revision }),
+    })
+    expect(completed.status).toBe(200)
+    const completedBody = (await completed.json()) as { mission: { status: string } }
+    expect(completedBody.mission.status).toBe('COMPLETED')
+  })
+
   describe('tool-level enforcement inside /api/agent', () => {
     let fakeUpstream: Server | undefined
 
