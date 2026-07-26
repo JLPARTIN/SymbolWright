@@ -231,8 +231,8 @@ function normalizeRelativePath(value: string): string {
     normalized.startsWith('.git/') ||
     normalized === '.symbolwright' ||
     normalized.startsWith('.symbolwright/') ||
-    normalized === '.symbolwright' ||
-    normalized.startsWith('.symbolwright/')
+    normalized === '.codemind' ||
+    normalized.startsWith('.codemind/')
   ) {
     throw new Error(`Unsafe edit path: ${value}`)
   }

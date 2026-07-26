@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -144,6 +144,40 @@ describe('GitHub intake API routes', () => {
     expect(body.packet.branchCreated).toBe(true)
     expect(body.packet.stagedFiles).toContain('b.txt')
     expect(body.packet.commitCreated).toBe(true)
+  })
+
+  it('never stages legacy CodeMind state (.codemind/) into a PR operation packet', async () => {
+    // Regression test: the changed-file filter previously excluded `.symbolwright/` twice
+    // instead of also excluding `.codemind/`, so pre-rebrand runtime state left in a repository
+    // could be swept into a generated PR packet.
+    const created = await fetch(`${started!.url}/api/missions`, {
+      method: 'POST',
+      headers: auth(),
+      body: JSON.stringify({
+        name: 'Test mission',
+        objective: 'Fix the thing',
+        workspaceKind: 'repository',
+        repositoryPath: '.',
+        runtimeMode: 'READ_ONLY',
+      }),
+    })
+    expect(created.status).toBe(201)
+    const mission = (await created.json()) as { mission: { id: string } }
+
+    mkdirSync(join(root, '.codemind'), { recursive: true })
+    writeFileSync(join(root, '.codemind', 'legacy-state.json'), '{}')
+    writeFileSync(join(root, 'b.txt'), 'new file')
+
+    const packetResponse = await fetch(
+      `${started!.url}/api/missions/${mission.mission.id}/github-pr-packet`,
+      { method: 'POST', headers: auth(), body: JSON.stringify({}) },
+    )
+    expect(packetResponse.status).toBe(200)
+    const body = (await packetResponse.json()) as {
+      packet: { stagedFiles: string[] }
+    }
+    expect(body.packet.stagedFiles).toContain('b.txt')
+    expect(body.packet.stagedFiles.some((path) => path.startsWith('.codemind'))).toBe(false)
   })
 
   it('returns 404 for a PR packet request against a nonexistent mission', async () => {

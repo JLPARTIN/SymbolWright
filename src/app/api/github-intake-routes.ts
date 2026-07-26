@@ -16,6 +16,13 @@ import {
 import type { PrOperationChangedFile, PrOperationPacket } from '../../github/pr-operation-packet.js'
 import { preparePrOperationPacket } from '../../github/pr-operation-packet.js'
 import { DefaultGitHubHttpClient } from '../../runtime/live-read/github-http-client.js'
+import type { AccessRuntime } from '../../access/access-runtime.js'
+import {
+  AuthorizationDeniedError,
+  ApprovalRequiredError,
+} from '../../access/authorization-service.js'
+import { checkConcurrentMissionLimit } from '../../access/mission-concurrency-guard.js'
+import type { RequestPrincipalKind } from './access-routes.js'
 
 const MAX_INTAKE_REQUEST_BYTES = 64 * 1024
 
@@ -25,6 +32,19 @@ export interface GitHubIntakeRouteContext {
   readonly githubToken?: string
   /** Preferred over `githubToken` when present — see `RepositoryRouteContext.githubTokenResolver`. */
   readonly githubTokenResolver?: (repository?: string) => Promise<string | undefined>
+  /**
+   * The following are only present when the caller is a delegated agent (never for the local
+   * operator). They gate `/api/github/intake`'s mission-creation path: acquiring a repository and
+   * creating a mission is a `symbolwright.mission.create`-level operation, distinct from the
+   * lower-level `symbolwright.repository.index` capability the route itself requires, so a
+   * Repository Analyst grant (read-only, no mission-create) must not be able to spin up real
+   * missions -- and real disk/Git footprint -- through intake's `read-only`/`writable` modes.
+   */
+  readonly accessRuntime?: AccessRuntime
+  readonly principalKind?: RequestPrincipalKind
+  readonly principalId?: string
+  readonly grantId?: string
+  readonly sessionId?: string
 }
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
@@ -101,7 +121,7 @@ function parseChangedFiles(statusOutput: string): readonly PrOperationChangedFil
       (entry) =>
         entry.path.length > 0 &&
         !entry.path.startsWith('.symbolwright/') &&
-        !entry.path.startsWith('.symbolwright/'),
+        !entry.path.startsWith('.codemind/'),
     )
 }
 
@@ -137,6 +157,63 @@ export async function handleGitHubIntakeRoute(
       if (mode !== 'dry-run' && mode !== 'read-only' && mode !== 'writable') {
         throw new Error('"mode" must be one of: dry-run, read-only, writable.')
       }
+      if (mode !== 'dry-run' && context.principalKind === 'agent') {
+        if (context.accessRuntime === undefined || context.principalId === undefined) {
+          sendJson(res, 403, {
+            error: 'authorization_denied',
+            reasonCode: 'ROUTE_NOT_PERMITTED',
+            message: 'This agent grant does not permit creating missions via GitHub intake.',
+          })
+          return true
+        }
+        const grantId = context.grantId as string
+        try {
+          await context.accessRuntime.authorizationService.requireAuthorized({
+            principalId: context.principalId,
+            grantId,
+            ...(context.sessionId === undefined ? {} : { sessionId: context.sessionId }),
+            capability: 'symbolwright.mission.create',
+          })
+        } catch (authzError) {
+          if (authzError instanceof ApprovalRequiredError) {
+            sendJson(res, 403, {
+              error: 'approval_required',
+              reasonCode: authzError.decision.reasonCode,
+              message: authzError.decision.reason,
+              approvalRequestId: authzError.decision.approvalId,
+              correlationId: authzError.decision.correlationId,
+            })
+            return true
+          }
+          if (authzError instanceof AuthorizationDeniedError) {
+            sendJson(res, 403, {
+              error: 'authorization_denied',
+              reasonCode: authzError.decision.reasonCode,
+              message: authzError.decision.reason,
+              requiredCapability: 'symbolwright.mission.create',
+              approvalPossible: false,
+              correlationId: authzError.decision.correlationId,
+            })
+            return true
+          }
+          throw authzError
+        }
+
+        const limitExceeded = checkConcurrentMissionLimit(
+          context.accessRuntime,
+          context.service,
+          grantId,
+        )
+        if (limitExceeded !== undefined) {
+          sendJson(res, 403, {
+            error: 'execution_limit_exceeded',
+            reasonCode: 'MAX_CONCURRENT_MISSIONS_EXCEEDED',
+            message: `This grant already has ${limitExceeded.activeCount} active mission(s), at its configured limit of ${limitExceeded.maxConcurrentMissions}.`,
+          })
+          return true
+        }
+      }
+
       const policy = createGitHubOperationsPolicy({
         enabledOperations: parseEnabledOperations(record),
       })
@@ -148,6 +225,7 @@ export async function handleGitHubIntakeRoute(
         objective: requiredString(record, 'objective'),
         runtimeMode: 'READ_ONLY',
         policy,
+        ...(context.grantId === undefined ? {} : { grantId: context.grantId }),
         ...(optionalString(record, 'ref') === undefined
           ? {}
           : { ref: optionalString(record, 'ref')! }),

@@ -430,14 +430,14 @@ export async function handleRepositoryCommit(
     : undefined
 
   // `.symbolwright/` is SymbolWright's own checkpoint/session state, not user
-  // content -- exclude it (and the legacy `.symbolwright/` name) from the default
+  // content -- exclude it (and the legacy `.codemind/` name) from the default
   // "stage everything" sweep regardless of whether the target repository's
   // own .gitignore happens to cover it, so committing from this view can
   // never accidentally check in checkpoint snapshots.
   const addArgs =
     fileList !== undefined && fileList.length > 0
       ? ['add', '--', ...fileList]
-      : ['add', '-A', '--', '.', ':!.symbolwright', ':!.symbolwright']
+      : ['add', '-A', '--', '.', ':!.symbolwright', ':!.codemind']
   const addResult = await runGitCommand(addArgs, context.cwd)
   if (addResult.exitCode !== 0) {
     sendJson(res, 500, { error: addResult.stderr || 'git add failed' })

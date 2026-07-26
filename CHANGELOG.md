@@ -4,6 +4,31 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ## [Unreleased]
 
+### Fixed
+
+- **GitHub repository intake — grant attribution and mission-create authorization bypass**:
+  `POST /api/github/intake` was gated only by the low-level `symbolwright.repository.index`
+  capability, so a read-only Repository Analyst grant (no `symbolwright.mission.create`) could
+  reach `read-only`/`writable` intake modes and have SymbolWright acquire a real external
+  repository and create a real mission — bypassing that profile's write restriction entirely.
+  The created mission was also never attributed to the calling grant (`missionService.create` was
+  invoked without a `grantId`), so `executionLimits.maxConcurrentMissions` and other per-grant
+  execution limits could not apply to missions created through intake. Intake now requires
+  `symbolwright.mission.create` (checked via the same `AuthorizationService`, and enforcing the
+  same concurrent-mission limit as `POST /api/missions`, via a new shared
+  `src/access/mission-concurrency-guard.ts`) for any non-`dry-run` mode, and threads the
+  authenticated grant's ID through `performExternalRepositoryIntake` into the created mission.
+- **Legacy `.codemind` exclusion typo**: three places meant to exclude both the canonical
+  `.symbolwright/` runtime-state directory and the legacy pre-rebrand `.codemind/` directory
+  instead repeated `.symbolwright` twice, so a repository still carrying `.codemind/` state could
+  have it swept into a real commit, a generated GitHub PR packet, or the semantic-index bootstrap
+  scan: `POST /api/repository/commit`'s default `git add -A` exclusions
+  (`src/app/api/repository-routes.ts`), the intake PR-packet changed-file filter
+  (`src/app/api/github-intake-routes.ts`), and the repository semantic-index directory ignore list
+  (`src/autonomy/repository-semantic-index-bootstrap.ts`). Also corrected the same duplicate in
+  `src/autonomy/transactional-edit-session.ts`'s unsafe-edit-path check. Added regression tests
+  proving `.codemind/` content is never staged, committed, or included in a PR packet.
+
 ### Added
 
 - **Multi-Agent Engineering Orchestration (Large PR Bundle #11)**: a governed collaborative

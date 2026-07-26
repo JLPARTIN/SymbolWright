@@ -37,6 +37,7 @@ import {
 } from '../access/access-grant-service.js'
 import { AuthorizationDeniedError, ApprovalRequiredError } from '../access/authorization-service.js'
 import { resolveRouteCapability } from '../access/route-capability-map.js'
+import { checkConcurrentMissionLimit } from '../access/mission-concurrency-guard.js'
 import {
   BRANCH_SENSITIVE_ROUTE_CAPABILITIES,
   isLikelyDefaultBranch,
@@ -573,25 +574,32 @@ export function createChatServerRequestListener(
         }
 
         if (requiredCapability === 'symbolwright.mission.create') {
-          const grant = accessRuntime.grantService.getGrant(principal.grantId as string)
-          const maxConcurrentMissions = grant?.executionLimits.maxConcurrentMissions
-          if (maxConcurrentMissions !== undefined) {
-            const activeCount = missionService.countActiveMissionsForGrant(
-              principal.grantId as string,
-            )
-            if (activeCount >= maxConcurrentMissions) {
-              sendJson(res, 403, {
-                error: 'execution_limit_exceeded',
-                reasonCode: 'MAX_CONCURRENT_MISSIONS_EXCEEDED',
-                message: `This grant already has ${activeCount} active mission(s), at its configured limit of ${maxConcurrentMissions}.`,
-              })
-              return
-            }
+          const limitExceeded = checkConcurrentMissionLimit(
+            accessRuntime,
+            missionService,
+            principal.grantId as string,
+          )
+          if (limitExceeded !== undefined) {
+            sendJson(res, 403, {
+              error: 'execution_limit_exceeded',
+              reasonCode: 'MAX_CONCURRENT_MISSIONS_EXCEEDED',
+              message: `This grant already has ${limitExceeded.activeCount} active mission(s), at its configured limit of ${limitExceeded.maxConcurrentMissions}.`,
+            })
+            return
           }
         }
       }
 
-      if (await handleGitHubIntakeRoute(req, res, url, githubIntakeContext)) {
+      if (
+        await handleGitHubIntakeRoute(req, res, url, {
+          ...githubIntakeContext,
+          accessRuntime,
+          principalKind: principal.kind,
+          ...(principal.principalId === undefined ? {} : { principalId: principal.principalId }),
+          ...(principal.grantId === undefined ? {} : { grantId: principal.grantId }),
+          ...(principal.sessionId === undefined ? {} : { sessionId: principal.sessionId }),
+        })
+      ) {
         return
       }
 
