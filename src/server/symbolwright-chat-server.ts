@@ -417,6 +417,7 @@ export function createChatServerRequestListener(
     ...(options.githubPrCreationClient !== undefined
       ? { githubPrCreationClient: options.githubPrCreationClient }
       : {}),
+    accessRuntime,
   }
   const missionContext = { service: missionService, cwd, accessRuntime }
   const sandboxContext = { service: sandboxService, missionService }
@@ -743,7 +744,10 @@ export function createChatServerRequestListener(
       }
 
       if (req.method === 'POST' && url.pathname === '/api/repository/push') {
-        await handleRepositoryPush(req, res, repositoryContext)
+        await handleRepositoryPush(req, res, {
+          ...repositoryContext,
+          ...(principal.grantId === undefined ? {} : { grantId: principal.grantId }),
+        })
         return
       }
 

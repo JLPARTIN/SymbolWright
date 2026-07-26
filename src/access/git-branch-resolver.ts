@@ -1,6 +1,6 @@
 import { runGitCommand } from '../runtime/git/git-command-runner.js'
 
-const COMMON_DEFAULT_BRANCH_NAMES = new Set(['main', 'master', 'trunk'])
+export const COMMON_DEFAULT_BRANCH_NAMES = new Set(['main', 'master', 'trunk'])
 
 /** Resolves the branch currently checked out in `cwd`, or `undefined` outside a git repository /
  * in a detached-HEAD state (branch-scope checks are skipped rather than guessed in that case). */

@@ -206,6 +206,133 @@ describe('Delegated Agent Access — end-to-end', () => {
     expect(pushMainBody.reasonCode).toBe('BRANCH_PROTECTED')
   })
 
+  it('denies a push that changes more files than executionLimits.maxFilesChanged allows', async () => {
+    const server = await launch()
+    const { token } = await createCodingAgentGrant(server, {
+      executionLimits: { maxFilesChanged: 1 },
+    })
+
+    await fetch(`${server.url}/api/repository/branches`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'feat/two-files' }),
+    })
+
+    writeFileSync(join(cwd, 'README.md'), '# hello\n\nUpdated.\n')
+    writeFileSync(join(cwd, 'second.md'), '# second file\n')
+    const commit = await fetch(`${server.url}/api/repository/commit`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'docs: two files' }),
+    })
+    expect(commit.status).toBe(200)
+
+    const push = await fetch(`${server.url}/api/repository/push`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true }),
+    })
+    expect(push.status).toBe(403)
+    const pushBody = (await push.json()) as { reasonCode: string }
+    expect(pushBody.reasonCode).toBe('PUSH_EXCEEDS_EXECUTION_LIMITS')
+
+    const remoteBranches = await runGitCommand(['branch'], remoteDir)
+    expect(remoteBranches.stdout).not.toContain('feat/two-files')
+  })
+
+  it('denies a push with more commits than executionLimits.maxCommits allows', async () => {
+    const server = await launch()
+    const { token } = await createCodingAgentGrant(server, {
+      executionLimits: { maxCommits: 1 },
+    })
+
+    await fetch(`${server.url}/api/repository/branches`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'feat/two-commits' }),
+    })
+
+    for (const [file, contents, message] of [
+      ['a.md', '# a\n', 'docs: a'],
+      ['b.md', '# b\n', 'docs: b'],
+    ] as const) {
+      writeFileSync(join(cwd, file), contents)
+      const commit = await fetch(`${server.url}/api/repository/commit`, {
+        method: 'POST',
+        headers: { ...agentAuth(token), 'content-type': 'application/json' },
+        body: JSON.stringify({ message }),
+      })
+      expect(commit.status).toBe(200)
+    }
+
+    const push = await fetch(`${server.url}/api/repository/push`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true }),
+    })
+    expect(push.status).toBe(403)
+    const pushBody = (await push.json()) as { reasonCode: string }
+    expect(pushBody.reasonCode).toBe('PUSH_EXCEEDS_EXECUTION_LIMITS')
+  })
+
+  it('denies a push whose diff has more lines than executionLimits.maxDiffLines allows', async () => {
+    const server = await launch()
+    const { token } = await createCodingAgentGrant(server, {
+      executionLimits: { maxDiffLines: 1 },
+    })
+
+    await fetch(`${server.url}/api/repository/branches`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'feat/big-diff' }),
+    })
+
+    writeFileSync(join(cwd, 'README.md'), '# hello\n\nline one\nline two\nline three\n')
+    const commit = await fetch(`${server.url}/api/repository/commit`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'docs: big diff' }),
+    })
+    expect(commit.status).toBe(200)
+
+    const push = await fetch(`${server.url}/api/repository/push`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true }),
+    })
+    expect(push.status).toBe(403)
+    const pushBody = (await push.json()) as { reasonCode: string }
+    expect(pushBody.reasonCode).toBe('PUSH_EXCEEDS_EXECUTION_LIMITS')
+  })
+
+  it('allows a push within all configured executionLimits size limits', async () => {
+    const server = await launch()
+    const { token } = await createCodingAgentGrant(server, {
+      executionLimits: { maxFilesChanged: 5, maxDiffLines: 100, maxCommits: 5 },
+    })
+
+    await fetch(`${server.url}/api/repository/branches`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'feat/small-change' }),
+    })
+
+    writeFileSync(join(cwd, 'README.md'), '# hello\n\nUpdated.\n')
+    const commit = await fetch(`${server.url}/api/repository/commit`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'docs: small change' }),
+    })
+    expect(commit.status).toBe(200)
+
+    const push = await fetch(`${server.url}/api/repository/push`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({ confirm: true }),
+    })
+    expect(push.status).toBe(200)
+  })
+
   it('denies an unrelated route entirely for an agent principal (fail closed)', async () => {
     const server = await launch()
     const { token } = await createCodingAgentGrant(server)

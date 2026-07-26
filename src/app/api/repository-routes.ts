@@ -2,6 +2,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
+import { COMMON_DEFAULT_BRANCH_NAMES } from '../../access/git-branch-resolver.js'
+import type { AccessRuntime } from '../../access/access-runtime.js'
+import type { MissionExecutionLimits } from '../../access/access-types.js'
 import {
   checkpointBeforeWrite,
   snapshotFileBeforeWrite,
@@ -39,6 +42,14 @@ export interface RepositoryRouteContext {
   readonly githubTokenResolver?: (repository?: string) => Promise<string | undefined>
   /** Test seam: inject a fake GitHubPrCreationClient instead of constructing the real REST client from githubToken. */
   readonly githubPrCreationClient?: GitHubPrCreationClient
+  /** Stable (not per-request) reference used to look up the calling grant's `executionLimits` at
+   * push time. Paired with the per-request `grantId` below — both must be present to enforce
+   * `maxFilesChanged`/`maxDiffLines`/`maxCommits`; either absent (e.g. the local operator) skips
+   * the check entirely, matching today's behavior. */
+  readonly accessRuntime?: AccessRuntime
+  /** The calling delegated-access grant's id, when the caller is an agent-token principal — set
+   * per-request by `symbolwright-chat-server.ts`, never parsed from the request body. */
+  readonly grantId?: string
 }
 
 async function resolveGitHubToken(
@@ -503,6 +514,109 @@ export async function detectGitHubRepository(cwd: string): Promise<string | unde
 }
 
 /**
+ * Resolves the ref to diff `HEAD` against when estimating "what this push changes": the branch's
+ * configured upstream when one exists (a re-push of an already-tracked branch), else the remote's
+ * default branch (a first push of a new branch). Returns `undefined` when neither can be
+ * determined (e.g. a local-only repository with no remote) — callers skip the size check in that
+ * case rather than guess, the same "best effort, never block on ambiguity" stance
+ * `isLikelyDefaultBranch` takes for branch-scope checks.
+ *
+ * Fetches from `remote` first: a local repository that has only ever pushed (never fetched) has
+ * neither the remote-tracking ref nor the underlying commit objects for the remote's default
+ * branch, so `git diff`/`git rev-list` against it would fail with "unknown revision" without this.
+ */
+async function resolvePushBaseRef(
+  cwd: string,
+  remote: string,
+  branch: string,
+): Promise<string | undefined> {
+  const fetchResult = await runGitCommand(['fetch', remote], cwd)
+  if (fetchResult.exitCode !== 0) return undefined
+
+  const upstream = await runGitCommand(['rev-parse', '--abbrev-ref', `${branch}@{u}`], cwd)
+  if (upstream.exitCode === 0) {
+    const ref = upstream.stdout.trim()
+    if (ref.length > 0) return ref
+  }
+
+  // No upstream (a new branch's first push): try the remote's actual reported default branch
+  // first, then fall back to common default-branch names. The fallback matters because a locally
+  // `git init --bare` remote (as in tests, or a freshly created bare mirror) may report a stale or
+  // never-configured HEAD symref pointing at a branch that was never actually created.
+  const candidateNames = new Set<string>()
+  const symref = await runGitCommand(['ls-remote', '--symref', remote, 'HEAD'], cwd)
+  const match =
+    symref.exitCode === 0 ? /^ref:\s+refs\/heads\/(\S+)\s+HEAD/m.exec(symref.stdout) : null
+  if (match?.[1] !== undefined) candidateNames.add(match[1])
+  for (const name of COMMON_DEFAULT_BRANCH_NAMES) candidateNames.add(name)
+
+  for (const name of candidateNames) {
+    const candidate = `${remote}/${name}`
+    const verify = await runGitCommand(['rev-parse', '--verify', `${candidate}^{commit}`], cwd)
+    if (verify.exitCode === 0) return candidate
+  }
+  return undefined
+}
+
+interface PushChangeStats {
+  readonly filesChanged: number
+  readonly diffLines: number
+  readonly commits: number
+}
+
+/** `filesChanged`/`diffLines` are the symmetric difference (`baseRef...HEAD`, i.e. against the
+ * merge-base) since that's "what this branch introduces," not "what changed on both sides since
+ * they diverged." `commits` uses `baseRef..HEAD` (commits reachable from HEAD but not baseRef) —
+ * exactly what this push actually adds to the remote. */
+async function computePushChangeStats(
+  cwd: string,
+  baseRef: string,
+): Promise<PushChangeStats | undefined> {
+  const [nameOnly, numstat, commitCount] = await Promise.all([
+    runGitCommand(['diff', '--name-only', `${baseRef}...HEAD`], cwd),
+    runGitCommand(['diff', '--numstat', `${baseRef}...HEAD`], cwd),
+    runGitCommand(['rev-list', '--count', `${baseRef}..HEAD`], cwd),
+  ])
+  if (nameOnly.exitCode !== 0 || numstat.exitCode !== 0 || commitCount.exitCode !== 0) {
+    return undefined
+  }
+
+  const filesChanged = nameOnly.stdout.split('\n').filter((line) => line.trim().length > 0).length
+  const diffLines = numstat.stdout
+    .split('\n')
+    .filter((line) => line.trim().length > 0)
+    .reduce((sum, line) => {
+      const [added, removed] = line.trim().split(/\s+/)
+      const addedCount = Number.parseInt(added ?? '', 10)
+      const removedCount = Number.parseInt(removed ?? '', 10)
+      return (
+        sum +
+        (Number.isFinite(addedCount) ? addedCount : 0) +
+        (Number.isFinite(removedCount) ? removedCount : 0)
+      )
+    }, 0)
+  const commits = Number.parseInt(commitCount.stdout.trim(), 10)
+
+  return { filesChanged, diffLines, commits: Number.isFinite(commits) ? commits : 0 }
+}
+
+function describePushExecutionLimitViolation(
+  stats: PushChangeStats,
+  limits: MissionExecutionLimits,
+): string | undefined {
+  if (limits.maxFilesChanged !== undefined && stats.filesChanged > limits.maxFilesChanged) {
+    return `This push changes ${stats.filesChanged} file(s), exceeding this grant's limit of ${limits.maxFilesChanged}.`
+  }
+  if (limits.maxDiffLines !== undefined && stats.diffLines > limits.maxDiffLines) {
+    return `This push changes ${stats.diffLines} diff line(s), exceeding this grant's limit of ${limits.maxDiffLines}.`
+  }
+  if (limits.maxCommits !== undefined && stats.commits > limits.maxCommits) {
+    return `This push includes ${stats.commits} commit(s), exceeding this grant's limit of ${limits.maxCommits}.`
+  }
+  return undefined
+}
+
+/**
  * `POST /api/repository/push` -- pushes the current branch. Requires
  * `confirm: true` in the body (a real human decision, not a default) and is
  * blocked on the same protected-ref/force-flag conditions the `git` runtime
@@ -557,6 +671,30 @@ export async function handleRepositoryPush(
   if (!gate.allowed) {
     sendJson(res, 403, { error: gate.blockReasons.join(' ') })
     return
+  }
+
+  if (context.accessRuntime !== undefined && context.grantId !== undefined) {
+    const grant = context.accessRuntime.grantService.getGrant(context.grantId)
+    const limits = grant?.executionLimits
+    const hasSizeLimits =
+      limits?.maxFilesChanged !== undefined ||
+      limits?.maxDiffLines !== undefined ||
+      limits?.maxCommits !== undefined
+    if (limits !== undefined && hasSizeLimits) {
+      const baseRef = await resolvePushBaseRef(context.cwd, remote, branch)
+      const stats =
+        baseRef === undefined ? undefined : await computePushChangeStats(context.cwd, baseRef)
+      const violation =
+        stats === undefined ? undefined : describePushExecutionLimitViolation(stats, limits)
+      if (violation !== undefined) {
+        sendJson(res, 403, {
+          error: 'execution_limit_exceeded',
+          reasonCode: 'PUSH_EXCEEDS_EXECUTION_LIMITS',
+          message: violation,
+        })
+        return
+      }
+    }
   }
 
   const args = setUpstream ? ['push', '-u', remote, branch] : ['push', remote, branch]
