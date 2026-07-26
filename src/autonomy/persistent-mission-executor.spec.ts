@@ -139,6 +139,112 @@ describe('persistent mission execution', () => {
     expect(completed?.failureDiagnostics).toEqual(['temporary repository lock'])
   })
 
+  it('does not interfere with normal completion when the mission finishes within its duration limit', async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-duration-ok-'))
+    workspaces.push(workspace)
+    const executor = new PersistentMissionExecutor({
+      store: new JsonMissionExecutionStore(workspace),
+      executor: {
+        async execute() {
+          return { state: 'completed' }
+        },
+      },
+    })
+
+    const result = await executor.start(graph([task('edit', [])]), { maxDurationMinutes: 60 })
+
+    expect(result.graph.tasks[0]?.state).toBe('completed')
+    expect(result.completedAt).toBeDefined()
+  })
+
+  it('fails remaining tasks and ends the mission once maxDurationMinutes is exceeded mid-run', async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-duration-mid-'))
+    workspaces.push(workspace)
+    let currentTime = Date.parse(NOW)
+    const executor = new PersistentMissionExecutor({
+      store: new JsonMissionExecutionStore(workspace),
+      now: () => new Date(currentTime),
+      executor: {
+        async execute() {
+          currentTime += 10 * 60_000 // each task takes 10 simulated minutes
+          return { state: 'completed' }
+        },
+      },
+    })
+
+    const result = await executor.start(
+      graph([task('a', []), task('b', ['a']), task('c', ['b'])]),
+      { maxDurationMinutes: 15 },
+    )
+
+    // a (+10min, 10<=15 -> ran), b (+10min, 10<=15 -> ran, now 20 elapsed), then 20>15 -> c fails.
+    expect(result.graph.tasks.map((node) => node.state)).toEqual([
+      'completed',
+      'completed',
+      'failed',
+    ])
+    expect(result.graph.tasks[2]?.failureDiagnostics[0]).toContain(
+      'exceeded its configured duration limit',
+    )
+    expect(result.completedAt).toBeDefined()
+  })
+
+  it('fails all non-terminal tasks immediately when a resumed mission is already over its duration limit', async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-duration-over-'))
+    workspaces.push(workspace)
+    const store = new JsonMissionExecutionStore(workspace)
+    await store.save({
+      schemaVersion: 1,
+      graph: graph([task('edit', [])]),
+      modifiedFiles: [],
+      startedAt: NOW,
+      updatedAt: NOW,
+    })
+
+    const execute = vi.fn(async () => ({ state: 'completed' as const }))
+    const executor = new PersistentMissionExecutor({
+      store,
+      now: () => new Date(Date.parse(NOW) + 60 * 60_000),
+      executor: { execute },
+    })
+
+    const result = await executor.resume('mission-restart-proof', { maxDurationMinutes: 30 })
+
+    expect(execute).not.toHaveBeenCalled()
+    expect(result.graph.tasks[0]?.state).toBe('failed')
+    expect(result.completedAt).toBeDefined()
+  })
+
+  it('never fails already-terminal tasks (completed/blocked) when the duration limit is exceeded', async () => {
+    const workspace = await mkdtemp(
+      path.join(os.tmpdir(), 'symbolwright-mission-duration-terminal-'),
+    )
+    workspaces.push(workspace)
+    const store = new JsonMissionExecutionStore(workspace)
+    await store.save({
+      schemaVersion: 1,
+      graph: graph([task('done', [], 'completed'), task('pending', [])]),
+      modifiedFiles: [],
+      startedAt: NOW,
+      updatedAt: NOW,
+    })
+
+    const executor = new PersistentMissionExecutor({
+      store,
+      now: () => new Date(Date.parse(NOW) + 60 * 60_000),
+      executor: {
+        async execute() {
+          return { state: 'completed' }
+        },
+      },
+    })
+
+    const result = await executor.resume('mission-restart-proof', { maxDurationMinutes: 30 })
+
+    expect(result.graph.tasks[0]?.state).toBe('completed')
+    expect(result.graph.tasks[1]?.state).toBe('failed')
+  })
+
   it('rejects missing executions and returns completed executions without relaunching tasks', async () => {
     const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-resume-'))
     workspaces.push(workspace)

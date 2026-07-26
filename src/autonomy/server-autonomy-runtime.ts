@@ -51,8 +51,12 @@ export interface ServerAutonomyRuntimeOptions {
    * that grant's `executionLimits.maxRepairAttempts`. */
   readonly maxRepairAttempts?: number
   /** Used to look up a mission's owning grant (via `mission.grantId`) to source a per-grant
-   * `executionLimits.maxRepairAttempts`. Absent for local-operator-only deployments. */
+   * `executionLimits.maxRepairAttempts`/`maxMissionDurationMinutes`. Absent for
+   * local-operator-only deployments. */
   readonly accessRuntime?: AccessRuntime
+  /** Global fallback mission-duration cap (minutes); see `accessRuntime` for the per-grant
+   * override rule (grant can only tighten, never loosen). */
+  readonly maxMissionDurationMinutes?: number
   readonly enablePortabilityWebResearch?: boolean
   readonly webSearchProvider?: WebSearchProvider
   readonly env?: ProviderGatewayEnv
@@ -120,6 +124,10 @@ export function createServerAutonomyRuntime(
     ...(options.validationCommands === undefined
       ? { resolveValidationCommands }
       : { validationCommands: options.validationCommands }),
+    ...(options.maxMissionDurationMinutes === undefined
+      ? {}
+      : { maxDurationMinutes: options.maxMissionDurationMinutes }),
+    ...(options.accessRuntime === undefined ? {} : { accessRuntime: options.accessRuntime }),
   })
 }
 
