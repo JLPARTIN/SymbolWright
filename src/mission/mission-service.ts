@@ -721,10 +721,7 @@ export class MissionService {
    * imported mission is never silently owned by a grant id that only meant something on a
    * different server.
    */
-  public import(
-    raw: unknown,
-    options: { readonly grantId?: string } = {},
-  ): SymbolWrightMission {
+  public import(raw: unknown, options: { readonly grantId?: string } = {}): SymbolWrightMission {
     const bundle = parseMissionExportBundle(raw, this.env)
     const now = this.now().toISOString()
     const newId = this.generateId()

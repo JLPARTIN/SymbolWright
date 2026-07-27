@@ -16,11 +16,7 @@
  */
 
 export type MissionAccessRelationship =
-  | 'operator'
-  | 'mission_owner'
-  | 'team_owner'
-  | 'team_member'
-  | 'none'
+  'operator' | 'mission_owner' | 'team_owner' | 'team_member' | 'none'
 
 export type MissionOperation = 'read' | 'contribute' | 'execute' | 'manage' | 'destructive'
 

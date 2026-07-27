@@ -396,7 +396,14 @@ export async function tryHandleAgentTeamRoute(
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/members` && req.method === 'POST') {
       if (!(await authorize(context, 'orchestration.team.manage', res))) return true
-      if (denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'manage', res)) {
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
         return true
       }
       const body = await readJsonBody(req)
@@ -459,7 +466,14 @@ export async function tryHandleAgentTeamRoute(
       req.method === 'DELETE'
     ) {
       if (!(await authorize(context, 'orchestration.team.manage', res))) return true
-      if (denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'manage', res)) {
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
         return true
       }
       const body = await readJsonBody(req)
@@ -475,7 +489,9 @@ export async function tryHandleAgentTeamRoute(
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/tasks` && req.method === 'GET') {
       if (!(await authorize(context, 'orchestration.team.read', res))) return true
-      if (denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'read', res)) {
+      if (
+        denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'read', res)
+      ) {
         return true
       }
       sendJson(res, 200, { tasks: context.orchestration.taskService.listTasksForTeam(teamId) })
@@ -484,7 +500,14 @@ export async function tryHandleAgentTeamRoute(
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/tasks` && req.method === 'POST') {
       if (!(await authorize(context, 'orchestration.team.manage', res))) return true
-      if (denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'manage', res)) {
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
         return true
       }
       const body = await readJsonBody(req)
@@ -536,7 +559,14 @@ export async function tryHandleAgentTeamRoute(
       req.method === 'POST'
     ) {
       if (!(await authorize(context, 'orchestration.task.assign', res))) return true
-      if (denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'manage', res)) {
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
         return true
       }
       const decision = context.orchestration.assignmentEngine.assign(teamId, taskId)
@@ -591,7 +621,9 @@ export async function tryHandleAgentTeamRoute(
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/candidates` && req.method === 'GET') {
       if (!(await authorize(context, 'orchestration.team.read', res))) return true
-      if (denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'read', res)) {
+      if (
+        denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'read', res)
+      ) {
         return true
       }
       sendJson(res, 200, { candidates: context.orchestration.candidateService.listForTeam(teamId) })
@@ -647,7 +679,8 @@ export async function tryHandleAgentTeamRoute(
       const body = await readJsonBody(req)
       // Same anti-impersonation rule as `agentId` above: a caller with its own active
       // membership always reviews as itself.
-      const reviewerId = resolveActorMemberId(team, context) ?? str(body, 'reviewerId') ?? context.actor
+      const reviewerId =
+        resolveActorMemberId(team, context) ?? str(body, 'reviewerId') ?? context.actor
       const verdict = str(body, 'verdict')
       const rationale = str(body, 'rationale')
       if (verdict === undefined || rationale === undefined) {
@@ -684,7 +717,14 @@ export async function tryHandleAgentTeamRoute(
       req.method === 'POST'
     ) {
       if (!(await authorize(context, 'orchestration.review.submit', res))) return true
-      if (denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'manage', res)) {
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
         return true
       }
       const body = await readJsonBody(req)
@@ -712,7 +752,14 @@ export async function tryHandleAgentTeamRoute(
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/integrations` && req.method === 'POST') {
       if (!(await authorize(context, 'orchestration.integration.request', res))) return true
-      if (denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'manage', res)) {
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
         return true
       }
       const body = await readJsonBody(req)
@@ -734,7 +781,14 @@ export async function tryHandleAgentTeamRoute(
     ) {
       if (!(await authorize(context, 'orchestration.integration.request', res))) return true
       const plan = context.orchestration.integrationService.getPlan(integrationId)
-      if (denyIfNoTeamAccess(context.orchestration.teamService.getTeam(plan.teamId), context, 'manage', res)) {
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(plan.teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
         return true
       }
       const result =
@@ -772,7 +826,9 @@ export async function tryHandleAgentTeamRoute(
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/events` && req.method === 'GET') {
       if (!(await authorize(context, 'orchestration.team.read', res))) return true
-      if (denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'read', res)) {
+      if (
+        denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'read', res)
+      ) {
         return true
       }
       const events = context.orchestration.store
