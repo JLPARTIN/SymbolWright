@@ -28,6 +28,30 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   (`src/autonomy/repository-semantic-index-bootstrap.ts`). Also corrected the same duplicate in
   `src/autonomy/transactional-edit-session.ts`'s unsafe-edit-path check. Added regression tests
   proving `.codemind/` content is never staged, committed, or included in a PR packet.
+- **`executionLimits.requirePullRequest` was declared but never enforced**: a grant could set
+  `requirePullRequest: true` (the Coding Agent and Repository Analyst profile default) and a
+  mission it owns could still be marked `COMPLETED` with zero pull requests ever created against
+  it — the flag had no code path checking it anywhere. `POST /api/missions/:id/complete` now
+  refuses with `403 PULL_REQUEST_REQUIRED` when the owning grant requires a pull request and
+  `mission.references.pullRequestUrls` is empty, via a new shared
+  `src/access/require-pull-request-guard.ts`. Also fixed the one real, GitHub-API-verified
+  PR-creation path (`POST /api/missions/:id/github-pr-packet/publish`) to actually call
+  `MissionService.recordPullRequest` on success — previously it recorded only an event, never
+  updating `references.pullRequestUrls`, so even a real published PR wouldn't have satisfied this
+  gate once it existed.
+- **`AccessGrantService.narrowGrant` could widen a grant despite its one-directional contract**:
+  the method's own doc comment says a PATCH "can never add a capability, widen repository/branch
+  scope, or extend expiry," but `executionLimits`/`sessionLimits`/`clientConstraints` were merged
+  with a plain `{ ...current, ...patch }` object spread, which accepted a *larger*
+  `maxConcurrentMissions`, a *longer* `maxSessionDurationMinutes`, flipping `allowDirectPush` from
+  `false` to `true`, flipping `requirePullRequest` from `true` to `false`, adding new entries to
+  `allowedCommands`/`allowedIpCidrs`/`allowedClientIds`, or clearing an existing IP/client
+  allowlist by replacing it with an empty one. New `src/access/grant-narrowing.ts` makes every
+  field's "stricter" direction explicit (smaller is stricter for numeric caps; allow-flags like
+  `allowDirectPush` can only go true→false; require-flags like `requirePullRequest` can only go
+  false→true; allowlist arrays can only shrink to a subset, and an empty replacement is rejected
+  when the current list is non-empty) and `narrowGrant` now rejects any patch that would widen
+  instead of silently accepting it.
 
 ### Added
 

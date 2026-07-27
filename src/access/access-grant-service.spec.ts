@@ -806,4 +806,213 @@ describe('AccessGrantService + AuthorizationService', () => {
       expect(decision.allowed).toBe(true)
     })
   })
+
+  describe('narrowGrant monotonicity', () => {
+    it('rejects raising executionLimits.maxConcurrentMissions', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        executionLimits: { maxConcurrentMissions: 2 },
+      })
+      expect(() =>
+        grants.narrowGrant(grant.id, { executionLimits: { maxConcurrentMissions: 5 } }),
+      ).toThrow(GrantValidationError)
+    })
+
+    it('allows lowering executionLimits.maxConcurrentMissions', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        executionLimits: { maxConcurrentMissions: 5 },
+      })
+      const updated = grants.narrowGrant(grant.id, {
+        executionLimits: { maxConcurrentMissions: 1 },
+      })
+      expect(updated.executionLimits.maxConcurrentMissions).toBe(1)
+    })
+
+    it('rejects flipping executionLimits.allowDirectPush from false to true', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        executionLimits: { allowDirectPush: false },
+      })
+      expect(() =>
+        grants.narrowGrant(grant.id, { executionLimits: { allowDirectPush: true } }),
+      ).toThrow(GrantValidationError)
+    })
+
+    it('allows flipping executionLimits.allowDirectPush from true to false', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        executionLimits: { allowDirectPush: true },
+      })
+      const updated = grants.narrowGrant(grant.id, {
+        executionLimits: { allowDirectPush: false },
+      })
+      expect(updated.executionLimits.allowDirectPush).toBe(false)
+    })
+
+    it('rejects flipping executionLimits.requirePullRequest from true to false', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        executionLimits: { requirePullRequest: true },
+      })
+      expect(() =>
+        grants.narrowGrant(grant.id, { executionLimits: { requirePullRequest: false } }),
+      ).toThrow(GrantValidationError)
+    })
+
+    it('allows flipping executionLimits.requirePullRequest from false to true', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        executionLimits: { requirePullRequest: false },
+      })
+      const updated = grants.narrowGrant(grant.id, {
+        executionLimits: { requirePullRequest: true },
+      })
+      expect(updated.executionLimits.requirePullRequest).toBe(true)
+    })
+
+    it('rejects adding a new entry to executionLimits.allowedCommands', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        executionLimits: { allowedCommands: ['npm', 'git'] },
+      })
+      expect(() =>
+        grants.narrowGrant(grant.id, {
+          executionLimits: { allowedCommands: ['npm', 'git', 'curl'] },
+        }),
+      ).toThrow(GrantValidationError)
+    })
+
+    it('allows shrinking executionLimits.allowedCommands to a subset', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        executionLimits: { allowedCommands: ['npm', 'git'] },
+      })
+      const updated = grants.narrowGrant(grant.id, {
+        executionLimits: { allowedCommands: ['npm'] },
+      })
+      expect(updated.executionLimits.allowedCommands).toEqual(['npm'])
+    })
+
+    it('rejects raising sessionLimits.maxConcurrentSessions', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        sessionLimits: { maxConcurrentSessions: 1 },
+      })
+      expect(() =>
+        grants.narrowGrant(grant.id, { sessionLimits: { maxConcurrentSessions: 3 } }),
+      ).toThrow(GrantValidationError)
+    })
+
+    it('allows lowering sessionLimits.maxConcurrentSessions', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        sessionLimits: { maxConcurrentSessions: 3 },
+      })
+      const updated = grants.narrowGrant(grant.id, {
+        sessionLimits: { maxConcurrentSessions: 1 },
+      })
+      expect(updated.sessionLimits.maxConcurrentSessions).toBe(1)
+    })
+
+    it('rejects adding a new entry to clientConstraints.allowedIpCidrs', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        clientConstraints: { allowedIpCidrs: ['10.0.0.0/24'] },
+      })
+      expect(() =>
+        grants.narrowGrant(grant.id, {
+          clientConstraints: { allowedIpCidrs: ['10.0.0.0/24', '0.0.0.0/0'] },
+        }),
+      ).toThrow(GrantValidationError)
+    })
+
+    it('rejects clearing an existing clientConstraints.allowedIpCidrs restriction with an empty list', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        clientConstraints: { allowedIpCidrs: ['10.0.0.0/24'] },
+      })
+      expect(() =>
+        grants.narrowGrant(grant.id, { clientConstraints: { allowedIpCidrs: [] } }),
+      ).toThrow(GrantValidationError)
+    })
+
+    it('allows narrowing clientConstraints.allowedIpCidrs to a subset', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+        clientConstraints: { allowedIpCidrs: ['10.0.0.0/24', '10.0.1.0/24'] },
+      })
+      const updated = grants.narrowGrant(grant.id, {
+        clientConstraints: { allowedIpCidrs: ['10.0.0.0/24'] },
+      })
+      expect(updated.clientConstraints?.allowedIpCidrs).toEqual(['10.0.0.0/24'])
+    })
+
+    it('allows adding a first-time restriction from an unset (unrestricted) allowlist', () => {
+      const { grant } = grants.createGrant({
+        principalType: 'coding-agent',
+        displayName: 'Coder',
+        issuedBy: 'operator-1',
+        profileId: 'coding-agent',
+        repositoryScope: REPO_SCOPE,
+      })
+      expect(grant.clientConstraints?.allowedIpCidrs).toBeUndefined()
+      const updated = grants.narrowGrant(grant.id, {
+        clientConstraints: { allowedIpCidrs: ['10.0.0.0/24'] },
+      })
+      expect(updated.clientConstraints?.allowedIpCidrs).toEqual(['10.0.0.0/24'])
+    })
+  })
 })

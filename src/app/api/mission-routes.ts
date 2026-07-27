@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { AccessRuntime } from '../../access/access-runtime.js'
+import { checkRequirePullRequest } from '../../access/require-pull-request-guard.js'
 import { createServerAutonomyRuntime } from '../../autonomy/server-autonomy-runtime.js'
 import {
   MISSION_EVENT_FILTERS,
@@ -444,6 +445,23 @@ export async function handleMissionRoute(
       return true
     }
     if (action === 'complete') {
+      const mission = context.service.get(missionId)
+      if (mission.grantId !== undefined && context.accessRuntime !== undefined) {
+        const unmet = checkRequirePullRequest(
+          context.accessRuntime,
+          mission.grantId,
+          mission.references.pullRequestUrls,
+        )
+        if (unmet !== undefined) {
+          sendJson(res, 403, {
+            error: 'execution_limit_exceeded',
+            reasonCode: 'PULL_REQUEST_REQUIRED',
+            message:
+              'This grant requires a pull request before a mission can be marked complete, and none has been recorded yet.',
+          })
+          return true
+        }
+      }
       sendJson(res, 200, { mission: context.service.complete(missionId, revision) })
       return true
     }

@@ -10,6 +10,11 @@ import {
 } from './access-credential.js'
 import { getPermissionProfile } from './access-profiles.js'
 import { checkClientConstraints, type ClientContext } from './client-constraints-match.js'
+import {
+  findClientConstraintsWideningViolation,
+  findExecutionLimitsWideningViolation,
+  findSessionLimitsWideningViolation,
+} from './grant-narrowing.js'
 import type { AccessStore, StoredCredential } from './access-store.js'
 import type {
   AgentAccessGrant,
@@ -406,6 +411,25 @@ export class AccessGrantService {
         )
       }
       expiresAt = new Date(requested).toISOString()
+    }
+
+    if (patch.executionLimits !== undefined) {
+      const violation = findExecutionLimitsWideningViolation(
+        grant.executionLimits,
+        patch.executionLimits,
+      )
+      if (violation !== undefined) throw new GrantValidationError(violation)
+    }
+    if (patch.sessionLimits !== undefined) {
+      const violation = findSessionLimitsWideningViolation(grant.sessionLimits, patch.sessionLimits)
+      if (violation !== undefined) throw new GrantValidationError(violation)
+    }
+    if (patch.clientConstraints !== undefined) {
+      const violation = findClientConstraintsWideningViolation(
+        grant.clientConstraints,
+        patch.clientConstraints,
+      )
+      if (violation !== undefined) throw new GrantValidationError(violation)
     }
 
     const deniedCapabilities = [

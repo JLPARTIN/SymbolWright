@@ -428,14 +428,20 @@ export class AuthorizationService {
 
   /**
    * Covers the subset of `MissionExecutionLimits` that a single point-in-time capability check can
-   * enforce. `maxConcurrentMissions`, `maxMissionDurationMinutes`, `maxRepairAttempts`,
-   * `maxFilesChanged`/`maxDiffLines`/`maxCommits`, and `sandboxNetworkAccess` are not enforced
-   * here — they need state this evaluator doesn't have (mission records don't carry a `grantId`
-   * today, there's no execution-abort mechanism, and diff/commit stats aren't computed by any
-   * caller yet). `requirePullRequest` is also left unenforced: the recommended Coding Agent profile
-   * sets both `requirePullRequest: true` and `allowDirectPush: true` simultaneously (push to an
-   * agent branch, then open a PR — not "never push directly"), so treating it as a push-time deny
-   * would break that default workflow; it needs mission-level completion tracking instead.
+   * enforce. The rest need state this evaluator doesn't have, so they're enforced at their own call
+   * sites instead: `maxConcurrentMissions` and `requirePullRequest` at
+   * `symbolwright-chat-server.ts`'s mission-create dispatch and `mission-routes.ts`'s `complete`
+   * action respectively (both via `mission.grantId`, recorded at creation);
+   * `maxMissionDurationMinutes` and `maxRepairAttempts` inside the autonomous mission runtime
+   * (`server-autonomy-runtime.ts`), which has the elapsed-time and attempt-count state a
+   * per-request check doesn't; `maxFilesChanged`/`maxDiffLines`/`maxCommits` at push time in
+   * `repository-routes.ts`, against real diff/commit stats computed there. `sandboxNetworkAccess`
+   * has no enforcement path yet — the sandbox itself only supports `network: none`, so the grant
+   * field is a no-op today. Note: `requirePullRequest` is deliberately not treated as a push-time
+   * deny even though the recommended Coding Agent profile sets `allowDirectPush: true` alongside
+   * it -- the intended flow is "push to an agent branch, then open a PR," not "never push
+   * directly," so it's enforced by refusing mission completion instead
+   * (`require-pull-request-guard.ts`).
    */
   private checkExecutionLimits(
     grant: AgentAccessGrant,
