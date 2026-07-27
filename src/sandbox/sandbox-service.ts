@@ -7,6 +7,7 @@ import {
   type GuardedHostExecutionController,
 } from './sandbox-guarded-host-backend.js'
 import type {
+  SandboxExecutionOwnership,
   SandboxExecutionRecord,
   SandboxHistoryList,
   SandboxHistoryStore,
@@ -49,6 +50,9 @@ export interface SandboxServiceOptions {
 
 export interface SandboxExecutionContext {
   readonly mode: SymbolWrightRuntimeMode
+  /** Who is running this execution -- recorded on the history entry so ownership can be
+   * enforced later on list/get/cancel. Absent means an operator-initiated execution. */
+  readonly ownership?: SandboxExecutionOwnership
 }
 
 export interface SandboxCancelResult {
@@ -152,6 +156,7 @@ export class SandboxService {
           policyDecision: 'blocked',
           policyReason: `No available runner for language ${request.languageId}.`,
         }),
+        context.ownership,
       )
     }
 
@@ -170,6 +175,7 @@ export class SandboxService {
           policyDecision: 'blocked',
           policyReason: decision.reason,
         }),
+        context.ownership,
       )
     }
 
@@ -184,7 +190,7 @@ export class SandboxService {
         onStart: (controller) => this.activeExecutions.set(executionId, controller),
       })
       this.activeExecutions.delete(executionId)
-      return this.persistResult(request, result)
+      return this.persistResult(request, result, context.ownership)
     }
 
     if (effectiveRunner.backend === 'browser') {
@@ -196,6 +202,7 @@ export class SandboxService {
             'No execution backend: Browser-isolated runners execute in the browser runtime, not through the server sandbox API.',
           durationStartedAt: started,
         }),
+        context.ownership,
       )
     }
 
@@ -206,15 +213,17 @@ export class SandboxService {
         policyReason: `No executable backend is wired for ${effectiveRunner.backend}.`,
         durationStartedAt: started,
       }),
+      context.ownership,
     )
   }
 
   private persistResult(
     request: SandboxExecutionRequest,
     result: SandboxExecutionResult,
+    ownership?: SandboxExecutionOwnership,
   ): SandboxExecutionResult {
     const finalized = this.finalizeResult(request, result)
-    this.historyStore?.record(finalized, request.missionId)
+    this.historyStore?.record(finalized, request.missionId, ownership)
     return finalized
   }
 

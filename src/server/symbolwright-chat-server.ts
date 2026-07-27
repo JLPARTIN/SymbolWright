@@ -37,6 +37,11 @@ import {
 } from '../access/access-grant-service.js'
 import { AuthorizationDeniedError, ApprovalRequiredError } from '../access/authorization-service.js'
 import { resolveRouteCapability } from '../access/route-capability-map.js'
+import {
+  canAccessMission,
+  resolveMissionVisibility,
+  type TeamVisibilitySource,
+} from '../access/mission-access-guard.js'
 import { checkConcurrentMissionLimit } from '../access/mission-concurrency-guard.js'
 import {
   BRANCH_SENSITIVE_ROUTE_CAPABILITIES,
@@ -403,9 +408,18 @@ export function createChatServerRequestListener(
     options.githubTokenResolver !== undefined ||
     env['GITHUB_TOKEN'] !== undefined ||
     loadGitHubAppConfigFromEnv(env) !== undefined
+  // Structural adapter onto `OrchestrationStore` for `mission-access-guard.ts`'s
+  // `TeamVisibilitySource` -- `access/` has no dependency on `orchestration/`, so the guard
+  // accepts this narrow shape rather than the concrete store type.
+  const teamVisibilitySource = {
+    listTeams: () => orchestrationRuntime.store.teams.list(),
+    membersByTeam: (teamId: string) => orchestrationRuntime.store.membersByTeam(teamId),
+  }
   const registryContext = {
     cwd,
     hasGitHubToken: hasGitHubCredential,
+    missionService,
+    teamSource: teamVisibilitySource,
   }
   const repositoryContext = {
     cwd: registryContext.cwd,
@@ -419,8 +433,17 @@ export function createChatServerRequestListener(
       : {}),
     accessRuntime,
   }
-  const missionContext = { service: missionService, cwd, accessRuntime }
-  const sandboxContext = { service: sandboxService, missionService }
+  const missionContext = {
+    service: missionService,
+    cwd,
+    accessRuntime,
+    teamSource: teamVisibilitySource,
+  }
+  const sandboxContext = {
+    service: sandboxService,
+    missionService,
+    teamSource: teamVisibilitySource,
+  }
   // Resolved once per server process: the `owner/repo` identity a grant's `repositoryScope` is
   // checked against. A SymbolWright server process is always bound to exactly one working tree,
   // so "repository scope" means "is this process's repository in the grant's allowlist" rather
@@ -509,6 +532,8 @@ export function createChatServerRequestListener(
           accessRuntime,
           actor: principal.actor,
           principalKind: principal.kind,
+          missionService,
+          teamSource: teamVisibilitySource,
           ...(principal.principalId === undefined ? {} : { principalId: principal.principalId }),
           ...(principal.grantId === undefined ? {} : { grantId: principal.grantId }),
           ...(principal.sessionId === undefined ? {} : { sessionId: principal.sessionId }),
@@ -611,7 +636,15 @@ export function createChatServerRequestListener(
         return
       }
 
-      if (await handleSandboxRoute(req, res, url, sandboxContext)) {
+      if (
+        await handleSandboxRoute(req, res, url, {
+          ...sandboxContext,
+          ...(principal.grantId === undefined ? {} : { callerGrantId: principal.grantId }),
+          ...(principal.principalId === undefined
+            ? {}
+            : { callerPrincipalId: principal.principalId }),
+        })
+      ) {
         return
       }
 
@@ -668,6 +701,7 @@ export function createChatServerRequestListener(
           missionService,
           cwd,
           principal.kind === 'agent' ? { principal, accessRuntime } : undefined,
+          teamVisibilitySource,
         )
         return
       }
@@ -677,23 +711,32 @@ export function createChatServerRequestListener(
         return
       }
 
+      const grantScopedRegistryContext = {
+        ...registryContext,
+        ...(principal.grantId === undefined ? {} : { callerGrantId: principal.grantId }),
+      }
+
       if (req.method === 'GET' && url.pathname === '/api/memory/recent') {
-        handleMemoryRecent(req, res, registryContext)
+        handleMemoryRecent(req, res, grantScopedRegistryContext)
         return
       }
 
       if (req.method === 'GET' && url.pathname === '/api/memory/procedural') {
-        handleMemoryProcedural(res, registryContext)
+        handleMemoryProcedural(res, grantScopedRegistryContext)
         return
       }
 
       if (req.method === 'GET' && url.pathname === '/api/checkpoints') {
-        handleCheckpointsList(req, res, registryContext)
+        handleCheckpointsList(req, res, grantScopedRegistryContext)
         return
       }
 
       if (req.method === 'GET' && url.pathname.startsWith('/api/checkpoints/')) {
-        handleCheckpointDetail(url.pathname.slice('/api/checkpoints/'.length), res, registryContext)
+        handleCheckpointDetail(
+          url.pathname.slice('/api/checkpoints/'.length),
+          res,
+          grantScopedRegistryContext,
+        )
         return
       }
 
@@ -925,6 +968,7 @@ async function handleAgent(
   missionService: MissionService,
   defaultCwd: string,
   agentPrincipal?: { readonly principal: RequestPrincipal; readonly accessRuntime: AccessRuntime },
+  teamSource?: TeamVisibilitySource,
 ): Promise<void> {
   const parsed = parseAgentRequestBody(await readJsonBody(req))
   let mission: SymbolWrightMission | undefined
@@ -937,6 +981,23 @@ async function handleAgent(
         return
       }
       throw error
+    }
+    // A delegated caller may only run an agent turn against a mission it owns or actively
+    // contributes to via a team -- otherwise it could read and append to another grant's mission
+    // by simply supplying that mission's id (see mission-access-guard.ts).
+    const visibility = resolveMissionVisibility(agentPrincipal?.principal.grantId, teamSource)
+    const access = canAccessMission(mission, visibility, 'execute')
+    if (!access.allowed) {
+      if (access.relationship === 'none') {
+        sendJson(res, 404, { error: `Mission not found: ${parsed.missionId}` })
+      } else {
+        sendJson(res, 403, {
+          error: 'authorization_denied',
+          reasonCode: 'MISSION_NOT_AUTHORIZED_FOR_OPERATION',
+          message: `This grant may not run an agent turn against mission ${parsed.missionId}.`,
+        })
+      }
+      return
     }
     if (mission.status !== 'ACTIVE') {
       sendJson(res, 409, {

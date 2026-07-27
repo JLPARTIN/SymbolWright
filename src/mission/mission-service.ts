@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 
+import type { MissionVisibility } from '../access/mission-access-guard.js'
 import type { ProviderMessage } from '../provider/provider.types.js'
 import { runGitCommand } from '../runtime/git/git-command-runner.js'
 import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
@@ -168,7 +169,11 @@ export class MissionService {
   }
 
   public list(
-    options: { readonly offset?: number; readonly limit?: number } = {},
+    options: {
+      readonly offset?: number
+      readonly limit?: number
+      readonly visibility?: MissionVisibility
+    } = {},
   ): MissionListResult {
     return this.store.listMissions(options)
   }
@@ -707,7 +712,19 @@ export class MissionService {
     )
   }
 
-  public import(raw: unknown): SymbolWrightMission {
+  /**
+   * `options.grantId` is the same caller-supplied trust boundary as `create()`'s — never parsed
+   * from the request body. `bundle.mission` is spread first, so without an explicit override its
+   * `grantId` (whatever grant owned the mission on the server it was exported from) would survive
+   * untouched into the imported record; that stale foreign grant id is stripped here and replaced
+   * with the importing caller's own grant (or left operator-owned when there is none), so an
+   * imported mission is never silently owned by a grant id that only meant something on a
+   * different server.
+   */
+  public import(
+    raw: unknown,
+    options: { readonly grantId?: string } = {},
+  ): SymbolWrightMission {
     const bundle = parseMissionExportBundle(raw, this.env)
     const now = this.now().toISOString()
     const newId = this.generateId()
@@ -719,6 +736,7 @@ export class MissionService {
       createdAt: now,
       updatedAt: now,
       lastOpenedAt: now,
+      grantId: options.grantId,
       importedFrom: {
         originalMissionId: bundle.mission.id,
         importedAt: now,

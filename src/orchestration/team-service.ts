@@ -27,6 +27,10 @@ export interface CreateTeamInput {
   readonly objective: string
   readonly createdBy: string
   readonly budget?: Partial<TeamBudget>
+  /** The authenticated caller's grant/principal, when created by a delegated agent -- recorded
+   * as the team's owner. Never sourced from the request body (see `AgentTeam.ownerGrantId`). */
+  readonly ownerGrantId?: string
+  readonly ownerPrincipalId?: string
 }
 
 /**
@@ -79,6 +83,8 @@ export class TeamService {
       objective: input.objective,
       status: 'forming',
       createdBy: input.createdBy,
+      ...(input.ownerGrantId === undefined ? {} : { ownerGrantId: input.ownerGrantId }),
+      ...(input.ownerPrincipalId === undefined ? {} : { ownerPrincipalId: input.ownerPrincipalId }),
       createdAt: nowIso,
       updatedAt: nowIso,
       budget: { ...DEFAULT_TEAM_BUDGET, ...input.budget },

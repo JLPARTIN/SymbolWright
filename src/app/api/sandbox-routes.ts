@@ -1,6 +1,12 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
+import {
+  canAccessMission,
+  resolveMissionVisibility,
+  type TeamVisibilitySource,
+} from '../../access/mission-access-guard.js'
 import { MissionNotFoundError, type MissionService } from '../../mission/mission-service.js'
+import type { SandboxExecutionSummary } from '../../sandbox/sandbox-history.js'
 import type { SymbolWrightRuntimeMode } from '../../runtime/types.js'
 import { SandboxRequestValidationError } from '../../sandbox/sandbox-request.js'
 import type { SandboxService } from '../../sandbox/sandbox-service.js'
@@ -20,6 +26,32 @@ const RUNTIME_MODES: readonly SymbolWrightRuntimeMode[] = [
 export interface SandboxRouteContext {
   readonly service: SandboxService
   readonly missionService?: MissionService
+  readonly teamSource?: TeamVisibilitySource
+  /** Undefined = operator (unrestricted), matching the convention throughout `access/`. */
+  readonly callerGrantId?: string
+  readonly callerPrincipalId?: string
+}
+
+/** True when the caller may see an execution it doesn't directly own by grant id: the operator
+ * always can; a delegated caller can when the execution is linked to a mission it can read
+ * (`canAccessMission`). An execution recorded before this ownership metadata existed, or with
+ * neither a `missionId` nor a matching `ownerGrantId`, is operator-only -- fail closed rather
+ * than guess at who may have created it. */
+function callerCanSeeExecution(
+  execution: { readonly missionId?: string; readonly ownerGrantId?: string },
+  context: SandboxRouteContext,
+): boolean {
+  if (context.callerGrantId === undefined) return true
+  if (execution.ownerGrantId === context.callerGrantId) return true
+  if (execution.missionId === undefined || context.missionService === undefined) return false
+  let mission
+  try {
+    mission = context.missionService.get(execution.missionId)
+  } catch {
+    return false
+  }
+  const visibility = resolveMissionVisibility(context.callerGrantId, context.teamSource)
+  return canAccessMission(mission, visibility, 'read').allowed
 }
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
@@ -166,9 +198,36 @@ export async function handleSandboxRoute(
       }
       const record = asRecord(await readJsonBody(req))
       const request = context.service.validateRequest(record)
-      if (request.missionId !== undefined) context.missionService?.get(request.missionId)
+      if (request.missionId !== undefined && context.missionService !== undefined) {
+        // `.get()` throws MissionNotFoundError -> caught below -> existing 404 handling.
+        const mission = context.missionService.get(request.missionId)
+        const visibility = resolveMissionVisibility(context.callerGrantId, context.teamSource)
+        const access = canAccessMission(mission, visibility, 'execute')
+        if (!access.allowed) {
+          if (access.relationship === 'none') {
+            sendJson(res, 404, { error: `Mission not found: ${request.missionId}` })
+          } else {
+            sendJson(res, 403, {
+              error: 'authorization_denied',
+              reasonCode: 'MISSION_NOT_AUTHORIZED_FOR_OPERATION',
+              message: `This grant may not run a sandbox execution against mission ${request.missionId}.`,
+            })
+          }
+          return true
+        }
+      }
       const result = await context.service.execute(request, {
         mode: parseRuntimeMode(record),
+        ...(context.callerGrantId === undefined
+          ? {}
+          : {
+              ownership: {
+                ownerGrantId: context.callerGrantId,
+                ...(context.callerPrincipalId === undefined
+                  ? {}
+                  : { ownerPrincipalId: context.callerPrincipalId }),
+              },
+            }),
       })
       recordMissionEvidence(context, request, result)
       sendJson(res, 200, { result })
@@ -180,11 +239,11 @@ export async function handleSandboxRoute(
         sendJson(res, 405, { error: 'method_not_allowed' })
         return true
       }
-      sendJson(
-        res,
-        200,
-        context.service.listExecutions(parseLimit(url.searchParams.get('limit'), 50)),
+      const list = context.service.listExecutions(parseLimit(url.searchParams.get('limit'), 50))
+      const executions: readonly SandboxExecutionSummary[] = list.executions.filter((execution) =>
+        callerCanSeeExecution(execution, context),
       )
+      sendJson(res, 200, { ...list, executions })
       return true
     }
 
@@ -195,7 +254,7 @@ export async function handleSandboxRoute(
       }
       const executionId = decodeURIComponent(url.pathname.slice('/api/sandbox/executions/'.length))
       const record = context.service.getExecution(executionId)
-      if (record === undefined) {
+      if (record === undefined || !callerCanSeeExecution(record, context)) {
         sendJson(res, 404, { error: 'sandbox_execution_not_found' })
         return true
       }
@@ -209,6 +268,11 @@ export async function handleSandboxRoute(
         return true
       }
       const executionId = decodeURIComponent(url.pathname.slice('/api/sandbox/cancel/'.length))
+      const existing = context.service.getExecution(executionId)
+      if (existing !== undefined && !callerCanSeeExecution(existing, context)) {
+        sendJson(res, 404, { error: 'sandbox_execution_not_found' })
+        return true
+      }
       const cancellation = await context.service.cancelExecution(executionId)
       sendJson(res, cancellation.ok ? 200 : 202, cancellation)
       return true
