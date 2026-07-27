@@ -68,6 +68,19 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   there's one implementation instead of two that can drift), and
   `POST /api/repository/branches` now re-checks the grant's `branchScope` against the actual
   requested name once the body is parsed.
+- **`executionLimits.sandboxNetworkAccess: true` was silently stored but never honored**: the
+  sandbox runner (`src/runtime/sandbox/sandbox-runner.ts`) only ever executes with `network:
+  none` — there is no code path anywhere that grants a sandboxed process network egress. Setting
+  `sandboxNetworkAccess: true` on a grant (at creation or via `narrowGrant`) would have let an
+  operator believe network access had been enabled when nothing downstream honored it.
+  `POST /api/v1/access-grants` and `PATCH /api/v1/access-grants/:id` now reject `true` explicitly
+  with a validation error instead of storing it silently.
+- **`FixedWindowRateLimiter` never forgot a key**: every distinct IP address or grant ID that ever
+  made a request stayed in its internal `Map` for the lifetime of the process, even long after
+  that key's rate-limit window expired — unbounded memory growth under a large stream of unique
+  callers. It now sweeps expired entries once the map grows past a threshold (10,000 keys), so
+  memory is bounded by actual concurrent traffic within a window rather than all traffic the
+  process has ever seen.
 
 ### Added
 

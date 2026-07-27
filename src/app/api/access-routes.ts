@@ -156,6 +156,16 @@ function parseMissionExecutionLimits(value: unknown): MissionExecutionLimits | u
   const maxMissionDurationMinutes = optionalPositiveNumber(record, 'maxMissionDurationMinutes')
   const maxRepairAttempts = optionalPositiveNumber(record, 'maxRepairAttempts')
   const sandboxNetworkAccess = optionalBoolean(record, 'sandboxNetworkAccess')
+  if (sandboxNetworkAccess === true) {
+    // The sandbox runner only ever executes with `network: none` (`src/runtime/sandbox/`) --
+    // there is no code path that grants a sandboxed process network egress, regardless of this
+    // grant field. Silently accepting `true` here would let an operator believe network access
+    // had been enabled when nothing downstream honors it, so reject it explicitly instead of
+    // storing a setting the platform can't act on.
+    throw new GrantValidationError(
+      'executionLimits.sandboxNetworkAccess: true is not supported -- the sandbox always runs with network: none. Leave this field unset or false.',
+    )
+  }
   const allowedCommands = optionalStringArray(record, 'allowedCommands')
   const maxFilesChanged = optionalPositiveNumber(record, 'maxFilesChanged')
   const maxDiffLines = optionalPositiveNumber(record, 'maxDiffLines')

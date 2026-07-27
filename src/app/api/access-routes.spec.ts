@@ -293,6 +293,24 @@ describe('POST /api/v1/access-grants — session/execution limits and approval p
     const body = (await response.json()) as { error: string }
     expect(body.error).toBe('validation_error')
   })
+
+  it('rejects executionLimits.sandboxNetworkAccess: true -- the sandbox has no code path that honors it', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/v1/access-grants`, {
+      method: 'POST',
+      headers: operatorAuth(),
+      body: JSON.stringify({
+        principalType: 'coding-agent',
+        displayName: 'Wants sandbox network',
+        profileId: 'coding-agent',
+        repositoryScope: { mode: 'installation', repositories: [], organizations: [] },
+        executionLimits: { sandboxNetworkAccess: true },
+      }),
+    })
+    expect(response.status).toBe(400)
+    const body = (await response.json()) as { error: string }
+    expect(body.error).toBe('validation_error')
+  })
 })
 
 describe('PATCH /api/v1/access-grants/:id — session/execution limits and client constraints', () => {
@@ -324,6 +342,20 @@ describe('PATCH /api/v1/access-grants/:id — session/execution limits and clien
     expect(body.grant.sessionLimits.maxConcurrentSessions).toBe(1)
     expect(body.grant.sessionLimits.inactivityTimeoutMinutes).toBe(20)
     expect(body.grant.clientConstraints?.allowedIpCidrs).toEqual(['192.168.1.0/24'])
+  })
+
+  it('rejects patching executionLimits.sandboxNetworkAccess to true', async () => {
+    const server = await launch()
+    const { grantId } = await createGrant(server)
+
+    const patch = await fetch(`${server.url}/api/v1/access-grants/${grantId}`, {
+      method: 'PATCH',
+      headers: operatorAuth(),
+      body: JSON.stringify({ executionLimits: { sandboxNetworkAccess: true } }),
+    })
+    expect(patch.status).toBe(400)
+    const body = (await patch.json()) as { error: string }
+    expect(body.error).toBe('validation_error')
   })
 })
 
