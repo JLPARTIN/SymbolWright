@@ -1,15 +1,7 @@
 import type { RuntimePolicySnapshot } from '../types.js'
 
 export type GitOperation =
-  | 'status'
-  | 'diff'
-  | 'log'
-  | 'branch'
-  | 'show'
-  | 'checkout_new'
-  | 'add'
-  | 'commit'
-  | 'push'
+  'status' | 'diff' | 'log' | 'branch' | 'show' | 'checkout_new' | 'add' | 'commit' | 'push'
 
 export const READ_OPERATIONS: ReadonlySet<GitOperation> = new Set([
   'status',

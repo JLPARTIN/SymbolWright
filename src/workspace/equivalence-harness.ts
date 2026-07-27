@@ -1,10 +1,5 @@
 export type EquivalenceValue =
-  | string
-  | number
-  | boolean
-  | null
-  | EquivalenceValue[]
-  | { [key: string]: EquivalenceValue }
+  string | number | boolean | null | EquivalenceValue[] | { [key: string]: EquivalenceValue }
 
 export type EquivalenceTestCase = {
   name: string

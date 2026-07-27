@@ -14,11 +14,7 @@ import type {
 } from './persistent-mission-executor.js'
 
 export type AutonomousMissionReleaseState =
-  | 'merge-ready'
-  | 'review-required'
-  | 'blocked'
-  | 'failed'
-  | 'incomplete'
+  'merge-ready' | 'review-required' | 'blocked' | 'failed' | 'incomplete'
 
 export type AutonomousMissionReleaseExecutionMode = 'start' | 'resume' | 'existing'
 

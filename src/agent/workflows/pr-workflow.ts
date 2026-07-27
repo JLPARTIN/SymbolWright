@@ -4,13 +4,7 @@ import { evaluateAjnaMergeGate } from '../../ajna/ajna-merge-gate.js'
 import type { SymbolWrightChangedFileContext } from '../../repo-context/repo-context.types.js'
 
 export type PrWorkflowStage =
-  | 'INVESTIGATE'
-  | 'IMPLEMENT'
-  | 'VALIDATE'
-  | 'REVIEW'
-  | 'PREPARE_PR'
-  | 'COMPLETED'
-  | 'BLOCKED'
+  'INVESTIGATE' | 'IMPLEMENT' | 'VALIDATE' | 'REVIEW' | 'PREPARE_PR' | 'COMPLETED' | 'BLOCKED'
 
 export interface PrWorkflowState {
   readonly stage: PrWorkflowStage

@@ -5,16 +5,10 @@ export const AJNA_PROOF_GATE_PHASE_ID = 'SYMBOLWRIGHT-TEST-10' as const
 // Inline status unions — structurally compatible with proof modules on feature branches.
 // These will remain valid after those PRs merge to main.
 type KernelTraceStatus =
-  | 'TRACE_PROOF_READY'
-  | 'TRACE_PROOF_PARTIAL'
-  | 'TRACE_PROOF_BLOCKED'
-  | 'TRACE_PROOF_INVALID'
+  'TRACE_PROOF_READY' | 'TRACE_PROOF_PARTIAL' | 'TRACE_PROOF_BLOCKED' | 'TRACE_PROOF_INVALID'
 
 type AjnaMatrixStatus =
-  | 'AJNA_PROOF_READY'
-  | 'AJNA_PROOF_PARTIAL'
-  | 'AJNA_PROOF_BLOCKED'
-  | 'AJNA_PROOF_INVALID'
+  'AJNA_PROOF_READY' | 'AJNA_PROOF_PARTIAL' | 'AJNA_PROOF_BLOCKED' | 'AJNA_PROOF_INVALID'
 
 type RepoContextStatus =
   | 'REPO_CONTEXT_PROOF_READY'

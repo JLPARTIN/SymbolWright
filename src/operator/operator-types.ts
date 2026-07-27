@@ -48,10 +48,7 @@ export interface OperatorSlashInput {
 }
 
 export type ParsedOperatorInput =
-  | OperatorEmptyInput
-  | OperatorInvalidInput
-  | OperatorMissionInput
-  | OperatorSlashInput
+  OperatorEmptyInput | OperatorInvalidInput | OperatorMissionInput | OperatorSlashInput
 
 export interface OperatorHistoryEntry {
   readonly timestamp: string

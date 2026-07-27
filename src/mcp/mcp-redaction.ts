@@ -10,9 +10,8 @@ export function redactMcpText(text: string): string {
 export function redactMcpToolResult(result: McpToolCallResult): McpToolCallResult {
   return {
     ...result,
-    content: result.content.map(
-      (block): McpToolContentBlock =>
-        block.text !== undefined ? { ...block, text: redactMcpText(block.text) } : block,
+    content: result.content.map((block): McpToolContentBlock =>
+      block.text !== undefined ? { ...block, text: redactMcpText(block.text) } : block,
     ),
   }
 }

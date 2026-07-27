@@ -10,9 +10,7 @@ import type { AjnaReviewFinding } from './ajna-review.types.js'
  */
 
 export type AjnaSecuritySensitiveTier =
-  | 'secrets-and-crypto'
-  | 'auth-and-access-control'
-  | 'supply-chain'
+  'secrets-and-crypto' | 'auth-and-access-control' | 'supply-chain'
 
 export interface AjnaSecuritySensitivePathRule {
   readonly tier: AjnaSecuritySensitiveTier

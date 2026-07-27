@@ -259,8 +259,7 @@ function resolveRequestPrincipal(
  */
 async function buildToolAccessControl(
   agentPrincipal:
-    | { readonly principal: RequestPrincipal; readonly accessRuntime: AccessRuntime }
-    | undefined,
+    { readonly principal: RequestPrincipal; readonly accessRuntime: AccessRuntime } | undefined,
   toolCwd: string,
 ): Promise<RuntimeToolContext['accessControl']> {
   if (agentPrincipal === undefined) return undefined

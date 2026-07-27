@@ -1,10 +1,5 @@
 export type OperatorReviewAction =
-  | 'post_pr_comment'
-  | 'apply_label'
-  | 'request_review'
-  | 'submit_review'
-  | 'create_pr'
-  | 'merge_pr'
+  'post_pr_comment' | 'apply_label' | 'request_review' | 'submit_review' | 'create_pr' | 'merge_pr'
 
 export interface OperatorReviewPacket {
   readonly id: string

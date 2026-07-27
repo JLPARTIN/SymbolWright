@@ -23,11 +23,9 @@ export const SYMBOLWRIGHT_BROWSER_WORKSPACE_PANELS = [
 export type SymbolWrightBrowserWorkspacePanel =
   (typeof SYMBOLWRIGHT_BROWSER_WORKSPACE_PANELS)[number]
 export type SymbolWrightBrowserWorkspaceKeyBoundary =
-  | 'browser_to_symbolwright_only'
-  | 'browser_to_provider_direct'
+  'browser_to_symbolwright_only' | 'browser_to_provider_direct'
 export type SymbolWrightBrowserWorkspaceProviderKeyStorage =
-  | 'server_side_vault_or_request_scoped_server_runtime'
-  | 'browser_runtime'
+  'server_side_vault_or_request_scoped_server_runtime' | 'browser_runtime'
 
 export interface SymbolWrightBrowserWorkspaceContract {
   readonly blockId: typeof SYMBOLWRIGHT_BROWSER_WORKSPACE_BLOCK_ID

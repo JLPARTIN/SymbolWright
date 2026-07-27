@@ -7,10 +7,7 @@ const DEFAULT_DB_PATH = join(DEFAULT_DB_DIR, 'symbolwright.db')
 const LEGACY_DB_FILENAME = 'codemind.db'
 
 export type EpisodicInteractionType =
-  | 'pr_history'
-  | 'user_correction'
-  | 'mistake_resolution'
-  | 'session_summary'
+  'pr_history' | 'user_correction' | 'mistake_resolution' | 'session_summary'
 
 export interface EpisodicInteractionRecord {
   readonly id: string

@@ -302,11 +302,7 @@ export async function tryHandleAgentTeamRoute(
       const member = context.orchestration.teamService.addMember(teamId, {
         displayName,
         principalType: principalType as
-          | 'human'
-          | 'llm'
-          | 'coding-agent'
-          | 'mcp-client'
-          | 'automation',
+          'human' | 'llm' | 'coding-agent' | 'mcp-client' | 'automation',
         role: roleRaw as AgentRole,
         provider: provider as AgentProviderKind,
         specialization: strArray(body, 'specialization'),

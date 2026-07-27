@@ -9,12 +9,7 @@ import type {
 } from './transactional-edit-session.js'
 
 export type AutonomousRepairLoopState =
-  | 'planned'
-  | 'validating'
-  | 'repairing'
-  | 'completed'
-  | 'failed'
-  | 'interrupted'
+  'planned' | 'validating' | 'repairing' | 'completed' | 'failed' | 'interrupted'
 
 export interface AutonomousValidationResult {
   readonly phase: string

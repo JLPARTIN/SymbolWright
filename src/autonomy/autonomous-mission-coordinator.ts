@@ -82,8 +82,7 @@ export class AutonomousMissionCoordinator {
   readonly #loadRepairLoop: AutonomousMissionCoordinatorOptions['loadRepairLoop']
   readonly #validationCommands: readonly string[]
   readonly #resolveValidationCommands:
-    | AutonomousMissionCoordinatorOptions['resolveValidationCommands']
-    | undefined
+    AutonomousMissionCoordinatorOptions['resolveValidationCommands'] | undefined
   readonly #multiAgentTracker: MultiAgentExecutionTracker | undefined
   readonly #maxDurationMinutes: number | undefined
   readonly #accessRuntime: AccessRuntime | undefined

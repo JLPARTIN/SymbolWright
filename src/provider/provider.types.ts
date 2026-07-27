@@ -34,9 +34,7 @@ export interface ProviderToolResultContent {
 }
 
 export type ProviderContentBlock =
-  | ProviderTextContent
-  | ProviderToolUseContent
-  | ProviderToolResultContent
+  ProviderTextContent | ProviderToolUseContent | ProviderToolResultContent
 
 export interface ProviderMessage {
   readonly role: ProviderMessageRole

@@ -5,8 +5,7 @@ export const PROVIDER_ROUTE_LABEL_DEEP = 'governed-deep-reasoning-provider' as c
 export const PROVIDER_ROUTE_LABEL_LIGHTWEIGHT = 'governed-lightweight-reasoning-provider' as const
 
 export type ProviderRouteLabel =
-  | typeof PROVIDER_ROUTE_LABEL_DEEP
-  | typeof PROVIDER_ROUTE_LABEL_LIGHTWEIGHT
+  typeof PROVIDER_ROUTE_LABEL_DEEP | typeof PROVIDER_ROUTE_LABEL_LIGHTWEIGHT
 
 export interface ProviderRegistryEntry {
   readonly routeLabel: ProviderRouteLabel

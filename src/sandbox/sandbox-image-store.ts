@@ -8,10 +8,7 @@ const DEFAULT_IMAGE_INSPECTION_TIMEOUT_MS = 1_000
 const MAX_IMAGE_INSPECTION_OUTPUT_CHARS = 2_000
 
 export type SandboxLocalImageInspectionStatus =
-  | 'installed'
-  | 'missing'
-  | 'unavailable'
-  | 'misconfigured'
+  'installed' | 'missing' | 'unavailable' | 'misconfigured'
 
 export interface SandboxLocalImageInspection {
   readonly imageId: string
