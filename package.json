@@ -80,7 +80,7 @@
     "node": ">=22.5.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.106.0",
+    "@anthropic-ai/sdk": "^0.115.0",
     "sql.js": "^1.10.3"
   }
 }
