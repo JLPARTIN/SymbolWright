@@ -13,10 +13,7 @@ export type SymbolWrightAjnaProofMatrixStatus =
 
 // Structurally compatible with SymbolWrightKernelTraceProofStatus from PR-CM-TEST-02.
 type KernelTraceStatus =
-  | 'TRACE_PROOF_READY'
-  | 'TRACE_PROOF_PARTIAL'
-  | 'TRACE_PROOF_BLOCKED'
-  | 'TRACE_PROOF_INVALID'
+  'TRACE_PROOF_READY' | 'TRACE_PROOF_PARTIAL' | 'TRACE_PROOF_BLOCKED' | 'TRACE_PROOF_INVALID'
 
 export interface SymbolWrightAjnaProofMatrixInput {
   readonly ajnaSpecFiles: readonly string[]

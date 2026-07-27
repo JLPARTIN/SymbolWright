@@ -59,8 +59,7 @@ export class AgentLoopAutonomousEditExecutor implements AutonomousEditTaskExecut
   readonly #runAgent: AgentLoopRunner
   readonly #readChangedFiles: () => Promise<readonly string[]>
   readonly #loadSemanticIndex:
-    | (() => Promise<RepositorySemanticIndexSnapshot | undefined>)
-    | undefined
+    (() => Promise<RepositorySemanticIndexSnapshot | undefined>) | undefined
   readonly #validationCommands: readonly string[]
   readonly #transactionManager: RepositoryEditTransactionManager | undefined
 

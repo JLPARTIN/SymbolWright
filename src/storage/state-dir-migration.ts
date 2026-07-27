@@ -17,11 +17,7 @@ const IN_PROGRESS_MARKER = '.migration-in-progress'
 const MIGRATED_MARKER = '.migrated-from-codemind'
 
 export type StateDirMigrationStatus =
-  | 'no_legacy'
-  | 'migrated'
-  | 'already_migrated'
-  | 'conflict'
-  | 'failed'
+  'no_legacy' | 'migrated' | 'already_migrated' | 'conflict' | 'failed'
 
 export interface StateDirMigrationResult {
   readonly status: StateDirMigrationStatus

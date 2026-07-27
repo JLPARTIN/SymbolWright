@@ -8,10 +8,7 @@ export type RepairLoopCheckpoint =
   | 'MERGE_READINESS_ASSESSED'
 
 export type RepairLoopOutcome =
-  | 'COMPLETED'
-  | 'STOPPED_AT_CHECKPOINT'
-  | 'BLOCKED'
-  | 'VALIDATION_FAILED'
+  'COMPLETED' | 'STOPPED_AT_CHECKPOINT' | 'BLOCKED' | 'VALIDATION_FAILED'
 
 export interface RepairLoopFinding {
   readonly id: string

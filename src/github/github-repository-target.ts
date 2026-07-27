@@ -13,12 +13,7 @@
  */
 
 export type GitHubRepositoryTargetType =
-  | 'repository'
-  | 'branch'
-  | 'pull-request'
-  | 'issue'
-  | 'file'
-  | 'unknown'
+  'repository' | 'branch' | 'pull-request' | 'issue' | 'file' | 'unknown'
 
 export interface GitHubRepositoryTarget {
   readonly host: string

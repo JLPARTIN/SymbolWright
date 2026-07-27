@@ -1,11 +1,5 @@
 export type RepositorySymbolKind =
-  | 'class'
-  | 'interface'
-  | 'type'
-  | 'function'
-  | 'method'
-  | 'variable'
-  | 'enum'
+  'class' | 'interface' | 'type' | 'function' | 'method' | 'variable' | 'enum'
 
 export interface RepositorySymbolRecord {
   readonly id: string

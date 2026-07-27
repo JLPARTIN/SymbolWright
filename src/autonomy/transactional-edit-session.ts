@@ -3,12 +3,7 @@ import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 export type TransactionalEditSessionState =
-  | 'planned'
-  | 'applying'
-  | 'applied'
-  | 'rolled-back'
-  | 'conflicted'
-  | 'failed'
+  'planned' | 'applying' | 'applied' | 'rolled-back' | 'conflicted' | 'failed'
 
 export interface TransactionalFileEdit {
   readonly path: string

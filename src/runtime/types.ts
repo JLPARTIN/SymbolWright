@@ -11,10 +11,7 @@ import type { SandboxExecutionRequest, SandboxExecutionResult } from '../sandbox
 
 /** Supported execution modes from plan-only to approved execution. */
 export type SymbolWrightRuntimeMode =
-  | 'PLAN_ONLY'
-  | 'READ_ONLY'
-  | 'PROPOSAL_ONLY'
-  | 'APPROVED_EXECUTION'
+  'PLAN_ONLY' | 'READ_ONLY' | 'PROPOSAL_ONLY' | 'APPROVED_EXECUTION'
 
 /** Union of all registered tool names in the runtime. */
 export type SymbolWrightToolName =
