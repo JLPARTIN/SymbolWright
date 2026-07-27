@@ -103,6 +103,16 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   (npm, GitHub Actions, and Docker ecosystems) so this pin — and dependency/Action versions more
   generally — get automated update PRs instead of silently going stale; a digest pin with no
   update mechanism would otherwise permanently freeze out upstream OS-level security patches.
+- **GitHub Actions referenced by moving major-version tags**: every workflow used tags like
+  `actions/checkout@v4` — a tag the action's maintainer can repoint to a different commit at any
+  time, so a workflow's actual behavior wasn't fully pinned to what was reviewed. All actions
+  across all five workflow files (`actions/checkout`, `actions/setup-node`,
+  `actions/dependency-review-action`, `docker/setup-buildx-action`, `docker/login-action`,
+  `docker/metadata-action`, `docker/build-push-action`) are now referenced by the exact commit SHA
+  the currently-used major-version tag resolves to (verified via `git ls-remote` against each
+  action's repository), with the human-readable version kept as a trailing comment. Covered by the
+  same new `.github/dependabot.yml` `github-actions` ecosystem entry, so these pins get automated
+  update PRs going forward rather than silently drifting from what's actually reviewed.
 
 ### Added
 
