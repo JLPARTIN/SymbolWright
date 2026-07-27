@@ -89,6 +89,38 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   `npm ci` instead of `npm install`, matching the CI workflow, so release and container builds
   install exactly what the committed lockfile specifies rather than potentially re-resolving
   dependency versions at build time.
+- **`Publish` could produce a confusing failed CI run on a normal release**: the workflow fires on
+  both a `v*.*.*` tag push and a GitHub Release being published, and a normal release process
+  triggers both for the same version. Since npm registry versions are immutable, the second run's
+  `npm publish` would fail outright once the first had already succeeded — a red, non-actionable
+  CI run with no real problem behind it. It now checks whether the version is already live on the
+  registry first and skips the publish step gracefully instead of erroring.
+- **Dockerfile base images were unpinned floating tags**: both build stages used `node:22-alpine`
+  (a tag Docker Hub can repoint at any time) rather than a specific image digest, so a rebuilt CI
+  run could pull different bytes than a previous one without any change to this repository. Pinned
+  both stages to the current `node:22-alpine` manifest-list digest
+  (`sha256:16e22a55...`, verified directly against the registry). Added `.github/dependabot.yml`
+  (npm, GitHub Actions, and Docker ecosystems) so this pin — and dependency/Action versions more
+  generally — get automated update PRs instead of silently going stale; a digest pin with no
+  update mechanism would otherwise permanently freeze out upstream OS-level security patches.
+- **GitHub Actions referenced by moving major-version tags**: every workflow used tags like
+  `actions/checkout@v4` — a tag the action's maintainer can repoint to a different commit at any
+  time, so a workflow's actual behavior wasn't fully pinned to what was reviewed. All actions
+  across all five workflow files (`actions/checkout`, `actions/setup-node`,
+  `actions/dependency-review-action`, `docker/setup-buildx-action`, `docker/login-action`,
+  `docker/metadata-action`, `docker/build-push-action`) are now referenced by the exact commit SHA
+  the currently-used major-version tag resolves to (verified via `git ls-remote` against each
+  action's repository), with the human-readable version kept as a trailing comment. Covered by the
+  same new `.github/dependabot.yml` `github-actions` ecosystem entry, so these pins get automated
+  update PRs going forward rather than silently drifting from what's actually reviewed.
+- **No static application security scanning**: the audit found no CodeQL workflow or configuration
+  anywhere in the repository, so no analysis engine was catching injection, path-traversal, or
+  similar code-level vulnerability patterns in TypeScript source before merge — only dependency
+  vulnerabilities were covered (Dependency Review). Added `.github/workflows/codeql.yml`, running
+  CodeQL's `javascript-typescript` analysis on every push to `main`, every PR, and weekly on a
+  schedule. Verified the repository is public, so this runs under GitHub's free Advanced Security
+  tier for public repos — no paid GHAS license required. Actions pinned to commit SHAs, matching
+  every other workflow.
 
 ### Added
 
