@@ -15,12 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # TODO: remove continue-on-error once GitHub Advanced Security (or public
-      # visibility) is enabled for this repo — dependency-review-action requires
-      # Dependency graph + GHAS and currently fails with "not supported on this
-      # repository" regardless of the dependency changes themselves.
       - name: Dependency Review
-        continue-on-error: true
         uses: actions/dependency-review-action@v4
         with:
           fail-on-severity: high

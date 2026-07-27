@@ -81,6 +81,14 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   callers. It now sweeps expired entries once the map grows past a threshold (10,000 keys), so
   memory is bounded by actual concurrent traffic within a window rather than all traffic the
   process has ever seen.
+- **CI supply-chain hardening**: the Dependency Review workflow's `continue-on-error: true` was a
+  workaround for a "not supported on this repository" failure that a live CI run confirmed no
+  longer happens (Dependency Review now runs a real scan and reports actual results) — removed the
+  escape hatch so a genuine high-severity dependency vulnerability or a denied license can now
+  block a PR, instead of only ever being advisory. The Deploy and Publish workflows now use
+  `npm ci` instead of `npm install`, matching the CI workflow, so release and container builds
+  install exactly what the committed lockfile specifies rather than potentially re-resolving
+  dependency versions at build time.
 
 ### Added
 
