@@ -729,7 +729,10 @@ export function createChatServerRequestListener(
       }
 
       if (req.method === 'POST' && url.pathname === '/api/repository/branches') {
-        await handleRepositoryBranchCreate(req, res, repositoryContext)
+        await handleRepositoryBranchCreate(req, res, {
+          ...repositoryContext,
+          ...(principal.grantId === undefined ? {} : { grantId: principal.grantId }),
+        })
         return
       }
 

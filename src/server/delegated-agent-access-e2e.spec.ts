@@ -206,6 +206,39 @@ describe('Delegated Agent Access — end-to-end', () => {
     expect(pushMainBody.reasonCode).toBe('BRANCH_PROTECTED')
   })
 
+  it("denies creating a branch outside the grant's branchScope, even from the working tree's current branch", async () => {
+    // Regression test: the route-level dispatch authorization check for `repo.branch.create` runs
+    // before the request body is read, so it can only see the *currently checked-out* branch --
+    // irrelevant to branch creation, since the new branch doesn't exist yet. Without a check
+    // against the real requested name inside the route handler, a grant restricted to
+    // feat/**|fix/**|symbolwright/agent/** could create a branch with any name at all.
+    const server = await launch()
+    const { token } = await createCodingAgentGrant(server)
+
+    const deniedPattern = await fetch(`${server.url}/api/repository/branches`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'release/v2' }),
+    })
+    expect(deniedPattern.status).toBe(403)
+    const deniedPatternBody = (await deniedPattern.json()) as { reasonCode: string }
+    expect(deniedPatternBody.reasonCode).toBe('BRANCH_PROTECTED')
+
+    const outOfScope = await fetch(`${server.url}/api/repository/branches`, {
+      method: 'POST',
+      headers: { ...agentAuth(token), 'content-type': 'application/json' },
+      body: JSON.stringify({ name: 'not-an-allowed-prefix' }),
+    })
+    expect(outOfScope.status).toBe(403)
+    const outOfScopeBody = (await outOfScope.json()) as { reasonCode: string }
+    expect(outOfScopeBody.reasonCode).toBe('BRANCH_OUT_OF_SCOPE')
+
+    // Confirm the branch was never actually created.
+    const branches = await runGitCommand(['branch'], cwd)
+    expect(branches.stdout).not.toContain('release/v2')
+    expect(branches.stdout).not.toContain('not-an-allowed-prefix')
+  })
+
   it('denies a push that changes more files than executionLimits.maxFilesChanged allows', async () => {
     const server = await launch()
     const { token } = await createCodingAgentGrant(server, {

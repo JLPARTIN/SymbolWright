@@ -52,6 +52,22 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   false→true; allowlist arrays can only shrink to a subset, and an empty replacement is rejected
   when the current list is non-empty) and `narrowGrant` now rejects any patch that would widen
   instead of silently accepting it.
+- **`POST /api/repository/branches` never validated the requested branch name against the calling
+  grant's `branchScope`**: the route-level authorization dispatch in `symbolwright-chat-server.ts`
+  resolves branch context (for the `branchScope.allowedPatterns`/`deniedPatterns` check) from the
+  *currently checked-out* branch, before the request body is read — irrelevant for branch
+  *creation*, since the branch being created doesn't exist yet, and `repo.branch.create` wasn't
+  even in the route-level set that triggers that resolution. `AuthorizationService`'s branch-scope
+  check only runs when a branch is present on the request, so it was silently skipped entirely,
+  and the route handler's own check (`evaluateGitToolRequest`) only consults a fixed global
+  denylist (`main`, `master`, ...), never the grant's configured `branchScope`. In effect, a grant
+  restricted to `feat/**`/`fix/**`/`symbolwright/agent/**` could create a branch under any other
+  name — `release/**`, a `deniedPatterns` entry, anything not in the small hardcoded list — with no
+  per-grant scope check applied at all. The branch-scope decision logic is now factored into a
+  shared `src/access/branch-scope-guard.ts` (also used by `AuthorizationService` internally, so
+  there's one implementation instead of two that can drift), and
+  `POST /api/repository/branches` now re-checks the grant's `branchScope` against the actual
+  requested name once the body is parsed.
 
 ### Added
 

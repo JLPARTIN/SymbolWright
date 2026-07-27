@@ -5,7 +5,8 @@ import {
   isHighRiskCapability,
   isKnownCapability,
 } from './access-capability-catalog.js'
-import { matchesAnyBranchPattern, matchesAnyRepositoryPattern } from './access-branch-match.js'
+import { matchesAnyRepositoryPattern } from './access-branch-match.js'
+import { checkBranchScope as checkBranchScopeViolation } from './branch-scope-guard.js'
 import type { AccessStore } from './access-store.js'
 import type {
   AgentAccessGrant,
@@ -547,58 +548,24 @@ export class AuthorizationService {
     riskLevel: RiskLevel,
     evaluatedPolicies: string[],
   ): AuthorizationDecision | undefined {
-    const branch = request.branch as string
-    const scope = grant.branchScope
-
-    if (matchesAnyBranchPattern(branch, scope.deniedPatterns) !== undefined) {
-      return decision(
-        {
-          allowed: false,
-          reasonCode: 'BRANCH_PROTECTED',
-          reason: `Branch "${branch}" is protected and cannot be mutated by this grant.`,
-          requiresApproval: false,
-          grantVersion: grant.version,
-          riskLevel,
-          evaluatedPolicies,
-        },
-        correlationId,
-      )
-    }
-
-    if (request.isDefaultBranch === true && !scope.defaultBranchMutationAllowed) {
-      return decision(
-        {
-          allowed: false,
-          reasonCode: 'DEFAULT_BRANCH_PROTECTED',
-          reason: 'The default branch is read-only for this grant.',
-          requiresApproval: false,
-          grantVersion: grant.version,
-          riskLevel,
-          evaluatedPolicies,
-        },
-        correlationId,
-      )
-    }
-
-    if (
-      request.isDefaultBranch !== true &&
-      matchesAnyBranchPattern(branch, scope.allowedPatterns) === undefined
-    ) {
-      return decision(
-        {
-          allowed: false,
-          reasonCode: 'BRANCH_OUT_OF_SCOPE',
-          reason: `Branch "${branch}" does not match this grant's allowed branch patterns.`,
-          requiresApproval: false,
-          grantVersion: grant.version,
-          riskLevel,
-          evaluatedPolicies,
-        },
-        correlationId,
-      )
-    }
-
-    return undefined
+    const violation = checkBranchScopeViolation(
+      grant.branchScope,
+      request.branch as string,
+      request.isDefaultBranch === true,
+    )
+    if (violation === undefined) return undefined
+    return decision(
+      {
+        allowed: false,
+        reasonCode: violation.reasonCode,
+        reason: violation.reason,
+        requiresApproval: false,
+        grantVersion: grant.version,
+        riskLevel,
+        evaluatedPolicies,
+      },
+      correlationId,
+    )
   }
 
   private checkApprovalPolicy(
