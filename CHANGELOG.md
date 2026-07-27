@@ -113,6 +113,14 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   action's repository), with the human-readable version kept as a trailing comment. Covered by the
   same new `.github/dependabot.yml` `github-actions` ecosystem entry, so these pins get automated
   update PRs going forward rather than silently drifting from what's actually reviewed.
+- **No static application security scanning**: the audit found no CodeQL workflow or configuration
+  anywhere in the repository, so no analysis engine was catching injection, path-traversal, or
+  similar code-level vulnerability patterns in TypeScript source before merge — only dependency
+  vulnerabilities were covered (Dependency Review). Added `.github/workflows/codeql.yml`, running
+  CodeQL's `javascript-typescript` analysis on every push to `main`, every PR, and weekly on a
+  schedule. Verified the repository is public, so this runs under GitHub's free Advanced Security
+  tier for public repos — no paid GHAS license required. Actions pinned to commit SHAs, matching
+  every other workflow.
 
 ### Added
 
