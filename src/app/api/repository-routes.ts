@@ -2,7 +2,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
-import { COMMON_DEFAULT_BRANCH_NAMES } from '../../access/git-branch-resolver.js'
+import {
+  COMMON_DEFAULT_BRANCH_NAMES,
+  isLikelyDefaultBranch,
+} from '../../access/git-branch-resolver.js'
+import { checkBranchScope } from '../../access/branch-scope-guard.js'
 import type { AccessRuntime } from '../../access/access-runtime.js'
 import type { MissionExecutionLimits } from '../../access/access-types.js'
 import {
@@ -386,6 +390,27 @@ export async function handleRepositoryBranchCreate(
   if (!gate.allowed) {
     sendJson(res, 403, { error: gate.blockReasons.join(' ') })
     return
+  }
+
+  // The dispatch-time authorization check in `symbolwright-chat-server.ts` runs before this route
+  // reads the request body, so it can only see the *currently checked-out* branch -- irrelevant
+  // here, since the branch being created doesn't exist yet. Re-check the grant's `branchScope`
+  // against the actual requested name so a grant restricted to `feat/**`/`fix/**` can't create a
+  // branch like `release/**` or a denylisted name just because the check above never saw it.
+  if (context.accessRuntime !== undefined && context.grantId !== undefined) {
+    const grant = context.accessRuntime.grantService.getGrant(context.grantId)
+    if (grant !== undefined) {
+      const isDefaultBranch = await isLikelyDefaultBranch(context.cwd, name)
+      const violation = checkBranchScope(grant.branchScope, name, isDefaultBranch)
+      if (violation !== undefined) {
+        sendJson(res, 403, {
+          error: 'authorization_denied',
+          reasonCode: violation.reasonCode,
+          message: violation.reason,
+        })
+        return
+      }
+    }
   }
 
   const result = await runGitCommand(['checkout', '-b', name], context.cwd)
