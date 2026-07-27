@@ -89,6 +89,20 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   `npm ci` instead of `npm install`, matching the CI workflow, so release and container builds
   install exactly what the committed lockfile specifies rather than potentially re-resolving
   dependency versions at build time.
+- **`Publish` could produce a confusing failed CI run on a normal release**: the workflow fires on
+  both a `v*.*.*` tag push and a GitHub Release being published, and a normal release process
+  triggers both for the same version. Since npm registry versions are immutable, the second run's
+  `npm publish` would fail outright once the first had already succeeded — a red, non-actionable
+  CI run with no real problem behind it. It now checks whether the version is already live on the
+  registry first and skips the publish step gracefully instead of erroring.
+- **Dockerfile base images were unpinned floating tags**: both build stages used `node:22-alpine`
+  (a tag Docker Hub can repoint at any time) rather than a specific image digest, so a rebuilt CI
+  run could pull different bytes than a previous one without any change to this repository. Pinned
+  both stages to the current `node:22-alpine` manifest-list digest
+  (`sha256:16e22a55...`, verified directly against the registry). Added `.github/dependabot.yml`
+  (npm, GitHub Actions, and Docker ecosystems) so this pin — and dependency/Action versions more
+  generally — get automated update PRs instead of silently going stale; a digest pin with no
+  update mechanism would otherwise permanently freeze out upstream OS-level security patches.
 
 ### Added
 

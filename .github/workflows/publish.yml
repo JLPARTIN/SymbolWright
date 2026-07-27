@@ -61,7 +61,24 @@ jobs:
       - name: Build
         run: npm run build
 
+      # This workflow fires on both a `v*.*.*` tag push and a GitHub Release being published --
+      # a normal release process produces both events for the same version, and npm registry
+      # versions are immutable, so the second run's publish would otherwise fail loudly (a
+      # confusing, non-actionable red CI run) purely because the first run already succeeded.
+      # Skip gracefully instead of erroring when the version is already live.
+      - name: Check whether this version is already published
+        id: check
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          if npm view "${name}@${version}" version >/dev/null 2>&1; then
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Publish to npm
+        if: steps.check.outputs.already_published != 'true'
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
