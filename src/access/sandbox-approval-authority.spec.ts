@@ -106,9 +106,7 @@ describe('sandbox approval authority binding', () => {
       approverId: 'operator-1',
     })
     const reorderedVersions = Object.fromEntries(Object.entries(versions).reverse())
-    const approved = await authorization.evaluate(
-      requestFor(grant, 'mission-1', reorderedVersions),
-    )
+    const approved = await authorization.evaluate(requestFor(grant, 'mission-1', reorderedVersions))
     expect(approved.allowed).toBe(true)
   })
 
