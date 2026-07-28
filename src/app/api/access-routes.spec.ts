@@ -311,6 +311,39 @@ describe('POST /api/v1/access-grants — session/execution limits and approval p
     const body = (await response.json()) as { error: string }
     expect(body.error).toBe('validation_error')
   })
+
+  it('accepts executionLimits.maxDailyEstimatedCostUsd, including a zero-dollar cap', async () => {
+    const server = await launch()
+    const created = await createGrant(server, {
+      executionLimits: { maxDailyEstimatedCostUsd: 0 },
+    })
+
+    const detail = await fetch(`${server.url}/api/v1/access-grants/${created.grantId}`, {
+      headers: operatorAuth(),
+    })
+    const body = (await detail.json()) as {
+      grant: { executionLimits: { maxDailyEstimatedCostUsd?: number } }
+    }
+    expect(body.grant.executionLimits.maxDailyEstimatedCostUsd).toBe(0)
+  })
+
+  it('rejects a negative executionLimits.maxDailyEstimatedCostUsd', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/v1/access-grants`, {
+      method: 'POST',
+      headers: operatorAuth(),
+      body: JSON.stringify({
+        principalType: 'coding-agent',
+        displayName: 'Negative cap',
+        profileId: 'coding-agent',
+        repositoryScope: { mode: 'installation', repositories: [], organizations: [] },
+        executionLimits: { maxDailyEstimatedCostUsd: -1 },
+      }),
+    })
+    expect(response.status).toBe(400)
+    const body = (await response.json()) as { error: string }
+    expect(body.error).toBe('validation_error')
+  })
 })
 
 describe('PATCH /api/v1/access-grants/:id — session/execution limits and client constraints', () => {

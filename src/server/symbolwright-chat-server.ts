@@ -37,6 +37,14 @@ import {
   type TeamVisibilitySource,
 } from '../access/mission-access-guard.js'
 import { checkConcurrentMissionLimit } from '../access/mission-concurrency-guard.js'
+import { checkUsageBudget } from '../access/mission-usage-guard.js'
+import { computeFixedCostMicrodollars } from '../access/fixed-cost-rates.js'
+import { usdToMicrodollars } from '../access/microdollars.js'
+import { GovernanceStore, resolveGovernanceStorePath } from '../access/governance-store.js'
+import {
+  ConcurrencyLimitExceededError,
+  ProviderConcurrencyGuard,
+} from '../access/provider-concurrency-guard.js'
 import {
   BRANCH_SENSITIVE_ROUTE_CAPABILITIES,
   isLikelyDefaultBranch,
@@ -147,6 +155,11 @@ export interface ChatServerOptions {
    * returned `StartedChatServer` so hooks can be registered after the server starts, not only
    * before. Defaults to a fresh instance when omitted. */
   readonly shutdownLifecycle?: ShutdownLifecycle
+  /** Test seam for the durable usage/reservation ledger (`src/access/governance-store.ts`).
+   * Defaults to a real SQLite-backed store under `<cwd>/.symbolwright/governance/`. */
+  readonly governanceStore?: GovernanceStore
+  /** Test seam for the in-memory provider/SSE/autonomous-execution concurrency limiter. */
+  readonly concurrencyGuard?: ProviderConcurrencyGuard
 }
 
 export interface StartedChatServer {
@@ -400,6 +413,27 @@ export function createChatServerRequestListener(
   const shutdownLifecycle = options.shutdownLifecycle ?? new ShutdownLifecycle()
   const missionService = options.missionService ?? new MissionService({ workspaceRoot: cwd, env })
   const accessRuntime = options.accessRuntime ?? new AccessRuntime({ workspaceRoot: cwd })
+  // Constructed lazily, on first actual use (a budget-capped grant's `/api/agent` call) rather
+  // than unconditionally for every server start -- most server instances (e.g. one only ever
+  // serving `/api/repository/*`) have no budget-limited grants and would otherwise pay for an
+  // opened SQLite file on disk (`.symbolwright/governance/`, gitignored in a real deployment, but
+  // a needless side effect all the same) for a feature they never touch.
+  let lazyGovernanceStore: GovernanceStore | undefined
+  const getGovernanceStore = (): GovernanceStore => {
+    if (lazyGovernanceStore === undefined) {
+      lazyGovernanceStore =
+        options.governanceStore ?? new GovernanceStore(resolveGovernanceStorePath(cwd))
+      // A reservation still `open` past its `expires_at` implies the process crashed mid-call --
+      // settle it conservatively now rather than leaving it to either permanently lock budget or
+      // (if a bare age check were used instead) silently undercount spend.
+      lazyGovernanceStore.settleExpiredReservations()
+      shutdownLifecycle.onBeforeShutdown(() => {
+        lazyGovernanceStore?.close()
+      })
+    }
+    return lazyGovernanceStore
+  }
+  const concurrencyGuard = options.concurrencyGuard ?? new ProviderConcurrencyGuard()
   const orchestrationRuntime = new OrchestrationRuntime({ workspaceRoot: cwd, accessRuntime })
   const sandboxService = new SandboxService({
     historyStore: new SandboxHistoryStore({ workspaceRoot: cwd, env }),
@@ -707,6 +741,8 @@ export function createChatServerRequestListener(
           overrideStore,
           missionService,
           cwd,
+          getGovernanceStore,
+          concurrencyGuard,
           principal.kind === 'agent' ? { principal, accessRuntime } : undefined,
           teamVisibilitySource,
         )
@@ -967,6 +1003,79 @@ function appendNewCheckpointReferences(
   }
 }
 
+/** Ceiling used to estimate a call's maximum possible cost before reserving it -- generous enough
+ * to cover a large prior-message context, since underestimating would let a reservation
+ * under-guard the actual spend. */
+const RESERVATION_ESTIMATED_INPUT_TOKENS = 200_000
+const RESERVATION_DEFAULT_MAX_OUTPUT_TOKENS = 8_192
+
+/**
+ * Builds the per-call budget-enforcement hook for `runAgentLoop` when the calling grant has a
+ * `maxDailyEstimatedCostUsd` cap configured. Absent a cap (or an operator caller, which has none),
+ * returns `undefined` -- unlimited, matching every other optional limit in this codebase. A model
+ * that can't be priced (unpinned or unrecognized) is rejected outright for a budget-limited grant
+ * rather than silently guessed at, per `computeFixedCostMicrodollars`'s no-fallback rule.
+ */
+function buildUsageGovernor(
+  governanceStore: GovernanceStore,
+  grantId: string,
+  capMicrodollars: bigint,
+  missionId: string | undefined,
+  maxTokens: number | undefined,
+): AgentLoopConfig['usageGovernor'] {
+  return {
+    reserve: async (context) => {
+      if (context.model === undefined) {
+        return {
+          allowed: false,
+          reason:
+            'This grant has a daily cost cap configured; the call must pin an explicit model so its cost can be estimated.',
+        }
+      }
+      let estimatedMicrodollars: bigint
+      try {
+        estimatedMicrodollars = computeFixedCostMicrodollars(
+          {
+            inputTokens: RESERVATION_ESTIMATED_INPUT_TOKENS,
+            outputTokens: maxTokens ?? RESERVATION_DEFAULT_MAX_OUTPUT_TOKENS,
+          },
+          context.model,
+        )
+      } catch {
+        return {
+          allowed: false,
+          reason: `No cost rate is configured for model "${context.model}"; this grant has a daily cost cap and cannot proceed without one.`,
+        }
+      }
+
+      const alreadySpent = governanceStore.getGrantDailyUsageMicrodollars(grantId)
+      const decision = checkUsageBudget(alreadySpent, estimatedMicrodollars, capMicrodollars)
+      if (!decision.allowed) {
+        return { allowed: false, reason: decision.reason ?? 'Daily cost cap exceeded.' }
+      }
+
+      const reservation = governanceStore.reserveUsage({
+        grantScope: `grant:${grantId}`,
+        grantId,
+        reservedMicrodollars: estimatedMicrodollars,
+        ...(missionId === undefined ? {} : { missionId }),
+      })
+      return { allowed: true, reservationId: reservation.reservationId }
+    },
+    settle: async (reservationId, usage, model) => {
+      if (usage === undefined || model === undefined) {
+        governanceStore.settleReservation(reservationId)
+        return
+      }
+      try {
+        governanceStore.settleReservation(reservationId, computeFixedCostMicrodollars(usage, model))
+      } catch {
+        governanceStore.settleReservation(reservationId)
+      }
+    },
+  }
+}
+
 async function handleAgent(
   req: IncomingMessage,
   res: ServerResponse,
@@ -974,6 +1083,10 @@ async function handleAgent(
   overrideStore: ProviderRuntimeOverrideStore,
   missionService: MissionService,
   defaultCwd: string,
+  /** Resolved lazily -- only called at all when this request actually needs it (a budget-capped
+   * grant's turn), so a server that never handles one never opens the governance database. */
+  getGovernanceStore: () => GovernanceStore,
+  concurrencyGuard: ProviderConcurrencyGuard,
   agentPrincipal?: { readonly principal: RequestPrincipal; readonly accessRuntime: AccessRuntime },
   teamSource?: TeamVisibilitySource,
 ): Promise<void> {
@@ -1039,6 +1152,24 @@ async function handleAgent(
   }
   const tools = assembleAgentTools()
   const priorMessages = parsed.priorMessages ?? mission?.agent.messages
+
+  const callerGrantId = agentPrincipal?.principal.grantId
+  const callerGrant =
+    callerGrantId === undefined
+      ? undefined
+      : agentPrincipal?.accessRuntime.grantService.getGrant(callerGrantId)
+  const dailyCapUsd = callerGrant?.executionLimits.maxDailyEstimatedCostUsd
+  const usageGovernor =
+    callerGrantId === undefined || dailyCapUsd === undefined
+      ? undefined
+      : buildUsageGovernor(
+          getGovernanceStore(),
+          callerGrantId,
+          usdToMicrodollars(dailyCapUsd),
+          mission?.id,
+          parsed.maxTokens,
+        )
+
   const agentConfig: AgentLoopConfig = {
     maxIterations: parsed.maxIterations,
     systemPrompt: parsed.systemPrompt ?? DEFAULT_AGENT_SYSTEM_PROMPT,
@@ -1046,6 +1177,7 @@ async function handleAgent(
     ...(parsed.maxTokens === undefined ? {} : { maxTokens: parsed.maxTokens }),
     ...(parsed.temperature === undefined ? {} : { temperature: parsed.temperature }),
     ...(priorMessages === undefined ? {} : { priorMessages }),
+    ...(usageGovernor === undefined ? {} : { usageGovernor }),
   }
 
   const missionWarnings: string[] = []
@@ -1114,6 +1246,11 @@ async function handleAgent(
         ),
       'Assistant result was not persisted',
     )
+    // Previously dropped on the floor entirely -- see MissionService.recordUsage.
+    persist(
+      () => missionService.recordUsage(mission.id, result.totalUsage, parsed.model),
+      'Usage was not persisted',
+    )
     appendNewCheckpointReferences(
       missionService,
       mission.id,
@@ -1124,21 +1261,46 @@ async function handleAgent(
   }
 
   if (!parsed.stream) {
-    const result = await runAgentLoop(
-      llmProvider,
-      parsed.message,
-      tools,
-      toolContext,
-      agentConfig,
-      onAgentEvent,
-    )
-    persistResult(result)
-    sendJson(res, 200, {
-      ...result,
-      ...(mission === undefined ? {} : { missionId: mission.id }),
-      ...(missionWarnings.length === 0 ? {} : { missionWarnings }),
-    })
+    let releaseProvider: () => void
+    try {
+      releaseProvider = concurrencyGuard.acquire('provider')
+    } catch (error) {
+      if (error instanceof ConcurrencyLimitExceededError) {
+        sendJson(res, 429, { error: error.message })
+        return
+      }
+      throw error
+    }
+    try {
+      const result = await runAgentLoop(
+        llmProvider,
+        parsed.message,
+        tools,
+        toolContext,
+        agentConfig,
+        onAgentEvent,
+      )
+      persistResult(result)
+      sendJson(res, 200, {
+        ...result,
+        ...(mission === undefined ? {} : { missionId: mission.id }),
+        ...(missionWarnings.length === 0 ? {} : { missionWarnings }),
+      })
+    } finally {
+      releaseProvider()
+    }
     return
+  }
+
+  let releaseSse: () => void
+  try {
+    releaseSse = concurrencyGuard.acquire('sse')
+  } catch (error) {
+    if (error instanceof ConcurrencyLimitExceededError) {
+      sendJson(res, 429, { error: error.message })
+      return
+    }
+    throw error
   }
 
   res.writeHead(200, {
@@ -1147,7 +1309,9 @@ async function handleAgent(
     connection: 'keep-alive',
   })
 
+  let releaseProvider: (() => void) | undefined
   try {
+    releaseProvider = concurrencyGuard.acquire('provider')
     const result = await runAgentLoop(
       llmProvider,
       parsed.message,
@@ -1201,6 +1365,8 @@ async function handleAgent(
       )
     }
   } finally {
+    releaseProvider?.()
+    releaseSse()
     res.end()
   }
 }

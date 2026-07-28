@@ -99,6 +99,13 @@ export interface MissionExecutionLimits {
   readonly maxCommits?: number
   readonly requirePullRequest?: boolean
   readonly allowDirectPush?: boolean
+  /** Daily provider-spend cap for this grant, in USD (matching the existing
+   * `AgentResourceLimits.maxEstimatedCostUsd`/`TeamBudget.maxEstimatedCostUsd` config
+   * convention). Converted to microdollars (`usdToMicrodollars`) and enforced against the
+   * durable governance store's per-grant daily total (`src/access/governance-store.ts`) via a
+   * transactional reservation made before each provider call, not a bare after-the-fact check.
+   * Undefined means unlimited, unchanged from every other optional limit here. */
+  readonly maxDailyEstimatedCostUsd?: number
 }
 
 export interface SessionLimits {

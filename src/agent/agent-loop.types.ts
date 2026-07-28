@@ -1,6 +1,12 @@
 import type { ProviderMessage, ProviderTokenUsage } from '../provider/provider.types.js'
 
-export const AGENT_LOOP_STATUSES = ['completed', 'tool_use_limit', 'error', 'cancelled'] as const
+export const AGENT_LOOP_STATUSES = [
+  'completed',
+  'tool_use_limit',
+  'error',
+  'cancelled',
+  'budget_exceeded',
+] as const
 export type AgentLoopStatus = (typeof AGENT_LOOP_STATUSES)[number]
 
 export const AGENT_LOOP_EVENT_TYPES = [
@@ -13,6 +19,31 @@ export const AGENT_LOOP_EVENT_TYPES = [
   'error',
 ] as const
 export type AgentLoopEventType = (typeof AGENT_LOOP_EVENT_TYPES)[number]
+
+/**
+ * Injected budget-enforcement hook, checked before every provider call. Deliberately kept free of
+ * `bigint`/cost-math concerns in `agent-loop.ts` itself -- the governor (constructed by the HTTP
+ * layer from the durable governance store, see `src/access/governance-store.ts`) owns estimating
+ * and reconciling cost; the loop only calls `reserve`/`settle` around each call. This runs at the
+ * provider-turn boundary (once per loop iteration, i.e. once per provider call), not just once
+ * per autonomous task, since one task can contain multiple iterations/provider calls.
+ */
+export interface AgentLoopUsageGovernor {
+  /** Called before each provider call with the model that will be used, if pinned. Returning
+   * `allowed: false` stops the loop before the call is made -- the loop returns
+   * `status: 'budget_exceeded'` without starting it. */
+  reserve(context: {
+    readonly model?: string
+  }): Promise<
+    | { readonly allowed: true; readonly reservationId: string }
+    | { readonly allowed: false; readonly reason: string }
+  >
+  /** Reconciles a reservation against actual reported usage after the call completes.
+   * `usage` omitted means the provider call failed before reporting usage -- the governor is
+   * expected to settle conservatively (retain the full reservation) rather than assume zero
+   * cost, matching the governance store's own `settleReservation` contract. */
+  settle(reservationId: string, usage?: ProviderTokenUsage, model?: string): Promise<void>
+}
 
 export interface AgentLoopConfig {
   readonly maxIterations: number
@@ -29,6 +60,9 @@ export interface AgentLoopConfig {
    * deliberate smallest-viable-increment boundary: it stops the *next* iteration promptly without
    * the larger, separate change of threading `AbortSignal` into every provider adapter. */
   readonly signal?: AbortSignal
+  /** Optional budget-enforcement hook. Absent means unlimited, matching every other optional
+   * limit in this codebase -- existing callers are entirely unaffected. */
+  readonly usageGovernor?: AgentLoopUsageGovernor
 }
 
 export interface AgentLoopToolCall {

@@ -2,7 +2,9 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 
 import type { MissionVisibility } from '../access/mission-access-guard.js'
-import type { ProviderMessage } from '../provider/provider.types.js'
+import { computeFixedCostMicrodollars } from '../access/fixed-cost-rates.js'
+import { parseMicrodollars, serializeMicrodollars } from '../access/microdollars.js'
+import type { ProviderMessage, ProviderTokenUsage } from '../provider/provider.types.js'
 import { runGitCommand } from '../runtime/git/git-command-runner.js'
 import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
 import { createMissionEvent, recoverInterruptedMissionEvents } from './mission-events.js'
@@ -415,6 +417,46 @@ export class MissionService {
       { status, characterCount: finalText.length },
     )
     return updated
+  }
+
+  /**
+   * Accumulates provider token/cost usage onto the mission -- fixes `AgentLoopResult.totalUsage`
+   * previously being dropped on the floor entirely at every call site. Display/audit only: the
+   * durable governance store (`src/access/governance-store.ts`) is the authoritative ledger for
+   * budget *enforcement*, reconciled independently through its own reserve/settle flow. `model`
+   * omitted (the caller didn't pin an explicit model) still captures token counts, just with no
+   * cost attributed for this call -- an unrecognized model does the same rather than blocking
+   * capture, since `computeFixedCostMicrodollars`'s no-silent-fallback rule exists for hard
+   * enforcement decisions, not for a best-effort display total.
+   */
+  public recordUsage(
+    missionId: string,
+    usage: ProviderTokenUsage,
+    model?: string,
+  ): SymbolWrightMission {
+    let costMicrodollars = 0n
+    if (model !== undefined) {
+      try {
+        costMicrodollars = computeFixedCostMicrodollars(usage, model)
+      } catch {
+        costMicrodollars = 0n
+      }
+    }
+
+    return this.updateLatest(missionId, (current) => {
+      const previous = current.usage
+      const previousCost =
+        previous === undefined ? 0n : parseMicrodollars(previous.totalCostMicrodollars)
+      return {
+        ...current,
+        usage: {
+          totalPromptUnits: (previous?.totalPromptUnits ?? 0) + usage.inputTokens,
+          totalCompletionUnits: (previous?.totalCompletionUnits ?? 0) + usage.outputTokens,
+          totalCostMicrodollars: serializeMicrodollars(previousCost + costMicrodollars),
+          lastRecordedAt: this.now().toISOString(),
+        },
+      }
+    })
   }
 
   public recordToolStarted(missionId: string, toolCallId: string, toolName: string): void {
