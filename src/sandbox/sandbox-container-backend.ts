@@ -211,37 +211,13 @@ class StrongSandboxContainerController implements SandboxBackendExecutionControl
           message:
             'The digest-pinned sandbox image is not installed locally. Normal execution will not pull it.',
         })
-        return this.finalResult({
-          started,
-          status,
-          stdout,
-          stderr,
-          outputTruncated,
-          verificationLevel,
-          artifacts,
-          diagnostics,
-          cleanupAttempted,
-          cleanupSucceeded,
-          cleanupWarnings,
-        })
+        throw new SandboxContainerTerminalError(status, stderr)
       }
       if (!imageInspection.stdout.includes(this.input.image.digest!)) {
         status = 'policy-blocked'
         stderr = 'The locally installed image does not match the allowlisted digest.'
         diagnostics.push({ severity: 'error', message: stderr })
-        return this.finalResult({
-          started,
-          status,
-          stdout,
-          stderr,
-          outputTruncated,
-          verificationLevel,
-          artifacts,
-          diagnostics,
-          cleanupAttempted,
-          cleanupSucceeded,
-          cleanupWarnings,
-        })
+        throw new SandboxContainerTerminalError(status, stderr)
       }
 
       const created = await this.command(
@@ -329,11 +305,14 @@ class StrongSandboxContainerController implements SandboxBackendExecutionControl
       }
     } catch (error) {
       if (this.cancelled) status = 'cancelled'
+      else if (error instanceof SandboxContainerTerminalError) status = error.status
       else if (error instanceof SandboxWorkspaceBoundaryError) status = 'policy-blocked'
       else status = 'internal-error'
       const message = error instanceof Error ? error.message : String(error)
       stderr = stderr.length === 0 ? boundedMessage(message) : stderr
-      diagnostics.push({ severity: 'error', message: boundedMessage(message) })
+      if (!(error instanceof SandboxContainerTerminalError)) {
+        diagnostics.push({ severity: 'error', message: boundedMessage(message) })
+      }
     } finally {
       cleanupAttempted = true
       if (containerCreated && this.plan !== undefined) {
@@ -547,6 +526,7 @@ async function runStandaloneCommand(
     let stdout = Buffer.alloc(0)
     let stderr = Buffer.alloc(0)
     let timedOut = false
+    let settled = false
     child.stdout.on('data', (chunk: Buffer) => {
       if (stdout.byteLength < CONTROL_COMMAND_OUTPUT_BYTES) {
         stdout = Buffer.concat([
@@ -568,6 +548,8 @@ async function runStandaloneCommand(
       child.kill('SIGKILL')
     }, timeoutMs)
     child.once('error', (error) => {
+      if (settled) return
+      settled = true
       clearTimeout(timer)
       resolve({
         exitCode: 1,
@@ -579,6 +561,8 @@ async function runStandaloneCommand(
       })
     })
     child.once('close', (code, closeSignal) => {
+      if (settled) return
+      settled = true
       clearTimeout(timer)
       resolve({
         exitCode: code,
