@@ -1,0 +1,29 @@
+
+> symbolwright@0.2.0 typecheck
+> tsc -p tsconfig.json --noEmit
+
+src/sandbox/sandbox-completion-coverage.spec.ts(9,3): error TS2305: Module '"./sandbox-container-command-plan.js"' has no exported member 'assertContainerCommandPlanStaysNonExecutable'.
+src/sandbox/sandbox-completion-coverage.spec.ts(303,7): error TS2353: Object literal may only specify known properties, and 'containerWorkspacePath' does not exist in type 'SandboxContainerCommandPlanOptions'.
+src/sandbox/sandbox-completion-coverage.spec.ts(311,40): error TS2345: Argument of type '{ image: SandboxImageDefinition; engine: SandboxContainerEngineStatus; hostWorkspacePath: string; entrypoint: never[]; }' is not assignable to parameter of type 'SandboxContainerCommandPlanOptions'.
+  Type '{ image: SandboxImageDefinition; engine: SandboxContainerEngineStatus; hostWorkspacePath: string; entrypoint: never[]; }' is missing the following properties from type 'SandboxContainerCommandPlanOptions': hostOutputPath, containerName
+src/sandbox/sandbox-completion-coverage.spec.ts(320,40): error TS2345: Argument of type '{ image: SandboxImageDefinition; engine: SandboxContainerEngineStatus; hostWorkspacePath: string; entrypoint: string[]; }' is not assignable to parameter of type 'SandboxContainerCommandPlanOptions'.
+  Type '{ image: SandboxImageDefinition; engine: SandboxContainerEngineStatus; hostWorkspacePath: string; entrypoint: string[]; }' is missing the following properties from type 'SandboxContainerCommandPlanOptions': hostOutputPath, containerName
+src/sandbox/sandbox-completion-coverage.spec.ts(329,40): error TS2345: Argument of type '{ image: SandboxImageDefinition; engine: SandboxContainerEngineStatus; hostWorkspacePath: string; entrypoint: string[]; }' is not assignable to parameter of type 'SandboxContainerCommandPlanOptions'.
+  Type '{ image: SandboxImageDefinition; engine: SandboxContainerEngineStatus; hostWorkspacePath: string; entrypoint: string[]; }' is missing the following properties from type 'SandboxContainerCommandPlanOptions': hostOutputPath, containerName
+src/sandbox/sandbox-completion-coverage.spec.ts(338,40): error TS2345: Argument of type '{ image: SandboxImageDefinition; engine: SandboxContainerEngineStatus; hostWorkspacePath: string; entrypoint: string[]; }' is not assignable to parameter of type 'SandboxContainerCommandPlanOptions'.
+  Type '{ image: SandboxImageDefinition; engine: SandboxContainerEngineStatus; hostWorkspacePath: string; entrypoint: string[]; }' is missing the following properties from type 'SandboxContainerCommandPlanOptions': hostOutputPath, containerName
+src/sandbox/sandbox-completion-coverage.spec.ts(347,40): error TS2345: Argument of type '{ image: SandboxImageDefinition; engine: SandboxContainerEngineStatus; hostWorkspacePath: string; entrypoint: string[]; }' is not assignable to parameter of type 'SandboxContainerCommandPlanOptions'.
+  Type '{ image: SandboxImageDefinition; engine: SandboxContainerEngineStatus; hostWorkspacePath: string; entrypoint: string[]; }' is missing the following properties from type 'SandboxContainerCommandPlanOptions': hostOutputPath, containerName
+src/sandbox/sandbox-container-backend.ts(395,9): error TS2322: Type 'Buffer<ArrayBufferLike>' is not assignable to type 'Buffer<ArrayBuffer>'.
+  Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'.
+    Type 'SharedArrayBuffer' is not assignable to type 'ArrayBuffer'.
+      Types of property '[Symbol.toStringTag]' are incompatible.
+        Type '"SharedArrayBuffer"' is not assignable to type '"ArrayBuffer"'.
+src/sandbox/sandbox-container-backend.ts(398,9): error TS2322: Type 'Buffer<ArrayBufferLike>' is not assignable to type 'Buffer<ArrayBuffer>'.
+  Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'.
+    Type 'SharedArrayBuffer' is not assignable to type 'ArrayBuffer'.
+      Types of property '[Symbol.toStringTag]' are incompatible.
+        Type '"SharedArrayBuffer"' is not assignable to type '"ArrayBuffer"'.
+src/sandbox/sandbox-container-command-plan.spec.ts(130,9): error TS2375: Type '{ image: string; digest: undefined; enabled: boolean; installed: boolean; id: string; languages: readonly string[]; source: string; sizeBytes?: number; }' is not assignable to type 'SandboxImageDefinition' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'digest' are incompatible.
+    Type 'undefined' is not assignable to type 'string'.
