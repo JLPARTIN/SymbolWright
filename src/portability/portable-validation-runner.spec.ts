@@ -157,6 +157,7 @@ describe('DockerPortableValidationRunner', () => {
     const runner = new DockerPortableValidationRunner({
       sandboxRunner: capturingRunner([], {
         outcome: 'BLOCKED',
+        stdout: '',
         exitCode: null,
         reason: 'Sandbox runner unavailable; host execution is not allowed. docker not found',
         reasonCode: 'SANDBOX_COMMAND_BACKEND_UNAVAILABLE',
