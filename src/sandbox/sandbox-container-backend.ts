@@ -6,7 +6,11 @@ import {
   buildSandboxContainerCommandPlan,
   type SandboxContainerCommandPlan,
 } from './sandbox-container-command-plan.js'
-import { serializeSandboxContainerInput } from './sandbox-container-transfer.js'
+import {
+  materializeSandboxContainerOutput,
+  sandboxContainerCopyOutEncodedLimit,
+  serializeSandboxContainerInput,
+} from './sandbox-container-transfer.js'
 import {
   cleanupSandboxContainerWorkspace,
   materializeSandboxContainerWorkspace,
@@ -283,7 +287,7 @@ class StrongSandboxContainerController implements SandboxBackendExecutionControl
       const copiedOut = await this.command(
         this.plan.commands.copyOut,
         CONTROL_COMMAND_TIMEOUT_MS,
-        CONTROL_COMMAND_OUTPUT_BYTES,
+        sandboxContainerCopyOutEncodedLimit(this.input.runner.limits),
       )
       if (copiedOut.exitCode !== 0) {
         diagnostics.push({
@@ -291,15 +295,28 @@ class StrongSandboxContainerController implements SandboxBackendExecutionControl
           message: `Artifact copy-out failed: ${boundedMessage(copiedOut.stderr || copiedOut.stdout)}`,
         })
       } else {
-        const quarantine = await quarantineSandboxContainerArtifacts({
-          executionId: this.input.executionId,
-          workspace,
-          limits: this.input.runner.limits,
-        })
-        artifacts = quarantine.artifacts
-        diagnostics.push(
-          ...quarantine.warnings.map((message) => ({ severity: 'warning' as const, message })),
-        )
+        try {
+          await materializeSandboxContainerOutput(
+            workspace,
+            copiedOut.stdout,
+            this.input.runner.limits,
+          )
+          const quarantine = await quarantineSandboxContainerArtifacts({
+            executionId: this.input.executionId,
+            workspace,
+            limits: this.input.runner.limits,
+          })
+          artifacts = quarantine.artifacts
+          diagnostics.push(
+            ...quarantine.warnings.map((message) => ({ severity: 'warning' as const, message })),
+          )
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error)
+          diagnostics.push({ severity: 'error', message: boundedMessage(message) })
+          status = /quota|maxFiles|maxFileBytes|output limit|byte quota/i.test(message)
+            ? 'resource-limit'
+            : 'policy-blocked'
+        }
       }
     } catch (error) {
       if (this.cancelled) status = 'cancelled'

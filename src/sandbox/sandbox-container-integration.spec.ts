@@ -181,7 +181,7 @@ integration('strong offline container execution', () => {
         languageId: 'javascript',
         mode: 'run',
         requestedRunnerId: STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID,
-        limits: { timeoutMs: 5_000, maxProcesses: 8 },
+        limits: { timeoutMs: 5_000, maxProcesses: 32 },
         source: `
           const { spawn } = require('node:child_process')
           let blocked = 0
