@@ -67,6 +67,15 @@ interface CommandOutcome {
   readonly outputLimited: boolean
 }
 
+class SandboxContainerTerminalError extends Error {
+  public constructor(
+    public readonly status: SandboxExecutionResult['status'],
+    message: string,
+  ) {
+    super(message)
+  }
+}
+
 export async function executeStrongSandboxContainer(
   input: ExecuteStrongSandboxContainerInput,
 ): Promise<SandboxExecutionResult> {
