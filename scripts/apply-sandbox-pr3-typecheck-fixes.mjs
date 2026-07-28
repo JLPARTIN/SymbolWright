@@ -33,77 +33,10 @@ replaceOnce(
 `,
 )
 
-replaceOnce(
-  'src/sandbox/sandbox-completion-coverage.spec.ts',
-  `    expect(result.status).toBe('unavailable')
-    expect(result.evidence.policyReason).toContain('No executable backend')
-`,
-  `    expect(result.status).toBe('unavailable')
-    expect(result.evidence.policyReason).toContain('immutable image configuration')
-`,
-)
-
-replaceOnce(
-  'src/sandbox/sandbox-completion-coverage.spec.ts',
-  `  it('covers container command planner safety branches without executing containers', () => {
-    const plan = buildSandboxContainerCommandPlan({
-      image: IMAGE,
-      engine: AVAILABLE_ENGINE,
-      hostWorkspacePath: '/tmp/symbolwright-sandbox/workspace-coverage',
-      containerWorkspacePath: '/workspace/custom',
-      entrypoint: ['node', 'main.js'],
-    })
-    expect(plan.engine).toBe('podman')
-    expect(plan.containerWorkspacePath).toBe('/workspace/custom')
-    expect(assertContainerCommandPlanStaysNonExecutable(plan)).toBe(false)
-
-    expect(() =>
-      buildSandboxContainerCommandPlan({
-        image: IMAGE,
-        engine: AVAILABLE_ENGINE,
-        hostWorkspacePath: '/tmp/symbolwright-sandbox/root-path',
-        entrypoint: [],
-      }),
-    ).toThrow('requires an entrypoint')
-
-    expect(() =>
-      buildSandboxContainerCommandPlan({
-        image: IMAGE,
-        engine: AVAILABLE_ENGINE,
-        hostWorkspacePath: '/tmp/symbolwright-sandbox/null-path',
-        entrypoint: ['node', 'bad\0arg'],
-      }),
-    ).toThrow('null-byte free')
-
-    expect(() =>
-      buildSandboxContainerCommandPlan({
-        image: IMAGE,
-        engine: AVAILABLE_ENGINE,
-        hostWorkspacePath: '/tmp/symbolwright-sandbox/bad\0path',
-        entrypoint: ['node', 'main.js'],
-      }),
-    ).toThrow('null bytes')
-
-    expect(() =>
-      buildSandboxContainerCommandPlan({
-        image: IMAGE,
-        engine: AVAILABLE_ENGINE,
-        hostWorkspacePath: '/',
-        entrypoint: ['node', 'main.js'],
-      }),
-    ).toThrow('filesystem root')
-
-    expect(() =>
-      buildSandboxContainerCommandPlan({
-        image: IMAGE,
-        engine: AVAILABLE_ENGINE,
-        hostWorkspacePath: '/tmp/repo/.git/workspace',
-        entrypoint: ['node', 'main.js'],
-      }),
-    ).toThrow('engine socket paths')
-  })
-`,
-  `  it('covers executable container command planner safety branches without running containers', () => {
+const coveragePath = 'src/sandbox/sandbox-completion-coverage.spec.ts'
+let coverage = readFileSync(coveragePath, 'utf8')
+const plannerBlock = `
+  it('covers executable container command planner safety branches without running containers', () => {
     const base = {
       image: IMAGE,
       engine: AVAILABLE_ENGINE,
@@ -119,22 +52,19 @@ replaceOnce(
     expect(plan.containerWorkspacePath).toBe('/workspace')
     expect(isSandboxContainerCommandPlanExecutable(plan)).toBe(true)
 
+    expect(() => buildSandboxContainerCommandPlan({ ...base, entrypoint: [] })).toThrow(
+      'requires an entrypoint',
+    )
     expect(() =>
-      buildSandboxContainerCommandPlan({ ...base, entrypoint: [] }),
-    ).toThrow('requires an entrypoint')
-
-    expect(() =>
-      buildSandboxContainerCommandPlan({ ...base, entrypoint: ['node', 'bad\0arg'] }),
+      buildSandboxContainerCommandPlan({ ...base, entrypoint: ['node', 'bad\\0arg'] }),
     ).toThrow('null-byte free')
-
     expect(() =>
       buildSandboxContainerCommandPlan({
         ...base,
-        hostWorkspacePath: '/tmp/symbolwright-sandbox/bad\0path',
+        hostWorkspacePath: '/tmp/symbolwright-sandbox/bad\\0path',
         entrypoint: ['node', '/workspace/main.js'],
       }),
     ).toThrow('null bytes')
-
     expect(() =>
       buildSandboxContainerCommandPlan({
         ...base,
@@ -142,7 +72,6 @@ replaceOnce(
         entrypoint: ['node', '/workspace/main.js'],
       }),
     ).toThrow('filesystem root')
-
     expect(() =>
       buildSandboxContainerCommandPlan({
         ...base,
@@ -151,8 +80,12 @@ replaceOnce(
       }),
     ).toThrow('engine socket paths')
   })
-`,
-)
+})
+`
+const plannerPattern = /\n  it\('covers container command planner safety branches without executing containers',[\s\S]*?\n  \}\)\n\}\)\n$/
+if (!plannerPattern.test(coverage)) throw new Error('container planner coverage block not found')
+coverage = coverage.replace(plannerPattern, plannerBlock)
+writeFileSync(coveragePath, coverage)
 
 replaceOnce(
   'src/sandbox/sandbox-container-backend.ts',
