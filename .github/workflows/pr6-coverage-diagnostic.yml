@@ -12,7 +12,7 @@ jobs:
   diagnose:
     runs-on: ubuntu-24.04
     steps:
-      - name: Report only coverage failure lines
+      - name: Report PR 6 branch coverage
         run: |
           curl --fail --silent --show-error --location \
             "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
@@ -26,7 +26,33 @@ jobs:
           set +e
           npm run test:coverage > /tmp/coverage.log 2>&1
           code=$?
-          if [ "$code" -ne 0 ]; then
-            tail -n 40 /tmp/coverage.log
-          fi
+          node <<'NODE'
+          const fs = require('node:fs')
+          const path = require('node:path')
+          const report = JSON.parse(fs.readFileSync('coverage/coverage-final.json', 'utf8'))
+          const targets = [
+            'src/release/artifact-smoke.ts',
+            'src/cli-release-readiness.ts',
+            'src/cli.ts',
+            'src/web/status-runner.ts',
+            'src/orchestration/orchestration-types.ts',
+            'src/orchestration/orchestration-store.ts',
+            'src/orchestration/team-service.ts',
+            'src/autonomy/autonomous-mission-coordinator.ts',
+            'src/autonomy/autonomous-mission-runtime.ts',
+            'src/autonomy/server-autonomy-runtime.ts',
+            'src/app/api/mission-routes.ts',
+            'src/server/symbolwright-chat-server.ts',
+          ]
+          for (const target of targets) {
+            const key = Object.keys(report).find((file) => file.endsWith(target))
+            if (!key) continue
+            const counts = Object.values(report[key].b).flat()
+            const covered = counts.filter((count) => count > 0).length
+            const total = counts.length
+            const pct = total === 0 ? 100 : (covered / total) * 100
+            console.log(`${target}: ${covered}/${total} branches (${pct.toFixed(2)}%)`)
+          }
+          NODE
+          tail -n 2 /tmp/coverage.log
           exit "$code"
