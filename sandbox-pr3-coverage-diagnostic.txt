@@ -1,0 +1,302 @@
+coverage_exit_status=1
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- false[39m
+[31m+ true[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-doctor.spec.ts:[2m47:37[22m[39m
+    [90m 45|[39m     [34mexpect[39m(report[33m.[39mgeneratedAt)[33m.[39m[34mtoBe[39m([33mNOW[39m)
+    [90m 46|[39m     [34mexpect[39m(report[33m.[39mreadOnly)[33m.[39m[34mtoBe[39m([35mtrue[39m)
+    [90m 47|[39m     [34mexpect[39m(report[33m.[39mexecutionEnabled)[33m.[39m[34mtoBe[39m([35mfalse[39m)
+    [90m   |[39m                                     [31m^[39m
+    [90m 48|[39m     [34mexpect[39m(report[33m.[39mguardedHostOptIn)[33m.[39m[34mtoBe[39m([35mtrue[39m)
+    [90m 49|[39m     [34mexpect[39m(report[33m.[39mcontainerEngine[33m.[39mengine)[33m.[39m[34mtoBe[39m([32m'docker'[39m)
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/21]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-doctor.spec.ts[2m > [22msandbox doctor[2m > [22mrenders operator-reviewed diagnostics and image commands honestly
+[31m[1mAssertionError[22m: expected 'SymbolWright Sandbox Doctor\n\nBlock:…' to contain 'Execution enabled: false'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Execution enabled: false[39m
+[31m+ SymbolWright Sandbox Doctor[39m
+[31m+[39m
+[31m+ Block: SYMBOLWRIGHT-SANDBOX-DOCTOR-01[39m
+[31m+ Generated: 2026-07-21T00:00:00.000Z[39m
+[31m+ Mode: READ-ONLY DIAGNOSTIC[39m
+[31m+ Strong container execution ready: true[39m
+[31m+ Strong-container opt-in: false[39m
+[31m+ Guarded-host opt-in: false[39m
+[31m+[39m
+[31m+ Container engine:[39m
+[31m+   docker: available version=27.0.0[39m
+[31m+   docker is available for digest-verified, pull-never strong sandbox execution.[39m
+[31m+[39m
+[31m+ Runtime inventory:[39m
+[31m+   - container-javascript-node26: available version=27.0.0; container-isolated/container; network=disabled — Strong container execution is disabled by operator policy.[39m
+[31m+   - browser-javascript: available; browser-isolated/browser; network=disabled[39m
+[31m+   - html-preview: available; browser-isolated/browser; network=disabled[39m
+[31m+   - browser-sqljs: available; browser-isolated/browser; network=disabled[39m
+[31m+   - browser-pyodide: available; browser-isolated/browser; network=disabled[39m
+[31m+   - guarded-host-javascript: unavailable version=22.0.0; guarded-host/guarded-host; network=disabled — node was detected, but trusted local host break-glass execution is disabled by default.[39m
+[31m+   - guarded-host-typescript: unavailable version=22.0.0; guarded-host/guarded-host; network=disabled — node was detected, but trusted local host break-glass execution is disabled by default.[39m
+[31m+   - guarded-host-python: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default. Discovery: python3 was not found on PATH.[39m
+[31m+   - guarded-host-go: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.[39m
+[31m+   - guarded-host-rust: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.[39m
+[31m+   - guarded-host-java: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.[39m
+[31m+   - guarded-host-ruby: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.[39m
+[31m+   - guarded-host-php: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.[39m
+[31m+   - guarded-host-c: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.[39m
+[31m+   - guarded-host-cpp: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.[39m
+[31m+   - guarded-host-r: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.[39m
+[31m+[39m
+[31m+ Image allowlist:[39m
+[31m+   - node-26-alpine-pinned: node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66; digest=sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66; enabled=false; installed=false; languages=javascript; prepare=docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66[39m
+[31m+[39m
+[31m+ Operator-reviewed preparation commands:[39m
+[31m+   - docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66[39m
+[31m+[39m
+[31m+ Warnings:[39m
+[31m+   - Sandbox doctor is read-only: it does not run repository code, pull images, install dependencies, or execute containers.[39m
+[31m+   - Image preparation commands are operator-reviewed hints only and are never run automatically.[39m
+[31m+   - Strong sandbox images are selected only from a digest-pinned built-in allowlist.[39m
+[31m+   - Normal sandbox execution uses --pull=never and never downloads an image.[39m
+[31m+   - Operators must preinstall the exact digest before enabling strong container execution.[39m
+[31m+   - The first executable strong-container slice supports JavaScript only; other ecosystems fail closed.[39m
+[31m+   - Strong container execution is disabled until SYMBOLWRIGHT_ENABLE_STRONG_CONTAINER_EXECUTION=true.[39m
+[31m+   - Guarded-host runners are trusted local host break-glass only; HTTP and agent-tool execution reject them.[39m
+[31m+   - Runtime discovery uses bounded version probes only; it does not execute repository code or install dependencies.[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-doctor.spec.ts:[2m67:22[22m[39m
+    [90m 65|[39m     [35mconst[39m rendered [33m=[39m [34mrenderSandboxDoctorReport[39m(report)
+    [90m 66|[39m     [34mexpect[39m(rendered)[33m.[39m[34mtoContain[39m([32m'Mode: READ-ONLY'[39m)
+    [90m 67|[39m     [34mexpect[39m(rendered)[33m.[39m[34mtoContain[39m([32m'Execution enabled: false'[39m)
+    [90m   |[39m                      [31m^[39m
+    [90m 68|[39m     [34mexpect[39m(rendered)[33m.[39m[34mtoContain[39m([32m'Guarded-host opt-in: false'[39m)
+    [90m 69|[39m     [34mexpect[39m(rendered)[33m.[39m[34mtoContain[39m([32m'docker pull node:22-bookworm-slim'[39m)
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/21]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-image-commands.spec.ts[2m > [22msandbox image command contracts[2m > [22minspects only built-in allowlisted image IDs
+[31m[1mAssertionError[22m: expected 'Unknown sandbox image id: python-3-12…' to contain 'SymbolWright Sandbox Image Inspection'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- SymbolWright Sandbox Image Inspection[39m
+[31m+ Unknown sandbox image id: python-3-12-slim[39m
+[31m+[39m
+[31m+ Allowed image IDs: node-26-alpine-pinned[39m
+[31m+ Browser and CLI requests may not supply arbitrary container image names.[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-image-commands.spec.ts:[2m41:22[22m[39m
+    [90m 39|[39m     const rendered = await renderSandboxImageInspectCommand(['python-3…
+    [90m 40|[39m
+    [90m 41|[39m     [34mexpect[39m(rendered)[33m.[39m[34mtoContain[39m([32m'SymbolWright Sandbox Image Inspection'[39m)
+    [90m   |[39m                      [31m^[39m
+    [90m 42|[39m     [34mexpect[39m(rendered)[33m.[39m[34mtoContain[39m([32m'Image ID: python-3-12-slim'[39m)
+    [90m 43|[39m     [34mexpect[39m(rendered)[33m.[39m[34mtoContain[39m([32m'Image: python:3.12-slim'[39m)
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/21]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-image-commands.spec.ts[2m > [22msandbox image command contracts[2m > [22mrenders a review-only preparation plan when an engine is detected
+[31m[1mAssertionError[22m: expected 'Unknown sandbox image id: golang-1-23…' to contain 'SymbolWright Sandbox Image Preparatio…'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- SymbolWright Sandbox Image Preparation Plan[39m
+[31m+ Unknown sandbox image id: golang-1-23-bookworm[39m
+[31m+[39m
+[31m+ Allowed image IDs: node-26-alpine-pinned[39m
+[31m+ Browser and CLI requests may not supply arbitrary container image names.[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-image-commands.spec.ts:[2m70:22[22m[39m
+    [90m 68|[39m     )
+    [90m 69|[39m
+    [90m 70|[39m     expect(rendered).toContain('SymbolWright Sandbox Image Preparation…
+    [90m   |[39m                      [31m^[39m
+    [90m 71|[39m     [34mexpect[39m(rendered)[33m.[39m[34mtoContain[39m([32m'Status: REVIEW_REQUIRED'[39m)
+    [90m 72|[39m     expect(rendered).toContain('prepare this allowlisted image manuall…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/21]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-image-commands.spec.ts[2m > [22msandbox image command contracts[2m > [22mblocks preparation when no container engine is detected
+[31m[1mAssertionError[22m: expected 'Unknown sandbox image id: rust-1-book…' to contain 'Status: BLOCKED'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Status: BLOCKED[39m
+[31m+ Unknown sandbox image id: rust-1-bookworm[39m
+[31m+[39m
+[31m+ Allowed image IDs: node-26-alpine-pinned[39m
+[31m+ Browser and CLI requests may not supply arbitrary container image names.[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-image-commands.spec.ts:[2m81:22[22m[39m
+    [90m 79|[39m     })
+    [90m 80|[39m
+    [90m 81|[39m     [34mexpect[39m(rendered)[33m.[39m[34mtoContain[39m([32m'Status: BLOCKED'[39m)
+    [90m   |[39m                      [31m^[39m
+    [90m 82|[39m     [34mexpect[39m(rendered)[33m.[39m[34mtoContain[39m([32m'No usable container engine is enabled'[39m)
+    [90m 83|[39m   })
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/21]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-images.spec.ts[2m > [22msandbox container image policy[2m > [22mdefines an explicit disabled image allowlist and rejects arbitrary image ids
+[31m[1mAssertionError[22m: expected false to be true // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-images.spec.ts:[2m20:71[22m[39m
+    [90m 18|[39m     [34mexpect[39m(policy[33m.[39mimages[33m.[39mlength)[33m.[39m[34mtoBeGreaterThan[39m([34m0[39m)
+    [90m 19|[39m     expect(policy.images.every((image) => image.enabled === false)).to…
+    [90m 20|[39m     expect(policy.images.every((image) => image.installed === false)).…
+    [90m   |[39m                                                                       [31m^[39m
+    [90m 21|[39m     expect(policy.images.map((image) => image.id)).toContain('python-3…
+    [90m 22|[39m     expect(isAllowedSandboxImageId(policy.images, 'python-3-12-slim'))…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/21]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-images.spec.ts[2m > [22msandbox container image policy[2m > [22mreports detected container engines without enabling execution
+[31m[1mAssertionError[22m: expected 'Strong sandbox images are selected on…' to contain 'does not execute containers'[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- does not execute containers[39m
+[31m+ Strong sandbox images are selected only from a digest-pinned built-in allowlist.[39m
+[31m+ Normal sandbox execution uses --pull=never and never downloads an image.[39m
+[31m+ Operators must preinstall the exact digest before enabling strong container execution.[39m
+[31m+ The first executable strong-container slice supports JavaScript only; other ecosystems fail closed.[39m
+[31m+ Strong container execution is disabled until SYMBOLWRIGHT_ENABLE_STRONG_CONTAINER_EXECUTION=true.[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-images.spec.ts:[2m45:40[22m[39m
+    [90m 43|[39m     [34mexpect[39m(policy[33m.[39mengine[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'available'[39m)
+    [90m 44|[39m     [34mexpect[39m(policy[33m.[39mengine[33m.[39mversion)[33m.[39m[34mtoBe[39m([32m'27.0.0'[39m)
+    [90m 45|[39m     expect(policy.warnings.join('\n')).toContain('does not execute con…
+    [90m   |[39m                                        [31m^[39m
+    [90m 46|[39m     expect(policy.images.every((image) => image.enabled === false)).to…
+    [90m 47|[39m   })
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/21]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-registry.spec.ts[2m > [22msandbox runtime inventory[2m > [22mexposes one digest-pinned image without enabling execution by default
+[31m[1mAssertionError[22m: expected 'available' to be 'unavailable' // Object.is equality[39m
+
+Expected: [32m"[7mun[27mavailable"[39m
+Received: [31m"available"[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-registry.spec.ts:[2m58:41[22m[39m
+    [90m 56|[39m       (candidate) => candidate.id === STRONG_SANDBOX_JAVASCRIPT_RUNNER…
+    [90m 57|[39m     )
+    [90m 58|[39m     [34mexpect[39m(runner[33m?.[39mavailability[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'unavailable'[39m)
+    [90m   |[39m                                         [31m^[39m
+    [90m 59|[39m     expect(runner?.availability.reason).toContain('disabled by operato…
+    [90m 60|[39m     [34mexpect[39m(inventory[33m.[39mwarnings[33m.[39m[34mjoin[39m([32m'\n'[39m))[33m.[39m[34mtoContain[39m([32m'digest-pinned'[39m)
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/21]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/server/symbolwright-chat-server-sandbox.spec.ts[2m > [22msymbolwright chat server sandbox routes[2m > [22mpersists policy-controlled execution history through the real server route
+[31m[1mAssertionError[22m: expected 'internal-error' to be 'policy-blocked' // Object.is equality[39m
+
+Expected: [32m"policy-blocked"[39m
+Received: [31m"internal-error"[39m
+
+[36m [2m❯[22m src/server/symbolwright-chat-server-sandbox.spec.ts:[2m110:36[22m[39m
+    [90m108|[39m       result: { executionId: string; status: string; evidence: { input…
+    [90m109|[39m     }
+    [90m110|[39m     [34mexpect[39m(executed[33m.[39mresult[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'policy-blocked'[39m)
+    [90m   |[39m                                    [31m^[39m
+    [90m111|[39m     expect(executed.result.evidence.inputHash).toMatch(/^[a-f0-9]{64}$…
+    [90m112|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/21]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/server/symbolwright-chat-server-sandbox.spec.ts[2m > [22msymbolwright chat server sandbox routes[2m > [22mrecords mission evidence through the wired sandbox route
+[31m[1mAssertionError[22m: expected false to be true // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+[36m [2m❯[22m src/server/symbolwright-chat-server-sandbox.spec.ts:[2m149:85[22m[39m
+    [90m147|[39m     [34mexpect[39m(events[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m200[39m)
+    [90m148|[39m     const body = (await events.json()) as { events: readonly { type: s…
+    [90m149|[39m     expect(body.events.some((event) => event.type === 'sandbox.executi…
+    [90m   |[39m                                                                                     [31m^[39m
+    [90m150|[39m   })
+    [90m151|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/21]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/app/api/sandbox-routes.spec.ts[2m > [22msandbox API route handler[2m > [22mlists only explicit sandbox image allowlist entries
+[31m[1mAssertionError[22m: expected [ 'node-26-alpine-pinned' ] to include 'python-3-12-slim'[39m
+[36m [2m❯[22m src/app/api/sandbox-routes.spec.ts:[2m134:50[22m[39m
+    [90m132|[39m       images: readonly { id: string; image: string; enabled: boolean; …
+    [90m133|[39m     }[33m>[39m()
+    [90m134|[39m     expect(body.images.map((image) => image.id)).toContain('python-3-1…
+    [90m   |[39m                                                  [31m^[39m
+    [90m135|[39m     expect(body.images.every((image) => image.enabled === false)).toBe…
+    [90m136|[39m     expect(body.images.some((image) => image.image === 'evil/random:la…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/21]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m12 failed[39m[22m[2m | [22m[1m[32m531 passed[39m[22m[2m | [22m[33m1 skipped[39m[90m (544)[39m
+[2m      Tests [22m [1m[31m21 failed[39m[22m[2m | [22m[1m[32m4042 passed[39m[22m[2m | [22m[33m6 skipped[39m[90m (4069)[39m
+[2m   Start at [22m 17:16:22
+[2m   Duration [22m 101.42s[2m (transform 9.10s, setup 0ms, import 38.53s, tests 147.88s, environment 81ms)[22m
+
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/cli-bin.spec.ts,title=src/cli-bin.spec.ts > symbolwright bin sandbox routing > routes top-level sandbox doctor through the sandbox renderer,line=26,column=22::AssertionError: expected 'SymbolWright Sandbox Doctor\n\nBlock:…' to contain 'Execution enabled: false'%0A%0A- Expected%0A+ Received%0A%0A- Execution enabled: false%0A+ SymbolWright Sandbox Doctor%0A+%0A+ Block: SYMBOLWRIGHT-SANDBOX-DOCTOR-01%0A+ Generated: 2026-07-21T00:00:00.000Z%0A+ Mode: READ-ONLY DIAGNOSTIC%0A+ Strong container execution ready: true%0A+ Strong-container opt-in: false%0A+ Guarded-host opt-in: false%0A+%0A+ Container engine:%0A+   docker: available version=27.0.0%0A+   docker is available for digest-verified, pull-never strong sandbox execution.%0A+%0A+ Runtime inventory:%0A+   - container-javascript-node26: available version=27.0.0; container-isolated/container; network=disabled — Strong container execution is disabled by operator policy.%0A+   - browser-javascript: available; browser-isolated/browser; network=disabled%0A+   - html-preview: available; browser-isolated/browser; network=disabled%0A+   - browser-sqljs: available; browser-isolated/browser; network=disabled%0A+   - browser-pyodide: available; browser-isolated/browser; network=disabled%0A+   - guarded-host-javascript: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-typescript: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-python: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-go: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-rust: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-java: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-ruby: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-php: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-c: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-cpp: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-r: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+%0A+ Image allowlist:%0A+   - node-26-alpine-pinned: node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66; digest=sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66; enabled=false; installed=false; languages=javascript; prepare=docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66%0A+%0A+ Operator-reviewed preparation commands:%0A+   - docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66%0A+%0A+ Warnings:%0A+   - Sandbox doctor is read-only: it does not run repository code, pull images, install dependencies, or execute containers.%0A+   - Image preparation commands are operator-reviewed hints only and are never run automatically.%0A+   - Strong sandbox images are selected only from a digest-pinned built-in allowlist.%0A+   - Normal sandbox execution uses --pull=never and never downloads an image.%0A+   - Operators must preinstall the exact digest before enabling strong container execution.%0A+   - The first executable strong-container slice supports JavaScript only; other ecosystems fail closed.%0A+   - Strong container execution is disabled until SYMBOLWRIGHT_ENABLE_STRONG_CONTAINER_EXECUTION=true.%0A+   - Guarded-host runners are trusted local host break-glass only; HTTP and agent-tool execution reject them.%0A+   - Runtime discovery uses bounded version probes only; it does not execute repository code or install dependencies.%0A%0A ❯ src/cli-bin.spec.ts:26:22%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/cli-bin.spec.ts,title=src/cli-bin.spec.ts > symbolwright bin sandbox routing > routes top-level sandbox image inspection without enabling execution,line=35,column=22::AssertionError: expected 'Unknown sandbox image id: node-22-boo…' to contain 'SymbolWright Sandbox Image Inspection'%0A%0A- Expected%0A+ Received%0A%0A- SymbolWright Sandbox Image Inspection%0A+ Unknown sandbox image id: node-22-bookworm-slim%0A+%0A+ Allowed image IDs: node-26-alpine-pinned%0A+ Browser and CLI requests may not supply arbitrary container image names.%0A%0A ❯ src/cli-bin.spec.ts:35:22%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/cli-release-readiness.spec.ts,title=src/cli-release-readiness.spec.ts > assessReleaseReadiness > passes all gates for valid workspace,line=22,column=28::AssertionError: expected 'RELEASE_BLOCKED' to be 'RELEASE_READY' // Object.is equality%0A%0AExpected: "RELEASE_READY"%0AReceived: "RELEASE_BLOCKED"%0A%0A ❯ src/cli-release-readiness.spec.ts:22:28%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/cli-release-readiness.spec.ts,title=src/cli-release-readiness.spec.ts > assessReleaseReadiness > passes the source-of-truth release proof gates,line=74,column=49::AssertionError: expected 'FAIL' to be 'PASS' // Object.is equality%0A%0AExpected: "PASS"%0AReceived: "FAIL"%0A%0A ❯ src/cli-release-readiness.spec.ts:74:49%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/cli-release-readiness.spec.ts,title=src/cli-release-readiness.spec.ts > renderReleaseReadinessReport > renders ready report,line=85,column=20::AssertionError: expected 'SymbolWright Release Readiness\n\nBlo…' to contain 'Outcome: RELEASE_READY'%0A%0A- Expected%0A+ Received%0A%0A- Outcome: RELEASE_READY%0A+ SymbolWright Release Readiness%0A+%0A+ Block: SYMBOLWRIGHT-RELEASE-01%0A+ Outcome: RELEASE_BLOCKED%0A+%0A+ Release gates:%0A+   [PASS] PHASES_COMPLETE: 20/20 runtime phases complete%0A+   [PASS] DOCTOR_HEALTHY: All 12 checks passed%0A+   [PASS] PACKAGE_VERSION: v0.2.0%0A+   [PASS] CHANGELOG_CURRENT: CHANGELOG.md contains v0.2.0 entry%0A+   [PASS] ENTRY_POINT: src/index.ts present%0A+   [PASS] INDEX_EXPORTS: 78 export statement(s)%0A+   [PASS] CLI_ENTRY: src/cli.ts present%0A+   [PASS] DOCKERFILE: Dockerfile present%0A+   [PASS] PUBLIC_API_CONTRACT: Package root and universal API exports resolve to dist entry points%0A+   [PASS] PACKAGE_BIN_CONTRACT: Package binaries map to built CLI entry points with source parity%0A+   [PASS] PACKAGE_LOCK_CONTRACT: Package install plan root metadata matches package.json%0A+   [PASS] UNIVERSAL_API_GATEWAY_CONTRACT: Universal API, provider adapter, browser workspace, and docs contracts are present and ready%0A+   [PASS] RUNTIME_MODE_TRUTH: Runtime policy, prompt, README, and governance docs agree on direct APPROVED_EXECUTION behavior%0A+   [PASS] VALIDATE_SCRIPT: npm run validate covers audit, typecheck, lint, format, coverage, build, and release-readiness%0A+   [FAIL] WORKFLOW_RELEASE_PROOF: .github/workflows/ci.yml missing npm run validate release proof gate%0A+   [PASS] BUILD_LEDGER_CONSISTENT: README and runtime build docs match the runtime build ledger%0A+   [PASS] NPM_PACK_SMOKE: Deferred by library caller; release-readiness CLI runs the real gate.%0A+   [PASS] DOCKER_RUNTIME_SMOKE: Deferred by library caller; release-readiness CLI runs the real gate.%0A+%0A+ Summary: 17 passed, 1 failed%0A+%0A+ Blockers:%0A+   - WORKFLOW_RELEASE_PROOF: .github/workflows/ci.yml missing npm run validate release proof gate%0A%0A ❯ src/cli-release-readiness.spec.ts:85:20%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/cli-sandbox.spec.ts,title=src/cli-sandbox.spec.ts > sandbox CLI renderer > renders sandbox doctor diagnostics by default,line=39,column=22::AssertionError: expected 'SymbolWright Sandbox Doctor\n\nBlock:…' to contain 'Execution enabled: false'%0A%0A- Expected%0A+ Received%0A%0A- Execution enabled: false%0A+ SymbolWright Sandbox Doctor%0A+%0A+ Block: SYMBOLWRIGHT-SANDBOX-DOCTOR-01%0A+ Generated: 2026-07-21T00:00:00.000Z%0A+ Mode: READ-ONLY DIAGNOSTIC%0A+ Strong container execution ready: true%0A+ Strong-container opt-in: false%0A+ Guarded-host opt-in: false%0A+%0A+ Container engine:%0A+   docker: available version=27.0.0%0A+   docker is available for digest-verified, pull-never strong sandbox execution.%0A+%0A+ Runtime inventory:%0A+   - container-javascript-node26: available version=27.0.0; container-isolated/container; network=disabled — Strong container execution is disabled by operator policy.%0A+   - browser-javascript: available; browser-isolated/browser; network=disabled%0A+   - html-preview: available; browser-isolated/browser; network=disabled%0A+   - browser-sqljs: available; browser-isolated/browser; network=disabled%0A+   - browser-pyodide: available; browser-isolated/browser; network=disabled%0A+   - guarded-host-javascript: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-typescript: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-python: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-go: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-rust: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-java: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-ruby: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-php: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-c: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-cpp: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-r: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+%0A+ Image allowlist:%0A+   - node-26-alpine-pinned: node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66; digest=sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66; enabled=false; installed=false; languages=javascript; prepare=docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66%0A+%0A+ Operator-reviewed preparation commands:%0A+   - docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66%0A+%0A+ Warnings:%0A+   - Sandbox doctor is read-only: it does not run repository code, pull images, install dependencies, or execute containers.%0A+   - Image preparation commands are operator-reviewed hints only and are never run automatically.%0A+   - Strong sandbox images are selected only from a digest-pinned built-in allowlist.%0A+   - Normal sandbox execution uses --pull=never and never downloads an image.%0A+   - Operators must preinstall the exact digest before enabling strong container execution.%0A+   - The first executable strong-container slice supports JavaScript only; other ecosystems fail closed.%0A+   - Strong container execution is disabled until SYMBOLWRIGHT_ENABLE_STRONG_CONTAINER_EXECUTION=true.%0A+   - Guarded-host runners are trusted local host break-glass only; HTTP and agent-tool execution reject them.%0A+   - Runtime discovery uses bounded version probes only; it does not execute repository code or install dependencies.%0A%0A ❯ src/cli-sandbox.spec.ts:39:22%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/cli-sandbox.spec.ts,title=src/cli-sandbox.spec.ts > sandbox CLI renderer > renders sandbox image inspection for allowlisted IDs only,line=52,column=22::AssertionError: expected 'Unknown sandbox image id: node-22-boo…' to contain 'SymbolWright Sandbox Image Inspection'%0A%0A- Expected%0A+ Received%0A%0A- SymbolWright Sandbox Image Inspection%0A+ Unknown sandbox image id: node-22-bookworm-slim%0A+%0A+ Allowed image IDs: node-26-alpine-pinned%0A+ Browser and CLI requests may not supply arbitrary container image names.%0A%0A ❯ src/cli-sandbox.spec.ts:52:22%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/release-workflow-contract.spec.ts,title=src/release-workflow-contract.spec.ts > release workflow proof gates > runs the shared validate gate in CI%2C deploy%2C and publish workflows,line=21,column=31::AssertionError: expected 'name: CI\n\non:\n  pull_request:\n\nc…' to contain 'npm run validate'%0A%0A- Expected%0A+ Received%0A%0A- npm run validate%0A+ name: CI%0A+%0A+ on:%0A+   pull_request:%0A+%0A+ concurrency:%0A+   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}%0A+   cancel-in-progress: true%0A+%0A+ permissions:%0A+   contents: write%0A+%0A+ jobs:%0A+   validate:%0A+     name: Validate SymbolWright%0A+     runs-on: ubuntu-24.04%0A+     steps:%0A+       - name: Checkout repository%0A+         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1%0A+         with:%0A+           ref: ${{ github.head_ref }}%0A+           fetch-depth: 0%0A+       - name: Setup Node.js 22%0A+         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0%0A+         with:%0A+           node-version: 22%0A+           cache: npm%0A+       - run: npm ci%0A+       - name: Capture full coverage tail%0A+         env:%0A+           HEAD_BRANCH: ${{ github.head_ref }}%0A+         run: |%0A+           set +e%0A+           npm run test:coverage > /tmp/sandbox-pr3-coverage.log 2>&1%0A+           status=$?%0A+           set -e%0A+           {%0A+             echo "coverage_exit_status=$status"%0A+             echo%0A+             tail -n 300 /tmp/sandbox-pr3-coverage.log%0A+           } > sandbox-pr3-coverage-diagnostic.txt%0A+           git config user.name "github-actions[bot]"%0A+           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"%0A+           git add sandbox-pr3-coverage-diagnostic.txt%0A+           git commit -m "chore(sandbox): capture PR3 full-coverage diagnostic"%0A+           git push origin "HEAD:${HEAD_BRANCH}"%0A+           exit "$status"%0A+%0A%0A ❯ src/release-workflow-contract.spec.ts:21:31%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/sandbox/sandbox-completion-coverage.spec.ts,title=src/sandbox/sandbox-completion-coverage.spec.ts > sandbox completion coverage > covers service cancellation and unwired backend result branches,line=190,column=42::AssertionError: expected 'The selected container runner has no …' to contain 'No executable backend'%0A%0AExpected: "No executable backend"%0AReceived: "The selected container runner has no matching immutable image configuration."%0A%0A ❯ src/sandbox/sandbox-completion-coverage.spec.ts:190:42%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/sandbox/sandbox-container-policy.spec.ts,title=src/sandbox/sandbox-container-policy.spec.ts > sandbox container policy skeleton > builds a blocked plan for allowlisted images until a backend enforces the policy,line=53,column=32::AssertionError: expected 2 to be 1 // Object.is equality%0A%0A- Expected%0A+ Received%0A%0A- 1%0A+ 2%0A%0A ❯ src/sandbox/sandbox-container-policy.spec.ts:53:32%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/sandbox/sandbox-doctor.spec.ts,title=src/sandbox/sandbox-doctor.spec.ts > sandbox doctor > builds a read-only report without enabling execution or pulling images,line=47,column=37::AssertionError: expected true to be false // Object.is equality%0A%0A- Expected%0A+ Received%0A%0A- false%0A+ true%0A%0A ❯ src/sandbox/sandbox-doctor.spec.ts:47:37%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/sandbox/sandbox-doctor.spec.ts,title=src/sandbox/sandbox-doctor.spec.ts > sandbox doctor > renders operator-reviewed diagnostics and image commands honestly,line=67,column=22::AssertionError: expected 'SymbolWright Sandbox Doctor\n\nBlock:…' to contain 'Execution enabled: false'%0A%0A- Expected%0A+ Received%0A%0A- Execution enabled: false%0A+ SymbolWright Sandbox Doctor%0A+%0A+ Block: SYMBOLWRIGHT-SANDBOX-DOCTOR-01%0A+ Generated: 2026-07-21T00:00:00.000Z%0A+ Mode: READ-ONLY DIAGNOSTIC%0A+ Strong container execution ready: true%0A+ Strong-container opt-in: false%0A+ Guarded-host opt-in: false%0A+%0A+ Container engine:%0A+   docker: available version=27.0.0%0A+   docker is available for digest-verified, pull-never strong sandbox execution.%0A+%0A+ Runtime inventory:%0A+   - container-javascript-node26: available version=27.0.0; container-isolated/container; network=disabled — Strong container execution is disabled by operator policy.%0A+   - browser-javascript: available; browser-isolated/browser; network=disabled%0A+   - html-preview: available; browser-isolated/browser; network=disabled%0A+   - browser-sqljs: available; browser-isolated/browser; network=disabled%0A+   - browser-pyodide: available; browser-isolated/browser; network=disabled%0A+   - guarded-host-javascript: unavailable version=22.0.0; guarded-host/guarded-host; network=disabled — node was detected, but trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-typescript: unavailable version=22.0.0; guarded-host/guarded-host; network=disabled — node was detected, but trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-python: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default. Discovery: python3 was not found on PATH.%0A+   - guarded-host-go: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-rust: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-java: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-ruby: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-php: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-c: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-cpp: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+   - guarded-host-r: unavailable; guarded-host/guarded-host; network=disabled — Trusted local host break-glass execution is disabled by default.%0A+%0A+ Image allowlist:%0A+   - node-26-alpine-pinned: node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66; digest=sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66; enabled=false; installed=false; languages=javascript; prepare=docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66%0A+%0A+ Operator-reviewed preparation commands:%0A+   - docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66%0A+%0A+ Warnings:%0A+   - Sandbox doctor is read-only: it does not run repository code, pull images, install dependencies, or execute containers.%0A+   - Image preparation commands are operator-reviewed hints only and are never run automatically.%0A+   - Strong sandbox images are selected only from a digest-pinned built-in allowlist.%0A+   - Normal sandbox execution uses --pull=never and never downloads an image.%0A+   - Operators must preinstall the exact digest before enabling strong container execution.%0A+   - The first executable strong-container slice supports JavaScript only; other ecosystems fail closed.%0A+   - Strong container execution is disabled until SYMBOLWRIGHT_ENABLE_STRONG_CONTAINER_EXECUTION=true.%0A+   - Guarded-host runners are trusted local host break-glass only; HTTP and agent-tool execution reject them.%0A+   - Runtime discovery uses bounded version probes only; it does not execute repository code or install dependencies.%0A%0A ❯ src/sandbox/sandbox-doctor.spec.ts:67:22%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/sandbox/sandbox-image-commands.spec.ts,title=src/sandbox/sandbox-image-commands.spec.ts > sandbox image command contracts > inspects only built-in allowlisted image IDs,line=41,column=22::AssertionError: expected 'Unknown sandbox image id: python-3-12…' to contain 'SymbolWright Sandbox Image Inspection'%0A%0A- Expected%0A+ Received%0A%0A- SymbolWright Sandbox Image Inspection%0A+ Unknown sandbox image id: python-3-12-slim%0A+%0A+ Allowed image IDs: node-26-alpine-pinned%0A+ Browser and CLI requests may not supply arbitrary container image names.%0A%0A ❯ src/sandbox/sandbox-image-commands.spec.ts:41:22%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/sandbox/sandbox-image-commands.spec.ts,title=src/sandbox/sandbox-image-commands.spec.ts > sandbox image command contracts > renders a review-only preparation plan when an engine is detected,line=70,column=22::AssertionError: expected 'Unknown sandbox image id: golang-1-23…' to contain 'SymbolWright Sandbox Image Preparatio…'%0A%0A- Expected%0A+ Received%0A%0A- SymbolWright Sandbox Image Preparation Plan%0A+ Unknown sandbox image id: golang-1-23-bookworm%0A+%0A+ Allowed image IDs: node-26-alpine-pinned%0A+ Browser and CLI requests may not supply arbitrary container image names.%0A%0A ❯ src/sandbox/sandbox-image-commands.spec.ts:70:22%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/sandbox/sandbox-image-commands.spec.ts,title=src/sandbox/sandbox-image-commands.spec.ts > sandbox image command contracts > blocks preparation when no container engine is detected,line=81,column=22::AssertionError: expected 'Unknown sandbox image id: rust-1-book…' to contain 'Status: BLOCKED'%0A%0A- Expected%0A+ Received%0A%0A- Status: BLOCKED%0A+ Unknown sandbox image id: rust-1-bookworm%0A+%0A+ Allowed image IDs: node-26-alpine-pinned%0A+ Browser and CLI requests may not supply arbitrary container image names.%0A%0A ❯ src/sandbox/sandbox-image-commands.spec.ts:81:22%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/sandbox/sandbox-images.spec.ts,title=src/sandbox/sandbox-images.spec.ts > sandbox container image policy > defines an explicit disabled image allowlist and rejects arbitrary image ids,line=20,column=71::AssertionError: expected false to be true // Object.is equality%0A%0A- Expected%0A+ Received%0A%0A- true%0A+ false%0A%0A ❯ src/sandbox/sandbox-images.spec.ts:20:71%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/sandbox/sandbox-images.spec.ts,title=src/sandbox/sandbox-images.spec.ts > sandbox container image policy > reports detected container engines without enabling execution,line=45,column=40::AssertionError: expected 'Strong sandbox images are selected on…' to contain 'does not execute containers'%0A%0A- Expected%0A+ Received%0A%0A- does not execute containers%0A+ Strong sandbox images are selected only from a digest-pinned built-in allowlist.%0A+ Normal sandbox execution uses --pull=never and never downloads an image.%0A+ Operators must preinstall the exact digest before enabling strong container execution.%0A+ The first executable strong-container slice supports JavaScript only; other ecosystems fail closed.%0A+ Strong container execution is disabled until SYMBOLWRIGHT_ENABLE_STRONG_CONTAINER_EXECUTION=true.%0A%0A ❯ src/sandbox/sandbox-images.spec.ts:45:40%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/sandbox/sandbox-registry.spec.ts,title=src/sandbox/sandbox-registry.spec.ts > sandbox runtime inventory > exposes one digest-pinned image without enabling execution by default,line=58,column=41::AssertionError: expected 'available' to be 'unavailable' // Object.is equality%0A%0AExpected: "unavailable"%0AReceived: "available"%0A%0A ❯ src/sandbox/sandbox-registry.spec.ts:58:41%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/server/symbolwright-chat-server-sandbox.spec.ts,title=src/server/symbolwright-chat-server-sandbox.spec.ts > symbolwright chat server sandbox routes > persists policy-controlled execution history through the real server route,line=110,column=36::AssertionError: expected 'internal-error' to be 'policy-blocked' // Object.is equality%0A%0AExpected: "policy-blocked"%0AReceived: "internal-error"%0A%0A ❯ src/server/symbolwright-chat-server-sandbox.spec.ts:110:36%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/server/symbolwright-chat-server-sandbox.spec.ts,title=src/server/symbolwright-chat-server-sandbox.spec.ts > symbolwright chat server sandbox routes > records mission evidence through the wired sandbox route,line=149,column=85::AssertionError: expected false to be true // Object.is equality%0A%0A- Expected%0A+ Received%0A%0A- true%0A+ false%0A%0A ❯ src/server/symbolwright-chat-server-sandbox.spec.ts:149:85%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/app/api/sandbox-routes.spec.ts,title=src/app/api/sandbox-routes.spec.ts > sandbox API route handler > lists only explicit sandbox image allowlist entries,line=134,column=50::AssertionError: expected [ 'node-26-alpine-pinned' ] to include 'python-3-12-slim'%0A ❯ src/app/api/sandbox-routes.spec.ts:134:50%0A%0A
