@@ -1,20 +1,23 @@
 from pathlib import Path
-import json
 import re
 import subprocess
 import sys
 
 
-def run(args: list[str], *, stdout=None, stderr=None) -> int:
-    return subprocess.run(args, check=False, stdout=stdout, stderr=stderr).returncode
+def run(args: list[str], *, quiet: bool = False) -> None:
+    result = subprocess.run(
+        args,
+        check=False,
+        stdout=subprocess.DEVNULL if quiet else None,
+        stderr=subprocess.DEVNULL if quiet else None,
+    )
+    if result.returncode != 0:
+        raise SystemExit(f"Command failed ({result.returncode}): {' '.join(args)}")
 
 
-if run(['npm', 'ci', '--silent']) != 0:
-    raise SystemExit('npm ci failed')
-if run(['python3', 'scripts/.pr6-preprocess.py']) != 0:
-    raise SystemExit('preprocess failed')
-if run(['python3', 'scripts/.pr6-apply.py']) != 0:
-    raise SystemExit('apply failed')
+run(['npm', 'ci', '--silent'], quiet=True)
+run(['python3', 'scripts/.pr6-preprocess.py'], quiet=True)
+run(['python3', 'scripts/.pr6-apply.py'], quiet=True)
 
 test_path = Path('src/autonomy/autonomous-budget-governance.spec.ts')
 test_text = test_path.read_text()
@@ -28,7 +31,22 @@ new_input = """        repositoryPath: workspaceRoot,
 """
 if old_input not in test_text:
     raise SystemExit('Generated mission input anchor missing')
-test_path.write_text(test_text.replace(old_input, new_input, 1))
+test_text = test_text.replace(old_input, new_input, 1)
+test_text = test_text.replace(
+    "import { mkdtempSync, rmSync } from 'node:fs'",
+    "import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'",
+    1,
+)
+source_anchor = """    roots.push(workspaceRoot)
+    const missionService = new MissionService({ workspaceRoot, env: {} })
+"""
+source_replacement = """    roots.push(workspaceRoot)
+    writeFileSync(path.join(workspaceRoot, 'index.ts'), 'export const budgetFixture = true\\n')
+    const missionService = new MissionService({ workspaceRoot, env: {} })
+"""
+if source_anchor not in test_text:
+    raise SystemExit('Generated repository fixture anchor missing')
+test_path.write_text(test_text.replace(source_anchor, source_replacement, 1))
 
 changelog_path = Path('scripts/lib/changelog-release.mjs')
 changelog_text = changelog_path.read_text()
@@ -55,50 +73,14 @@ if count != 1:
     raise SystemExit('extractReleaseNotes function anchor missing')
 changelog_path.write_text(changelog_text)
 
-format_paths = [
-    'src/autonomy/autonomous-budget-governance.spec.ts',
-    'src/autonomy/autonomous-mission-coordinator.ts',
-    'src/autonomy/autonomous-mission-runtime.ts',
-    'src/autonomy/server-autonomy-runtime.ts',
-    'src/orchestration/orchestration-money.spec.ts',
-    'src/orchestration/orchestration-store.ts',
-    'src/orchestration/orchestration-types.ts',
-    'src/orchestration/team-service.ts',
-    'src/app/api/mission-routes.ts',
-    'src/server/symbolwright-chat-server.ts',
-    'src/cli-release-readiness.ts',
-    'src/cli-release-readiness.spec.ts',
-    'src/release/artifact-smoke.ts',
-]
-with open('/tmp/prettier.log', 'w') as sink:
-    if run(['npx', 'prettier', '--write', *format_paths], stdout=sink, stderr=sink) != 0:
-        print(Path('/tmp/prettier.log').read_text())
-        raise SystemExit('prettier failed')
+run(['npm', 'install', '--package-lock-only', '--ignore-scripts', '--silent'], quiet=True)
+run(['npm', 'run', 'build', '--silent'], quiet=True)
 
-with open('/tmp/vitest.log', 'w') as sink:
-    status = run(
-        ['npx', 'vitest', 'run', '--reporter=json', '--outputFile=/tmp/vitest.json'],
-        stdout=sink,
-        stderr=sink,
-    )
-
-result_path = Path('/tmp/vitest.json')
-if not result_path.exists():
-    print(Path('/tmp/vitest.log').read_text()[-12000:])
-    raise SystemExit(status)
-
-data = json.loads(result_path.read_text())
-print(f"failed suites={data.get('numFailedTestSuites')} failed tests={data.get('numFailedTests')}")
-for suite in data.get('testResults', []):
-    if suite.get('status') != 'failed':
-        continue
-    print(f"FILE: {suite.get('name')}")
-    if suite.get('message'):
-        print(suite['message'])
-    for assertion in suite.get('assertionResults', []):
-        if assertion.get('status') == 'failed':
-            print(f"TEST: {assertion.get('fullName') or assertion.get('title')}")
-            for message in assertion.get('failureMessages', []):
-                print(message)
-
-sys.exit(status)
+script = """
+const { runNpmPackSmoke } = require('./dist/release/artifact-smoke.js')
+const result = runNpmPackSmoke(process.cwd())
+console.log(JSON.stringify(result, null, 2))
+if (result.status !== 'PASS') process.exit(1)
+"""
+result = subprocess.run(['node', '-e', script], check=False)
+sys.exit(result.returncode)
