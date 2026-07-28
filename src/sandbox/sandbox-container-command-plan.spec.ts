@@ -34,9 +34,10 @@ function planWith(overrides: Partial<Parameters<typeof buildSandboxContainerComm
 }
 
 describe('sandbox container command planner', () => {
-  it('builds executable create/copy/exec phases with mandatory isolation controls', () => {
+  it('builds executable create/stream/exec phases with mandatory isolation controls', () => {
     const plan = planWith()
     const create = plan.commands.create.join(' ')
+    const copyIn = plan.commands.copyIn.join(' ')
     const allCommands = Object.values(plan.commands).flat().join(' ')
 
     expect(plan.schemaVersion).toBe(2)
@@ -56,8 +57,6 @@ describe('sandbox container command planner', () => {
         '--pull=never',
         '--network',
         'none',
-        '--pid',
-        'private',
         '--ipc',
         'none',
         '--read-only',
@@ -80,7 +79,11 @@ describe('sandbox container command planner', () => {
       ]),
     )
     expect(create).toContain('/workspace:rw,nosuid,nodev,size=')
-    expect(plan.commands.copyIn.join(' ')).toContain('docker cp')
+    expect(create).not.toContain('--pid host')
+    expect(create).not.toContain('--pid container:')
+    expect(copyIn).toContain('docker exec -i')
+    expect(copyIn).toContain('--user 65532:65532')
+    expect(copyIn).toContain('node -e')
     expect(plan.commands.copyOut.join(' ')).toContain('docker cp')
     expect(plan.commands.execute).toContain('exec')
     expect(allCommands).not.toContain('--privileged')
