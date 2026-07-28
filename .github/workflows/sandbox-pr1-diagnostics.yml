@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  sandbox-route-regression:
+  full-coverage-diagnostics:
     if: github.head_ref == 'symbolwright/sandbox-pr1-guarded-host-containment'
     runs-on: ubuntu-24.04
     steps:
@@ -19,5 +19,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Run sandbox route regression only
-        run: npx vitest run src/app/api/sandbox-routes.spec.ts --reporter=verbose
+      - name: Run full coverage and print concise failure tail
+        shell: bash
+        run: |
+          set +e
+          npm run test:coverage > /tmp/sandbox-pr1-coverage.log 2>&1
+          status=$?
+          tail -n 220 /tmp/sandbox-pr1-coverage.log
+          exit "$status"
