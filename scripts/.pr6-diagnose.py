@@ -98,6 +98,11 @@ artifact_text = artifact_text.replace(
     "'-e', 'SYMBOLWRIGHT_CHAT_HOST=0.0.0.0', '-e', 'SYMBOLWRIGHT_CHAT_PORT=8787'",
     1,
 )
+artifact_text = artifact_text.replace(
+    "if (!commandExists('openssl')) throw new Error('openssl is required for hosted Docker smoke.')",
+    "if (spawnSync('openssl', ['version'], { stdio: 'ignore' }).status !== 0) throw new Error('openssl is required for hosted Docker smoke.')",
+    1,
+)
 old_cleanup = """    if (run('docker', ['inspect', '-f', '{{.State.ExitCode}}', name]) !== '0') throw new Error('Container exited non-zero after SIGTERM.')
   } finally {
 """
