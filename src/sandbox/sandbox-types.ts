@@ -20,6 +20,7 @@ export type SandboxBackendKind = (typeof SANDBOX_BACKEND_KINDS)[number]
 
 export type SandboxRuntimeAvailabilityStatus = 'available' | 'unavailable' | 'misconfigured'
 export type SandboxExecutionMode = 'run' | 'compile' | 'test'
+/** Legacy runner-level state. The authoritative broker uses the richer network-mode evidence below. */
 export type SandboxNetworkPolicy = 'disabled' | 'loopback-only' | 'allowlisted'
 export type SandboxDependencyState = 'ready' | 'missing' | 'blocked' | 'unsupported'
 
@@ -134,13 +135,42 @@ export interface SandboxArtifactReference {
   readonly sha256: string
 }
 
+export interface SandboxAuthorizationEvidence {
+  readonly deploymentMode: 'local' | 'hosted'
+  readonly callerKind: 'operator' | 'delegated-grant' | 'team-member' | 'system'
+  readonly capabilityId: string
+  readonly grantIdHash?: string
+  readonly principalIdHash?: string
+  readonly approvalIdHash?: string
+}
+
+export interface SandboxPolicyEvidence {
+  readonly id: string
+  readonly version: number
+  readonly fingerprint: string
+  readonly intent: 'offline-execution' | 'dependency-acquisition' | 'egress-execution'
+  readonly networkMode:
+    | 'disabled'
+    | 'dependency-broker-only'
+    | 'allowlisted-egress'
+    | 'unsupported'
+  readonly dependencyMode: 'disabled' | 'brokered' | 'unsupported'
+  readonly workspaceMode: 'managed-mission' | 'temporary-copy' | 'trusted-local-host'
+  readonly sourceVersions: Readonly<Record<string, number>>
+}
+
 export interface SandboxExecutionEvidence {
+  /** Added by the authoritative broker finalization boundary before persistence/API return. */
+  readonly schemaVersion?: 1
   readonly verificationLevel: VerificationLevel
   readonly inputHash: string
   readonly outputHash?: string
   readonly outputExcerpt?: string
   readonly policyDecision: 'allowed' | 'blocked'
   readonly policyReason?: string
+  readonly decisionCode?: string
+  readonly authorization?: SandboxAuthorizationEvidence
+  readonly policy?: SandboxPolicyEvidence
 }
 
 export interface SandboxExecutionResult {
