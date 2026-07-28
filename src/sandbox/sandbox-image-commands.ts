@@ -32,7 +32,7 @@ async function resolveImagePolicy(
       ? await discoverRuntimeCommands(DEFAULT_SANDBOX_DISCOVERY_PROBES, { env })
       : await discoveredAvailability
 
-  return buildSandboxImagePolicy(commandAvailability)
+  return buildSandboxImagePolicy(commandAvailability, env)
 }
 
 function renderImageIds(images: readonly SandboxImageDefinition[]): string {
