@@ -2,7 +2,10 @@ import path from 'node:path'
 
 import { buildSandboxContainerPolicyPlan } from './sandbox-container-policy.js'
 import type { SandboxContainerPolicyPlan } from './sandbox-container-policy.js'
-import { SANDBOX_CONTAINER_COPY_IN_SCRIPT } from './sandbox-container-transfer.js'
+import {
+  SANDBOX_CONTAINER_COPY_IN_SCRIPT,
+  SANDBOX_CONTAINER_COPY_OUT_SCRIPT,
+} from './sandbox-container-transfer.js'
 import type { SandboxContainerEngineStatus } from './sandbox-images.js'
 import type { SandboxImageDefinition, SandboxLimits } from './sandbox-types.js'
 
@@ -67,7 +70,7 @@ export function buildSandboxContainerCommandPlan(
   assertPinnedImage(options.image)
   assertSafeEntrypoint(options.entrypoint)
   assertSafeHostPath(options.hostWorkspacePath)
-  const hostOutputPath = assertSafeHostPath(options.hostOutputPath)
+  assertSafeHostPath(options.hostOutputPath)
   const containerName = assertSafeContainerName(options.containerName)
   const user = assertSafeUser(options.user ?? DEFAULT_NON_ROOT_USER)
   const policy = buildSandboxContainerPolicyPlan({
@@ -89,6 +92,18 @@ export function buildSandboxContainerCommandPlan(
   )
   const cpuCount = Math.max(0.01, (policy.limits.maxCpuPercent ?? 100) / 100)
   const image = options.image.image
+  const commonExec = [
+    '--user',
+    user,
+    '--workdir',
+    SAFE_CONTAINER_PATH,
+    '--env',
+    'HOME=/tmp',
+    '--env',
+    'TMPDIR=/tmp',
+    '--env',
+    `PATH=${MINIMAL_CONTAINER_PATH}`,
+  ] as const
   const commands = {
     inspectImage: [engine, 'image', 'inspect', '--format', '{{json .RepoDigests}}', image],
     create: [
@@ -104,8 +119,7 @@ export function buildSandboxContainerCommandPlan(
       '--network',
       'none',
       // Docker and Podman use a private PID namespace by default. No caller-controlled --pid value
-      // is accepted; omitting the flag avoids the invalid Docker `--pid private` spelling while
-      // still forbidding host or container-shared PID namespaces.
+      // is accepted, so host and container-shared PID namespaces remain impossible here.
       '--ipc',
       'none',
       '--read-only',
@@ -150,39 +164,28 @@ export function buildSandboxContainerCommandPlan(
       engine,
       'exec',
       '-i',
-      '--user',
-      user,
-      '--workdir',
-      SAFE_CONTAINER_PATH,
-      '--env',
-      'HOME=/tmp',
-      '--env',
-      'TMPDIR=/tmp',
-      '--env',
-      `PATH=${MINIMAL_CONTAINER_PATH}`,
+      ...commonExec,
       containerName,
       'node',
       '-e',
       SANDBOX_CONTAINER_COPY_IN_SCRIPT,
     ],
-    execute: [
+    execute: [engine, 'exec', '-i', ...commonExec, containerName, ...options.entrypoint],
+    copyOut: [
       engine,
       'exec',
-      '-i',
-      '--user',
-      user,
-      '--workdir',
-      SAFE_CONTAINER_PATH,
+      ...commonExec,
       '--env',
-      'HOME=/tmp',
+      `SYMBOLWRIGHT_COPY_OUT_MAX_FILES=${policy.limits.maxFiles}`,
       '--env',
-      'TMPDIR=/tmp',
-      '--env',
-      `PATH=${MINIMAL_CONTAINER_PATH}`,
+      `SYMBOLWRIGHT_COPY_OUT_MAX_BYTES=${
+        policy.limits.maxTotalSourceBytes + policy.limits.maxArtifactBytes
+      }`,
       containerName,
-      ...options.entrypoint,
+      'node',
+      '-e',
+      SANDBOX_CONTAINER_COPY_OUT_SCRIPT,
     ],
-    copyOut: [engine, 'cp', `${containerName}:/workspace/.`, hostOutputPath],
     kill: [engine, 'kill', '--signal', 'KILL', containerName],
     remove: [engine, 'rm', '--force', '--volumes', containerName],
   } as const
@@ -203,7 +206,7 @@ export function buildSandboxContainerCommandPlan(
     policy,
     warnings: [
       'The canonical repository is never mounted into the container.',
-      'Source is streamed into a size-bounded tmpfs workspace and copied out only to quarantine.',
+      'Source and generated files cross the boundary through fixed, bounded, non-shell protocols.',
       'Normal execution uses --pull=never and requires a preinstalled digest-pinned image.',
       'Private PID isolation is enforced by excluding host and container-shared PID modes.',
       'Browser and model requests cannot add mounts, engine flags, environment variables, or image names.',
