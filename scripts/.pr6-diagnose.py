@@ -103,6 +103,13 @@ artifact_text = artifact_text.replace(
     "if (spawnSync('openssl', ['version'], { stdio: 'ignore' }).status !== 0) throw new Error('openssl is required for hosted Docker smoke.')",
     1,
 )
+openssl_anchor = """      run('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-subj', '/CN=localhost', '-keyout', path.join(certs, 'key.pem'), '-out', path.join(certs, 'cert.pem'), '-days', '1'])
+"""
+openssl_replacement = openssl_anchor + """      run('chmod', ['0444', path.join(certs, 'key.pem'), path.join(certs, 'cert.pem')])
+"""
+if openssl_anchor not in artifact_text:
+    raise SystemExit('OpenSSL fixture anchor missing')
+artifact_text = artifact_text.replace(openssl_anchor, openssl_replacement, 1)
 old_cleanup = """    if (run('docker', ['inspect', '-f', '{{.State.ExitCode}}', name]) !== '0') throw new Error('Container exited non-zero after SIGTERM.')
   } finally {
 """
