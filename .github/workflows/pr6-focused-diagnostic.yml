@@ -1,0 +1,30 @@
+name: PR6 Focused Diagnostic
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Report artifact smoke test result
+        run: |
+          curl --fail --silent --show-error --location \
+            "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
+            | tar -xz --strip-components=1
+          git init -q
+          git config user.name focused-test
+          git config user.email focused-test@example.com
+          git add .
+          git commit -qm baseline
+          npm ci --silent
+          set +e
+          npx vitest run src/release/artifact-smoke.spec.ts --coverage > /tmp/focused.log 2>&1
+          code=$?
+          tail -n 70 /tmp/focused.log
+          exit "$code"
