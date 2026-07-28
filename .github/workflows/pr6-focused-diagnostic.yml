@@ -12,7 +12,7 @@ jobs:
   diagnose:
     runs-on: ubuntu-24.04
     steps:
-      - name: Report artifact smoke test result
+      - name: Report full coverage failure tail
         run: |
           curl --fail --silent --show-error --location \
             "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
@@ -24,7 +24,7 @@ jobs:
           git commit -qm baseline
           npm ci --silent
           set +e
-          npx vitest run src/release/artifact-smoke.spec.ts --coverage > /tmp/focused.log 2>&1
+          npm run test:coverage > /tmp/full.log 2>&1
           code=$?
-          tail -n 70 /tmp/focused.log
+          tail -n 55 /tmp/full.log
           exit "$code"
