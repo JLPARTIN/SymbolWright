@@ -93,6 +93,11 @@ new_bins = """    const binInvocations = [
 if old_bins not in artifact_text:
     raise SystemExit('Packed-bin invocation anchor missing')
 artifact_text = artifact_text.replace(old_bins, new_bins, 1)
+artifact_text = artifact_text.replace(
+    "'-e', 'SYMBOLWRIGHT_HOST=0.0.0.0', '-e', 'SYMBOLWRIGHT_PORT=8787'",
+    "'-e', 'SYMBOLWRIGHT_CHAT_HOST=0.0.0.0', '-e', 'SYMBOLWRIGHT_CHAT_PORT=8787'",
+    1,
+)
 old_cleanup = """    if (run('docker', ['inspect', '-f', '{{.State.ExitCode}}', name]) !== '0') throw new Error('Container exited non-zero after SIGTERM.')
   } finally {
 """
