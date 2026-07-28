@@ -105,7 +105,8 @@ artifact_text = artifact_text.replace(
 )
 openssl_anchor = """      run('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-subj', '/CN=localhost', '-keyout', path.join(certs, 'key.pem'), '-out', path.join(certs, 'cert.pem'), '-days', '1'])
 """
-openssl_replacement = openssl_anchor + """      run('chmod', ['0444', path.join(certs, 'key.pem'), path.join(certs, 'cert.pem')])
+openssl_replacement = openssl_anchor + """      run('chmod', ['0555', certs])
+      run('chmod', ['0444', path.join(certs, 'key.pem'), path.join(certs, 'cert.pem')])
 """
 if openssl_anchor not in artifact_text:
     raise SystemExit('OpenSSL fixture anchor missing')
