@@ -127,9 +127,7 @@ describe('DockerPortableValidationRunner', () => {
 
   it('selects only server-owned profiles for portable ecosystems', () => {
     expect(commandProfileForPortableValidation('npm test')).toBe('trusted-local-portable-node')
-    expect(commandProfileForPortableValidation('go test ./...')).toBe(
-      'trusted-local-portable-go',
-    )
+    expect(commandProfileForPortableValidation('go test ./...')).toBe('trusted-local-portable-go')
     expect(commandProfileForPortableValidation('cargo test --all')).toBe(
       'trusted-local-portable-rust',
     )
