@@ -38,7 +38,10 @@ import {
 } from '../access/mission-access-guard.js'
 import { checkConcurrentMissionLimit } from '../access/mission-concurrency-guard.js'
 import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../access/sandbox-capabilities.js'
-import { resolveGrantSandboxPolicyReferences } from '../access/sandbox-policy-compat.js'
+import {
+  grantAllowsOfflineSandbox,
+  resolveGrantSandboxPolicyReferences,
+} from '../access/sandbox-policy-compat.js'
 import { checkUsageBudget } from '../access/mission-usage-guard.js'
 import { computeFixedCostMicrodollars } from '../access/fixed-cost-rates.js'
 import { usdToMicrodollars } from '../access/microdollars.js'
@@ -1241,11 +1244,14 @@ async function handleAgent(
   const offlineReference = resolvedSandboxReferences?.references.offline
   const sandboxAuthorization = {
     deploymentMode,
-    callerKind: callerGrant === undefined ? ('operator' as const) : ('delegated-grant' as const),
+    callerKind: callerGrantId === undefined ? ('operator' as const) : ('delegated-grant' as const),
     runtimeMode: parsed.mode,
     approvedCapabilityIds:
-      callerGrant !== undefined &&
-      (resolvedSandboxReferences?.unsupportedReason !== undefined || offlineReference === undefined)
+      callerGrantId !== undefined &&
+      (callerGrant === undefined ||
+        resolvedSandboxReferences?.unsupportedReason !== undefined ||
+        offlineReference === undefined ||
+        !grantAllowsOfflineSandbox(callerGrant))
         ? []
         : [SANDBOX_OFFLINE_EXECUTE_CAPABILITY],
     repositoryId: mission?.repository.remoteUrl ?? toolCwd,

@@ -202,7 +202,7 @@ export class SandboxService {
       const blockedDecision = blockAuthorizedExecution(
         decision,
         'SANDBOX_BACKEND_NOT_SERVER_EXECUTABLE',
-        'Browser-isolated runners execute in the browser runtime, not through the server sandbox API.',
+        'No execution backend: Browser-isolated runners execute in the browser runtime, not through the server sandbox API.',
       )
       return this.persistResult(
         request,

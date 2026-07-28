@@ -1,3 +1,0 @@
-integration_exit_status=1
-
-src/access/access-types.ts: expected one occurrence, found 0: '  readonly approvalPolicy: ApprovalPolicy\n  readonly executionLimits: MissionExecutionLimits\n  readonly sessionLimits: S'

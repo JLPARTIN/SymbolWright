@@ -283,7 +283,10 @@ export function resolveEffectiveSandboxPolicy(
 
   const runner = input.runner
   if (runner === undefined) {
-    return blocked('SANDBOX_RUNNER_NOT_FOUND', 'No matching sandbox runner is available.')
+    return blocked(
+      'SANDBOX_RUNNER_NOT_FOUND',
+      'No available runner matches the requested sandbox language and runner selection.',
+    )
   }
 
   const catalog = input.catalog ?? new SandboxPolicyCatalog()
@@ -411,10 +414,17 @@ export function resolveEffectiveSandboxPolicy(
     )
   }
 
-  const allowedCommands = intersectOptionalAllowlists([
+  const commandRestrictionLayers = [
     profile.allowedCommands,
     input.authorization.grantAllowedCommands,
-  ])
+  ].filter((layer): layer is readonly string[] => layer !== undefined)
+  const allowedCommands = intersectDefined(commandRestrictionLayers)
+  if (commandRestrictionLayers.length > 0 && allowedCommands.length === 0) {
+    return blocked(
+      'SANDBOX_COMMAND_POLICY_EMPTY',
+      'The effective command allowlist is empty after strict policy intersection.',
+    )
+  }
   const workspaceMode = resolveWorkspaceMode(input.request, runner)
   if (!profile.workspaceModes.includes(workspaceMode)) {
     return blocked(
@@ -462,7 +472,7 @@ export function resolveEffectiveSandboxPolicy(
     allowedModes,
     allowedCommands,
     commandPolicy:
-      allowedCommands.length === 0 ? ('runner-defined' as const) : ('allowlist' as const),
+      commandRestrictionLayers.length === 0 ? ('runner-defined' as const) : ('allowlist' as const),
     limits,
     workspace: {
       mode: workspaceMode,
@@ -622,15 +632,6 @@ function intersectDefined<T>(layers: readonly (readonly T[] | undefined)[]): rea
     result = result.filter((entry) => allowed.has(entry))
   }
   return result
-}
-
-function intersectOptionalAllowlists(
-  layers: readonly (readonly string[] | undefined)[],
-): readonly string[] {
-  const restricted = layers.filter(
-    (layer): layer is readonly string[] => layer !== undefined && layer.length > 0,
-  )
-  return restricted.length === 0 ? [] : intersectDefined(restricted)
 }
 
 function positiveInteger(value: string | undefined, fallback: number): number {

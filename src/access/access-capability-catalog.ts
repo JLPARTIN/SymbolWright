@@ -279,5 +279,5 @@ export function capabilityRiskLevel(id: string): RiskLevel | undefined {
 
 /** Never included by a broad/wildcard grant expansion — must always be listed explicitly. */
 export function expandNonHighRiskWildcard(ids: readonly string[]): readonly string[] {
-  return ids.filter((id) => !isHighRiskCapability(id))
+  return ids.filter((id) => id !== LEGACY_SANDBOX_EXECUTE_CAPABILITY && !isHighRiskCapability(id))
 }

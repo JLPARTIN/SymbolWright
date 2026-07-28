@@ -1,3 +1,0 @@
-finalizer_exit_status=1
-
-src/access/authorization-service.ts: expected one occurrence, found 0: '   * `maxFilesChanged`/`maxDiffLines`/`maxCommits` at push time in\n   * `repository-routes.ts`, agai'

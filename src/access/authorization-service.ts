@@ -492,10 +492,12 @@ export class AuthorizationService {
    * action respectively (both via `mission.grantId`, recorded at creation);
    * `maxMissionDurationMinutes` and `maxRepairAttempts` inside the autonomous mission runtime
    * (`server-autonomy-runtime.ts`), which has the elapsed-time and attempt-count state a
-   * per-request check doesn't; `maxFilesChanged`/`maxDiffLines`/`maxCommits` at push time in
-   * `repository-routes.ts`, against real diff/commit stats computed there. `sandboxNetworkAccess`
-   * has no enforcement path yet — the sandbox itself only supports `network: none`, so the grant
-   * field is a no-op today. Note: `requirePullRequest` is deliberately not treated as a push-time
+   * per-request check doesn't;
+   * `maxFilesChanged`/`maxDiffLines`/`maxCommits` at push time in
+   * `repository-routes.ts`, against real diff/commit stats computed there. Legacy
+   * `sandboxNetworkAccess: true` is rejected; false or absent maps only to the offline policy and
+   * cannot authorize dependency acquisition or egress. Note: `requirePullRequest` is deliberately
+   * not treated as a push-time
    * deny even though the recommended Coding Agent profile sets `allowDirectPush: true` alongside
    * it -- the intended flow is "push to an agent branch, then open a PR," not "never push
    * directly," so it's enforced by refusing mission completion instead

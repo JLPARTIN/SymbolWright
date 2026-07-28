@@ -1,1 +1,0 @@
-Trigger the branch-scoped integration builder after workflow registration settles.

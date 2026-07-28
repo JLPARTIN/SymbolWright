@@ -2,7 +2,10 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { AccessRuntime } from '../../access/access-runtime.js'
 import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../../access/sandbox-capabilities.js'
-import { resolveGrantSandboxPolicyReferences } from '../../access/sandbox-policy-compat.js'
+import {
+  grantAllowsOfflineSandbox,
+  resolveGrantSandboxPolicyReferences,
+} from '../../access/sandbox-policy-compat.js'
 import {
   canAccessMission,
   resolveMissionVisibility,
@@ -317,7 +320,8 @@ export async function handleSandboxRoute(
       }
       const offlineReference = resolvedReferences?.references.offline
       const approvedCapabilityIds =
-        callerGrant !== undefined && offlineReference === undefined
+        callerGrant !== undefined &&
+        (offlineReference === undefined || !grantAllowsOfflineSandbox(callerGrant))
           ? []
           : [SANDBOX_OFFLINE_EXECUTE_CAPABILITY]
       const authorization = {

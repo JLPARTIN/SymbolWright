@@ -1,8 +1,21 @@
 import type { AgentAccessGrant, SandboxPolicyReferences } from './access-types.js'
 import {
+  SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
+  sandboxCapabilityAliases,
+} from './sandbox-capabilities.js'
+import {
   DEFAULT_OFFLINE_SANDBOX_POLICY_ID,
   DEFAULT_OFFLINE_SANDBOX_POLICY_VERSION,
 } from '../sandbox/sandbox-policy-model.js'
+
+export function grantAllowsOfflineSandbox(grant: AgentAccessGrant): boolean {
+  const aliases = sandboxCapabilityAliases(SANDBOX_OFFLINE_EXECUTE_CAPABILITY)
+  if (aliases.some((alias) => grant.deniedCapabilities.includes(alias))) return false
+  return aliases.some(
+    (alias) =>
+      grant.symbolWrightCapabilities.includes(alias) || grant.githubCapabilities.includes(alias),
+  )
+}
 
 export interface ResolvedGrantSandboxPolicyReferences {
   readonly references: SandboxPolicyReferences
