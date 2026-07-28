@@ -68,7 +68,7 @@ SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION=
   {
     type: 'after',
     file: 'CHANGELOG.md',
-    anchor: '### Fixed\n',
+    anchor: '## [Unreleased]\n\n### Fixed\n',
     text: `- **Sandbox guarded-host truth boundary (Sandbox Bundle PR 1/7)**: reclassifies
   guarded-host as trusted local operator break-glass execution rather than a strong sandbox,
   forbids it in hosted mode and through the HTTP sandbox API or \`sandbox_execute\` agent tool,
