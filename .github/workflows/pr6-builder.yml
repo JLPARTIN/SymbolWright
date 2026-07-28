@@ -6,16 +6,172 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Report only failed PR 6 tests
+      - name: Checkout PR head branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate corrected PR 6 product files
         run: |
-          curl --fail --silent --show-error --location \
-            "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
-            | tar -xz --strip-components=1
-          python3 scripts/.pr6-diagnose.py
+          python3 scripts/.pr6-preprocess.py
+          python3 scripts/.pr6-apply.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          test_path = Path('src/autonomy/autonomous-budget-governance.spec.ts')
+          test_text = test_path.read_text()
+          old_input = """        repositoryPath: workspaceRoot,
+                  runtimeMode: 'APPROVED_EXECUTION',
+          """
+          new_input = """        repositoryPath: workspaceRoot,
+                  workspaceKind: 'repository',
+                  labels: [],
+                  runtimeMode: 'APPROVED_EXECUTION',
+          """
+          if old_input not in test_text:
+              raise SystemExit('Generated mission input anchor missing')
+          test_text = test_text.replace(old_input, new_input, 1)
+          test_text = test_text.replace(
+              "import { mkdtempSync, rmSync } from 'node:fs'",
+              "import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'",
+              1,
+          )
+          source_anchor = """    roots.push(workspaceRoot)
+              const missionService = new MissionService({ workspaceRoot, env: {} })
+          """
+          source_replacement = """    roots.push(workspaceRoot)
+              writeFileSync(path.join(workspaceRoot, 'index.ts'), 'export const budgetFixture = true\\n')
+              const missionService = new MissionService({ workspaceRoot, env: {} })
+          """
+          if source_anchor not in test_text:
+              raise SystemExit('Generated repository fixture anchor missing')
+          test_path.write_text(test_text.replace(source_anchor, source_replacement, 1))
+
+          changelog_path = Path('scripts/lib/changelog-release.mjs')
+          changelog_text = changelog_path.read_text()
+          replacement = '''export function extractReleaseNotes(content, version) {
+            assertReleaseVersion(version)
+            const heading = `## [${version}]`
+            const headingIndex = content.indexOf(heading)
+            if (headingIndex < 0) throw new Error(`No release notes found for ${version}.`)
+            const bodyStart = content.indexOf('\\n', headingIndex)
+            if (bodyStart < 0) throw new Error(`No release notes found for ${version}.`)
+            const nextHeading = content.indexOf('\\n## [', bodyStart + 1)
+            const body = content.slice(bodyStart + 1, nextHeading < 0 ? content.length : nextHeading).trim()
+            if (body.length === 0) throw new Error(`No release notes found for ${version}.`)
+            return body + '\\n'
+          }
+          '''
+          changelog_text, count = re.subn(
+              r'export function extractReleaseNotes\(content, version\) \{.*?\n\}',
+              lambda _match: replacement.rstrip(),
+              changelog_text,
+              count=1,
+              flags=re.DOTALL,
+          )
+          if count != 1:
+              raise SystemExit('extractReleaseNotes function anchor missing')
+          changelog_path.write_text(changelog_text)
+          PY
+          npm install --package-lock-only --ignore-scripts
+
+      - name: Format generated product files
+        run: >-
+          npx prettier --write
+          CHANGELOG.md
+          package.json
+          package-lock.json
+          scripts/docker-smoke.mjs
+          scripts/extract-release-notes.mjs
+          scripts/release-prepare.mjs
+          scripts/verify-release-tag.mjs
+          scripts/lib/changelog-release.mjs
+          scripts/lib/changelog-release.test.mjs
+          src/app/api/mission-routes.ts
+          src/autonomy/autonomous-budget-governance.spec.ts
+          src/autonomy/autonomous-mission-coordinator.ts
+          src/autonomy/autonomous-mission-runtime.ts
+          src/autonomy/server-autonomy-runtime.ts
+          src/cli-release-readiness.ts
+          src/cli-release-readiness.spec.ts
+          src/orchestration/orchestration-money.spec.ts
+          src/orchestration/orchestration-store.ts
+          src/orchestration/orchestration-types.ts
+          src/orchestration/team-service.ts
+          src/release/artifact-smoke.ts
+          src/server/symbolwright-chat-server.ts
+          .github/workflows/deploy.yml
+          .github/workflows/publish.yml
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Release script tests
+        run: npm run test:release-scripts
+
+      - name: Full unit and integration tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Packed npm artifact smoke
+        run: >-
+          node -e "const {runNpmPackSmoke}=require('./dist/release/artifact-smoke.js');
+          const result=runNpmPackSmoke(process.cwd()); console.log(result);
+          if(result.status!=='PASS') process.exit(1)"
+
+      - name: Strict local and hosted Docker smoke
+        env:
+          SYMBOLWRIGHT_REQUIRE_DOCKER_SMOKE: '1'
+        run: npm run release:docker-smoke
+
+      - name: Commit validated product files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            CHANGELOG.md Dockerfile package.json package-lock.json \
+            scripts/docker-smoke.mjs scripts/extract-release-notes.mjs \
+            scripts/release-prepare.mjs scripts/verify-release-tag.mjs \
+            scripts/lib/changelog-release.mjs scripts/lib/changelog-release.test.mjs \
+            src/app/api/mission-routes.ts \
+            src/autonomy/autonomous-budget-governance.spec.ts \
+            src/autonomy/autonomous-mission-coordinator.ts \
+            src/autonomy/autonomous-mission-runtime.ts \
+            src/autonomy/server-autonomy-runtime.ts \
+            src/cli-release-readiness.ts src/cli-release-readiness.spec.ts \
+            src/orchestration/orchestration-money.spec.ts \
+            src/orchestration/orchestration-store.ts \
+            src/orchestration/orchestration-types.ts \
+            src/orchestration/team-service.ts \
+            src/release/artifact-smoke.ts \
+            src/server/symbolwright-chat-server.ts \
+            .github/workflows/deploy.yml .github/workflows/publish.yml
+          git commit -m "feat(release): complete artifact integrity and governance closure (Bundle #12 PR 6/7)"
+          git push origin HEAD:${GITHUB_HEAD_REF}
