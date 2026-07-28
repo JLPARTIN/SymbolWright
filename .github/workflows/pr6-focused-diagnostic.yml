@@ -12,19 +12,56 @@ jobs:
   diagnose:
     runs-on: ubuntu-24.04
     steps:
-      - name: Report final coverage summary only
+      - name: Measure exact branch coverage deficit
         run: |
           curl --fail --silent --show-error --location \
             "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
             | tar -xz --strip-components=1
           git init -q
-          git config user.name focused-test
-          git config user.email focused-test@example.com
+          git config user.name coverage-test
+          git config user.email coverage-test@example.com
           git add .
           git commit -qm baseline
           npm ci --silent
           set +e
           npm run test:coverage > /tmp/full.log 2>&1
           code=$?
+          node <<'NODE'
+          const fs = require('node:fs')
+          const report = JSON.parse(fs.readFileSync('coverage/coverage-final.json', 'utf8'))
+
+          let covered = 0
+          let total = 0
+          const files = []
+          for (const [file, entry] of Object.entries(report)) {
+            const counts = Object.values(entry.b).flat()
+            const fileCovered = counts.filter((count) => count > 0).length
+            const fileTotal = counts.length
+            covered += fileCovered
+            total += fileTotal
+            files.push({ file, covered: fileCovered, total: fileTotal, missing: fileTotal - fileCovered })
+          }
+
+          const required = Math.ceil(total * 0.8)
+          console.log(`GLOBAL_BRANCHES covered=${covered} total=${total} required=${required} deficit=${required - covered} pct=${((covered / total) * 100).toFixed(4)}`)
+
+          for (const item of files.sort((a, b) => b.missing - a.missing).slice(0, 12)) {
+            console.log(`FILE missing=${item.missing} covered=${item.covered}/${item.total} ${item.file}`)
+          }
+
+          const target = Object.keys(report).find((file) => file.endsWith('/src/release/artifact-smoke.ts'))
+          if (target) {
+            const entry = report[target]
+            for (const [id, counts] of Object.entries(entry.b)) {
+              const metadata = entry.branchMap[id]
+              counts.forEach((count, index) => {
+                if (count > 0) return
+                const location = metadata.locations?.[index] ?? metadata.loc
+                const line = location?.start?.line ?? metadata.line ?? 'unknown'
+                console.log(`UNCOVERED artifact-smoke branch=${id}:${index} type=${metadata.type} line=${line}`)
+              })
+            }
+          }
+          NODE
           grep -E "Failed Tests|FAIL  |Test Files|Tests  |ERROR: Coverage" /tmp/full.log | tail -n 20 || true
           exit "$code"
