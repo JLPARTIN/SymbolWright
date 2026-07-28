@@ -1,0 +1,50 @@
+name: PR5 Changelog Cleanup
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  clean:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout PR head branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Restore main changelog and add only PR 5 entry
+        run: |
+          git show origin/main:CHANGELOG.md > CHANGELOG.md
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('CHANGELOG.md')
+          content = path.read_text()
+          anchor = '### Fixed\n\n'
+          entry = '''- **Network and operational hardening (Bundle #12 PR 5)**: adds explicit local/hosted
+            deployment modes; fail-closed non-loopback plaintext behavior; direct-TLS or
+            trusted-reverse-proxy HTTPS enforcement; right-to-left trusted `X-Forwarded-For`
+            resolution with IPv4-mapped IPv6 normalization; strict immediate-proxy forwarded-protocol
+            validation and conflict rejection; coarse public `/readyz` plus operator-only readiness
+            diagnostics and metrics; startup detection of stale missions, corrupt sandbox state, and
+            external-repository retention work; and hosted-mode startup refusal when the governance
+            ledger, process concurrency caps, or delegated-agent execution/session/cost limits are
+            missing.\n'''
+          if anchor not in content:
+              raise SystemExit('CHANGELOG Fixed anchor missing')
+          path.write_text(content.replace(anchor, anchor + entry, 1))
+          PY
+          git rm .github/workflows/pr5-changelog-cleanup.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "docs: keep PR 5 changelog diff focused"
+          git push origin HEAD:${GITHUB_HEAD_REF}
