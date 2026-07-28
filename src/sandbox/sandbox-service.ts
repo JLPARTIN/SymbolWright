@@ -457,9 +457,7 @@ function containerEngineStatus(runner: SandboxRunnerDefinition): SandboxContaine
   return {
     engine,
     status: runner.availability.status,
-    ...(runner.availability.version === undefined
-      ? {}
-      : { version: runner.availability.version }),
+    ...(runner.availability.version === undefined ? {} : { version: runner.availability.version }),
     reason:
       runner.availability.reason ??
       `${engine} availability was inherited from strong sandbox runtime discovery.`,

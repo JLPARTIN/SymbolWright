@@ -517,6 +517,10 @@ This is one Large PR Bundle delivered as seven ordered, independently reviewable
 
 ### PR 3 of 7 — Real strong offline container executor
 
+**Implementation status:** implemented by PR #336 with a JavaScript-first, digest-pinned,
+operator-opt-in backend. Unsupported ecosystems remain fail-closed pending later complete image and
+runtime profiles.
+
 **Suggested title:** `feat(sandbox): ship the strong offline container execution backend`
 
 **Objectives:**

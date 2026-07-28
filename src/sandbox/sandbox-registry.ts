@@ -3,10 +3,7 @@ import {
   UNIVERSAL_LANGUAGE_REGISTRY,
   type CodeRunnerDefinition,
 } from '../workspace/language-registry.js'
-import {
-  STRONG_SANDBOX_NODE_IMAGE_ID,
-  buildSandboxImagePolicy,
-} from './sandbox-images.js'
+import { STRONG_SANDBOX_NODE_IMAGE_ID, buildSandboxImagePolicy } from './sandbox-images.js'
 import { DEFAULT_SANDBOX_LIMITS } from './sandbox-limits.js'
 import type {
   SandboxImageDefinition,
@@ -124,10 +121,14 @@ function strongContainerRunner(options: {
     displayName: 'Strong Offline JavaScript Container',
     trustClass: 'container-isolated',
     backend: 'container',
-    availability: runnerAvailability(available ? 'available' : options.engine.status, options.generatedAt, {
-      ...(options.engine.version === undefined ? {} : { version: options.engine.version }),
-      reason,
-    }),
+    availability: runnerAvailability(
+      available ? 'available' : options.engine.status,
+      options.generatedAt,
+      {
+        ...(options.engine.version === undefined ? {} : { version: options.engine.version }),
+        reason,
+      },
+    ),
     capabilities: STRONG_CONTAINER_CAPABILITIES,
     limits: DEFAULT_SANDBOX_LIMITS,
     networkPolicy: 'disabled',

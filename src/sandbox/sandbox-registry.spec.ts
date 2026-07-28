@@ -85,9 +85,7 @@ describe('sandbox runtime inventory', () => {
       networkMode: 'none',
       workspaceMode: 'copy-in-tmpfs-copy-out',
     })
-    expect(findSandboxRunner(inventory, 'javascript')?.id).toBe(
-      STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID,
-    )
+    expect(findSandboxRunner(inventory, 'javascript')?.id).toBe(STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID)
   })
 
   it('keeps guarded-host unavailable unless explicitly opted in', () => {

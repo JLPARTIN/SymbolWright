@@ -156,7 +156,10 @@ export async function quarantineSandboxContainerArtifacts(options: {
       throw new SandboxWorkspaceBoundaryError('Generated artifacts exceed maxArtifactBytes.')
     }
     const sourcePath = safeJoin(options.workspace.outputDir, relativePath)
-    const artifactPath = safeJoin(options.workspace.artifactDir, path.posix.join('files', relativePath))
+    const artifactPath = safeJoin(
+      options.workspace.artifactDir,
+      path.posix.join('files', relativePath),
+    )
     const content = await readFile(sourcePath)
     await mkdir(path.dirname(artifactPath), { recursive: true, mode: 0o700 })
     await writeFile(artifactPath, content, { mode: 0o600 })
@@ -180,12 +183,7 @@ export async function quarantineSandboxContainerArtifacts(options: {
       const manifestPath = path.join(options.workspace.artifactDir, 'changes.json')
       await writeFile(manifestPath, manifestContent, { mode: 0o600 })
       artifacts.push(
-        artifactReference(
-          options.executionId,
-          'changes.json',
-          manifestContent,
-          'application/json',
-        ),
+        artifactReference(options.executionId, 'changes.json', manifestContent, 'application/json'),
       )
     } else {
       warnings.push('Artifact manifest omitted because maxArtifactBytes was exhausted.')
@@ -201,12 +199,7 @@ export async function quarantineSandboxContainerArtifacts(options: {
       const patchPath = path.join(options.workspace.artifactDir, 'changes.patch')
       await writeFile(patchPath, patch.content, { mode: 0o600 })
       artifacts.push(
-        artifactReference(
-          options.executionId,
-          'changes.patch',
-          patch.content,
-          'text/x-diff',
-        ),
+        artifactReference(options.executionId, 'changes.patch', patch.content, 'text/x-diff'),
       )
     }
   }
@@ -228,7 +221,8 @@ async function copyRepositorySnapshot(
   budget: CopyBudget,
 ): Promise<void> {
   const canonicalRoot = await realpath(path.resolve(rootPath))
-  const selection = selectedPaths === undefined || selectedPaths.length === 0 ? ['.'] : selectedPaths
+  const selection =
+    selectedPaths === undefined || selectedPaths.length === 0 ? ['.'] : selectedPaths
   for (const selectedPath of selection) {
     const normalized = normalizeRelativePath(selectedPath)
     await copyRepositoryEntry(canonicalRoot, normalized, destinationRoot, limits, budget)
@@ -252,7 +246,9 @@ async function copyRepositoryEntry(
   }
   const canonicalSource = await realpath(sourcePath)
   if (!isInside(canonicalSource, canonicalRoot)) {
-    throw new SandboxWorkspaceBoundaryError(`Repository path escaped its managed root: ${relativePath}.`)
+    throw new SandboxWorkspaceBoundaryError(
+      `Repository path escaped its managed root: ${relativePath}.`,
+    )
   }
 
   if (metadata.isDirectory()) {
@@ -271,7 +267,9 @@ async function copyRepositoryEntry(
   }
 
   if (!metadata.isFile()) {
-    throw new SandboxWorkspaceBoundaryError(`Non-regular repository entry rejected: ${relativePath}.`)
+    throw new SandboxWorkspaceBoundaryError(
+      `Non-regular repository entry rejected: ${relativePath}.`,
+    )
   }
   const content = await readFile(sourcePath)
   await writeBoundedFile(destinationRoot, relativePath, content, limits, budget)
@@ -311,7 +309,9 @@ async function makeTreeContainerWritable(root: string): Promise<void> {
     } else if (entry.isFile()) {
       await chmod(entryPath, 0o666)
     } else {
-      throw new SandboxWorkspaceBoundaryError(`Non-regular materialized entry rejected: ${entry.name}.`)
+      throw new SandboxWorkspaceBoundaryError(
+        `Non-regular materialized entry rejected: ${entry.name}.`,
+      )
     }
   }
 }
@@ -337,7 +337,9 @@ async function manifestDirectory(
         continue
       }
       if (!metadata.isFile()) {
-        throw new SandboxWorkspaceBoundaryError(`Generated non-regular file rejected: ${relativePath}.`)
+        throw new SandboxWorkspaceBoundaryError(
+          `Generated non-regular file rejected: ${relativePath}.`,
+        )
       }
       if (manifest.size + 1 > limits.maxFiles) {
         throw new SandboxWorkspaceBoundaryError('Workspace exceeds maxFiles.')
@@ -381,7 +383,8 @@ function buildBoundedPatch(
   outputDir: string,
   remainingBytes: number,
 ): { readonly content?: Buffer; readonly warning?: string } {
-  if (remainingBytes <= 0) return { warning: 'Patch omitted because maxArtifactBytes was exhausted.' }
+  if (remainingBytes <= 0)
+    return { warning: 'Patch omitted because maxArtifactBytes was exhausted.' }
   const result = spawnSync(
     'git',
     ['diff', '--no-index', '--binary', '--no-ext-diff', '--', inputDir, outputDir],
@@ -476,7 +479,10 @@ function containsExcludedDirectory(relativePath: string): boolean {
 }
 
 function safeExecutionId(executionId: string): string {
-  const safe = executionId.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 48)
+  const safe = executionId
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .slice(0, 48)
   return safe.length === 0 ? 'execution' : safe
 }
 

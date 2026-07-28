@@ -99,7 +99,9 @@ export async function reapStrongSandboxOrphans(
       attempted: true,
       engine: engine.engine,
       removedContainerIds: [],
-      warnings: [`Container orphan discovery failed: ${boundedMessage(list.stderr || list.stdout)}`],
+      warnings: [
+        `Container orphan discovery failed: ${boundedMessage(list.stderr || list.stdout)}`,
+      ],
     }
   }
   const ids = list.stdout
@@ -610,7 +612,10 @@ function verificationForMode(mode: SandboxExecutionRequest['mode']): Verificatio
 }
 
 function managedContainerName(executionId: string): string {
-  const safe = executionId.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 60)
+  const safe = executionId
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .slice(0, 60)
   return `symbolwright-sandbox-${safe.length === 0 ? 'execution' : safe}`
 }
 

@@ -163,6 +163,15 @@ export interface SandboxPolicyEvidence {
   readonly networkMode: 'disabled' | 'dependency-broker-only' | 'allowlisted-egress' | 'unsupported'
   readonly dependencyMode: 'disabled' | 'brokered' | 'unsupported'
   readonly workspaceMode: 'managed-mission' | 'temporary-copy' | 'trusted-local-host'
+  readonly container?: {
+    readonly engine: 'docker' | 'podman'
+    readonly imageId: string
+    readonly imageDigest: string
+    readonly user: string
+    readonly pullPolicy: 'never'
+    readonly networkMode: 'none'
+    readonly workspaceMode: 'copy-in-tmpfs-copy-out'
+  }
   readonly sourceVersions: Readonly<Record<string, number>>
 }
 

@@ -37,9 +37,7 @@ describe('sandbox container command planner', () => {
   it('builds executable create/copy/exec phases with mandatory isolation controls', () => {
     const plan = planWith()
     const create = plan.commands.create.join(' ')
-    const allCommands = Object.values(plan.commands)
-      .flat()
-      .join(' ')
+    const allCommands = Object.values(plan.commands).flat().join(' ')
 
     expect(plan.schemaVersion).toBe(2)
     expect(plan.executionEnabled).toBe(true)
