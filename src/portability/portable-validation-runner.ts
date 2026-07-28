@@ -44,11 +44,6 @@ export interface DockerPortableValidationRunnerOptions {
   readonly workspaceTrust?: SandboxCommandWorkspaceTrust
 }
 
-/**
- * Compatibility adapter for discovered ecosystem validation. It does not construct Docker arguments,
- * choose caller-controlled images, or spawn processes. Profile selection is deterministic and the
- * centralized sandbox backend invokes `SandboxExecutionBroker.authorizeCommand` before execution.
- */
 export class DockerPortableValidationRunner implements PortableValidationRunner {
   readonly #options: DockerPortableValidationRunnerOptions
 
@@ -81,6 +76,7 @@ export class DockerPortableValidationRunner implements PortableValidationRunner 
     }
 
     const runner = this.#options.sandboxRunner ?? new DockerSandboxRunner()
+    const authorization = request.authorization ?? this.#options.authorization
     const result = await runner.runCommand({
       workspaceRoot: request.repositoryRoot,
       binary: parsed.binary as SandboxCommandBinary,
@@ -92,9 +88,7 @@ export class DockerPortableValidationRunner implements PortableValidationRunner 
       ...(request.maxOutputBytes === undefined
         ? {}
         : { maxOutputBytes: request.maxOutputBytes }),
-      ...(request.authorization ?? this.#options.authorization) === undefined
-        ? {}
-        : { authorization: request.authorization ?? this.#options.authorization! },
+      ...(authorization === undefined ? {} : { authorization }),
     })
 
     if (result.outcome === 'BLOCKED') {
