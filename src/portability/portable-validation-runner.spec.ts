@@ -31,9 +31,9 @@ function capturingRunner(
   result: Partial<SandboxRunnerResult> = {},
 ): SandboxRunner {
   return {
-    runCommand: vi.fn(async (request) => {
+    runCommand: vi.fn(async (request): Promise<SandboxRunnerResult> => {
       captured.push(request)
-      return {
+      const resolved: SandboxRunnerResult = {
         outcome: 'EXECUTED',
         runner: 'docker',
         command: [request.binary, ...request.args].join(' '),
@@ -43,6 +43,7 @@ function capturingRunner(
         reason: null,
         ...result,
       }
+      return resolved
     }),
   }
 }
