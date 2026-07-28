@@ -2,9 +2,12 @@ name: CI
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -30,41 +33,75 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Capture exact failing specifications
-        id: tests
+      - name: Audit dependencies
+        run: npm run audit
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Sandbox runner contract tests
+        run: npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
+
+      - name: Prepare digest-pinned strong sandbox image
+        run: docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66
+
+      - name: Strong sandbox adversarial integration
+        env:
+          SYMBOLWRIGHT_RUN_STRONG_CONTAINER_INTEGRATION: 'true'
+        run: npx vitest run src/sandbox/sandbox-container-integration.spec.ts --reporter=verbose
+
+      - name: Capture coverage result
+        id: coverage
         run: |
+          : "${GITHUB_OUTPUT:?GITHUB_OUTPUT missing}"
           set +e
-          npm test > /tmp/symbolwright-tests.log 2>&1
+          npm run test:coverage > /tmp/symbolwright-coverage.log 2>&1
           status=$?
           set -e
 
-          clean_log=/tmp/symbolwright-tests-clean.log
+          clean_log=/tmp/symbolwright-coverage-clean.log
           files=""
-
-          if [ -f /tmp/symbolwright-tests.log ]; then
-            perl -pe 's/\e\[[0-9;]*[A-Za-z]//g' /tmp/symbolwright-tests.log > "$clean_log" || cp /tmp/symbolwright-tests.log "$clean_log" || true
+          if [ -f /tmp/symbolwright-coverage.log ]; then
+            perl -pe 's/\e\[[0-9;]*[A-Za-z]//g' /tmp/symbolwright-coverage.log > "$clean_log" || cp /tmp/symbolwright-coverage.log "$clean_log" || true
             files=$(grep -oE 'FAIL +src/[^ >]+' "$clean_log" 2>/dev/null | sed -E 's/^FAIL +//' | sort -u | paste -sd, - || true)
           fi
-
           if [ -z "$files" ]; then
-            files=unknown
+            files=none
           fi
-
           files=${files:0:240}
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          echo "files=$files" >> "$GITHUB_OUTPUT"
 
-          if [ -n "${GITHUB_OUTPUT:-}" ]; then
-            echo "status=$status" >> "$GITHUB_OUTPUT"
-            echo "files=$files" >> "$GITHUB_OUTPUT"
-          else
-            echo "GITHUB_OUTPUT not set — printing outputs to stdout"
-            echo "status=$status"
-            echo "files=$files"
-          fi
-
-      - name: Failing specs — ${{ steps.tests.outputs.files }}
+      - name: Coverage gate — ${{ steps.coverage.outputs.files }}
         run: |
-          status="${{ steps.tests.outputs.status }}"
+          status="${{ steps.coverage.outputs.status }}"
           if ! printf '%s' "$status" | grep -Eq '^[0-9]+$'; then
-            status=1
+            echo "Coverage step returned an invalid status: $status" >&2
+            exit 1
           fi
           exit "$status"
+
+      - name: Build
+        run: npm run build
+
+      - name: Compute changed files for preflight
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --name-only "origin/${{ github.event.pull_request.base.ref }}...HEAD" > /tmp/symbolwright-changed-files.txt
+          else
+            git diff --name-only HEAD~1 HEAD > /tmp/symbolwright-changed-files.txt || true
+          fi
+
+      - name: PR preflight
+        run: |
+          mapfile -t files < /tmp/symbolwright-changed-files.txt
+          node dist/cli.js preflight "${files[@]}"
+
+      - name: Validate
+        run: npm run validate
