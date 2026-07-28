@@ -1,4 +1,9 @@
-import { spawn, spawnSync } from 'node:child_process'
+import {
+  spawn,
+  spawnSync,
+  type ChildProcessWithoutNullStreams,
+  type SpawnSyncReturns,
+} from 'node:child_process'
 import path from 'node:path'
 
 import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../access/sandbox-capabilities.js'
@@ -13,7 +18,30 @@ import {
 import { SandboxExecutionBroker } from './sandbox-execution-broker.js'
 import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
 
-export type SandboxCommandBinary = 'git' | 'npm' | 'npx' | 'node' | 'prettier'
+export type SandboxCommandBinary =
+  | 'git'
+  | 'npm'
+  | 'npx'
+  | 'node'
+  | 'prettier'
+  | 'python'
+  | 'python3'
+  | 'pytest'
+  | 'go'
+  | 'gofmt'
+  | 'cargo'
+  | 'rustc'
+  | 'mvn'
+  | './mvnw'
+  | 'gradle'
+  | './gradlew'
+  | 'dotnet'
+  | 'ruby'
+  | 'bundle'
+  | 'rake'
+  | 'php'
+  | 'composer'
+
 export type SandboxRunnerOutcome = 'EXECUTED' | 'BLOCKED'
 export type SandboxFileWriteOutcome = 'WRITTEN' | 'BLOCKED'
 
@@ -71,6 +99,23 @@ export interface SandboxFileWriter {
   readonly writeFile: (request: SandboxFileWriteRequest) => SandboxFileWriteResult
 }
 
+export type SandboxCommandSpawn = (
+  command: string,
+  args: readonly string[],
+  options: { readonly timeout: number; readonly stdio: ['ignore', 'pipe', 'pipe'] },
+) => ChildProcessWithoutNullStreams
+
+export type SandboxCommandSpawnSync = (
+  command: string,
+  args: readonly string[],
+  options: {
+    readonly input: string
+    readonly encoding: 'utf8'
+    readonly timeout: number
+    readonly maxBuffer: number
+  },
+) => SpawnSyncReturns<string>
+
 export interface DockerSandboxRunnerOptions {
   readonly dockerBinary?: string
   readonly image?: string
@@ -85,6 +130,8 @@ export interface DockerSandboxRunnerOptions {
   readonly authorization?: SandboxAuthorizationContext
   readonly profileId?: SandboxCommandProfileId
   readonly workspaceTrust?: SandboxCommandWorkspaceTrust
+  readonly spawnProcess?: SandboxCommandSpawn
+  readonly spawnSyncProcess?: SandboxCommandSpawnSync
 }
 
 interface MutableDockerSandboxRunnerOptions {
@@ -109,7 +156,14 @@ export interface DockerSandboxResolvedConfig {
   readonly maxOutputBytes: number
 }
 
-const ALLOWED_BINARIES = new Set<SandboxCommandBinary>(['git', 'npm', 'npx', 'node', 'prettier'])
+const RUNTIME_BINARIES = new Set<SandboxCommandBinary>([
+  'git',
+  'npm',
+  'npx',
+  'node',
+  'prettier',
+])
+
 export const DEFAULT_DOCKER_IMAGE = 'node:22-bookworm'
 export const DEFAULT_SANDBOX_MEMORY = '2048m'
 export const DEFAULT_SANDBOX_CPUS = '1'
@@ -131,7 +185,6 @@ process.stdin.on('end', () => {
     console.error('workspace boundary escaped');
     process.exit(71);
   }
-
   function realContainingPath(candidate) {
     let current = candidate;
     const trailing = [];
@@ -147,28 +200,24 @@ process.stdin.on('end', () => {
       }
     }
   }
-
   const realRoot = realContainingPath(root);
   const realTarget = realContainingPath(target);
   if (realTarget !== realRoot && !realTarget.startsWith(realRoot + path.sep)) {
     console.error('workspace boundary escaped');
     process.exit(71);
   }
-
   const dir = path.dirname(target);
   fs.mkdirSync(dir, { recursive: true });
   const tempPath = path.join(
     dir,
-    '.' + path.basename(target) + '.tmp-' + process.pid + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2),
+    '.' + path.basename(target) + '.tmp-' + process.pid + '-' + Date.now().toString(36),
   );
   const content = Buffer.concat(chunks).toString('utf8');
   try {
     fs.writeFileSync(tempPath, content, { encoding: 'utf8', mode: 0o600 });
     fs.renameSync(tempPath, target);
   } catch (error) {
-    try {
-      if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
-    } catch {}
+    try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch {}
     throw error;
   }
 });
@@ -263,7 +312,7 @@ export function renderDockerSandboxConfig(
 
 export function parseWorkspaceCommand(command: string): ParsedWorkspaceCommand {
   const parsed = parseSandboxCommand(command)
-  if (!ALLOWED_BINARIES.has(parsed.binary as SandboxCommandBinary)) {
+  if (!RUNTIME_BINARIES.has(parsed.binary as SandboxCommandBinary)) {
     throw new Error(`Sandbox command binary is not allowed: ${parsed.binary}`)
   }
   return { binary: parsed.binary as SandboxCommandBinary, args: parsed.args }
@@ -275,10 +324,9 @@ export function renderSandboxCommand(command: ParsedWorkspaceCommand): string {
 
 function buildDockerWorkspaceArgs(
   workspaceRoot: string,
-  options: DockerSandboxRunnerOptions = {},
+  options: DockerSandboxRunnerOptions,
   policy?: EffectiveSandboxCommandPolicy,
 ): readonly string[] {
-  const resolvedWorkspaceRoot = path.resolve(workspaceRoot)
   const config = resolveDockerSandboxConfig(options)
   return [
     'run',
@@ -296,7 +344,7 @@ function buildDockerWorkspaceArgs(
     '--env',
     'HOME=/workspace',
     '-v',
-    `${resolvedWorkspaceRoot}:/workspace:rw`,
+    `${path.resolve(workspaceRoot)}:/workspace:rw`,
     '-w',
     '/workspace',
     policy?.image ?? config.image,
@@ -330,19 +378,18 @@ export function buildDockerFileWriteArgs(
 }
 
 export class DockerSandboxRunner implements SandboxRunner {
-  private readonly dockerBinary: string
   private readonly options: DockerSandboxRunnerOptions
   private readonly env: NodeJS.ProcessEnv
   private readonly broker: SandboxExecutionBroker
+  private readonly spawnProcess: SandboxCommandSpawn
 
   public constructor(
     options: DockerSandboxRunnerOptions = resolveDockerSandboxRunnerOptionsFromEnv(),
   ) {
-    const config = resolveDockerSandboxConfig(options)
-    this.dockerBinary = config.dockerBinary
     this.options = options
     this.env = options.env ?? process.env
     this.broker = options.broker ?? new SandboxExecutionBroker({ env: this.env })
+    this.spawnProcess = options.spawnProcess ?? spawn
   }
 
   public async runCommand(request: SandboxCommandRequest): Promise<SandboxRunnerResult> {
@@ -365,22 +412,15 @@ export class DockerSandboxRunner implements SandboxRunner {
       authorization,
     )
     if (!decision.allowed || decision.policy === undefined) {
-      return {
-        outcome: 'BLOCKED',
-        runner: 'docker',
-        command,
-        stdout: '',
-        stderr: '',
-        exitCode: null,
-        reason: decision.reason,
-        reasonCode: decision.reasonCode,
-      }
+      return blockedRunnerResult(command, decision.reasonCode, decision.reason)
     }
 
-    const args = buildDockerRunArgs(request, this.options, decision.policy)
+    const policy = decision.policy
+    const config = resolveDockerSandboxConfig(this.options)
+    const args = buildDockerRunArgs(request, this.options, policy)
     return new Promise<SandboxRunnerResult>((resolve) => {
-      const child = spawn(this.dockerBinary, args, {
-        timeout: decision.policy!.limits.timeoutMs,
+      const child = this.spawnProcess(config.dockerBinary, args, {
+        timeout: policy.limits.timeoutMs,
         stdio: ['ignore', 'pipe', 'pipe'],
       })
       const stdoutChunks: Buffer[] = []
@@ -395,7 +435,7 @@ export class DockerSandboxRunner implements SandboxRunner {
         resolve(result)
       }
       const recordChunk = (chunks: Buffer[], chunk: Buffer): void => {
-        const remaining = decision.policy!.limits.maxOutputBytes - outputBytes
+        const remaining = policy.limits.maxOutputBytes - outputBytes
         if (remaining <= 0) {
           outputLimitExceeded = true
           child.kill('SIGKILL')
@@ -413,15 +453,12 @@ export class DockerSandboxRunner implements SandboxRunner {
       child.stderr.on('data', (chunk: Buffer) => recordChunk(stderrChunks, chunk))
       child.once('error', (error) => {
         finish({
-          outcome: 'BLOCKED',
-          runner: 'docker',
-          command,
-          stdout: '',
-          stderr: '',
-          exitCode: null,
-          reason: `Sandbox runner unavailable; host execution is not allowed. ${error.message}`,
-          reasonCode: 'SANDBOX_COMMAND_BACKEND_UNAVAILABLE',
-          policy: decision.policy,
+          ...blockedRunnerResult(
+            command,
+            'SANDBOX_COMMAND_BACKEND_UNAVAILABLE',
+            `Sandbox runner unavailable; host execution is not allowed. ${error.message}`,
+          ),
+          policy,
         })
       })
       child.once('close', (code) => {
@@ -438,7 +475,7 @@ export class DockerSandboxRunner implements SandboxRunner {
           ...(outputLimitExceeded
             ? { reasonCode: 'SANDBOX_COMMAND_OUTPUT_LIMIT' }
             : {}),
-          policy: decision.policy,
+          policy,
         })
       })
     })
@@ -446,19 +483,18 @@ export class DockerSandboxRunner implements SandboxRunner {
 }
 
 export class DockerSandboxFileWriter implements SandboxFileWriter {
-  private readonly dockerBinary: string
   private readonly options: DockerSandboxRunnerOptions
   private readonly env: NodeJS.ProcessEnv
   private readonly broker: SandboxExecutionBroker
+  private readonly spawnSyncProcess: SandboxCommandSpawnSync
 
   public constructor(
     options: DockerSandboxRunnerOptions = resolveDockerSandboxRunnerOptionsFromEnv(),
   ) {
-    const config = resolveDockerSandboxConfig(options)
-    this.dockerBinary = config.dockerBinary
     this.options = options
     this.env = options.env ?? process.env
     this.broker = options.broker ?? new SandboxExecutionBroker({ env: this.env })
+    this.spawnSyncProcess = options.spawnSyncProcess ?? spawnSync
   }
 
   public writeFile(request: SandboxFileWriteRequest): SandboxFileWriteResult {
@@ -476,49 +512,45 @@ export class DockerSandboxFileWriter implements SandboxFileWriter {
       authorization,
     )
     if (!decision.allowed || decision.policy === undefined) {
-      return {
-        outcome: 'BLOCKED',
-        runner: 'docker',
-        targetPath: request.targetPath,
-        stdout: '',
-        stderr: '',
-        exitCode: null,
-        reason: decision.reason,
-        reasonCode: decision.reasonCode,
-      }
+      return blockedFileResult(request.targetPath, decision.reasonCode, decision.reason)
     }
 
-    const args = buildDockerFileWriteArgs(request, this.options, decision.policy)
-    const result = spawnSync(this.dockerBinary, args, {
-      input: request.content,
-      encoding: 'utf8',
-      timeout: decision.policy.limits.timeoutMs,
-      maxBuffer: decision.policy.limits.maxOutputBytes,
-    })
+    const policy = decision.policy
+    const config = resolveDockerSandboxConfig(this.options)
+    const result = this.spawnSyncProcess(
+      config.dockerBinary,
+      buildDockerFileWriteArgs(request, this.options, policy),
+      {
+        input: request.content,
+        encoding: 'utf8',
+        timeout: policy.limits.timeoutMs,
+        maxBuffer: policy.limits.maxOutputBytes,
+      },
+    )
     const stdout = redactValidationOutput(result.stdout ?? '')
     const stderr = redactValidationOutput(result.stderr ?? '')
     if (result.error !== undefined) {
       return {
-        outcome: 'BLOCKED',
-        runner: 'docker',
-        targetPath: request.targetPath,
+        ...blockedFileResult(
+          request.targetPath,
+          'SANDBOX_FILE_WRITE_BACKEND_UNAVAILABLE',
+          `Sandbox file writer unavailable; host file writes are not allowed. ${result.error.message}`,
+        ),
         stdout,
         stderr,
         exitCode: result.status,
-        reason: `Sandbox file writer unavailable; host file writes are not allowed. ${result.error.message}`,
-        reasonCode: 'SANDBOX_FILE_WRITE_BACKEND_UNAVAILABLE',
       }
     }
     if (result.status !== 0) {
       return {
-        outcome: 'BLOCKED',
-        runner: 'docker',
-        targetPath: request.targetPath,
+        ...blockedFileResult(
+          request.targetPath,
+          'SANDBOX_FILE_WRITE_FAILED',
+          'Sandbox file writer failed.',
+        ),
         stdout,
         stderr,
         exitCode: result.status,
-        reason: 'Sandbox file writer failed.',
-        reasonCode: 'SANDBOX_FILE_WRITE_FAILED',
       }
     }
     return {
@@ -530,6 +562,40 @@ export class DockerSandboxFileWriter implements SandboxFileWriter {
       exitCode: result.status,
       reason: null,
     }
+  }
+}
+
+function blockedRunnerResult(
+  command: string,
+  reasonCode: string,
+  reason: string,
+): SandboxRunnerResult {
+  return {
+    outcome: 'BLOCKED',
+    runner: 'docker',
+    command,
+    stdout: '',
+    stderr: '',
+    exitCode: null,
+    reason,
+    reasonCode,
+  }
+}
+
+function blockedFileResult(
+  targetPath: string,
+  reasonCode: string,
+  reason: string,
+): SandboxFileWriteResult {
+  return {
+    outcome: 'BLOCKED',
+    runner: 'docker',
+    targetPath,
+    stdout: '',
+    stderr: '',
+    exitCode: null,
+    reason,
+    reasonCode,
   }
 }
 
