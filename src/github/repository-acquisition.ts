@@ -9,6 +9,12 @@ import {
   type GitHubOperationsPolicy,
 } from './github-operations-policy.js'
 import type { GitHubRepositoryTarget } from './github-repository-target.js'
+import {
+  checkDiskHeadroom,
+  computeWorkspaceStats,
+  removeWorkspaceSafely,
+  WorkspaceLimitExceededError,
+} from './repository-workspace-fs.js'
 
 /**
  * Real repository acquisition: clones an external GitHub repository (public,
@@ -42,6 +48,109 @@ export interface RepositoryAcquisitionResult {
 }
 
 export class RepositoryAcquisitionError extends Error {}
+
+/**
+ * Caps applied to every non-dry-run acquisition, closing the gaps a bare `git count-objects -v`
+ * check alone would miss: `maxGitObjects`/`maxGitBytes` cover git's own object storage, while
+ * `maxWorkspaceBytes`/`maxFileCount`/`maxFileBytes` cover the checked-out working tree (including
+ * LFS content and generated files `count-objects` never sees). `maxAcquisitionDurationMs` is an
+ * overall wall-clock budget on top of the per-subprocess timeout already applied to `git clone`.
+ */
+export interface RepositoryAcquisitionLimits {
+  readonly maxGitObjects?: number
+  readonly maxGitBytes?: number
+  readonly maxWorkspaceBytes?: number
+  readonly maxFileCount?: number
+  readonly maxFileBytes?: number
+  readonly maxAcquisitionDurationMs?: number
+  readonly minFreeDiskBytes?: number
+  /** Defaults to `false`: acquisition sets `GIT_LFS_SKIP_SMUDGE=1` unless a caller explicitly
+   * opts in to fetching LFS content. */
+  readonly allowLfs?: boolean
+}
+
+export const DEFAULT_ACQUISITION_LIMITS: Required<RepositoryAcquisitionLimits> = {
+  maxGitObjects: 500_000,
+  maxGitBytes: 2 * 1024 * 1024 * 1024,
+  maxWorkspaceBytes: 4 * 1024 * 1024 * 1024,
+  maxFileCount: 200_000,
+  maxFileBytes: 512 * 1024 * 1024,
+  maxAcquisitionDurationMs: 180_000,
+  minFreeDiskBytes: 1024 * 1024 * 1024,
+  allowLfs: false,
+}
+
+function resolveLimits(
+  limits: RepositoryAcquisitionLimits | undefined,
+): Required<RepositoryAcquisitionLimits> {
+  return { ...DEFAULT_ACQUISITION_LIMITS, ...limits }
+}
+
+function cloneEnv(limits: Required<RepositoryAcquisitionLimits>): NodeJS.ProcessEnv | undefined {
+  return limits.allowLfs ? undefined : { ...process.env, GIT_LFS_SKIP_SMUDGE: '1' }
+}
+
+/** Parses `git count-objects -v` output. `size`/`size-pack` are reported in KiB. */
+function parseGitCountObjects(output: string): { objectCount: number; totalBytes: number } {
+  const fields = new Map<string, number>()
+  for (const line of output.split('\n')) {
+    const [key, value] = line.split(':').map((part) => part.trim())
+    if (key === undefined || value === undefined) continue
+    const parsed = Number.parseInt(value, 10)
+    if (Number.isFinite(parsed)) fields.set(key, parsed)
+  }
+  const objectCount = (fields.get('count') ?? 0) + (fields.get('in-pack') ?? 0)
+  const totalBytes = ((fields.get('size') ?? 0) + (fields.get('size-pack') ?? 0)) * 1024
+  return { objectCount, totalBytes }
+}
+
+/**
+ * Runs after a clone/duplicate has been verified: enforces the git-object and workspace caps and
+ * the overall wall-clock budget. Returns a failure reason rather than throwing, since a cap
+ * violation is an ordinary, expected acquisition outcome, not a bug.
+ */
+async function enforceAcquisitionCaps(
+  destination: string,
+  limits: Required<RepositoryAcquisitionLimits>,
+  deadlineAt: number,
+): Promise<{ readonly ok: true } | { readonly ok: false; readonly reason: string }> {
+  if (Date.now() > deadlineAt) {
+    return { ok: false, reason: 'Acquisition exceeded its overall wall-clock budget.' }
+  }
+
+  const countObjects = await runGitCommand(['count-objects', '-v'], destination, 30_000)
+  if (countObjects.exitCode === 0) {
+    const parsed = parseGitCountObjects(countObjects.stdout)
+    if (parsed.objectCount > limits.maxGitObjects) {
+      return {
+        ok: false,
+        reason: `Git object count ${parsed.objectCount} exceeds the configured limit of ${limits.maxGitObjects}.`,
+      }
+    }
+    if (parsed.totalBytes > limits.maxGitBytes) {
+      return {
+        ok: false,
+        reason: `Git object storage of ${parsed.totalBytes} bytes exceeds the configured limit of ${limits.maxGitBytes} bytes.`,
+      }
+    }
+  }
+
+  try {
+    await computeWorkspaceStats(destination, {
+      maxFileCount: limits.maxFileCount,
+      maxTotalBytes: limits.maxWorkspaceBytes,
+      maxFileBytes: limits.maxFileBytes,
+      deadlineAt,
+    })
+  } catch (error) {
+    if (error instanceof WorkspaceLimitExceededError) {
+      return { ok: false, reason: error.message }
+    }
+    throw error
+  }
+
+  return { ok: true }
+}
 
 const REF_PATTERN = /^[A-Za-z0-9][A-Za-z0-9/_.-]{0,199}$/
 
@@ -126,6 +235,7 @@ export interface AcquireExternalRepositoryOptions {
   readonly mode: RepositoryAcquisitionMode
   readonly ref?: string
   readonly policy?: GitHubOperationsPolicy
+  readonly limits?: RepositoryAcquisitionLimits
 }
 
 /**
@@ -139,6 +249,7 @@ export async function acquireExternalRepository(
   const policy = options.policy ?? createGitHubOperationsPolicy()
   policy.assertAllowed('clone_repo')
 
+  const limits = resolveLimits(options.limits)
   const evidence: string[] = []
   const { target } = options
   const sourceUrl = target.canonicalHttpsUrl
@@ -165,11 +276,13 @@ export async function acquireExternalRepository(
     }
   }
 
-  await mkdir(path.dirname(destination), { recursive: true })
-  const cloneArgs = ['clone', '--no-tags', sourceUrl, destination]
-  const cloneResult = await runGitCommand(cloneArgs, path.dirname(destination), 120_000)
-  if (cloneResult.exitCode !== 0) {
-    evidence.push(`Clone failed with exit code ${cloneResult.exitCode ?? 'unknown'}.`)
+  const acquisitionRoot = resolveAcquisitionRoot(options.workspaceRoot)
+  const fail = async (
+    reason: string,
+    evidenceLine?: string,
+  ): Promise<RepositoryAcquisitionResult> => {
+    if (evidenceLine !== undefined) evidence.push(evidenceLine)
+    await removeWorkspaceSafely(acquisitionRoot, destination)
     return {
       strategy: 'clone',
       mode: options.mode,
@@ -177,27 +290,46 @@ export async function acquireExternalRepository(
       workspacePath: destination,
       sourceUrl,
       evidence,
-      error: cloneResult.stderr.trim().length > 0 ? cloneResult.stderr.trim() : 'git clone failed.',
+      error: reason,
     }
+  }
+
+  const headroom = await checkDiskHeadroom(options.workspaceRoot, limits.minFreeDiskBytes)
+  if (!headroom.ok) {
+    return fail(
+      'Insufficient free disk space to begin acquisition.',
+      `Only ${headroom.freeBytes} bytes free; ${limits.minFreeDiskBytes} bytes required.`,
+    )
+  }
+
+  const deadlineAt = Date.now() + limits.maxAcquisitionDurationMs
+  const cloneTimeoutMs = Math.max(1_000, Math.min(120_000, deadlineAt - Date.now()))
+
+  await mkdir(path.dirname(destination), { recursive: true })
+  const cloneArgs = ['clone', '--no-tags', sourceUrl, destination]
+  const cloneResult = await runGitCommand(
+    cloneArgs,
+    path.dirname(destination),
+    cloneTimeoutMs,
+    cloneEnv(limits),
+  )
+  if (cloneResult.exitCode !== 0) {
+    return fail(
+      cloneResult.stderr.trim().length > 0 ? cloneResult.stderr.trim() : 'git clone failed.',
+      `Clone failed with exit code ${cloneResult.exitCode ?? 'unknown'}.`,
+    )
   }
   evidence.push('Clone completed.')
 
   if (requestedRef !== undefined) {
     const checkout = await runGitCommand(['checkout', requestedRef], destination)
     if (checkout.exitCode !== 0) {
-      evidence.push(`Checkout of ref "${requestedRef}" failed.`)
-      return {
-        strategy: 'clone',
-        mode: options.mode,
-        acquired: false,
-        workspacePath: destination,
-        sourceUrl,
-        evidence,
-        error:
-          checkout.stderr.trim().length > 0
-            ? checkout.stderr.trim()
-            : `Failed to check out ref "${requestedRef}".`,
-      }
+      return fail(
+        checkout.stderr.trim().length > 0
+          ? checkout.stderr.trim()
+          : `Failed to check out ref "${requestedRef}".`,
+        `Checkout of ref "${requestedRef}" failed.`,
+      )
     }
     evidence.push(`Checked out ref "${requestedRef}".`)
   }
@@ -205,15 +337,12 @@ export async function acquireExternalRepository(
   const verification = await verifyAcquiredWorkspace(destination)
   if (verification.reason !== undefined) evidence.push(verification.reason)
   if (!verification.ok) {
-    return {
-      strategy: 'clone',
-      mode: options.mode,
-      acquired: false,
-      workspacePath: destination,
-      sourceUrl,
-      evidence,
-      error: verification.reason ?? 'Acquired workspace failed verification.',
-    }
+    return fail(verification.reason ?? 'Acquired workspace failed verification.')
+  }
+
+  const capsResult = await enforceAcquisitionCaps(destination, limits, deadlineAt)
+  if (!capsResult.ok) {
+    return fail(capsResult.reason)
   }
 
   return {
@@ -234,6 +363,7 @@ export interface DuplicateLocalRepositoryOptions {
   readonly mode: RepositoryAcquisitionMode
   readonly slug: string
   readonly policy?: GitHubOperationsPolicy
+  readonly limits?: RepositoryAcquisitionLimits
 }
 
 /**
@@ -247,6 +377,7 @@ export async function duplicateLocalRepository(
   const policy = options.policy ?? createGitHubOperationsPolicy()
   policy.assertAllowed('clone_repo')
 
+  const limits = resolveLimits(options.limits)
   const evidence: string[] = []
   const sourcePath = path.resolve(options.sourceLocalPath)
 
@@ -275,14 +406,13 @@ export async function duplicateLocalRepository(
     }
   }
 
-  await mkdir(path.dirname(destination), { recursive: true })
-  const cloneResult = await runGitCommand(
-    ['clone', '--no-tags', sourcePath, destination],
-    path.dirname(destination),
-    120_000,
-  )
-  if (cloneResult.exitCode !== 0) {
-    evidence.push(`Duplication failed with exit code ${cloneResult.exitCode ?? 'unknown'}.`)
+  const acquisitionRoot = resolveAcquisitionRoot(options.workspaceRoot)
+  const fail = async (
+    reason: string,
+    evidenceLine?: string,
+  ): Promise<RepositoryAcquisitionResult> => {
+    if (evidenceLine !== undefined) evidence.push(evidenceLine)
+    await removeWorkspaceSafely(acquisitionRoot, destination)
     return {
       strategy: 'duplicate-local',
       mode: options.mode,
@@ -290,23 +420,45 @@ export async function duplicateLocalRepository(
       workspacePath: destination,
       sourceUrl: sourcePath,
       evidence,
-      error: cloneResult.stderr.trim().length > 0 ? cloneResult.stderr.trim() : 'git clone failed.',
+      error: reason,
     }
+  }
+
+  const headroom = await checkDiskHeadroom(options.workspaceRoot, limits.minFreeDiskBytes)
+  if (!headroom.ok) {
+    return fail(
+      'Insufficient free disk space to begin acquisition.',
+      `Only ${headroom.freeBytes} bytes free; ${limits.minFreeDiskBytes} bytes required.`,
+    )
+  }
+
+  const deadlineAt = Date.now() + limits.maxAcquisitionDurationMs
+  const cloneTimeoutMs = Math.max(1_000, Math.min(120_000, deadlineAt - Date.now()))
+
+  await mkdir(path.dirname(destination), { recursive: true })
+  const cloneResult = await runGitCommand(
+    ['clone', '--no-tags', sourcePath, destination],
+    path.dirname(destination),
+    cloneTimeoutMs,
+    cloneEnv(limits),
+  )
+  if (cloneResult.exitCode !== 0) {
+    return fail(
+      cloneResult.stderr.trim().length > 0 ? cloneResult.stderr.trim() : 'git clone failed.',
+      `Duplication failed with exit code ${cloneResult.exitCode ?? 'unknown'}.`,
+    )
   }
   evidence.push('Duplication completed.')
 
   const verification = await verifyAcquiredWorkspace(destination)
   if (verification.reason !== undefined) evidence.push(verification.reason)
   if (!verification.ok) {
-    return {
-      strategy: 'duplicate-local',
-      mode: options.mode,
-      acquired: false,
-      workspacePath: destination,
-      sourceUrl: sourcePath,
-      evidence,
-      error: verification.reason ?? 'Acquired workspace failed verification.',
-    }
+    return fail(verification.reason ?? 'Acquired workspace failed verification.')
+  }
+
+  const capsResult = await enforceAcquisitionCaps(destination, limits, deadlineAt)
+  if (!capsResult.ok) {
+    return fail(capsResult.reason)
   }
 
   return {

@@ -34,6 +34,7 @@ import { runMcpServerCommand } from './cli-mcp-server.js'
 import { renderMissionPacketCommand } from './cli-mission-packet.js'
 import { runPreflightCommand } from './cli-preflight.js'
 import { renderProjectContextCommand } from './cli-project-context.js'
+import { runPruneReposCommand } from './cli-prune-repos.js'
 import { renderProvidersCommand } from './cli-providers.js'
 import { renderReleaseReadinessCommand } from './cli-release-readiness.js'
 import { renderRepairLoopCommand } from './cli-repair-loop.js'
@@ -348,6 +349,10 @@ async function main(): Promise<void> {
 
     case 'serve':
       await runServeCommand(rest)
+      break
+
+    case 'prune-repos':
+      console.log(await runPruneReposCommand(process.cwd(), rest))
       break
 
     case 'checkpoint':

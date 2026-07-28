@@ -180,6 +180,33 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   autonomy runtime, without the HTTP layer needing to know autonomy exists. `symbolwright serve`
   (`cli-serve.ts`) now handles `SIGTERM`/`SIGINT` by calling `server.close()` instead of blocking
   forever, with a second signal during the grace period forcing an immediate exit.
+- **External repository intake had no size/count/time caps and no cleanup on most failure paths
+  (Bundle #12 PR 3)**: `acquireExternalRepository`/`duplicateLocalRepository` cloned into
+  `.symbolwright/external-repos/` with no limit beyond a 120s per-subprocess timeout, so a large
+  or hostile external repository could exhaust disk space, and a clone/checkout/verification
+  failure left the partial destination directory behind on disk with nothing to clean it up.
+  Non-`dry-run` acquisitions now enforce, via new `src/github/repository-workspace-fs.ts` and
+  cap-checking in `repository-acquisition.ts`: git object count and packed/unpacked byte size
+  (`git count-objects -v`), total checked-out workspace byte size, file count, and max individual
+  file size (a bare `count-objects` check alone misses working-tree files and LFS content), an
+  overall acquisition wall-clock budget, and up-front free-disk headroom before any clone I/O
+  starts. `GIT_LFS_SKIP_SMUDGE=1` is now set unless a caller explicitly opts in. Every failure
+  path — clone failure, checkout failure, verification failure, a cap violation, and (in
+  `external-repository-intake.ts`) profile-building or mission-creation failure — now deletes the
+  partial destination via a symlink-safe deletion helper that `lstat`s the candidate first (a
+  symlinked destination is unlinked directly and never traversed) and, for a real directory,
+  confirms its canonical path stays inside the controlled acquisition root before recursing.
+  New `src/github/repository-acquisition-retention.ts` adds two-phase quarantine-then-delete
+  retention for acquired workspaces no longer needed: a workspace is only prunable once **no
+  retained mission at all** references it (not just no `ACTIVE` mission, since a paused, failed,
+  completed, or imported mission may still need its repository for reopening, export, or audit);
+  quarantined workspaces are rechecked for new mission references immediately before their actual
+  deletion and restored if one appeared during the grace window; a shared
+  `src/github/acquisition-root-lock.ts` mutex serializes intake against retention sweeps so a
+  workspace can never be quarantined in the window between its acquisition finishing and the
+  mission that will reference it actually being created. New operator command
+  `symbolwright prune-repos` (`--quarantine-only`/`--finalize-only`/`--json`) runs the sweep
+  on demand.
 
 ### Added
 

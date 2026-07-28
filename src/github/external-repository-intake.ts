@@ -3,8 +3,11 @@ import path from 'node:path'
 import type { SymbolWrightMission } from '../mission/mission-types.js'
 import type { MissionService } from '../mission/mission-service.js'
 import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
+import { withAcquisitionRootLock } from './acquisition-root-lock.js'
 import {
   acquireExternalRepository,
+  resolveAcquisitionRoot,
+  type RepositoryAcquisitionLimits,
   type RepositoryAcquisitionMode,
   type RepositoryAcquisitionResult,
 } from './repository-acquisition.js'
@@ -22,6 +25,7 @@ import {
   type RepositoryIntakeProfile,
   type RepositoryMetadataSummary,
 } from './repository-intake-profile.js'
+import { removeWorkspaceSafely } from './repository-workspace-fs.js'
 
 /**
  * The mission-runtime integration point for external GitHub repositories.
@@ -57,6 +61,7 @@ export interface ExternalRepositoryIntakeOptions {
   readonly policy?: GitHubOperationsPolicy
   readonly targetOptions?: ParseGitHubRepositoryTargetOptions
   readonly metadata?: RepositoryMetadataSummary
+  readonly limits?: RepositoryAcquisitionLimits
   /**
    * The delegated grant this intake is acting on behalf of, if any -- forwarded to
    * `MissionService.create` so the resulting mission is attributed to that grant, exactly like a
@@ -97,62 +102,89 @@ export async function performExternalRepositoryIntake(
   const target =
     options.target ?? parseGitHubRepositoryTarget(options.rawTarget!, options.targetOptions)
   const ref = options.ref ?? target.ref
+  const acquisitionRoot = resolveAcquisitionRoot(options.workspaceRoot)
 
-  const acquisition = await acquireExternalRepository({
-    target,
-    workspaceRoot: options.workspaceRoot,
-    mode: options.mode,
-    ...(ref === undefined ? {} : { ref }),
-    policy,
+  // Held for the full acquire-through-mission-creation sequence: a concurrent retention sweep
+  // (repository-acquisition-retention.ts) only considers a workspace "referenced" once a mission
+  // points at it, so without this lock a sweep running between acquisition completing and the
+  // mission actually being created could quarantine this workspace out from under it.
+  return withAcquisitionRootLock(acquisitionRoot, async () => {
+    const acquisition = await acquireExternalRepository({
+      target,
+      workspaceRoot: options.workspaceRoot,
+      mode: options.mode,
+      ...(ref === undefined ? {} : { ref }),
+      policy,
+      ...(options.limits === undefined ? {} : { limits: options.limits }),
+    })
+
+    let profile: RepositoryIntakeProfile
+    try {
+      profile = await buildRepositoryIntakeProfile({
+        target,
+        acquisition,
+        policy,
+        ...(options.metadata === undefined ? {} : { metadata: options.metadata }),
+      })
+    } catch (error) {
+      if (acquisition.acquired) {
+        await removeWorkspaceSafely(acquisitionRoot, acquisition.workspacePath)
+      }
+      throw error
+    }
+
+    if (options.mode === 'dry-run' || !acquisition.acquired) {
+      return { target, acquisition, profile }
+    }
+
+    const relativeRepositoryPath = path.relative(
+      path.resolve(options.workspaceRoot),
+      acquisition.workspacePath,
+    )
+
+    let mission: SymbolWrightMission
+    try {
+      mission = await options.missionService.create(
+        {
+          name: options.name ?? defaultMissionName(target, ref),
+          objective: options.objective,
+          workspaceKind: 'repository',
+          repositoryPath: relativeRepositoryPath,
+          runtimeMode: options.runtimeMode,
+          labels: [
+            'external-repository',
+            `origin:${target.host}`,
+            `strategy:${acquisition.strategy}`,
+          ],
+        },
+        options.grantId === undefined ? {} : { grantId: options.grantId },
+      )
+    } catch (error) {
+      await removeWorkspaceSafely(acquisitionRoot, acquisition.workspacePath)
+      throw error
+    }
+
+    options.missionService.appendEvent(
+      mission.id,
+      'github.intake.acquired',
+      `Acquired external repository ${target.canonicalHttpsUrl} into an isolated workspace.`,
+      {
+        target: target.canonicalHttpsUrl,
+        targetType: target.targetType,
+        strategy: acquisition.strategy,
+        mode: acquisition.mode,
+        workspacePath: acquisition.workspacePath,
+        resolvedRef: acquisition.checkedOutRef,
+        ecosystems: profile.portability?.ecosystems ?? [],
+        primaryEcosystem: profile.portability?.primaryEcosystem,
+        validationCommands: profile.portability?.validationCommands ?? [],
+        packageRoots: profile.packageRoots,
+        riskFlags: profile.riskFlags,
+        writesAllowed: profile.writesAllowed,
+        pullRequestCreationAllowed: profile.pullRequestCreationAllowed,
+      },
+    )
+
+    return { target, acquisition, profile, mission }
   })
-
-  const profile = await buildRepositoryIntakeProfile({
-    target,
-    acquisition,
-    policy,
-    ...(options.metadata === undefined ? {} : { metadata: options.metadata }),
-  })
-
-  if (options.mode === 'dry-run' || !acquisition.acquired) {
-    return { target, acquisition, profile }
-  }
-
-  const relativeRepositoryPath = path.relative(
-    path.resolve(options.workspaceRoot),
-    acquisition.workspacePath,
-  )
-  const mission = await options.missionService.create(
-    {
-      name: options.name ?? defaultMissionName(target, ref),
-      objective: options.objective,
-      workspaceKind: 'repository',
-      repositoryPath: relativeRepositoryPath,
-      runtimeMode: options.runtimeMode,
-      labels: ['external-repository', `origin:${target.host}`, `strategy:${acquisition.strategy}`],
-    },
-    options.grantId === undefined ? {} : { grantId: options.grantId },
-  )
-
-  options.missionService.appendEvent(
-    mission.id,
-    'github.intake.acquired',
-    `Acquired external repository ${target.canonicalHttpsUrl} into an isolated workspace.`,
-    {
-      target: target.canonicalHttpsUrl,
-      targetType: target.targetType,
-      strategy: acquisition.strategy,
-      mode: acquisition.mode,
-      workspacePath: acquisition.workspacePath,
-      resolvedRef: acquisition.checkedOutRef,
-      ecosystems: profile.portability?.ecosystems ?? [],
-      primaryEcosystem: profile.portability?.primaryEcosystem,
-      validationCommands: profile.portability?.validationCommands ?? [],
-      packageRoots: profile.packageRoots,
-      riskFlags: profile.riskFlags,
-      writesAllowed: profile.writesAllowed,
-      pullRequestCreationAllowed: profile.pullRequestCreationAllowed,
-    },
-  )
-
-  return { target, acquisition, profile, mission }
 }
