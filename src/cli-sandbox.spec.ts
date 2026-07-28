@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { renderSandboxCommand } from './cli-sandbox.js'
-import {
-  STRONG_SANDBOX_NODE_IMAGE_ID,
-  runnerAvailability,
-} from './sandbox/sandbox-registry.js'
+import { STRONG_SANDBOX_NODE_IMAGE_ID } from './sandbox/sandbox-images.js'
+import { runnerAvailability } from './sandbox/sandbox-registry.js'
 import type { SandboxContainerEngineStatus } from './sandbox/sandbox-images.js'
 import type { SandboxImageDefinition } from './sandbox/sandbox-types.js'
 
