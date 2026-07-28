@@ -31,7 +31,7 @@ jobs:
           SYMBOLWRIGHT_REQUIRE_DOCKER_SMOKE: '1'
         run: python3 scripts/.pr6-diagnose.py
 
-      - name: Format permanent product files
+      - name: Format permanent non-workflow product files
         run: >-
           npx prettier --write
           CHANGELOG.md
@@ -58,10 +58,8 @@ jobs:
           src/release/artifact-smoke.ts
           src/server/symbolwright-chat-server.ts
           src/web/status-runner.ts
-          .github/workflows/deploy.yml
-          .github/workflows/publish.yml
 
-      - name: Commit validated permanent product files
+      - name: Commit validated non-workflow product files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -82,8 +80,7 @@ jobs:
             src/orchestration/team-service.ts \
             src/release/artifact-smoke.ts \
             src/server/symbolwright-chat-server.ts \
-            src/web/status-runner.ts \
-            .github/workflows/deploy.yml .github/workflows/publish.yml
+            src/web/status-runner.ts
           git status --short
           git diff --cached --quiet && { echo "No permanent product changes were staged"; exit 1; }
           git commit -m "feat(release): complete artifact integrity and governance closure (Bundle #12 PR 6/7)"
