@@ -66,10 +66,7 @@ export function finalizeSandboxExecutionEvidence(
               dependencyMode: policy.dependencies.mode,
               workspaceMode: policy.workspace.mode,
               sourceVersions: Object.fromEntries(
-                policy.sources.map((source) => [
-                  evidencePolicySourceId(source),
-                  source.version,
-                ]),
+                policy.sources.map((source) => [evidencePolicySourceId(source), source.version]),
               ),
             },
           }),
