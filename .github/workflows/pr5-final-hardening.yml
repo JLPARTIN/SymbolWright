@@ -1,0 +1,337 @@
+name: PR5 Final Hardening
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout PR head branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply reviewed hardening corrections
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace(relative, before, after):
+              path = Path(relative)
+              text = path.read_text()
+              if before not in text:
+                  raise SystemExit(f'Missing anchor in {relative}: {before[:120]}')
+              path.write_text(text.replace(before, after, 1))
+
+          replace(
+              'src/server/deployment-mode.ts',
+              "import { parseTrustedProxyCidrs, type ParsedCidr } from './trusted-proxy.js'",
+              "import { isIP } from 'node:net'\n\nimport { parseTrustedProxyCidrs, type ParsedCidr } from './trusted-proxy.js'",
+          )
+          replace(
+              'src/server/deployment-mode.ts',
+              """export function isLoopbackHost(host: string): boolean {
+            const normalized = host
+              .trim()
+              .toLowerCase()
+              .replace(/^\\[|\\]$/g, '')
+            return normalized === 'localhost' || normalized === '::1' || normalized.startsWith('127.')
+          }
+          """,
+              """export function isLoopbackHost(host: string): boolean {
+            const normalized = host
+              .trim()
+              .toLowerCase()
+              .replace(/^\\[|\\]$/g, '')
+            if (normalized === 'localhost' || normalized === '::1') return true
+            if (isIP(normalized) !== 4) return false
+            return normalized.split('.')[0] === '127'
+          }
+          """,
+          )
+          replace(
+              'src/server/trusted-proxy.ts',
+              """    const family = detected
+              const bits = family === 4 ? 32 : 128
+              const prefixLength = rawPrefix === undefined ? bits : Number.parseInt(rawPrefix, 10)
+              if (!Number.isInteger(prefixLength) || prefixLength < 0 || prefixLength > bits) {
+          """,
+              """    const family = detected
+              const bits = family === 4 ? 32 : 128
+              if (rawPrefix !== undefined && !/^(0|[1-9]\\d*)$/.test(rawPrefix)) {
+                throw new TrustedProxyConfigError(`Malformed trusted-proxy CIDR prefix: ${entry}`)
+              }
+              const prefixLength = rawPrefix === undefined ? bits : Number(rawPrefix)
+              if (!Number.isInteger(prefixLength) || prefixLength < 0 || prefixLength > bits) {
+          """,
+          )
+          replace(
+              'src/cli-serve.ts',
+              """function parsePositiveInteger(value: string | undefined, name: string): number | undefined {
+            if (value === undefined || value.trim().length === 0) return undefined
+            const parsed = Number.parseInt(value, 10)
+            if (!Number.isInteger(parsed) || parsed < 1)
+              throw new Error(`${name} must be a positive integer.`)
+            return parsed
+          }
+          """,
+              """function parsePositiveInteger(value: string | undefined, name: string): number | undefined {
+            if (value === undefined || value.trim().length === 0) return undefined
+            const normalized = value.trim()
+            if (!/^[1-9]\\d*$/.test(normalized)) {
+              throw new Error(`${name} must be a positive integer.`)
+            }
+            const parsed = Number(normalized)
+            if (!Number.isSafeInteger(parsed)) {
+              throw new Error(`${name} must be a positive safe integer.`)
+            }
+            return parsed
+          }
+          """,
+          )
+          replace(
+              'src/server/metrics-registry.ts',
+              """    res.once('finish', () => {
+              this.setGauge(
+                'http_requests_active',
+                Math.max(0, (this.#gauges.get('http_requests_active') ?? 1) - 1),
+              )
+              const bucket = Math.floor(res.statusCode / 100)
+              if (bucket >= 1 && bucket <= 5) this.increment(`http_responses_${bucket}xx_total`)
+              if (res.statusCode === 401) this.increment('http_authentication_failures_total')
+              if (res.statusCode === 403) this.increment('http_authorization_denials_total')
+              if (res.statusCode === 429) this.increment('http_rate_or_concurrency_limited_total')
+              if (res.statusCode >= 500) this.increment('http_server_errors_total')
+            })
+          """,
+              """    let finalized = false
+            const finalize = (): void => {
+              if (finalized) return
+              finalized = true
+              this.setGauge(
+                'http_requests_active',
+                Math.max(0, (this.#gauges.get('http_requests_active') ?? 1) - 1),
+              )
+              const bucket = Math.floor(res.statusCode / 100)
+              if (bucket >= 1 && bucket <= 5) this.increment(`http_responses_${bucket}xx_total`)
+              if (res.statusCode === 401) this.increment('http_authentication_failures_total')
+              if (res.statusCode === 403) this.increment('http_authorization_denials_total')
+              if (res.statusCode === 429) this.increment('http_rate_or_concurrency_limited_total')
+              if (res.statusCode >= 500) this.increment('http_server_errors_total')
+            }
+            res.once('finish', finalize)
+            res.once('close', finalize)
+          """,
+          )
+          replace(
+              'src/app/server/unified-server.ts',
+              "import { prepareOperationalServerOptions } from '../../server/operational-bootstrap.js'",
+              "import { MetricsRegistry } from '../../server/metrics-registry.js'\nimport { prepareOperationalServerOptions } from '../../server/operational-bootstrap.js'",
+          )
+          replace(
+              'src/app/server/unified-server.ts',
+              """  const chatListener = createChatServerRequestListener(options)
+            const deploymentSecurity = resolveDeploymentSecurity(options)
+          """,
+              """  const metricsRegistry = options.metricsRegistry ?? new MetricsRegistry()
+            const chatListener = createChatServerRequestListener({ ...options, metricsRegistry })
+            const deploymentSecurity = resolveDeploymentSecurity(options)
+          """,
+          )
+          replace(
+              'src/app/server/unified-server.ts',
+              """    const url = new URL(req.url ?? '/', 'http://localhost')
+            applyOperationalSecurityHeaders(res)
+          """,
+              """    const url = new URL(req.url ?? '/', 'http://localhost')
+            metricsRegistry.trackResponse(req, res)
+            applyOperationalSecurityHeaders(res)
+          """,
+          )
+
+          boot = Path('src/server/boot-sweep.ts')
+          text = boot.read_text()
+          text = text.replace(
+              "  const sandboxIndex = path.join(",
+              "  let sandboxHistoryHealthy = true\n  const sandboxIndex = path.join(",
+              1,
+          )
+          text = text.replace(
+              """    } catch (error) {
+              warnings.push(
+                `Sandbox history index is unreadable: ${error instanceof Error ? error.message : String(error)}`,
+              )
+            }
+            }
+
+            let retention = { quarantined: 0, deleted: 0, restored: 0 }
+          """,
+              """    } catch (error) {
+              sandboxHistoryHealthy = false
+              warnings.push(
+                `Sandbox history index is unreadable: ${error instanceof Error ? error.message : String(error)}`,
+              )
+            }
+            }
+            options.readiness.setCheck(
+              'sandbox_history',
+              sandboxHistoryHealthy,
+              sandboxHistoryHealthy ? undefined : 'Sandbox history state is unreadable.',
+            )
+
+            let retentionHealthy = true
+            let retention = { quarantined: 0, deleted: 0, restored: 0 }
+          """,
+              1,
+          )
+          text = text.replace(
+              """    } catch (error) {
+              warnings.push(
+                `External-repository retention sweep failed: ${error instanceof Error ? error.message : String(error)}`,
+              )
+            }
+            }
+
+            options.readiness.setCheck(
+          """,
+              """    } catch (error) {
+              retentionHealthy = false
+              warnings.push(
+                `External-repository retention sweep failed: ${error instanceof Error ? error.message : String(error)}`,
+              )
+            }
+            }
+            options.readiness.setCheck(
+              'repository_retention',
+              retentionHealthy,
+              retentionHealthy ? undefined : 'External repository retention sweep failed.',
+            )
+
+            options.readiness.setCheck(
+          """,
+              1,
+          )
+          boot.write_text(text)
+
+          metrics_spec = Path('src/server/metrics-registry.spec.ts')
+          text = metrics_spec.read_text()
+          text = text.replace(
+              """  })
+            })
+          """,
+              """  })
+
+            it('releases the active gauge once when a client disconnects before finish', () => {
+              const registry = new MetricsRegistry()
+              const req = {} as IncomingMessage
+              const res = Object.assign(new EventEmitter(), { statusCode: 200 }) as unknown as ServerResponse
+              registry.trackResponse(req, res)
+              res.emit('close')
+              res.emit('finish')
+              const snapshot = registry.snapshot()
+              expect(snapshot.gauges['http_requests_active']).toBe(0)
+              expect(snapshot.counters['http_responses_2xx_total']).toBe(1)
+            })
+            })
+          """,
+              1,
+          )
+          metrics_spec.write_text(text)
+
+          deployment_spec = Path('src/server/deployment-mode.spec.ts')
+          text = deployment_spec.read_text()
+          marker = """  it('fails closed for non-loopback plaintext local binding without the escape hatch', () => {
+            expect(() => resolveDeploymentSecurity({ host: '0.0.0.0' })).toThrow(DeploymentConfigError)
+            })
+          """
+          addition = marker + """
+            it('does not mistake a hostname beginning with 127 for a loopback address', () => {
+              expect(() => resolveDeploymentSecurity({ host: '127.attacker.example' })).toThrow(
+                DeploymentConfigError,
+              )
+            })
+          """
+          if marker not in text:
+              raise SystemExit('Missing deployment test anchor')
+          deployment_spec.write_text(text.replace(marker, addition, 1))
+
+          proxy_spec = Path('src/server/trusted-proxy.spec.ts')
+          text = proxy_spec.read_text()
+          before = """    expect(() => parseTrustedProxyCidrs(['10.0.0.0/99'])).toThrow(TrustedProxyConfigError)
+            expect(() => parseTrustedProxyCidrs(['not-an-ip'])).toThrow(TrustedProxyConfigError)
+          """
+          after = """    expect(() => parseTrustedProxyCidrs(['10.0.0.0/99'])).toThrow(TrustedProxyConfigError)
+            expect(() => parseTrustedProxyCidrs(['10.0.0.0/24junk'])).toThrow(TrustedProxyConfigError)
+            expect(() => parseTrustedProxyCidrs(['not-an-ip'])).toThrow(TrustedProxyConfigError)
+          """
+          if before not in text:
+              raise SystemExit('Missing trusted proxy test anchor')
+          proxy_spec.write_text(text.replace(before, after, 1))
+
+          cli_spec = Path('src/cli-serve.spec.ts')
+          text = cli_spec.read_text()
+          anchor = """  it('reads canonical SYMBOLWRIGHT_* host/port/cors/TLS vars', () => {
+          """
+          test = """  it('rejects malformed hosted concurrency limits instead of partially parsing them', () => {
+            expect(() =>
+              resolveChatServerOptions(
+                {},
+                {
+                  SYMBOLWRIGHT_API_KEY: 'k',
+                  SYMBOLWRIGHT_MAX_PROVIDER_CONCURRENCY: '3junk',
+                },
+              ),
+            ).toThrow('SYMBOLWRIGHT_MAX_PROVIDER_CONCURRENCY must be a positive integer')
+            })
+
+          """
+          if anchor not in text:
+              raise SystemExit('Missing CLI test anchor')
+          cli_spec.write_text(text.replace(anchor, test + anchor, 1))
+          PY
+
+      - name: Format and validate
+        run: |
+          npx prettier --write \
+            src/app/server/unified-server.ts \
+            src/cli-serve.ts \
+            src/cli-serve.spec.ts \
+            src/server/boot-sweep.ts \
+            src/server/deployment-mode.ts \
+            src/server/deployment-mode.spec.ts \
+            src/server/metrics-registry.ts \
+            src/server/metrics-registry.spec.ts \
+            src/server/trusted-proxy.ts \
+            src/server/trusted-proxy.spec.ts
+          npm run typecheck
+          npm run lint
+          npm run format:check
+          npm test
+          npm run build
+
+      - name: Commit reviewed hardening and remove workflow
+        run: |
+          git rm .github/workflows/pr5-final-hardening.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix(server): close final PR 5 hardening edge cases"
+          git push origin HEAD:${GITHUB_HEAD_REF}
