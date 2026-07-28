@@ -1,0 +1,84 @@
+name: Sandbox PR1 Builder
+
+on:
+  push:
+    branches:
+      - symbolwright/sandbox-pr1-guarded-host-containment
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-commit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout implementation branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply guarded-host containment implementation
+        run: |
+          node scripts/sandbox-pr1-builder-part1.mjs
+          node scripts/sandbox-pr1-builder-part2.mjs
+          node scripts/sandbox-pr1-builder-part3.mjs
+          node scripts/sandbox-pr1-builder-part4.mjs
+          node scripts/sandbox-pr1-builder-part5.mjs
+
+      - name: Format source changes
+        run: npm run format
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run targeted sandbox boundary tests
+        run: |
+          npx vitest run \
+            src/sandbox/sandbox-policy-coverage.spec.ts \
+            src/app/api/sandbox-routes.spec.ts \
+            src/runtime/tools/sandbox-tools.spec.ts \
+            src/server/symbolwright-chat-server-sandbox.spec.ts \
+            src/runtime/tools/bash-tool-boundary.spec.ts
+
+      - name: Build
+        run: npm run build
+
+      - name: Validate served client
+        run: npm run validate:served-client
+
+      - name: Commit generated implementation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            .env.example \
+            CHANGELOG.md \
+            src/sandbox/sandbox-policy.ts \
+            src/app/api/sandbox-routes.ts \
+            src/runtime/tools/sandbox-tools.ts \
+            src/runtime/tools/bash-tool.ts \
+            src/app/views/repository-view.ts \
+            src/agent/tool-schema-bridge.ts \
+            src/sandbox/sandbox-registry.ts \
+            src/sandbox/sandbox-policy-coverage.spec.ts \
+            src/app/api/sandbox-routes.spec.ts \
+            src/runtime/tools/sandbox-tools.spec.ts \
+            src/server/symbolwright-chat-server-sandbox.spec.ts \
+            src/runtime/tools/bash-tool-boundary.spec.ts
+          git diff --cached --check
+          git commit -m "fix(sandbox): contain guarded-host execution (Sandbox PR 1/7)"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
