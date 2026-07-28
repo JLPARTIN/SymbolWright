@@ -131,7 +131,11 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       type: 'object',
       properties: {
         command: { type: 'string', description: 'Shell command to execute (must be allowlisted)' },
-        timeoutMs: { type: 'number', description: 'Timeout in milliseconds (default 120000)' },
+        timeoutMs: {
+          type: 'number',
+          description:
+            'Timeout in milliseconds; requests are capped at the 300000ms server maximum',
+        },
       },
       required: ['command'],
     },
@@ -324,7 +328,8 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
         },
         repository: {
           type: 'object',
-          description: 'Approved repository target with rootPath and selectedPaths',
+          description:
+            'Server-authoritative repository target. Callers may provide selectedPaths only; rootPath is rejected.',
         },
         requestedRunnerId: {
           type: 'string',

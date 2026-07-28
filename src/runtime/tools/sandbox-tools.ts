@@ -16,6 +16,7 @@ const FORBIDDEN_SANDBOX_TOOL_FIELDS = new Set([
   'podmanArgs',
   'containerArgs',
 ])
+const GUARDED_HOST_RUNNER_PREFIX = 'guarded-host-'
 
 function assertNoForbiddenFields(input: unknown): void {
   if (typeof input !== 'object' || input === null || Array.isArray(input)) return
@@ -41,8 +42,38 @@ function asToolRequest(input: unknown, context: RuntimeToolContext): unknown {
     throw new Error('sandbox_execute input must be a structured object request.')
   }
   const record = input as Record<string, unknown>
+  const requestedRunnerId = record['requestedRunnerId']
+  if (
+    typeof requestedRunnerId === 'string' &&
+    requestedRunnerId.startsWith(GUARDED_HOST_RUNNER_PREFIX)
+  ) {
+    throw new Error(
+      'sandbox_execute rejects trusted local host runners. Guarded-host is a local operator break-glass path, not an agent/API sandbox.',
+    )
+  }
+
+  const rawRepository = record['repository']
+  let repository: unknown = rawRepository
+  if (
+    typeof rawRepository === 'object' &&
+    rawRepository !== null &&
+    !Array.isArray(rawRepository)
+  ) {
+    const repositoryRecord = rawRepository as Record<string, unknown>
+    if ('rootPath' in repositoryRecord) {
+      throw new Error(
+        'sandbox_execute rejects repository.rootPath because workspace authority comes from the runtime context.',
+      )
+    }
+    repository = {
+      ...repositoryRecord,
+      rootPath: context.cwd,
+    }
+  }
+
   return {
     ...record,
+    ...(rawRepository === undefined ? {} : { repository }),
     ...(record['missionId'] === undefined && context.sessionId !== undefined
       ? { missionId: context.sessionId }
       : {}),
@@ -128,6 +159,7 @@ export const sandboxListRuntimesTool: RuntimeToolDefinition = {
           networkPolicy: runner.networkPolicy,
           dependencyState: runner.dependencyState,
           capabilities: runner.capabilities,
+          notes: runner.notes,
         })),
         warnings: inventory.warnings,
       },
@@ -140,7 +172,7 @@ export const sandboxListRuntimesTool: RuntimeToolDefinition = {
 export const sandboxExecuteTool: RuntimeToolDefinition = {
   name: 'sandbox_execute',
   description:
-    'Execute, compile, or test code through SymbolWright structured sandbox execution. Accepts only structured sandbox requests; raw shell commands, executable paths, image names, and container args are rejected.',
+    'Execute, compile, or test code through SymbolWright structured sandbox execution. Accepts only structured requests; raw shell commands, caller-selected repository roots, trusted local host runners, image names, and container args are rejected.',
   capability: 'APPROVED_COMMAND',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const service = resolveSandboxService(context)

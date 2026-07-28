@@ -1,6 +1,7 @@
 import type { RuntimeToolDefinition } from '../types.js'
 import { renderRuntimeBoundary } from '../renderers/runtime-renderers.js'
 import {
+  DEFAULT_TIMEOUT_MS,
   DockerSandboxRunner,
   parseWorkspaceCommand,
   type SandboxRunner,
@@ -10,6 +11,10 @@ import {
 export interface BashToolInput {
   readonly command: string
   readonly timeoutMs?: number
+}
+function normalizeRequestedTimeout(timeoutMs: number | undefined): number | undefined {
+  if (timeoutMs === undefined || !Number.isFinite(timeoutMs) || timeoutMs <= 0) return undefined
+  return Math.min(Math.floor(timeoutMs), DEFAULT_TIMEOUT_MS)
 }
 
 function parseBashInput(input: unknown): BashToolInput {
@@ -81,10 +86,11 @@ export async function executeBashTool(
     return renderBlockedCommand(input.command, message)
   }
 
+  const timeoutMs = normalizeRequestedTimeout(input.timeoutMs)
   const result = await sandboxRunner.runCommand({
     ...parsedCommand,
     workspaceRoot: cwd,
-    ...(typeof input.timeoutMs === 'number' ? { timeoutMs: input.timeoutMs } : {}),
+    ...(timeoutMs === undefined ? {} : { timeoutMs }),
   })
 
   return renderSandboxResult(result)

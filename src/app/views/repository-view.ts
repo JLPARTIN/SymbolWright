@@ -112,7 +112,7 @@ export function buildRepositoryViewClientScript(): string {
 
     function repoSandboxCompatibleRunner(languageId) {
       return repoState.sandboxRunners.find(function (runner) {
-        return runner.languageIds.indexOf(languageId) >= 0 && runner.availability.status === 'available' && runner.backend !== 'browser';
+        return runner.languageIds.indexOf(languageId) >= 0 && runner.availability.status === 'available' && runner.backend === 'container';
       }) || null;
     }
 
@@ -130,12 +130,13 @@ export function buildRepositoryViewClientScript(): string {
       }).join('');
       const compatible = languageId ? repoSandboxCompatibleRunner(languageId) : null;
       if (compatible) select.value = compatible.id;
-      runBtn.disabled = !repoState.currentFilePath || compatible === null;
-      if (!repoState.currentFilePath) statusEl.textContent = 'Open a supported file to run it.';
-      else if (!languageId) statusEl.textContent = 'No server sandbox language is recognized for this file extension.';
-      else if (compatible === null) statusEl.textContent = languageId + ' has no available server runner. Enable SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION=true or prepare an approved container image.';
-      else statusEl.textContent = 'Ready: ' + languageId + ' via ' + compatible.id + ' (' + compatible.backend + ', ' + compatible.trustClass + ').';
-    }
+runBtn.disabled = !repoState.currentFilePath || compatible === null || !appState.activeMissionId;
+if (!repoState.currentFilePath) statusEl.textContent = 'Open a supported file to run it.';
+else if (!languageId) statusEl.textContent = 'No server sandbox language is recognized for this file extension.';
+else if (!appState.activeMissionId) statusEl.textContent = 'Select or create an active mission so the server can resolve the authoritative repository workspace.';
+else if (compatible === null) statusEl.textContent = languageId + ' has no available strong server container runner. Guarded-host is local break-glass only and cannot run through the HTTP API.';
+else statusEl.textContent = 'Ready: ' + languageId + ' via ' + compatible.id + ' (' + compatible.backend + ', ' + compatible.trustClass + ').';
+}
 
     async function loadRepoSandboxRuntimes() {
       const result = await repoFetchJson('/api/sandbox/runtimes/refresh', { method: 'POST' });
@@ -171,9 +172,9 @@ export function buildRepositoryViewClientScript(): string {
       document.getElementById('repo-sandbox-result').textContent = lines.join('\\n');
     }
 
-    async function runRepoSandbox() {
-      if (!repoState.currentFilePath) return;
-      const languageId = repoSandboxLanguageForPath(repoState.currentFilePath);
+async function runRepoSandbox() {
+  if (!repoState.currentFilePath || !appState.activeMissionId) return;
+const languageId = repoSandboxLanguageForPath(repoState.currentFilePath);
       if (!languageId) return;
       const runnerId = document.getElementById('repo-sandbox-runner').value;
       const mode = document.getElementById('repo-sandbox-mode').value;
@@ -186,14 +187,13 @@ export function buildRepositoryViewClientScript(): string {
       const payload = {
         languageId: languageId,
         mode: mode,
-        repository: { rootPath: '.', selectedPaths: [repoState.currentFilePath] },
-        requestedRunnerId: runnerId,
-        stdin: document.getElementById('repo-sandbox-stdin').value,
-        args: repoSandboxArgs(),
-        runtimeMode: 'APPROVED_EXECUTION'
-      };
-      if (appState.activeMissionId) payload.missionId = appState.activeMissionId;
-      const result = await repoFetchJson('/api/sandbox/execute', {
+  repository: { selectedPaths: [repoState.currentFilePath] },
+  requestedRunnerId: runnerId,
+  stdin: document.getElementById('repo-sandbox-stdin').value,
+  args: repoSandboxArgs(),
+  missionId: appState.activeMissionId
+};
+const result = await repoFetchJson('/api/sandbox/execute', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(payload)

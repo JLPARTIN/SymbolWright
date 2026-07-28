@@ -78,7 +78,6 @@ describe('sandbox runtime agent tools', () => {
         languageId: 'javascript',
         mode: 'run',
         source: "console.log('proposal only')",
-        requestedRunnerId: 'guarded-host-javascript',
       },
       context('PROPOSAL_ONLY'),
     )
@@ -86,14 +85,38 @@ describe('sandbox runtime agent tools', () => {
     expect(rendered).toContain('fileCount')
   })
 
-  it('runs JavaScript through the shared sandbox service in APPROVED_EXECUTION', async () => {
+  it('rejects guarded-host and caller-selected repository roots from the agent tool', async () => {
+    await expect(
+      sandboxExecuteTool.execute(
+        {
+          languageId: 'javascript',
+          mode: 'run',
+          source: "console.log('must not run')",
+          requestedRunnerId: 'guarded-host-javascript',
+        },
+        context('APPROVED_EXECUTION'),
+      ),
+    ).rejects.toThrow('trusted local host runners')
+
+    await expect(
+      sandboxExecuteTool.execute(
+        {
+          languageId: 'javascript',
+          mode: 'run',
+          repository: { rootPath: '/etc', selectedPaths: ['passwd'] },
+        },
+        context('APPROVED_EXECUTION'),
+      ),
+    ).rejects.toThrow('repository.rootPath')
+  })
+
+  it('records a server-safe policy-blocked execution through the shared service', async () => {
     const recorded: string[] = []
     const rendered = await sandboxExecuteTool.execute(
       {
         languageId: 'javascript',
         mode: 'run',
-        source: "console.log('agent sandbox ok')",
-        requestedRunnerId: 'guarded-host-javascript',
+        source: "console.log('browser execution belongs in the browser')",
       },
       context('APPROVED_EXECUTION', {
         sessionId: 'mission_agent_tool_test',
@@ -101,9 +124,8 @@ describe('sandbox runtime agent tools', () => {
       }),
     )
 
-    expect(rendered).toContain('agent sandbox ok')
-    expect(rendered).toContain('"status": "passed"')
-    expect(rendered).toContain('"trustClass": "guarded-host"')
+    expect(rendered).toContain('"status": "policy-blocked"')
+    expect(rendered).toContain('"trustClass": "browser-isolated"')
     expect(recorded).toEqual(['sandbox_agent_tool_test'])
   })
 })
