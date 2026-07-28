@@ -2,6 +2,7 @@ import path from 'node:path'
 
 import { buildSandboxContainerPolicyPlan } from './sandbox-container-policy.js'
 import type { SandboxContainerPolicyPlan } from './sandbox-container-policy.js'
+import { SANDBOX_CONTAINER_COPY_IN_SCRIPT } from './sandbox-container-transfer.js'
 import type { SandboxContainerEngineStatus } from './sandbox-images.js'
 import type { SandboxImageDefinition, SandboxLimits } from './sandbox-types.js'
 
@@ -65,7 +66,7 @@ export function buildSandboxContainerCommandPlan(
   assertAvailableContainerEngine(options.engine)
   assertPinnedImage(options.image)
   assertSafeEntrypoint(options.entrypoint)
-  const hostWorkspacePath = assertSafeHostPath(options.hostWorkspacePath)
+  assertSafeHostPath(options.hostWorkspacePath)
   const hostOutputPath = assertSafeHostPath(options.hostOutputPath)
   const containerName = assertSafeContainerName(options.containerName)
   const user = assertSafeUser(options.user ?? DEFAULT_NON_ROOT_USER)
@@ -145,7 +146,25 @@ export function buildSandboxContainerCommandPlan(
       'while :; do sleep 3600; done',
     ],
     start: [engine, 'start', containerName],
-    copyIn: [engine, 'cp', `${hostWorkspacePath}${path.sep}.`, `${containerName}:/workspace`],
+    copyIn: [
+      engine,
+      'exec',
+      '-i',
+      '--user',
+      user,
+      '--workdir',
+      SAFE_CONTAINER_PATH,
+      '--env',
+      'HOME=/tmp',
+      '--env',
+      'TMPDIR=/tmp',
+      '--env',
+      `PATH=${MINIMAL_CONTAINER_PATH}`,
+      containerName,
+      'node',
+      '-e',
+      SANDBOX_CONTAINER_COPY_IN_SCRIPT,
+    ],
     execute: [
       engine,
       'exec',
@@ -184,7 +203,7 @@ export function buildSandboxContainerCommandPlan(
     policy,
     warnings: [
       'The canonical repository is never mounted into the container.',
-      'Source is copied into a size-bounded tmpfs workspace and copied out only to quarantine.',
+      'Source is streamed into a size-bounded tmpfs workspace and copied out only to quarantine.',
       'Normal execution uses --pull=never and requires a preinstalled digest-pinned image.',
       'Private PID isolation is enforced by excluding host and container-shared PID modes.',
       'Browser and model requests cannot add mounts, engine flags, environment variables, or image names.',
