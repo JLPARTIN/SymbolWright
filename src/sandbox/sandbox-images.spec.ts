@@ -6,44 +6,54 @@ import {
   findSandboxImage,
   isAllowedSandboxImageId,
   selectContainerEngine,
+  STRONG_SANDBOX_NODE_IMAGE,
+  STRONG_SANDBOX_NODE_IMAGE_ID,
 } from './sandbox-images.js'
 import { runnerAvailability } from './sandbox-registry.js'
 
 const CHECKED_AT = '2026-07-20T00:00:00.000Z'
 
 describe('sandbox container image policy', () => {
-  it('defines an explicit disabled image allowlist and rejects arbitrary image ids', () => {
-    const policy = buildSandboxImagePolicy()
+  it('defines one explicit disabled digest-pinned image and rejects arbitrary image ids', () => {
+    const policy = buildSandboxImagePolicy(new Map(), {})
 
-    expect(policy.images.length).toBeGreaterThan(0)
+    expect(policy.images).toHaveLength(1)
     expect(policy.images.every((image) => image.enabled === false)).toBe(true)
     expect(policy.images.every((image) => image.installed === false)).toBe(true)
-    expect(policy.images.map((image) => image.id)).toContain('python-3-12-slim')
-    expect(isAllowedSandboxImageId(policy.images, 'python-3-12-slim')).toBe(true)
+    expect(policy.images.map((image) => image.id)).toContain(STRONG_SANDBOX_NODE_IMAGE_ID)
+    expect(isAllowedSandboxImageId(policy.images, STRONG_SANDBOX_NODE_IMAGE_ID)).toBe(true)
     expect(isAllowedSandboxImageId(policy.images, 'evil/random:latest')).toBe(false)
-    expect(findSandboxImage(policy.images, 'python-3-12-slim')?.image).toBe('python:3.12-slim')
+    expect(findSandboxImage(policy.images, STRONG_SANDBOX_NODE_IMAGE_ID)?.image).toBe(
+      STRONG_SANDBOX_NODE_IMAGE,
+    )
     expect(DEFAULT_SANDBOX_IMAGE_ALLOWLIST.some((image) => image.image.endsWith(':latest'))).toBe(
       false,
     )
+    expect(policy.images[0]?.digest).toMatch(/^sha256:[a-f0-9]{64}$/)
   })
 
-  it('reports detected container engines without enabling execution', () => {
-    const policy = buildSandboxImagePolicy(
-      new Map([
-        [
-          'docker',
-          runnerAvailability('available', CHECKED_AT, {
-            version: '27.0.0',
-          }),
-        ],
-      ]),
-    )
+  it('reports a detected engine without enabling execution until operator opt-in', () => {
+    const availability = new Map([
+      [
+        'docker',
+        runnerAvailability('available', CHECKED_AT, {
+          version: '27.0.0',
+        }),
+      ],
+    ])
+    const disabled = buildSandboxImagePolicy(availability, {})
 
-    expect(policy.engine.engine).toBe('docker')
-    expect(policy.engine.status).toBe('available')
-    expect(policy.engine.version).toBe('27.0.0')
-    expect(policy.warnings.join('\n')).toContain('does not execute containers')
-    expect(policy.images.every((image) => image.enabled === false)).toBe(true)
+    expect(disabled.engine.engine).toBe('docker')
+    expect(disabled.engine.status).toBe('available')
+    expect(disabled.engine.version).toBe('27.0.0')
+    expect(disabled.warnings.join('\n')).toContain('never downloads an image')
+    expect(disabled.images.every((image) => image.enabled === false)).toBe(true)
+
+    const enabled = buildSandboxImagePolicy(availability, {
+      SYMBOLWRIGHT_ENABLE_STRONG_CONTAINER_EXECUTION: 'true',
+    })
+    expect(enabled.images.every((image) => image.enabled === true)).toBe(true)
+    expect(enabled.warnings.join('\n')).toContain('exact image digest is verified')
   })
 
   it('falls back to unavailable or misconfigured when engines cannot be used', () => {
