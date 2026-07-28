@@ -211,6 +211,42 @@ describe('sandbox API route handler', () => {
     expect(JSON.stringify(sandboxEvent?.payload)).not.toContain('route-secret-token')
   })
 
+  it('lets the mission runtime mode override request and route execution proposals', async () => {
+    const { sandboxService, missionService } = services()
+    const mission = await missionService.create({
+      name: 'Read-only sandbox mission',
+      objective: 'Keep sandbox execution read-only',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
+    })
+
+    const execute = response()
+    await handleSandboxRoute(
+      request('POST', {
+        languageId: 'javascript',
+        mode: 'run',
+        source: "console.log('must remain blocked')",
+        runtimeMode: 'APPROVED_EXECUTION',
+        missionId: mission.id,
+      }),
+      execute,
+      new URL('http://localhost/api/sandbox/execute'),
+      { service: sandboxService, missionService, runtimeMode: 'APPROVED_EXECUTION' },
+    )
+
+    expect(execute.statusCode).toBe(200)
+    const body = execute.json<{
+      result: {
+        status: string
+        evidence: { policyReason?: string }
+      }
+    }>()
+    expect(body.result.status).toBe('policy-blocked')
+    expect(body.result.evidence.policyReason).toContain('READ_ONLY')
+  })
+
   it('rejects guarded-host HTTP execution and caller-selected repository roots', async () => {
     const { sandboxService, missionService } = services()
     const mission = await missionService.create({
