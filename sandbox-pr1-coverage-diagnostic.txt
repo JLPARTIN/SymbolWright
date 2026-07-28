@@ -1,5 +1,6 @@
-coverage_exit_status=1
+coverage_exit_status=0
 
+  ...laboration.ts |      92 |       90 |     100 |   91.66 | 40,91             
  ...time/live-read |   99.15 |    87.03 |     100 |   99.13 |                   
   ...ead-client.ts |     100 |      100 |     100 |     100 |                   
   ...ttp-client.ts |     100 |      100 |     100 |     100 |                   
@@ -219,4 +220,3 @@ coverage_exit_status=1
   ...ce-session.ts |   84.94 |    74.66 |     100 |   84.26 | ...70,283,287,306 
   ...ce-web-app.ts |   94.28 |    72.22 |   86.66 |   94.11 | 235,242           
 -------------------|---------|----------|---------|---------|-------------------
-ERROR: Coverage for branches (79.98%) does not meet global threshold (80%)
