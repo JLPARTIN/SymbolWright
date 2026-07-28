@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import re
 import subprocess
 import sys
@@ -96,11 +97,12 @@ artifact_path.write_text(artifact_text.replace(old_bins, new_bins, 1))
 run(['npm', 'install', '--package-lock-only', '--ignore-scripts', '--silent'], quiet=True)
 run(['npm', 'run', 'build', '--silent'], quiet=True)
 
+os.environ['SYMBOLWRIGHT_REQUIRE_DOCKER_SMOKE'] = '1'
 script = """
-const { runNpmPackSmoke } = require('./dist/release/artifact-smoke.js')
-const result = runNpmPackSmoke(process.cwd())
+const { runDockerSmoke } = require('./dist/release/artifact-smoke.js')
+const result = runDockerSmoke(process.cwd())
 console.log(JSON.stringify(result, null, 2))
 if (result.status !== 'PASS') process.exit(1)
 """
-result = subprocess.run(['node', '-e', script], check=False)
+result = subprocess.run(['node', '-e', script], check=False, env=os.environ.copy())
 sys.exit(result.returncode)
