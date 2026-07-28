@@ -30,17 +30,30 @@ jobs:
         env:
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
-          node scripts/apply-sandbox-pr3-evidence-quality.mjs
-          npx prettier --write \
-            src/sandbox/sandbox-container-backend.ts \
-            src/sandbox/sandbox-container-workspace.ts
-          npm run typecheck
-          npx vitest run \
-            src/sandbox/sandbox-container-command-plan.spec.ts \
-            src/sandbox/sandbox-container-workspace.spec.ts \
-            src/sandbox/sandbox-completion-coverage.spec.ts
+          set +e
+          (
+            node scripts/apply-sandbox-pr3-evidence-quality.mjs
+            npx prettier --write \
+              src/sandbox/sandbox-container-backend.ts \
+              src/sandbox/sandbox-container-workspace.ts
+            npm run typecheck
+            npx vitest run \
+              src/sandbox/sandbox-container-command-plan.spec.ts \
+              src/sandbox/sandbox-container-workspace.spec.ts \
+              src/sandbox/sandbox-completion-coverage.spec.ts
+          ) > /tmp/sandbox-pr3-evidence.log 2>&1
+          status=$?
+          set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ "$status" -ne 0 ]; then
+            git reset --hard HEAD
+            cp /tmp/sandbox-pr3-evidence.log sandbox-pr3-evidence-diagnostic.txt
+            git add sandbox-pr3-evidence-diagnostic.txt
+            git commit -m "chore(sandbox): capture PR3 evidence-quality diagnostic"
+            git push origin "HEAD:${HEAD_BRANCH}"
+            exit "$status"
+          fi
           git add -A
           git commit -m "fix(sandbox): make cleanup evidence and reaper settlement exact"
           git push origin "HEAD:${HEAD_BRANCH}"
