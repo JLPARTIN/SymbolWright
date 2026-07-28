@@ -1,7 +1,16 @@
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
+import os from 'node:os'
+import path from 'node:path'
 
 import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../access/sandbox-capabilities.js'
 import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
+import {
+  executeStrongSandboxContainer,
+  reapStrongSandboxOrphans,
+  type ExecuteStrongSandboxContainerInput,
+  type SandboxBackendExecutionController,
+  type StrongSandboxReaperReport,
+} from './sandbox-container-backend.js'
 import { DEFAULT_SANDBOX_DISCOVERY_PROBES, discoverRuntimeCommands } from './sandbox-discovery.js'
 import { finalizeSandboxExecutionEvidence } from './sandbox-evidence.js'
 import { SandboxExecutionBroker, type SandboxBrokerDecision } from './sandbox-execution-broker.js'
@@ -15,6 +24,7 @@ import type {
   SandboxHistoryList,
   SandboxHistoryStore,
 } from './sandbox-history.js'
+import { findSandboxImage, type SandboxContainerEngineStatus } from './sandbox-images.js'
 import { normalizeSandboxLimits } from './sandbox-limits.js'
 import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
 import { validateSandboxExecutionRequest } from './sandbox-request.js'
@@ -39,6 +49,11 @@ export type SandboxInventoryBuilder = (
   commandAvailability?: ReadonlyMap<string, SandboxRunnerAvailability>,
 ) => SandboxInventory
 
+interface ActiveSandboxExecutionController {
+  cancel(): void
+  readonly completed: Promise<SandboxExecutionResult>
+}
+
 export interface SandboxServiceOptions {
   readonly inventory?: SandboxInventory
   readonly buildInventory?: SandboxInventoryBuilder
@@ -47,6 +62,15 @@ export interface SandboxServiceOptions {
   >
   readonly historyStore?: SandboxHistoryStore
   readonly broker?: SandboxExecutionBroker
+  readonly executeContainer?: (
+    input: ExecuteStrongSandboxContainerInput,
+  ) => Promise<SandboxExecutionResult>
+  readonly reapContainers?: (
+    engine: SandboxContainerEngineStatus,
+    env?: NodeJS.ProcessEnv,
+  ) => Promise<StrongSandboxReaperReport>
+  readonly workspaceRoot?: string
+  readonly containerStateRoot?: string
   readonly now?: () => Date
   readonly generateExecutionId?: () => string
   readonly env?: NodeJS.ProcessEnv
@@ -80,10 +104,18 @@ export class SandboxService {
   >
   private readonly historyStore: SandboxHistoryStore | undefined
   private readonly broker: SandboxExecutionBroker
+  private readonly executeContainer: (
+    input: ExecuteStrongSandboxContainerInput,
+  ) => Promise<SandboxExecutionResult>
+  private readonly reapContainers: (
+    engine: SandboxContainerEngineStatus,
+    env?: NodeJS.ProcessEnv,
+  ) => Promise<StrongSandboxReaperReport>
+  private readonly containerStateRoot: string
   private readonly now: () => Date
   private readonly generateExecutionId: () => string
   private readonly env: NodeJS.ProcessEnv
-  private readonly activeExecutions = new Map<string, GuardedHostExecutionController>()
+  private readonly activeExecutions = new Map<string, ActiveSandboxExecutionController>()
 
   public constructor(options: SandboxServiceOptions) {
     this.env = options.env ?? process.env
@@ -102,7 +134,18 @@ export class SandboxService {
     this.historyStore = options.historyStore
     this.now = options.now ?? (() => new Date())
     this.broker = options.broker ?? new SandboxExecutionBroker({ env: this.env, now: this.now })
+    this.executeContainer = options.executeContainer ?? executeStrongSandboxContainer
+    this.reapContainers = options.reapContainers ?? reapStrongSandboxOrphans
     this.generateExecutionId = options.generateExecutionId ?? (() => `sandbox_${randomUUID()}`)
+    this.containerStateRoot = path.resolve(
+      options.containerStateRoot ??
+        this.env['SYMBOLWRIGHT_SANDBOX_STATE_ROOT'] ??
+        path.join(
+          os.tmpdir(),
+          'symbolwright-strong-sandbox',
+          workspaceScopeHash(options.workspaceRoot ?? process.cwd()),
+        ),
+    )
   }
 
   public listInventory(): SandboxInventory {
@@ -117,6 +160,29 @@ export class SandboxService {
     const commandAvailability = await this.discoverCommandAvailability()
     this.inventory = this.buildInventory(commandAvailability)
     return this.inventory
+  }
+
+  public async reconcileContainerOrphans(): Promise<StrongSandboxReaperReport> {
+    await this.refreshInventory()
+    const runner = this.inventory.runners.find(
+      (candidate) => candidate.backend === 'container' && candidate.container !== undefined,
+    )
+    if (runner?.container === undefined) {
+      return {
+        attempted: false,
+        engine: 'none',
+        removedContainerIds: [],
+        warnings: ['No strong container runner is registered.'],
+      }
+    }
+    return this.reapContainers(containerEngineStatus(runner), this.env)
+  }
+
+  public async shutdown(): Promise<void> {
+    const controllers = [...this.activeExecutions.values()]
+    for (const controller of controllers) controller.cancel()
+    await Promise.allSettled(controllers.map((controller) => controller.completed))
+    this.activeExecutions.clear()
   }
 
   public listExecutions(limit = 50): SandboxHistoryList {
@@ -184,6 +250,45 @@ export class SandboxService {
       )
     }
 
+    if (selectedRunner.backend === 'container') {
+      const imageId = selectedRunner.container?.imageId
+      const image =
+        imageId === undefined ? undefined : findSandboxImage(this.inventory.images, imageId)
+      if (selectedRunner.container === undefined || image === undefined) {
+        const unavailableDecision = blockAuthorizedExecution(
+          decision,
+          'SANDBOX_CONTAINER_CONFIGURATION_MISSING',
+          'The selected container runner has no matching immutable image configuration.',
+        )
+        return this.persistResult(
+          request,
+          this.result(executionId, request, selectedRunner, startedAt, 'unavailable', {
+            policyDecision: 'blocked',
+            policyReason: unavailableDecision.reason,
+            durationStartedAt: started,
+          }),
+          context.ownership,
+          unavailableDecision,
+          authorization,
+        )
+      }
+      const result = await this.executeContainer({
+        executionId,
+        request,
+        runner: selectedRunner,
+        image,
+        engine: containerEngineStatus(selectedRunner),
+        startedAt,
+        now: this.now,
+        env: this.env,
+        stateRoot: this.containerStateRoot,
+        onStart: (controller: SandboxBackendExecutionController) =>
+          this.activeExecutions.set(executionId, controller),
+      })
+      this.activeExecutions.delete(executionId)
+      return this.persistResult(request, result, context.ownership, decision, authorization)
+    }
+
     if (selectedRunner.backend === 'guarded-host') {
       const result = await executeGuardedHostRequest({
         executionId,
@@ -192,7 +297,8 @@ export class SandboxService {
         startedAt,
         now: this.now,
         env: this.env,
-        onStart: (controller) => this.activeExecutions.set(executionId, controller),
+        onStart: (controller: GuardedHostExecutionController) =>
+          this.activeExecutions.set(executionId, controller),
       })
       this.activeExecutions.delete(executionId)
       return this.persistResult(request, result, context.ownership, decision, authorization)
@@ -337,6 +443,31 @@ function blockAuthorizedExecution(
     reasonCode,
     reason,
   }
+}
+
+function containerEngineStatus(runner: SandboxRunnerDefinition): SandboxContainerEngineStatus {
+  const engine = runner.container?.engine
+  if (engine === undefined) {
+    return {
+      engine: 'none',
+      status: 'unavailable',
+      reason: 'Runner has no configured container engine.',
+    }
+  }
+  return {
+    engine,
+    status: runner.availability.status,
+    ...(runner.availability.version === undefined
+      ? {}
+      : { version: runner.availability.version }),
+    reason:
+      runner.availability.reason ??
+      `${engine} availability was inherited from strong sandbox runtime discovery.`,
+  }
+}
+
+function workspaceScopeHash(workspaceRoot: string): string {
+  return createHash('sha256').update(path.resolve(workspaceRoot)).digest('hex').slice(0, 24)
 }
 
 function unavailableRunner(request: SandboxExecutionRequest): SandboxRunnerDefinition {
