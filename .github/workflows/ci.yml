@@ -26,17 +26,20 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Capture typecheck output
+      - name: Apply typecheck fixes
         env:
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
-          set +e
-          npm run typecheck > sandbox-pr3-typecheck-diagnostic.txt 2>&1
-          status=$?
-          set -e
+          node scripts/apply-sandbox-pr3-typecheck-fixes.mjs
+          npx prettier --write \
+            src/sandbox/sandbox-completion-coverage.spec.ts \
+            src/sandbox/sandbox-container-backend.ts \
+            src/sandbox/sandbox-container-command-plan.spec.ts
+          npm run typecheck
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add sandbox-pr3-typecheck-diagnostic.txt
-          git commit -m "chore(sandbox): capture PR3 typecheck diagnostic"
+          git add src/sandbox/sandbox-completion-coverage.spec.ts \
+            src/sandbox/sandbox-container-backend.ts \
+            src/sandbox/sandbox-container-command-plan.spec.ts
+          git commit -m "fix(sandbox): align strong-container tests and buffer types"
           git push origin "HEAD:${HEAD_BRANCH}"
-          exit "$status"
