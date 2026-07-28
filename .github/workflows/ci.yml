@@ -26,50 +26,21 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Apply exact focused fixes
+      - name: Apply evidence-quality fixes
         env:
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
-          node scripts/apply-sandbox-pr3-focused-fixes.mjs
+          node scripts/apply-sandbox-pr3-evidence-quality.mjs
           npx prettier --write \
-            src/sandbox/sandbox-registry.spec.ts \
-            src/sandbox/sandbox-completion-coverage.spec.ts \
-            src/sandbox/sandbox-container-policy.ts \
-            src/sandbox/sandbox-doctor.spec.ts
+            src/sandbox/sandbox-container-backend.ts \
+            src/sandbox/sandbox-container-workspace.ts
           npm run typecheck
+          npx vitest run \
+            src/sandbox/sandbox-container-command-plan.spec.ts \
+            src/sandbox/sandbox-container-workspace.spec.ts \
+            src/sandbox/sandbox-completion-coverage.spec.ts
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "fix(sandbox): close remaining PR3 unit contracts"
+          git commit -m "fix(sandbox): make cleanup evidence and reaper settlement exact"
           git push origin "HEAD:${HEAD_BRANCH}"
-      - name: Run focused PR3 contracts
-        env:
-          HEAD_BRANCH: ${{ github.head_ref }}
-        run: |
-          set +e
-          npx vitest run \
-            src/sandbox/sandbox-container-policy.spec.ts \
-            src/sandbox/sandbox-container-command-plan.spec.ts \
-            src/sandbox/sandbox-doctor.spec.ts \
-            src/sandbox/sandbox-image-commands.spec.ts \
-            src/sandbox/sandbox-images.spec.ts \
-            src/sandbox/sandbox-image-store.spec.ts \
-            src/sandbox/sandbox-registry.spec.ts \
-            src/sandbox/sandbox-completion-coverage.spec.ts \
-            src/app/api/sandbox-routes.spec.ts \
-            src/server/symbolwright-chat-server-sandbox.spec.ts \
-            src/cli-sandbox.spec.ts \
-            src/cli-bin.spec.ts \
-            --reporter=verbose > /tmp/sandbox-pr3-focused.log 2>&1
-          status=$?
-          set -e
-          if [ "$status" -ne 0 ]; then
-            tail -n 260 /tmp/sandbox-pr3-focused.log > sandbox-pr3-focused-diagnostic.txt
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add sandbox-pr3-focused-diagnostic.txt
-            git commit -m "chore(sandbox): capture PR3 focused diagnostic"
-            git push origin "HEAD:${HEAD_BRANCH}"
-          fi
-          cat /tmp/sandbox-pr3-focused.log
-          exit "$status"
