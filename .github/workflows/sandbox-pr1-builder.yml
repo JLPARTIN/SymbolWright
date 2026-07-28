@@ -1,22 +1,24 @@
 name: Sandbox PR1 Builder
 
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
     branches:
-      - symbolwright/sandbox-pr1-guarded-host-containment
+      - main
 
 permissions:
   contents: write
 
 jobs:
   build-and-commit:
-    if: github.actor != 'github-actions[bot]'
+    if: github.head_ref == 'symbolwright/sandbox-pr1-guarded-host-containment' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout implementation branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
 
       - name: Setup Node.js 22
@@ -61,6 +63,8 @@ jobs:
         run: npm run validate:served-client
 
       - name: Commit generated implementation
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -81,4 +85,4 @@ jobs:
             src/runtime/tools/bash-tool-boundary.spec.ts
           git diff --cached --check
           git commit -m "fix(sandbox): contain guarded-host execution (Sandbox PR 1/7)"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "HEAD:${HEAD_BRANCH}"
