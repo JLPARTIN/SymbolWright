@@ -102,8 +102,9 @@ export function buildSandboxContainerCommandPlan(
       `symbolwright.sandbox.execution=${containerName}`,
       '--network',
       'none',
-      '--pid',
-      'private',
+      // Docker and Podman use a private PID namespace by default. No caller-controlled --pid value
+      // is accepted; omitting the flag avoids the invalid Docker `--pid private` spelling while
+      // still forbidding host or container-shared PID namespaces.
       '--ipc',
       'none',
       '--read-only',
@@ -185,6 +186,7 @@ export function buildSandboxContainerCommandPlan(
       'The canonical repository is never mounted into the container.',
       'Source is copied into a size-bounded tmpfs workspace and copied out only to quarantine.',
       'Normal execution uses --pull=never and requires a preinstalled digest-pinned image.',
+      'Private PID isolation is enforced by excluding host and container-shared PID modes.',
       'Browser and model requests cannot add mounts, engine flags, environment variables, or image names.',
       ...policy.warnings,
     ],
