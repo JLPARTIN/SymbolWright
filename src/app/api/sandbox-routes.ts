@@ -16,12 +16,6 @@ import type {
 } from '../../sandbox/sandbox-types.js'
 
 const MAX_SANDBOX_REQUEST_BYTES = 512 * 1024
-const RUNTIME_MODES: readonly SymbolWrightRuntimeMode[] = [
-  'PLAN_ONLY',
-  'READ_ONLY',
-  'PROPOSAL_ONLY',
-  'APPROVED_EXECUTION',
-]
 
 export interface SandboxRouteContext {
   readonly service: SandboxService
@@ -30,6 +24,8 @@ export interface SandboxRouteContext {
   /** Undefined = operator (unrestricted), matching the convention throughout `access/`. */
   readonly callerGrantId?: string
   readonly callerPrincipalId?: string
+  /** Server-derived runtime mode. Request JSON is never allowed to elevate this value. */
+  readonly runtimeMode?: SymbolWrightRuntimeMode
 }
 
 /** True when the caller may see an execution it doesn't directly own by grant id: the operator
@@ -88,15 +84,47 @@ function asRecord(value: unknown): Record<string, unknown> {
   }
   return value as Record<string, unknown>
 }
+function requestedMissionId(record: Record<string, unknown>): string | undefined {
+  const value = record['missionId']
+  if (value === undefined) return undefined
+  if (typeof value !== 'string') {
+    throw new SandboxRequestValidationError('missionId must be a string')
+  }
+  return value
+}
 
-function parseRuntimeMode(record: Record<string, unknown>): SymbolWrightRuntimeMode {
-  const value = record['runtimeMode'] ?? record['modePolicy'] ?? 'APPROVED_EXECUTION'
-  if (typeof value !== 'string' || !(RUNTIME_MODES as readonly string[]).includes(value)) {
+function requestsTrustedLocalHost(record: Record<string, unknown>): boolean {
+  const requestedRunnerId = record['requestedRunnerId']
+  return typeof requestedRunnerId === 'string' && requestedRunnerId.startsWith('guarded-host-')
+}
+
+function bindRepositoryToMissionWorkspace(
+  record: Record<string, unknown>,
+  missionWorkspaceRoot: string | undefined,
+): Record<string, unknown> {
+  const rawRepository = record['repository']
+  if (rawRepository === undefined) return record
+  if (typeof rawRepository !== 'object' || rawRepository === null || Array.isArray(rawRepository)) {
+    return record
+  }
+  const repository = rawRepository as Record<string, unknown>
+  if ('rootPath' in repository) {
     throw new SandboxRequestValidationError(
-      'runtimeMode must be a supported SymbolWright runtime mode',
+      'repository.rootPath is server-controlled and must not be supplied by the caller',
     )
   }
-  return value as SymbolWrightRuntimeMode
+  if (missionWorkspaceRoot === undefined) {
+    throw new SandboxRequestValidationError(
+      'Repository sandbox execution requires a missionId bound to a server-managed workspace',
+    )
+  }
+  return {
+    ...record,
+    repository: {
+      ...repository,
+      rootPath: missionWorkspaceRoot,
+    },
+  }
 }
 
 function parseLimit(value: string | null, fallback: number): number {
@@ -197,27 +225,48 @@ export async function handleSandboxRoute(
         return true
       }
       const record = asRecord(await readJsonBody(req))
-      const request = context.service.validateRequest(record)
-      if (request.missionId !== undefined && context.missionService !== undefined) {
-        // `.get()` throws MissionNotFoundError -> caught below -> existing 404 handling.
-        const mission = context.missionService.get(request.missionId)
+      if (requestsTrustedLocalHost(record)) {
+        sendJson(res, 403, {
+          error: 'trusted_local_host_execution_forbidden',
+          reasonCode: 'GUARDED_HOST_HTTP_FORBIDDEN',
+          message:
+            'Trusted local host execution is a local operator break-glass path and is never available through the HTTP sandbox API.',
+        })
+        return true
+      }
+
+      const missionId = requestedMissionId(record)
+      let missionWorkspaceRoot: string | undefined
+      let effectiveRuntimeMode = context.runtimeMode ?? 'APPROVED_EXECUTION'
+      if (missionId !== undefined) {
+        if (context.missionService === undefined) {
+          throw new SandboxRequestValidationError(
+            'missionId cannot be resolved because no mission service is configured',
+          )
+        }
+        const mission = context.missionService.get(missionId)
         const visibility = resolveMissionVisibility(context.callerGrantId, context.teamSource)
         const access = canAccessMission(mission, visibility, 'execute')
         if (!access.allowed) {
           if (access.relationship === 'none') {
-            sendJson(res, 404, { error: `Mission not found: ${request.missionId}` })
+            sendJson(res, 404, { error: `Mission not found: ${missionId}` })
           } else {
             sendJson(res, 403, {
               error: 'authorization_denied',
               reasonCode: 'MISSION_NOT_AUTHORIZED_FOR_OPERATION',
-              message: `This grant may not run a sandbox execution against mission ${request.missionId}.`,
+              message: `This grant may not run a sandbox execution against mission ${missionId}.`,
             })
           }
           return true
         }
+        missionWorkspaceRoot = mission.repository.rootPath
+        effectiveRuntimeMode = mission.agent.runtimeMode
       }
+
+      const securedRecord = bindRepositoryToMissionWorkspace(record, missionWorkspaceRoot)
+      const request = context.service.validateRequest(securedRecord)
       const result = await context.service.execute(request, {
-        mode: parseRuntimeMode(record),
+        mode: effectiveRuntimeMode,
         ...(context.callerGrantId === undefined
           ? {}
           : {

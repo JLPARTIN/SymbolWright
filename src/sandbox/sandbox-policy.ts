@@ -15,6 +15,10 @@ function guardedHostEnabled(env: NodeJS.ProcessEnv): boolean {
   return env['SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION'] === 'true'
 }
 
+function hostedDeployment(env: NodeJS.ProcessEnv): boolean {
+  return env['SYMBOLWRIGHT_DEPLOYMENT_MODE']?.trim().toLowerCase() === 'hosted'
+}
+
 export function evaluateSandboxPolicy(
   request: SandboxExecutionRequest,
   runner: SandboxRunnerDefinition,
@@ -68,16 +72,24 @@ export function evaluateSandboxPolicy(
   }
 
   if (runner.trustClass === 'guarded-host') {
+    if (hostedDeployment(env)) {
+      return {
+        allowed: false,
+        reason:
+          'Trusted local host execution is forbidden in hosted deployment mode. Use a strong container backend instead.',
+      }
+    }
     if (!guardedHostEnabled(env)) {
       return {
         allowed: false,
         reason:
-          'Guarded-host execution is disabled. Set SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION=true to opt in.',
+          'Trusted local host execution is disabled. Set SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION=true only for an explicit local operator break-glass session.',
       }
     }
     return {
       allowed: true,
-      reason: 'Approved guarded-host execution; not a strong sandbox.',
+      reason:
+        'Operator-approved trusted local host break-glass execution; not a sandbox and not host-network/filesystem isolated.',
     }
   }
 

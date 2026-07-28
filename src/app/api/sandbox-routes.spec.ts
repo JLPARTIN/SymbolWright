@@ -136,7 +136,7 @@ describe('sandbox API route handler', () => {
     expect(body.images.some((image) => image.image === 'evil/random:latest')).toBe(false)
   })
 
-  it('executes through policy, persists history, and records mission evidence', async () => {
+  it('uses server-derived policy, persists history, and records mission evidence', async () => {
     const { sandboxService, missionService } = services()
     const mission = await missionService.create({
       name: 'Sandbox route mission',
@@ -152,15 +152,13 @@ describe('sandbox API route handler', () => {
       request('POST', {
         languageId: 'javascript',
         mode: 'run',
-        requestedRunnerId: 'guarded-host-javascript',
-        source:
-          "console.log('sandbox-route-ok'); console.log(process.env.SYMBOLWRIGHT_SECRET_TOKEN ?? 'NO_SECRET')",
-        runtimeMode: 'APPROVED_EXECUTION',
+        source: "console.log('browser-side-only')",
+        runtimeMode: 'READ_ONLY',
         missionId: mission.id,
       }),
       execute,
       new URL('http://localhost/api/sandbox/execute'),
-      { service: sandboxService, missionService },
+      { service: sandboxService, missionService, runtimeMode: 'APPROVED_EXECUTION' },
     )
 
     expect(execute.statusCode).toBe(200)
@@ -175,19 +173,19 @@ describe('sandbox API route handler', () => {
           inputHash: string
           verificationLevel: string
           policyDecision: string
+          policyReason?: string
         }
       }
     }>()
     expect(body.result.executionId).toBe('sandbox_route_test')
-    expect(body.result.status).toBe('passed')
-    expect(body.result.stdout).toContain('sandbox-route-ok')
-    expect(body.result.stdout).toContain('NO_SECRET')
-    expect(body.result.stdout).not.toContain('route-secret-token')
-    expect(body.result.backend).toBe('guarded-host')
-    expect(body.result.trustClass).toBe('guarded-host')
+    expect(body.result.status).toBe('policy-blocked')
+    expect(body.result.stdout).toBe('')
+    expect(body.result.backend).toBe('browser')
+    expect(body.result.trustClass).toBe('browser-isolated')
     expect(body.result.evidence.inputHash).toMatch(/^[a-f0-9]{64}$/)
-    expect(body.result.evidence.verificationLevel).toBe('EXECUTED')
-    expect(body.result.evidence.policyDecision).toBe('allowed')
+    expect(body.result.evidence.verificationLevel).toBe('UNVERIFIED')
+    expect(body.result.evidence.policyDecision).toBe('blocked')
+    expect(body.result.evidence.policyReason).toContain('browser runtime')
 
     const history = response()
     await handleSandboxRoute(
@@ -203,16 +201,95 @@ describe('sandbox API route handler', () => {
 
     const restarted = services()
     const persisted = restarted.sandboxService.getExecution('sandbox_route_test')
-    expect(persisted?.result.status).toBe('passed')
-    expect(persisted?.result.stdout).toContain('NO_SECRET')
-    expect(persisted?.result.stdout).not.toContain('route-secret-token')
+    expect(persisted?.result.status).toBe('policy-blocked')
 
     const events = restarted.missionService.readEvents(mission.id)
-    const sandboxEvent = events.find((event) => event.type === 'sandbox.execution.completed')
+    const sandboxEvent = events.find((event) => event.type === 'sandbox.execution.blocked')
     expect(sandboxEvent).toBeDefined()
     expect(JSON.stringify(sandboxEvent?.payload)).toContain('sandbox_route_test')
-    expect(JSON.stringify(sandboxEvent?.payload)).toContain('EXECUTED')
+    expect(JSON.stringify(sandboxEvent?.payload)).toContain('UNVERIFIED')
     expect(JSON.stringify(sandboxEvent?.payload)).not.toContain('route-secret-token')
+  })
+
+  it('lets the mission runtime mode override request and route execution proposals', async () => {
+    const { sandboxService, missionService } = services()
+    const mission = await missionService.create({
+      name: 'Read-only sandbox mission',
+      objective: 'Keep sandbox execution read-only',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'READ_ONLY',
+      labels: [],
+    })
+
+    const execute = response()
+    await handleSandboxRoute(
+      request('POST', {
+        languageId: 'javascript',
+        mode: 'run',
+        source: "console.log('must remain blocked')",
+        runtimeMode: 'APPROVED_EXECUTION',
+        missionId: mission.id,
+      }),
+      execute,
+      new URL('http://localhost/api/sandbox/execute'),
+      { service: sandboxService, missionService, runtimeMode: 'APPROVED_EXECUTION' },
+    )
+
+    expect(execute.statusCode).toBe(200)
+    const body = execute.json<{
+      result: {
+        status: string
+        evidence: { policyReason?: string }
+      }
+    }>()
+    expect(body.result.status).toBe('policy-blocked')
+    expect(body.result.evidence.policyReason).toContain('READ_ONLY')
+  })
+
+  it('rejects guarded-host HTTP execution and caller-selected repository roots', async () => {
+    const { sandboxService, missionService } = services()
+    const mission = await missionService.create({
+      name: 'Sandbox boundary mission',
+      objective: 'Prove the HTTP trust boundary',
+      workspaceKind: 'repository',
+      repositoryPath: '.',
+      runtimeMode: 'APPROVED_EXECUTION',
+      labels: [],
+    })
+
+    const guarded = response()
+    await handleSandboxRoute(
+      request('POST', {
+        languageId: 'javascript',
+        mode: 'run',
+        requestedRunnerId: 'guarded-host-javascript',
+        source: "console.log('must not run')",
+        missionId: mission.id,
+      }),
+      guarded,
+      new URL('http://localhost/api/sandbox/execute'),
+      { service: sandboxService, missionService },
+    )
+    expect(guarded.statusCode).toBe(403)
+    expect(guarded.json<{ reasonCode: string }>().reasonCode).toBe('GUARDED_HOST_HTTP_FORBIDDEN')
+
+    const callerRoot = response()
+    await handleSandboxRoute(
+      request('POST', {
+        languageId: 'javascript',
+        mode: 'run',
+        repository: { rootPath: '/etc', selectedPaths: ['passwd'] },
+        missionId: mission.id,
+      }),
+      callerRoot,
+      new URL('http://localhost/api/sandbox/execute'),
+      { service: sandboxService, missionService },
+    )
+    expect(callerRoot.statusCode).toBe(400)
+    expect(callerRoot.json<{ error: string }>().error).toContain(
+      'repository.rootPath is server-controlled',
+    )
   })
 
   it('returns structured errors for malformed payloads and missing execution records', async () => {

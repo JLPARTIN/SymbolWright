@@ -5,6 +5,13 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 ## [Unreleased]
 
 ### Fixed
+- **Sandbox guarded-host truth boundary (Sandbox Bundle PR 1/7)**: reclassifies
+  guarded-host as trusted local operator break-glass execution rather than a strong sandbox,
+  forbids it in hosted mode and through the HTTP sandbox API or `sandbox_execute` agent tool,
+  rejects caller-selected repository roots at those boundaries, derives HTTP execution mode
+  from server context instead of request JSON, and caps `bash` timeout overrides at the server
+  maximum. The repository dashboard now waits for a mission-bound strong container runner rather
+  than advertising guarded-host as an HTTP-compatible sandbox.
 
 - **Release integrity, artifact smoke, and remaining governance closure (Bundle #12 PR 6)**:
   adds human-only clean-tree `release:prepare`, immutable tag/package/lock/changelog verification,

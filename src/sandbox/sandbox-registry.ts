@@ -68,7 +68,7 @@ function browserAvailability(runner: CodeRunnerDefinition, now: string): Sandbox
   if (runner.id === 'server-typescript-node') {
     return runnerAvailability('available', now, {
       reason:
-        'Legacy server TypeScript runner is guarded-host and must be routed through Bundle 4 policy before execution.',
+        'Legacy server TypeScript execution is trusted local host break-glass, not a strong sandbox.',
     })
   }
   return runnerAvailability('available', now)
@@ -109,8 +109,10 @@ function guardedHostRunner(
     networkPolicy,
     dependencyState: availability.status === 'available' ? 'ready' : 'unsupported',
     notes: [
-      'Guarded-host is not a strong sandbox.',
+      'Guarded-host is trusted local host execution, not a strong sandbox.',
+      'It does not enforce host network or full host filesystem isolation.',
       'It remains disabled unless APPROVED_EXECUTION and SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION=true are both present.',
+      'The HTTP sandbox API and sandbox_execute agent tool reject guarded-host runners.',
       'No inherited secrets, shell interpolation, arbitrary executable paths, or dependency installation are allowed.',
     ],
   }
@@ -130,14 +132,14 @@ function disabledGuardedHostAvailability(
   if (discovered?.status === 'available') {
     return runnerAvailability('unavailable', checkedAt, {
       ...(discovered.version === undefined ? {} : { version: discovered.version }),
-      reason: `${command} was detected, but guarded-host execution is disabled by default.`,
+      reason: `${command} was detected, but trusted local host break-glass execution is disabled by default.`,
     })
   }
   return runnerAvailability('unavailable', checkedAt, {
     reason:
       discovered?.reason === undefined
-        ? 'Guarded-host execution is disabled by default.'
-        : `Guarded-host execution is disabled by default. Discovery: ${discovered.reason}`,
+        ? 'Trusted local host break-glass execution is disabled by default.'
+        : `Trusted local host break-glass execution is disabled by default. Discovery: ${discovered.reason}`,
   })
 }
 
@@ -193,7 +195,7 @@ export function buildSandboxInventory(
     images: imagePolicy.images,
     warnings: [
       ...imagePolicy.warnings,
-      'Guarded-host runners require explicit opt-in and APPROVED_EXECUTION before code can run.',
+      'Guarded-host runners are trusted local host break-glass only; HTTP and agent-tool execution reject them.',
       'Runtime discovery uses bounded version probes only; it does not execute repository code or install dependencies.',
     ],
   }

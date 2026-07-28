@@ -76,6 +76,21 @@ describe('symbolwright chat server sandbox routes', () => {
     expect(body.schemaVersion).toBe(1)
     expect(body.runners.some((runner) => runner.trustClass === 'browser-isolated')).toBe(true)
   })
+  it('refuses guarded-host execution through the authenticated HTTP API', async () => {
+    const response = await fetch(`${started!.url}/api/sandbox/execute`, {
+      method: 'POST',
+      headers: auth(),
+      body: JSON.stringify({
+        languageId: 'javascript',
+        mode: 'run',
+        source: 'console.log("must not run")',
+        requestedRunnerId: 'guarded-host-javascript',
+      }),
+    })
+    expect(response.status).toBe(403)
+    const body = (await response.json()) as { reasonCode: string }
+    expect(body.reasonCode).toBe('GUARDED_HOST_HTTP_FORBIDDEN')
+  })
 
   it('persists policy-controlled execution history through the real server route', async () => {
     const execute = await fetch(`${started!.url}/api/sandbox/execute`, {

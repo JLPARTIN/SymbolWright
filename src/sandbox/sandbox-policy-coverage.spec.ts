@@ -230,8 +230,18 @@ describe('sandbox policy branch coverage', () => {
       mode: 'APPROVED_EXECUTION',
       env: { SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true' },
     })
+    const guardedHosted = evaluateSandboxPolicy(request(), guarded, {
+      mode: 'APPROVED_EXECUTION',
+      env: {
+        SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION: 'true',
+        SYMBOLWRIGHT_DEPLOYMENT_MODE: 'hosted',
+      },
+    })
     expect(guardedBlocked.allowed).toBe(false)
     expect(guardedAllowed.allowed).toBe(true)
+    expect(guardedAllowed.reason).toContain('break-glass')
+    expect(guardedHosted.allowed).toBe(false)
+    expect(guardedHosted.reason).toContain('forbidden in hosted')
 
     const unavailable = evaluateSandboxPolicy(
       request(),
