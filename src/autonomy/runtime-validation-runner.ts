@@ -7,6 +7,8 @@ import {
   type PortableValidationRunner,
 } from '../portability/portable-validation-runner.js'
 import { isSafePortableValidationCommand } from '../portability/repository-portability.js'
+import type { SandboxCommandWorkspaceTrust } from '../sandbox/sandbox-command-policy.js'
+import type { SandboxAuthorizationContext } from '../sandbox/sandbox-policy-model.js'
 import type { SandboxRunner } from '../runtime/sandbox/sandbox-runner.js'
 import type { RuntimeApproval, RuntimePolicySnapshot } from '../runtime/types.js'
 import { runValidationCommand } from '../runtime/validation/validation-command-executor.js'
@@ -21,13 +23,15 @@ export interface RuntimeAutonomousValidationRunnerOptions {
   readonly approval?: RuntimeApproval | undefined
   readonly sandboxRunner?: SandboxRunner | undefined
   readonly portableRunner?: PortableValidationRunner | undefined
+  readonly authorization?: SandboxAuthorizationContext | undefined
+  readonly workspaceTrust?: SandboxCommandWorkspaceTrust | undefined
   readonly reason?: string | undefined
 }
 
 /**
- * Production adapter that executes validation through SymbolWright's policy gate.
- * Legacy root-level Node commands retain the original transcript pathway;
- * discovered ecosystem and nested-package commands use portable containers.
+ * Production adapter that executes every validation path through brokered sandbox adapters.
+ * Legacy root-level Node commands retain the transcript pathway; discovered ecosystem and nested
+ * package commands use server-owned portable command profiles.
  */
 export class RuntimeAutonomousValidationRunner implements AutonomousValidationRunner {
   readonly #options: RuntimeAutonomousValidationRunnerOptions
@@ -61,6 +65,7 @@ export class RuntimeAutonomousValidationRunner implements AutonomousValidationRu
       ALLOWLISTED_VALIDATION_COMMANDS.includes(
         invocation.command as (typeof ALLOWLISTED_VALIDATION_COMMANDS)[number],
       )
+    const workspaceTrust = this.#options.workspaceTrust ?? 'trusted-local'
 
     if (!isLegacyRootCommand && isSafePortableValidationCommand(invocation.command)) {
       let repositoryRoot: string
@@ -80,12 +85,22 @@ export class RuntimeAutonomousValidationRunner implements AutonomousValidationRu
           durationMs: 0,
         }
       }
-      const result = await (
-        this.#options.portableRunner ?? new DockerPortableValidationRunner()
-      ).run({
+      const portableRunner =
+        this.#options.portableRunner ??
+        new DockerPortableValidationRunner({
+          workspaceTrust,
+          ...(this.#options.authorization === undefined
+            ? {}
+            : { authorization: this.#options.authorization }),
+        })
+      const result = await portableRunner.run({
         repositoryRoot,
         command: invocation.command,
         policy: this.#options.policy,
+        workspaceTrust,
+        ...(this.#options.authorization === undefined
+          ? {}
+          : { authorization: this.#options.authorization }),
       })
       return {
         phase: input.phase,
@@ -106,6 +121,8 @@ export class RuntimeAutonomousValidationRunner implements AutonomousValidationRu
       this.#options.policy,
       this.#options.approval,
       this.#options.sandboxRunner,
+      this.#options.authorization,
+      workspaceTrust,
     )
 
     return {
