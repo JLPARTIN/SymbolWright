@@ -1,4 +1,10 @@
 import {
+  LEGACY_SANDBOX_EXECUTE_CAPABILITY,
+  SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+  SANDBOX_EGRESS_CAPABILITY,
+  SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
+} from './sandbox-capabilities.js'
+import {
   DEFAULT_ALLOWED_BRANCH_PATTERNS,
   DEFAULT_DENIED_BRANCH_PATTERNS,
   type ApprovalPolicy,
@@ -73,6 +79,10 @@ export const REPOSITORY_ANALYST_PROFILE: PermissionProfile = {
     'repo.branch.create',
     'repo.pull_request.create',
     'symbolwright.mission.execute',
+    LEGACY_SANDBOX_EXECUTE_CAPABILITY,
+    SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
+    SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+    SANDBOX_EGRESS_CAPABILITY,
   ],
   defaultBranchScope: READ_ONLY_BRANCH_SCOPE,
   defaultApprovalPolicy: { rules: [{ match: '*', requirement: 'none' }] },
@@ -99,7 +109,7 @@ export const CODING_AGENT_PROFILE: PermissionProfile = {
     'symbolwright.mission.cancel',
     'symbolwright.validation.run',
     'symbolwright.repair.run',
-    'symbolwright.sandbox.execute',
+    SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
     'symbolwright.checkpoint.create',
     'symbolwright.checkpoint.restore',
   ],
@@ -143,6 +153,8 @@ export const CODING_AGENT_PROFILE: PermissionProfile = {
     'repo.organization.manage',
     'repo.branch.delete',
     'repo.branch.update',
+    SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+    SANDBOX_EGRESS_CAPABILITY,
   ],
   defaultBranchScope: STANDARD_BRANCH_SCOPE,
   defaultApprovalPolicy: {
@@ -192,6 +204,8 @@ export const MAINTAINER_AGENT_PROFILE: PermissionProfile = {
     'repo.environments.manage',
     'repo.repository.delete',
     'repo.organization.manage',
+    SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+    SANDBOX_EGRESS_CAPABILITY,
   ],
   defaultBranchScope: STANDARD_BRANCH_SCOPE,
   defaultApprovalPolicy: {

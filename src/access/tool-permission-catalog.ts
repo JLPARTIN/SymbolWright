@@ -1,5 +1,6 @@
 import type { SymbolWrightToolName } from '../runtime/types.js'
 import type { ApprovalRequirement, RiskLevel } from './access-types.js'
+import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from './sandbox-capabilities.js'
 
 /**
  * Every SymbolWright tool must declare the capability (or capabilities) it
@@ -59,11 +60,11 @@ export const TOOL_PERMISSION_DESCRIPTORS: Readonly<
   zflow_report_catalog: tool('symbolwright.mission.read', 'read'),
   glob: tool('repo.content.read', 'read'),
   grep: tool('symbolwright.repository.search', 'low'),
-  bash: tool('symbolwright.sandbox.execute', 'write'),
+  bash: tool(SANDBOX_OFFLINE_EXECUTE_CAPABILITY, 'write'),
   edit_file: tool('repo.content.update', 'write', ['symbolwright.mission.execute']),
   git: tool('repo.commit.create', 'write'),
   swarm_dispatch: tool('symbolwright.mission.execute', 'write'),
-  run_tests: tool('symbolwright.validation.run', 'low', ['symbolwright.sandbox.execute']),
+  run_tests: tool('symbolwright.validation.run', 'low', [SANDBOX_OFFLINE_EXECUTE_CAPABILITY]),
   run_typecheck: tool('symbolwright.validation.run', 'low'),
   run_lint: tool('symbolwright.validation.run', 'low'),
   memory_recall: tool('symbolwright.repository.search', 'low'),
@@ -74,8 +75,8 @@ export const TOOL_PERMISSION_DESCRIPTORS: Readonly<
   web_search: tool('symbolwright.repository.search', 'low'),
   subagent_run: tool('symbolwright.mission.execute', 'write'),
   skill_run: tool('symbolwright.mission.execute', 'write'),
-  sandbox_list_runtimes: tool('symbolwright.sandbox.execute', 'read'),
-  sandbox_execute: tool('symbolwright.sandbox.execute', 'low'),
+  sandbox_list_runtimes: tool(SANDBOX_OFFLINE_EXECUTE_CAPABILITY, 'read'),
+  sandbox_execute: tool(SANDBOX_OFFLINE_EXECUTE_CAPABILITY, 'low'),
 }
 
 export function resolveToolPermissionDescriptor(

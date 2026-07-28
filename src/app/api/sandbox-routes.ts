@@ -1,11 +1,18 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
+import type { AccessRuntime } from '../../access/access-runtime.js'
+import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../../access/sandbox-capabilities.js'
+import {
+  grantAllowsOfflineSandbox,
+  resolveGrantSandboxPolicyReferences,
+} from '../../access/sandbox-policy-compat.js'
 import {
   canAccessMission,
   resolveMissionVisibility,
   type TeamVisibilitySource,
 } from '../../access/mission-access-guard.js'
 import { MissionNotFoundError, type MissionService } from '../../mission/mission-service.js'
+import type { SymbolWrightMission } from '../../mission/mission-types.js'
 import type { SandboxExecutionSummary } from '../../sandbox/sandbox-history.js'
 import type { SymbolWrightRuntimeMode } from '../../runtime/types.js'
 import { SandboxRequestValidationError } from '../../sandbox/sandbox-request.js'
@@ -20,6 +27,9 @@ const MAX_SANDBOX_REQUEST_BYTES = 512 * 1024
 export interface SandboxRouteContext {
   readonly service: SandboxService
   readonly missionService?: MissionService
+  readonly accessRuntime?: AccessRuntime
+  readonly deploymentMode?: 'local' | 'hosted'
+  readonly repositoryId?: string
   readonly teamSource?: TeamVisibilitySource
   /** Undefined = operator (unrestricted), matching the convention throughout `access/`. */
   readonly callerGrantId?: string
@@ -176,6 +186,21 @@ function recordMissionEvidence(
       artifactReferences: result.artifacts.map((artifact) => artifact.artifactId),
       policyDecision: result.evidence.policyDecision,
       verificationLevel: result.evidence.verificationLevel,
+      ...(result.evidence.decisionCode === undefined
+        ? {}
+        : { decisionCode: result.evidence.decisionCode }),
+      ...(result.evidence.policy === undefined
+        ? {}
+        : {
+            sandboxPolicy: {
+              id: result.evidence.policy.id,
+              version: result.evidence.policy.version,
+              fingerprint: result.evidence.policy.fingerprint,
+              intent: result.evidence.policy.intent,
+              networkMode: result.evidence.policy.networkMode,
+              dependencyMode: result.evidence.policy.dependencyMode,
+            },
+          }),
     },
   )
 }
@@ -236,7 +261,10 @@ export async function handleSandboxRoute(
       }
 
       const missionId = requestedMissionId(record)
+      let mission: SymbolWrightMission | undefined
       let missionWorkspaceRoot: string | undefined
+      let callerKind: 'operator' | 'delegated-grant' | 'team-member' =
+        context.callerGrantId === undefined ? 'operator' : 'delegated-grant'
       let effectiveRuntimeMode = context.runtimeMode ?? 'APPROVED_EXECUTION'
       if (missionId !== undefined) {
         if (context.missionService === undefined) {
@@ -244,9 +272,12 @@ export async function handleSandboxRoute(
             'missionId cannot be resolved because no mission service is configured',
           )
         }
-        const mission = context.missionService.get(missionId)
+        mission = context.missionService.get(missionId)
         const visibility = resolveMissionVisibility(context.callerGrantId, context.teamSource)
         const access = canAccessMission(mission, visibility, 'execute')
+        if (access.relationship === 'team_member' || access.relationship === 'team_owner') {
+          callerKind = 'team-member'
+        }
         if (!access.allowed) {
           if (access.relationship === 'none') {
             sendJson(res, 404, { error: `Mission not found: ${missionId}` })
@@ -265,8 +296,62 @@ export async function handleSandboxRoute(
 
       const securedRecord = bindRepositoryToMissionWorkspace(record, missionWorkspaceRoot)
       const request = context.service.validateRequest(securedRecord)
+      const callerGrant =
+        context.callerGrantId === undefined
+          ? undefined
+          : context.accessRuntime?.grantService.getGrant(context.callerGrantId)
+      if (context.callerGrantId !== undefined && callerGrant === undefined) {
+        sendJson(res, 403, {
+          error: 'authorization_denied',
+          reasonCode: 'SANDBOX_GRANT_NOT_FOUND',
+          message: 'The delegated sandbox grant no longer exists.',
+        })
+        return true
+      }
+      const resolvedReferences =
+        callerGrant === undefined ? undefined : resolveGrantSandboxPolicyReferences(callerGrant)
+      if (resolvedReferences?.unsupportedReason !== undefined) {
+        sendJson(res, 403, {
+          error: 'authorization_denied',
+          reasonCode: 'SANDBOX_LEGACY_NETWORK_UNSUPPORTED',
+          message: resolvedReferences.unsupportedReason,
+        })
+        return true
+      }
+      const offlineReference = resolvedReferences?.references.offline
+      const approvedCapabilityIds =
+        callerGrant !== undefined &&
+        (offlineReference === undefined || !grantAllowsOfflineSandbox(callerGrant))
+          ? []
+          : [SANDBOX_OFFLINE_EXECUTE_CAPABILITY]
+      const authorization = {
+        deploymentMode: context.deploymentMode ?? 'local',
+        callerKind,
+        runtimeMode: effectiveRuntimeMode,
+        approvedCapabilityIds,
+        repositoryId:
+          context.repositoryId ??
+          mission?.repository.remoteUrl ??
+          missionWorkspaceRoot ??
+          'inline-source',
+        workspaceId: missionId ?? missionWorkspaceRoot ?? 'inline-source',
+        ...(missionId === undefined ? {} : { missionId }),
+        ...(context.callerPrincipalId === undefined
+          ? {}
+          : { principalId: context.callerPrincipalId }),
+        ...(callerGrant === undefined
+          ? {}
+          : {
+              grantId: callerGrant.id,
+              grantVersion: callerGrant.version,
+              grantAllowedCommands: callerGrant.executionLimits.allowedCommands,
+            }),
+        ...(offlineReference === undefined ? {} : { policyReference: offlineReference }),
+        intent: 'offline-execution' as const,
+      }
       const result = await context.service.execute(request, {
         mode: effectiveRuntimeMode,
+        authorization,
         ...(context.callerGrantId === undefined
           ? {}
           : {

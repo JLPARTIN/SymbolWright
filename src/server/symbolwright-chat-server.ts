@@ -37,6 +37,11 @@ import {
   type TeamVisibilitySource,
 } from '../access/mission-access-guard.js'
 import { checkConcurrentMissionLimit } from '../access/mission-concurrency-guard.js'
+import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../access/sandbox-capabilities.js'
+import {
+  grantAllowsOfflineSandbox,
+  resolveGrantSandboxPolicyReferences,
+} from '../access/sandbox-policy-compat.js'
 import { checkUsageBudget } from '../access/mission-usage-guard.js'
 import { computeFixedCostMicrodollars } from '../access/fixed-cost-rates.js'
 import { usdToMicrodollars } from '../access/microdollars.js'
@@ -519,7 +524,10 @@ export function createChatServerRequestListener(
   const sandboxContext = {
     service: sandboxService,
     missionService,
+    accessRuntime,
     teamSource: teamVisibilitySource,
+    deploymentMode: deploymentSecurity.deploymentMode,
+    repositoryId: cwd,
   }
   // Resolved once per server process: the `owner/repo` identity a grant's `repositoryScope` is
   // checked against. A SymbolWright server process is always bound to exactly one working tree,
@@ -822,6 +830,8 @@ export function createChatServerRequestListener(
           cwd,
           getGovernanceStore,
           concurrencyGuard,
+          sandboxService,
+          deploymentSecurity.deploymentMode,
           principal.kind === 'agent' ? { principal, accessRuntime } : undefined,
           teamVisibilitySource,
         )
@@ -1166,6 +1176,8 @@ async function handleAgent(
    * grant's turn), so a server that never handles one never opens the governance database. */
   getGovernanceStore: () => GovernanceStore,
   concurrencyGuard: ProviderConcurrencyGuard,
+  sandboxService: SandboxService,
+  deploymentMode: 'local' | 'hosted',
   agentPrincipal?: { readonly principal: RequestPrincipal; readonly accessRuntime: AccessRuntime },
   teamSource?: TeamVisibilitySource,
 ): Promise<void> {
@@ -1222,21 +1234,53 @@ async function handleAgent(
     hasGitHubToken: env['GITHUB_TOKEN'] !== undefined,
   })
   const toolCwd = mission?.repository.rootPath ?? defaultCwd
-  const toolAccessControl = await buildToolAccessControl(agentPrincipal, toolCwd)
-  const toolContext: RuntimeToolContext = {
-    cwd: toolCwd,
-    policy,
-    ...(mission === undefined ? {} : { sessionId: mission.id }),
-    ...(toolAccessControl === undefined ? {} : { accessControl: toolAccessControl }),
-  }
-  const tools = assembleAgentTools()
-  const priorMessages = parsed.priorMessages ?? mission?.agent.messages
-
   const callerGrantId = agentPrincipal?.principal.grantId
   const callerGrant =
     callerGrantId === undefined
       ? undefined
       : agentPrincipal?.accessRuntime.grantService.getGrant(callerGrantId)
+  const resolvedSandboxReferences =
+    callerGrant === undefined ? undefined : resolveGrantSandboxPolicyReferences(callerGrant)
+  const offlineReference = resolvedSandboxReferences?.references.offline
+  const sandboxAuthorization = {
+    deploymentMode,
+    callerKind: callerGrantId === undefined ? ('operator' as const) : ('delegated-grant' as const),
+    runtimeMode: parsed.mode,
+    approvedCapabilityIds:
+      callerGrantId !== undefined &&
+      (callerGrant === undefined ||
+        resolvedSandboxReferences?.unsupportedReason !== undefined ||
+        offlineReference === undefined ||
+        !grantAllowsOfflineSandbox(callerGrant))
+        ? []
+        : [SANDBOX_OFFLINE_EXECUTE_CAPABILITY],
+    repositoryId: mission?.repository.remoteUrl ?? toolCwd,
+    workspaceId: mission?.id ?? toolCwd,
+    ...(mission === undefined ? {} : { missionId: mission.id }),
+    ...(agentPrincipal?.principal.principalId === undefined
+      ? {}
+      : { principalId: agentPrincipal.principal.principalId }),
+    ...(callerGrant === undefined
+      ? {}
+      : {
+          grantId: callerGrant.id,
+          grantVersion: callerGrant.version,
+          grantAllowedCommands: callerGrant.executionLimits.allowedCommands,
+        }),
+    ...(offlineReference === undefined ? {} : { policyReference: offlineReference }),
+    intent: 'offline-execution' as const,
+  }
+  const toolAccessControl = await buildToolAccessControl(agentPrincipal, toolCwd)
+  const toolContext: RuntimeToolContext = {
+    cwd: toolCwd,
+    policy,
+    sandboxService,
+    sandboxAuthorization,
+    ...(mission === undefined ? {} : { sessionId: mission.id }),
+    ...(toolAccessControl === undefined ? {} : { accessControl: toolAccessControl }),
+  }
+  const tools = assembleAgentTools()
+  const priorMessages = parsed.priorMessages ?? mission?.agent.messages
   const dailyCapUsd = callerGrant?.executionLimits.maxDailyEstimatedCostUsd
   const usageGovernor =
     callerGrantId === undefined || dailyCapUsd === undefined

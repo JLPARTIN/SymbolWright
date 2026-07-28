@@ -49,7 +49,7 @@ describe('runAuthorizedTool', () => {
     )
 
     expect(result).toBe('ok')
-    expect(requireAuthorized).toHaveBeenCalledWith('symbolwright.sandbox.execute', 'bash', {
+    expect(requireAuthorized).toHaveBeenCalledWith('symbolwright.sandbox.execute.offline', 'bash', {
       command: 'git status',
     })
     expect(execute).toHaveBeenCalledOnce()

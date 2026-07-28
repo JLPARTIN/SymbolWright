@@ -8,6 +8,7 @@ import type { WorkspaceManager } from '../workspace/workspace-manager.js'
 import type { SandboxFileWriter, SandboxRunner } from './sandbox/sandbox-runner.js'
 import type { SandboxService } from '../sandbox/sandbox-service.js'
 import type { SandboxExecutionRequest, SandboxExecutionResult } from '../sandbox/sandbox-types.js'
+import type { SandboxAuthorizationContext } from '../sandbox/sandbox-policy-model.js'
 
 /** Supported execution modes from plan-only to approved execution. */
 export type SymbolWrightRuntimeMode =
@@ -191,6 +192,8 @@ export interface RuntimeToolContext {
   readonly sandboxRunner?: SandboxRunner
   readonly sandboxFileWriter?: SandboxFileWriter
   readonly sandboxService?: SandboxService
+  /** Immutable authority resolved by the server; tool input cannot supply or widen it. */
+  readonly sandboxAuthorization?: SandboxAuthorizationContext
   readonly recordSandboxExecution?: (
     request: SandboxExecutionRequest,
     result: SandboxExecutionResult,

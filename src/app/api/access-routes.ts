@@ -22,6 +22,7 @@ import type {
   ClientConstraints,
   MissionExecutionLimits,
   RepositoryScope,
+  SandboxPolicyReferences,
   SessionLimits,
 } from '../../access/access-types.js'
 
@@ -205,6 +206,37 @@ function parseMissionExecutionLimits(value: unknown): MissionExecutionLimits | u
   }
 }
 
+function parseSandboxPolicyReferences(value: unknown): SandboxPolicyReferences | undefined {
+  if (value === undefined) return undefined
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new GrantValidationError('sandboxPolicyReferences must be an object.')
+  }
+  const record = value as Record<string, unknown>
+  const result: Record<string, { id: string; version: number }> = {}
+  for (const kind of ['offline', 'dependency', 'egress'] as const) {
+    const raw = record[kind]
+    if (raw === undefined) continue
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+      throw new GrantValidationError(`sandboxPolicyReferences.${kind} must be an object.`)
+    }
+    const reference = raw as Record<string, unknown>
+    const id = reference['id']
+    const version = reference['version']
+    if (typeof id !== 'string' || id.trim().length === 0) {
+      throw new GrantValidationError(
+        `sandboxPolicyReferences.${kind}.id must be a non-empty string.`,
+      )
+    }
+    if (typeof version !== 'number' || !Number.isSafeInteger(version) || version <= 0) {
+      throw new GrantValidationError(
+        `sandboxPolicyReferences.${kind}.version must be a positive integer.`,
+      )
+    }
+    result[kind] = { id: id.trim(), version }
+  }
+  return result as SandboxPolicyReferences
+}
+
 function parseSessionLimits(value: unknown): SessionLimits | undefined {
   if (value === undefined) return undefined
   if (typeof value !== 'object' || value === null) {
@@ -314,6 +346,7 @@ export async function handleAccessRoute(
       const body = await readJsonBody(req)
       const branchScope = parseBranchScopeOverride(body['branchScope'])
       const executionLimits = parseMissionExecutionLimits(body['executionLimits'])
+      const sandboxPolicyReferences = parseSandboxPolicyReferences(body['sandboxPolicyReferences'])
       const sessionLimits = parseSessionLimits(body['sessionLimits'])
       const clientConstraints = parseClientConstraints(body['clientConstraints'])
       const approvalPolicy = parseApprovalPolicy(body['approvalPolicy'])
@@ -365,6 +398,7 @@ export async function handleAccessRoute(
           : {}),
         ...(typeof body['enableMerge'] === 'boolean' ? { enableMerge: body['enableMerge'] } : {}),
         ...(executionLimits === undefined ? {} : { executionLimits }),
+        ...(sandboxPolicyReferences === undefined ? {} : { sandboxPolicyReferences }),
         ...(sessionLimits === undefined ? {} : { sessionLimits }),
         ...(clientConstraints === undefined ? {} : { clientConstraints }),
         ...(approvalPolicy === undefined ? {} : { approvalPolicy }),
