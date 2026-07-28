@@ -1,0 +1,117 @@
+name: Sandbox PR2 Finalize v2
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.head_ref == 'symbolwright/sandbox-pr2-unified-execution-broker' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply reviewed final authority program
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import textwrap
+
+          authorization_path = Path('src/access/authorization-service.ts')
+          authorization = authorization_path.read_text()
+          old = "   * per-request check doesn't; `maxFilesChanged`/`maxDiffLines`/`maxCommits` at push time in\n"
+          new = "   * per-request check doesn't;\n   * `maxFilesChanged`/`maxDiffLines`/`maxCommits` at push time in\n"
+          if authorization.count(old) != 1:
+              raise SystemExit('authorization-service comment layout changed unexpectedly')
+          authorization_path.write_text(authorization.replace(old, new, 1))
+
+          workflow = Path('.github/workflows/sandbox-pr2-finalize.yml').read_text()
+          marker = "          python3 <<'PY'\n"
+          start = workflow.index(marker) + len(marker)
+          end = workflow.index('\n          PY', start)
+          program = textwrap.dedent(workflow[start:end])
+          exec(compile(program, 'sandbox-pr2-finalizer.py', 'exec'))
+          PY
+      - name: Reuse reviewed adversarial test payload
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import textwrap
+
+          workflow = Path('.github/workflows/sandbox-pr2-finalize.yml').read_text()
+          section = workflow.index('      - name: Add adversarial policy and evidence tests\n')
+          start_marker = '        run: |\n'
+          start = workflow.index(start_marker, section) + len(start_marker)
+          end = workflow.index('\n      - name: Format final source and tests', start)
+          Path('/tmp/sandbox-pr2-add-tests.sh').write_text(textwrap.dedent(workflow[start:end]))
+          PY
+          bash /tmp/sandbox-pr2-add-tests.sh
+      - name: Format final source and tests
+        run: |
+          npx prettier --write \
+            src/sandbox/sandbox-policy-model.ts \
+            src/sandbox/sandbox-service.ts \
+            src/access/sandbox-policy-compat.ts \
+            src/access/access-capability-catalog.ts \
+            src/app/api/sandbox-routes.ts \
+            src/server/symbolwright-chat-server.ts \
+            src/access/authorization-service.ts \
+            src/sandbox/sandbox-policy-model-boundary.spec.ts \
+            src/sandbox/sandbox-evidence.spec.ts \
+            src/access/sandbox-capability-authority.spec.ts
+      - name: Remove all temporary PR2 build machinery
+        run: |
+          git rm -f --ignore-unmatch .github/sandbox-pr2-trigger*.txt
+          git rm -f --ignore-unmatch .github/workflows/sandbox-pr2-*.yml
+          git rm -f --ignore-unmatch sandbox-pr2-*-diagnostic*.txt
+      - name: Commit clean final implementation
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git diff --cached --check
+          git commit -m "fix(sandbox): close PR2 policy authority gaps and add adversarial proof"
+          git push origin "HEAD:${HEAD_BRANCH}"
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Format check
+        run: npm run format:check
+      - name: Focused final tests
+        run: |
+          npx vitest run \
+            src/sandbox/sandbox-policy-model.spec.ts \
+            src/sandbox/sandbox-policy-model-boundary.spec.ts \
+            src/sandbox/sandbox-execution-broker.spec.ts \
+            src/sandbox/sandbox-evidence.spec.ts \
+            src/access/sandbox-policy-compat.spec.ts \
+            src/access/sandbox-capability-authority.spec.ts \
+            src/sandbox/sandbox-policy-coverage.spec.ts \
+            src/sandbox/sandbox-registry.spec.ts \
+            src/app/api/sandbox-routes.spec.ts \
+            src/runtime/tools/sandbox-tools.spec.ts \
+            --reporter=verbose
+      - name: Full coverage
+        run: npm run test:coverage
+      - name: Build
+        run: npm run build
+      - name: PR preflight
+        run: npm run preflight -- --base-ref origin/main
+      - name: Full validation
+        run: npm run validate
