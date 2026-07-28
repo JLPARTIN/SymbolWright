@@ -172,6 +172,14 @@ export interface AgentTeam {
   objective: string
   status: TeamStatus
   readonly createdBy: string
+  /** The authenticated grant that created this team, when created by a delegated agent
+   * (undefined = operator-created, or a team persisted before this field existed -- both are
+   * treated as operator-owned by `team-access-guard.ts`, never inferred from `createdBy`'s
+   * free-form display string). Distinct from mission ownership: a team can be owned by a
+   * different grant than the mission it targets, as long as that grant could manage the
+   * mission at creation time. */
+  readonly ownerGrantId?: string
+  readonly ownerPrincipalId?: string
   readonly createdAt: string
   updatedAt: string
   startedAt?: string

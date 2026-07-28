@@ -171,6 +171,22 @@ describe('MissionService', () => {
     expect(imported.importedFrom?.originalMissionId).toBe(created.id)
   })
 
+  it('strips a foreign grantId from an imported bundle rather than inheriting it', async () => {
+    // Regression test: `import()` used to spread `...bundle.mission` wholesale, so a mission
+    // exported from a grant on one server -- or another grant on this one -- would carry that
+    // stale `grantId` straight into the imported record, silently attributing ownership to a
+    // grant id that only ever meant something in the original export's context.
+    const created = await create()
+    const bundle = service.export(created.id) as { mission: { grantId?: string } }
+    bundle.mission.grantId = 'grant-from-another-server'
+
+    const importedNoGrant = service.import(bundle)
+    expect(importedNoGrant.grantId).toBeUndefined()
+
+    const importedWithGrant = service.import(bundle, { grantId: 'grant-importing-caller' })
+    expect(importedWithGrant.grantId).toBe('grant-importing-caller')
+  })
+
   it('detects repository drift without switching branches', async () => {
     const created = await create()
     await runGitCommand(['checkout', '-b', 'other'], root)

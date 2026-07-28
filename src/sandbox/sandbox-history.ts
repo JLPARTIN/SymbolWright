@@ -4,6 +4,16 @@ import path from 'node:path'
 import { redactSandboxText } from './sandbox-redaction.js'
 import type { SandboxExecutionResult } from './sandbox-types.js'
 
+/** Who may see/cancel this execution. `ownerGrantId` absent means an operator-initiated
+ * execution (visible to the operator only, same as every other operator-owned resource in this
+ * codebase); `ownerPrincipalId` is recorded even for operator runs where available, for
+ * attribution. A standalone (no `missionId`) delegated execution is owned directly by the
+ * executing grant, since it has no mission to inherit access from. */
+export interface SandboxExecutionOwnership {
+  readonly ownerGrantId?: string
+  readonly ownerPrincipalId?: string
+}
+
 export interface SandboxExecutionSummary {
   readonly executionId: string
   readonly languageId: string
@@ -15,6 +25,7 @@ export interface SandboxExecutionSummary {
   readonly completedAt: string
   readonly durationMs: number
   readonly missionId?: string
+  readonly ownerGrantId?: string
 }
 
 export interface SandboxExecutionRecord {
@@ -23,6 +34,8 @@ export interface SandboxExecutionRecord {
   readonly createdAt: string
   readonly result: SandboxExecutionResult
   readonly missionId?: string
+  readonly ownerGrantId?: string
+  readonly ownerPrincipalId?: string
 }
 
 export interface SandboxHistoryList {
@@ -89,6 +102,7 @@ function summarize(record: SandboxExecutionRecord): SandboxExecutionSummary {
     completedAt: record.result.completedAt,
     durationMs: record.result.durationMs,
     ...(record.missionId === undefined ? {} : { missionId: record.missionId }),
+    ...(record.ownerGrantId === undefined ? {} : { ownerGrantId: record.ownerGrantId }),
   }
 }
 
@@ -105,7 +119,11 @@ export class SandboxHistoryStore {
     this.now = options.now ?? (() => new Date())
   }
 
-  public record(result: SandboxExecutionResult, missionId?: string): SandboxExecutionRecord {
+  public record(
+    result: SandboxExecutionResult,
+    missionId?: string,
+    ownership?: SandboxExecutionOwnership,
+  ): SandboxExecutionRecord {
     const executionId = safeExecutionId(result.executionId)
     const record: SandboxExecutionRecord = {
       schemaVersion: 1,
@@ -113,6 +131,10 @@ export class SandboxHistoryStore {
       createdAt: this.now().toISOString(),
       result: sanitizeResult(result),
       ...(missionId === undefined ? {} : { missionId }),
+      ...(ownership?.ownerGrantId === undefined ? {} : { ownerGrantId: ownership.ownerGrantId }),
+      ...(ownership?.ownerPrincipalId === undefined
+        ? {}
+        : { ownerPrincipalId: ownership.ownerPrincipalId }),
     }
     atomicWriteJson(this.executionPath(executionId), record)
     this.writeIndex([summarize(record), ...this.readIndex().executions])

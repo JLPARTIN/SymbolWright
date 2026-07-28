@@ -121,6 +121,33 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   schedule. Verified the repository is public, so this runs under GitHub's free Advanced Security
   tier for public repos — no paid GHAS license required. Actions pinned to commit SHAs, matching
   every other workflow.
+- **No resource-instance ownership check on mission-linked routes (Bundle #12 PR 1)**: every
+  mission-linked surface checked only that a caller held the right *capability class* (e.g.
+  `symbolwright.mission.read`), never that the specific resource belonged to them. A delegated
+  grant could read, mutate, or control another grant's missions by simply supplying that
+  mission's id: `GET /api/missions` returned every mission unfiltered; `handleAutonomousMissionRoute`
+  (dispatched from `mission-routes.ts` before any ownership check) received no `grantId` at all, so
+  `start`/`resume`/`pause`/`cancel`/`retry` had no notion of caller identity; `POST /api/agent`
+  loaded a caller-supplied `missionId` and let the turn proceed with zero ownership comparison;
+  sandbox execution (`POST /api/sandbox/execute`, including standalone runs with no `missionId`)
+  and its history had no grant attribution whatsoever; checkpoint listing/detail had no ownership
+  check; `MissionService.import()` spread the exported bundle's `grantId` wholesale into the
+  imported record, carrying over a stale foreign grant id; and `TeamService.listTeams()`/`getTeam()`
+  had no notion of caller identity either, with `AgentTeam` having no owner grant/principal field
+  at all and team creation accepting a caller-supplied `repositoryRoot` instead of deriving it from
+  the verified mission. New `src/access/mission-access-guard.ts` (`canAccessMission`,
+  `resolveMissionVisibility`) and `src/access/team-access-guard.ts` (`checkTeamAccess`) establish
+  one shared relationship/operation model — `operator | mission_owner | team_owner | team_member |
+  none`, checked against `read | contribute | execute | manage | destructive` — applied uniformly
+  across missions, autonomy actions, `/api/agent`, sandbox executions (with new
+  `SandboxExecutionOwnership` tracking on every history record), checkpoints, mission import
+  (grantId now stripped and reassigned to the importing caller), and the full `/api/v1/agent-teams`
+  surface (including anti-impersonation: `agentId`/`reviewerId` are now derived from the caller's
+  own active team-member record rather than trusted from the request body). Cross-grant denials
+  return `404` (relationship `none`) rather than `403`, to avoid confirming a resource's existence
+  under a different owner. Repository memory (`GET /api/memory/recent`/`/procedural`) is
+  operator-only for now, since the underlying schema has no repository/mission/grant scoping key at
+  all — a policy decision recorded explicitly rather than left implicit.
 
 ### Added
 

@@ -16,6 +16,7 @@ import {
 } from 'node:fs'
 import path from 'node:path'
 
+import { canAccessMission, type MissionVisibility } from '../access/mission-access-guard.js'
 import { isValidMissionId } from './mission-id.js'
 import { migrateMissionRecord } from './mission-migration.js'
 import { redactMissionRecord } from './mission-redaction.js'
@@ -179,8 +180,16 @@ export class MissionStore {
     }
   }
 
+  /** `options.visibility`, when supplied, filters to missions the caller can see (direct
+   * ownership plus per-mission team membership) *before* pagination/`total` are computed —
+   * applied against the full record, not the projected `MissionListSummary`, since that summary
+   * doesn't carry `grantId`. Omitted entirely for operator callers (unrestricted, unchanged). */
   public listMissions(
-    options: { readonly offset?: number; readonly limit?: number } = {},
+    options: {
+      readonly offset?: number
+      readonly limit?: number
+      readonly visibility?: MissionVisibility
+    } = {},
   ): MissionListResult {
     const offset = Math.max(0, Math.floor(options.offset ?? 0))
     const limit = Math.min(200, Math.max(1, Math.floor(options.limit ?? 50)))
@@ -192,7 +201,14 @@ export class MissionStore {
     for (const missionId of indexResult.index.missionIds) {
       const readResult = this.readMissionResult(missionId)
       warnings.push(...readResult.warnings)
-      if (readResult.mission !== undefined) summaries.push(missionSummary(readResult.mission))
+      if (readResult.mission === undefined) continue
+      if (
+        options.visibility !== undefined &&
+        !canAccessMission(readResult.mission, options.visibility, 'read').allowed
+      ) {
+        continue
+      }
+      summaries.push(missionSummary(readResult.mission))
     }
 
     summaries.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))

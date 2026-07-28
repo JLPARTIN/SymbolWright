@@ -1,6 +1,12 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { AccessRuntime } from '../../access/access-runtime.js'
+import {
+  canAccessMission,
+  resolveMissionVisibility,
+  type MissionOperation,
+  type TeamVisibilitySource,
+} from '../../access/mission-access-guard.js'
 import { checkRequirePullRequest } from '../../access/require-pull-request-guard.js'
 import { createServerAutonomyRuntime } from '../../autonomy/server-autonomy-runtime.js'
 import {
@@ -45,6 +51,67 @@ export interface MissionRouteContext {
    * mission's repair loop. Distinct from `grantId` above, which is per-request and only used at
    * mission-creation time. */
   readonly accessRuntime?: AccessRuntime
+  /** Read-only view onto the orchestration store's teams, used to resolve which missions a
+   * delegated caller can see via active team membership (see `mission-access-guard.ts`). Stable
+   * across requests, like `accessRuntime`. Omitted entirely, visibility degrades to
+   * direct-ownership-only (no team-derived access), never to "see everything". */
+  readonly teamSource?: TeamVisibilitySource
+}
+
+/** Maps a `/api/missions/:id/autonomy[/:action]` request onto the access-guard operation it
+ * requires. `undefined` means "not a recognized action for this method" — the ownership check
+ * is skipped and `handleAutonomousMissionRoute` is left to respond with its own `405`, so a
+ * mismatched method never becomes a confusing `404`/`403` (or an ownership-check mission lookup
+ * against an id that was never going to be used) instead of "method not allowed". Every
+ * recognized autonomy action is POST-only today except the dashboard (`GET`, no action). */
+function missionOperationForAutonomyAction(
+  action: string | undefined,
+  method: string | undefined,
+): MissionOperation | undefined {
+  if (action === undefined) return method === 'GET' ? 'read' : undefined
+  if (method !== 'POST') return undefined
+  if (action === 'start' || action === 'resume' || action === 'pause' || action === 'retry') {
+    return 'execute'
+  }
+  // `cancel`/`release` stop or ship the mission's autonomous work outright -- reserved for the
+  // mission/team owner or operator, not any active contributing team member.
+  if (action === 'cancel' || action === 'release') return 'manage'
+  return undefined
+}
+
+/** Same shape as `missionOperationForAutonomyAction`, for direct `/api/missions/:id[/:action]`
+ * routes. `record` is the one write action available to an active *contributing* team member
+ * (it's how in-progress evidence gets appended during real work); every other mutation --
+ * lifecycle transitions, branch switching, deletion -- is reserved for owner/operator. Each
+ * action is gated on the one HTTP method it actually supports, same reasoning as the autonomy
+ * mapping above. */
+function missionOperationForDirectAction(
+  action: string | undefined,
+  method: string | undefined,
+): MissionOperation | undefined {
+  if (action === undefined) {
+    if (method === 'GET') return 'read'
+    if (method === 'PATCH') return 'manage'
+    if (method === 'DELETE') return 'destructive'
+    return undefined
+  }
+  if (action === 'events') return method === 'GET' ? 'read' : undefined
+  if (action === 'export') return method === 'POST' ? 'read' : undefined
+  if (action === 'record') return method === 'POST' ? 'contribute' : undefined
+  if (method !== 'POST') return undefined
+  if (
+    action === 'pause' ||
+    action === 'resume' ||
+    action === 'complete' ||
+    action === 'abandon' ||
+    action === 'reopen' ||
+    action === 'attach-scratch' ||
+    action === 'switch-recorded-branch' ||
+    action === 'checkpoint-label'
+  ) {
+    return 'manage'
+  }
+  return undefined
 }
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
@@ -307,6 +374,53 @@ export async function handleMissionRoute(
     return false
   }
 
+  // Resource-instance ownership check -- runs before *any* dispatch (including into
+  // `handleAutonomousMissionRoute`, which has no notion of caller identity of its own) for every
+  // route shaped `/api/missions/:id[...]` other than the collection routes handled below. A
+  // capability-class check (route-capability-map.ts) only establishes that the caller may use
+  // `symbolwright.mission.read`/`.execute`/etc. *in general* -- this establishes that they may
+  // use it against *this specific mission*.
+  if (url.pathname !== '/api/missions' && url.pathname !== '/api/missions/import') {
+    const autonomyMatch = /^\/api\/missions\/([^/]+)\/autonomy(?:\/([^/]+))?$/.exec(url.pathname)
+    const directMatch = /^\/api\/missions\/([^/]+)(?:\/([^/]+))?$/.exec(url.pathname)
+    const candidateId = autonomyMatch?.[1] ?? directMatch?.[1]
+    const operation =
+      autonomyMatch !== null
+        ? missionOperationForAutonomyAction(autonomyMatch[2], req.method)
+        : missionOperationForDirectAction(directMatch?.[2], req.method)
+    if (candidateId !== undefined && operation !== undefined) {
+      let mission
+      try {
+        mission = context.service.get(candidateId)
+      } catch (error) {
+        if (error instanceof MissionNotFoundError) {
+          sendJson(res, 404, { error: error.message })
+          return true
+        }
+        // A malformed id (fails `isValidMissionId`) throws a plain `Error` here, before this
+        // check ever reaches the function's main try/catch below -- without this fallback it
+        // would propagate uncaught instead of degrading to the same 500 that path already
+        // returns for an unexpected error.
+        sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) })
+        return true
+      }
+      const visibility = resolveMissionVisibility(context.grantId, context.teamSource)
+      const access = canAccessMission(mission, visibility, operation)
+      if (!access.allowed) {
+        if (access.relationship === 'none') {
+          sendJson(res, 404, { error: `Mission not found: ${candidateId}` })
+        } else {
+          sendJson(res, 403, {
+            error: 'authorization_denied',
+            reasonCode: 'MISSION_NOT_AUTHORIZED_FOR_OPERATION',
+            message: `This grant may not perform "${operation}" on mission ${candidateId}.`,
+          })
+        }
+        return true
+      }
+    }
+  }
+
   const runtime = autonomyRuntime(context)
   if (
     await handleAutonomousMissionRoute(req, res, url, {
@@ -322,7 +436,16 @@ export async function handleMissionRoute(
       if (req.method === 'GET') {
         const offset = parseInteger(url.searchParams.get('offset'), 0)
         const limit = Math.min(200, Math.max(1, parseInteger(url.searchParams.get('limit'), 50)))
-        sendJson(res, 200, context.service.list({ offset, limit }))
+        const visibility = resolveMissionVisibility(context.grantId, context.teamSource)
+        sendJson(
+          res,
+          200,
+          context.service.list({
+            offset,
+            limit,
+            ...(context.grantId === undefined ? {} : { visibility }),
+          }),
+        )
         return true
       }
       if (req.method === 'POST') {
@@ -347,7 +470,10 @@ export async function handleMissionRoute(
       }
       const body = await readJsonBody(req)
       const record = asRecord(body)
-      const mission = context.service.import(record['bundle'] ?? body)
+      const mission = context.service.import(
+        record['bundle'] ?? body,
+        context.grantId === undefined ? {} : { grantId: context.grantId },
+      )
       sendJson(res, 201, { mission })
       return true
     }

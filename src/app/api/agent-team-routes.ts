@@ -6,9 +6,18 @@ import {
 } from '../../access/authorization-service.js'
 import type { AccessRuntime } from '../../access/access-runtime.js'
 import { GrantValidationError } from '../../access/access-grant-service.js'
+import {
+  canAccessMission,
+  resolveMissionVisibility,
+  type MissionOperation,
+  type TeamVisibilitySource,
+} from '../../access/mission-access-guard.js'
+import { checkTeamAccess } from '../../access/team-access-guard.js'
+import { MissionNotFoundError, type MissionService } from '../../mission/mission-service.js'
 import type {
   AgentProviderKind,
   AgentRole,
+  AgentTeam,
   AgentTrustTier,
 } from '../../orchestration/orchestration-types.js'
 import { AGENT_PROVIDER_KINDS, AGENT_TRUST_TIERS } from '../../orchestration/orchestration-types.js'
@@ -50,6 +59,8 @@ export interface AgentTeamRouteContext {
   readonly principalId?: string
   readonly grantId?: string
   readonly sessionId?: string
+  readonly missionService?: MissionService
+  readonly teamSource?: TeamVisibilitySource
 }
 
 const MAX_BODY_BYTES = 256 * 1024
@@ -139,6 +150,86 @@ async function authorize(
   }
 }
 
+/** True when `context`'s caller directly owns the mission `team` belongs to -- a mission owner
+ * gets full team authority even without an explicit team-owner record or team membership (see
+ * `team-access-guard.ts`'s policy table). Best-effort: without `missionService` wired, or if the
+ * mission can't be found, this is `false` (fail closed to narrower authority, not wider). */
+function isCallerMissionOwner(team: AgentTeam, context: AgentTeamRouteContext): boolean {
+  if (context.grantId === undefined || context.missionService === undefined) return false
+  try {
+    const mission = context.missionService.get(team.missionId)
+    const visibility = resolveMissionVisibility(context.grantId, context.teamSource)
+    return canAccessMission(mission, visibility, 'destructive').relationship === 'mission_owner'
+  } catch {
+    return false
+  }
+}
+
+function isCallerActiveTeamMember(team: AgentTeam, context: AgentTeamRouteContext): boolean {
+  if (context.grantId === undefined) return false
+  return context.orchestration.store
+    .membersByTeam(team.id)
+    .some((member) => member.grantId === context.grantId && member.status !== 'removed')
+}
+
+/** Pure resource-instance ownership check for `team` -- no response side effects, safe to use
+ * both for a single-resource route (via `denyIfNoTeamAccess` below) and for filtering a list. */
+function teamAccess(
+  team: AgentTeam,
+  context: AgentTeamRouteContext,
+  operation: MissionOperation,
+): { readonly relationship: string; readonly allowed: boolean } {
+  if (context.principalKind === 'operator') return { relationship: 'operator', allowed: true }
+  return checkTeamAccess(
+    { id: team.id, missionId: team.missionId, ownerGrantId: team.ownerGrantId },
+    {
+      ...(context.grantId === undefined ? {} : { grantId: context.grantId }),
+      isMissionOwner: isCallerMissionOwner(team, context),
+      isActiveMember: isCallerActiveTeamMember(team, context),
+    },
+    operation,
+  )
+}
+
+/** Resource-instance ownership check for `team`, sibling to the mission-level check in
+ * `mission-routes.ts`. Sends the response and returns `true` when access is denied; callers
+ * should `return true` from the route handler immediately when this returns `true`. Runs *in
+ * addition to* `authorize()`'s capability-class check, not instead of it -- capability
+ * establishes the caller may use this operation *in general*, this establishes they may use it
+ * against *this specific team*. */
+function denyIfNoTeamAccess(
+  team: AgentTeam,
+  context: AgentTeamRouteContext,
+  operation: MissionOperation,
+  res: ServerResponse,
+): boolean {
+  const access = teamAccess(team, context, operation)
+  if (access.allowed) return false
+  if (access.relationship === 'none') {
+    sendJson(res, 404, { error: 'not_found', message: `No such team: ${team.id}` })
+  } else {
+    sendJson(res, 403, {
+      error: 'authorization_denied',
+      reasonCode: 'TEAM_NOT_AUTHORIZED_FOR_OPERATION',
+      message: `This grant may not perform "${operation}" on team ${team.id}.`,
+    })
+  }
+  return true
+}
+
+/** When the caller is a delegated grant with its own active membership on `team`, returns that
+ * membership's id -- the caller's *own* identity, never a value trusted from the request body.
+ * Returns `undefined` for the operator or a mission/team owner with no member record of their
+ * own (a genuinely privileged caller acting on a member's behalf, e.g. an operator backfilling
+ * history), in which case the caller-supplied id in the body is used as before. */
+function resolveActorMemberId(team: AgentTeam, context: AgentTeamRouteContext): string | undefined {
+  if (context.grantId === undefined) return undefined
+  const member = context.orchestration.store
+    .membersByTeam(team.id)
+    .find((candidate) => candidate.grantId === context.grantId && candidate.status !== 'removed')
+  return member?.id
+}
+
 function handleKnownError(res: ServerResponse, error: unknown): boolean {
   if (error instanceof TeamNotFoundError || error instanceof TaskNotFoundError) {
     sendJson(res, 404, { error: 'not_found', message: error.message })
@@ -196,17 +287,52 @@ export async function tryHandleAgentTeamRoute(
       const missionId = str(body, 'missionId')
       const name = str(body, 'name')
       const objective = str(body, 'objective')
-      const repositoryRoot = str(body, 'repositoryRoot')
-      if (
-        missionId === undefined ||
-        name === undefined ||
-        objective === undefined ||
-        repositoryRoot === undefined
-      ) {
+      if (missionId === undefined || name === undefined || objective === undefined) {
         sendJson(res, 400, {
           error: 'validation_error',
-          message: 'missionId, name, objective, repositoryRoot are required.',
+          message: 'missionId, name, objective are required.',
         })
+        return true
+      }
+      // For a delegated caller, `repositoryRoot` is derived from the verified mission -- never
+      // caller-supplied -- and the caller must be able to manage that mission before a team can
+      // be pointed at it. The operator has no mission of its own to verify against (its API key
+      // is unrestricted everywhere else in this subsystem too), so it keeps the legacy
+      // body-supplied `repositoryRoot` behavior unchanged.
+      let repositoryRoot = str(body, 'repositoryRoot')
+      if (context.grantId !== undefined) {
+        if (context.missionService === undefined) {
+          sendJson(res, 500, { error: 'mission_service_unavailable' })
+          return true
+        }
+        let mission
+        try {
+          mission = context.missionService.get(missionId)
+        } catch (error) {
+          if (error instanceof MissionNotFoundError) {
+            sendJson(res, 404, { error: error.message })
+            return true
+          }
+          throw error
+        }
+        const visibility = resolveMissionVisibility(context.grantId, context.teamSource)
+        const access = canAccessMission(mission, visibility, 'manage')
+        if (!access.allowed) {
+          if (access.relationship === 'none') {
+            sendJson(res, 404, { error: `Mission not found: ${missionId}` })
+          } else {
+            sendJson(res, 403, {
+              error: 'authorization_denied',
+              reasonCode: 'MISSION_NOT_AUTHORIZED_FOR_OPERATION',
+              message: `This grant may not create a team for mission ${missionId}.`,
+            })
+          }
+          return true
+        }
+        repositoryRoot = mission.repository.rootPath
+      }
+      if (repositoryRoot === undefined) {
+        sendJson(res, 400, { error: 'validation_error', message: 'repositoryRoot is required.' })
         return true
       }
       const team = context.orchestration.teamService.createTeam({
@@ -215,6 +341,8 @@ export async function tryHandleAgentTeamRoute(
         objective,
         repositoryRoot,
         createdBy: context.actor,
+        ...(context.grantId === undefined ? {} : { ownerGrantId: context.grantId }),
+        ...(context.principalId === undefined ? {} : { ownerPrincipalId: context.principalId }),
       })
       sendJson(res, 201, { team })
       return true
@@ -222,7 +350,10 @@ export async function tryHandleAgentTeamRoute(
 
     if (url.pathname === '/api/v1/agent-teams' && req.method === 'GET') {
       if (!(await authorize(context, 'orchestration.team.read', res))) return true
-      sendJson(res, 200, { teams: context.orchestration.teamService.listTeams() })
+      const teams = context.orchestration.teamService
+        .listTeams()
+        .filter((team) => teamAccess(team, context, 'read').allowed)
+      sendJson(res, 200, { teams })
       return true
     }
 
@@ -231,6 +362,7 @@ export async function tryHandleAgentTeamRoute(
     if (url.pathname === `/api/v1/agent-teams/${teamId}` && req.method === 'GET') {
       if (!(await authorize(context, 'orchestration.team.read', res))) return true
       const team = context.orchestration.teamService.getTeam(teamId)
+      if (denyIfNoTeamAccess(team, context, 'read', res)) return true
       sendJson(res, 200, {
         team,
         members: context.orchestration.store.membersByTeam(teamId),
@@ -247,6 +379,8 @@ export async function tryHandleAgentTeamRoute(
       ['start', 'pause', 'resume', 'cancel'].includes(lifecycleAction ?? '')
     ) {
       if (!(await authorize(context, 'orchestration.team.manage', res))) return true
+      const teamForLifecycle = context.orchestration.teamService.getTeam(teamId)
+      if (denyIfNoTeamAccess(teamForLifecycle, context, 'manage', res)) return true
       const nextStatus =
         lifecycleAction === 'start'
           ? 'running'
@@ -262,6 +396,16 @@ export async function tryHandleAgentTeamRoute(
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/members` && req.method === 'POST') {
       if (!(await authorize(context, 'orchestration.team.manage', res))) return true
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
+        return true
+      }
       const body = await readJsonBody(req)
       const displayName = str(body, 'displayName')
       const roleRaw = str(body, 'role')
@@ -322,6 +466,16 @@ export async function tryHandleAgentTeamRoute(
       req.method === 'DELETE'
     ) {
       if (!(await authorize(context, 'orchestration.team.manage', res))) return true
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
+        return true
+      }
       const body = await readJsonBody(req)
       const member = context.orchestration.teamService.removeMember(
         teamId,
@@ -335,12 +489,27 @@ export async function tryHandleAgentTeamRoute(
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/tasks` && req.method === 'GET') {
       if (!(await authorize(context, 'orchestration.team.read', res))) return true
+      if (
+        denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'read', res)
+      ) {
+        return true
+      }
       sendJson(res, 200, { tasks: context.orchestration.taskService.listTasksForTeam(teamId) })
       return true
     }
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/tasks` && req.method === 'POST') {
       if (!(await authorize(context, 'orchestration.team.manage', res))) return true
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
+        return true
+      }
       const body = await readJsonBody(req)
       const title = str(body, 'title')
       const objective = str(body, 'objective')
@@ -390,6 +559,16 @@ export async function tryHandleAgentTeamRoute(
       req.method === 'POST'
     ) {
       if (!(await authorize(context, 'orchestration.task.assign', res))) return true
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
+        return true
+      }
       const decision = context.orchestration.assignmentEngine.assign(teamId, taskId)
       if (!decision.unresolved) {
         context.orchestration.taskService.assignAgents(taskId, decision.selectedAgentIds)
@@ -400,9 +579,15 @@ export async function tryHandleAgentTeamRoute(
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/workspaces` && req.method === 'POST') {
       if (!(await authorize(context, 'orchestration.candidate.submit', res))) return true
+      const team = context.orchestration.teamService.getTeam(teamId)
+      if (denyIfNoTeamAccess(team, context, 'contribute', res)) return true
       const body = await readJsonBody(req)
       const workspaceTaskId = str(body, 'taskId')
-      const agentId = str(body, 'agentId')
+      // A delegated caller with their own active team membership always acts as themselves --
+      // never as a body-supplied `agentId` claiming another member's identity. Only a caller
+      // with no member record of its own (operator, or a mission/team owner acting on a
+      // member's behalf) may supply `agentId` directly.
+      const agentId = resolveActorMemberId(team, context) ?? str(body, 'agentId')
       if (workspaceTaskId === undefined || agentId === undefined) {
         sendJson(res, 400, {
           error: 'validation_error',
@@ -421,7 +606,6 @@ export async function tryHandleAgentTeamRoute(
         })
         return true
       }
-      const team = context.orchestration.teamService.getTeam(teamId)
       const workspace = await context.orchestration.workspaceService.createWorkspace({
         teamId,
         taskId: workspaceTaskId,
@@ -437,15 +621,22 @@ export async function tryHandleAgentTeamRoute(
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/candidates` && req.method === 'GET') {
       if (!(await authorize(context, 'orchestration.team.read', res))) return true
+      if (
+        denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'read', res)
+      ) {
+        return true
+      }
       sendJson(res, 200, { candidates: context.orchestration.candidateService.listForTeam(teamId) })
       return true
     }
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/candidates` && req.method === 'POST') {
       if (!(await authorize(context, 'orchestration.candidate.submit', res))) return true
+      const team = context.orchestration.teamService.getTeam(teamId)
+      if (denyIfNoTeamAccess(team, context, 'contribute', res)) return true
       const body = await readJsonBody(req)
       const taskId2 = str(body, 'taskId')
-      const agentId = str(body, 'agentId')
+      const agentId = resolveActorMemberId(team, context) ?? str(body, 'agentId')
       const workspaceId = str(body, 'workspaceId')
       const rationale = str(body, 'rationale')
       if (
@@ -460,7 +651,6 @@ export async function tryHandleAgentTeamRoute(
         })
         return true
       }
-      const team = context.orchestration.teamService.getTeam(teamId)
       const workspace = context.orchestration.workspaceService.getWorkspace(workspaceId)
       const candidate = await context.orchestration.candidateService.submitCandidate({
         missionId: team.missionId,
@@ -484,8 +674,13 @@ export async function tryHandleAgentTeamRoute(
       req.method === 'POST'
     ) {
       if (!(await authorize(context, 'orchestration.review.submit', res))) return true
+      const team = context.orchestration.teamService.getTeam(teamId)
+      if (denyIfNoTeamAccess(team, context, 'contribute', res)) return true
       const body = await readJsonBody(req)
-      const reviewerId = str(body, 'reviewerId') ?? context.actor
+      // Same anti-impersonation rule as `agentId` above: a caller with its own active
+      // membership always reviews as itself.
+      const reviewerId =
+        resolveActorMemberId(team, context) ?? str(body, 'reviewerId') ?? context.actor
       const verdict = str(body, 'verdict')
       const rationale = str(body, 'rationale')
       if (verdict === undefined || rationale === undefined) {
@@ -522,6 +717,16 @@ export async function tryHandleAgentTeamRoute(
       req.method === 'POST'
     ) {
       if (!(await authorize(context, 'orchestration.review.submit', res))) return true
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
+        return true
+      }
       const body = await readJsonBody(req)
       const rationale = str(body, 'rationale') ?? ''
       if (
@@ -547,6 +752,16 @@ export async function tryHandleAgentTeamRoute(
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/integrations` && req.method === 'POST') {
       if (!(await authorize(context, 'orchestration.integration.request', res))) return true
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
+        return true
+      }
       const body = await readJsonBody(req)
       const candidateIds = strArray(body, 'candidateIds')
       const plan = await context.orchestration.integrationService.prepareIntegration(
@@ -565,6 +780,17 @@ export async function tryHandleAgentTeamRoute(
       req.method === 'POST'
     ) {
       if (!(await authorize(context, 'orchestration.integration.request', res))) return true
+      const plan = context.orchestration.integrationService.getPlan(integrationId)
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(plan.teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
+        return true
+      }
       const result =
         await context.orchestration.integrationService.executeIntegration(integrationId)
       sendJson(res, 200, { result })
@@ -578,6 +804,17 @@ export async function tryHandleAgentTeamRoute(
       req.method === 'POST'
     ) {
       if (!(await authorize(context, 'orchestration.integration.request', res))) return true
+      const rollbackPlan = context.orchestration.integrationService.getPlan(integrationId)
+      if (
+        denyIfNoTeamAccess(
+          context.orchestration.teamService.getTeam(rollbackPlan.teamId),
+          context,
+          'manage',
+          res,
+        )
+      ) {
+        return true
+      }
       const body = await readJsonBody(req)
       const result = await context.orchestration.integrationService.rollbackIntegration(
         integrationId,
@@ -589,6 +826,11 @@ export async function tryHandleAgentTeamRoute(
 
     if (url.pathname === `/api/v1/agent-teams/${teamId}/events` && req.method === 'GET') {
       if (!(await authorize(context, 'orchestration.team.read', res))) return true
+      if (
+        denyIfNoTeamAccess(context.orchestration.teamService.getTeam(teamId), context, 'read', res)
+      ) {
+        return true
+      }
       const events = context.orchestration.store
         .listAudit()
         .filter((event) => event.teamId === teamId)
