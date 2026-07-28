@@ -39,35 +39,39 @@ jobs:
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
           set +e
-          node scripts/apply-sandbox-pr3-final-patches.mjs > /tmp/sandbox-pr3-patch.log 2>&1
+          (
+            node scripts/apply-sandbox-pr3-final-patches.mjs
+            npx prettier --write \
+              src/server/symbolwright-chat-server.ts \
+              src/sandbox/sandbox-policy-model.ts \
+              src/sandbox/sandbox-types.ts \
+              src/sandbox/sandbox-evidence.ts \
+              src/sandbox/sandbox-container-backend.ts \
+              src/sandbox/sandbox-container-command-plan.ts \
+              src/sandbox/sandbox-container-policy.ts \
+              src/sandbox/sandbox-container-workspace.ts \
+              src/sandbox/sandbox-container-integration.spec.ts \
+              src/sandbox/sandbox-container-workspace.spec.ts \
+              src/sandbox/sandbox-container-command-plan.spec.ts \
+              src/sandbox/sandbox-registry.ts \
+              src/sandbox/sandbox-registry.spec.ts \
+              src/sandbox/sandbox-service.ts \
+              src/sandbox/sandbox-doctor.ts \
+              src/cli-sandbox.ts
+            git diff --check
+          ) > /tmp/sandbox-pr3-finalize.log 2>&1
           status=$?
           set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [ "$status" -ne 0 ]; then
-            cp /tmp/sandbox-pr3-patch.log sandbox-pr3-patch-diagnostic.txt
+            git reset --hard HEAD
+            cp /tmp/sandbox-pr3-finalize.log sandbox-pr3-patch-diagnostic.txt
             git add sandbox-pr3-patch-diagnostic.txt
-            git commit -m "chore(sandbox): capture PR3 patch diagnostic"
+            git commit -m "chore(sandbox): capture PR3 finalization diagnostic"
             git push origin "HEAD:${HEAD_BRANCH}"
             exit "$status"
           fi
-          npx prettier --write \
-            src/server/symbolwright-chat-server.ts \
-            src/sandbox/sandbox-policy-model.ts \
-            src/sandbox/sandbox-types.ts \
-            src/sandbox/sandbox-evidence.ts \
-            src/sandbox/sandbox-container-backend.ts \
-            src/sandbox/sandbox-container-command-plan.ts \
-            src/sandbox/sandbox-container-policy.ts \
-            src/sandbox/sandbox-container-workspace.ts \
-            src/sandbox/sandbox-container-integration.spec.ts \
-            src/sandbox/sandbox-container-workspace.spec.ts \
-            src/sandbox/sandbox-container-command-plan.spec.ts \
-            src/sandbox/sandbox-registry.ts \
-            src/sandbox/sandbox-registry.spec.ts \
-            src/sandbox/sandbox-service.ts \
-            src/sandbox/sandbox-doctor.ts \
-            src/cli-sandbox.ts
           git add -A
           git commit -m "feat(sandbox): finalize strong offline container integration"
           git push origin "HEAD:${HEAD_BRANCH}"
