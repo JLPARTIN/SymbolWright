@@ -225,10 +225,9 @@ integration('strong offline container execution', () => {
       },
       { mode: 'APPROVED_EXECUTION' },
     )
-    expect(
-      ['resource-limit', 'runtime-error'],
-      resultDiagnostic(diskPressure),
-    ).toContain(diskPressure.status)
+    expect(['resource-limit', 'runtime-error'], resultDiagnostic(diskPressure)).toContain(
+      diskPressure.status,
+    )
     expect(diskPressure.stderr).toMatch(/ENOSPC|space|quota|memory/i)
   }, 45_000)
 })

@@ -6,6 +6,7 @@ import {
   buildSandboxContainerCommandPlan,
   type SandboxContainerCommandPlan,
 } from './sandbox-container-command-plan.js'
+import { serializeSandboxContainerInput } from './sandbox-container-transfer.js'
 import {
   cleanupSandboxContainerWorkspace,
   materializeSandboxContainerWorkspace,
@@ -245,10 +246,12 @@ class StrongSandboxContainerController implements SandboxBackendExecutionControl
       )
       if (startedContainer.exitCode !== 0) throw commandFailure('container start', startedContainer)
 
+      const copyInPayload = await serializeSandboxContainerInput(workspace)
       const copiedIn = await this.command(
         this.plan.commands.copyIn,
         CONTROL_COMMAND_TIMEOUT_MS,
         CONTROL_COMMAND_OUTPUT_BYTES,
+        copyInPayload,
       )
       if (copiedIn.exitCode !== 0) throw commandFailure('container copy-in', copiedIn)
 
