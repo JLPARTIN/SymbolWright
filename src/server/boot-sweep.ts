@@ -84,6 +84,7 @@ export async function runBootSweep(options: BootSweepOptions): Promise<BootSweep
     )
   }
 
+  let sandboxHistoryHealthy = true
   const sandboxIndex = path.join(
     path.resolve(options.workspaceRoot),
     '.symbolwright',
@@ -94,12 +95,19 @@ export async function runBootSweep(options: BootSweepOptions): Promise<BootSweep
     try {
       JSON.parse(readFileSync(sandboxIndex, 'utf8'))
     } catch (error) {
+      sandboxHistoryHealthy = false
       warnings.push(
         `Sandbox history index is unreadable: ${error instanceof Error ? error.message : String(error)}`,
       )
     }
   }
+  options.readiness.setCheck(
+    'sandbox_history',
+    sandboxHistoryHealthy,
+    sandboxHistoryHealthy ? undefined : 'Sandbox history state is unreadable.',
+  )
 
+  let retentionHealthy = true
   let retention = { quarantined: 0, deleted: 0, restored: 0 }
   const acquisitionRoot = resolveAcquisitionRoot(options.workspaceRoot)
   const quarantineRoot = resolveQuarantineRoot(options.workspaceRoot)
@@ -115,11 +123,17 @@ export async function runBootSweep(options: BootSweepOptions): Promise<BootSweep
         restored: result.restored.length,
       }
     } catch (error) {
+      retentionHealthy = false
       warnings.push(
         `External-repository retention sweep failed: ${error instanceof Error ? error.message : String(error)}`,
       )
     }
   }
+  options.readiness.setCheck(
+    'repository_retention',
+    retentionHealthy,
+    retentionHealthy ? undefined : 'External repository retention sweep failed.',
+  )
 
   options.readiness.setCheck(
     'mission_store',

@@ -138,7 +138,10 @@ export function parseTrustedProxyCidrs(
     }
     const family = detected
     const bits = family === 4 ? 32 : 128
-    const prefixLength = rawPrefix === undefined ? bits : Number.parseInt(rawPrefix, 10)
+    if (rawPrefix !== undefined && !/^(0|[1-9]\d*)$/.test(rawPrefix)) {
+      throw new TrustedProxyConfigError(`Malformed trusted-proxy CIDR prefix: ${entry}`)
+    }
+    const prefixLength = rawPrefix === undefined ? bits : Number(rawPrefix)
     if (!Number.isInteger(prefixLength) || prefixLength < 0 || prefixLength > bits) {
       throw new TrustedProxyConfigError(`Malformed trusted-proxy CIDR prefix: ${entry}`)
     }

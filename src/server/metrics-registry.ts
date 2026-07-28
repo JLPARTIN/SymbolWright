@@ -24,7 +24,10 @@ export class MetricsRegistry {
     this.#tracked.add(req)
     this.increment('http_requests_total')
     this.setGauge('http_requests_active', (this.#gauges.get('http_requests_active') ?? 0) + 1)
-    res.once('finish', () => {
+    let finalized = false
+    const finalize = (): void => {
+      if (finalized) return
+      finalized = true
       this.setGauge(
         'http_requests_active',
         Math.max(0, (this.#gauges.get('http_requests_active') ?? 1) - 1),
@@ -35,7 +38,9 @@ export class MetricsRegistry {
       if (res.statusCode === 403) this.increment('http_authorization_denials_total')
       if (res.statusCode === 429) this.increment('http_rate_or_concurrency_limited_total')
       if (res.statusCode >= 500) this.increment('http_server_errors_total')
-    })
+    }
+    res.once('finish', finalize)
+    res.once('close', finalize)
   }
 
   public snapshot(): MetricsSnapshot {

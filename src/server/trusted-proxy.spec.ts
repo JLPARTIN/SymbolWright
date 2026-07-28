@@ -97,6 +97,7 @@ describe('trusted proxy resolution', () => {
 
   it('fails startup parsing on malformed CIDRs', () => {
     expect(() => parseTrustedProxyCidrs(['10.0.0.0/99'])).toThrow(TrustedProxyConfigError)
+    expect(() => parseTrustedProxyCidrs(['10.0.0.0/24junk'])).toThrow(TrustedProxyConfigError)
     expect(() => parseTrustedProxyCidrs(['not-an-ip'])).toThrow(TrustedProxyConfigError)
   })
 })

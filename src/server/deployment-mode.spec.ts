@@ -11,6 +11,12 @@ describe('deployment mode', () => {
     expect(() => resolveDeploymentSecurity({ host: '0.0.0.0' })).toThrow(DeploymentConfigError)
   })
 
+  it('does not mistake a hostname beginning with 127 for a loopback address', () => {
+    expect(() => resolveDeploymentSecurity({ host: '127.attacker.example' })).toThrow(
+      DeploymentConfigError,
+    )
+  })
+
   it('allows the non-loopback plaintext escape hatch only in local mode and emits a warning', () => {
     const result = resolveDeploymentSecurity({
       host: '0.0.0.0',

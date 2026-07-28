@@ -6,6 +6,7 @@ import {
 } from '../../server/symbolwright-chat-server.js'
 import { createAndStartHttpServer, ShutdownLifecycle } from './http-bootstrap.js'
 import { resolveDeploymentSecurity } from '../../server/deployment-mode.js'
+import { MetricsRegistry } from '../../server/metrics-registry.js'
 import { prepareOperationalServerOptions } from '../../server/operational-bootstrap.js'
 import {
   applyOperationalSecurityHeaders,
@@ -37,7 +38,8 @@ export type { StartedUnifiedServer, UnifiedServerOptions } from './route-types.j
 export function createUnifiedRequestListener(
   options: UnifiedServerOptions,
 ): (req: IncomingMessage, res: ServerResponse) => void {
-  const chatListener = createChatServerRequestListener(options)
+  const metricsRegistry = options.metricsRegistry ?? new MetricsRegistry()
+  const chatListener = createChatServerRequestListener({ ...options, metricsRegistry })
   const deploymentSecurity = resolveDeploymentSecurity(options)
 
   return (req, res) => {
@@ -46,6 +48,7 @@ export function createUnifiedRequestListener(
 
   async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const url = new URL(req.url ?? '/', 'http://localhost')
+    metricsRegistry.trackResponse(req, res)
     applyOperationalSecurityHeaders(res)
     const requestSecurity = resolveRequestSecurity(req, deploymentSecurity)
     if (requestSecurity.rejection !== undefined) {

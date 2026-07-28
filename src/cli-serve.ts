@@ -22,9 +22,14 @@ function parseBoolean(value: string | undefined, name: string): boolean | undefi
 
 function parsePositiveInteger(value: string | undefined, name: string): number | undefined {
   if (value === undefined || value.trim().length === 0) return undefined
-  const parsed = Number.parseInt(value, 10)
-  if (!Number.isInteger(parsed) || parsed < 1)
+  const normalized = value.trim()
+  if (!/^[1-9]\d*$/.test(normalized)) {
     throw new Error(`${name} must be a positive integer.`)
+  }
+  const parsed = Number(normalized)
+  if (!Number.isSafeInteger(parsed)) {
+    throw new Error(`${name} must be a positive safe integer.`)
+  }
   return parsed
 }
 

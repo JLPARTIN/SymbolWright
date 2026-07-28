@@ -18,4 +18,16 @@ describe('MetricsRegistry', () => {
     expect(snapshot.counters['http_rate_or_concurrency_limited_total']).toBe(1)
     expect(snapshot.gauges['http_requests_active']).toBe(0)
   })
+
+  it('releases the active gauge once when a client disconnects before finish', () => {
+    const registry = new MetricsRegistry()
+    const req = {} as IncomingMessage
+    const res = Object.assign(new EventEmitter(), { statusCode: 200 }) as unknown as ServerResponse
+    registry.trackResponse(req, res)
+    res.emit('close')
+    res.emit('finish')
+    const snapshot = registry.snapshot()
+    expect(snapshot.gauges['http_requests_active']).toBe(0)
+    expect(snapshot.counters['http_responses_2xx_total']).toBe(1)
+  })
 })

@@ -1,3 +1,5 @@
+import { isIP } from 'node:net'
+
 import { parseTrustedProxyCidrs, type ParsedCidr } from './trusted-proxy.js'
 
 export type SymbolWrightDeploymentMode = 'local' | 'hosted'
@@ -33,7 +35,9 @@ export function isLoopbackHost(host: string): boolean {
     .trim()
     .toLowerCase()
     .replace(/^\[|\]$/g, '')
-  return normalized === 'localhost' || normalized === '::1' || normalized.startsWith('127.')
+  if (normalized === 'localhost' || normalized === '::1') return true
+  if (isIP(normalized) !== 4) return false
+  return normalized.split('.')[0] === '127'
 }
 
 function positiveInteger(value: number | undefined, name: string): number | undefined {
