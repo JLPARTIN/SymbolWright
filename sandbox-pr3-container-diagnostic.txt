@@ -1,0 +1,98 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/runner/work/SymbolWright/SymbolWright[39m
+
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mruns as non-root with a read-only root, no host mounts, and quarantined artifacts[32m 56[2mms[22m[39m
+[31m   → expected 'internal-error' to be 'passed' // Object.is equality[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mphysically blocks outbound networking[32m 37[2mms[22m[39m
+[31m   → expected 'internal-error' to be 'passed' // Object.is equality[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mterminates output floods at the effective byte limit[32m 33[2mms[22m[39m
+[31m   → expected 'internal-error' to be 'resource-limit' // Object.is equality[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces wall-time and explicit cancellation with container cleanup[32m 32[2mms[22m[39m
+[31m   → expected 'internal-error' to be 'timeout' // Object.is equality[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces PID and tmpfs disk pressure without escaping the container[32m 32[2mms[22m[39m
+[31m   → expected [ 'passed', 'resource-limit', …(1) ] to include 'internal-error'[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 5 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mruns as non-root with a read-only root, no host mounts, and quarantined artifacts
+[31m[1mAssertionError[22m: expected 'internal-error' to be 'passed' // Object.is equality[39m
+
+Expected: [32m"passed"[39m
+Received: [31m"internal-error"[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m70:27[22m[39m
+    [90m 68|[39m     )
+    [90m 69|[39m
+    [90m 70|[39m     [34mexpect[39m(result[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'passed'[39m)
+    [90m   |[39m                           [31m^[39m
+    [90m 71|[39m     [35mconst[39m proof [33m=[39m [33mJSON[39m[33m.[39m[34mparse[39m(result[33m.[39mstdout[33m.[39m[34mtrim[39m()) [35mas[39m {
+    [90m 72|[39m       readonly uid[33m:[39m number
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mphysically blocks outbound networking
+[31m[1mAssertionError[22m: expected 'internal-error' to be 'passed' // Object.is equality[39m
+
+Expected: [32m"passed"[39m
+Received: [31m"internal-error"[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m105:27[22m[39m
+    [90m103|[39m     )
+    [90m104|[39m
+    [90m105|[39m     [34mexpect[39m(result[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'passed'[39m)
+    [90m   |[39m                           [31m^[39m
+    [90m106|[39m     [34mexpect[39m(result[33m.[39mstdout)[33m.[39m[34mtoContain[39m([32m'network-blocked'[39m)
+    [90m107|[39m     [34mexpect[39m(result[33m.[39mstderr)[33m.[39mnot[33m.[39m[34mtoContain[39m([32m'network-connected'[39m)
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mterminates output floods at the effective byte limit
+[31m[1mAssertionError[22m: expected 'internal-error' to be 'resource-limit' // Object.is equality[39m
+
+Expected: [32m"resource-limit"[39m
+Received: [31m"internal-error"[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m122:27[22m[39m
+    [90m120|[39m     )
+    [90m121|[39m
+    [90m122|[39m     [34mexpect[39m(result[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'resource-limit'[39m)
+    [90m   |[39m                           [31m^[39m
+    [90m123|[39m     [34mexpect[39m(result[33m.[39moutputTruncated)[33m.[39m[34mtoBe[39m([35mtrue[39m)
+    [90m124|[39m     expect(Buffer.byteLength(result.stdout) + Buffer.byteLength(result…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces wall-time and explicit cancellation with container cleanup
+[31m[1mAssertionError[22m: expected 'internal-error' to be 'timeout' // Object.is equality[39m
+
+Expected: [32m"timeout"[39m
+Received: [31m"internal-error"[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m140:29[22m[39m
+    [90m138|[39m       { mode[33m:[39m [32m'APPROVED_EXECUTION'[39m }[33m,[39m
+    [90m139|[39m     )
+    [90m140|[39m     [34mexpect[39m(timedOut[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'timeout'[39m)
+    [90m   |[39m                             [31m^[39m
+    [90m141|[39m     [34mexpect[39m(timedOut[33m.[39mcleanup[33m.[39msucceeded)[33m.[39m[34mtoBe[39m([35mtrue[39m)
+    [90m142|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces PID and tmpfs disk pressure without escaping the container
+[31m[1mAssertionError[22m: expected [ 'passed', 'resource-limit', …(1) ] to include 'internal-error'[39m
+[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m183:59[22m[39m
+    [90m181|[39m       { mode[33m:[39m [32m'APPROVED_EXECUTION'[39m }[33m,[39m
+    [90m182|[39m     )
+    [90m183|[39m     expect(['passed', 'resource-limit', 'runtime-error']).toContain(pr…
+    [90m   |[39m                                                           [31m^[39m
+    [90m184|[39m
+    [90m185|[39m     [35mconst[39m diskPressure [33m=[39m [35mawait[39m [34mservice[39m([32m'sandbox-disk'[39m)[33m.[39m[34mexecute[39m(
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m5 failed[39m[22m[90m (5)[39m
+[2m   Start at [22m 16:55:39
+[2m   Duration [22m 569ms[2m (transform 186ms, setup 0ms, import 232ms, tests 194ms, environment 0ms)[22m
+
