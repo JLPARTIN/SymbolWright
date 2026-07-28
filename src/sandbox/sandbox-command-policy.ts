@@ -92,6 +92,7 @@ export interface SandboxCommandPolicyDecision {
 }
 
 const SHELL_META_PATTERN = /[;&|`$<>\n\r]/
+const TRUSTED_LOCAL_COMMAND_TIMEOUT_MS = 300_000
 
 const PROFILE_DEFINITIONS: readonly SandboxCommandProfile[] = [
   profile('trusted-local-runtime-node', 'node:22-bookworm', [
@@ -284,7 +285,7 @@ function profile(
     version: SANDBOX_COMMAND_POLICY_VERSION,
     image,
     allowedBinaries: Object.freeze([...allowedBinaries]),
-    timeoutMs: DEFAULT_SANDBOX_LIMITS.timeoutMs,
+    timeoutMs: TRUSTED_LOCAL_COMMAND_TIMEOUT_MS,
     maxOutputBytes: DEFAULT_SANDBOX_LIMITS.maxOutputBytes,
   })
 }
