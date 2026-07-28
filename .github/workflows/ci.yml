@@ -38,7 +38,19 @@ jobs:
         env:
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
-          node scripts/apply-sandbox-pr3-final-patches.mjs
+          set +e
+          node scripts/apply-sandbox-pr3-final-patches.mjs > /tmp/sandbox-pr3-patch.log 2>&1
+          status=$?
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ "$status" -ne 0 ]; then
+            cp /tmp/sandbox-pr3-patch.log sandbox-pr3-patch-diagnostic.txt
+            git add sandbox-pr3-patch-diagnostic.txt
+            git commit -m "chore(sandbox): capture PR3 patch diagnostic"
+            git push origin "HEAD:${HEAD_BRANCH}"
+            exit "$status"
+          fi
           npx prettier --write \
             src/server/symbolwright-chat-server.ts \
             src/sandbox/sandbox-policy-model.ts \
@@ -56,8 +68,6 @@ jobs:
             src/sandbox/sandbox-service.ts \
             src/sandbox/sandbox-doctor.ts \
             src/cli-sandbox.ts
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -m "feat(sandbox): finalize strong offline container integration"
           git push origin "HEAD:${HEAD_BRANCH}"
