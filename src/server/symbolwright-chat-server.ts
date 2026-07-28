@@ -114,6 +114,15 @@ import {
   type ProviderStreamTransport,
 } from './provider-chat-stream.js'
 import { FixedWindowRateLimiter, type RateLimiter } from './rate-limiter.js'
+import { resolveDeploymentSecurity } from './deployment-mode.js'
+import { MetricsRegistry } from './metrics-registry.js'
+import { prepareOperationalServerOptions } from './operational-bootstrap.js'
+import { ReadinessRegistry } from './readiness-registry.js'
+import {
+  applyOperationalSecurityHeaders,
+  resolveRequestSecurity,
+  sendRequestSecurityRejection,
+} from './trusted-proxy.js'
 
 const DEFAULT_AGENT_SYSTEM_PROMPT =
   'You are SymbolWright, a direct-capable coding agent. Use the available tools to accomplish the request.'
@@ -160,6 +169,14 @@ export interface ChatServerOptions {
   readonly governanceStore?: GovernanceStore
   /** Test seam for the in-memory provider/SSE/autonomous-execution concurrency limiter. */
   readonly concurrencyGuard?: ProviderConcurrencyGuard
+  readonly deploymentMode?: 'local' | 'hosted'
+  readonly trustedProxyCidrs?: readonly string[]
+  readonly allowUnencryptedNonLoopback?: boolean
+  readonly maxProviderConcurrency?: number
+  readonly maxSseStreams?: number
+  readonly maxAutonomousExecutions?: number
+  readonly metricsRegistry?: MetricsRegistry
+  readonly readinessRegistry?: ReadinessRegistry
 }
 
 export interface StartedChatServer {
@@ -176,11 +193,18 @@ export interface StartedChatServer {
   close(hardKillMs?: number): Promise<void>
 }
 
-export function assertChatServerCanStart(options: Pick<ChatServerOptions, 'apiKey'>): void {
+export function assertChatServerCanStart(
+  options: Pick<ChatServerOptions, 'apiKey'> & Partial<ChatServerOptions>,
+): void {
   if (options.apiKey.trim().length === 0) {
     throw new ChatServerConfigError(
       'SYMBOLWRIGHT_API_KEY is required to start the chat server. Set it before running "symbolwright serve" (the legacy CODEMIND_API_KEY name still works).',
     )
+  }
+  try {
+    resolveDeploymentSecurity(options)
+  } catch (error) {
+    throw new ChatServerConfigError(error instanceof Error ? error.message : String(error))
   }
 }
 
@@ -240,6 +264,7 @@ function resolveRequestPrincipal(
   req: IncomingMessage,
   apiKey: string,
   accessRuntime: AccessRuntime,
+  clientIp: string,
 ): RequestPrincipal | undefined {
   if (isAuthorized(req, apiKey)) {
     return { kind: 'operator', actor: 'operator' }
@@ -252,7 +277,7 @@ function resolveRequestPrincipal(
 
   try {
     const { grant, session } = accessRuntime.grantService.authenticateAgentToken(presented, {
-      ip: clientIpFor(req),
+      ip: clientIp,
     })
     return {
       kind: 'agent',
@@ -386,10 +411,6 @@ function buildProviderCatalog(): readonly {
   }))
 }
 
-function clientIpFor(req: IncomingMessage): string {
-  return req.socket.remoteAddress ?? 'unknown'
-}
-
 function isSupportedProviderId(value: unknown): value is SymbolWrightProviderId {
   return (
     typeof value === 'string' &&
@@ -410,6 +431,9 @@ export function createChatServerRequestListener(
   const env = options.env ?? process.env
   const localStatusProvider = options.localStatusProvider ?? collectStatus
   const cwd = options.cwd ?? process.cwd()
+  const deploymentSecurity = resolveDeploymentSecurity(options)
+  const metricsRegistry = options.metricsRegistry ?? new MetricsRegistry()
+  const readinessRegistry = options.readinessRegistry ?? new ReadinessRegistry()
   const shutdownLifecycle = options.shutdownLifecycle ?? new ShutdownLifecycle()
   const missionService = options.missionService ?? new MissionService({ workspaceRoot: cwd, env })
   const accessRuntime = options.accessRuntime ?? new AccessRuntime({ workspaceRoot: cwd })
@@ -418,22 +442,33 @@ export function createChatServerRequestListener(
   // serving `/api/repository/*`) have no budget-limited grants and would otherwise pay for an
   // opened SQLite file on disk (`.symbolwright/governance/`, gitignored in a real deployment, but
   // a needless side effect all the same) for a feature they never touch.
-  let lazyGovernanceStore: GovernanceStore | undefined
+  let lazyGovernanceStore: GovernanceStore | undefined = options.governanceStore
+  let governanceCloserRegistered = false
   const getGovernanceStore = (): GovernanceStore => {
-    if (lazyGovernanceStore === undefined) {
-      lazyGovernanceStore =
-        options.governanceStore ?? new GovernanceStore(resolveGovernanceStorePath(cwd))
-      // A reservation still `open` past its `expires_at` implies the process crashed mid-call --
-      // settle it conservatively now rather than leaving it to either permanently lock budget or
-      // (if a bare age check were used instead) silently undercount spend.
-      lazyGovernanceStore.settleExpiredReservations()
+    lazyGovernanceStore ??= new GovernanceStore(resolveGovernanceStorePath(cwd))
+    // A reservation still `open` past its `expires_at` implies the process crashed mid-call --
+    // settle it conservatively now rather than leaving it to either permanently lock budget or
+    // (if a bare age check were used instead) silently undercount spend.
+    lazyGovernanceStore.settleExpiredReservations()
+    if (!governanceCloserRegistered) {
+      governanceCloserRegistered = true
       shutdownLifecycle.onBeforeShutdown(() => {
         lazyGovernanceStore?.close()
       })
     }
     return lazyGovernanceStore
   }
+  if (lazyGovernanceStore !== undefined) getGovernanceStore()
   const concurrencyGuard = options.concurrencyGuard ?? new ProviderConcurrencyGuard()
+  if (deploymentSecurity.maxProviderConcurrency !== undefined) {
+    concurrencyGuard.configurePool('provider', deploymentSecurity.maxProviderConcurrency)
+  }
+  if (deploymentSecurity.maxSseStreams !== undefined) {
+    concurrencyGuard.configurePool('sse', deploymentSecurity.maxSseStreams)
+  }
+  if (deploymentSecurity.maxAutonomousExecutions !== undefined) {
+    concurrencyGuard.configurePool('autonomous', deploymentSecurity.maxAutonomousExecutions)
+  }
   const orchestrationRuntime = new OrchestrationRuntime({ workspaceRoot: cwd, accessRuntime })
   const sandboxService = new SandboxService({
     historyStore: new SandboxHistoryStore({ workspaceRoot: cwd, env }),
@@ -507,11 +542,24 @@ export function createChatServerRequestListener(
 
   async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const url = new URL(req.url ?? '/', 'http://localhost')
+    metricsRegistry.trackResponse(req, res)
+    applyOperationalSecurityHeaders(res)
+    const requestSecurity = resolveRequestSecurity(req, deploymentSecurity)
+    if (requestSecurity.rejection !== undefined) {
+      sendRequestSecurityRejection(res, requestSecurity.rejection)
+      return
+    }
     applyCors(res, options.corsOrigin)
 
     if (req.method === 'OPTIONS') {
       res.writeHead(204)
       res.end()
+      return
+    }
+
+    if (req.method === 'GET' && url.pathname === '/readyz') {
+      const snapshot = readinessRegistry.publicSnapshot()
+      sendJson(res, snapshot.ready ? 200 : 503, snapshot)
       return
     }
 
@@ -532,7 +580,7 @@ export function createChatServerRequestListener(
     // (stricter, IP-keyed) rate limit instead of relying on the post-auth limiter that never sees
     // them.
     if (url.pathname === '/api/v1/device-authorization' || url.pathname === '/api/v1/oauth/token') {
-      if (!deviceFlowRateLimiter.consume(clientIpFor(req))) {
+      if (!deviceFlowRateLimiter.consume(requestSecurity.clientIp)) {
         sendJson(res, 429, { error: 'rate_limited' })
         return
       }
@@ -541,7 +589,12 @@ export function createChatServerRequestListener(
       return
     }
 
-    const principal = resolveRequestPrincipal(req, options.apiKey, accessRuntime)
+    const principal = resolveRequestPrincipal(
+      req,
+      options.apiKey,
+      accessRuntime,
+      requestSecurity.clientIp,
+    )
     if (principal === undefined) {
       sendJson(res, 401, { error: 'unauthorized' })
       return
@@ -550,9 +603,33 @@ export function createChatServerRequestListener(
     // Keyed by grant when the caller is an authenticated agent so distinct grants sharing an
     // egress IP (NAT, shared CI runner) don't share one budget, and one grant can't be starved by
     // unrelated traffic from the same address; falls back to IP for the operator API key.
-    const rateLimitKey = principal.grantId ?? clientIpFor(req)
+    const rateLimitKey = principal.grantId ?? requestSecurity.clientIp
     if (!rateLimiter.consume(rateLimitKey)) {
       sendJson(res, 429, { error: 'rate_limited' })
+      return
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/metrics') {
+      if (principal.kind !== 'operator') {
+        sendJson(res, 404, { error: 'not_found' })
+        return
+      }
+      metricsRegistry.setGauge('provider_requests_active', concurrencyGuard.activeCount('provider'))
+      metricsRegistry.setGauge('sse_streams_active', concurrencyGuard.activeCount('sse'))
+      metricsRegistry.setGauge(
+        'autonomous_executions_active',
+        concurrencyGuard.activeCount('autonomous'),
+      )
+      sendJson(res, 200, metricsRegistry.snapshot())
+      return
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/diagnostics/readiness') {
+      if (principal.kind !== 'operator') {
+        sendJson(res, 404, { error: 'not_found' })
+        return
+      }
+      sendJson(res, 200, readinessRegistry.detailedSnapshot())
       return
     }
 
@@ -562,6 +639,7 @@ export function createChatServerRequestListener(
           runtime: accessRuntime,
           actor: principal.actor,
           principalKind: principal.kind,
+          requireExplicitDelegatedLimits: deploymentSecurity.deploymentMode === 'hosted',
         })
       ) {
         return
@@ -1373,7 +1451,9 @@ async function handleAgent(
 
 export async function startChatServer(options: ChatServerOptions): Promise<StartedChatServer> {
   assertChatServerCanStart(options)
-  const warnings = buildChatServerWarnings(options)
+  const prepared = await prepareOperationalServerOptions(options)
+  options = prepared.options
+  const warnings = prepared.warnings
   // Resolved once, here, and threaded into `createChatServerRequestListener` below via the same
   // `??`-defaulting convention every other per-request dependency in this file uses -- so
   // whichever mission-linked subsystem registers a shutdown hook (e.g. the autonomy runtime's

@@ -15,6 +15,7 @@ import { ApprovalNotFoundError, ApprovalStateError } from '../../access/authoriz
 import { ALL_CAPABILITIES } from '../../access/access-capability-catalog.js'
 import { PERMISSION_PROFILES } from '../../access/access-profiles.js'
 import { APPROVAL_REQUIREMENTS } from '../../access/access-types.js'
+import { missingHostedDelegatedLimits } from '../../access/hosted-limit-policy.js'
 import type {
   ApprovalPolicy,
   BranchScope,
@@ -31,6 +32,8 @@ export interface AccessRouteContext {
   /** The identity performing this HTTP call — the legacy operator, or an agent-token session. */
   readonly actor: string
   readonly principalKind: RequestPrincipalKind
+  /** Hosted deployments refuse creation of a delegated grant unless every mandatory execution, session, and cost cap is explicit. */
+  readonly requireExplicitDelegatedLimits?: boolean
 }
 
 const MAX_BODY_BYTES = 256 * 1024
@@ -314,6 +317,14 @@ export async function handleAccessRoute(
       const sessionLimits = parseSessionLimits(body['sessionLimits'])
       const clientConstraints = parseClientConstraints(body['clientConstraints'])
       const approvalPolicy = parseApprovalPolicy(body['approvalPolicy'])
+      if (context.requireExplicitDelegatedLimits === true) {
+        const missing = missingHostedDelegatedLimits(executionLimits, sessionLimits)
+        if (missing.length > 0) {
+          throw new GrantValidationError(
+            `Hosted mode requires explicit delegated-agent limits: ${missing.join(', ')}.`,
+          )
+        }
+      }
       const input: CreateGrantInput = {
         principalType: body['principalType'] as CreateGrantInput['principalType'],
         displayName: String(body['displayName'] ?? ''),
