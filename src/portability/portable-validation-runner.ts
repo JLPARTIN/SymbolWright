@@ -72,7 +72,12 @@ export class DockerPortableValidationRunner implements PortableValidationRunner 
     try {
       parsed = parseSandboxCommand(command)
     } catch (error) {
-      return blocked(command, image, startedAt, error instanceof Error ? error.message : String(error))
+      return blocked(
+        command,
+        image,
+        startedAt,
+        error instanceof Error ? error.message : String(error),
+      )
     }
 
     const runner = this.#options.sandboxRunner ?? new DockerSandboxRunner()
@@ -82,12 +87,9 @@ export class DockerPortableValidationRunner implements PortableValidationRunner 
       binary: parsed.binary as SandboxCommandBinary,
       args: parsed.args,
       profileId,
-      workspaceTrust:
-        request.workspaceTrust ?? this.#options.workspaceTrust ?? 'trusted-local',
+      workspaceTrust: request.workspaceTrust ?? this.#options.workspaceTrust ?? 'trusted-local',
       ...(request.timeoutMs === undefined ? {} : { timeoutMs: request.timeoutMs }),
-      ...(request.maxOutputBytes === undefined
-        ? {}
-        : { maxOutputBytes: request.maxOutputBytes }),
+      ...(request.maxOutputBytes === undefined ? {} : { maxOutputBytes: request.maxOutputBytes }),
       ...(authorization === undefined ? {} : { authorization }),
     })
 
@@ -117,9 +119,7 @@ export class DockerPortableValidationRunner implements PortableValidationRunner 
   }
 }
 
-export function commandProfileForPortableValidation(
-  command: string,
-): SandboxCommandProfileId {
+export function commandProfileForPortableValidation(command: string): SandboxCommandProfileId {
   const trimmed = command.trim()
   if (/^(npm|npx|node|prettier)\b/.test(trimmed)) return 'trusted-local-portable-node'
   if (/^(python|python3|pytest)\b/.test(trimmed)) return 'trusted-local-portable-python'
