@@ -162,13 +162,7 @@ export interface DockerSandboxResolvedConfig {
   readonly maxOutputBytes: number
 }
 
-const RUNTIME_BINARIES = new Set<SandboxCommandBinary>([
-  'git',
-  'npm',
-  'npx',
-  'node',
-  'prettier',
-])
+const RUNTIME_BINARIES = new Set<SandboxCommandBinary>(['git', 'npm', 'npx', 'node', 'prettier'])
 
 export const DEFAULT_DOCKER_IMAGE = 'node:22-bookworm'
 export const DEFAULT_SANDBOX_MEMORY = '2048m'
@@ -296,8 +290,7 @@ export function resolveDockerSandboxConfig(
     network: options.network ?? DEFAULT_SANDBOX_NETWORK,
     user: options.user ?? resolveDefaultSandboxUser(),
     timeoutMs: options.timeoutMs ?? profile?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
-    maxOutputBytes:
-      options.maxOutputBytes ?? profile?.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES,
+    maxOutputBytes: options.maxOutputBytes ?? profile?.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES,
   }
 }
 
@@ -406,14 +399,10 @@ export class DockerSandboxRunner implements SandboxRunner {
       {
         command,
         workspaceRoot: request.workspaceRoot,
-        workspaceTrust:
-          request.workspaceTrust ?? this.options.workspaceTrust ?? 'trusted-local',
-        profileId:
-          request.profileId ?? this.options.profileId ?? 'trusted-local-runtime-node',
+        workspaceTrust: request.workspaceTrust ?? this.options.workspaceTrust ?? 'trusted-local',
+        profileId: request.profileId ?? this.options.profileId ?? 'trusted-local-runtime-node',
         ...(request.timeoutMs === undefined ? {} : { timeoutMs: request.timeoutMs }),
-        ...(request.maxOutputBytes === undefined
-          ? {}
-          : { maxOutputBytes: request.maxOutputBytes }),
+        ...(request.maxOutputBytes === undefined ? {} : { maxOutputBytes: request.maxOutputBytes }),
       },
       authorization,
     )
@@ -478,9 +467,7 @@ export class DockerSandboxRunner implements SandboxRunner {
           stderr,
           exitCode: code,
           reason: outputLimitExceeded ? 'Sandbox output limit exceeded.' : null,
-          ...(outputLimitExceeded
-            ? { reasonCode: 'SANDBOX_COMMAND_OUTPUT_LIMIT' }
-            : {}),
+          ...(outputLimitExceeded ? { reasonCode: 'SANDBOX_COMMAND_OUTPUT_LIMIT' } : {}),
           policy,
         })
       })
@@ -510,8 +497,7 @@ export class DockerSandboxFileWriter implements SandboxFileWriter {
       {
         command: 'node',
         workspaceRoot: request.workspaceRoot,
-        workspaceTrust:
-          request.workspaceTrust ?? this.options.workspaceTrust ?? 'trusted-local',
+        workspaceTrust: request.workspaceTrust ?? this.options.workspaceTrust ?? 'trusted-local',
         profileId: 'trusted-local-runtime-node',
         ...(request.timeoutMs === undefined ? {} : { timeoutMs: request.timeoutMs }),
       },
@@ -612,9 +598,7 @@ function defaultAuthorization(
   const root = path.resolve(request.workspaceRoot)
   return {
     deploymentMode:
-      env['SYMBOLWRIGHT_DEPLOYMENT_MODE']?.trim().toLowerCase() === 'hosted'
-        ? 'hosted'
-        : 'local',
+      env['SYMBOLWRIGHT_DEPLOYMENT_MODE']?.trim().toLowerCase() === 'hosted' ? 'hosted' : 'local',
     callerKind: 'operator',
     runtimeMode: 'APPROVED_EXECUTION',
     approvedCapabilityIds: [SANDBOX_OFFLINE_EXECUTE_CAPABILITY],
