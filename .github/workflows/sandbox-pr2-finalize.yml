@@ -1,0 +1,831 @@
+name: Sandbox PR2 Finalize
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.head_ref == 'symbolwright/sandbox-pr2-unified-execution-broker' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply final authority tightening
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              target = Path(path)
+              text = target.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one occurrence, found {count}: {old[:100]!r}')
+              target.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'src/sandbox/sandbox-policy-model.ts',
+              "return blocked('SANDBOX_RUNNER_NOT_FOUND', 'No matching sandbox runner is available.')",
+              "return blocked(\n      'SANDBOX_RUNNER_NOT_FOUND',\n      'No available runner matches the requested sandbox language and runner selection.',\n    )",
+          )
+          replace_once(
+              'src/sandbox/sandbox-policy-model.ts',
+              """  const allowedCommands = intersectOptionalAllowlists([\n    profile.allowedCommands,\n    input.authorization.grantAllowedCommands,\n  ])\n  const workspaceMode = resolveWorkspaceMode(input.request, runner)\n""",
+              """  const commandRestrictionLayers = [\n    profile.allowedCommands,\n    input.authorization.grantAllowedCommands,\n  ].filter((layer): layer is readonly string[] => layer !== undefined)\n  const allowedCommands = intersectDefined(commandRestrictionLayers)\n  if (commandRestrictionLayers.length > 0 && allowedCommands.length === 0) {\n    return blocked(\n      'SANDBOX_COMMAND_POLICY_EMPTY',\n      'The effective command allowlist is empty after strict policy intersection.',\n    )\n  }\n  const workspaceMode = resolveWorkspaceMode(input.request, runner)\n""",
+          )
+          replace_once(
+              'src/sandbox/sandbox-policy-model.ts',
+              """    commandPolicy:\n      allowedCommands.length === 0 ? ('runner-defined' as const) : ('allowlist' as const),\n""",
+              """    commandPolicy:\n      commandRestrictionLayers.length === 0\n        ? ('runner-defined' as const)\n        : ('allowlist' as const),\n""",
+          )
+          replace_once(
+              'src/sandbox/sandbox-policy-model.ts',
+              """function intersectOptionalAllowlists(\n  layers: readonly (readonly string[] | undefined)[],\n): readonly string[] {\n  const restricted = layers.filter(\n    (layer): layer is readonly string[] => layer !== undefined && layer.length > 0,\n  )\n  return restricted.length === 0 ? [] : intersectDefined(restricted)\n}\n\n""",
+              '',
+          )
+
+          replace_once(
+              'src/sandbox/sandbox-service.ts',
+              "'Browser-isolated runners execute in the browser runtime, not through the server sandbox API.',",
+              "'No execution backend: Browser-isolated runners execute in the browser runtime, not through the server sandbox API.',",
+          )
+
+          replace_once(
+              'src/access/sandbox-policy-compat.ts',
+              """import type { AgentAccessGrant, SandboxPolicyReferences } from './access-types.js'\n""",
+              """import type { AgentAccessGrant, SandboxPolicyReferences } from './access-types.js'\nimport {\n  SANDBOX_OFFLINE_EXECUTE_CAPABILITY,\n  sandboxCapabilityAliases,\n} from './sandbox-capabilities.js'\n""",
+          )
+          replace_once(
+              'src/access/sandbox-policy-compat.ts',
+              """export interface ResolvedGrantSandboxPolicyReferences {\n""",
+              """export function grantAllowsOfflineSandbox(grant: AgentAccessGrant): boolean {\n  const aliases = sandboxCapabilityAliases(SANDBOX_OFFLINE_EXECUTE_CAPABILITY)\n  if (aliases.some((alias) => grant.deniedCapabilities.includes(alias))) return false\n  return aliases.some(\n    (alias) =>\n      grant.symbolWrightCapabilities.includes(alias) ||\n      grant.githubCapabilities.includes(alias),\n  )\n}\n\nexport interface ResolvedGrantSandboxPolicyReferences {\n""",
+          )
+
+          replace_once(
+              'src/access/access-capability-catalog.ts',
+              "return ids.filter((id) => !isHighRiskCapability(id))",
+              "return ids.filter(\n    (id) => id !== LEGACY_SANDBOX_EXECUTE_CAPABILITY && !isHighRiskCapability(id),\n  )",
+          )
+
+          replace_once(
+              'src/app/api/sandbox-routes.ts',
+              "import { resolveGrantSandboxPolicyReferences } from '../../access/sandbox-policy-compat.js'",
+              "import {\n  grantAllowsOfflineSandbox,\n  resolveGrantSandboxPolicyReferences,\n} from '../../access/sandbox-policy-compat.js'",
+          )
+          replace_once(
+              'src/app/api/sandbox-routes.ts',
+              """      const approvedCapabilityIds =\n        callerGrant !== undefined && offlineReference === undefined\n          ? []\n          : [SANDBOX_OFFLINE_EXECUTE_CAPABILITY]\n""",
+              """      const approvedCapabilityIds =\n        callerGrant !== undefined &&\n        (offlineReference === undefined || !grantAllowsOfflineSandbox(callerGrant))\n          ? []\n          : [SANDBOX_OFFLINE_EXECUTE_CAPABILITY]\n""",
+          )
+
+          replace_once(
+              'src/server/symbolwright-chat-server.ts',
+              "import { resolveGrantSandboxPolicyReferences } from '../access/sandbox-policy-compat.js'",
+              "import {\n  grantAllowsOfflineSandbox,\n  resolveGrantSandboxPolicyReferences,\n} from '../access/sandbox-policy-compat.js'",
+          )
+          replace_once(
+              'src/server/symbolwright-chat-server.ts',
+              """    callerKind: callerGrant === undefined ? ('operator' as const) : ('delegated-grant' as const),\n    runtimeMode: parsed.mode,\n    approvedCapabilityIds:\n      callerGrant !== undefined &&\n      (resolvedSandboxReferences?.unsupportedReason !== undefined || offlineReference === undefined)\n        ? []\n        : [SANDBOX_OFFLINE_EXECUTE_CAPABILITY],\n""",
+              """    callerKind:\n      callerGrantId === undefined ? ('operator' as const) : ('delegated-grant' as const),\n    runtimeMode: parsed.mode,\n    approvedCapabilityIds:\n      callerGrantId !== undefined &&\n      (callerGrant === undefined ||\n        resolvedSandboxReferences?.unsupportedReason !== undefined ||\n        offlineReference === undefined ||\n        !grantAllowsOfflineSandbox(callerGrant))\n        ? []\n        : [SANDBOX_OFFLINE_EXECUTE_CAPABILITY],\n""",
+          )
+
+          replace_once(
+              'src/access/authorization-service.ts',
+              """   * `maxFilesChanged`/`maxDiffLines`/`maxCommits` at push time in\n   * `repository-routes.ts`, against real diff/commit stats computed there. `sandboxNetworkAccess`\n   * has no enforcement path yet — the sandbox itself only supports `network: none`, so the grant\n   * field is a no-op today. Note: `requirePullRequest` is deliberately not treated as a push-time\n""",
+              """   * `maxFilesChanged`/`maxDiffLines`/`maxCommits` at push time in\n   * `repository-routes.ts`, against real diff/commit stats computed there. Legacy\n   * `sandboxNetworkAccess: true` is rejected; false or absent maps only to the offline policy and\n   * cannot authorize dependency acquisition or egress. Note: `requirePullRequest` is deliberately\n   * not treated as a push-time\n""",
+          )
+          PY
+      - name: Add adversarial policy and evidence tests
+        shell: bash
+        run: |
+          cat > src/sandbox/sandbox-policy-model-boundary.spec.ts <<'EOF'
+          import { describe, expect, it } from 'vitest'
+
+          import {
+            SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+            SANDBOX_EGRESS_CAPABILITY,
+            SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
+          } from '../access/sandbox-capabilities.js'
+          import { DEFAULT_SANDBOX_LIMITS } from './sandbox-limits.js'
+          import {
+            SANDBOX_GLOBAL_POLICY_ID,
+            SandboxPolicyCatalog,
+            resolveEffectiveSandboxPolicy,
+            type SandboxAuthorizationContext,
+            type SandboxPolicyProfile,
+          } from './sandbox-policy-model.js'
+          import type { SandboxExecutionRequest, SandboxRunnerDefinition } from './sandbox-types.js'
+
+          const REQUEST: SandboxExecutionRequest = {
+            languageId: 'javascript',
+            mode: 'run',
+            source: 'console.log(1)',
+          }
+
+          function runner(overrides: Partial<SandboxRunnerDefinition> = {}): SandboxRunnerDefinition {
+            return {
+              id: 'container-javascript',
+              languageIds: ['javascript'],
+              displayName: 'JavaScript container',
+              trustClass: 'container-isolated',
+              backend: 'container',
+              availability: { status: 'available', checkedAt: '2026-07-28T00:00:00.000Z' },
+              capabilities: {
+                run: true,
+                compile: true,
+                test: true,
+                stdin: true,
+                multiFile: true,
+                repository: true,
+                network: false,
+              },
+              limits: DEFAULT_SANDBOX_LIMITS,
+              networkPolicy: 'disabled',
+              dependencyState: 'ready',
+              notes: [],
+              ...overrides,
+            }
+          }
+
+          function authorization(
+            overrides: Partial<SandboxAuthorizationContext> = {},
+          ): SandboxAuthorizationContext {
+            return {
+              deploymentMode: 'local',
+              callerKind: 'operator',
+              runtimeMode: 'APPROVED_EXECUTION',
+              approvedCapabilityIds: [SANDBOX_OFFLINE_EXECUTE_CAPABILITY],
+              repositoryId: 'JLPARTIN/SymbolWright',
+              workspaceId: 'workspace-1',
+              ...overrides,
+            }
+          }
+
+          function offlineProfile(overrides: Partial<SandboxPolicyProfile> = {}): SandboxPolicyProfile {
+            return {
+              id: 'offline-test',
+              version: 1,
+              enabled: true,
+              allowedIntents: ['offline-execution'],
+              deploymentModes: ['local', 'hosted'],
+              callerKinds: ['operator', 'delegated-grant', 'team-member', 'system'],
+              allowedBackends: ['container', 'browser', 'wasm', 'guarded-host'],
+              allowedTrustClasses: [
+                'container-isolated',
+                'browser-isolated',
+                'wasm-isolated',
+                'guarded-host',
+              ],
+              networkModes: ['disabled'],
+              dependencyModes: ['disabled'],
+              workspaceModes: ['temporary-copy', 'managed-mission', 'trusted-local-host'],
+              artifactExport: 'quarantine-only',
+              cleanupRequired: true,
+              evidenceRequired: true,
+              ...overrides,
+            }
+          }
+
+          function profileResolution(
+            profile: SandboxPolicyProfile,
+            auth: Partial<SandboxAuthorizationContext> = {},
+            request: SandboxExecutionRequest = REQUEST,
+            selectedRunner: SandboxRunnerDefinition = runner(),
+          ) {
+            return resolveEffectiveSandboxPolicy({
+              request,
+              runner: selectedRunner,
+              authorization: authorization({
+                policyReference: { id: profile.id, version: profile.version },
+                ...auth,
+              }),
+              catalog: new SandboxPolicyCatalog([profile]),
+            })
+          }
+
+          function nonOfflineApproval(
+            profile: SandboxPolicyProfile,
+            capabilityId: string,
+            additions: Readonly<Record<string, number>> = {},
+          ) {
+            return {
+              id: 'approval-1',
+              capabilityId,
+              policyVersions: {
+                [SANDBOX_GLOBAL_POLICY_ID]: 1,
+                [profile.id]: profile.version,
+                'runner:container-javascript': 1,
+                'request-tightening': 1,
+                ...additions,
+              },
+            }
+          }
+
+          describe('effective sandbox policy adversarial boundaries', () => {
+            it('fails closed without capability, executable runtime mode, runner, or policy reference', () => {
+              expect(
+                resolveEffectiveSandboxPolicy({
+                  request: REQUEST,
+                  runner: runner(),
+                  authorization: authorization({ approvedCapabilityIds: [] }),
+                }).reasonCode,
+              ).toBe('SANDBOX_CAPABILITY_NOT_APPROVED')
+
+              for (const runtimeMode of ['READ_ONLY', 'PLAN_ONLY', 'PROPOSAL_ONLY'] as const) {
+                expect(
+                  resolveEffectiveSandboxPolicy({
+                    request: REQUEST,
+                    runner: runner(),
+                    authorization: authorization({ runtimeMode }),
+                  }).reasonCode,
+                ).toBe('SANDBOX_RUNTIME_MODE_BLOCKED')
+              }
+
+              expect(
+                resolveEffectiveSandboxPolicy({
+                  request: REQUEST,
+                  authorization: authorization(),
+                }).reasonCode,
+              ).toBe('SANDBOX_RUNNER_NOT_FOUND')
+
+              expect(
+                resolveEffectiveSandboxPolicy({
+                  request: REQUEST,
+                  runner: runner(),
+                  authorization: authorization({
+                    intent: 'egress-execution',
+                    approvedCapabilityIds: [SANDBOX_EGRESS_CAPABILITY],
+                  }),
+                }).reasonCode,
+              ).toBe('SANDBOX_POLICY_REFERENCE_REQUIRED')
+            })
+
+            it('rejects disabled profiles and stale expected source versions', () => {
+              const disabled = offlineProfile({ enabled: false })
+              expect(profileResolution(disabled).reasonCode).toBe('SANDBOX_POLICY_DISABLED')
+
+              expect(
+                profileResolution(offlineProfile(), {
+                  expectedPolicyVersions: { [SANDBOX_GLOBAL_POLICY_ID]: 2 },
+                }).reasonCode,
+              ).toBe('SANDBOX_POLICY_VERSION_STALE')
+            })
+
+            it('rejects every incompatible profile dimension', () => {
+              expect(
+                profileResolution(offlineProfile({ allowedIntents: [] })).reasonCode,
+              ).toBe('SANDBOX_INTENT_NOT_ALLOWED')
+              expect(
+                profileResolution(offlineProfile({ deploymentModes: ['hosted'] })).reasonCode,
+              ).toBe('SANDBOX_DEPLOYMENT_NOT_ALLOWED')
+              expect(
+                profileResolution(offlineProfile({ callerKinds: ['system'] })).reasonCode,
+              ).toBe('SANDBOX_CALLER_NOT_ALLOWED')
+              expect(
+                profileResolution(offlineProfile({ allowedBackends: ['wasm'] })).reasonCode,
+              ).toBe('SANDBOX_BACKEND_NOT_ALLOWED')
+              expect(
+                profileResolution(
+                  offlineProfile({ allowedTrustClasses: ['wasm-isolated'] }),
+                ).reasonCode,
+              ).toBe('SANDBOX_TRUST_CLASS_NOT_ALLOWED')
+              expect(
+                profileResolution(offlineProfile({ allowedLanguageIds: ['python'] })).reasonCode,
+              ).toBe('SANDBOX_LANGUAGE_NOT_ALLOWED')
+              expect(
+                profileResolution(offlineProfile({ allowedModes: ['test'] })).reasonCode,
+              ).toBe('SANDBOX_MODE_NOT_ALLOWED')
+              expect(
+                profileResolution(
+                  offlineProfile({ workspaceModes: ['managed-mission'] }),
+                ).reasonCode,
+              ).toBe('SANDBOX_WORKSPACE_MODE_NOT_ALLOWED')
+            })
+
+            it('treats an explicit empty or conflicting command intersection as deny-all', () => {
+              expect(
+                profileResolution(offlineProfile({ allowedCommands: [] })).reasonCode,
+              ).toBe('SANDBOX_COMMAND_POLICY_EMPTY')
+              expect(
+                profileResolution(offlineProfile({ allowedCommands: ['npm'] }), {
+                  grantAllowedCommands: ['git'],
+                }).reasonCode,
+              ).toBe('SANDBOX_COMMAND_POLICY_EMPTY')
+
+              const allowed = profileResolution(offlineProfile({ allowedCommands: ['npm', 'git'] }), {
+                grantAllowedCommands: ['npm'],
+              })
+              expect(allowed.allowed).toBe(true)
+              expect(allowed.policy?.commandPolicy).toBe('allowlist')
+              expect(allowed.policy?.allowedCommands).toEqual(['npm'])
+            })
+
+            it('requires exact approval capability, grant version, and complete policy versions', () => {
+              const profile: SandboxPolicyProfile = {
+                ...offlineProfile({
+                  id: 'dependency-test',
+                  allowedIntents: ['dependency-acquisition'],
+                  networkModes: ['dependency-broker-only'],
+                  dependencyModes: ['brokered'],
+                }),
+              }
+              const base = {
+                intent: 'dependency-acquisition' as const,
+                approvedCapabilityIds: [SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY],
+                grantId: 'grant-1',
+                grantVersion: 4,
+              }
+
+              expect(
+                profileResolution(profile, {
+                  ...base,
+                  approval: {
+                    ...nonOfflineApproval(profile, SANDBOX_OFFLINE_EXECUTE_CAPABILITY, {
+                      'grant:grant-1': 4,
+                    }),
+                    grantVersion: 4,
+                  },
+                }).reasonCode,
+              ).toBe('SANDBOX_APPROVAL_CAPABILITY_MISMATCH')
+
+              expect(
+                profileResolution(profile, {
+                  ...base,
+                  approval: {
+                    ...nonOfflineApproval(profile, SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY, {
+                      'grant:grant-1': 4,
+                    }),
+                    grantVersion: 3,
+                  },
+                }).reasonCode,
+              ).toBe('SANDBOX_APPROVAL_GRANT_STALE')
+
+              expect(
+                profileResolution(profile, {
+                  ...base,
+                  approval: {
+                    id: 'approval-stale',
+                    capabilityId: SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+                    grantVersion: 4,
+                    policyVersions: {
+                      [SANDBOX_GLOBAL_POLICY_ID]: 2,
+                      [profile.id]: 1,
+                      'runner:container-javascript': 1,
+                      'grant:grant-1': 4,
+                      'request-tightening': 1,
+                    },
+                  },
+                }).reasonCode,
+              ).toBe('SANDBOX_APPROVAL_POLICY_STALE')
+
+              expect(
+                profileResolution(profile, {
+                  ...base,
+                  approval: {
+                    id: 'approval-incomplete',
+                    capabilityId: SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+                    grantVersion: 4,
+                    policyVersions: {
+                      [SANDBOX_GLOBAL_POLICY_ID]: 1,
+                      [profile.id]: 1,
+                      'runner:container-javascript': 1,
+                      'grant:grant-1': 4,
+                    },
+                  },
+                }).reasonCode,
+              ).toBe('SANDBOX_APPROVAL_POLICY_INCOMPLETE')
+            })
+
+            it('blocks unsupported network and dependency modes independently', () => {
+              const networkBlocked = offlineProfile({
+                id: 'dependency-network-blocked',
+                allowedIntents: ['dependency-acquisition'],
+                networkModes: ['disabled'],
+                dependencyModes: ['brokered'],
+              })
+              expect(
+                profileResolution(networkBlocked, {
+                  intent: 'dependency-acquisition',
+                  approvedCapabilityIds: [SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY],
+                  approval: nonOfflineApproval(
+                    networkBlocked,
+                    SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+                  ),
+                }).reasonCode,
+              ).toBe('SANDBOX_NETWORK_POLICY_UNAVAILABLE')
+
+              const dependencyBlocked = offlineProfile({
+                id: 'dependency-mode-blocked',
+                allowedIntents: ['dependency-acquisition'],
+                networkModes: ['dependency-broker-only'],
+                dependencyModes: ['disabled'],
+              })
+              expect(
+                profileResolution(dependencyBlocked, {
+                  intent: 'dependency-acquisition',
+                  approvedCapabilityIds: [SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY],
+                  approval: nonOfflineApproval(
+                    dependencyBlocked,
+                    SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+                  ),
+                }).reasonCode,
+              ).toBe('SANDBOX_DEPENDENCY_POLICY_UNAVAILABLE')
+            })
+
+            it('resolves explicit egress policy and mission/grant source versions', () => {
+              const profile = offlineProfile({
+                id: 'egress-test',
+                version: 3,
+                allowedIntents: ['egress-execution'],
+                networkModes: ['allowlisted-egress'],
+              })
+              const result = profileResolution(profile, {
+                intent: 'egress-execution',
+                approvedCapabilityIds: [SANDBOX_EGRESS_CAPABILITY],
+                missionId: 'mission-1',
+                grantId: 'grant-1',
+                grantVersion: 7,
+                approval: {
+                  ...nonOfflineApproval(profile, SANDBOX_EGRESS_CAPABILITY, {
+                    'grant:grant-1': 7,
+                    'mission:mission-1': 1,
+                  }),
+                  grantVersion: 7,
+                },
+              })
+              expect(result.allowed).toBe(true)
+              expect(result.policy?.network.mode).toBe('allowlisted-egress')
+              expect(result.policy?.dependencies.mode).toBe('disabled')
+              expect(result.policy?.sources.map((source) => source.kind)).toContain('mission')
+            })
+
+            it('handles compile/test capability intersections and valid global version config', () => {
+              const profile = offlineProfile({ allowedModes: ['compile', 'test'] })
+              const compileResult = resolveEffectiveSandboxPolicy({
+                request: { ...REQUEST, mode: 'compile' },
+                runner: runner({
+                  capabilities: {
+                    ...runner().capabilities,
+                    run: false,
+                    compile: true,
+                    test: false,
+                  },
+                }),
+                authorization: authorization({
+                  policyReference: { id: profile.id, version: profile.version },
+                }),
+                catalog: new SandboxPolicyCatalog([profile]),
+                env: { SYMBOLWRIGHT_SANDBOX_GLOBAL_POLICY_VERSION: '9' },
+              })
+              expect(compileResult.allowed).toBe(true)
+              expect(compileResult.policy?.sources[0]).toMatchObject({ version: 9 })
+
+              const invalidVersion = profileResolution(profile, {}, { ...REQUEST, mode: 'test' })
+              expect(invalidVersion.allowed).toBe(true)
+            })
+          })
+          EOF
+
+          cat > src/sandbox/sandbox-evidence.spec.ts <<'EOF'
+          import { describe, expect, it } from 'vitest'
+
+          import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../access/sandbox-capabilities.js'
+          import { finalizeSandboxExecutionEvidence } from './sandbox-evidence.js'
+          import { SandboxExecutionBroker } from './sandbox-execution-broker.js'
+          import { DEFAULT_SANDBOX_LIMITS } from './sandbox-limits.js'
+          import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
+          import type {
+            SandboxExecutionRequest,
+            SandboxExecutionResult,
+            SandboxRunnerDefinition,
+          } from './sandbox-types.js'
+
+          const RUNNER: SandboxRunnerDefinition = {
+            id: 'container-javascript',
+            languageIds: ['javascript'],
+            displayName: 'JavaScript container',
+            trustClass: 'container-isolated',
+            backend: 'container',
+            availability: { status: 'available', checkedAt: '2026-07-28T00:00:00.000Z' },
+            capabilities: {
+              run: true,
+              compile: true,
+              test: true,
+              stdin: true,
+              multiFile: true,
+              repository: true,
+              network: false,
+            },
+            limits: DEFAULT_SANDBOX_LIMITS,
+            networkPolicy: 'disabled',
+            dependencyState: 'ready',
+            notes: [],
+          }
+
+          function baseResult(stdout = '', stderr = ''): SandboxExecutionResult {
+            return {
+              executionId: 'sandbox-1',
+              languageId: 'javascript',
+              runnerId: RUNNER.id,
+              trustClass: RUNNER.trustClass,
+              backend: RUNNER.backend,
+              status: 'passed',
+              startedAt: '2026-07-28T00:00:00.000Z',
+              completedAt: '2026-07-28T00:00:01.000Z',
+              durationMs: 1_000,
+              exitCode: 0,
+              stdout,
+              stderr,
+              outputTruncated: false,
+              diagnostics: [],
+              artifacts: [],
+              evidence: {
+                verificationLevel: 'EXECUTED',
+                inputHash: 'pre-finalization',
+                policyDecision: 'allowed',
+              },
+              cleanup: { attempted: true, succeeded: true },
+            }
+          }
+
+          const AUTHORIZATION: SandboxAuthorizationContext = {
+            deploymentMode: 'hosted',
+            callerKind: 'delegated-grant',
+            runtimeMode: 'APPROVED_EXECUTION',
+            approvedCapabilityIds: [SANDBOX_OFFLINE_EXECUTE_CAPABILITY],
+            repositoryId: 'JLPARTIN/SymbolWright',
+            workspaceId: 'workspace-secret',
+            missionId: 'mission-secret',
+            grantId: 'grant-secret',
+            grantVersion: 2,
+            principalId: 'principal-secret',
+            approval: {
+              id: 'approval-secret',
+              capabilityId: SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
+              grantVersion: 2,
+              policyVersions: {},
+            },
+          }
+
+          describe('sandbox evidence finalization', () => {
+            it('hashes caller inputs and records immutable policy evidence without raw authority IDs', () => {
+              const request: SandboxExecutionRequest = {
+                languageId: 'javascript',
+                mode: 'run',
+                source: 'api_key=source-super-secret',
+                files: [{ path: 'src/index.js', content: 'token=file-super-secret' }],
+                repository: {
+                  rootPath: '/host/private/repository',
+                  selectedPaths: ['src/index.js'],
+                },
+                stdin: 'password=stdin-super-secret',
+                args: ['--token=argument-super-secret'],
+                limits: { timeoutMs: 1_000 },
+                missionId: 'mission-secret',
+                requestedRunnerId: RUNNER.id,
+              }
+              const decision = new SandboxExecutionBroker().authorize(
+                request,
+                RUNNER,
+                AUTHORIZATION,
+              )
+              expect(decision.allowed).toBe(true)
+
+              const finalized = finalizeSandboxExecutionEvidence({
+                request,
+                result: baseResult(
+                  'authorization=output-super-secret',
+                  'Bearer abcdefghijklmnopqrstuvwxyz',
+                ),
+                decision,
+                authorization: AUTHORIZATION,
+              })
+
+              expect(finalized.evidence.schemaVersion).toBe(1)
+              expect(finalized.evidence.inputHash).toMatch(/^[a-f0-9]{64}$/)
+              expect(finalized.evidence.outputHash).toMatch(/^[a-f0-9]{64}$/)
+              expect(finalized.evidence.outputExcerpt).toContain('[REDACTED]')
+              expect(finalized.evidence.authorization).toMatchObject({
+                deploymentMode: 'hosted',
+                callerKind: 'delegated-grant',
+                capabilityId: SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
+              })
+              expect(finalized.evidence.authorization?.grantIdHash).toMatch(/^[a-f0-9]{64}$/)
+              expect(finalized.evidence.authorization?.principalIdHash).toMatch(/^[a-f0-9]{64}$/)
+              expect(finalized.evidence.authorization?.approvalIdHash).toMatch(/^[a-f0-9]{64}$/)
+              expect(finalized.evidence.policy).toMatchObject({
+                id: 'sandbox-offline-default',
+                version: 1,
+                intent: 'offline-execution',
+                networkMode: 'disabled',
+                dependencyMode: 'disabled',
+              })
+
+              const persistedEvidence = JSON.stringify(finalized.evidence)
+              for (const raw of [
+                'source-super-secret',
+                'file-super-secret',
+                'stdin-super-secret',
+                'argument-super-secret',
+                '/host/private/repository',
+                'mission-secret',
+                'grant-secret',
+                'principal-secret',
+                'approval-secret',
+                'output-super-secret',
+                'abcdefghijklmnopqrstuvwxyz',
+              ]) {
+                expect(persistedEvidence).not.toContain(raw)
+              }
+            })
+
+            it('finalizes a minimal blocked result without optional hashes or policy metadata', () => {
+              const request: SandboxExecutionRequest = {
+                languageId: 'javascript',
+                mode: 'run',
+                source: 'console.log(1)',
+              }
+              const finalized = finalizeSandboxExecutionEvidence({
+                request,
+                result: baseResult(),
+                decision: {
+                  allowed: false,
+                  reasonCode: 'SANDBOX_CAPABILITY_NOT_APPROVED',
+                  reason: 'blocked',
+                },
+                authorization: {
+                  deploymentMode: 'local',
+                  callerKind: 'operator',
+                  runtimeMode: 'APPROVED_EXECUTION',
+                  approvedCapabilityIds: [],
+                  repositoryId: 'inline-source',
+                  workspaceId: 'inline-source',
+                },
+              })
+              expect(finalized.evidence.policyDecision).toBe('blocked')
+              expect(finalized.evidence.decisionCode).toBe('SANDBOX_CAPABILITY_NOT_APPROVED')
+              expect(finalized.evidence.outputHash).toBeUndefined()
+              expect(finalized.evidence.outputExcerpt).toBeUndefined()
+              expect(finalized.evidence.policy).toBeUndefined()
+              expect(finalized.evidence.authorization).toEqual({
+                deploymentMode: 'local',
+                callerKind: 'operator',
+                capabilityId: 'unresolved',
+              })
+            })
+          })
+          EOF
+
+          cat > src/access/sandbox-capability-authority.spec.ts <<'EOF'
+          import { describe, expect, it } from 'vitest'
+
+          import {
+            ALL_CAPABILITIES,
+            expandNonHighRiskWildcard,
+          } from './access-capability-catalog.js'
+          import type { AgentAccessGrant } from './access-types.js'
+          import {
+            LEGACY_SANDBOX_EXECUTE_CAPABILITY,
+            SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+            SANDBOX_EGRESS_CAPABILITY,
+            SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
+          } from './sandbox-capabilities.js'
+          import { grantAllowsOfflineSandbox } from './sandbox-policy-compat.js'
+
+          function grant(
+            capabilities: readonly string[],
+            deniedCapabilities: readonly string[] = [],
+          ): AgentAccessGrant {
+            return {
+              id: 'grant-1',
+              version: 1,
+              principalId: 'principal-1',
+              principalType: 'coding-agent',
+              displayName: 'Sandbox grant',
+              issuedBy: 'operator',
+              createdAt: '2026-07-28T00:00:00.000Z',
+              updatedAt: '2026-07-28T00:00:00.000Z',
+              startsAt: '2026-07-28T00:00:00.000Z',
+              expiresAt: '2026-07-29T00:00:00.000Z',
+              status: 'active',
+              profileId: 'custom',
+              repositoryScope: {
+                mode: 'single',
+                repositories: ['JLPARTIN/SymbolWright'],
+                organizations: [],
+              },
+              branchScope: {
+                allowedPatterns: ['feat/**'],
+                deniedPatterns: ['main'],
+                defaultBranchReadOnly: true,
+                defaultBranchMutationAllowed: false,
+              },
+              symbolWrightCapabilities: capabilities,
+              githubCapabilities: [],
+              deniedCapabilities,
+              approvalPolicy: { rules: [{ match: '*', requirement: 'none' }] },
+              executionLimits: {},
+              sessionLimits: {},
+            }
+          }
+
+          describe('sandbox capability authority', () => {
+            it('accepts canonical or legacy offline grants but honors either explicit denial alias', () => {
+              expect(grantAllowsOfflineSandbox(grant([SANDBOX_OFFLINE_EXECUTE_CAPABILITY]))).toBe(
+                true,
+              )
+              expect(grantAllowsOfflineSandbox(grant([LEGACY_SANDBOX_EXECUTE_CAPABILITY]))).toBe(
+                true,
+              )
+              expect(grantAllowsOfflineSandbox(grant([]))).toBe(false)
+              expect(
+                grantAllowsOfflineSandbox(
+                  grant(
+                    [SANDBOX_OFFLINE_EXECUTE_CAPABILITY],
+                    [LEGACY_SANDBOX_EXECUTE_CAPABILITY],
+                  ),
+                ),
+              ).toBe(false)
+            })
+
+            it('keeps compatibility aliases and high-risk network surfaces out of wildcard grants', () => {
+              const expanded = expandNonHighRiskWildcard(
+                ALL_CAPABILITIES.map((capability) => capability.id),
+              )
+              expect(expanded).toContain(SANDBOX_OFFLINE_EXECUTE_CAPABILITY)
+              expect(expanded).not.toContain(LEGACY_SANDBOX_EXECUTE_CAPABILITY)
+              expect(expanded).not.toContain(SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY)
+              expect(expanded).not.toContain(SANDBOX_EGRESS_CAPABILITY)
+            })
+          })
+          EOF
+      - name: Format final source and tests
+        run: |
+          npx prettier --write \
+            src/sandbox/sandbox-policy-model.ts \
+            src/sandbox/sandbox-service.ts \
+            src/access/sandbox-policy-compat.ts \
+            src/access/access-capability-catalog.ts \
+            src/app/api/sandbox-routes.ts \
+            src/server/symbolwright-chat-server.ts \
+            src/access/authorization-service.ts \
+            src/sandbox/sandbox-policy-model-boundary.spec.ts \
+            src/sandbox/sandbox-evidence.spec.ts \
+            src/access/sandbox-capability-authority.spec.ts
+      - name: Remove all temporary PR2 build machinery
+        shell: bash
+        run: |
+          git rm -f --ignore-unmatch .github/sandbox-pr2-trigger*.txt
+          git rm -f --ignore-unmatch .github/workflows/sandbox-pr2-*.yml
+          git rm -f --ignore-unmatch sandbox-pr2-*-diagnostic*.txt
+      - name: Commit clean final implementation
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git diff --cached --check
+          git commit -m "fix(sandbox): close PR2 policy authority gaps and add adversarial proof"
+          git push origin "HEAD:${HEAD_BRANCH}"
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Format check
+        run: npm run format:check
+      - name: Focused final tests
+        run: |
+          npx vitest run \
+            src/sandbox/sandbox-policy-model.spec.ts \
+            src/sandbox/sandbox-policy-model-boundary.spec.ts \
+            src/sandbox/sandbox-execution-broker.spec.ts \
+            src/sandbox/sandbox-evidence.spec.ts \
+            src/access/sandbox-policy-compat.spec.ts \
+            src/access/sandbox-capability-authority.spec.ts \
+            src/sandbox/sandbox-policy-coverage.spec.ts \
+            src/sandbox/sandbox-registry.spec.ts \
+            src/app/api/sandbox-routes.spec.ts \
+            src/runtime/tools/sandbox-tools.spec.ts \
+            --reporter=verbose
+      - name: Full coverage
+        run: npm run test:coverage
+      - name: Build
+        run: npm run build
+      - name: PR preflight
+        run: npm run preflight -- --base-ref origin/main
+      - name: Full validation
+        run: npm run validate
