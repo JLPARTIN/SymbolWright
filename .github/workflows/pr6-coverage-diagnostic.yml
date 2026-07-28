@@ -24,12 +24,12 @@ jobs:
       - name: Install dependencies
         run: npm ci --silent
 
-      - name: Report coverage failure tail only
+      - name: Report final coverage failure lines
         run: |
           set +e
           npm run test:coverage > /tmp/coverage.log 2>&1
           code=$?
           if [ "$code" -ne 0 ]; then
-            tail -n 240 /tmp/coverage.log
+            tail -n 40 /tmp/coverage.log
           fi
           exit "$code"
