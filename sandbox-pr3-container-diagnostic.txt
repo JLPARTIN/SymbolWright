@@ -1,98 +1,628 @@
 
 [1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/runner/work/SymbolWright/SymbolWright[39m
 
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mruns as non-root with a read-only root, no host mounts, and quarantined artifacts[32m 56[2mms[22m[39m
-[31m   → expected 'internal-error' to be 'passed' // Object.is equality[39m
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mphysically blocks outbound networking[32m 37[2mms[22m[39m
-[31m   → expected 'internal-error' to be 'passed' // Object.is equality[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mruns as non-root with a read-only root, no host mounts, and quarantined artifacts[32m 55[2mms[22m[39m
+[31m   → {
+  "status": "internal-error",
+  "stdout": "",
+  "stderr": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "message": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information"
+    }
+  ],
+  "cleanup": {
+    "attempted": true,
+    "succeeded": true
+  },
+  "evidence": {
+    "verificationLevel": "UNVERIFIED",
+    "inputHash": "c1a8a6c2714872f378beadcc1f915518caf969dff892ba442475a9143d3016b6",
+    "policyDecision": "allowed",
+    "schemaVersion": 1,
+    "outputHash": "53b9ccff130359a15d6a5935e3fe8888f063e8842feeca0df435539016e8bdff",
+    "outputExcerpt": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+    "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
+    "decisionCode": "SANDBOX_POLICY_ALLOWED",
+    "authorization": {
+      "deploymentMode": "local",
+      "callerKind": "operator",
+      "capabilityId": "symbolwright.sandbox.execute.offline"
+    },
+    "policy": {
+      "id": "sandbox-offline-default",
+      "version": 1,
+      "fingerprint": "7315b34275d2ae19663bc044652d04ba3a6d6739d1406df53a1d53609711dbc9",
+      "intent": "offline-execution",
+      "networkMode": "disabled",
+      "dependencyMode": "disabled",
+      "workspaceMode": "temporary-copy",
+      "container": {
+        "engine": "docker",
+        "imageId": "node-26-alpine-pinned",
+        "imageDigest": "sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66",
+        "user": "65532:65532",
+        "pullPolicy": "never",
+        "networkMode": "none",
+        "workspaceMode": "copy-in-tmpfs-copy-out"
+      },
+      "sourceVersions": {
+        "sandbox-global": 1,
+        "sandbox-offline-default": 1,
+        "runner:container-javascript-node26": 1,
+        "request-tightening": 1
+      }
+    }
+  }
+}: expected 'internal-error' to be 'passed' // Object.is equality[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mphysically blocks outbound networking[32m 32[2mms[22m[39m
+[31m   → {
+  "status": "internal-error",
+  "stdout": "",
+  "stderr": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "message": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information"
+    }
+  ],
+  "cleanup": {
+    "attempted": true,
+    "succeeded": true
+  },
+  "evidence": {
+    "verificationLevel": "UNVERIFIED",
+    "inputHash": "1605d95c56d70b9e64b78c57f4ac411f016af86246b2da58e7996eddcf665752",
+    "policyDecision": "allowed",
+    "schemaVersion": 1,
+    "outputHash": "53b9ccff130359a15d6a5935e3fe8888f063e8842feeca0df435539016e8bdff",
+    "outputExcerpt": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+    "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
+    "decisionCode": "SANDBOX_POLICY_ALLOWED",
+    "authorization": {
+      "deploymentMode": "local",
+      "callerKind": "operator",
+      "capabilityId": "symbolwright.sandbox.execute.offline"
+    },
+    "policy": {
+      "id": "sandbox-offline-default",
+      "version": 1,
+      "fingerprint": "195d098dd8d0bdaaaa281d1ba9d8a161ad5fd46ca6b8a42779af3297464114cf",
+      "intent": "offline-execution",
+      "networkMode": "disabled",
+      "dependencyMode": "disabled",
+      "workspaceMode": "temporary-copy",
+      "container": {
+        "engine": "docker",
+        "imageId": "node-26-alpine-pinned",
+        "imageDigest": "sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66",
+        "user": "65532:65532",
+        "pullPolicy": "never",
+        "networkMode": "none",
+        "workspaceMode": "copy-in-tmpfs-copy-out"
+      },
+      "sourceVersions": {
+        "sandbox-global": 1,
+        "sandbox-offline-default": 1,
+        "runner:container-javascript-node26": 1,
+        "request-tightening": 1
+      }
+    }
+  }
+}: expected 'internal-error' to be 'passed' // Object.is equality[39m
  [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mterminates output floods at the effective byte limit[32m 33[2mms[22m[39m
-[31m   → expected 'internal-error' to be 'resource-limit' // Object.is equality[39m
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces wall-time and explicit cancellation with container cleanup[32m 32[2mms[22m[39m
-[31m   → expected 'internal-error' to be 'timeout' // Object.is equality[39m
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces PID and tmpfs disk pressure without escaping the container[32m 32[2mms[22m[39m
-[31m   → expected [ 'passed', 'resource-limit', …(1) ] to include 'internal-error'[39m
+[31m   → {
+  "status": "internal-error",
+  "stdout": "",
+  "stderr": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "message": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information"
+    }
+  ],
+  "cleanup": {
+    "attempted": true,
+    "succeeded": true
+  },
+  "evidence": {
+    "verificationLevel": "UNVERIFIED",
+    "inputHash": "017134e5ded64733e620b992969fa518e82b27e11dedae3963f17be727605eb7",
+    "policyDecision": "allowed",
+    "schemaVersion": 1,
+    "outputHash": "53b9ccff130359a15d6a5935e3fe8888f063e8842feeca0df435539016e8bdff",
+    "outputExcerpt": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+    "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
+    "decisionCode": "SANDBOX_POLICY_ALLOWED",
+    "authorization": {
+      "deploymentMode": "local",
+      "callerKind": "operator",
+      "capabilityId": "symbolwright.sandbox.execute.offline"
+    },
+    "policy": {
+      "id": "sandbox-offline-default",
+      "version": 1,
+      "fingerprint": "57bba9c1010f4e6d943b9b44ae09f4a9908701f5a0b87be9013e6fbbd662de64",
+      "intent": "offline-execution",
+      "networkMode": "disabled",
+      "dependencyMode": "disabled",
+      "workspaceMode": "temporary-copy",
+      "container": {
+        "engine": "docker",
+        "imageId": "node-26-alpine-pinned",
+        "imageDigest": "sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66",
+        "user": "65532:65532",
+        "pullPolicy": "never",
+        "networkMode": "none",
+        "workspaceMode": "copy-in-tmpfs-copy-out"
+      },
+      "sourceVersions": {
+        "sandbox-global": 1,
+        "sandbox-offline-default": 1,
+        "runner:container-javascript-node26": 1,
+        "request-tightening": 1
+      }
+    }
+  }
+}: expected 'internal-error' to be 'resource-limit' // Object.is equality[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces wall-time and explicit cancellation with container cleanup[32m 34[2mms[22m[39m
+[31m   → {
+  "status": "internal-error",
+  "stdout": "",
+  "stderr": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "message": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information"
+    }
+  ],
+  "cleanup": {
+    "attempted": true,
+    "succeeded": true
+  },
+  "evidence": {
+    "verificationLevel": "UNVERIFIED",
+    "inputHash": "b93cb23fb6de8ecb1acc6ceb7817e714d21e665ffa508fb82359e67757a39c27",
+    "policyDecision": "allowed",
+    "schemaVersion": 1,
+    "outputHash": "53b9ccff130359a15d6a5935e3fe8888f063e8842feeca0df435539016e8bdff",
+    "outputExcerpt": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+    "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
+    "decisionCode": "SANDBOX_POLICY_ALLOWED",
+    "authorization": {
+      "deploymentMode": "local",
+      "callerKind": "operator",
+      "capabilityId": "symbolwright.sandbox.execute.offline"
+    },
+    "policy": {
+      "id": "sandbox-offline-default",
+      "version": 1,
+      "fingerprint": "fc01de532d578970b3339101f4732822edbf1639aa955acde134a54d42a61f27",
+      "intent": "offline-execution",
+      "networkMode": "disabled",
+      "dependencyMode": "disabled",
+      "workspaceMode": "temporary-copy",
+      "container": {
+        "engine": "docker",
+        "imageId": "node-26-alpine-pinned",
+        "imageDigest": "sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66",
+        "user": "65532:65532",
+        "pullPolicy": "never",
+        "networkMode": "none",
+        "workspaceMode": "copy-in-tmpfs-copy-out"
+      },
+      "sourceVersions": {
+        "sandbox-global": 1,
+        "sandbox-offline-default": 1,
+        "runner:container-javascript-node26": 1,
+        "request-tightening": 1
+      }
+    }
+  }
+}: expected 'internal-error' to be 'timeout' // Object.is equality[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces PID and tmpfs disk pressure without escaping the container[32m 34[2mms[22m[39m
+[31m   → {
+  "status": "internal-error",
+  "stdout": "",
+  "stderr": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "message": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information"
+    }
+  ],
+  "cleanup": {
+    "attempted": true,
+    "succeeded": true
+  },
+  "evidence": {
+    "verificationLevel": "UNVERIFIED",
+    "inputHash": "dce8f6f1f81e1ca621be401747ae7ef3b2493b3c3130b2d9ad7d1d1a4e72a212",
+    "policyDecision": "allowed",
+    "schemaVersion": 1,
+    "outputHash": "53b9ccff130359a15d6a5935e3fe8888f063e8842feeca0df435539016e8bdff",
+    "outputExcerpt": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+    "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
+    "decisionCode": "SANDBOX_POLICY_ALLOWED",
+    "authorization": {
+      "deploymentMode": "local",
+      "callerKind": "operator",
+      "capabilityId": "symbolwright.sandbox.execute.offline"
+    },
+    "policy": {
+      "id": "sandbox-offline-default",
+      "version": 1,
+      "fingerprint": "aae870bcb6d3bd71f8309e0a4df5b467a22371beffa9ad4aeff0c120a03c3c17",
+      "intent": "offline-execution",
+      "networkMode": "disabled",
+      "dependencyMode": "disabled",
+      "workspaceMode": "temporary-copy",
+      "container": {
+        "engine": "docker",
+        "imageId": "node-26-alpine-pinned",
+        "imageDigest": "sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66",
+        "user": "65532:65532",
+        "pullPolicy": "never",
+        "networkMode": "none",
+        "workspaceMode": "copy-in-tmpfs-copy-out"
+      },
+      "sourceVersions": {
+        "sandbox-global": 1,
+        "sandbox-offline-default": 1,
+        "runner:container-javascript-node26": 1,
+        "request-tightening": 1
+      }
+    }
+  }
+}: expected [ 'passed', 'resource-limit', …(1) ] to include 'internal-error'[39m
 
 [31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 5 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
 
 [41m[1m FAIL [22m[49m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mruns as non-root with a read-only root, no host mounts, and quarantined artifacts
-[31m[1mAssertionError[22m: expected 'internal-error' to be 'passed' // Object.is equality[39m
+[31m[1mAssertionError[22m: {
+  "status": "internal-error",
+  "stdout": "",
+  "stderr": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "message": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information"
+    }
+  ],
+  "cleanup": {
+    "attempted": true,
+    "succeeded": true
+  },
+  "evidence": {
+    "verificationLevel": "UNVERIFIED",
+    "inputHash": "c1a8a6c2714872f378beadcc1f915518caf969dff892ba442475a9143d3016b6",
+    "policyDecision": "allowed",
+    "schemaVersion": 1,
+    "outputHash": "53b9ccff130359a15d6a5935e3fe8888f063e8842feeca0df435539016e8bdff",
+    "outputExcerpt": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+    "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
+    "decisionCode": "SANDBOX_POLICY_ALLOWED",
+    "authorization": {
+      "deploymentMode": "local",
+      "callerKind": "operator",
+      "capabilityId": "symbolwright.sandbox.execute.offline"
+    },
+    "policy": {
+      "id": "sandbox-offline-default",
+      "version": 1,
+      "fingerprint": "7315b34275d2ae19663bc044652d04ba3a6d6739d1406df53a1d53609711dbc9",
+      "intent": "offline-execution",
+      "networkMode": "disabled",
+      "dependencyMode": "disabled",
+      "workspaceMode": "temporary-copy",
+      "container": {
+        "engine": "docker",
+        "imageId": "node-26-alpine-pinned",
+        "imageDigest": "sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66",
+        "user": "65532:65532",
+        "pullPolicy": "never",
+        "networkMode": "none",
+        "workspaceMode": "copy-in-tmpfs-copy-out"
+      },
+      "sourceVersions": {
+        "sandbox-global": 1,
+        "sandbox-offline-default": 1,
+        "runner:container-javascript-node26": 1,
+        "request-tightening": 1
+      }
+    }
+  }
+}: expected 'internal-error' to be 'passed' // Object.is equality[39m
 
 Expected: [32m"passed"[39m
 Received: [31m"internal-error"[39m
 
-[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m70:27[22m[39m
-    [90m 68|[39m     )
-    [90m 69|[39m
-    [90m 70|[39m     [34mexpect[39m(result[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'passed'[39m)
-    [90m   |[39m                           [31m^[39m
-    [90m 71|[39m     [35mconst[39m proof [33m=[39m [33mJSON[39m[33m.[39m[34mparse[39m(result[33m.[39mstdout[33m.[39m[34mtrim[39m()) [35mas[39m {
-    [90m 72|[39m       readonly uid[33m:[39m number
+[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m86:53[22m[39m
+    [90m 84|[39m     )
+    [90m 85|[39m
+    [90m 86|[39m     [34mexpect[39m(result[33m.[39mstatus[33m,[39m [34mresultDiagnostic[39m(result))[33m.[39m[34mtoBe[39m([32m'passed'[39m)
+    [90m   |[39m                                                     [31m^[39m
+    [90m 87|[39m     [35mconst[39m proof [33m=[39m [33mJSON[39m[33m.[39m[34mparse[39m(result[33m.[39mstdout[33m.[39m[34mtrim[39m()) [35mas[39m {
+    [90m 88|[39m       readonly uid[33m:[39m number
 
 [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯[22m[39m
 
 [41m[1m FAIL [22m[49m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mphysically blocks outbound networking
-[31m[1mAssertionError[22m: expected 'internal-error' to be 'passed' // Object.is equality[39m
+[31m[1mAssertionError[22m: {
+  "status": "internal-error",
+  "stdout": "",
+  "stderr": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "message": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information"
+    }
+  ],
+  "cleanup": {
+    "attempted": true,
+    "succeeded": true
+  },
+  "evidence": {
+    "verificationLevel": "UNVERIFIED",
+    "inputHash": "1605d95c56d70b9e64b78c57f4ac411f016af86246b2da58e7996eddcf665752",
+    "policyDecision": "allowed",
+    "schemaVersion": 1,
+    "outputHash": "53b9ccff130359a15d6a5935e3fe8888f063e8842feeca0df435539016e8bdff",
+    "outputExcerpt": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+    "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
+    "decisionCode": "SANDBOX_POLICY_ALLOWED",
+    "authorization": {
+      "deploymentMode": "local",
+      "callerKind": "operator",
+      "capabilityId": "symbolwright.sandbox.execute.offline"
+    },
+    "policy": {
+      "id": "sandbox-offline-default",
+      "version": 1,
+      "fingerprint": "195d098dd8d0bdaaaa281d1ba9d8a161ad5fd46ca6b8a42779af3297464114cf",
+      "intent": "offline-execution",
+      "networkMode": "disabled",
+      "dependencyMode": "disabled",
+      "workspaceMode": "temporary-copy",
+      "container": {
+        "engine": "docker",
+        "imageId": "node-26-alpine-pinned",
+        "imageDigest": "sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66",
+        "user": "65532:65532",
+        "pullPolicy": "never",
+        "networkMode": "none",
+        "workspaceMode": "copy-in-tmpfs-copy-out"
+      },
+      "sourceVersions": {
+        "sandbox-global": 1,
+        "sandbox-offline-default": 1,
+        "runner:container-javascript-node26": 1,
+        "request-tightening": 1
+      }
+    }
+  }
+}: expected 'internal-error' to be 'passed' // Object.is equality[39m
 
 Expected: [32m"passed"[39m
 Received: [31m"internal-error"[39m
 
-[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m105:27[22m[39m
-    [90m103|[39m     )
-    [90m104|[39m
-    [90m105|[39m     [34mexpect[39m(result[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'passed'[39m)
-    [90m   |[39m                           [31m^[39m
-    [90m106|[39m     [34mexpect[39m(result[33m.[39mstdout)[33m.[39m[34mtoContain[39m([32m'network-blocked'[39m)
-    [90m107|[39m     [34mexpect[39m(result[33m.[39mstderr)[33m.[39mnot[33m.[39m[34mtoContain[39m([32m'network-connected'[39m)
+[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m121:53[22m[39m
+    [90m119|[39m     )
+    [90m120|[39m
+    [90m121|[39m     [34mexpect[39m(result[33m.[39mstatus[33m,[39m [34mresultDiagnostic[39m(result))[33m.[39m[34mtoBe[39m([32m'passed'[39m)
+    [90m   |[39m                                                     [31m^[39m
+    [90m122|[39m     [34mexpect[39m(result[33m.[39mstdout)[33m.[39m[34mtoContain[39m([32m'network-blocked'[39m)
+    [90m123|[39m     [34mexpect[39m(result[33m.[39mstderr)[33m.[39mnot[33m.[39m[34mtoContain[39m([32m'network-connected'[39m)
 
 [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯[22m[39m
 
 [41m[1m FAIL [22m[49m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mterminates output floods at the effective byte limit
-[31m[1mAssertionError[22m: expected 'internal-error' to be 'resource-limit' // Object.is equality[39m
+[31m[1mAssertionError[22m: {
+  "status": "internal-error",
+  "stdout": "",
+  "stderr": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "message": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information"
+    }
+  ],
+  "cleanup": {
+    "attempted": true,
+    "succeeded": true
+  },
+  "evidence": {
+    "verificationLevel": "UNVERIFIED",
+    "inputHash": "017134e5ded64733e620b992969fa518e82b27e11dedae3963f17be727605eb7",
+    "policyDecision": "allowed",
+    "schemaVersion": 1,
+    "outputHash": "53b9ccff130359a15d6a5935e3fe8888f063e8842feeca0df435539016e8bdff",
+    "outputExcerpt": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+    "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
+    "decisionCode": "SANDBOX_POLICY_ALLOWED",
+    "authorization": {
+      "deploymentMode": "local",
+      "callerKind": "operator",
+      "capabilityId": "symbolwright.sandbox.execute.offline"
+    },
+    "policy": {
+      "id": "sandbox-offline-default",
+      "version": 1,
+      "fingerprint": "57bba9c1010f4e6d943b9b44ae09f4a9908701f5a0b87be9013e6fbbd662de64",
+      "intent": "offline-execution",
+      "networkMode": "disabled",
+      "dependencyMode": "disabled",
+      "workspaceMode": "temporary-copy",
+      "container": {
+        "engine": "docker",
+        "imageId": "node-26-alpine-pinned",
+        "imageDigest": "sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66",
+        "user": "65532:65532",
+        "pullPolicy": "never",
+        "networkMode": "none",
+        "workspaceMode": "copy-in-tmpfs-copy-out"
+      },
+      "sourceVersions": {
+        "sandbox-global": 1,
+        "sandbox-offline-default": 1,
+        "runner:container-javascript-node26": 1,
+        "request-tightening": 1
+      }
+    }
+  }
+}: expected 'internal-error' to be 'resource-limit' // Object.is equality[39m
 
 Expected: [32m"resource-limit"[39m
 Received: [31m"internal-error"[39m
 
-[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m122:27[22m[39m
-    [90m120|[39m     )
-    [90m121|[39m
-    [90m122|[39m     [34mexpect[39m(result[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'resource-limit'[39m)
-    [90m   |[39m                           [31m^[39m
-    [90m123|[39m     [34mexpect[39m(result[33m.[39moutputTruncated)[33m.[39m[34mtoBe[39m([35mtrue[39m)
-    [90m124|[39m     expect(Buffer.byteLength(result.stdout) + Buffer.byteLength(result…
+[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m138:53[22m[39m
+    [90m136|[39m     )
+    [90m137|[39m
+    [90m138|[39m     expect(result.status, resultDiagnostic(result)).toBe('resource-lim…
+    [90m   |[39m                                                     [31m^[39m
+    [90m139|[39m     [34mexpect[39m(result[33m.[39moutputTruncated)[33m.[39m[34mtoBe[39m([35mtrue[39m)
+    [90m140|[39m     expect(Buffer.byteLength(result.stdout) + Buffer.byteLength(result…
 
 [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯[22m[39m
 
 [41m[1m FAIL [22m[49m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces wall-time and explicit cancellation with container cleanup
-[31m[1mAssertionError[22m: expected 'internal-error' to be 'timeout' // Object.is equality[39m
+[31m[1mAssertionError[22m: {
+  "status": "internal-error",
+  "stdout": "",
+  "stderr": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "message": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information"
+    }
+  ],
+  "cleanup": {
+    "attempted": true,
+    "succeeded": true
+  },
+  "evidence": {
+    "verificationLevel": "UNVERIFIED",
+    "inputHash": "b93cb23fb6de8ecb1acc6ceb7817e714d21e665ffa508fb82359e67757a39c27",
+    "policyDecision": "allowed",
+    "schemaVersion": 1,
+    "outputHash": "53b9ccff130359a15d6a5935e3fe8888f063e8842feeca0df435539016e8bdff",
+    "outputExcerpt": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+    "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
+    "decisionCode": "SANDBOX_POLICY_ALLOWED",
+    "authorization": {
+      "deploymentMode": "local",
+      "callerKind": "operator",
+      "capabilityId": "symbolwright.sandbox.execute.offline"
+    },
+    "policy": {
+      "id": "sandbox-offline-default",
+      "version": 1,
+      "fingerprint": "fc01de532d578970b3339101f4732822edbf1639aa955acde134a54d42a61f27",
+      "intent": "offline-execution",
+      "networkMode": "disabled",
+      "dependencyMode": "disabled",
+      "workspaceMode": "temporary-copy",
+      "container": {
+        "engine": "docker",
+        "imageId": "node-26-alpine-pinned",
+        "imageDigest": "sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66",
+        "user": "65532:65532",
+        "pullPolicy": "never",
+        "networkMode": "none",
+        "workspaceMode": "copy-in-tmpfs-copy-out"
+      },
+      "sourceVersions": {
+        "sandbox-global": 1,
+        "sandbox-offline-default": 1,
+        "runner:container-javascript-node26": 1,
+        "request-tightening": 1
+      }
+    }
+  }
+}: expected 'internal-error' to be 'timeout' // Object.is equality[39m
 
 Expected: [32m"timeout"[39m
 Received: [31m"internal-error"[39m
 
-[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m140:29[22m[39m
-    [90m138|[39m       { mode[33m:[39m [32m'APPROVED_EXECUTION'[39m }[33m,[39m
-    [90m139|[39m     )
-    [90m140|[39m     [34mexpect[39m(timedOut[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'timeout'[39m)
-    [90m   |[39m                             [31m^[39m
-    [90m141|[39m     [34mexpect[39m(timedOut[33m.[39mcleanup[33m.[39msucceeded)[33m.[39m[34mtoBe[39m([35mtrue[39m)
-    [90m142|[39m
+[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m156:57[22m[39m
+    [90m154|[39m       { mode[33m:[39m [32m'APPROVED_EXECUTION'[39m }[33m,[39m
+    [90m155|[39m     )
+    [90m156|[39m     [34mexpect[39m(timedOut[33m.[39mstatus[33m,[39m [34mresultDiagnostic[39m(timedOut))[33m.[39m[34mtoBe[39m([32m'timeout'[39m)
+    [90m   |[39m                                                         [31m^[39m
+    [90m157|[39m     [34mexpect[39m(timedOut[33m.[39mcleanup[33m.[39msucceeded)[33m.[39m[34mtoBe[39m([35mtrue[39m)
+    [90m158|[39m
 
 [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯[22m[39m
 
 [41m[1m FAIL [22m[49m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces PID and tmpfs disk pressure without escaping the container
-[31m[1mAssertionError[22m: expected [ 'passed', 'resource-limit', …(1) ] to include 'internal-error'[39m
-[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m183:59[22m[39m
-    [90m181|[39m       { mode[33m:[39m [32m'APPROVED_EXECUTION'[39m }[33m,[39m
-    [90m182|[39m     )
-    [90m183|[39m     expect(['passed', 'resource-limit', 'runtime-error']).toContain(pr…
-    [90m   |[39m                                                           [31m^[39m
-    [90m184|[39m
-    [90m185|[39m     [35mconst[39m diskPressure [33m=[39m [35mawait[39m [34mservice[39m([32m'sandbox-disk'[39m)[33m.[39m[34mexecute[39m(
+[31m[1mAssertionError[22m: {
+  "status": "internal-error",
+  "stdout": "",
+  "stderr": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+  "diagnostics": [
+    {
+      "severity": "error",
+      "message": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information"
+    }
+  ],
+  "cleanup": {
+    "attempted": true,
+    "succeeded": true
+  },
+  "evidence": {
+    "verificationLevel": "UNVERIFIED",
+    "inputHash": "dce8f6f1f81e1ca621be401747ae7ef3b2493b3c3130b2d9ad7d1d1a4e72a212",
+    "policyDecision": "allowed",
+    "schemaVersion": 1,
+    "outputHash": "53b9ccff130359a15d6a5935e3fe8888f063e8842feeca0df435539016e8bdff",
+    "outputExcerpt": "container create failed with status 125: docker: --pid: invalid PID mode Run 'docker create --help' for more information",
+    "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
+    "decisionCode": "SANDBOX_POLICY_ALLOWED",
+    "authorization": {
+      "deploymentMode": "local",
+      "callerKind": "operator",
+      "capabilityId": "symbolwright.sandbox.execute.offline"
+    },
+    "policy": {
+      "id": "sandbox-offline-default",
+      "version": 1,
+      "fingerprint": "aae870bcb6d3bd71f8309e0a4df5b467a22371beffa9ad4aeff0c120a03c3c17",
+      "intent": "offline-execution",
+      "networkMode": "disabled",
+      "dependencyMode": "disabled",
+      "workspaceMode": "temporary-copy",
+      "container": {
+        "engine": "docker",
+        "imageId": "node-26-alpine-pinned",
+        "imageDigest": "sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66",
+        "user": "65532:65532",
+        "pullPolicy": "never",
+        "networkMode": "none",
+        "workspaceMode": "copy-in-tmpfs-copy-out"
+      },
+      "sourceVersions": {
+        "sandbox-global": 1,
+        "sandbox-offline-default": 1,
+        "runner:container-javascript-node26": 1,
+        "request-tightening": 1
+      }
+    }
+  }
+}: expected [ 'passed', 'resource-limit', …(1) ] to include 'internal-error'[39m
+[36m [2m❯[22m src/sandbox/sandbox-container-integration.spec.ts:[2m202:7[22m[39m
+    [90m200|[39m       [[32m'passed'[39m[33m,[39m [32m'resource-limit'[39m[33m,[39m [32m'runtime-error'[39m][33m,[39m
+    [90m201|[39m       [34mresultDiagnostic[39m(processPressure)[33m,[39m
+    [90m202|[39m     )[33m.[39m[34mtoContain[39m(processPressure[33m.[39mstatus)
+    [90m   |[39m       [31m^[39m
+    [90m203|[39m
+    [90m204|[39m     [35mconst[39m diskPressure [33m=[39m [35mawait[39m [34mservice[39m([32m'sandbox-disk'[39m)[33m.[39m[34mexecute[39m(
 
 [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯[22m[39m
 
 
 [2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
 [2m      Tests [22m [1m[31m5 failed[39m[22m[90m (5)[39m
-[2m   Start at [22m 16:55:39
-[2m   Duration [22m 569ms[2m (transform 186ms, setup 0ms, import 232ms, tests 194ms, environment 0ms)[22m
+[2m   Start at [22m 16:57:47
+[2m   Duration [22m 547ms[2m (transform 180ms, setup 0ms, import 225ms, tests 193ms, environment 0ms)[22m
 
