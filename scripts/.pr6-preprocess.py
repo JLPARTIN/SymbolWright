@@ -126,4 +126,79 @@ text, count = re.subn(
 )
 if count != 1:
     raise SystemExit(f'Expected one workflow generator block, replaced {count}')
+
+# Align generated autonomy tests with the repository's real public types.
+text = text.replace("principalType: 'service', displayName: 'Budgeted'", "principalType: 'service-account', displayName: 'Budgeted'", 1)
+text = text.replace(
+    """    const mission = missionService.create({
+      name: 'Budget stop', objective: 'Do no provider work', repositoryRoot: workspaceRoot,
+      runtimeMode: 'APPROVED_EXECUTION', grantId: grant.id,
+    })
+""",
+    """    const mission = await missionService.create(
+      {
+        name: 'Budget stop',
+        objective: 'Do no provider work',
+        repositoryPath: workspaceRoot,
+        runtimeMode: 'APPROVED_EXECUTION',
+      },
+      { grantId: grant.id },
+    )
+""",
+    1,
+)
+text = text.replace(
+    "taskExecutor: { async execute() { calls += 1; return { status: 'completed', summary: 'done' } } },",
+    "taskExecutor: { async execute() { calls += 1; return { state: 'completed' } } },",
+    1,
+)
+text = text.replace(
+    """    expect(result.execution.status).toBe('cancelled')
+    expect(result.execution.cancellationReason).toBe('budget')
+""",
+    """    expect(result.execution.graph.tasks.every((task) => task.state === 'failed')).toBe(true)
+    expect(result.execution.completedAt).toBeDefined()
+    expect(result.execution.cancellationReason).toBe('budget')
+""",
+    1,
+)
+
+# Preserve narrowing across the returned budget predicate closure.
+text = text.replace(
+    """  #budgetExceededPredicate(
+    mission: SymbolWrightMission,
+  ): (() => boolean) | undefined {
+    if (
+      mission.grantId === undefined ||
+      this.#accessRuntime === undefined ||
+      this.#getGovernanceStore === undefined
+    ) {
+      return undefined
+    }
+    const capUsd = this.#accessRuntime.grantService.getGrant(mission.grantId)?.executionLimits
+      .maxDailyEstimatedCostUsd
+    if (capUsd === undefined) return undefined
+    const cap = usdToMicrodollars(capUsd)
+    return () =>
+      this.#getGovernanceStore?.().getGrantDailyUsageMicrodollars(mission.grantId as string) >= cap
+  }
+""",
+    """  #budgetExceededPredicate(
+    mission: SymbolWrightMission,
+  ): (() => boolean) | undefined {
+    const grantId = mission.grantId
+    const getGovernanceStore = this.#getGovernanceStore
+    if (grantId === undefined || this.#accessRuntime === undefined || getGovernanceStore === undefined) {
+      return undefined
+    }
+    const capUsd = this.#accessRuntime.grantService.getGrant(grantId)?.executionLimits
+      .maxDailyEstimatedCostUsd
+    if (capUsd === undefined) return undefined
+    const cap = usdToMicrodollars(capUsd)
+    return () => getGovernanceStore().getGrantDailyUsageMicrodollars(grantId) >= cap
+  }
+""",
+    1,
+)
+
 path.write_text(text)
