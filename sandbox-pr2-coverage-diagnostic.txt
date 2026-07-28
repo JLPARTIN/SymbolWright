@@ -1,0 +1,262 @@
+coverage_exit_status=1
+
+ [32m✓[39m src/app/shell/mission-resume-integration.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 193[2mms[22m[39m
+ [32m✓[39m src/github/github-read-adapter.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/server/rate-limiter.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m src/runtime/workflow/zflow-report-catalog.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/preflight-tool.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/runtime/workflow/runtime-report-note.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/runtime/runtime-mode-truth-gate.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/web/status.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/cli-scan.spec.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 115[2mms[22m[39m
+ [32m✓[39m src/cli-ajna-scan-profile.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/ajna/governance/ajna-rule-engine.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+(node:9971) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m src/memory/memory-browse.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m src/app/api/sandbox-routes-boundary-coverage.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/runtime/validation/runtime-context-validator.spec.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/ajna/ajna-github-readonly-client-collector.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/cli-sandbox.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/config/env-compat.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/runtime/workflow/zflow-report.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mcp/mcp-stdio-transport.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 347[2mms[22m[39m
+ [32m✓[39m src/workspace/equivalence-harness.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/runtime/validation/validation-output-redactor.spec.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/web/web-safety.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/mcp/mcp-client.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 346[2mms[22m[39m
+ [32m✓[39m src/cli-ajna-merge-readiness-client-collector-fixture.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/cli-build-ledger.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/sandbox/sandbox-execution-broker.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/mcp/mcp-server-tools.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/tui/terminal-renderer.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m src/access/fixed-cost-rates.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/memory-store-tool.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/access/require-pull-request-guard.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 186[2mms[22m[39m
+ [32m✓[39m src/app/server/http-bootstrap.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 122[2mms[22m[39m
+ [32m✓[39m src/runtime/workflow/runtime-report-status.spec.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/zflow-report-rollup-tool.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/sandbox/sandbox-images.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/proposal-mode-tools.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/server/mission-autonomy-client.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/conversation/conversation.types.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/access/branch-scope-guard.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-store-secret-proof.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m src/server/mission-autonomy-edit-executor.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/read-only-tools.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/access/provider-concurrency-guard.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/skills/skill-discovery.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m src/hivemind/hivemind.types.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/web-search-tool.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/runtime/github-write/github-pr-creation.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/runtime/transcript/runtime-transcript.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/runtime/sandbox/sandbox-diagnostics.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/zflow-report-catalog-tool.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/cli-ajna-review-pr-client-collector-fixture.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/access/client-constraints-match.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/access/team-access-guard.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-deleted-branch.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 85[2mms[22m[39m
+ [32m✓[39m src/cli-ajna-github-api-snapshot-fixture.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/server/deployment-mode.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/runtime/github-write/pr-collaboration.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/app/views/agent-access-view.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/server/chat-transcript-logic.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/cli-ajna-review-pr-github-api-fixture.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/autonomy/runtime-validation-runner-portability.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-atomic-temp.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/config/symbolwright-runtime-mode-config.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/forensics/command-evidence.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/providers/provider-config.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/workspace/sql-browser-runner.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/memory-recall-tool.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/ajna/operator/ajna-operator-renderer.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-validation.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/workspace/pyodide-browser-runner.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/zflow-report-tool.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/release-workflow-contract.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/runtime/loop/symbolwright-agent-loop.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/ajna/analysis/ajna-file-insights.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/mission/mission-export.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m src/autonomy/mission-execution-lock.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m src/autonomy/mission-execution-abort-registry.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/app/shell/workspace-agent-bridge.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/app/api/mission-routes-autonomy.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/mission/mission-event-order.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m src/mission/mission-list-pagination.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m src/ajna/operator/ajna-risk-trend.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/skills/skill-frontmatter.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/mission/mission-corrupt-event.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m src/mission/mission-delete-artifacts.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m src/ajna/operator/ajna-saved-reviews.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/runtime/recovery/change-ledger.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/autonomy/multi-agent-dashboard-projection.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/runtime/compaction/transcript-compactor.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/runtime/registry/runtime-registry.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/operator/operator-renderer.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/cli-ajna-docs.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/workspace/browser-workspace-contract.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/workspace/workspace-client-logic.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/forensics/file-classifier.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/runtime/git/git-command-runner.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 86[2mms[22m[39m
+ [32m✓[39m src/runtime/workflow/zflow-handoff.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/access/access-credential.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 292[2mms[22m[39m
+ [32m✓[39m src/mission/mission-export-boundary.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/operator/operator-history-store.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/server/mission-autonomy-release-client.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/config/symbolwright-provider-selection.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/ajna/governance/ajna-governance-renderer.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/cli-bin.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m src/mission/mission-validation-output.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 68[2mms[22m[39m
+ [32m✓[39m src/github/github-comment-adapter.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/mission/mission-tool-output-cap.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 50[2mms[22m[39m
+ [32m✓[39m src/mission/mission-missing-repository.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m src/operator/operator-input-parser.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/workspace/sql-js-runtime.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 92[2mms[22m[39m
+ [32m✓[39m src/app/state/client-state.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/github/github-checks-adapter.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/cli-version.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-import-traversal.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/cli-plan.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/portability/portable-validation-invocation.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/access/mission-usage-guard.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/server/metrics-registry.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m src/cli-ajna-client-pipeline-manifest.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-revision.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 64[2mms[22m[39m
+ [32m✓[39m src/runtime/context/untrusted-content-boundary.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/mission/mission-scratch.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m src/cli-runtime-search.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 143[2mms[22m[39m
+ [32m✓[39m src/mission/mission-checkpoint-label.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m src/access/tool-permission-catalog.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/mission/mission-export-warning.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/bash-tool-boundary.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/mission/mission-interrupted-recovery.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 58[2mms[22m[39m
+ [32m✓[39m src/cli-preflight.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/app/views/checkpoints-view.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/memory/provider-llm-adapter.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/app/router/client-router.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-provider-safety.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m src/server/boot-sweep.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/runtime/session/runtime-session.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/mission/mission-redaction.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-open-files.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 73[2mms[22m[39m
+ [32m✓[39m src/app/shell/repository-mission-bridge.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/checkpoint/checkpoint-tool-hook-mission.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/mcp/mcp-redaction.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/forensics/package-manager.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-notes-labels.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32m✓[39m src/mission/mission-status.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32m✓[39m src/mission/mission-migration.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/checkpoint/checkpoint-session.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-import-conflict.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 95[2mms[22m[39m
+ [32m✓[39m src/conversation/unified-system-prompt-runtime-mode.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/mission/mission-diff-selection.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32m✓[39m src/mission/mission-runtime-mode.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m src/mission/mission-failed-status.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m src/mission/mission-completed-browse.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m src/workspace/i18n.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/mission/mission-paused-agent.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 72[2mms[22m[39m
+ [32m✓[39m src/cli-runtime-validation-plan.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/tui/tui.types.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/mission/mission-status-timestamps.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/apply-patch-tool.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/storage/storage-paths.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/cli-runtime-status-dashboard.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/mission/mission-artifact-directory.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m src/symbolwright-foundation.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/autonomy/merge-readiness-high-impact.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/access/hosted-limit-policy.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/ajna/analysis/ajna-timeline.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/cli-mcp-server.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/mission/mission-active-default.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m src/app/shell/mission-shell-contract.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/mission/mission-repository-boundary.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/cli-runtime-pr-notes.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/evidence-review/external-evidence-review.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/cli-runtime-propose-patch.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/mission/mission-summary.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/mission/mission-web-mcp-evidence.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/cli-runtime-plan.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/server/symbolwright-agent-request-mission.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/cli-runtime-read.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/mission/mission-runtime-enum.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/mission/mission-id.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/mission/mission-event-pagination.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/mission/mission-local-only.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/memory/agent-tools-mission-ids.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/skill-run-tool.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/mission/mission-agent-persistence-warning.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/mission/mission-name-objective.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-second-browser.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/mcp/mcp-policy.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-no-background.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/mission/mission-readonly-resume.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/mission/mission-reconciliation-choice.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/mission/mission-system-boundaries.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/mission/mission-portability.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/mission/mission-no-memory-copy.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/mission/mission-no-second-checkpoint.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/checkpoint/checkpoint-hash.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/hivemind/subagent-session.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-provider-model.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/mission/mission-label-limits.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/mission/mission-source-of-truth.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/server/readiness-registry.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m src/mission/mission-no-credentials.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/mission/mission-pending-draft.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/mission/mission-objective-length.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/mission/mission-no-branch-auto-create.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/mission/mission-opened-event.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/mission/mission-events-unique.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/mission/mission-no-cloud-sync.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/app/views/agent-view.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/mission/mission-no-auto-send.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/cli-runtime-approved-run.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/mission/mission-status-list.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/mission/mission-browser-independent.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/mission/mission-schema-version.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/mission/mission-api-auth-contract.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-policy-coverage.spec.ts[2m > [22msandbox service fallback coverage[2m > [22mreturns unavailable results when no matching runner exists
+[31m[1mAssertionError[22m: expected 'No matching sandbox runner is availab…' to contain 'No available runner'[39m
+
+Expected: [32m"No [7mavailable runner[27m"[39m
+Received: [31m"No [7mmatching sandbox runner is available.[27m"[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-policy-coverage.spec.ts:[2m290:42[22m[39m
+    [90m288|[39m     [34mexpect[39m(result[33m.[39mstatus)[33m.[39m[34mtoBe[39m([32m'unavailable'[39m)
+    [90m289|[39m     [34mexpect[39m(result[33m.[39mrunnerId)[33m.[39m[34mtoBe[39m([32m'unavailable-javascript'[39m)
+    [90m290|[39m     expect(result.evidence.policyReason).toContain('No available runne…
+    [90m   |[39m                                          [31m^[39m
+    [90m291|[39m   })
+    [90m292|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m src/sandbox/sandbox-registry.spec.ts[2m > [22msandbox policy and service foundation[2m > [22mdoes not fake execution before a backend is wired
+[31m[1mAssertionError[22m: expected 'Browser-isolated runners execute in t…' to contain 'No execution backend'[39m
+
+Expected: [32m"No execution backend"[39m
+Received: [31m"Browser-isolated runners execute in the browser runtime, not through the server sandbox API."[39m
+
+[36m [2m❯[22m src/sandbox/sandbox-registry.spec.ts:[2m130:42[22m[39m
+    [90m128|[39m     [34mexpect[39m(result[33m.[39mtrustClass)[33m.[39m[34mtoBe[39m([32m'browser-isolated'[39m)
+    [90m129|[39m     [34mexpect[39m(result[33m.[39mevidence[33m.[39mverificationLevel)[33m.[39m[34mtoBe[39m([32m'UNVERIFIED'[39m)
+    [90m130|[39m     expect(result.evidence.policyReason).toContain('No execution backe…
+    [90m   |[39m                                          [31m^[39m
+    [90m131|[39m   })
+    [90m132|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m536 passed[39m[22m[90m (538)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m4039 passed[39m[22m[2m | [22m[33m1 skipped[39m[90m (4042)[39m
+[2m   Start at [22m 15:00:17
+[2m   Duration [22m 69.02s[2m (transform 8.30s, setup 0ms, import 36.41s, tests 57.67s, environment 66ms)[22m
+
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/sandbox/sandbox-policy-coverage.spec.ts,title=src/sandbox/sandbox-policy-coverage.spec.ts > sandbox service fallback coverage > returns unavailable results when no matching runner exists,line=290,column=42::AssertionError: expected 'No matching sandbox runner is availab…' to contain 'No available runner'%0A%0AExpected: "No available runner"%0AReceived: "No matching sandbox runner is available."%0A%0A ❯ src/sandbox/sandbox-policy-coverage.spec.ts:290:42%0A%0A
+
+::error file=/home/runner/work/SymbolWright/SymbolWright/src/sandbox/sandbox-registry.spec.ts,title=src/sandbox/sandbox-registry.spec.ts > sandbox policy and service foundation > does not fake execution before a backend is wired,line=130,column=42::AssertionError: expected 'Browser-isolated runners execute in t…' to contain 'No execution backend'%0A%0AExpected: "No execution backend"%0AReceived: "Browser-isolated runners execute in the browser runtime, not through the server sandbox API."%0A%0A ❯ src/sandbox/sandbox-registry.spec.ts:130:42%0A%0A
