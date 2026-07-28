@@ -6,45 +6,31 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   harden:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout PR head branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          ref: ${{ github.head_ref }}
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Apply reviewed hardening corrections
+      - name: Apply patch and isolate static validation failure
         run: |
+          curl --fail --silent --show-error --location \
+            "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
+            | tar -xz --strip-components=1
           python3 - <<'PY'
           from pathlib import Path
           path = Path('scripts/.pr5-final-hardening.py')
           text = path.read_text()
-          before = 're.subn(pattern, replacement, text, count=1, flags=re.DOTALL)'
-          after = 're.subn(pattern, lambda _match: replacement, text, count=1, flags=re.DOTALL)'
-          if before not in text:
-              raise SystemExit('regex helper anchor missing')
-          path.write_text(text.replace(before, after, 1))
+          text = text.replace(
+              're.subn(pattern, replacement, text, count=1, flags=re.DOTALL)',
+              're.subn(pattern, lambda _match: replacement, text, count=1, flags=re.DOTALL)',
+              1,
+          )
+          path.write_text(text)
           PY
           python3 scripts/.pr5-final-hardening.py
-
-      - name: Format and validate
-        run: |
+          npm ci --silent
           npx prettier --write \
             src/app/server/unified-server.ts \
             src/cli-serve.ts \
@@ -55,18 +41,13 @@ jobs:
             src/server/metrics-registry.ts \
             src/server/metrics-registry.spec.ts \
             src/server/trusted-proxy.ts \
-            src/server/trusted-proxy.spec.ts
-          npm run typecheck
-          npm run lint
-          npm run format:check
-          npm test
-          npm run build
-
-      - name: Commit reviewed hardening and remove temporary files
-        run: |
-          git rm .github/workflows/pr5-final-hardening.yml scripts/.pr5-final-hardening.py
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "fix(server): close final PR 5 hardening edge cases"
-          git push origin HEAD:${GITHUB_HEAD_REF}
+            src/server/trusted-proxy.spec.ts \
+            --log-level silent
+          echo '=== TYPECHECK ==='
+          npm run typecheck --silent
+          echo '=== LINT ==='
+          npm run lint --silent
+          echo '=== FORMAT CHECK ==='
+          npm run format:check --silent
+          echo '=== BUILD ==='
+          npm run build --silent
