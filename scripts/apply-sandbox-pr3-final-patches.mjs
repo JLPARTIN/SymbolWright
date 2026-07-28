@@ -1,4 +1,4 @@
-import { readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 
 function replaceOnce(path, before, after) {
   const text = readFileSync(path, 'utf8')
@@ -96,10 +96,14 @@ replaceOnce(
 
 replaceOnce(
   'CHANGELOG.md',
-  `### Added
+  `## [Unreleased]
+
+### Added
 
 `,
-  `### Added
+  `## [Unreleased]
+
+### Added
 
 - **Strong offline container executor (Sandbox Bundle PR 3/7)**: adds an opt-in,
   digest-pinned JavaScript container runner with normal-execution \`--pull=never\`, physical
@@ -125,85 +129,13 @@ runtime profiles.
 `,
 )
 
-const workflow = `name: CI
-
-on:
-  pull_request:
-  push:
-    branches:
-      - main
-
-concurrency:
-  group: \${{ github.workflow }}-\${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
-
-jobs:
-  validate:
-    name: Validate SymbolWright
-    runs-on: ubuntu-24.04
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Audit dependencies
-        run: npm run audit
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Format check
-        run: npm run format:check
-
-      - name: Sandbox runner contract tests
-        run: npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
-
-      - name: Prepare digest-pinned strong sandbox image
-        run: docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66
-
-      - name: Strong sandbox adversarial integration
-        env:
-          SYMBOLWRIGHT_RUN_STRONG_CONTAINER_INTEGRATION: 'true'
-        run: npx vitest run src/sandbox/sandbox-container-integration.spec.ts
-
-      - name: Test with coverage
-        run: npm run test:coverage
-
-      - name: Build
-        run: npm run build
-
-      - name: Compute changed files for preflight
-        run: |
-          if [ "\${{ github.event_name }}" = "pull_request" ]; then
-            git diff --name-only "origin/\${{ github.event.pull_request.base.ref }}...HEAD" > /tmp/symbolwright-changed-files.txt
-          else
-            git diff --name-only HEAD~1 HEAD > /tmp/symbolwright-changed-files.txt || true
-          fi
-
-      - name: PR preflight
-        run: |
-          mapfile -t files < /tmp/symbolwright-changed-files.txt
-          node dist/cli.js preflight "\${files[@]}"
-
-      - name: Validate
-        run: npm run validate
-`
+let workflow = readFileSync('.github/workflows/ci.yml', 'utf8')
+workflow = workflow.replace('permissions:\n  contents: write', 'permissions:\n  contents: read')
+workflow = workflow.replace(`        with:\n          ref: \${{ github.head_ref }}\n          fetch-depth: 0`, `        with:\n          fetch-depth: 0`)
+workflow = workflow.replace(
+  /\n      - name: Apply guarded PR3 final patches[\s\S]*?\n      - name: Audit dependencies/,
+  '\n      - name: Audit dependencies',
+)
 writeFileSync('.github/workflows/ci.yml', workflow)
+if (existsSync('sandbox-pr3-patch-diagnostic.txt')) rmSync('sandbox-pr3-patch-diagnostic.txt')
 rmSync('scripts/apply-sandbox-pr3-final-patches.mjs')
