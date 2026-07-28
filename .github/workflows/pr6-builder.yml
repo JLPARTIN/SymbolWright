@@ -20,6 +20,7 @@ jobs:
             | tar -xz --strip-components=1
           python3 - <<'PY'
           from pathlib import Path
+          import re
           path = Path('scripts/.pr6-apply.py')
           text = path.read_text()
           old = '''replace_once(
@@ -34,6 +35,42 @@ jobs:
           )'''
           if old not in text:
               raise SystemExit('PR 6 generator import-anchor block missing')
-          path.write_text(text.replace(old, new, 1))
+          text = text.replace(old, new, 1)
+          docker_block = '''# Docker image must give the non-root process a real writable state root.
+          replace_once(
+              'Dockerfile',
+              """COPY --from=build /app/dist/ ./dist/
+
+          RUN addgroup -S symbolwright && adduser -S symbolwright -G symbolwright
+          USER symbolwright
+
+          ENTRYPOINT [\"node\", \"dist/cli.js\"]
+          """,
+              """COPY --from=build /app/dist/ ./dist/
+
+          RUN addgroup -S symbolwright \\
+            && adduser -S symbolwright -G symbolwright \\
+            && mkdir -p /data \\
+            && chown symbolwright:symbolwright /data
+          USER symbolwright
+          WORKDIR /data
+          EXPOSE 8787
+          VOLUME [\"/data\"]
+
+          ENTRYPOINT [\"node\", \"/app/dist/cli.js\"]
+          """,
+          )
+
+          '''
+          text, count = re.subn(
+              r"# Docker image must give the non-root process a real writable state root\..*?# Package scripts and native node:test coverage for release tooling\.",
+              lambda _match: docker_block + '# Package scripts and native node:test coverage for release tooling.',
+              text,
+              count=1,
+              flags=re.DOTALL,
+          )
+          if count != 1:
+              raise SystemExit(f'Expected one Docker generator block, replaced {count}')
+          path.write_text(text)
           PY
           python3 scripts/.pr6-apply.py
