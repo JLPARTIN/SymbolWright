@@ -1,4 +1,5 @@
-import type { RuntimeToolDefinition } from '../types.js'
+import type { SandboxCommandWorkspaceTrust } from '../../sandbox/sandbox-command-policy.js'
+import type { SandboxAuthorizationContext } from '../../sandbox/sandbox-policy-model.js'
 import { renderRuntimeBoundary } from '../renderers/runtime-renderers.js'
 import {
   DEFAULT_TIMEOUT_MS,
@@ -7,11 +8,13 @@ import {
   type SandboxRunner,
   type SandboxRunnerResult,
 } from '../sandbox/sandbox-runner.js'
+import type { RuntimeToolDefinition } from '../types.js'
 
 export interface BashToolInput {
   readonly command: string
   readonly timeoutMs?: number
 }
+
 function normalizeRequestedTimeout(timeoutMs: number | undefined): number | undefined {
   if (timeoutMs === undefined || !Number.isFinite(timeoutMs) || timeoutMs <= 0) return undefined
   return Math.min(Math.floor(timeoutMs), DEFAULT_TIMEOUT_MS)
@@ -53,17 +56,11 @@ function renderSandboxResult(result: SandboxRunnerResult): string {
     `Exit code: ${result.exitCode ?? 'unknown'}`,
   ]
 
-  if (result.reason !== null) {
-    lines.push(`Reason: ${result.reason}`)
-  }
-
-  if (result.stdout.length > 0) {
-    lines.push('', 'stdout:', result.stdout)
-  }
-  if (result.stderr.length > 0) {
-    lines.push('', 'stderr:', result.stderr)
-  }
-
+  if (result.reason !== null) lines.push(`Reason: ${result.reason}`)
+  if (result.reasonCode !== undefined) lines.push(`Decision: ${result.reasonCode}`)
+  if (result.policy !== undefined) lines.push(`Policy fingerprint: ${result.policy.fingerprint}`)
+  if (result.stdout.length > 0) lines.push('', 'stdout:', result.stdout)
+  if (result.stderr.length > 0) lines.push('', 'stderr:', result.stderr)
   lines.push('', renderRuntimeBoundary())
   return lines.join('\n')
 }
@@ -72,7 +69,9 @@ export async function executeBashTool(
   input: BashToolInput,
   cwd: string,
   shellAllowed: boolean,
-  sandboxRunner: SandboxRunner = new DockerSandboxRunner(),
+  sandboxRunner?: SandboxRunner,
+  authorization?: SandboxAuthorizationContext,
+  workspaceTrust: SandboxCommandWorkspaceTrust = 'trusted-local',
 ): Promise<string> {
   if (!shellAllowed) {
     return renderBlockedCommand(input.command, 'Shell execution is not allowed by current policy.')
@@ -87,18 +86,22 @@ export async function executeBashTool(
   }
 
   const timeoutMs = normalizeRequestedTimeout(input.timeoutMs)
-  const result = await sandboxRunner.runCommand({
+  const runner =
+    sandboxRunner ?? new DockerSandboxRunner({ authorization, workspaceTrust })
+  const result = await runner.runCommand({
     ...parsedCommand,
     workspaceRoot: cwd,
+    workspaceTrust,
+    ...(authorization === undefined ? {} : { authorization }),
     ...(timeoutMs === undefined ? {} : { timeoutMs }),
   })
-
   return renderSandboxResult(result)
 }
 
 export const bashTool: RuntimeToolDefinition = {
   name: 'bash',
-  description: 'Execute a parameterized workspace command inside the zero-trust sandbox runner.',
+  description:
+    'Execute an allowlisted parameterized workspace command through the authoritative sandbox broker. The legacy bind-mounted container is local trusted compatibility, not strong untrusted isolation.',
   capability: 'APPROVED_COMMAND',
   execute: async (input, context) =>
     executeBashTool(
@@ -106,5 +109,7 @@ export const bashTool: RuntimeToolDefinition = {
       context.cwd,
       context.policy.allowShell,
       context.sandboxRunner,
+      context.sandboxAuthorization,
+      context.untrustedRepositoryContent ? 'external-untrusted' : 'trusted-local',
     ),
 }
