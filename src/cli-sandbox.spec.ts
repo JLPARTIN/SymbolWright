@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { renderSandboxCommand } from './cli-sandbox.js'
-import { runnerAvailability } from './sandbox/sandbox-registry.js'
+import {
+  STRONG_SANDBOX_NODE_IMAGE_ID,
+  runnerAvailability,
+} from './sandbox/sandbox-registry.js'
 import type { SandboxContainerEngineStatus } from './sandbox/sandbox-images.js'
 import type { SandboxImageDefinition } from './sandbox/sandbox-types.js'
 
@@ -36,7 +39,7 @@ describe('sandbox CLI renderer', () => {
 
     expect(rendered).toContain('SymbolWright Sandbox Doctor')
     expect(rendered).toContain('Mode: READ-ONLY')
-    expect(rendered).toContain('Execution enabled: false')
+    expect(rendered).toContain('Strong container execution ready: false')
   })
 
   it('renders sandbox image policy diagnostics', async () => {
@@ -47,17 +50,17 @@ describe('sandbox CLI renderer', () => {
   })
 
   it('renders sandbox image inspection for allowlisted IDs only', async () => {
-    const rendered = await renderSandboxCommand(['inspect', 'node-22-bookworm-slim'], OPTIONS)
+    const rendered = await renderSandboxCommand(['inspect', STRONG_SANDBOX_NODE_IMAGE_ID], OPTIONS)
 
     expect(rendered).toContain('SymbolWright Sandbox Image Inspection')
-    expect(rendered).toContain('Image ID: node-22-bookworm-slim')
+    expect(rendered).toContain(`Image ID: ${STRONG_SANDBOX_NODE_IMAGE_ID}`)
     expect(rendered).toContain('Container engine: docker (available)')
     expect(rendered).toContain('Local store status: missing')
     expect(rendered).toContain('does not acquire, run, or mutate images')
   })
 
   it('rejects raw image names in sandbox image inspection', async () => {
-    const rendered = await renderSandboxCommand(['inspect', 'node:22-bookworm-slim'], OPTIONS)
+    const rendered = await renderSandboxCommand(['inspect', 'node:26-alpine'], OPTIONS)
 
     expect(rendered).toContain('Unknown sandbox image id')
     expect(rendered).toContain('arbitrary container image names')
