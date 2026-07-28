@@ -15,7 +15,8 @@ describe('strong sandbox backend defaults', () => {
     })
     const runner = inventory.runners.find((candidate) => candidate.backend === 'container')
     const image = inventory.images.find((candidate) => candidate.id === runner?.container?.imageId)
-    if (runner === undefined || image === undefined) throw new Error('Container fixture unavailable')
+    if (runner === undefined || image === undefined)
+      throw new Error('Container fixture unavailable')
 
     const result = await executeStrongSandboxContainer({
       executionId: 'backend-defaults',
