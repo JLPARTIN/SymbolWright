@@ -87,7 +87,11 @@ export async function executeBashTool(
 
   const timeoutMs = normalizeRequestedTimeout(input.timeoutMs)
   const runner =
-    sandboxRunner ?? new DockerSandboxRunner({ authorization, workspaceTrust })
+    sandboxRunner ??
+    new DockerSandboxRunner({
+      workspaceTrust,
+      ...(authorization === undefined ? {} : { authorization }),
+    })
   const result = await runner.runCommand({
     ...parsedCommand,
     workspaceRoot: cwd,
