@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
-import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../access/sandbox-capabilities.js'
+import {
+  LEGACY_SANDBOX_EXECUTE_CAPABILITY,
+  SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
+} from '../access/sandbox-capabilities.js'
 import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
 import {
+  getSandboxCommandProfile,
+  listSandboxCommandProfiles,
   parseSandboxCommand,
   resolveEffectiveSandboxCommandPolicy,
   type SandboxCommandPolicyRequest,
+  type SandboxCommandProfileId,
 } from './sandbox-command-policy.js'
 
 const REQUEST: SandboxCommandPolicyRequest = {
@@ -40,6 +46,17 @@ describe('sandbox command policy', () => {
     expect(() => parseSandboxCommand('npm test && curl example.com')).toThrow(
       'shell metacharacters',
     )
+    expect(() => parseSandboxCommand('   ')).toThrow('must not be empty')
+  })
+
+  it('exposes only the fixed server-owned command profile catalog', () => {
+    const profiles = listSandboxCommandProfiles()
+
+    expect(profiles.length).toBeGreaterThan(1)
+    expect(getSandboxCommandProfile('trusted-local-portable-python')?.image).toBe(
+      'python:3.12-bookworm',
+    )
+    expect(getSandboxCommandProfile('missing-profile' as SandboxCommandProfileId)).toBeUndefined()
   })
 
   it('resolves a fingerprinted local-only compatibility policy', () => {
@@ -62,6 +79,21 @@ describe('sandbox command policy', () => {
       egress: false,
     })
     expect(decision.policy?.fingerprint).toMatch(/^[a-f0-9]{64}$/)
+  })
+
+  it('permits the trusted-system caller and canonicalizes the legacy offline alias', () => {
+    const decision = resolveEffectiveSandboxCommandPolicy({
+      request: REQUEST,
+      authorization: authorization({
+        callerKind: 'system',
+        approvedCapabilityIds: [LEGACY_SANDBOX_EXECUTE_CAPABILITY],
+      }),
+      env: {},
+    })
+
+    expect(decision.allowed).toBe(true)
+    expect(decision.policy?.callerKind).toBe('system')
+    expect(decision.policy?.capabilityId).toBe(SANDBOX_OFFLINE_EXECUTE_CAPABILITY)
   })
 
   it.each([
@@ -108,6 +140,28 @@ describe('sandbox command policy', () => {
     expect(readOnly.reasonCode).toBe('SANDBOX_RUNTIME_MODE_BLOCKED')
   })
 
+  it('rejects malformed commands and unknown command profiles before execution', () => {
+    const malformed = resolveEffectiveSandboxCommandPolicy({
+      request: { ...REQUEST, command: 'npm test | cat' },
+      authorization: authorization(),
+      env: {},
+    })
+    const missingProfile = resolveEffectiveSandboxCommandPolicy({
+      request: { ...REQUEST, profileId: 'missing-profile' as SandboxCommandProfileId },
+      authorization: authorization(),
+      env: {},
+    })
+
+    expect(malformed).toMatchObject({
+      allowed: false,
+      reasonCode: 'SANDBOX_COMMAND_INVALID',
+    })
+    expect(missingProfile).toMatchObject({
+      allowed: false,
+      reasonCode: 'SANDBOX_COMMAND_PROFILE_NOT_FOUND',
+    })
+  })
+
   it('enforces profile binaries and exact grant command restrictions', () => {
     const unsupportedBinary = resolveEffectiveSandboxCommandPolicy({
       request: { ...REQUEST, command: 'python script.py' },
@@ -141,6 +195,23 @@ describe('sandbox command policy', () => {
     })
 
     expect(decision.policy?.limits).toEqual({ timeoutMs: 20_000, maxOutputBytes: 6_000 })
+  })
+
+  it('ignores non-positive and non-finite optional limit requests', () => {
+    const decision = resolveEffectiveSandboxCommandPolicy({
+      request: { ...REQUEST, timeoutMs: 0, maxOutputBytes: Number.NaN },
+      authorization: authorization({
+        grantLimits: { timeoutMs: -1, maxOutputBytes: Number.POSITIVE_INFINITY },
+        missionLimits: {},
+      }),
+      env: {},
+    })
+
+    expect(decision.allowed).toBe(true)
+    expect(decision.policy?.limits).toEqual({
+      timeoutMs: 60_000,
+      maxOutputBytes: 64_000,
+    })
   })
 
   it('honors the emergency global kill switch', () => {
