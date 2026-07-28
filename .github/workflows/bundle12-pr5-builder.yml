@@ -6,19 +6,16 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout PR head branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-          show-progress: false
-          ref: ${{ github.head_ref }}
-
       - name: Apply PR 5 implementation and expose any anchor failure
-        run: node scripts/.bundle12-pr5-apply.mjs
+        run: |
+          curl --fail --silent --show-error --location \
+            "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
+            | tar -xz --strip-components=1
+          node scripts/.bundle12-pr5-apply.mjs
