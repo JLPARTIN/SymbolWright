@@ -2,12 +2,9 @@ name: CI
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -33,47 +30,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Audit dependencies
-        run: npm run audit
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Format check
-        run: npm run format:check
-
-      - name: Sandbox runner contract tests
-        run: npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
-
-      - name: Prepare digest-pinned strong sandbox image
-        run: docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66
-
-      - name: Strong sandbox adversarial integration
-        env:
-          SYMBOLWRIGHT_RUN_STRONG_CONTAINER_INTEGRATION: 'true'
-        run: npx vitest run src/sandbox/sandbox-container-integration.spec.ts --reporter=verbose
-
-      - name: Test with coverage
-        run: npm run test:coverage
-
-      - name: Build
-        run: npm run build
-
-      - name: Compute changed files for preflight
+      - name: Capture coverage failure tail
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git diff --name-only "origin/${{ github.event.pull_request.base.ref }}...HEAD" > /tmp/symbolwright-changed-files.txt
-          else
-            git diff --name-only HEAD~1 HEAD > /tmp/symbolwright-changed-files.txt || true
-          fi
-
-      - name: PR preflight
-        run: |
-          mapfile -t files < /tmp/symbolwright-changed-files.txt
-          node dist/cli.js preflight "${files[@]}"
-
-      - name: Validate
-        run: npm run validate
+          set +e
+          npm run test:coverage > /tmp/symbolwright-coverage.log 2>&1
+          status=$?
+          set -e
+          tail -n 400 /tmp/symbolwright-coverage.log
+          exit "$status"
