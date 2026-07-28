@@ -13,97 +13,9 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Generate PR 6 patch and report only failed tests
-        shell: bash
+      - name: Report only failed PR 6 tests
         run: |
-          set -o pipefail
           curl --fail --silent --show-error --location \
             "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
             | tar -xz --strip-components=1
-          npm ci --silent
-          python3 scripts/.pr6-preprocess.py
-          python3 scripts/.pr6-apply.py
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          test_path = Path('src/autonomy/autonomous-budget-governance.spec.ts')
-          test_text = test_path.read_text()
-          test_text = test_text.replace(
-              """        repositoryPath: workspaceRoot,
-                  runtimeMode: 'APPROVED_EXECUTION',
-          """,
-              """        repositoryPath: workspaceRoot,
-                  workspaceKind: 'repository',
-                  labels: [],
-                  runtimeMode: 'APPROVED_EXECUTION',
-          """,
-              1,
-          )
-          test_path.write_text(test_text)
-
-          changelog_path = Path('scripts/lib/changelog-release.mjs')
-          changelog_text = changelog_path.read_text()
-          replacement = '''export function extractReleaseNotes(content, version) {
-            assertReleaseVersion(version)
-            const heading = `## [${version}]`
-            const headingIndex = content.indexOf(heading)
-            if (headingIndex < 0) throw new Error(`No release notes found for ${version}.`)
-            const bodyStart = content.indexOf('\\n', headingIndex)
-            if (bodyStart < 0) throw new Error(`No release notes found for ${version}.`)
-            const nextHeading = content.indexOf('\\n## [', bodyStart + 1)
-            const body = content.slice(bodyStart + 1, nextHeading < 0 ? content.length : nextHeading).trim()
-            if (body.length === 0) throw new Error(`No release notes found for ${version}.`)
-            return body + '\\n'
-          }
-          '''
-          changelog_text, count = re.subn(
-              r'export function extractReleaseNotes\(content, version\) \{.*?\n\}',
-              lambda _match: replacement.rstrip(),
-              changelog_text,
-              count=1,
-              flags=re.DOTALL,
-          )
-          if count != 1:
-              raise SystemExit('extractReleaseNotes function anchor missing')
-          changelog_path.write_text(changelog_text)
-          PY
-          npx prettier --write \
-            src/autonomy/autonomous-budget-governance.spec.ts \
-            src/autonomy/autonomous-mission-coordinator.ts \
-            src/autonomy/autonomous-mission-runtime.ts \
-            src/autonomy/server-autonomy-runtime.ts \
-            src/orchestration/orchestration-money.spec.ts \
-            src/orchestration/orchestration-store.ts \
-            src/orchestration/orchestration-types.ts \
-            src/orchestration/team-service.ts \
-            src/app/api/mission-routes.ts \
-            src/server/symbolwright-chat-server.ts \
-            src/cli-release-readiness.ts src/cli-release-readiness.spec.ts \
-            src/release/artifact-smoke.ts >/dev/null
-          set +e
-          npx vitest run --reporter=json --outputFile=/tmp/vitest.json >/tmp/vitest.log 2>&1
-          status=$?
-          set -e
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          result_path = Path('/tmp/vitest.json')
-          if not result_path.exists():
-              print(Path('/tmp/vitest.log').read_text()[-12000:])
-              raise SystemExit(0)
-          data = json.loads(result_path.read_text())
-          print(f"failed suites={data.get('numFailedTestSuites')} failed tests={data.get('numFailedTests')}")
-          for suite in data.get('testResults', []):
-              if suite.get('status') != 'failed':
-                  continue
-              print(f"FILE: {suite.get('name')}")
-              if suite.get('message'):
-                  print(suite['message'])
-              for assertion in suite.get('assertionResults', []):
-                  if assertion.get('status') == 'failed':
-                      print(f"TEST: {assertion.get('fullName') or assertion.get('title')}")
-                      for message in assertion.get('failureMessages', []):
-                          print(message)
-          PY
-          exit "$status"
+          python3 scripts/.pr6-diagnose.py
