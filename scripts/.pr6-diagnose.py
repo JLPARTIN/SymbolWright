@@ -105,7 +105,38 @@ new_cleanup = """    if (run('docker', ['inspect', '-f', '{{.State.ExitCode}}', 
 """
 if old_cleanup not in artifact_text:
     raise SystemExit('Docker cleanup anchor missing')
-artifact_path.write_text(artifact_text.replace(old_cleanup, new_cleanup, 1))
+artifact_text = artifact_text.replace(old_cleanup, new_cleanup, 1)
+volume_replacements = [
+    (
+        """  const state = mkdtempSync(path.join(tmpdir(), `symbolwright-${profile}-state-`))
+  const certs = mkdtempSync(path.join(tmpdir(), `symbolwright-${profile}-certs-`))
+""",
+        """  const volume = `${name}-state`
+  const certs = mkdtempSync(path.join(tmpdir(), `symbolwright-${profile}-certs-`))
+""",
+    ),
+    (
+        """    const mounts = ['-v', `${state}:/data`]
+""",
+        """    run('docker', ['volume', 'create', volume])
+    const mounts = ['-v', `${volume}:/data`]
+""",
+    ),
+    (
+        """    spawnSync('docker', ['rm', '-f', name], { stdio: 'ignore' })
+    rmSync(state, { recursive: true, force: true }); rmSync(certs, { recursive: true, force: true })
+""",
+        """    spawnSync('docker', ['rm', '-f', name], { stdio: 'ignore' })
+    spawnSync('docker', ['volume', 'rm', '-f', volume], { stdio: 'ignore' })
+    rmSync(certs, { recursive: true, force: true })
+""",
+    ),
+]
+for before, after in volume_replacements:
+    if before not in artifact_text:
+        raise SystemExit(f'Docker volume anchor missing: {before[:80]!r}')
+    artifact_text = artifact_text.replace(before, after, 1)
+artifact_path.write_text(artifact_text)
 
 run(['npm', 'install', '--package-lock-only', '--ignore-scripts', '--silent'], quiet=True)
 run(['npm', 'run', 'build', '--silent'], quiet=True)
