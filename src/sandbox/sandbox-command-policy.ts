@@ -101,17 +101,8 @@ const PROFILE_DEFINITIONS: readonly SandboxCommandProfile[] = [
     'node',
     'prettier',
   ]),
-  profile('trusted-local-portable-node', 'node:22-bookworm', [
-    'npm',
-    'npx',
-    'node',
-    'prettier',
-  ]),
-  profile('trusted-local-portable-python', 'python:3.12-bookworm', [
-    'python',
-    'python3',
-    'pytest',
-  ]),
+  profile('trusted-local-portable-node', 'node:22-bookworm', ['npm', 'npx', 'node', 'prettier']),
+  profile('trusted-local-portable-python', 'python:3.12-bookworm', ['python', 'python3', 'pytest']),
   profile('trusted-local-portable-go', 'golang:1-bookworm', ['go', 'gofmt']),
   profile('trusted-local-portable-rust', 'rust:1-bookworm', ['cargo', 'rustc']),
   profile('trusted-local-portable-maven', 'maven:3-eclipse-temurin-21', ['mvn', './mvnw']),
@@ -199,7 +190,10 @@ export function resolveEffectiveSandboxCommandPolicy(input: {
 
   const profile = getSandboxCommandProfile(input.request.profileId)
   if (profile === undefined) {
-    return blocked('SANDBOX_COMMAND_PROFILE_NOT_FOUND', 'The requested command profile is not installed.')
+    return blocked(
+      'SANDBOX_COMMAND_PROFILE_NOT_FOUND',
+      'The requested command profile is not installed.',
+    )
   }
 
   let command: ParsedSandboxCommand
