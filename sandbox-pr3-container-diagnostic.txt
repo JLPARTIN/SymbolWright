@@ -1,15 +1,15 @@
 
 [1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/runner/work/SymbolWright/SymbolWright[39m
 
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mruns as non-root with a read-only root, no host mounts, and quarantined artifacts[32m 288[2mms[22m[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mruns as non-root with a read-only root, no host mounts, and quarantined artifacts[33m 349[2mms[22m[39m
 [31m   → {
   "status": "internal-error",
   "stdout": "",
-  "stderr": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+  "stderr": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
   "diagnostics": [
     {
       "severity": "error",
-      "message": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only"
+      "message": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0"
     }
   ],
   "cleanup": {
@@ -21,8 +21,8 @@
     "inputHash": "c1a8a6c2714872f378beadcc1f915518caf969dff892ba442475a9143d3016b6",
     "policyDecision": "allowed",
     "schemaVersion": 1,
-    "outputHash": "06bb1067567426a0ae36820d50735f8baa984333851e4c7bf7fd8f577c73d645",
-    "outputExcerpt": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+    "outputHash": "03f225a694505e25ee4a5ee2db60342c82b8d06eb5e5e36cd32138eeb92095a3",
+    "outputExcerpt": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
     "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
     "decisionCode": "SANDBOX_POLICY_ALLOWED",
     "authorization": {
@@ -56,15 +56,15 @@
     }
   }
 }: expected 'internal-error' to be 'passed' // Object.is equality[39m
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mphysically blocks outbound networking[32m 196[2mms[22m[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mphysically blocks outbound networking[32m 272[2mms[22m[39m
 [31m   → {
   "status": "internal-error",
   "stdout": "",
-  "stderr": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+  "stderr": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
   "diagnostics": [
     {
       "severity": "error",
-      "message": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only"
+      "message": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0"
     }
   ],
   "cleanup": {
@@ -76,8 +76,8 @@
     "inputHash": "1605d95c56d70b9e64b78c57f4ac411f016af86246b2da58e7996eddcf665752",
     "policyDecision": "allowed",
     "schemaVersion": 1,
-    "outputHash": "06bb1067567426a0ae36820d50735f8baa984333851e4c7bf7fd8f577c73d645",
-    "outputExcerpt": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+    "outputHash": "03f225a694505e25ee4a5ee2db60342c82b8d06eb5e5e36cd32138eeb92095a3",
+    "outputExcerpt": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
     "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
     "decisionCode": "SANDBOX_POLICY_ALLOWED",
     "authorization": {
@@ -111,15 +111,15 @@
     }
   }
 }: expected 'internal-error' to be 'passed' // Object.is equality[39m
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mterminates output floods at the effective byte limit[32m 197[2mms[22m[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mterminates output floods at the effective byte limit[32m 274[2mms[22m[39m
 [31m   → {
   "status": "internal-error",
   "stdout": "",
-  "stderr": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+  "stderr": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
   "diagnostics": [
     {
       "severity": "error",
-      "message": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only"
+      "message": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0"
     }
   ],
   "cleanup": {
@@ -131,8 +131,8 @@
     "inputHash": "017134e5ded64733e620b992969fa518e82b27e11dedae3963f17be727605eb7",
     "policyDecision": "allowed",
     "schemaVersion": 1,
-    "outputHash": "06bb1067567426a0ae36820d50735f8baa984333851e4c7bf7fd8f577c73d645",
-    "outputExcerpt": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+    "outputHash": "03f225a694505e25ee4a5ee2db60342c82b8d06eb5e5e36cd32138eeb92095a3",
+    "outputExcerpt": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
     "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
     "decisionCode": "SANDBOX_POLICY_ALLOWED",
     "authorization": {
@@ -166,15 +166,15 @@
     }
   }
 }: expected 'internal-error' to be 'resource-limit' // Object.is equality[39m
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces wall-time and explicit cancellation with container cleanup[32m 187[2mms[22m[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces wall-time and explicit cancellation with container cleanup[32m 268[2mms[22m[39m
 [31m   → {
   "status": "internal-error",
   "stdout": "",
-  "stderr": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+  "stderr": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
   "diagnostics": [
     {
       "severity": "error",
-      "message": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only"
+      "message": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0"
     }
   ],
   "cleanup": {
@@ -186,8 +186,8 @@
     "inputHash": "b93cb23fb6de8ecb1acc6ceb7817e714d21e665ffa508fb82359e67757a39c27",
     "policyDecision": "allowed",
     "schemaVersion": 1,
-    "outputHash": "06bb1067567426a0ae36820d50735f8baa984333851e4c7bf7fd8f577c73d645",
-    "outputExcerpt": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+    "outputHash": "03f225a694505e25ee4a5ee2db60342c82b8d06eb5e5e36cd32138eeb92095a3",
+    "outputExcerpt": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
     "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
     "decisionCode": "SANDBOX_POLICY_ALLOWED",
     "authorization": {
@@ -221,15 +221,15 @@
     }
   }
 }: expected 'internal-error' to be 'timeout' // Object.is equality[39m
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces PID and tmpfs disk pressure without escaping the container[32m 199[2mms[22m[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces PID and tmpfs disk pressure without escaping the container[33m 15197[2mms[22m[39m
 [31m   → {
   "status": "internal-error",
   "stdout": "",
-  "stderr": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+  "stderr": "container copy-in failed with status unknown:",
   "diagnostics": [
     {
       "severity": "error",
-      "message": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only"
+      "message": "container copy-in failed with status unknown:"
     }
   ],
   "cleanup": {
@@ -241,8 +241,8 @@
     "inputHash": "dce8f6f1f81e1ca621be401747ae7ef3b2493b3c3130b2d9ad7d1d1a4e72a212",
     "policyDecision": "allowed",
     "schemaVersion": 1,
-    "outputHash": "06bb1067567426a0ae36820d50735f8baa984333851e4c7bf7fd8f577c73d645",
-    "outputExcerpt": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+    "outputHash": "aca97367fc637fe0f608802ca79701925b84c0acd0a9f9618c78caae5b09f661",
+    "outputExcerpt": "container copy-in failed with status unknown:",
     "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
     "decisionCode": "SANDBOX_POLICY_ALLOWED",
     "authorization": {
@@ -283,11 +283,11 @@
 [31m[1mAssertionError[22m: {
   "status": "internal-error",
   "stdout": "",
-  "stderr": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+  "stderr": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
   "diagnostics": [
     {
       "severity": "error",
-      "message": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only"
+      "message": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0"
     }
   ],
   "cleanup": {
@@ -299,8 +299,8 @@
     "inputHash": "c1a8a6c2714872f378beadcc1f915518caf969dff892ba442475a9143d3016b6",
     "policyDecision": "allowed",
     "schemaVersion": 1,
-    "outputHash": "06bb1067567426a0ae36820d50735f8baa984333851e4c7bf7fd8f577c73d645",
-    "outputExcerpt": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+    "outputHash": "03f225a694505e25ee4a5ee2db60342c82b8d06eb5e5e36cd32138eeb92095a3",
+    "outputExcerpt": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
     "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
     "decisionCode": "SANDBOX_POLICY_ALLOWED",
     "authorization": {
@@ -352,11 +352,11 @@ Received: [31m"internal-error"[39m
 [31m[1mAssertionError[22m: {
   "status": "internal-error",
   "stdout": "",
-  "stderr": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+  "stderr": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
   "diagnostics": [
     {
       "severity": "error",
-      "message": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only"
+      "message": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0"
     }
   ],
   "cleanup": {
@@ -368,8 +368,8 @@ Received: [31m"internal-error"[39m
     "inputHash": "1605d95c56d70b9e64b78c57f4ac411f016af86246b2da58e7996eddcf665752",
     "policyDecision": "allowed",
     "schemaVersion": 1,
-    "outputHash": "06bb1067567426a0ae36820d50735f8baa984333851e4c7bf7fd8f577c73d645",
-    "outputExcerpt": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+    "outputHash": "03f225a694505e25ee4a5ee2db60342c82b8d06eb5e5e36cd32138eeb92095a3",
+    "outputExcerpt": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
     "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
     "decisionCode": "SANDBOX_POLICY_ALLOWED",
     "authorization": {
@@ -421,11 +421,11 @@ Received: [31m"internal-error"[39m
 [31m[1mAssertionError[22m: {
   "status": "internal-error",
   "stdout": "",
-  "stderr": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+  "stderr": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
   "diagnostics": [
     {
       "severity": "error",
-      "message": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only"
+      "message": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0"
     }
   ],
   "cleanup": {
@@ -437,8 +437,8 @@ Received: [31m"internal-error"[39m
     "inputHash": "017134e5ded64733e620b992969fa518e82b27e11dedae3963f17be727605eb7",
     "policyDecision": "allowed",
     "schemaVersion": 1,
-    "outputHash": "06bb1067567426a0ae36820d50735f8baa984333851e4c7bf7fd8f577c73d645",
-    "outputExcerpt": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+    "outputHash": "03f225a694505e25ee4a5ee2db60342c82b8d06eb5e5e36cd32138eeb92095a3",
+    "outputExcerpt": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
     "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
     "decisionCode": "SANDBOX_POLICY_ALLOWED",
     "authorization": {
@@ -490,11 +490,11 @@ Received: [31m"internal-error"[39m
 [31m[1mAssertionError[22m: {
   "status": "internal-error",
   "stdout": "",
-  "stderr": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+  "stderr": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
   "diagnostics": [
     {
       "severity": "error",
-      "message": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only"
+      "message": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0"
     }
   ],
   "cleanup": {
@@ -506,8 +506,8 @@ Received: [31m"internal-error"[39m
     "inputHash": "b93cb23fb6de8ecb1acc6ceb7817e714d21e665ffa508fb82359e67757a39c27",
     "policyDecision": "allowed",
     "schemaVersion": 1,
-    "outputHash": "06bb1067567426a0ae36820d50735f8baa984333851e4c7bf7fd8f577c73d645",
-    "outputExcerpt": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+    "outputHash": "03f225a694505e25ee4a5ee2db60342c82b8d06eb5e5e36cd32138eeb92095a3",
+    "outputExcerpt": "container copy-in failed with status 1: <anonymous_script>:1 SyntaxError: Unexpected end of JSON input     at JSON.parse (<anonymous>)     at Socket.<anonymous> ([eval]:8:24)     at Socket.emit (node:events:521:24)     at endReadableNT (node:internal/streams/readable:1753:12)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v26.5.0",
     "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
     "decisionCode": "SANDBOX_POLICY_ALLOWED",
     "authorization": {
@@ -559,11 +559,11 @@ Received: [31m"internal-error"[39m
 [31m[1mAssertionError[22m: {
   "status": "internal-error",
   "stdout": "",
-  "stderr": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+  "stderr": "container copy-in failed with status unknown:",
   "diagnostics": [
     {
       "severity": "error",
-      "message": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only"
+      "message": "container copy-in failed with status unknown:"
     }
   ],
   "cleanup": {
@@ -575,8 +575,8 @@ Received: [31m"internal-error"[39m
     "inputHash": "dce8f6f1f81e1ca621be401747ae7ef3b2493b3c3130b2d9ad7d1d1a4e72a212",
     "policyDecision": "allowed",
     "schemaVersion": 1,
-    "outputHash": "06bb1067567426a0ae36820d50735f8baa984333851e4c7bf7fd8f577c73d645",
-    "outputExcerpt": "container copy-in failed with status 1: Error response from daemon: container rootfs is marked read-only",
+    "outputHash": "aca97367fc637fe0f608802ca79701925b84c0acd0a9f9618c78caae5b09f661",
+    "outputExcerpt": "container copy-in failed with status unknown:",
     "policyReason": "Resolved sandbox-offline-default@1 by strict policy intersection.",
     "decisionCode": "SANDBOX_POLICY_ALLOWED",
     "authorization": {
@@ -623,6 +623,6 @@ Received: [31m"internal-error"[39m
 
 [2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
 [2m      Tests [22m [1m[31m5 failed[39m[22m[90m (5)[39m
-[2m   Start at [22m 17:01:44
-[2m   Duration [22m 1.42s[2m (transform 183ms, setup 0ms, import 227ms, tests 1.07s, environment 0ms)[22m
+[2m   Start at [22m 17:02:44
+[2m   Duration [22m 16.70s[2m (transform 164ms, setup 0ms, import 209ms, tests 16.37s, environment 0ms)[22m
 
