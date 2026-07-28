@@ -285,7 +285,11 @@ async function main(): Promise<void> {
       break
 
     case 'release-readiness':
-      console.log(renderReleaseReadinessCommand(process.cwd()))
+      console.log(
+        renderReleaseReadinessCommand(process.cwd(), {
+          runArtifactSmoke: !rest.includes('--static'),
+        }),
+      )
       break
 
     case 'runtime-status':

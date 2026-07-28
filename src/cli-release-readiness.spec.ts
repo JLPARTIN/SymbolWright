@@ -43,6 +43,8 @@ describe('assessReleaseReadiness', () => {
     expect(codes).toContain('VALIDATE_SCRIPT')
     expect(codes).toContain('WORKFLOW_RELEASE_PROOF')
     expect(codes).toContain('BUILD_LEDGER_CONSISTENT')
+    expect(codes).toContain('NPM_PACK_SMOKE')
+    expect(codes).toContain('DOCKER_RUNTIME_SMOKE')
   })
 
   it('includes doctor report', () => {

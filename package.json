@@ -35,7 +35,7 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build:app": "npm run typecheck && npm run build",
-    "validate": "npm run audit && npm run typecheck && npm run lint && npm run format:check && npm run test:coverage && npm run build && npm run release-readiness",
+    "validate": "npm run audit && npm run test:release-scripts && npm run typecheck && npm run lint && npm run format:check && npm run test:coverage && npm run build && npm run release-readiness",
     "prepublishOnly": "npm run validate",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
@@ -46,7 +46,12 @@
     "release-readiness": "node dist/cli.js release-readiness",
     "build-ledger": "node dist/cli.js build-ledger",
     "dev": "npm run serve",
-    "serve": "npm run build && node dist/cli.js serve"
+    "serve": "npm run build && node dist/cli.js serve",
+    "release:prepare": "node scripts/release-prepare.mjs",
+    "release:verify-tag": "node scripts/verify-release-tag.mjs",
+    "release:notes": "node scripts/extract-release-notes.mjs",
+    "release:docker-smoke": "node scripts/docker-smoke.mjs",
+    "test:release-scripts": "node --test scripts/lib/changelog-release.test.mjs"
   },
   "keywords": [
     "symbolwright",

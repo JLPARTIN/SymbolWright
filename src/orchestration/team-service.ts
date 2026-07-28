@@ -12,6 +12,8 @@ import {
   type CreateTeamMemberInput,
   type OrchestrationAuditEvent,
   type OrchestrationAuditEventType,
+  normalizeAgentResourceLimits,
+  normalizeTeamBudget,
   type TeamBudget,
   type TeamStatus,
 } from './orchestration-types.js'
@@ -87,7 +89,7 @@ export class TeamService {
       ...(input.ownerPrincipalId === undefined ? {} : { ownerPrincipalId: input.ownerPrincipalId }),
       createdAt: nowIso,
       updatedAt: nowIso,
-      budget: { ...DEFAULT_TEAM_BUDGET, ...input.budget },
+      budget: normalizeTeamBudget({ ...DEFAULT_TEAM_BUDGET, ...input.budget }),
       usage: zeroBudgetUsage(),
       metrics: zeroTeamMetrics(),
       unresolvedRisks: [],
@@ -201,7 +203,7 @@ export class TeamService {
       assignedTaskIds: [],
       trustTier: input.trustTier,
       concurrencyLimit: input.concurrencyLimit ?? 1,
-      resourceLimits: input.resourceLimits ?? {},
+      resourceLimits: normalizeAgentResourceLimits(input.resourceLimits ?? {}),
       createdAt: nowIso,
       updatedAt: nowIso,
     }

@@ -1,4 +1,6 @@
 import type { AccessRuntime } from '../access/access-runtime.js'
+import type { GovernanceStore } from '../access/governance-store.js'
+import { usdToMicrodollars } from '../access/microdollars.js'
 import type { MissionService } from '../mission/mission-service.js'
 import type { SymbolWrightMission } from '../mission/mission-types.js'
 import type { AutonomousRepairLoopRecord } from './autonomous-repair-loop.js'
@@ -44,6 +46,8 @@ export interface AutonomousMissionCoordinatorOptions {
   /** Used to look up a mission's owning grant (via `mission.grantId`) to source a per-grant
    * `executionLimits.maxMissionDurationMinutes`. Absent for local-operator-only deployments. */
   readonly accessRuntime?: AccessRuntime
+  /** Lazy to preserve local zero-side-effect startup when no delegated mission has a cost cap. */
+  readonly getGovernanceStore?: () => GovernanceStore
   /** Same instance passed to `PersistentMissionExecutor`'s callers and `AutonomousMissionControl`
    * -- lets a concurrent `/autonomy/cancel`/`/autonomy/pause` reach this mission's in-flight
    * `run()` loop. Defaults to a private instance when omitted (fine for standalone/test usage). */
@@ -92,6 +96,7 @@ export class AutonomousMissionCoordinator {
   readonly #multiAgentTracker: MultiAgentExecutionTracker | undefined
   readonly #maxDurationMinutes: number | undefined
   readonly #accessRuntime: AccessRuntime | undefined
+  readonly #getGovernanceStore: (() => GovernanceStore) | undefined
   readonly #abortRegistry: MissionExecutionAbortRegistry
   readonly #now: () => Date
 
@@ -106,6 +111,7 @@ export class AutonomousMissionCoordinator {
     this.#multiAgentTracker = options.multiAgentTracker
     this.#maxDurationMinutes = options.maxDurationMinutes
     this.#accessRuntime = options.accessRuntime
+    this.#getGovernanceStore = options.getGovernanceStore
     this.#abortRegistry = options.abortRegistry ?? new MissionExecutionAbortRegistry()
     this.#now = options.now ?? (() => new Date())
   }
@@ -146,8 +152,10 @@ export class AutonomousMissionCoordinator {
       )
 
       const maxDurationMinutes = this.#resolveMaxDurationMinutes(mission)
+      const isBudgetExceeded = this.#budgetExceededPredicate(mission)
       const execution = await this.#executor.start(plan.graph, {
         ...(maxDurationMinutes === undefined ? {} : { maxDurationMinutes }),
+        ...(isBudgetExceeded === undefined ? {} : { isBudgetExceeded }),
         signal: registration.signal,
       })
       await this.#synchronizeSpecialists(execution)
@@ -172,8 +180,10 @@ export class AutonomousMissionCoordinator {
     }
     try {
       const maxDurationMinutes = this.#resolveMaxDurationMinutes(mission)
+      const isBudgetExceeded = this.#budgetExceededPredicate(mission)
       const execution = await this.#executor.resume(missionId, {
         ...(maxDurationMinutes === undefined ? {} : { maxDurationMinutes }),
+        ...(isBudgetExceeded === undefined ? {} : { isBudgetExceeded }),
         signal: registration.signal,
       })
       await this.#synchronizeSpecialists(execution)
@@ -198,6 +208,23 @@ export class AutonomousMissionCoordinator {
     } finally {
       this.#abortRegistry.release(missionId)
     }
+  }
+
+  #budgetExceededPredicate(mission: SymbolWrightMission): (() => boolean) | undefined {
+    const grantId = mission.grantId
+    const getGovernanceStore = this.#getGovernanceStore
+    if (
+      grantId === undefined ||
+      this.#accessRuntime === undefined ||
+      getGovernanceStore === undefined
+    ) {
+      return undefined
+    }
+    const capUsd =
+      this.#accessRuntime.grantService.getGrant(grantId)?.executionLimits.maxDailyEstimatedCostUsd
+    if (capUsd === undefined) return undefined
+    const cap = usdToMicrodollars(capUsd)
+    return () => getGovernanceStore().getGrantDailyUsageMicrodollars(grantId) >= cap
   }
 
   async status(missionId: string): Promise<MissionDashboardProjection> {

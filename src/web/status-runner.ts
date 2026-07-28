@@ -6,18 +6,26 @@ import { buildRuntimeStatusView, type RuntimeStatusView, type ScriptOutput } fro
 
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 
-export function runScript(name: string, script: string): Promise<ScriptOutput> {
+export function runScript(
+  name: string,
+  script: string,
+  args: readonly string[] = [],
+): Promise<ScriptOutput> {
   const startedAt = Date.now()
 
   return new Promise((resolve) => {
-    const child = spawn(npmCommand, ['run', script, '--silent'], {
-      cwd: process.cwd(),
-      env: {
-        ...process.env,
-        CI: '1',
+    const child = spawn(
+      npmCommand,
+      ['run', script, '--silent', ...(args.length === 0 ? [] : ['--', ...args])],
+      {
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          CI: '1',
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
       },
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
+    )
 
     let output = ''
     let timedOut = false
@@ -51,7 +59,7 @@ export function runScript(name: string, script: string): Promise<ScriptOutput> {
 export async function collectStatus(): Promise<RuntimeStatusView> {
   const [doctor, releaseReadiness] = await Promise.all([
     runScript('doctor', 'doctor'),
-    runScript('release-readiness', 'release-readiness'),
+    runScript('release-readiness', 'release-readiness', ['--static']),
   ])
 
   return buildRuntimeStatusView(doctor, releaseReadiness)
