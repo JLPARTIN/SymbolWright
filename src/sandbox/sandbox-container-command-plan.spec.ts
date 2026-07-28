@@ -127,7 +127,14 @@ describe('sandbox container command planner', () => {
     expect(() => planWith({ user: '0:0' })).toThrow('numeric non-root')
     expect(() =>
       planWith({
-        image: { ...IMAGE, image: 'node:latest', digest: undefined },
+        image: {
+          id: IMAGE.id,
+          image: 'node:latest',
+          languages: IMAGE.languages,
+          source: IMAGE.source,
+          enabled: true,
+          installed: true,
+        },
       }),
     ).toThrow('digest-pinned')
   })

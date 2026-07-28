@@ -6,8 +6,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import { renderSandboxCommand } from '../cli-sandbox.js'
 import {
-  assertContainerCommandPlanStaysNonExecutable,
   buildSandboxContainerCommandPlan,
+  isSandboxContainerCommandPlanExecutable,
 } from './sandbox-container-command-plan.js'
 import { SandboxHistoryStore } from './sandbox-history.js'
 import { DEFAULT_SANDBOX_IMAGE_ALLOWLIST } from './sandbox-images.js'
@@ -30,7 +30,11 @@ const EXECUTION_ENV: NodeJS.ProcessEnv = {
 }
 
 const workspaces: string[] = []
-const IMAGE = DEFAULT_SANDBOX_IMAGE_ALLOWLIST[0]!
+const IMAGE = {
+  ...DEFAULT_SANDBOX_IMAGE_ALLOWLIST[0]!,
+  enabled: true,
+  installed: true,
+}
 const AVAILABLE_ENGINE: SandboxContainerEngineStatus = {
   engine: 'podman',
   status: 'available',
@@ -295,60 +299,47 @@ describe('sandbox completion coverage', () => {
     expect(containsRepresentativeSandboxSecret(undefined)).toBe(false)
   })
 
-  it('covers container command planner safety branches without executing containers', () => {
-    const plan = buildSandboxContainerCommandPlan({
+  it('covers executable container command planner safety branches without running containers', () => {
+    const base = {
       image: IMAGE,
       engine: AVAILABLE_ENGINE,
-      hostWorkspacePath: '/tmp/symbolwright-sandbox/workspace-coverage',
-      containerWorkspacePath: '/workspace/custom',
-      entrypoint: ['node', 'main.js'],
+      hostWorkspacePath: '/tmp/symbolwright-sandbox/workspace-coverage/input',
+      hostOutputPath: '/tmp/symbolwright-sandbox/workspace-coverage/output',
+      containerName: 'symbolwright-sandbox-coverage',
+    } as const
+    const plan = buildSandboxContainerCommandPlan({
+      ...base,
+      entrypoint: ['node', '/workspace/main.js'],
     })
     expect(plan.engine).toBe('podman')
-    expect(plan.containerWorkspacePath).toBe('/workspace/custom')
-    expect(assertContainerCommandPlanStaysNonExecutable(plan)).toBe(false)
+    expect(plan.containerWorkspacePath).toBe('/workspace')
+    expect(isSandboxContainerCommandPlanExecutable(plan)).toBe(true)
 
+    expect(() => buildSandboxContainerCommandPlan({ ...base, entrypoint: [] })).toThrow(
+      'requires an entrypoint',
+    )
     expect(() =>
-      buildSandboxContainerCommandPlan({
-        image: IMAGE,
-        engine: AVAILABLE_ENGINE,
-        hostWorkspacePath: '/tmp/symbolwright-sandbox/root-path',
-        entrypoint: [],
-      }),
-    ).toThrow('requires an entrypoint')
-
-    expect(() =>
-      buildSandboxContainerCommandPlan({
-        image: IMAGE,
-        engine: AVAILABLE_ENGINE,
-        hostWorkspacePath: '/tmp/symbolwright-sandbox/null-path',
-        entrypoint: ['node', 'bad\0arg'],
-      }),
+      buildSandboxContainerCommandPlan({ ...base, entrypoint: ['node', 'bad\0arg'] }),
     ).toThrow('null-byte free')
-
     expect(() =>
       buildSandboxContainerCommandPlan({
-        image: IMAGE,
-        engine: AVAILABLE_ENGINE,
+        ...base,
         hostWorkspacePath: '/tmp/symbolwright-sandbox/bad\0path',
-        entrypoint: ['node', 'main.js'],
+        entrypoint: ['node', '/workspace/main.js'],
       }),
     ).toThrow('null bytes')
-
     expect(() =>
       buildSandboxContainerCommandPlan({
-        image: IMAGE,
-        engine: AVAILABLE_ENGINE,
+        ...base,
         hostWorkspacePath: '/',
-        entrypoint: ['node', 'main.js'],
+        entrypoint: ['node', '/workspace/main.js'],
       }),
     ).toThrow('filesystem root')
-
     expect(() =>
       buildSandboxContainerCommandPlan({
-        image: IMAGE,
-        engine: AVAILABLE_ENGINE,
+        ...base,
         hostWorkspacePath: '/tmp/repo/.git/workspace',
-        entrypoint: ['node', 'main.js'],
+        entrypoint: ['node', '/workspace/main.js'],
       }),
     ).toThrow('engine socket paths')
   })

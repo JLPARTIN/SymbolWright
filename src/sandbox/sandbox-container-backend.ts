@@ -368,8 +368,8 @@ class StrongSandboxContainerController implements SandboxBackendExecutionControl
         stdio: ['pipe', 'pipe', 'pipe'],
       })
       this.activeChild = child
-      let stdout = Buffer.alloc(0)
-      let stderr = Buffer.alloc(0)
+      let stdout: Buffer<ArrayBufferLike> = Buffer.alloc(0)
+      let stderr: Buffer<ArrayBufferLike> = Buffer.alloc(0)
       let outputLimited = false
       let timedOut = false
       let settled = false
