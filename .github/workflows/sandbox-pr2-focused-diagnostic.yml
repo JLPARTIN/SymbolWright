@@ -1,0 +1,60 @@
+name: Sandbox PR2 Focused Diagnostic
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: github.head_ref == 'symbolwright/sandbox-pr2-unified-execution-broker' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capture focused test output
+        id: tests
+        shell: bash
+        run: |
+          set +e
+          npx vitest run \
+            src/sandbox/sandbox-policy-model.spec.ts \
+            src/sandbox/sandbox-policy-model-boundary.spec.ts \
+            src/sandbox/sandbox-execution-broker.spec.ts \
+            src/sandbox/sandbox-evidence.spec.ts \
+            src/access/sandbox-policy-compat.spec.ts \
+            src/access/sandbox-capability-authority.spec.ts \
+            src/sandbox/sandbox-policy-coverage.spec.ts \
+            src/sandbox/sandbox-registry.spec.ts \
+            src/app/api/sandbox-routes.spec.ts \
+            src/runtime/tools/sandbox-tools.spec.ts \
+            --reporter=verbose > /tmp/sandbox-pr2-focused.log 2>&1
+          status=$?
+          {
+            echo "focused_exit_status=$status"
+            echo
+            tail -n 180 /tmp/sandbox-pr2-focused.log
+          } > sandbox-pr2-focused-diagnostic.txt
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+      - name: Commit diagnostic
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sandbox-pr2-focused-diagnostic.txt
+          git commit -m "chore(sandbox): capture final PR2 focused diagnostic"
+          git push origin "HEAD:${HEAD_BRANCH}"
+      - name: Preserve test status
+        if: steps.tests.outputs.status != '0'
+        run: exit 1
