@@ -1,13 +1,17 @@
-import { spawn } from 'node:child_process'
-import path from 'node:path'
-
-import { readEnvWithLegacyFallback } from '../config/env-compat.js'
-import { redactValidationOutput } from '../runtime/validation/validation-output-redactor.js'
-import type { RuntimePolicySnapshot } from '../runtime/types.js'
 import {
-  isSafePortableValidationCommand,
-  sandboxImageForValidationCommand,
-} from './repository-portability.js'
+  DockerSandboxRunner,
+  type SandboxCommandBinary,
+  type SandboxRunner,
+} from '../sandbox/sandbox-command-backend.js'
+import {
+  getSandboxCommandProfile,
+  parseSandboxCommand,
+  type SandboxCommandProfileId,
+  type SandboxCommandWorkspaceTrust,
+} from '../sandbox/sandbox-command-policy.js'
+import type { SandboxAuthorizationContext } from '../sandbox/sandbox-policy-model.js'
+import type { RuntimePolicySnapshot } from '../runtime/types.js'
+import { isSafePortableValidationCommand } from './repository-portability.js'
 
 export interface PortableValidationRequest {
   readonly repositoryRoot: string
@@ -15,6 +19,8 @@ export interface PortableValidationRequest {
   readonly policy: RuntimePolicySnapshot
   readonly timeoutMs?: number
   readonly maxOutputBytes?: number
+  readonly authorization?: SandboxAuthorizationContext
+  readonly workspaceTrust?: SandboxCommandWorkspaceTrust
 }
 
 export interface PortableValidationResult {
@@ -32,49 +38,29 @@ export interface PortableValidationRunner {
   run(request: PortableValidationRequest): Promise<PortableValidationResult>
 }
 
-export interface PortableSpawnedProcess {
-  readonly stdout: NodeJS.ReadableStream
-  readonly stderr: NodeJS.ReadableStream
-  kill(signal?: NodeJS.Signals | number): boolean
-  on(event: 'error', listener: (error: Error) => void): this
-  on(event: 'close', listener: (code: number | null) => void): this
+export interface DockerPortableValidationRunnerOptions {
+  readonly sandboxRunner?: SandboxRunner
+  readonly authorization?: SandboxAuthorizationContext
+  readonly workspaceTrust?: SandboxCommandWorkspaceTrust
 }
 
-export type PortableSpawn = (
-  binary: string,
-  args: readonly string[],
-  options: {
-    readonly timeout: number
-    readonly stdio: readonly ['ignore', 'pipe', 'pipe']
-  },
-) => PortableSpawnedProcess
-
-const defaultPortableSpawn: PortableSpawn = (binary, args, options) =>
-  spawn(binary, [...args], {
-    timeout: options.timeout,
-    stdio: [...options.stdio],
-  }) as PortableSpawnedProcess
-
+/**
+ * Compatibility adapter for discovered ecosystem validation. It does not construct Docker arguments,
+ * choose caller-controlled images, or spawn processes. Profile selection is deterministic and the
+ * centralized sandbox backend invokes `SandboxExecutionBroker.authorizeCommand` before execution.
+ */
 export class DockerPortableValidationRunner implements PortableValidationRunner {
-  readonly #dockerBinary: string
-  readonly #spawn: PortableSpawn
+  readonly #options: DockerPortableValidationRunnerOptions
 
-  constructor(
-    dockerBinary = readEnvWithLegacyFallback(
-      'SYMBOLWRIGHT_SANDBOX_DOCKER_BINARY',
-      'CODEMIND_SANDBOX_DOCKER_BINARY',
-      { env: process.env },
-    )?.trim() || 'docker',
-    spawnProcess: PortableSpawn = defaultPortableSpawn,
-  ) {
-    this.#dockerBinary = dockerBinary
-    this.#spawn = spawnProcess
+  constructor(options: DockerPortableValidationRunnerOptions = {}) {
+    this.#options = options
   }
 
   async run(request: PortableValidationRequest): Promise<PortableValidationResult> {
     const startedAt = Date.now()
     const command = request.command.trim()
-    const image = sandboxImageForValidationCommand(command)
+    const profileId = commandProfileForPortableValidation(command)
+    const image = getSandboxCommandProfile(profileId)?.image ?? 'unavailable'
     if (!request.policy.allowShell) {
       return blocked(command, image, startedAt, 'Shell execution is disabled by runtime policy.')
     }
@@ -87,91 +73,70 @@ export class DockerPortableValidationRunner implements PortableValidationRunner 
       )
     }
 
-    const [binary, ...args] = command.split(/\s+/)
-    if (binary === undefined)
-      return blocked(command, image, startedAt, 'Validation command is empty.')
-    const repositoryRoot = path.resolve(request.repositoryRoot)
-    const user =
-      typeof process.getuid === 'function' && typeof process.getgid === 'function'
-        ? `${process.getuid()}:${process.getgid()}`
-        : '1000:1000'
-    const dockerArgs = [
-      'run',
-      '--rm',
-      '--cap-drop=ALL',
-      '--security-opt=no-new-privileges:true',
-      '--network',
-      'none',
-      '--memory',
-      readEnvWithLegacyFallback('SYMBOLWRIGHT_SANDBOX_MEMORY', 'CODEMIND_SANDBOX_MEMORY', {
-        env: process.env,
-      })?.trim() || '2048m',
-      '--cpus',
-      readEnvWithLegacyFallback('SYMBOLWRIGHT_SANDBOX_CPUS', 'CODEMIND_SANDBOX_CPUS', {
-        env: process.env,
-      })?.trim() || '1',
-      '--user',
-      user,
-      '--env',
-      'HOME=/workspace',
-      '-v',
-      `${repositoryRoot}:/workspace:rw`,
-      '-w',
-      '/workspace',
-      image,
-      binary,
-      ...args,
-    ]
+    let parsed
+    try {
+      parsed = parseSandboxCommand(command)
+    } catch (error) {
+      return blocked(command, image, startedAt, error instanceof Error ? error.message : String(error))
+    }
 
-    return new Promise((resolve) => {
-      const child = this.#spawn(this.#dockerBinary, dockerArgs, {
-        timeout: request.timeoutMs ?? 180_000,
-        stdio: ['ignore', 'pipe', 'pipe'],
-      })
-      const stdout: Buffer[] = []
-      const stderr: Buffer[] = []
-      const maxOutputBytes = request.maxOutputBytes ?? 1024 * 1024
-      let outputBytes = 0
-      let exceeded = false
-      const record = (target: Buffer[], chunk: Buffer): void => {
-        outputBytes += chunk.byteLength
-        if (outputBytes > maxOutputBytes) {
-          exceeded = true
-          child.kill('SIGKILL')
-          return
-        }
-        target.push(chunk)
-      }
-      child.stdout.on('data', (chunk: Buffer) => record(stdout, chunk))
-      child.stderr.on('data', (chunk: Buffer) => record(stderr, chunk))
-      child.on('error', (error) => {
-        resolve({
-          outcome: 'ERROR',
-          command,
-          image,
-          exitCode: null,
-          stdout: '',
-          stderr: '',
-          durationMs: Date.now() - startedAt,
-          reason: `Portable sandbox runner unavailable; host execution is not allowed. ${error.message}`,
-        })
-      })
-      child.on('close', (code) => {
-        const renderedStdout = redactValidationOutput(Buffer.concat(stdout).toString('utf8'))
-        const renderedStderr = redactValidationOutput(Buffer.concat(stderr).toString('utf8'))
-        resolve({
-          outcome: exceeded ? 'BLOCKED' : code === 0 ? 'PASS' : 'FAIL',
-          command,
-          image,
-          exitCode: code,
-          stdout: renderedStdout,
-          stderr: renderedStderr,
-          durationMs: Date.now() - startedAt,
-          ...(exceeded ? { reason: 'Portable sandbox output limit exceeded.' } : {}),
-        })
-      })
+    const runner = this.#options.sandboxRunner ?? new DockerSandboxRunner()
+    const result = await runner.runCommand({
+      workspaceRoot: request.repositoryRoot,
+      binary: parsed.binary as SandboxCommandBinary,
+      args: parsed.args,
+      profileId,
+      workspaceTrust:
+        request.workspaceTrust ?? this.#options.workspaceTrust ?? 'trusted-local',
+      ...(request.timeoutMs === undefined ? {} : { timeoutMs: request.timeoutMs }),
+      ...(request.maxOutputBytes === undefined
+        ? {}
+        : { maxOutputBytes: request.maxOutputBytes }),
+      ...(request.authorization ?? this.#options.authorization) === undefined
+        ? {}
+        : { authorization: request.authorization ?? this.#options.authorization! },
     })
+
+    if (result.outcome === 'BLOCKED') {
+      const backendError = result.reasonCode === 'SANDBOX_COMMAND_BACKEND_UNAVAILABLE'
+      return {
+        outcome: backendError ? 'ERROR' : 'BLOCKED',
+        command,
+        image,
+        exitCode: result.exitCode,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        durationMs: Date.now() - startedAt,
+        reason: result.reason ?? 'Portable sandbox execution was blocked.',
+      }
+    }
+
+    return {
+      outcome: result.exitCode === 0 ? 'PASS' : 'FAIL',
+      command,
+      image,
+      exitCode: result.exitCode,
+      stdout: result.stdout,
+      stderr: result.stderr,
+      durationMs: Date.now() - startedAt,
+    }
   }
+}
+
+export function commandProfileForPortableValidation(
+  command: string,
+): SandboxCommandProfileId {
+  const trimmed = command.trim()
+  if (/^(npm|npx|node|prettier)\b/.test(trimmed)) return 'trusted-local-portable-node'
+  if (/^(python|python3|pytest)\b/.test(trimmed)) return 'trusted-local-portable-python'
+  if (/^(go|gofmt)\b/.test(trimmed)) return 'trusted-local-portable-go'
+  if (/^(cargo|rustc)\b/.test(trimmed)) return 'trusted-local-portable-rust'
+  if (/^(mvn|\.\/mvnw)\b/.test(trimmed)) return 'trusted-local-portable-maven'
+  if (/^(gradle|\.\/gradlew)\b/.test(trimmed)) return 'trusted-local-portable-gradle'
+  if (/^dotnet\b/.test(trimmed)) return 'trusted-local-portable-dotnet'
+  if (/^(ruby|bundle|rake)\b/.test(trimmed)) return 'trusted-local-portable-ruby'
+  if (/^(php|composer)\b/.test(trimmed)) return 'trusted-local-portable-php'
+  return 'trusted-local-portable-node'
 }
 
 function blocked(
