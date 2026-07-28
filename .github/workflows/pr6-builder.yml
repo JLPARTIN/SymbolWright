@@ -13,22 +13,17 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout PR head branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          ref: ${{ github.head_ref }}
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Generate final product files
+      - name: Report only the final failing test
         env:
           SYMBOLWRIGHT_REQUIRE_DOCKER_SMOKE: '1'
-        run: python3 scripts/.pr6-diagnose.py >/tmp/pr6-generate.log
-
-      - name: Report only failed tests
-        run: python3 scripts/.pr6-test-diagnose.py
+        run: |
+          curl --fail --silent --show-error --location \
+            "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
+            | tar -xz --strip-components=1
+          git init -q
+          git config user.name test
+          git config user.email test@example.com
+          git add .
+          git commit -qm baseline
+          python3 scripts/.pr6-diagnose.py >/tmp/pr6-generate.log
+          python3 scripts/.pr6-test-diagnose.py
