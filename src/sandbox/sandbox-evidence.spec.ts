@@ -124,6 +124,9 @@ describe('sandbox evidence finalization', () => {
       networkMode: 'disabled',
       dependencyMode: 'disabled',
     })
+    const sourceVersionIds = Object.keys(finalized.evidence.policy?.sourceVersions ?? {})
+    expect(sourceVersionIds).toContainEqual(expect.stringMatching(/^grant:[a-f0-9]{64}$/))
+    expect(sourceVersionIds).toContainEqual(expect.stringMatching(/^mission:[a-f0-9]{64}$/))
 
     const persistedEvidence = JSON.stringify(finalized.evidence)
     for (const raw of [
