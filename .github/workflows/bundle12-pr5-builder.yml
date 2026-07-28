@@ -18,4 +18,22 @@ jobs:
           curl --fail --silent --show-error --location \
             "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
             | tar -xz --strip-components=1
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64
+          import re
+
+          target = Path('scripts/.bundle12-pr5-apply.mjs')
+          source = target.read_text()
+          pattern = re.compile(r"String\.raw`(.*?)`(?=,\n\))", re.DOTALL)
+
+          def encode(match):
+              payload = base64.b64encode(match.group(1).encode()).decode()
+              return f"Buffer.from('{payload}', 'base64').toString('utf8')"
+
+          source, count = pattern.subn(encode, source)
+          if count < 10:
+              raise SystemExit(f'Expected at least 10 embedded source blocks, encoded {count}')
+          target.write_text(source)
+          PY
           node scripts/.bundle12-pr5-apply.mjs
