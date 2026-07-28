@@ -141,5 +141,33 @@ export async function runServeCommand(
   const options = resolveChatServerOptions(parseServeArgs(args), env)
   const server = await startUnifiedServer(options)
   console.log(renderServeBanner(server))
-  await new Promise<never>(() => undefined)
+  await waitForShutdownSignal(server)
+}
+
+/** Replaces the previous `await new Promise<never>(() => undefined)` -- the process used to wait
+ * forever with no way to shut down cleanly; `SIGTERM`/`SIGINT` now trigger `server.close()`
+ * (drain connections, run shutdown hooks, force-close stragglers after the grace period). A
+ * second signal during that grace period means "stop now": it force-exits immediately instead of
+ * waiting out the timer. */
+async function waitForShutdownSignal(server: StartedUnifiedServer): Promise<void> {
+  await new Promise<void>((resolve) => {
+    let shuttingDown = false
+    const shutdown = (signal: string): void => {
+      if (shuttingDown) {
+        console.log(`\nReceived ${signal} again -- forcing immediate shutdown.`)
+        process.exit(1)
+      }
+      shuttingDown = true
+      console.log(`\nReceived ${signal}, shutting down gracefully...`)
+      server.close().then(
+        () => resolve(),
+        (error: unknown) => {
+          console.error('Error during graceful shutdown:', error)
+          resolve()
+        },
+      )
+    }
+    process.on('SIGTERM', () => shutdown('SIGTERM'))
+    process.on('SIGINT', () => shutdown('SIGINT'))
+  })
 }

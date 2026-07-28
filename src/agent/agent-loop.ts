@@ -197,6 +197,18 @@ export async function runAgentLoop(
   let finalText = ''
 
   for (let i = 0; i < maxIterations; i++) {
+    if (config.signal?.aborted === true) {
+      onEvent?.({ type: 'loop_end', status: 'cancelled', totalIterations: i })
+      return {
+        status: 'cancelled',
+        finalText,
+        iterations,
+        totalIterations: i,
+        totalUsage,
+        finalMessages: messages,
+      }
+    }
+
     onEvent?.({ type: 'iteration_start', iterationNumber: i + 1 })
 
     let streamResult: Awaited<ReturnType<typeof collectStreamEvents>>

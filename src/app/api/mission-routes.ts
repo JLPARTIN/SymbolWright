@@ -8,6 +8,7 @@ import {
   type TeamVisibilitySource,
 } from '../../access/mission-access-guard.js'
 import { checkRequirePullRequest } from '../../access/require-pull-request-guard.js'
+import type { ShutdownLifecycle } from '../server/http-bootstrap.js'
 import { createServerAutonomyRuntime } from '../../autonomy/server-autonomy-runtime.js'
 import {
   MISSION_EVENT_FILTERS,
@@ -56,6 +57,11 @@ export interface MissionRouteContext {
    * across requests, like `accessRuntime`. Omitted entirely, visibility degrades to
    * direct-ownership-only (no team-derived access), never to "see everything". */
   readonly teamSource?: TeamVisibilitySource
+  /** Lets the lazily-constructed autonomy runtime register a "abort every in-flight execution"
+   * hook the first time it's built for this `service`, so a server shutdown can reach missions
+   * that are autonomously executing even though this runtime lives outside the HTTP-server-level
+   * composition `http-bootstrap.ts` knows about. Stable across requests, like `accessRuntime`. */
+  readonly shutdownLifecycle?: ShutdownLifecycle
 }
 
 /** Maps a `/api/missions/:id/autonomy[/:action]` request onto the access-guard operation it
@@ -129,6 +135,12 @@ function autonomyRuntime(context: MissionRouteContext) {
     ...(context.accessRuntime === undefined ? {} : { accessRuntime: context.accessRuntime }),
   })
   AUTONOMY_RUNTIMES.set(context.service, runtime)
+  // Registered once per runtime, not per request -- a graceful shutdown must reach every mission
+  // this process is currently executing autonomously, not just the one the shutdown-triggering
+  // request happens to be about.
+  context.shutdownLifecycle?.onBeforeShutdown(() => {
+    runtime.abortRegistry.requestAbortAll('shutdown')
+  })
   return runtime
 }
 

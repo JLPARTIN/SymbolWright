@@ -2,6 +2,11 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
+import {
+  abortReasonOf,
+  type MissionExecutionAbortReason,
+} from './mission-execution-abort-registry.js'
+import { MissionExecutionLock } from './mission-execution-lock.js'
 import type {
   AutonomousTaskGraph,
   AutonomousTaskNode,
@@ -24,7 +29,12 @@ export interface MissionTaskRepairInput {
 
 export interface MissionTaskExecutor {
   prepare?(graph: AutonomousTaskGraph): Promise<void> | void
-  execute(task: AutonomousTaskNode): Promise<MissionTaskExecutionResult>
+  /** `signal`, when provided, is the same abort signal `run()` observes -- forwarded so an
+   * individual task implementation (e.g. the agent-loop-backed executor) can stop its own
+   * in-flight work promptly instead of only being interrupted between tasks. Optional so any
+   * other `MissionTaskExecutor` implementation that ignores it still compiles and works exactly
+   * as before. */
+  execute(task: AutonomousTaskNode, signal?: AbortSignal): Promise<MissionTaskExecutionResult>
   repair?(input: MissionTaskRepairInput): Promise<MissionTaskExecutionResult>
 }
 
@@ -35,7 +45,19 @@ export interface PersistedMissionExecution {
   readonly startedAt: string
   readonly updatedAt: string
   readonly completedAt?: string | undefined
+  /** Monotonically increasing on every save -- an observability/audit counter, not itself the
+   * concurrency-safety mechanism (that's `MissionExecutionLock`, which serializes every
+   * read-modify-write sequence against this record across both this executor and
+   * `AutonomousMissionControl`). Optional so pre-existing persisted records without it still
+   * parse; treated as `0` when absent. */
+  readonly revision?: number
+  /** Set when the execution stopped early via `run()` observing an abort signal, distinguishing
+   * an operator-requested stop from a shutdown/budget/duration-triggered one for the mission
+   * timeline and audit trail. */
+  readonly cancellationReason?: MissionExecutionAbortReason
 }
+
+export class MissionAlreadyRunningError extends Error {}
 
 export interface MissionExecutionStore {
   load(missionId: string): Promise<PersistedMissionExecution | undefined>
@@ -63,7 +85,11 @@ export class JsonMissionExecutionStore implements MissionExecutionStore {
     await mkdir(this.#root, { recursive: true })
     const destination = path.join(this.#root, `${validateId(execution.graph.missionId)}.json`)
     const temporary = `${destination}.${randomUUID()}.tmp`
-    await writeFile(temporary, `${JSON.stringify(execution, null, 2)}\n`, { mode: 0o600 })
+    const withRevision: PersistedMissionExecution = {
+      ...execution,
+      revision: (execution.revision ?? 0) + 1,
+    }
+    await writeFile(temporary, `${JSON.stringify(withRevision, null, 2)}\n`, { mode: 0o600 })
     await rename(temporary, destination)
   }
 }
@@ -74,21 +100,34 @@ export interface MissionExecutionRunOptions {
    * instead of continuing indefinitely. Checked between tasks, not by pre-empting one already in
    * flight — the executor has no way to interrupt an arbitrary in-progress tool/sandbox call. */
   readonly maxDurationMinutes?: number
+  /** Observed at the top of every loop iteration and forwarded into `MissionTaskExecutor.execute`.
+   * Aborting stops the *next* iteration/task from starting; an already in-flight task still runs
+   * to its own natural completion (bounded by its own timeout), but its result is discarded
+   * rather than applied if the persisted state changed underneath it while it ran (see
+   * `#reconcileAfterTask`) -- concurrent cancellation always wins over a task's own completion. */
+  readonly signal?: AbortSignal
 }
 
 export class PersistentMissionExecutor {
   readonly #store: MissionExecutionStore
   readonly #executor: MissionTaskExecutor
   readonly #now: () => Date
+  readonly #lock: MissionExecutionLock
 
   constructor(input: {
     readonly store: MissionExecutionStore
     readonly executor: MissionTaskExecutor
     readonly now?: () => Date
+    /** Shared with `AutonomousMissionControl` so pause/cancel/retry's own read-modify-write
+     * serializes against this executor's -- see `mission-execution-lock.ts`. Defaults to a
+     * private instance (correct for standalone/test usage where nothing else touches the same
+     * persisted records concurrently). */
+    readonly lock?: MissionExecutionLock
   }) {
     this.#store = input.store
     this.#executor = input.executor
     this.#now = input.now ?? (() => new Date())
+    this.#lock = input.lock ?? new MissionExecutionLock()
   }
 
   async start(
@@ -125,14 +164,27 @@ export class PersistentMissionExecutor {
     initial: PersistedMissionExecution,
     options: MissionExecutionRunOptions = {},
   ): Promise<PersistedMissionExecution> {
+    const missionId = initial.graph.missionId
     let current = initial
     while (true) {
+      if (options.signal?.aborted === true) {
+        current = await this.#stopForAbort(missionId, current, options.signal)
+        return current
+      }
+
       if (
         options.maxDurationMinutes !== undefined &&
         this.#exceedsDuration(current, options.maxDurationMinutes)
       ) {
-        current = this.#failRemainingTasksForDurationLimit(current, options.maxDurationMinutes)
-        await this.#store.save(current)
+        current = await this.#lock.withLock(missionId, async () => {
+          const latest = (await this.#store.load(missionId)) ?? current
+          const stopped = {
+            ...this.#failRemainingTasksForDurationLimit(latest, options.maxDurationMinutes!),
+            cancellationReason: 'duration' as const,
+          }
+          await this.#store.save(stopped)
+          return stopped
+        })
         return current
       }
 
@@ -150,8 +202,40 @@ export class PersistentMissionExecutor {
         return current
       }
 
-      current = await this.#executeTask(current, next)
+      current = await this.#executeTask(current, next, options.signal)
     }
+  }
+
+  /** Runs before the next task starts, when `options.signal` is already aborted. If a concurrent
+   * `AutonomousMissionControl` mutation already resolved the abort (e.g. `cancel()` already
+   * marked every pending/active task `cancelled` before calling `requestAbort`), this is a
+   * no-op merge -- the freshest persisted state is simply returned. If nothing has resolved it
+   * yet (e.g. a bare graceful-shutdown abort with no corresponding HTTP mutation), every
+   * non-terminal task is marked `interrupted` (resumable) rather than left stuck "running"
+   * forever. */
+  async #stopForAbort(
+    missionId: string,
+    fallback: PersistedMissionExecution,
+    signal: AbortSignal,
+  ): Promise<PersistedMissionExecution> {
+    return this.#lock.withLock(missionId, async () => {
+      const latest = (await this.#store.load(missionId)) ?? fallback
+      if (latest.completedAt !== undefined) return latest
+      const unfinished = latest.graph.tasks.some((task) => !isTerminal(task.state))
+      if (!unfinished) return latest
+      const updatedAt = this.#now().toISOString()
+      const tasks = latest.graph.tasks.map((task) =>
+        isTerminal(task.state) ? task : { ...task, state: 'interrupted' as const, updatedAt },
+      )
+      const stopped: PersistedMissionExecution = {
+        ...latest,
+        graph: { ...latest.graph, tasks, updatedAt },
+        updatedAt,
+        cancellationReason: abortReasonOf(signal) ?? 'system',
+      }
+      await this.#store.save(stopped)
+      return stopped
+    })
   }
 
   #exceedsDuration(execution: PersistedMissionExecution, maxDurationMinutes: number): boolean {
@@ -186,22 +270,30 @@ export class PersistentMissionExecutor {
   async #executeTask(
     execution: PersistedMissionExecution,
     task: AutonomousTaskNode,
+    signal?: AbortSignal,
   ): Promise<PersistedMissionExecution> {
+    const missionId = execution.graph.missionId
     const startedAt = new Date().toISOString()
-    let current = updateTask(execution, task.id, {
-      state:
-        task.kind === 'validation'
-          ? 'validating'
-          : task.kind === 'repair'
-            ? 'repairing'
-            : 'running',
-      startedAt,
-      updatedAt: startedAt,
+    const activeState =
+      task.kind === 'validation' ? 'validating' : task.kind === 'repair' ? 'repairing' : 'running'
+
+    // Reload-under-lock before marking the task active, not just before the final write below --
+    // a concurrent `AutonomousMissionControl` mutation may have edited a *different* task in this
+    // same graph since `execution` was captured (e.g. cancelling one task while this one starts),
+    // and writing from a stale full-graph snapshot would silently clobber that edit.
+    const current = await this.#lock.withLock(missionId, async () => {
+      const latest = (await this.#store.load(missionId)) ?? execution
+      const updated = updateTask(latest, task.id, {
+        state: activeState,
+        startedAt,
+        updatedAt: startedAt,
+      })
+      await this.#store.save(updated)
+      return updated
     })
-    await this.#store.save(current)
 
     try {
-      const result = await this.#executor.execute(findTask(current.graph, task.id))
+      const result = await this.#executor.execute(findTask(current.graph, task.id), signal)
       if (
         task.kind === 'validation' &&
         result.state === 'failed' &&
@@ -209,23 +301,55 @@ export class PersistentMissionExecutor {
       ) {
         return this.#repairValidationFailure(current, task.id, result)
       }
-      current = applyTaskResult(current, task.id, result)
-      await this.#store.save(current)
-      return current
+      return await this.#reconcileAfterTask(missionId, task.id, activeState, (latest) =>
+        applyTaskResult(latest, task.id, result),
+      )
     } catch (error) {
       const failedAt = new Date().toISOString()
-      const existing = findTask(current.graph, task.id)
-      const attempts = existing.retry.attempts + 1
-      const state = attempts < existing.retry.maxAttempts ? 'ready' : 'failed'
-      current = updateTask(current, task.id, {
-        state,
-        retry: { ...existing.retry, attempts },
-        failureDiagnostics: [...existing.failureDiagnostics, errorMessage(error)],
-        updatedAt: failedAt,
+      return await this.#reconcileAfterTask(missionId, task.id, activeState, (latest) => {
+        const existing = findTask(latest.graph, task.id)
+        const attempts = existing.retry.attempts + 1
+        const state = attempts < existing.retry.maxAttempts ? 'ready' : 'failed'
+        return updateTask(latest, task.id, {
+          state,
+          retry: { ...existing.retry, attempts },
+          failureDiagnostics: [...existing.failureDiagnostics, errorMessage(error)],
+          updatedAt: failedAt,
+        })
       })
-      await this.#store.save(current)
-      return current
     }
+  }
+
+  /** Runs after a task's real work settles (success or failure), reloading the latest persisted
+   * state under the lock immediately before deciding what to write. If the task is no longer in
+   * the active state this executor itself set it to before starting -- i.e. a concurrent
+   * `AutonomousMissionControl` mutation (cancel/pause) already moved it off that state while the
+   * work was in flight -- that mutation wins: this task's own result is discarded entirely rather
+   * than overwriting it. Otherwise `applyResult` is applied to the *freshest* state (not the
+   * possibly-stale `current` the task started from) and saved. This is the concrete fix for the
+   * cancel-during-task race: a bare pre-write comparison without a lock still has a gap between
+   * the comparison and the write for another writer to slip into; reloading and deciding *inside*
+   * the same lock both `PersistentMissionExecutor` and `AutonomousMissionControl` share closes it. */
+  async #reconcileAfterTask(
+    missionId: string,
+    taskId: string,
+    expectedActiveState: AutonomousTaskState,
+    applyResult: (latest: PersistedMissionExecution) => PersistedMissionExecution,
+  ): Promise<PersistedMissionExecution> {
+    return this.#lock.withLock(missionId, async () => {
+      const latest = await this.#store.load(missionId)
+      if (latest === undefined) {
+        throw new Error(
+          `Mission execution ${missionId} disappeared while executing task ${taskId}.`,
+        )
+      }
+      if (findTask(latest.graph, taskId).state !== expectedActiveState) {
+        return latest
+      }
+      const applied = applyResult(latest)
+      await this.#store.save(applied)
+      return applied
+    })
   }
 
   async #repairValidationFailure(

@@ -266,7 +266,10 @@ describe('persistent mission execution', () => {
     }
     await store.save(completed)
 
-    expect(await executor.resume('mission-restart-proof')).toEqual(completed)
+    // `save()` stamps a monotonic `revision` on every write (see mission-execution-lock.ts's
+    // doc comment for why) -- the persisted copy has it even though the in-memory fixture above
+    // was never mutated in place.
+    expect(await executor.resume('mission-restart-proof')).toEqual({ ...completed, revision: 1 })
     expect(execute).not.toHaveBeenCalled()
   })
 

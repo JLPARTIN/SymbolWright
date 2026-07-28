@@ -1,13 +1,7 @@
 import { timingSafeEqual } from 'node:crypto'
-import { readFileSync } from 'node:fs'
-import {
-  createServer as createHttpServer,
-  type IncomingMessage,
-  type Server,
-  type ServerResponse,
-} from 'node:http'
-import { createServer as createHttpsServer } from 'node:https'
+import type { IncomingMessage, Server, ServerResponse } from 'node:http'
 
+import { createAndStartHttpServer, ShutdownLifecycle } from '../app/server/http-bootstrap.js'
 import {
   SYMBOLWRIGHT_PROVIDER_ADAPTERS,
   SYMBOLWRIGHT_SUPPORTED_PROVIDER_IDS,
@@ -148,6 +142,11 @@ export interface ChatServerOptions {
   readonly accessRuntime?: AccessRuntime
   /** Test seam: inject a fake GitHub credential resolver instead of the real GitHub App/PAT resolver built from `env`. */
   readonly githubTokenResolver?: GitHubTokenResolver
+  /** Lets a caller (e.g. `cli-serve.ts`'s signal handling) register hooks that run before the
+   * server closes -- e.g. aborting every in-flight autonomous execution. Also exposed on the
+   * returned `StartedChatServer` so hooks can be registered after the server starts, not only
+   * before. Defaults to a fresh instance when omitted. */
+  readonly shutdownLifecycle?: ShutdownLifecycle
 }
 
 export interface StartedChatServer {
@@ -156,6 +155,12 @@ export interface StartedChatServer {
   readonly host: string
   readonly port: number
   readonly warnings: readonly string[]
+  readonly shutdownLifecycle: ShutdownLifecycle
+  /** Stops accepting new connections, runs every registered shutdown hook, waits for in-flight
+   * requests/SSE streams to end on their own, and force-destroys any still open after
+   * `hardKillMs` (default 10s). Distinct from `server.close()` (still available directly on
+   * `.server` for existing callers), which does none of that. */
+  close(hardKillMs?: number): Promise<void>
 }
 
 export function assertChatServerCanStart(options: Pick<ChatServerOptions, 'apiKey'>): void {
@@ -392,6 +397,7 @@ export function createChatServerRequestListener(
   const env = options.env ?? process.env
   const localStatusProvider = options.localStatusProvider ?? collectStatus
   const cwd = options.cwd ?? process.cwd()
+  const shutdownLifecycle = options.shutdownLifecycle ?? new ShutdownLifecycle()
   const missionService = options.missionService ?? new MissionService({ workspaceRoot: cwd, env })
   const accessRuntime = options.accessRuntime ?? new AccessRuntime({ workspaceRoot: cwd })
   const orchestrationRuntime = new OrchestrationRuntime({ workspaceRoot: cwd, accessRuntime })
@@ -438,6 +444,7 @@ export function createChatServerRequestListener(
     cwd,
     accessRuntime,
     teamSource: teamVisibilitySource,
+    shutdownLifecycle,
   }
   const sandboxContext = {
     service: sandboxService,
@@ -1201,33 +1208,31 @@ async function handleAgent(
 export async function startChatServer(options: ChatServerOptions): Promise<StartedChatServer> {
   assertChatServerCanStart(options)
   const warnings = buildChatServerWarnings(options)
-  const listener = createChatServerRequestListener(options)
+  // Resolved once, here, and threaded into `createChatServerRequestListener` below via the same
+  // `??`-defaulting convention every other per-request dependency in this file uses -- so
+  // whichever mission-linked subsystem registers a shutdown hook (e.g. the autonomy runtime's
+  // abort-all-in-flight-executions hook) and the `close()` this function returns are always
+  // talking to the exact same instance, never two independently-defaulted ones.
+  const shutdownLifecycle = options.shutdownLifecycle ?? new ShutdownLifecycle()
+  const listener = createChatServerRequestListener({ ...options, shutdownLifecycle })
 
-  const server =
-    options.tlsCertFile !== undefined && options.tlsKeyFile !== undefined
-      ? createHttpsServer(
-          {
-            cert: readFileSync(options.tlsCertFile),
-            key: readFileSync(options.tlsKeyFile),
-          },
-          listener,
-        )
-      : createHttpServer(listener)
-
-  await new Promise<void>((resolve, reject) => {
-    server.once('error', reject)
-    server.listen(options.port, options.host, () => resolve())
+  const started = await createAndStartHttpServer(listener, {
+    host: options.host,
+    port: options.port,
+    ...(options.tlsCertFile === undefined ? {} : { tlsCertFile: options.tlsCertFile }),
+    ...(options.tlsKeyFile === undefined ? {} : { tlsKeyFile: options.tlsKeyFile }),
   })
 
-  const address = server.address()
-  const port = typeof address === 'object' && address !== null ? address.port : options.port
-  const protocol = options.tlsCertFile !== undefined ? 'https' : 'http'
-
   return {
-    server,
-    url: `${protocol}://${options.host}:${port}`,
-    host: options.host,
-    port,
+    server: started.server,
+    url: started.url,
+    host: started.host,
+    port: started.port,
     warnings,
+    shutdownLifecycle,
+    close: async (hardKillMs?: number) => {
+      await shutdownLifecycle.runHooks()
+      await started.close(hardKillMs)
+    },
   }
 }

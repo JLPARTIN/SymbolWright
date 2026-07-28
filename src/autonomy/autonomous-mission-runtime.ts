@@ -10,6 +10,8 @@ import {
 } from './autonomous-mission-release.js'
 import { registerAutonomousMissionReleaseService } from './autonomous-mission-release-registry.js'
 import { JsonAutonomousRepairLoopStore } from './autonomous-repair-loop.js'
+import { MissionExecutionAbortRegistry } from './mission-execution-abort-registry.js'
+import { MissionExecutionLock } from './mission-execution-lock.js'
 import { MultiAgentExecutionTracker } from './multi-agent-execution-tracker.js'
 import { MultiAgentMissionStore } from './multi-agent-mission-runtime.js'
 import {
@@ -47,6 +49,11 @@ export interface AutonomousMissionRuntime {
   readonly repairLoopStore: JsonAutonomousRepairLoopStore
   readonly multiAgentStore: MultiAgentMissionStore
   readonly multiAgentTracker: MultiAgentExecutionTracker
+  /** Shared with `AutonomousMissionControl`/`AutonomousMissionCoordinator` so a `pause`/`cancel`
+   * request can reach a running mission's in-flight execution -- see
+   * `mission-execution-abort-registry.ts`. Exposed so `startChatServer`/`startUnifiedServer` can
+   * abort every registered execution during graceful shutdown. */
+  readonly abortRegistry: MissionExecutionAbortRegistry
 }
 
 export function createAutonomousMissionRuntime(
@@ -54,9 +61,15 @@ export function createAutonomousMissionRuntime(
 ): AutonomousMissionRuntime {
   const workspaceRoot = path.resolve(options.workspaceRoot)
   const executionStore = new JsonMissionExecutionStore(workspaceRoot)
+  // Shared, not per-class, so `PersistentMissionExecutor`'s run loop and
+  // `AutonomousMissionControl`'s pause/cancel/retry serialize their read-modify-write sequences
+  // against each other, not just against themselves (mission-execution-lock.ts).
+  const lock = new MissionExecutionLock()
+  const abortRegistry = new MissionExecutionAbortRegistry()
   const executor = new PersistentMissionExecutor({
     store: executionStore,
     executor: options.taskExecutor,
+    lock,
   })
   const repairLoopStore = new JsonAutonomousRepairLoopStore(workspaceRoot)
   const releaseStore = new JsonAutonomousMissionReleaseStore(workspaceRoot)
@@ -90,11 +103,14 @@ export function createAutonomousMissionRuntime(
       : { maxDurationMinutes: options.maxDurationMinutes }),
     ...(options.accessRuntime === undefined ? {} : { accessRuntime: options.accessRuntime }),
     multiAgentTracker,
+    abortRegistry,
     ...clockOptions,
   })
   const control = new AutonomousMissionControl({
     executionStore,
     missionService: options.missionService,
+    lock,
+    abortRegistry,
     ...clockOptions,
   })
   const release = new AutonomousMissionReleaseService({
@@ -116,5 +132,6 @@ export function createAutonomousMissionRuntime(
     repairLoopStore,
     multiAgentStore,
     multiAgentTracker,
+    abortRegistry,
   }
 }

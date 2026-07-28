@@ -6,6 +6,7 @@ import {
   planAutonomousRepositoryMission,
   type AutonomousRepositoryPlan,
 } from './autonomous-repository-planner.js'
+import { MissionExecutionAbortRegistry } from './mission-execution-abort-registry.js'
 import {
   projectMissionDashboard,
   type MissionDashboardProjection,
@@ -16,10 +17,11 @@ import {
   type MultiAgentDashboardProjection,
 } from './multi-agent-dashboard-projection.js'
 import type { MultiAgentExecutionTracker } from './multi-agent-execution-tracker.js'
-import type {
-  MissionExecutionStore,
-  PersistedMissionExecution,
-  PersistentMissionExecutor,
+import {
+  MissionAlreadyRunningError,
+  type MissionExecutionStore,
+  type PersistedMissionExecution,
+  type PersistentMissionExecutor,
 } from './persistent-mission-executor.js'
 import type { RepositorySemanticIndexSnapshot } from './repository-semantic-index.types.js'
 
@@ -42,6 +44,10 @@ export interface AutonomousMissionCoordinatorOptions {
   /** Used to look up a mission's owning grant (via `mission.grantId`) to source a per-grant
    * `executionLimits.maxMissionDurationMinutes`. Absent for local-operator-only deployments. */
   readonly accessRuntime?: AccessRuntime
+  /** Same instance passed to `PersistentMissionExecutor`'s callers and `AutonomousMissionControl`
+   * -- lets a concurrent `/autonomy/cancel`/`/autonomy/pause` reach this mission's in-flight
+   * `run()` loop. Defaults to a private instance when omitted (fine for standalone/test usage). */
+  readonly abortRegistry?: MissionExecutionAbortRegistry
   readonly now?: () => Date
 }
 
@@ -86,6 +92,7 @@ export class AutonomousMissionCoordinator {
   readonly #multiAgentTracker: MultiAgentExecutionTracker | undefined
   readonly #maxDurationMinutes: number | undefined
   readonly #accessRuntime: AccessRuntime | undefined
+  readonly #abortRegistry: MissionExecutionAbortRegistry
   readonly #now: () => Date
 
   constructor(options: AutonomousMissionCoordinatorOptions) {
@@ -99,76 +106,97 @@ export class AutonomousMissionCoordinator {
     this.#multiAgentTracker = options.multiAgentTracker
     this.#maxDurationMinutes = options.maxDurationMinutes
     this.#accessRuntime = options.accessRuntime
+    this.#abortRegistry = options.abortRegistry ?? new MissionExecutionAbortRegistry()
     this.#now = options.now ?? (() => new Date())
   }
 
   async start(missionId: string): Promise<AutonomousMissionStartResult> {
     const mission = this.#missionService.get(missionId)
-    const [index, validationCommands] = await Promise.all([
-      this.#loadSemanticIndex(mission.repository.rootPath),
-      this.#commands(missionId, mission.repository.rootPath),
-    ])
-    const plan = planAutonomousRepositoryMission({
-      missionId,
-      objective: mission.objective,
-      repositoryRoot: mission.repository.rootPath,
-      index,
-      validationCommands,
-      now: this.#now().toISOString(),
-    })
-
-    this.#missionService.appendEvent(
-      missionId,
-      'autonomy.plan.created',
-      'Executable autonomous repository plan created.',
-      {
-        taskCount: plan.graph.tasks.length,
-        affectedFiles: plan.affectedFiles,
-        matchedSymbols: plan.matchedSymbols,
+    const registration = this.#abortRegistry.registerIfAbsent(missionId)
+    if (!registration.ok) {
+      throw new MissionAlreadyRunningError(
+        `Mission ${missionId} already has an autonomous execution in progress.`,
+      )
+    }
+    try {
+      const [index, validationCommands] = await Promise.all([
+        this.#loadSemanticIndex(mission.repository.rootPath),
+        this.#commands(missionId, mission.repository.rootPath),
+      ])
+      const plan = planAutonomousRepositoryMission({
+        missionId,
+        objective: mission.objective,
+        repositoryRoot: mission.repository.rootPath,
+        index,
         validationCommands,
-        rationale: plan.rationale,
-      },
-    )
+        now: this.#now().toISOString(),
+      })
 
-    const maxDurationMinutes = this.#resolveMaxDurationMinutes(mission)
-    const execution = await this.#executor.start(
-      plan.graph,
-      maxDurationMinutes === undefined ? {} : { maxDurationMinutes },
-    )
-    await this.#synchronizeSpecialists(execution)
-    this.#recordExecutionEvents(missionId, execution)
-    return {
-      plan,
-      execution,
-      dashboard: await this.#dashboard(execution, index),
+      this.#missionService.appendEvent(
+        missionId,
+        'autonomy.plan.created',
+        'Executable autonomous repository plan created.',
+        {
+          taskCount: plan.graph.tasks.length,
+          affectedFiles: plan.affectedFiles,
+          matchedSymbols: plan.matchedSymbols,
+          validationCommands,
+          rationale: plan.rationale,
+        },
+      )
+
+      const maxDurationMinutes = this.#resolveMaxDurationMinutes(mission)
+      const execution = await this.#executor.start(plan.graph, {
+        ...(maxDurationMinutes === undefined ? {} : { maxDurationMinutes }),
+        signal: registration.signal,
+      })
+      await this.#synchronizeSpecialists(execution)
+      this.#recordExecutionEvents(missionId, execution)
+      return {
+        plan,
+        execution,
+        dashboard: await this.#dashboard(execution, index),
+      }
+    } finally {
+      this.#abortRegistry.release(missionId)
     }
   }
 
   async resume(missionId: string): Promise<AutonomousMissionStartResult> {
     const mission = this.#missionService.get(missionId)
-    const maxDurationMinutes = this.#resolveMaxDurationMinutes(mission)
-    const execution = await this.#executor.resume(
-      missionId,
-      maxDurationMinutes === undefined ? {} : { maxDurationMinutes },
-    )
-    await this.#synchronizeSpecialists(execution)
-    this.#recordExecutionEvents(missionId, execution)
-    const index = await this.#loadSemanticIndex(mission.repository.rootPath)
-    const validationCommands = execution.graph.tasks
-      .filter((task) => task.kind === 'validation')
-      .map((task) => validationCommand(task.objective))
-    const plan = planAutonomousRepositoryMission({
-      missionId,
-      objective: mission.objective,
-      repositoryRoot: mission.repository.rootPath,
-      index,
-      validationCommands,
-      now: execution.graph.createdAt,
-    })
-    return {
-      plan,
-      execution,
-      dashboard: await this.#dashboard(execution, index),
+    const registration = this.#abortRegistry.registerIfAbsent(missionId)
+    if (!registration.ok) {
+      throw new MissionAlreadyRunningError(
+        `Mission ${missionId} already has an autonomous execution in progress.`,
+      )
+    }
+    try {
+      const maxDurationMinutes = this.#resolveMaxDurationMinutes(mission)
+      const execution = await this.#executor.resume(missionId, {
+        ...(maxDurationMinutes === undefined ? {} : { maxDurationMinutes }),
+        signal: registration.signal,
+      })
+      await this.#synchronizeSpecialists(execution)
+      this.#recordExecutionEvents(missionId, execution)
+      const index = await this.#loadSemanticIndex(mission.repository.rootPath)
+      const validationCommands = execution.graph.tasks
+        .filter((task) => task.kind === 'validation')
+        .map((task) => validationCommand(task.objective))
+      const plan = planAutonomousRepositoryMission({
+        missionId,
+        objective: mission.objective,
+        repositoryRoot: mission.repository.rootPath,
+        index,
+        validationCommands,
+        now: execution.graph.createdAt,
+      })
+      return {
+        plan,
+        execution,
+        dashboard: await this.#dashboard(execution, index),
+      }
+    } finally {
+      this.#abortRegistry.release(missionId)
     }
   }
 
