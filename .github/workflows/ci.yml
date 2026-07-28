@@ -48,6 +48,14 @@ jobs:
       - name: Sandbox runner contract tests
         run: npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
 
+      - name: Prepare digest-pinned strong sandbox image
+        run: docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66
+
+      - name: Strong sandbox adversarial integration
+        env:
+          SYMBOLWRIGHT_RUN_STRONG_CONTAINER_INTEGRATION: 'true'
+        run: npx vitest run src/sandbox/sandbox-container-integration.spec.ts
+
       - name: Test with coverage
         run: npm run test:coverage
 
