@@ -237,6 +237,7 @@ export async function handleSandboxRoute(
 
       const missionId = requestedMissionId(record)
       let missionWorkspaceRoot: string | undefined
+      let effectiveRuntimeMode = context.runtimeMode ?? 'APPROVED_EXECUTION'
       if (missionId !== undefined) {
         if (context.missionService === undefined) {
           throw new SandboxRequestValidationError(
@@ -259,12 +260,13 @@ export async function handleSandboxRoute(
           return true
         }
         missionWorkspaceRoot = mission.repository.rootPath
+        effectiveRuntimeMode = mission.agent.runtimeMode
       }
 
       const securedRecord = bindRepositoryToMissionWorkspace(record, missionWorkspaceRoot)
       const request = context.service.validateRequest(securedRecord)
       const result = await context.service.execute(request, {
-        mode: context.runtimeMode ?? 'APPROVED_EXECUTION',
+        mode: effectiveRuntimeMode,
         ...(context.callerGrantId === undefined
           ? {}
           : {
