@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../../access/sandbox-capabilities.js'
+import type { EffectiveSandboxCommandPolicy } from '../../sandbox/sandbox-command-policy.js'
 import { createRuntimePolicyForMode } from '../policy/runtime-policy.js'
 import {
   DEFAULT_TIMEOUT_MS,
@@ -90,7 +91,7 @@ describe('bash tool boundary hardening', () => {
         exitCode: null,
         reason: 'Sandbox output limit exceeded.',
         reasonCode: 'SANDBOX_COMMAND_OUTPUT_LIMIT',
-        policy: { fingerprint: 'a'.repeat(64) } as SandboxRunnerResult['policy'],
+        policy: { fingerprint: 'a'.repeat(64) } as EffectiveSandboxCommandPolicy,
       }),
     )
 
@@ -156,7 +157,10 @@ describe('bash tool boundary hardening', () => {
   it('defaults omitted input timeout and trusted workspace classification through the tool', async () => {
     const captured: SandboxCommandRequest[] = []
 
-    await bashTool.execute({ command: 'node --version', timeoutMs: 'ignored' }, context(capturingRunner(captured)))
+    await bashTool.execute(
+      { command: 'node --version', timeoutMs: 'ignored' },
+      context(capturingRunner(captured)),
+    )
 
     expect(captured[0]?.workspaceTrust).toBe('trusted-local')
     expect(captured[0]?.timeoutMs).toBeUndefined()
