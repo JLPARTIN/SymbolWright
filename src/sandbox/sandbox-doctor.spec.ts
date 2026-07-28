@@ -84,7 +84,7 @@ describe('sandbox doctor', () => {
     expect(rendered).toContain('Strong-container opt-in: false')
     expect(rendered).toContain('Guarded-host opt-in: false')
     expect(rendered).toContain(`docker pull ${STRONG_SANDBOX_NODE_IMAGE}`)
-    expect(rendered).toContain('never pulled automatically')
+    expect(rendered).toContain('does not pull images automatically')
 
     const images = renderSandboxImagesReport(report)
     expect(images).toContain('SymbolWright Sandbox Images')
