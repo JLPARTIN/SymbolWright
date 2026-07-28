@@ -23,5 +23,34 @@ jobs:
           npm ci --silent
           python3 scripts/.pr6-preprocess.py
           python3 scripts/.pr6-apply.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          path = Path('scripts/lib/changelog-release.mjs')
+          text = path.read_text()
+          replacement = '''export function extractReleaseNotes(content, version) {
+            assertReleaseVersion(version)
+            const heading = `## [${version}]`
+            const headingIndex = content.indexOf(heading)
+            if (headingIndex < 0) throw new Error(`No release notes found for ${version}.`)
+            const bodyStart = content.indexOf('\\n', headingIndex)
+            if (bodyStart < 0) throw new Error(`No release notes found for ${version}.`)
+            const nextHeading = content.indexOf('\\n## [', bodyStart + 1)
+            const body = content.slice(bodyStart + 1, nextHeading < 0 ? content.length : nextHeading).trim()
+            if (body.length === 0) throw new Error(`No release notes found for ${version}.`)
+            return body + '\\n'
+          }
+          '''
+          text, count = re.subn(
+              r'export function extractReleaseNotes\(content, version\) \{.*?\n\}',
+              replacement.rstrip(),
+              text,
+              count=1,
+              flags=re.DOTALL,
+          )
+          if count != 1:
+              raise SystemExit('extractReleaseNotes function anchor missing')
+          path.write_text(text)
+          PY
           npx prettier --write scripts/lib/changelog-release.mjs scripts/lib/changelog-release.test.mjs >/dev/null
           node --test scripts/lib/changelog-release.test.mjs
