@@ -30,6 +30,7 @@ export const DEFAULT_SANDBOX_IMAGE_ALLOWLIST: readonly SandboxImageDefinition[] 
     languages: ['javascript'],
     source: IMAGE_POLICY_SOURCE,
     enabled: false,
+    installed: false,
   },
 ]
 
