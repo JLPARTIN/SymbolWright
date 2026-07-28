@@ -117,7 +117,7 @@ export type SandboxCommandSpawnSync = (
 ) => SpawnSyncReturns<string>
 
 const DEFAULT_SPAWN_PROCESS: SandboxCommandSpawn = (command, args, options) =>
-  spawn(command, [...args], options)
+  spawn(command, [...args], options) as unknown as ChildProcessWithoutNullStreams
 
 const DEFAULT_SPAWN_SYNC_PROCESS: SandboxCommandSpawnSync = (command, args, options) =>
   spawnSync(command, [...args], options)
