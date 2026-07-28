@@ -6,53 +6,30 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  diagnose:
+  format:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     steps:
-      - name: Report PR 6 branch coverage
+      - name: Checkout PR head branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Format and commit the artifact smoke spec
         run: |
-          curl --fail --silent --show-error --location \
-            "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
-            | tar -xz --strip-components=1
-          git init -q
-          git config user.name coverage-test
-          git config user.email coverage-test@example.com
-          git add .
-          git commit -qm baseline
           npm ci --silent
-          set +e
-          npm run test:coverage > /tmp/coverage.log 2>&1
-          code=$?
-          node <<'NODE'
-          const fs = require('node:fs')
-          const path = require('node:path')
-          const report = JSON.parse(fs.readFileSync('coverage/coverage-final.json', 'utf8'))
-          const targets = [
-            'src/release/artifact-smoke.ts',
-            'src/cli-release-readiness.ts',
-            'src/cli.ts',
-            'src/web/status-runner.ts',
-            'src/orchestration/orchestration-types.ts',
-            'src/orchestration/orchestration-store.ts',
-            'src/orchestration/team-service.ts',
-            'src/autonomy/autonomous-mission-coordinator.ts',
-            'src/autonomy/autonomous-mission-runtime.ts',
-            'src/autonomy/server-autonomy-runtime.ts',
-            'src/app/api/mission-routes.ts',
-            'src/server/symbolwright-chat-server.ts',
-          ]
-          for (const target of targets) {
-            const key = Object.keys(report).find((file) => file.endsWith(target))
-            if (!key) continue
-            const counts = Object.values(report[key].b).flat()
-            const covered = counts.filter((count) => count > 0).length
-            const total = counts.length
-            const pct = total === 0 ? 100 : (covered / total) * 100
-            console.log(`${target}: ${covered}/${total} branches (${pct.toFixed(2)}%)`)
-          }
-          NODE
-          tail -n 2 /tmp/coverage.log
-          exit "$code"
+          npx prettier --write src/release/artifact-smoke.spec.ts
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/release/artifact-smoke.spec.ts
+          git commit -m "style(release): format artifact smoke coverage tests"
+          git push origin HEAD:${GITHUB_HEAD_REF}
