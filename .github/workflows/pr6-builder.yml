@@ -43,7 +43,7 @@ jobs:
           '''
           text, count = re.subn(
               r'export function extractReleaseNotes\(content, version\) \{.*?\n\}',
-              replacement.rstrip(),
+              lambda _match: replacement.rstrip(),
               text,
               count=1,
               flags=re.DOTALL,
