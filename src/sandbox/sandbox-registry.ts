@@ -109,6 +109,11 @@ function strongContainerRunner(options: {
   readonly generatedAt: string
 }): SandboxRunnerDefinition {
   const available = options.image.enabled && options.engine.status === 'available'
+  const availabilityStatus: SandboxRunnerAvailability['status'] = available
+    ? 'available'
+    : options.image.enabled
+      ? options.engine.status
+      : 'unavailable'
   const engine = options.engine.engine === 'podman' ? 'podman' : 'docker'
   const reason = !options.image.enabled
     ? 'Strong container execution is disabled by operator policy.'
@@ -121,14 +126,10 @@ function strongContainerRunner(options: {
     displayName: 'Strong Offline JavaScript Container',
     trustClass: 'container-isolated',
     backend: 'container',
-    availability: runnerAvailability(
-      available ? 'available' : options.engine.status,
-      options.generatedAt,
-      {
-        ...(options.engine.version === undefined ? {} : { version: options.engine.version }),
-        reason,
-      },
-    ),
+    availability: runnerAvailability(availabilityStatus, options.generatedAt, {
+      ...(options.engine.version === undefined ? {} : { version: options.engine.version }),
+      reason,
+    }),
     capabilities: STRONG_CONTAINER_CAPABILITIES,
     limits: DEFAULT_SANDBOX_LIMITS,
     networkPolicy: 'disabled',
