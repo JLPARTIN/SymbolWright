@@ -6,18 +6,31 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   harden:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Apply patch and isolate static validation failure
+      - name: Checkout PR head branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply and format reviewed hardening corrections
         run: |
-          curl --fail --silent --show-error --location \
-            "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
-            | tar -xz --strip-components=1
           python3 - <<'PY'
           from pathlib import Path
           path = Path('scripts/.pr5-final-hardening.py')
@@ -30,7 +43,6 @@ jobs:
           path.write_text(text)
           PY
           python3 scripts/.pr5-final-hardening.py
-          npm ci --silent
           npx prettier --write \
             src/app/server/unified-server.ts \
             src/cli-serve.ts \
@@ -41,13 +53,46 @@ jobs:
             src/server/metrics-registry.ts \
             src/server/metrics-registry.spec.ts \
             src/server/trusted-proxy.ts \
-            src/server/trusted-proxy.spec.ts \
-            --log-level silent
-          echo '=== TYPECHECK ==='
-          npm run typecheck --silent
-          echo '=== LINT ==='
-          npm run lint --silent
-          echo '=== FORMAT CHECK ==='
-          npm run format:check --silent
-          echo '=== BUILD ==='
-          npm run build --silent
+            src/server/trusted-proxy.spec.ts
+
+      - name: Run full tests with compact failure output
+        run: |
+          set +e
+          npx vitest run --reporter=json --outputFile=.vitest-results.json >/dev/null 2>&1
+          status=$?
+          set -e
+          if [ "$status" -ne 0 ]; then
+            node - <<'NODE'
+          const fs = require('node:fs')
+          const result = JSON.parse(fs.readFileSync('.vitest-results.json', 'utf8'))
+          console.log(`Failed suites: ${result.numFailedTestSuites ?? 0}; failed tests: ${result.numFailedTests ?? 0}`)
+          for (const suite of result.testResults ?? []) {
+            const failed = (suite.assertionResults ?? []).filter((test) => test.status === 'failed')
+            if (failed.length === 0 && suite.status !== 'failed') continue
+            console.log(`\nFILE: ${suite.name}`)
+            for (const test of failed) {
+              console.log(`TEST: ${(test.ancestorTitles ?? []).concat(test.title ?? []).join(' > ')}`)
+              for (const message of test.failureMessages ?? []) console.log(message)
+            }
+            if (failed.length === 0 && suite.message) console.log(suite.message)
+          }
+          NODE
+            exit "$status"
+          fi
+
+      - name: Confirm static gates
+        run: |
+          npm run typecheck
+          npm run lint
+          npm run format:check
+          npm run build
+
+      - name: Commit reviewed hardening and remove temporary files
+        run: |
+          git rm .github/workflows/pr5-final-hardening.yml scripts/.pr5-final-hardening.py
+          rm -f .vitest-results.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix(server): close final PR 5 hardening edge cases"
+          git push origin HEAD:${GITHUB_HEAD_REF}
