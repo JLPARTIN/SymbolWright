@@ -4,9 +4,14 @@ import {
   renderSandboxImageInspectCommand,
   renderSandboxImagePrepareCommand,
 } from './sandbox-image-commands.js'
+import {
+  STRONG_SANDBOX_NODE_IMAGE,
+  STRONG_SANDBOX_NODE_IMAGE_DIGEST,
+  STRONG_SANDBOX_NODE_IMAGE_ID,
+} from './sandbox-images.js'
 import { runnerAvailability } from './sandbox-registry.js'
-import type { SandboxImageDefinition } from './sandbox-types.js'
 import type { SandboxContainerEngineStatus } from './sandbox-images.js'
+import type { SandboxImageDefinition } from './sandbox-types.js'
 
 const CHECKED_AT = '2026-07-20T00:00:00.000Z'
 const DOCKER_OPTIONS = {
@@ -30,21 +35,26 @@ const DOCKER_OPTIONS = {
     inspectedAt: CHECKED_AT,
     reason: 'allowlisted image was found in the local image store.',
     sizeBytes: 123_456,
-    digest: 'python@sha256:local-digest',
+    digest: STRONG_SANDBOX_NODE_DIGEST_FOR_INSPECTION,
   }),
 }
+const STRONG_SANDBOX_NODE_DIGEST_FOR_INSPECTION =
+  `node@${STRONG_SANDBOX_NODE_IMAGE_DIGEST}` as const
 
 describe('sandbox image command contracts', () => {
   it('inspects only built-in allowlisted image IDs', async () => {
-    const rendered = await renderSandboxImageInspectCommand(['python-3-12-slim'], DOCKER_OPTIONS)
+    const rendered = await renderSandboxImageInspectCommand(
+      [STRONG_SANDBOX_NODE_IMAGE_ID],
+      DOCKER_OPTIONS,
+    )
 
     expect(rendered).toContain('SymbolWright Sandbox Image Inspection')
-    expect(rendered).toContain('Image ID: python-3-12-slim')
-    expect(rendered).toContain('Image: python:3.12-slim')
+    expect(rendered).toContain(`Image ID: ${STRONG_SANDBOX_NODE_IMAGE_ID}`)
+    expect(rendered).toContain(`Image: ${STRONG_SANDBOX_NODE_IMAGE}`)
     expect(rendered).toContain('Container engine: docker (available)')
     expect(rendered).toContain('Local store status: installed')
     expect(rendered).toContain('Local image size bytes: 123456')
-    expect(rendered).toContain('Local image digest: python@sha256:local-digest')
+    expect(rendered).toContain(`Local image digest: ${STRONG_SANDBOX_NODE_DIGEST_FOR_INSPECTION}`)
     expect(rendered).toContain('This command is read-only')
   })
 
@@ -63,7 +73,7 @@ describe('sandbox image command contracts', () => {
 
   it('renders a review-only preparation plan when an engine is detected', async () => {
     const rendered = await renderSandboxImagePrepareCommand(
-      ['golang-1-23-bookworm'],
+      [STRONG_SANDBOX_NODE_IMAGE_ID],
       DOCKER_OPTIONS,
     )
 
@@ -71,14 +81,15 @@ describe('sandbox image command contracts', () => {
     expect(rendered).toContain('Status: REVIEW_REQUIRED')
     expect(rendered).toContain('prepare this allowlisted image manually')
     expect(rendered).toContain('SymbolWright does not execute this plan automatically')
+    expect(rendered).toContain(STRONG_SANDBOX_NODE_IMAGE)
   })
 
   it('blocks preparation when no container engine is detected', async () => {
-    const rendered = await renderSandboxImagePrepareCommand(['rust-1-bookworm'], {
+    const rendered = await renderSandboxImagePrepareCommand([STRONG_SANDBOX_NODE_IMAGE_ID], {
       discoverCommandAvailability: async () => new Map(),
     })
 
     expect(rendered).toContain('Status: BLOCKED')
-    expect(rendered).toContain('No usable container engine is enabled')
+    expect(rendered).toContain('No usable container engine is available')
   })
 })
