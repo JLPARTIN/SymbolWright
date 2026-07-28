@@ -82,6 +82,7 @@ export class AgentLoopAutonomousEditExecutor implements AutonomousEditTaskExecut
   async execute(
     task: AutonomousTaskNode,
     context?: AutonomousEditExecutionContext,
+    signal?: AbortSignal,
   ): Promise<MissionTaskExecutionResult> {
     const semanticIndex = await this.#loadSemanticIndex?.()
     const plan = planSemanticMultiFileEdit({
@@ -115,6 +116,7 @@ export class AgentLoopAutonomousEditExecutor implements AutonomousEditTaskExecut
           maxIterations: this.#maxIterations,
           systemPrompt: this.#systemPrompt,
           ...(this.#model === undefined ? {} : { model: this.#model }),
+          ...(signal === undefined ? {} : { signal }),
         },
       )
     } catch (error) {

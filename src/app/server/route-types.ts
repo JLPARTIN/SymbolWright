@@ -1,5 +1,6 @@
 import type { Server } from 'node:http'
 
+import type { ShutdownLifecycle } from './http-bootstrap.js'
 import type { ChatServerOptions } from '../../server/symbolwright-chat-server.js'
 
 /**
@@ -16,4 +17,7 @@ export interface StartedUnifiedServer {
   readonly host: string
   readonly port: number
   readonly warnings: readonly string[]
+  readonly shutdownLifecycle: ShutdownLifecycle
+  /** Same graceful-shutdown behavior as `StartedChatServer.close()` -- see its doc comment. */
+  close(hardKillMs?: number): Promise<void>
 }

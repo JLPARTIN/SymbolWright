@@ -1,17 +1,11 @@
-import { readFileSync } from 'node:fs'
-import {
-  createServer as createHttpServer,
-  type IncomingMessage,
-  type Server,
-  type ServerResponse,
-} from 'node:http'
-import { createServer as createHttpsServer } from 'node:https'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import {
   assertChatServerCanStart,
   buildChatServerWarnings,
   createChatServerRequestListener,
 } from '../../server/symbolwright-chat-server.js'
+import { createAndStartHttpServer, ShutdownLifecycle } from './http-bootstrap.js'
 import { tryHandleUnifiedRoute } from './route-table.js'
 import type { StartedUnifiedServer, UnifiedServerOptions } from './route-types.js'
 
@@ -59,33 +53,28 @@ export async function startUnifiedServer(
 ): Promise<StartedUnifiedServer> {
   assertChatServerCanStart(options)
   const warnings = buildChatServerWarnings(options)
-  const listener = createUnifiedRequestListener(options)
+  // Same single-resolution convention as `startChatServer` -- see its comment for why this must
+  // not be independently defaulted in two places.
+  const shutdownLifecycle = options.shutdownLifecycle ?? new ShutdownLifecycle()
+  const listener = createUnifiedRequestListener({ ...options, shutdownLifecycle })
 
-  const server: Server =
-    options.tlsCertFile !== undefined && options.tlsKeyFile !== undefined
-      ? createHttpsServer(
-          {
-            cert: readFileSync(options.tlsCertFile),
-            key: readFileSync(options.tlsKeyFile),
-          },
-          listener,
-        )
-      : createHttpServer(listener)
-
-  await new Promise<void>((resolve, reject) => {
-    server.once('error', reject)
-    server.listen(options.port, options.host, () => resolve())
+  const started = await createAndStartHttpServer(listener, {
+    host: options.host,
+    port: options.port,
+    ...(options.tlsCertFile === undefined ? {} : { tlsCertFile: options.tlsCertFile }),
+    ...(options.tlsKeyFile === undefined ? {} : { tlsKeyFile: options.tlsKeyFile }),
   })
 
-  const address = server.address()
-  const port = typeof address === 'object' && address !== null ? address.port : options.port
-  const protocol = options.tlsCertFile !== undefined ? 'https' : 'http'
-
   return {
-    server,
-    url: `${protocol}://${options.host}:${port}`,
-    host: options.host,
-    port,
+    server: started.server,
+    url: started.url,
+    host: started.host,
+    port: started.port,
     warnings,
+    shutdownLifecycle,
+    close: async (hardKillMs?: number) => {
+      await shutdownLifecycle.runHooks()
+      await started.close(hardKillMs)
+    },
   }
 }

@@ -1,6 +1,6 @@
 import type { ProviderMessage, ProviderTokenUsage } from '../provider/provider.types.js'
 
-export const AGENT_LOOP_STATUSES = ['completed', 'tool_use_limit', 'error'] as const
+export const AGENT_LOOP_STATUSES = ['completed', 'tool_use_limit', 'error', 'cancelled'] as const
 export type AgentLoopStatus = (typeof AGENT_LOOP_STATUSES)[number]
 
 export const AGENT_LOOP_EVENT_TYPES = [
@@ -21,6 +21,14 @@ export interface AgentLoopConfig {
   readonly maxTokens?: number
   readonly temperature?: number
   readonly priorMessages?: readonly ProviderMessage[]
+  /** Checked at the top of every iteration -- when already aborted, the loop returns immediately
+   * with `status: 'cancelled'` without starting a new provider call, preserving whatever
+   * `totalUsage`/`finalMessages` were accumulated so far. Does **not** abort an already-in-flight
+   * `provider.complete()` call -- no provider adapter threads a signal into its underlying SDK
+   * request yet, so a call that's already started runs to its own natural completion. This is a
+   * deliberate smallest-viable-increment boundary: it stops the *next* iteration promptly without
+   * the larger, separate change of threading `AbortSignal` into every provider adapter. */
+  readonly signal?: AbortSignal
 }
 
 export interface AgentLoopToolCall {

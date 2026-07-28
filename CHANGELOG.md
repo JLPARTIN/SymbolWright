@@ -148,6 +148,38 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   under a different owner. Repository memory (`GET /api/memory/recent`/`/procedural`) is
   operator-only for now, since the underlying schema has no repository/mission/grant scoping key at
   all — a policy decision recorded explicitly rather than left implicit.
+- **No cancellation, and no graceful shutdown, for in-flight autonomous execution (Bundle #12
+  PR 2)**: an operator's `pause`/`cancel` only updated the persisted mission record — the
+  in-process autonomy loop kept running its current task to completion, unaware anything had
+  changed, and could then overwrite the just-written cancellation with its own stale in-memory
+  result once it finished. There was also no signal path from a `pause`/`cancel` into
+  `runAgentLoop` or `PersistentMissionExecutor.run()` at all, and process shutdown
+  (`SIGTERM`/`SIGINT`) did nothing but wait forever (`await new Promise<never>(...)`), so
+  in-flight requests and executions were simply severed rather than drained. New
+  `src/autonomy/mission-execution-abort-registry.ts` (`MissionExecutionAbortRegistry`,
+  `registerIfAbsent`/`release`/`requestAbort`/`requestAbortAll`, injected rather than a bare
+  module singleton) and `src/autonomy/mission-execution-lock.ts` (`MissionExecutionLock`, a
+  per-mission-key FIFO async mutex) are now shared by both `PersistentMissionExecutor` and
+  `AutonomousMissionControl`. Every read-modify-write around a task's start/finish and around
+  `pause`/`cancel` runs inside that lock and reloads the freshest persisted state immediately
+  before writing, so **cancellation always wins**: if a task's own completion is still in flight
+  when a concurrent `cancel` lands, the task's result is discarded rather than clobbering the
+  cancelled state. `AGENT_LOOP_STATUSES` gains `'cancelled'`, and an `AbortSignal` is threaded
+  from the abort registry through the coordinator, the executor, `MissionBoundTaskExecutor`,
+  `RuntimeMissionTaskExecutor`, and `AgentLoopAutonomousEditExecutor` into `runAgentLoop` itself,
+  which now checks `config.signal?.aborted` at the top of its loop and returns
+  `status: 'cancelled'` with whatever usage/messages/iterations had already accumulated
+  (threading the signal into an already-in-flight provider SDK call is a deliberate, disclosed
+  non-goal of this PR). A duplicate `start`/`resume` on an already-running mission now throws
+  `MissionAlreadyRunningError` instead of silently starting a second concurrent execution loop.
+  Also fixes the "no graceful shutdown" half of the same problem: new
+  `src/app/server/http-bootstrap.ts` (`createAndStartHttpServer`, `ShutdownLifecycle`) is shared
+  by both `startChatServer` and `startUnifiedServer`, draining connections and force-destroying
+  any still-open sockets after a bounded grace period; `ShutdownLifecycle.onBeforeShutdown` lets
+  `mission-routes.ts` register an abort-all-missions hook the first time it constructs an
+  autonomy runtime, without the HTTP layer needing to know autonomy exists. `symbolwright serve`
+  (`cli-serve.ts`) now handles `SIGTERM`/`SIGINT` by calling `server.close()` instead of blocking
+  forever, with a second signal during the grace period forcing an immediate exit.
 
 ### Added
 

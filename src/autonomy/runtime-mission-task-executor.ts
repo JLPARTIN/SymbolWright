@@ -15,6 +15,7 @@ export interface AutonomousEditTaskExecutor {
   execute(
     task: AutonomousTaskNode,
     context?: AutonomousEditExecutionContext,
+    signal?: AbortSignal,
   ): Promise<MissionTaskExecutionResult>
 }
 
@@ -46,7 +47,10 @@ export class RuntimeMissionTaskExecutor implements MissionTaskExecutor {
     this.#repairController = options.repairController
   }
 
-  async execute(task: AutonomousTaskNode): Promise<MissionTaskExecutionResult> {
+  async execute(
+    task: AutonomousTaskNode,
+    signal?: AbortSignal,
+  ): Promise<MissionTaskExecutionResult> {
     if (task.kind === 'validation') {
       return this.#executeValidation(task)
     }
@@ -62,7 +66,7 @@ export class RuntimeMissionTaskExecutor implements MissionTaskExecutor {
           evidence: [{ kind: 'diagnostic', id: `blocked-${task.id}` }],
         }
       }
-      return this.#editExecutor.execute(task)
+      return this.#editExecutor.execute(task, undefined, signal)
     }
 
     return {

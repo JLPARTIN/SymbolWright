@@ -11,7 +11,7 @@ import {
 describe('agent-loop.types', () => {
   describe('AGENT_LOOP_STATUSES', () => {
     it('includes all expected statuses', () => {
-      expect(AGENT_LOOP_STATUSES).toEqual(['completed', 'tool_use_limit', 'error'])
+      expect(AGENT_LOOP_STATUSES).toEqual(['completed', 'tool_use_limit', 'error', 'cancelled'])
     })
   })
 

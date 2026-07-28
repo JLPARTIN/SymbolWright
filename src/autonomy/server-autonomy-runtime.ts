@@ -224,8 +224,11 @@ class MissionBoundTaskExecutor implements MissionTaskExecutor {
     })
   }
 
-  async execute(task: AutonomousTaskNode): Promise<MissionTaskExecutionResult> {
-    return this.#preparedDelegate().execute(task)
+  async execute(
+    task: AutonomousTaskNode,
+    signal?: AbortSignal,
+  ): Promise<MissionTaskExecutionResult> {
+    return this.#preparedDelegate().execute(task, signal)
   }
 
   async repair(input: MissionTaskRepairInput): Promise<MissionTaskExecutionResult> {

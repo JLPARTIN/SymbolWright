@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { ShutdownLifecycle } from './app/server/http-bootstrap.js'
 import type { StartedUnifiedServer } from './app/server/route-types.js'
 import { parseServeArgs, renderServeBanner, resolveChatServerOptions } from './cli-serve.js'
 import {
@@ -139,6 +140,8 @@ describe('renderServeBanner', () => {
       host: '127.0.0.1',
       port: 8787,
       warnings: [],
+      shutdownLifecycle: new ShutdownLifecycle(),
+      close: async () => undefined,
     }
     const banner = renderServeBanner(server)
     expect(banner).toContain('http://127.0.0.1:8787')
@@ -153,6 +156,8 @@ describe('renderServeBanner', () => {
       host: '0.0.0.0',
       port: 8787,
       warnings: ['reverse proxy recommended'],
+      shutdownLifecycle: new ShutdownLifecycle(),
+      close: async () => undefined,
     }
     expect(renderServeBanner(server)).toContain('reverse proxy recommended')
   })
