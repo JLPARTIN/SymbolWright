@@ -74,11 +74,62 @@ jobs:
           if [ -z "$files" ]; then
             files=none
           fi
-          files=${files:0:240}
+          files=${files:0:160}
           echo "status=$status" >> "$GITHUB_OUTPUT"
           echo "files=$files" >> "$GITHUB_OUTPUT"
 
-      - name: Coverage gate — ${{ steps.coverage.outputs.files }}
+          node <<'NODE' >> "$GITHUB_OUTPUT"
+          const fs = require('node:fs')
+          const coveragePath = 'coverage/coverage-final.json'
+          const unavailable = () => {
+            console.log('statements=unavailable')
+            console.log('branches=unavailable')
+            console.log('functions=unavailable')
+            console.log('lines=unavailable')
+          }
+          if (!fs.existsSync(coveragePath)) {
+            unavailable()
+            process.exit(0)
+          }
+          const coverage = JSON.parse(fs.readFileSync(coveragePath, 'utf8'))
+          let statementsTotal = 0
+          let statementsCovered = 0
+          let branchesTotal = 0
+          let branchesCovered = 0
+          let functionsTotal = 0
+          let functionsCovered = 0
+          const lineHits = new Map()
+          for (const file of Object.values(coverage)) {
+            for (const hits of Object.values(file.s ?? {})) {
+              statementsTotal += 1
+              if (hits > 0) statementsCovered += 1
+            }
+            for (const hits of Object.values(file.b ?? {})) {
+              for (const hit of hits) {
+                branchesTotal += 1
+                if (hit > 0) branchesCovered += 1
+              }
+            }
+            for (const hits of Object.values(file.f ?? {})) {
+              functionsTotal += 1
+              if (hits > 0) functionsCovered += 1
+            }
+            for (const [id, location] of Object.entries(file.statementMap ?? {})) {
+              const key = `${file.path}:${location.start.line}`
+              lineHits.set(key, Math.max(lineHits.get(key) ?? 0, file.s[id] ?? 0))
+            }
+          }
+          const linesTotal = lineHits.size
+          const linesCovered = [...lineHits.values()].filter((hits) => hits > 0).length
+          const pct = (covered, total) =>
+            total === 0 ? '100.00' : ((covered / total) * 100).toFixed(2)
+          console.log(`statements=${pct(statementsCovered, statementsTotal)}`)
+          console.log(`branches=${pct(branchesCovered, branchesTotal)}`)
+          console.log(`functions=${pct(functionsCovered, functionsTotal)}`)
+          console.log(`lines=${pct(linesCovered, linesTotal)}`)
+          NODE
+
+      - name: Coverage gate — S ${{ steps.coverage.outputs.statements }} B ${{ steps.coverage.outputs.branches }} F ${{ steps.coverage.outputs.functions }} L ${{ steps.coverage.outputs.lines }} — tests ${{ steps.coverage.outputs.files }}
         run: |
           status="${{ steps.coverage.outputs.status }}"
           if ! printf '%s' "$status" | grep -Eq '^[0-9]+$'; then
