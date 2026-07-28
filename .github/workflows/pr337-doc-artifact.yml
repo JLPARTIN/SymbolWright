@@ -1,0 +1,69 @@
+name: PR337 Documentation Artifact
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Apply exact documentation inserts in ephemeral checkout
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          changelog = Path('CHANGELOG.md')
+          text = changelog.read_text()
+          marker = '### Added\n\n'
+          addition = '''- **Unified execution-caller migration (Sandbox Bundle PR 4/7)**: routes approved local
+            `bash`, test/lint/typecheck, validation-gate, portable-validation, autonomous-repair,
+            forensics/preflight, API, and agent-tool execution through the authoritative sandbox broker.
+            Runtime and portability Docker runners are now thin adapters over a centralized sandbox command
+            backend with server-owned command profiles, exact grant command restrictions, minimum-only
+            limits, physical network mode `none`, redacted/fingerprinted decisions, and architecture tests
+            preventing direct container construction outside sandbox backends. The retained read-write
+            repository bind path is explicitly classified as trusted-local compatibility—not strong
+            hostile-code isolation—and is forbidden for hosted, delegated, team-member, and
+            external-untrusted execution. No dependency acquisition, runtime egress, or host fallback is
+            added.
+
+          '''
+          if addition not in text:
+              if marker not in text:
+                  raise SystemExit('changelog marker not found')
+              text = text.replace(marker, marker + addition, 1)
+              changelog.write_text(text)
+
+          plan = Path('docs/security/SANDBOX_LARGE_PR_BUNDLE_BUILD_PLAN.md')
+          text = plan.read_text()
+          marker = '### PR 4 of 7 — Migrate every execution caller and remove duplication\n\n'
+          status = '''**Implementation status:** implemented by PR #337. Structured API/tool execution remains
+          on the strong offline broker path. Legacy local validation and formatting commands now resolve
+          broker-owned command profiles and execute only through a centralized trusted-local compatibility
+          backend. That compatibility path is explicitly denied for hosted, delegated, team-member, and
+          external-untrusted contexts; unsupported strong ecosystem profiles fail closed.
+
+          '''
+          if status not in text:
+              if marker not in text:
+                  raise SystemExit('build-plan marker not found')
+              text = text.replace(marker, marker + status, 1)
+              plan.write_text(text)
+          PY
+      - name: Package updated documentation
+        run: |
+          tar -czf /tmp/pr337-documentation.tgz \
+            CHANGELOG.md \
+            docs/security/SANDBOX_LARGE_PR_BUNDLE_BUILD_PLAN.md
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pr337-documentation
+          path: /tmp/pr337-documentation.tgz
+          if-no-files-found: error
+          retention-days: 1
