@@ -212,13 +212,20 @@ describe('runDockerSmoke', () => {
 
   it('fails when graceful shutdown does not stop the container', () => {
     installSuccessfulCommandMocks({ runningState: 'true' })
-    vi.spyOn(Date, 'now').mockReturnValueOnce(0).mockReturnValueOnce(20_000).mockReturnValue(20_000)
+    let now = 0
+    const nowSpy = vi.spyOn(Date, 'now').mockImplementation(() => {
+      now += 20_000
+      return now
+    })
 
-    const result = runDockerSmoke(process.cwd(), 'symbolwright:test')
+    try {
+      const result = runDockerSmoke(process.cwd(), 'symbolwright:test')
 
-    expect(result.status).toBe('FAIL')
-    expect(result.detail).toContain('Container did not stop after SIGTERM')
-    vi.restoreAllMocks()
+      expect(result.status).toBe('FAIL')
+      expect(result.detail).toContain('Container did not stop after SIGTERM')
+    } finally {
+      nowSpy.mockRestore()
+    }
   })
 
   it('fails when the container exits non-zero after SIGTERM', () => {
