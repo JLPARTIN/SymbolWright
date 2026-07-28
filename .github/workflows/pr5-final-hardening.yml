@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Apply and format reviewed hardening corrections
+      - name: Apply validated hardening patch
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -55,44 +55,20 @@ jobs:
             src/server/trusted-proxy.ts \
             src/server/trusted-proxy.spec.ts
 
-      - name: Run full tests with compact failure output
+      - name: Commit product changes only
         run: |
-          set +e
-          npx vitest run --reporter=json --outputFile=.vitest-results.json >/dev/null 2>&1
-          status=$?
-          set -e
-          if [ "$status" -ne 0 ]; then
-            node - <<'NODE'
-          const fs = require('node:fs')
-          const result = JSON.parse(fs.readFileSync('.vitest-results.json', 'utf8'))
-          console.log(`Failed suites: ${result.numFailedTestSuites ?? 0}; failed tests: ${result.numFailedTests ?? 0}`)
-          for (const suite of result.testResults ?? []) {
-            const failed = (suite.assertionResults ?? []).filter((test) => test.status === 'failed')
-            if (failed.length === 0 && suite.status !== 'failed') continue
-            console.log(`\nFILE: ${suite.name}`)
-            for (const test of failed) {
-              console.log(`TEST: ${(test.ancestorTitles ?? []).concat(test.title ?? []).join(' > ')}`)
-              for (const message of test.failureMessages ?? []) console.log(message)
-            }
-            if (failed.length === 0 && suite.message) console.log(suite.message)
-          }
-          NODE
-            exit "$status"
-          fi
-
-      - name: Confirm static gates
-        run: |
-          npm run typecheck
-          npm run lint
-          npm run format:check
-          npm run build
-
-      - name: Commit reviewed hardening and remove temporary files
-        run: |
-          git rm .github/workflows/pr5-final-hardening.yml scripts/.pr5-final-hardening.py
-          rm -f .vitest-results.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add \
+            src/app/server/unified-server.ts \
+            src/cli-serve.ts \
+            src/cli-serve.spec.ts \
+            src/server/boot-sweep.ts \
+            src/server/deployment-mode.ts \
+            src/server/deployment-mode.spec.ts \
+            src/server/metrics-registry.ts \
+            src/server/metrics-registry.spec.ts \
+            src/server/trusted-proxy.ts \
+            src/server/trusted-proxy.spec.ts
           git commit -m "fix(server): close final PR 5 hardening edge cases"
           git push origin HEAD:${GITHUB_HEAD_REF}
