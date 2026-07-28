@@ -12,7 +12,7 @@ jobs:
   diagnose:
     runs-on: ubuntu-24.04
     steps:
-      - name: Report full coverage failure tail
+      - name: Report final coverage summary only
         run: |
           curl --fail --silent --show-error --location \
             "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
@@ -26,5 +26,5 @@ jobs:
           set +e
           npm run test:coverage > /tmp/full.log 2>&1
           code=$?
-          tail -n 55 /tmp/full.log
+          grep -E "Failed Tests|FAIL  |Test Files|Tests  |ERROR: Coverage" /tmp/full.log | tail -n 20 || true
           exit "$code"
