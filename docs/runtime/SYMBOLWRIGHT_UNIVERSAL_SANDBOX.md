@@ -2,190 +2,166 @@
 
 This document tracks the Bundle #4 sandbox runtime rollout and the current execution boundary.
 
-SymbolWright presently has two different categories of server-side execution:
+SymbolWright presently has three categories of server-side execution:
 
-1. Docker-based validation runners under `src/runtime/sandbox/` and `src/portability/`, which execute a restricted set of validation commands with Docker networking disabled.
-2. The structured universal sandbox service under `src/sandbox/`, whose container policy/command plan remains non-executable but whose `guarded-host` backend can directly run local host language processes when an operator explicitly opts in.
+1. The structured universal sandbox service under `src/sandbox/`, including an opt-in strong offline JavaScript container backend governed by `SandboxExecutionBroker`.
+2. Docker-based validation runners under `src/runtime/sandbox/` and `src/portability/`, which still construct separate policies for approved validation workflows and will be migrated in Sandbox Bundle PR 4.
+3. The `guarded-host` backend, which directly runs trusted local host language processes only when a local operator explicitly opts in.
 
-The guarded-host backend is **not a strong sandbox**. It does not create container, virtual-machine, WASM, filesystem-jail, or network-namespace isolation. It must remain disabled for hosted or delegated untrusted execution. The current forensic build plan for replacing these divergent paths with one authoritative strong-sandbox broker is `docs/security/SANDBOX_LARGE_PR_BUNDLE_BUILD_PLAN.md`.
+The guarded-host backend is **not a strong sandbox**. It does not create container, virtual-machine, WASM, filesystem-jail, or network-namespace isolation. It remains forbidden for hosted or delegated callers and is never an automatic fallback from container execution.
 
 ## Current execution architecture
 
-Structured server sandbox requests now pass through `SandboxExecutionBroker`, which resolves an
-immutable `EffectiveSandboxPolicy` from server-owned deployment, caller, grant, mission, workspace,
-runner, resource, and request-tightening authority. The broker currently resolves the offline
-profile only. Dependency acquisition and allowlisted egress remain explicit unsupported future
-profiles; no network access is enabled by this architecture slice.
+Structured server sandbox requests pass through `SandboxExecutionBroker`, which resolves an immutable, fingerprinted `EffectiveSandboxPolicy` from server-owned deployment, caller, grant, mission, workspace, runner, image, resource, and request-tightening authority.
+
+The currently executable strong profile is offline only. Dependency acquisition and allowlisted runtime egress remain separate unsupported future profiles; no network authority is added by the strong-container slice.
 
 ## Current implemented slices
 
 - Shared sandbox request/result/policy model.
+- One authoritative execution broker and effective-policy resolver.
 - Authenticated `/api/sandbox/*` routes in the unified server.
-- Local `.symbolwright/sandbox/` execution history records.
-- Runtime discovery probes for common language commands and container engines.
-- Explicit container image allowlist.
-- Read-only sandbox doctor and image diagnostics renderer.
-- Read-only image inspection and operator-reviewed preparation-plan command contracts.
-- Top-level `symbolwright sandbox ...` CLI routing through the existing CLI entrypoint.
-- Read-only local image-store inspection for allowlisted image IDs only.
-- Container backend policy skeleton for future network-disabled isolated execution.
-- Review-only container command planner for future Docker/Podman execution.
-- Guarded-host execution backend for explicitly opted-in trusted local use; disabled by default and not a strong sandbox.
-- Separate Docker-based validation runners used by approved agent/validation workflows; these are not yet unified with the universal sandbox policy skeleton.
+- Local `.symbolwright/sandbox/` execution history and redacted policy evidence.
+- Runtime discovery probes for common language commands and Docker/Podman.
+- One digest-pinned, operator-opt-in JavaScript strong-container runner.
+- `--pull=never` normal execution with pre-execution digest verification.
+- Private copy-in workspace outside the canonical repository.
+- Quota-bounded tmpfs `/workspace` and `/tmp` inside the container.
+- Read-only container root filesystem, numeric non-root user, dropped capabilities, no-new-privileges, private PID/IPC namespaces, and bounded CPU/memory/PIDs.
+- Physical container network mode `none`.
+- Bounded output, timeout, source, file, workspace, and artifact limits.
+- Copy-out only to artifact quarantine, with changed-file manifests and an optional bounded patch.
+- Cancellation, mandatory removal, process cleanup, shutdown cancellation, and boot-time orphan reaping.
+- Read-only sandbox doctor and image diagnostics.
+- Guarded-host execution for explicitly opted-in trusted local use; disabled by default and not a strong sandbox.
+- Separate legacy Docker validation runners awaiting broker migration in PR 4.
 
 ## Trust classes
 
 SymbolWright distinguishes these runtime trust classes:
 
-- `browser-isolated`: browser worker, Pyodide, sql.js, or sandboxed preview-style execution.
-- `container-isolated`: reserved in the universal sandbox model for a future container backend that enforces the complete strong-isolation contract.
+- `browser-isolated`: browser worker, Pyodide, sql.js, or preview-style execution.
+- `container-isolated`: the strong offline container backend when every required engine, image, workspace, isolation, quota, cleanup, and evidence control is enforceable.
 - `wasm-isolated`: reserved for constrained WebAssembly runtimes.
-- `guarded-host`: local child-process execution on the SymbolWright host. This is not a strong sandbox, may retain host filesystem/network reach according to the operating-system account, and remains disabled by default.
-- `unavailable`: no runtime is available or allowed.
+- `guarded-host`: local child-process execution on the SymbolWright host. This is not a strong sandbox and may retain host filesystem/network reach according to the operating-system account.
+- `unavailable`: no runtime or enforceable policy is available.
 
-Inventory fields such as `capabilities.network: false` and `networkPolicy: disabled` describe the intended runner contract. They must not be interpreted as proof of network isolation for guarded-host execution, because the guarded-host backend does not enforce a network namespace.
+Inventory fields such as `capabilities.network: false` and `networkPolicy: disabled` describe a runner contract. For the strong container backend, that contract is implemented with container network mode `none`. It is not proof of network isolation for guarded-host execution.
+
+## Strong offline container executor
+
+The first executable universal container profile supports JavaScript using the built-in allowlist entry:
+
+```text
+node-26-alpine-pinned
+node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66
+```
+
+The operator must preinstall that exact digest and explicitly set:
+
+```bash
+SYMBOLWRIGHT_ENABLE_STRONG_CONTAINER_EXECUTION=true
+```
+
+Normal execution uses `--pull=never`; SymbolWright does not download images while servicing a sandbox request. Unsupported languages and missing/mismatched images fail closed.
+
+### Workspace boundary
+
+The strong backend:
+
+1. creates a private temporary directory outside the canonical repository;
+2. copies only the validated source or selected managed-repository snapshot into it;
+3. rejects symlinks, traversal, non-regular files, and excluded state directories;
+4. creates a container with no host bind mounts;
+5. copies the bounded snapshot into a quota-limited `/workspace` tmpfs;
+6. executes there;
+7. copies results to a separate host quarantine directory;
+8. exports only bounded changed-file artifacts, a change manifest, and an optional patch;
+9. deletes the temporary execution workspace;
+10. never applies generated files to the canonical repository automatically.
+
+No host home, `.git`, `.symbolwright`, `.codemind`, `node_modules`, Docker/Podman socket, SSH agent, provider credential, cloud token, registry credential, or ambient proxy variable is mounted or forwarded.
+
+### Container controls
+
+The generated create/exec plan includes:
+
+- digest-pinned image identity;
+- `--pull=never`;
+- `--network none`;
+- private PID namespace;
+- disabled IPC sharing;
+- read-only root filesystem;
+- all Linux capabilities dropped;
+- `no-new-privileges`;
+- numeric non-root UID/GID;
+- CPU, memory, memory-swap, and PID limits;
+- quota-bounded tmpfs mounts for `/workspace` and `/tmp`;
+- a minimal environment;
+- an init process for child reaping;
+- no bind mounts or arbitrary container arguments.
+
+A request cannot select an arbitrary image, engine option, mount, environment variable, UID, hostname, or network mode.
+
+### Cleanup and reconciliation
+
+Every execution attempts forceful container removal with volumes and removes its temporary host workspace. Timeout, output flood, cancellation, and other terminal paths kill the execution container before cleanup. The server cancels active containers during graceful shutdown and performs boot-time reaping of containers labeled as SymbolWright-managed.
+
+The artifact quarantine may persist according to normal local sandbox-history retention so operators can review evidence. Quarantined output is not trusted repository content.
 
 ## Runtime discovery
 
-Runtime discovery runs bounded version checks only. It does not execute repository code, run package managers, install dependencies, or download runtimes. Discovery uses argument arrays with `shell: false`, timeout caps, and a minimal environment allowlist.
+Runtime discovery runs bounded version checks only. It does not execute repository code, run package managers, install dependencies, pull images, or download runtimes. Discovery uses argument arrays with `shell: false`, timeout caps, and a minimal environment allowlist.
 
 ## Guarded-host execution
 
 Guarded-host execution is available only when all applicable policy checks pass and `SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION=true` is set.
 
-It:
+It creates a temporary working directory, uses fixed runtime/compiler plans with `shell: false`, passes a reduced environment, bounds time/output, kills the process group where supported, and removes its workspace.
 
-- creates a temporary working directory;
-- materializes approved source into that directory;
-- uses fixed language runtime/compiler command plans with `shell: false`;
-- passes a reduced environment;
-- bounds execution time and captured output;
-- kills the process group on cancellation/timeout where supported;
-- removes the temporary workspace after execution.
+It does **not** enforce the full sandbox limits at the operating-system boundary and does not isolate the child from the host network or all host-readable files. It is a trusted-local break-glass capability, not a safe fallback when Docker is unavailable. No container failure may silently fall back to guarded-host execution.
 
-It does **not** enforce the full declared sandbox limits at the operating-system boundary and does not isolate the child from the host network or all host-readable files. It is therefore a trusted-local break-glass capability, not a safe fallback when Docker is unavailable. No container failure may silently fall back to guarded-host execution.
+## Container image policy and operator diagnostics
 
-## Container image policy
+Container images are a built-in digest-pinned allowlist. Browser, API, CLI, mission, and model requests cannot supply raw image names. `symbolwright sandbox doctor`, `symbolwright sandbox images`, and `symbolwright sandbox inspect <image-id>` provide read-only detection and inspection.
 
-Container images are an explicit allowlist. Browser requests cannot supply arbitrary image names. Images are not pulled automatically by the universal sandbox service. The default inventory keeps images disabled and marks them not installed; `symbolwright sandbox inspect <image-id>` can separately read allowlisted local image-store metadata when Docker or Podman is detected.
-
-The current allowlist uses friendly image tags for planning/inspection. Before the future backend can make a production `container-isolated` claim, executable images must be operator-approved and pinned to immutable digests.
-
-## Container execution policy skeleton
-
-The container policy skeleton defines the contract a future backend must satisfy before it can truthfully report `container-isolated` execution. The plan is intentionally non-executable for now.
-
-Required controls include:
-
-- network policy `disabled` by default;
-- no privileged containers;
-- no host PID namespace;
-- no host network;
-- no container-engine socket mounts;
-- no home-directory mounts;
-- no arbitrary mounts;
-- no arbitrary user-supplied container arguments;
-- no registry credentials from browser requests;
-- non-root execution;
-- dropped Linux capabilities;
-- disabled privilege escalation;
-- read-only root filesystem where workable;
-- writable temporary workspace only;
-- minimal environment allowlist;
-- bounded CPU, memory, process count, disk, timeout, output, and artifact limits;
-- cleanup required after every execution attempt;
-- immutable image identity and no normal-execution image pull;
-- server-authoritative workspace identity and symlink-safe materialization;
-- no direct read-write mount of the canonical repository for untrusted execution.
-
-This policy plan does not create, start, pull, inspect, or remove containers. A later backend slice must enforce the policy before universal server-side container execution can be enabled.
-
-## Container command planner
-
-The container command planner turns an allowlisted image, detected Docker/Podman engine, temporary workspace path, fixed entrypoint, and bounded limits into a review-only argument array.
-
-The generated plan includes safety controls such as:
-
-- `--pull=never` to prevent automatic image acquisition;
-- `--network none`;
-- private PID namespace;
-- read-only root filesystem;
-- dropped capabilities;
-- no-new-privileges security option;
-- non-root user;
-- bounded memory, CPU, and process count;
-- controlled temporary workspace mount only;
-- minimal environment variables.
-
-The planner rejects request-shaped attempts to supply arbitrary container options, arbitrary image names, unsafe workspace paths, host home paths, Git directories, and container-engine socket paths. The plan remains `executionEnabled: false`; it is not an execution backend and SymbolWright does not run the generated argv in this slice.
-
-The future executable backend must strengthen path canonicalization, immutable image identity, disk/artifact limits, cleanup reconciliation, and copy-in/copy-out workspace handling before relying on this plan for hostile code.
-
-## Docker validation runners
-
-The Docker runners under `src/runtime/sandbox/` and `src/portability/` are real execution paths used for approved command and repository validation workflows. They currently:
-
-- disable Docker networking;
-- drop capabilities and set no-new-privileges;
-- apply selected time, memory, CPU, and output limits;
-- run command binaries through argument arrays rather than a shell;
-- fail rather than falling back to host execution when Docker is unavailable.
-
-They also construct separate Docker policies and directly bind-mount the working repository read-write. They do not yet satisfy the complete future universal container contract. They should be treated as offline validation runners for trusted/local workflows, not as a completed public multi-tenant strong sandbox.
-
-## Sandbox doctor
-
-The sandbox doctor report is read-only. It reports:
-
-- detected language runtime versions;
-- Docker or Podman detection status;
-- guarded-host opt-in state;
-- image allowlist entries;
-- operator-reviewed image preparation command hints;
-- warnings about unsupported or future execution behavior.
-
-Preparation commands are advisory. SymbolWright does not run them automatically.
-
-## Image command contracts
-
-The sandbox image command contract accepts allowlisted image IDs only, never raw image names. The top-level CLI currently supports:
+Example preparation and inspection flow:
 
 ```bash
 symbolwright sandbox doctor
 symbolwright sandbox images
-symbolwright sandbox inspect node-22-bookworm-slim
-symbolwright sandbox prepare python-3-12-slim
+symbolwright sandbox inspect node-26-alpine-pinned
+docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66
 ```
 
-Inspection is read-only. It may call the detected container engine to inspect an allowlisted image already present in the local image store. It does not acquire images, execute containers, mount volumes, pass arbitrary image names, or mutate the host. Preparation renders a review-only command plan when Docker or Podman has been detected. SymbolWright does not run that command, download the image, execute containers, or mutate the host in this slice.
+The pull command is an operator-reviewed preparation action, not something performed during a sandbox request. The executor verifies that the local image reports the allowlisted digest before creating a container.
 
-Raw image names such as `node:22-bookworm-slim` or registry paths are rejected because browser and CLI requests must not select arbitrary container images.
+## Docker validation runners
+
+The Docker runners under `src/runtime/sandbox/` and `src/portability/` are separate real execution paths used for approved validation workflows. They disable networking, drop capabilities, use no-new-privileges, apply selected limits, and do not fall back to host execution.
+
+They still construct separate Docker policies and directly bind-mount the working repository read-write. They are not the new universal hostile-code strong-container backend. Sandbox Bundle PR 4 must migrate those callers through the authoritative broker and remove duplicated policy construction.
 
 ## Network access and dependency acquisition
 
-- The current Docker validation runners use `--network none`.
-- `executionLimits.sandboxNetworkAccess: true` is rejected because no supported strong-sandbox egress path exists.
+- The strong container executor and legacy Docker validation runners use network mode `none`.
+- `executionLimits.sandboxNetworkAccess: true` remains rejected.
 - Guarded-host cannot truthfully claim network isolation.
-- Automatic dependency installation and arbitrary runtime internet access are not supported strong-sandbox capabilities.
+- Automatic dependency installation is not part of the executor.
+- Arbitrary runtime internet access is not supported.
 
-The revised build plan keeps strong execution offline first, adds dependency acquisition as a separate governed broker, and permits later runtime egress only through operator-owned policy profiles with enforced SSRF, DNS, redirect, quota, approval, and audit controls.
+The locked bundle sequence adds dependency acquisition later as a separate governed broker. Runtime egress comes later still and only through operator-owned profiles with enforced DNS, SSRF, redirect, TLS, quota, approval, bypass-prevention, and audit controls.
 
 ## Security boundary
 
 Current truthful posture:
 
-- Browser-isolated runners retain their browser execution behavior.
-- Docker validation runners provide useful offline validation isolation but are not yet the unified completed strong-container backend.
-- The universal container backend remains non-executable.
-- Guarded-host is real local host execution behind an explicit opt-in and is not a strong sandbox.
-- Public hosted/delegated untrusted sandbox execution and general sandbox network access are not production-ready.
+- Browser-isolated runners retain their browser behavior.
+- The universal service has one real JavaScript-first strong offline container backend when explicitly enabled and fully prepared.
+- Other strong-container language ecosystems remain unsupported and fail closed.
+- Legacy Docker validation paths remain outside the unified broker until PR 4.
+- Guarded-host remains trusted local break-glass execution only.
+- General sandbox network access and dependency acquisition remain unavailable.
+- No automatic fallback exists from container execution to host execution.
 
-Out of scope until the revised sandbox bundle lands:
-
-- automatic image acquisition during normal execution;
-- governed dependency acquisition;
-- arbitrary Docker images or container flags;
-- brokered sandbox egress;
-- hosted/delegated guarded-host execution;
-- automatic fallback from container execution to host execution;
-- a production claim of public multi-tenant strong sandboxing.
+Remaining bundle work includes migrating every legacy execution caller, governed dependency acquisition, brokered allowlisted egress, and a final independent adversarial audit before any broad public multi-tenant sandbox claim.
