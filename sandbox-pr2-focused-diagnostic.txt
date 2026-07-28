@@ -1,84 +1,64 @@
-focused_exit_status=1
+focused_exit_status=0
 
 
 [1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/runner/work/SymbolWright/SymbolWright[39m
 
  [32m✓[39m src/sandbox/sandbox-policy-model-boundary.spec.ts[2m > [22meffective sandbox policy adversarial boundaries[2m > [22mfails closed without capability, executable runtime mode, runner, or policy reference[32m 2[2mms[22m[39m
- [32m✓[39m src/sandbox/sandbox-policy-model-boundary.spec.ts[2m > [22meffective sandbox policy adversarial boundaries[2m > [22mrejects disabled profiles and stale expected source versions[32m 1[2mms[22m[39m
+ [32m✓[39m src/sandbox/sandbox-policy-model-boundary.spec.ts[2m > [22meffective sandbox policy adversarial boundaries[2m > [22mrejects disabled profiles and stale expected source versions[32m 0[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-model-boundary.spec.ts[2m > [22meffective sandbox policy adversarial boundaries[2m > [22mrejects every incompatible profile dimension[32m 1[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-model-boundary.spec.ts[2m > [22meffective sandbox policy adversarial boundaries[2m > [22mtreats an explicit empty or conflicting command intersection as deny-all[32m 8[2mms[22m[39m
- [32m✓[39m src/sandbox/sandbox-policy-model-boundary.spec.ts[2m > [22meffective sandbox policy adversarial boundaries[2m > [22mrequires exact approval capability, grant version, and complete policy versions[32m 1[2mms[22m[39m
+ [32m✓[39m src/sandbox/sandbox-policy-model-boundary.spec.ts[2m > [22meffective sandbox policy adversarial boundaries[2m > [22mrequires exact approval capability, grant version, and complete policy versions[32m 0[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-model-boundary.spec.ts[2m > [22meffective sandbox policy adversarial boundaries[2m > [22mblocks unsupported network and dependency modes independently[32m 0[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-model-boundary.spec.ts[2m > [22meffective sandbox policy adversarial boundaries[2m > [22mresolves explicit egress policy and mission/grant source versions[32m 1[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-model-boundary.spec.ts[2m > [22meffective sandbox policy adversarial boundaries[2m > [22mhandles compile/test capability intersections and valid global version config[32m 3[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-coverage.spec.ts[2m > [22msandbox policy branch coverage[2m > [22mreports unavailable runners with explicit and fallback reasons[32m 3[2mms[22m[39m
- [32m✓[39m src/sandbox/sandbox-policy-coverage.spec.ts[2m > [22msandbox policy branch coverage[2m > [22mrejects unsupported run, compile, test, and repository modes[32m 1[2mms[22m[39m
- [32m✓[39m src/sandbox/sandbox-policy-coverage.spec.ts[2m > [22msandbox policy branch coverage[2m > [22mcovers request validation edge branches[32m 5[2mms[22m[39m
+ [32m✓[39m src/sandbox/sandbox-policy-coverage.spec.ts[2m > [22msandbox policy branch coverage[2m > [22mrejects unsupported run, compile, test, and repository modes[32m 0[2mms[22m[39m
+ [32m✓[39m src/sandbox/sandbox-policy-coverage.spec.ts[2m > [22msandbox policy branch coverage[2m > [22mcovers request validation edge branches[32m 4[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-coverage.spec.ts[2m > [22msandbox policy branch coverage[2m > [22mblocks every non-execution runtime mode[32m 0[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-coverage.spec.ts[2m > [22msandbox policy branch coverage[2m > [22mcovers guarded-host, unavailable, and generic trust decisions[32m 1[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-coverage.spec.ts[2m > [22msandbox service fallback coverage[2m > [22mreturns empty history views without a history store[32m 0[2mms[22m[39m
- [32m✓[39m src/sandbox/sandbox-policy-coverage.spec.ts[2m > [22msandbox service fallback coverage[2m > [22mreturns unavailable results when no matching runner exists[32m 3[2mms[22m[39m
+ [32m✓[39m src/sandbox/sandbox-policy-coverage.spec.ts[2m > [22msandbox service fallback coverage[2m > [22mreturns unavailable results when no matching runner exists[32m 2[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-coverage.spec.ts[2m > [22msandbox service fallback coverage[2m > [22mpreserves a requested runner id when the runner does not support the language[32m 1[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-coverage.spec.ts[2m > [22msandbox service fallback coverage[2m > [22mrebuilds inventory with discovered command availability[32m 1[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-model.spec.ts[2m > [22meffective sandbox policy resolver[2m > [22mresolves a deeply immutable offline policy by strict limit intersection[32m 11[2mms[22m[39m
- [32m✓[39m src/sandbox/sandbox-policy-model.spec.ts[2m > [22meffective sandbox policy resolver[2m > [22mnever lets a request or lower authority widen any numeric cap[32m 15[2mms[22m[39m
+ [32m✓[39m src/sandbox/sandbox-policy-model.spec.ts[2m > [22meffective sandbox policy resolver[2m > [22mnever lets a request or lower authority widen any numeric cap[32m 14[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-model.spec.ts[2m > [22meffective sandbox policy resolver[2m > [22mfails closed on the emergency global disable switch[32m 1[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-model.spec.ts[2m > [22meffective sandbox policy resolver[2m > [22mdenies stale or missing policy references[32m 0[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-model.spec.ts[2m > [22meffective sandbox policy resolver[2m > [22mrequires dependency acquisition to use an explicit policy and current bound approval[32m 1[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-policy-model.spec.ts[2m > [22meffective sandbox policy resolver[2m > [22mdenies guarded-host for hosted or delegated authority before execution[32m 0[2mms[22m[39m
- [31m×[39m src/sandbox/sandbox-evidence.spec.ts[2m > [22msandbox evidence finalization[2m > [22mhashes caller inputs and records immutable policy evidence without raw authority IDs[32m 30[2mms[22m[39m
-[31m   → expected '{"verificationLevel":"EXECUTED","inpu…' not to contain 'mission-secret'[39m
- [32m✓[39m src/sandbox/sandbox-evidence.spec.ts[2m > [22msandbox evidence finalization[2m > [22mfinalizes a minimal blocked result without optional hashes or policy metadata[32m 1[2mms[22m[39m
- [32m✓[39m src/app/api/sandbox-routes.spec.ts[2m > [22msandbox API route handler[2m > [22mlists runtime inventory and rejects unsupported methods[32m 5[2mms[22m[39m
+ [32m✓[39m src/app/api/sandbox-routes.spec.ts[2m > [22msandbox API route handler[2m > [22mlists runtime inventory and rejects unsupported methods[32m 4[2mms[22m[39m
  [32m✓[39m src/app/api/sandbox-routes.spec.ts[2m > [22msandbox API route handler[2m > [22mlists only explicit sandbox image allowlist entries[32m 2[2mms[22m[39m
+ [32m✓[39m src/app/api/sandbox-routes.spec.ts[2m > [22msandbox API route handler[2m > [22muses server-derived policy, persists history, and records mission evidence[32m 77[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-registry.spec.ts[2m > [22msandbox runtime inventory[2m > [22mregisters browser-isolated existing runners without promoting edit-only languages[32m 3[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-registry.spec.ts[2m > [22msandbox runtime inventory[2m > [22mincludes explicit container image policy without enabling image execution[32m 1[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-registry.spec.ts[2m > [22msandbox runtime inventory[2m > [22mkeeps guarded-host unavailable unless explicitly opted in[32m 1[2mms[22m[39m
- [32m✓[39m src/sandbox/sandbox-registry.spec.ts[2m > [22msandbox policy and service foundation[2m > [22mblocks execution in read-only and proposal-only modes with structured reasons[32m 3[2mms[22m[39m
- [32m✓[39m src/sandbox/sandbox-registry.spec.ts[2m > [22msandbox policy and service foundation[2m > [22mdoes not fake execution before a backend is wired[32m 11[2mms[22m[39m
+ [32m✓[39m src/sandbox/sandbox-registry.spec.ts[2m > [22msandbox policy and service foundation[2m > [22mblocks execution in read-only and proposal-only modes with structured reasons[32m 4[2mms[22m[39m
+ [32m✓[39m src/sandbox/sandbox-registry.spec.ts[2m > [22msandbox policy and service foundation[2m > [22mdoes not fake execution before a backend is wired[32m 10[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-registry.spec.ts[2m > [22msandbox policy and service foundation[2m > [22mrequires explicit guarded-host opt-in[32m 1[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-registry.spec.ts[2m > [22msandbox policy and service foundation[2m > [22mrefreshes inventory from bounded runtime discovery without executing code[32m 1[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-registry.spec.ts[2m > [22msandbox redaction[2m > [22mredacts representative secrets before evidence can persist[32m 1[2mms[22m[39m
+ [32m✓[39m src/app/api/sandbox-routes.spec.ts[2m > [22msandbox API route handler[2m > [22mlets the mission runtime mode override request and route execution proposals[32m 19[2mms[22m[39m
+ [32m✓[39m src/app/api/sandbox-routes.spec.ts[2m > [22msandbox API route handler[2m > [22mrejects guarded-host HTTP execution and caller-selected repository roots[32m 18[2mms[22m[39m
+ [32m✓[39m src/app/api/sandbox-routes.spec.ts[2m > [22msandbox API route handler[2m > [22mreturns structured errors for malformed payloads and missing execution records[32m 1[2mms[22m[39m
+ [32m✓[39m src/sandbox/sandbox-evidence.spec.ts[2m > [22msandbox evidence finalization[2m > [22mhashes caller inputs and records immutable policy evidence without raw authority IDs[32m 10[2mms[22m[39m
+ [32m✓[39m src/sandbox/sandbox-evidence.spec.ts[2m > [22msandbox evidence finalization[2m > [22mfinalizes a minimal blocked result without optional hashes or policy metadata[32m 0[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/sandbox-tools.spec.ts[2m > [22msandbox runtime agent tools[2m > [22mlists real runtime inventory without shell commands[32m 3[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/sandbox-tools.spec.ts[2m > [22msandbox runtime agent tools[2m > [22mrejects raw command-shaped execution input[32m 2[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/sandbox-tools.spec.ts[2m > [22msandbox runtime agent tools[2m > [22mreturns a proposal in PROPOSAL_ONLY without launching execution[32m 1[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/sandbox-tools.spec.ts[2m > [22msandbox runtime agent tools[2m > [22mrejects guarded-host and caller-selected repository roots from the agent tool[32m 1[2mms[22m[39m
+ [32m✓[39m src/runtime/tools/sandbox-tools.spec.ts[2m > [22msandbox runtime agent tools[2m > [22mrecords a server-safe policy-blocked execution through the shared service[32m 10[2mms[22m[39m
  [32m✓[39m src/access/sandbox-policy-compat.spec.ts[2m > [22msandbox grant policy compatibility[2m > [22mmaps legacy false or absent network fields to offline policy only[32m 2[2mms[22m[39m
  [32m✓[39m src/access/sandbox-policy-compat.spec.ts[2m > [22msandbox grant policy compatibility[2m > [22mfails closed for a persisted legacy true value[32m 0[2mms[22m[39m
  [32m✓[39m src/access/sandbox-policy-compat.spec.ts[2m > [22msandbox grant policy compatibility[2m > [22mpreserves explicit server-owned references without synthesizing broader authority[32m 0[2mms[22m[39m
  [32m✓[39m src/access/sandbox-policy-compat.spec.ts[2m > [22msandbox grant policy compatibility[2m > [22mkeeps dependency acquisition and egress out of broad wildcard expansion[32m 1[2mms[22m[39m
- [32m✓[39m src/runtime/tools/sandbox-tools.spec.ts[2m > [22msandbox runtime agent tools[2m > [22mlists real runtime inventory without shell commands[32m 2[2mms[22m[39m
- [32m✓[39m src/runtime/tools/sandbox-tools.spec.ts[2m > [22msandbox runtime agent tools[2m > [22mrejects raw command-shaped execution input[32m 1[2mms[22m[39m
- [32m✓[39m src/runtime/tools/sandbox-tools.spec.ts[2m > [22msandbox runtime agent tools[2m > [22mreturns a proposal in PROPOSAL_ONLY without launching execution[32m 1[2mms[22m[39m
- [32m✓[39m src/runtime/tools/sandbox-tools.spec.ts[2m > [22msandbox runtime agent tools[2m > [22mrejects guarded-host and caller-selected repository roots from the agent tool[32m 1[2mms[22m[39m
- [32m✓[39m src/runtime/tools/sandbox-tools.spec.ts[2m > [22msandbox runtime agent tools[2m > [22mrecords a server-safe policy-blocked execution through the shared service[32m 9[2mms[22m[39m
- [32m✓[39m src/access/sandbox-capability-authority.spec.ts[2m > [22msandbox capability authority[2m > [22maccepts canonical or legacy offline grants but honors either explicit denial alias[32m 1[2mms[22m[39m
- [32m✓[39m src/access/sandbox-capability-authority.spec.ts[2m > [22msandbox capability authority[2m > [22mkeeps compatibility aliases and high-risk network surfaces out of wildcard grants[32m 1[2mms[22m[39m
- [32m✓[39m src/sandbox/sandbox-execution-broker.spec.ts[2m > [22mSandboxExecutionBroker[2m > [22mforces the effective runner offline even when inventory advertises networking[32m 9[2mms[22m[39m
+ [32m✓[39m src/sandbox/sandbox-execution-broker.spec.ts[2m > [22mSandboxExecutionBroker[2m > [22mforces the effective runner offline even when inventory advertises networking[32m 15[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-execution-broker.spec.ts[2m > [22mSandboxExecutionBroker[2m > [22mdenies when the capability was not approved by server authority[32m 1[2mms[22m[39m
  [32m✓[39m src/sandbox/sandbox-execution-broker.spec.ts[2m > [22mSandboxExecutionBroker[2m > [22mpreserves legacy runtime-mode refusal behind the broker[32m 0[2mms[22m[39m
- [32m✓[39m src/app/api/sandbox-routes.spec.ts[2m > [22msandbox API route handler[2m > [22muses server-derived policy, persists history, and records mission evidence[33m 337[2mms[22m[39m
- [32m✓[39m src/app/api/sandbox-routes.spec.ts[2m > [22msandbox API route handler[2m > [22mlets the mission runtime mode override request and route execution proposals[33m 594[2mms[22m[39m
- [32m✓[39m src/app/api/sandbox-routes.spec.ts[2m > [22msandbox API route handler[2m > [22mrejects guarded-host HTTP execution and caller-selected repository roots[32m 14[2mms[22m[39m
- [32m✓[39m src/app/api/sandbox-routes.spec.ts[2m > [22msandbox API route handler[2m > [22mreturns structured errors for malformed payloads and missing execution records[32m 1[2mms[22m[39m
+ [32m✓[39m src/access/sandbox-capability-authority.spec.ts[2m > [22msandbox capability authority[2m > [22maccepts canonical or legacy offline grants but honors either explicit denial alias[32m 1[2mms[22m[39m
+ [32m✓[39m src/access/sandbox-capability-authority.spec.ts[2m > [22msandbox capability authority[2m > [22mkeeps compatibility aliases and high-risk network surfaces out of wildcard grants[32m 1[2mms[22m[39m
 
-[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
-
-[41m[1m FAIL [22m[49m src/sandbox/sandbox-evidence.spec.ts[2m > [22msandbox evidence finalization[2m > [22mhashes caller inputs and records immutable policy evidence without raw authority IDs
-[31m[1mAssertionError[22m: expected '{"verificationLevel":"EXECUTED","inpu…' not to contain 'mission-secret'[39m
-
-Expected: [32m"mission-secret"[39m
-Received: [31m"{"verificationLevel":"EXECUTED","inputHash":"1494984f83bb3eaad74ee9087158cf39f7622b0d7c1f12e1d3ebcb64b0ebf1f2","policyDecision":"allowed","schemaVersion":1,"outputHash":"0d689b386e601de0d6ae5d81f590dfdf5d0c58dbeb6d0cf28f9648a8dc478a7b","outputExcerpt":"[REDACTED]\n--- stderr ---\n[REDACTED]","policyReason":"Resolved sandbox-offline-default@1 by strict policy intersection.","decisionCode":"SANDBOX_POLICY_ALLOWED","authorization":{"deploymentMode":"hosted","callerKind":"delegated-grant","capabilityId":"symbolwright.sandbox.execute.offline","grantIdHash":"f4e068bcabeaf80bca2c3709413c36ef78c1f7a6f40fe284aecf91ce183fa91e","principalIdHash":"1e314fd28ce4aecc609b3d8d0e6ab8dde666266dd5b56cf6fb1f57ca99b6d8b1","approvalIdHash":"b54bda87ea1419f5093854fedc392a6042cf59297a6a4cc6e360877a3a512da4"},"policy":{"id":"sandbox-offline-default","version":1,"fingerprint":"fc5780ac52980276ea1012ca7d042f0008ef1f65778bfac720f99ecdd662ce52","intent":"offline-execution","networkMode":"disabled","dependencyMode":"disabled","workspaceMode":"managed-mission","sourceVersions":{"sandbox-global":1,"sandbox-offline-default":1,"runner:container-javascript":1,"grant:grant-secret":2,"mission:mission-secret":1,"request-tightening":1}}}"[39m
-
-[36m [2m❯[22m src/sandbox/sandbox-evidence.spec.ts:[2m142:37[22m[39m
-    [90m140|[39m       [32m'abcdefghijklmnopqrstuvwxyz'[39m[33m,[39m
-    [90m141|[39m     ]) {
-    [90m142|[39m       [34mexpect[39m(persistedEvidence)[33m.[39mnot[33m.[39m[34mtoContain[39m(raw)
-    [90m   |[39m                                     [31m^[39m
-    [90m143|[39m     }
-    [90m144|[39m   })
-
-[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
-
-
-[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m9 passed[39m[22m[90m (10)[39m
-[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m52 passed[39m[22m[90m (53)[39m
-[2m   Start at [22m 15:16:36
-[2m   Duration [22m 1.35s[2m (transform 622ms, setup 0ms, import 960ms, tests 1.11s, environment 1ms)[22m
+[2m Test Files [22m [1m[32m10 passed[39m[22m[90m (10)[39m
+[2m      Tests [22m [1m[32m53 passed[39m[22m[90m (53)[39m
+[2m   Start at [22m 15:18:11
+[2m   Duration [22m 711ms[2m (transform 433ms, setup 0ms, import 684ms, tests 258ms, environment 1ms)[22m
 
