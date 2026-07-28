@@ -106,6 +106,14 @@ export interface MissionExecutionRunOptions {
    * rather than applied if the persisted state changed underneath it while it ran (see
    * `#reconcileAfterTask`) -- concurrent cancellation always wins over a task's own completion. */
   readonly signal?: AbortSignal
+  /** Checked between tasks, same cadence as `maxDurationMinutes`: if it resolves `true`, `run()`
+   * stops launching further tasks and fails every remaining non-terminal task with
+   * `cancellationReason: 'budget'`. A pure predicate rather than a live governance-store handle
+   * so this module stays free of any dependency on `src/access/` -- the server composition root
+   * closes over its own budget check (mission usage vs. the owning grant's configured cap). Not
+   * checked against an already in-flight task for the same reason `maxDurationMinutes` isn't:
+   * the executor has no way to interrupt an arbitrary in-progress tool/sandbox call. */
+  readonly isBudgetExceeded?: () => Promise<boolean> | boolean
 }
 
 export class PersistentMissionExecutor {
@@ -179,8 +187,27 @@ export class PersistentMissionExecutor {
         current = await this.#lock.withLock(missionId, async () => {
           const latest = (await this.#store.load(missionId)) ?? current
           const stopped = {
-            ...this.#failRemainingTasksForDurationLimit(latest, options.maxDurationMinutes!),
+            ...this.#failRemainingTasks(
+              latest,
+              `Mission exceeded its configured duration limit of ${options.maxDurationMinutes!} minute(s).`,
+            ),
             cancellationReason: 'duration' as const,
+          }
+          await this.#store.save(stopped)
+          return stopped
+        })
+        return current
+      }
+
+      if (options.isBudgetExceeded !== undefined && (await options.isBudgetExceeded())) {
+        current = await this.#lock.withLock(missionId, async () => {
+          const latest = (await this.#store.load(missionId)) ?? current
+          const stopped = {
+            ...this.#failRemainingTasks(
+              latest,
+              "Mission exceeded the owning grant's configured cost budget.",
+            ),
+            cancellationReason: 'budget' as const,
           }
           await this.#store.save(stopped)
           return stopped
@@ -243,12 +270,11 @@ export class PersistentMissionExecutor {
     return elapsedMs > maxDurationMinutes * 60_000
   }
 
-  #failRemainingTasksForDurationLimit(
+  #failRemainingTasks(
     execution: PersistedMissionExecution,
-    maxDurationMinutes: number,
+    reason: string,
   ): PersistedMissionExecution {
     const updatedAt = this.#now().toISOString()
-    const reason = `Mission exceeded its configured duration limit of ${maxDurationMinutes} minute(s).`
     const tasks = execution.graph.tasks.map((task) =>
       isTerminal(task.state)
         ? task

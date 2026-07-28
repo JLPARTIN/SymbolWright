@@ -100,6 +100,25 @@ export interface MissionImportedSource {
   readonly originalMissionId: string
 }
 
+/** Accumulated provider usage/cost for a mission, captured from `AgentLoopResult.totalUsage`
+ * (previously dropped on the floor entirely -- see `MissionService.recordUsage`). Display/audit
+ * only: the authoritative ledger for budget *enforcement* is the durable governance store
+ * (`src/access/governance-store.ts`), not this JSON field. `totalCostMicrodollars` is a canonical
+ * base-10 string (`serializeMicrodollars`/`parseMicrodollars`) since `bigint` never crosses a
+ * JSON-backed record directly.
+ *
+ * Field names deliberately say "prompt"/"completion" rather than "token" -- `mission-redaction.ts`'s
+ * `SECRET_KEY_PATTERN` matches any key containing "token" (no word boundary, by design, so it also
+ * catches compounds like `github_token`) and blanks the whole field to `'[REDACTED]'` before every
+ * disk write. That scanner exists to protect real secrets and is deliberately not narrowed here;
+ * this field just avoids the word it keys on. */
+export interface MissionUsage {
+  readonly totalPromptUnits: number
+  readonly totalCompletionUnits: number
+  readonly totalCostMicrodollars: string
+  readonly lastRecordedAt: string
+}
+
 export interface SymbolWrightMission {
   readonly schemaVersion: typeof CURRENT_MISSION_SCHEMA_VERSION
   readonly revision: number
@@ -157,6 +176,7 @@ export interface SymbolWrightMission {
   readonly labels: readonly string[]
   readonly notes?: string | undefined
   readonly importedFrom?: MissionImportedSource | undefined
+  readonly usage?: MissionUsage | undefined
 }
 
 export interface MissionEvent {

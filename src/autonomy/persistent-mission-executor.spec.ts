@@ -245,6 +245,106 @@ describe('persistent mission execution', () => {
     expect(result.graph.tasks[1]?.state).toBe('failed')
   })
 
+  it('does not interfere with normal completion when isBudgetExceeded stays false', async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-budget-ok-'))
+    workspaces.push(workspace)
+    const executor = new PersistentMissionExecutor({
+      store: new JsonMissionExecutionStore(workspace),
+      executor: {
+        async execute() {
+          return { state: 'completed' }
+        },
+      },
+    })
+
+    const result = await executor.start(graph([task('edit', [])]), {
+      isBudgetExceeded: () => false,
+    })
+
+    expect(result.graph.tasks[0]?.state).toBe('completed')
+    expect(result.completedAt).toBeDefined()
+  })
+
+  it('fails remaining tasks with cancellationReason "budget" once isBudgetExceeded reports true mid-run', async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-budget-mid-'))
+    workspaces.push(workspace)
+    let calls = 0
+    const executor = new PersistentMissionExecutor({
+      store: new JsonMissionExecutionStore(workspace),
+      executor: {
+        async execute() {
+          return { state: 'completed' }
+        },
+      },
+    })
+
+    const result = await executor.start(
+      graph([task('a', []), task('b', ['a']), task('c', ['b'])]),
+      {
+        isBudgetExceeded: () => {
+          calls += 1
+          return calls > 1 // exceeded once task "a" has already run
+        },
+      },
+    )
+
+    expect(result.graph.tasks.map((node) => node.state)).toEqual(['completed', 'failed', 'failed'])
+    expect(result.graph.tasks[1]?.failureDiagnostics[0]).toContain('configured cost budget')
+    expect(result.cancellationReason).toBe('budget')
+    expect(result.completedAt).toBeDefined()
+  })
+
+  it('supports an async isBudgetExceeded predicate', async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-budget-async-'))
+    workspaces.push(workspace)
+    const store = new JsonMissionExecutionStore(workspace)
+    await store.save({
+      schemaVersion: 1,
+      graph: graph([task('edit', [])]),
+      modifiedFiles: [],
+      startedAt: NOW,
+      updatedAt: NOW,
+    })
+
+    const execute = vi.fn(async () => ({ state: 'completed' as const }))
+    const executor = new PersistentMissionExecutor({ store, executor: { execute } })
+
+    const result = await executor.resume('mission-restart-proof', {
+      isBudgetExceeded: async () => true,
+    })
+
+    expect(execute).not.toHaveBeenCalled()
+    expect(result.graph.tasks[0]?.state).toBe('failed')
+    expect(result.cancellationReason).toBe('budget')
+  })
+
+  it('never fails already-terminal tasks when the budget check reports exceeded', async () => {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-budget-terminal-'))
+    workspaces.push(workspace)
+    const store = new JsonMissionExecutionStore(workspace)
+    await store.save({
+      schemaVersion: 1,
+      graph: graph([task('done', [], 'completed'), task('pending', [])]),
+      modifiedFiles: [],
+      startedAt: NOW,
+      updatedAt: NOW,
+    })
+
+    const executor = new PersistentMissionExecutor({
+      store,
+      executor: {
+        async execute() {
+          return { state: 'completed' }
+        },
+      },
+    })
+
+    const result = await executor.resume('mission-restart-proof', { isBudgetExceeded: () => true })
+
+    expect(result.graph.tasks[0]?.state).toBe('completed')
+    expect(result.graph.tasks[1]?.state).toBe('failed')
+  })
+
   it('rejects missing executions and returns completed executions without relaunching tasks', async () => {
     const workspace = await mkdtemp(path.join(os.tmpdir(), 'symbolwright-mission-resume-'))
     workspaces.push(workspace)

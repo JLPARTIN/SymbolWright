@@ -432,6 +432,124 @@ describe('agent-loop', () => {
     })
   })
 
+  describe('usageGovernor', () => {
+    it('does not call reserve/settle at all when no governor is configured', async () => {
+      const provider = makeMockProvider([makeTextResponse('Done.')])
+      const result = await runAgentLoop(
+        provider,
+        'Do something',
+        [],
+        makeToolContext(),
+        makeConfig(),
+      )
+      expect(result.status).toBe('completed')
+    })
+
+    it('stops before the provider call with status budget_exceeded when reserve denies', async () => {
+      const provider = makeMockProvider([makeTextResponse('Should never be reached.')])
+      const reserve = async () => ({ allowed: false as const, reason: 'over budget' })
+      const settle = async () => undefined
+
+      const result = await runAgentLoop(
+        provider,
+        'Do something',
+        [],
+        makeToolContext(),
+        makeConfig({ usageGovernor: { reserve, settle } }),
+      )
+
+      expect(result.status).toBe('budget_exceeded')
+      expect(result.error).toBe('over budget')
+      expect(result.totalIterations).toBe(0)
+      expect(result.totalUsage).toEqual({ inputTokens: 0, outputTokens: 0 })
+    })
+
+    it('settles the reservation with actual usage after a successful call', async () => {
+      const provider = makeMockProvider([makeTextResponse('Done.', 111, 222)])
+      const settled: { reservationId: string; usage: unknown; model: string | undefined }[] = []
+      const result = await runAgentLoop(
+        provider,
+        'Do something',
+        [],
+        makeToolContext(),
+        makeConfig({
+          model: 'test-model',
+          usageGovernor: {
+            reserve: async () => ({ allowed: true as const, reservationId: 'r-1' }),
+            settle: async (reservationId, usage, model) => {
+              settled.push({ reservationId, usage, model })
+            },
+          },
+        }),
+      )
+
+      expect(result.status).toBe('completed')
+      expect(settled).toEqual([
+        {
+          reservationId: 'r-1',
+          usage: { inputTokens: 111, outputTokens: 222 },
+          model: 'test-model',
+        },
+      ])
+    })
+
+    it('settles conservatively (no usage argument) when the provider call throws', async () => {
+      const throwingProvider: LLMProvider = {
+        providerId: 'mock',
+        displayName: 'Mock Provider',
+        // eslint-disable-next-line require-yield -- deliberately throws before ever yielding
+        async *complete() {
+          throw new Error('provider exploded')
+        },
+      }
+      const settled: { reservationId: string; usage: unknown }[] = []
+      const result = await runAgentLoop(
+        throwingProvider,
+        'Do something',
+        [],
+        makeToolContext(),
+        makeConfig({
+          usageGovernor: {
+            reserve: async () => ({ allowed: true as const, reservationId: 'r-err' }),
+            settle: async (reservationId, usage) => {
+              settled.push({ reservationId, usage })
+            },
+          },
+        }),
+      )
+
+      expect(result.status).toBe('error')
+      expect(settled).toEqual([{ reservationId: 'r-err', usage: undefined }])
+    })
+
+    it('reserves once per iteration across a multi-iteration tool-use loop', async () => {
+      const provider = makeMockProvider([
+        makeToolUseResponse('t-1', 'read_file', { path: '/a.ts' }),
+        makeTextResponse('Done after tool use.'),
+      ])
+      const tools = [makeTool('read_file', 'file content')]
+      let reserveCalls = 0
+      const result = await runAgentLoop(
+        provider,
+        'Read a.ts',
+        tools,
+        makeToolContext(),
+        makeConfig({
+          usageGovernor: {
+            reserve: async () => {
+              reserveCalls++
+              return { allowed: true as const, reservationId: `r-${reserveCalls}` }
+            },
+            settle: async () => undefined,
+          },
+        }),
+      )
+
+      expect(result.status).toBe('completed')
+      expect(reserveCalls).toBe(2)
+    })
+  })
+
   describe('untrusted-content boundary', () => {
     it('wraps READ/SEARCH tool output for a mission flagged as external-repository intake', async () => {
       const provider = makeMockProvider([

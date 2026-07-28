@@ -211,6 +211,26 @@ export async function runAgentLoop(
 
     onEvent?.({ type: 'iteration_start', iterationNumber: i + 1 })
 
+    let reservationId: string | undefined
+    if (config.usageGovernor !== undefined) {
+      const decision = await config.usageGovernor.reserve(
+        config.model === undefined ? {} : { model: config.model },
+      )
+      if (!decision.allowed) {
+        onEvent?.({ type: 'loop_end', status: 'budget_exceeded', totalIterations: i })
+        return {
+          status: 'budget_exceeded',
+          finalText,
+          iterations,
+          totalIterations: i,
+          totalUsage,
+          error: decision.reason,
+          finalMessages: messages,
+        }
+      }
+      reservationId = decision.reservationId
+    }
+
     let streamResult: Awaited<ReturnType<typeof collectStreamEvents>>
     try {
       const stream = provider.complete(messages, providerTools, {
@@ -223,6 +243,11 @@ export async function runAgentLoop(
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error)
       onEvent?.({ type: 'error', error: errorMsg })
+      // No usage was reported for this call -- the governor settles conservatively at the full
+      // reservation rather than assuming zero cost.
+      if (reservationId !== undefined) {
+        await config.usageGovernor?.settle(reservationId, undefined, config.model)
+      }
       return {
         status: 'error',
         finalText: '',
@@ -232,6 +257,10 @@ export async function runAgentLoop(
         error: errorMsg,
         finalMessages: messages,
       }
+    }
+
+    if (reservationId !== undefined) {
+      await config.usageGovernor?.settle(reservationId, streamResult.usage, config.model)
     }
 
     totalUsage = addUsage(totalUsage, streamResult.usage)

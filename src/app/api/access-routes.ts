@@ -127,6 +127,20 @@ function optionalPositiveNumber(record: Record<string, unknown>, key: string): n
   return value
 }
 
+/** Unlike `optionalPositiveNumber`, accepts `0` -- a real, valid budget cap (a zero-dollar
+ * allowance) that must not be confused with "unset". */
+function optionalNonNegativeNumber(
+  record: Record<string, unknown>,
+  key: string,
+): number | undefined {
+  const value = record[key]
+  if (value === undefined) return undefined
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    throw new GrantValidationError(`${key} must be a non-negative number.`)
+  }
+  return value
+}
+
 function optionalBoolean(record: Record<string, unknown>, key: string): boolean | undefined {
   const value = record[key]
   if (value === undefined) return undefined
@@ -172,6 +186,7 @@ function parseMissionExecutionLimits(value: unknown): MissionExecutionLimits | u
   const maxCommits = optionalPositiveNumber(record, 'maxCommits')
   const requirePullRequest = optionalBoolean(record, 'requirePullRequest')
   const allowDirectPush = optionalBoolean(record, 'allowDirectPush')
+  const maxDailyEstimatedCostUsd = optionalNonNegativeNumber(record, 'maxDailyEstimatedCostUsd')
   return {
     ...(maxConcurrentMissions === undefined ? {} : { maxConcurrentMissions }),
     ...(maxMissionDurationMinutes === undefined ? {} : { maxMissionDurationMinutes }),
@@ -183,6 +198,7 @@ function parseMissionExecutionLimits(value: unknown): MissionExecutionLimits | u
     ...(maxCommits === undefined ? {} : { maxCommits }),
     ...(requirePullRequest === undefined ? {} : { requirePullRequest }),
     ...(allowDirectPush === undefined ? {} : { allowDirectPush }),
+    ...(maxDailyEstimatedCostUsd === undefined ? {} : { maxDailyEstimatedCostUsd }),
   }
 }
 

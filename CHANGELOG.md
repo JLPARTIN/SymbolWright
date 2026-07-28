@@ -207,6 +207,54 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   mission that will reference it actually being created. New operator command
   `symbolwright prune-repos` (`--quarantine-only`/`--finalize-only`/`--json`) runs the sweep
   on demand.
+- **No durable usage/cost ledger, and `AgentLoopResult.totalUsage` was dropped on the floor
+  entirely (Bundle #12 PR 4)**: `recordAgentResult` never captured provider token/cost usage, so
+  no mission ever recorded what it actually spent, and there was no enforcement path at all for a
+  delegated grant's spend — the only existing money math (`src/telemetry/cost-tracker.ts`) was a
+  float-based, display-only CLI summary never wired into any budget decision. New
+  `src/access/microdollars.ts` establishes `bigint` microdollars as the sole representation used
+  in any enforcement or comparison, with `serializeMicrodollars`/`parseMicrodollars` as the one
+  codec pair every JSON/HTTP boundary uses (`bigint` never crosses one directly — `JSON.stringify`
+  throws on it). New `src/access/fixed-cost-rates.ts` (`computeFixedCostMicrodollars`) mirrors
+  `DEFAULT_COST_RATES`' models as fixed-point microdollar rates with ceiling rounding, throwing
+  `UnknownModelRateError` for an unpriced model rather than silently guessing — the existing float
+  `computeCost`/`DEFAULT_COST_RATES` path is untouched and stays display-only. New
+  `src/access/governance-store.ts` (`GovernanceStore`, SQLite via `node:sqlite`, WAL mode,
+  `0o600`) holds four tables — durable rate-limit windows, per-mission usage, per-grant daily
+  totals, and a `usage_reservations` ledger — with a transactional reserve-then-settle flow:
+  `reserveUsage` (server-generated `reservationId`, an optional client idempotency key unique only
+  within its own `grantScope`) atomically reserves an estimated cost before a provider call;
+  `settleReservation` reconciles it against actual reported usage afterward, settling
+  conservatively at the full reservation when a provider call fails to report usage rather than
+  assuming zero cost; `settleExpiredReservations` (run on first use) closes out any reservation
+  still `open` past its `expires_at`, covering a mid-call crash. `MissionExecutionLimits` gains
+  `maxDailyEstimatedCostUsd`; new `src/access/mission-usage-guard.ts` (`checkUsageBudget`, pure)
+  and `src/access/provider-concurrency-guard.ts` (`ProviderConcurrencyGuard`, in-memory named
+  pools — concurrency is process-local and doesn't need durability, unlike money) back the actual
+  enforcement. `AgentLoopConfig` gains an optional `usageGovernor` hook, checked at the
+  provider-turn boundary (once per loop iteration): `runAgentLoop` now reserves before every
+  provider call and settles after, returning a new `'budget_exceeded'` status when a governor
+  denies. `symbolwright-chat-server.ts`'s `/api/agent` now builds a real governor from the
+  governance store whenever the calling grant has `maxDailyEstimatedCostUsd` configured (rejecting
+  outright, for a budget-limited grant, a call whose model can't be priced), wraps both the
+  non-streaming and SSE paths in the new concurrency guard's `provider`/`sse` pools (`429` once a
+  pool is at capacity), and now actually calls the new `MissionService.recordUsage` with
+  `result.totalUsage` — fixing the drop-on-the-floor bug. `SymbolWrightMission` gains a `usage`
+  field (`totalPromptUnits`/`totalCompletionUnits`, deliberately not named with "tokens" —
+  `mission-redaction.ts`'s secret-key scanner matches any key containing that substring and would
+  silently blank the field to `'[REDACTED]'` on every disk write, a real bug this naming works
+  around rather than one this PR touches the scanner to fix). `PersistentMissionExecutor` gains an
+  `isBudgetExceeded` predicate option (same cadence as the existing `maxDurationMinutes` check),
+  reusing PR 2's `cancellationReason: 'budget'` vocabulary when it fires — the mechanism is built
+  and tested at the executor level; wiring a live grant-budget predicate into the autonomy
+  composition root (`autonomous-mission-runtime.ts`/`mission-routes.ts`) is a disclosed follow-up,
+  not done in this PR. Also disclosed as deliberately out of scope: migrating
+  `TeamBudget`/`TeamBudgetUsage` (`src/orchestration/orchestration-types.ts`) from float USD to
+  the new integer-microdollar representation — that subsystem's floats are self-contained and
+  internally consistent, and nothing compares them against the new governance store's `bigint`
+  ledger today, so the migration is left as a separately-sized follow-up rather than widening this
+  PR's blast radius into Bundle #11's already-tested orchestration budget code for no enforcement
+  gain in this PR's actual money path.
 
 ### Added
 
