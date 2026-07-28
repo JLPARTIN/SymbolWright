@@ -30,13 +30,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Apply guarded-host containment implementation
-        run: |
-          node scripts/sandbox-pr1-builder-part1.mjs
-          node scripts/sandbox-pr1-builder-part2.mjs
-          node scripts/sandbox-pr1-builder-part3.mjs
-          node scripts/sandbox-pr1-builder-part4.mjs
-          node scripts/sandbox-pr1-builder-part5.mjs
+      - name: Apply builder part 1
+        run: node scripts/sandbox-pr1-builder-part1.mjs
+
+      - name: Apply builder part 2
+        run: node scripts/sandbox-pr1-builder-part2.mjs
+
+      - name: Apply builder part 3
+        run: node scripts/sandbox-pr1-builder-part3.mjs
+
+      - name: Apply builder part 4
+        run: node scripts/sandbox-pr1-builder-part4.mjs
+
+      - name: Apply builder part 5
+        run: node scripts/sandbox-pr1-builder-part5.mjs
 
       - name: Format source changes
         run: npm run format
