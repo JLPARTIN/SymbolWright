@@ -94,28 +94,26 @@ replaceOnce(
 `,
 )
 
-replaceOnce(
-  'CHANGELOG.md',
-  `## [Unreleased]
-
-### Added
-
-`,
-  `## [Unreleased]
-
-### Added
-
-- **Strong offline container executor (Sandbox Bundle PR 3/7)**: adds an opt-in,
+const changelogPath = 'CHANGELOG.md'
+const changelog = readFileSync(changelogPath, 'utf8')
+const changelogMarker = `## [Unreleased]\n\n### Added\n\n`
+const changelogEntry = `- **Strong offline container executor (Sandbox Bundle PR 3/7)**: adds an opt-in,
   digest-pinned JavaScript container runner with normal-execution \`--pull=never\`, physical
   \`--network none\`, a read-only root filesystem, numeric non-root execution, dropped Linux
   capabilities, no-new-privileges, private PID/IPC namespaces, CPU/memory/PID/tmpfs/time/output
   quotas, symlink-safe copy-in materialization outside the canonical repository, bounded copy-out
   artifact quarantine and patch generation, cancellation, mandatory cleanup, and boot-time orphan
   reaping. No dependency acquisition, runtime egress, arbitrary image selection, repository bind
-  mount, or container-to-guarded-host fallback is introduced.
-
-`,
-)
+  mount, or container-to-guarded-host fallback is introduced.\n\n`
+const changelogIndex = changelog.indexOf(changelogMarker)
+if (changelogIndex < 0) throw new Error('CHANGELOG.md: Unreleased Added marker not found')
+if (!changelog.includes('Strong offline container executor (Sandbox Bundle PR 3/7)')) {
+  const insertionPoint = changelogIndex + changelogMarker.length
+  writeFileSync(
+    changelogPath,
+    `${changelog.slice(0, insertionPoint)}${changelogEntry}${changelog.slice(insertionPoint)}`,
+  )
+}
 
 replaceOnce(
   'docs/security/SANDBOX_LARGE_PR_BUNDLE_BUILD_PLAN.md',
@@ -131,7 +129,10 @@ runtime profiles.
 
 let workflow = readFileSync('.github/workflows/ci.yml', 'utf8')
 workflow = workflow.replace('permissions:\n  contents: write', 'permissions:\n  contents: read')
-workflow = workflow.replace(`        with:\n          ref: \${{ github.head_ref }}\n          fetch-depth: 0`, `        with:\n          fetch-depth: 0`)
+workflow = workflow.replace(
+  `        with:\n          ref: \${{ github.head_ref }}\n          fetch-depth: 0`,
+  `        with:\n          fetch-depth: 0`,
+)
 workflow = workflow.replace(
   /\n      - name: Apply guarded PR3 final patches[\s\S]*?\n      - name: Audit dependencies/,
   '\n      - name: Audit dependencies',
