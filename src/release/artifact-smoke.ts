@@ -37,7 +37,9 @@ export function runNpmPackSmoke(workspaceRoot: string): ArtifactSmokeResult {
     const packed = JSON.parse(
       run('npm', ['pack', '--json', '--pack-destination', packDir], { cwd: workspaceRoot }),
     ) as { filename: string }[]
-    const tarball = path.join(packDir, packed[0]?.filename ?? '')
+    const filename = packed[0]?.filename
+    if (!filename) throw new Error('npm pack did not return a tarball filename.')
+    const tarball = path.join(packDir, filename)
     run('npm', ['install', '--ignore-scripts', tarball], { cwd: projectDir })
     const binInvocations = [
       ['symbolwright', ['--help']],
