@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Report only the final failing test
+      - name: Verify status route stays static
         env:
           SYMBOLWRIGHT_REQUIRE_DOCKER_SMOKE: '1'
         run: |
@@ -26,4 +26,4 @@ jobs:
           git add .
           git commit -qm baseline
           python3 scripts/.pr6-diagnose.py >/tmp/pr6-generate.log
-          python3 scripts/.pr6-test-diagnose.py
+          npx vitest run src/app/server/unified-server.spec.ts
