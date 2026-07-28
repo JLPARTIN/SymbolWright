@@ -92,7 +92,20 @@ new_bins = """    const binInvocations = [
 """
 if old_bins not in artifact_text:
     raise SystemExit('Packed-bin invocation anchor missing')
-artifact_path.write_text(artifact_text.replace(old_bins, new_bins, 1))
+artifact_text = artifact_text.replace(old_bins, new_bins, 1)
+old_cleanup = """    if (run('docker', ['inspect', '-f', '{{.State.ExitCode}}', name]) !== '0') throw new Error('Container exited non-zero after SIGTERM.')
+  } finally {
+"""
+new_cleanup = """    if (run('docker', ['inspect', '-f', '{{.State.ExitCode}}', name]) !== '0') throw new Error('Container exited non-zero after SIGTERM.')
+  } catch (error) {
+    const logs = spawnSync('docker', ['logs', name], { encoding: 'utf8' })
+    const detail = error instanceof Error ? error.message : String(error)
+    throw new Error(`${detail}\\nContainer logs:\\n${logs.stdout ?? ''}${logs.stderr ?? ''}`)
+  } finally {
+"""
+if old_cleanup not in artifact_text:
+    raise SystemExit('Docker cleanup anchor missing')
+artifact_path.write_text(artifact_text.replace(old_cleanup, new_cleanup, 1))
 
 run(['npm', 'install', '--package-lock-only', '--ignore-scripts', '--silent'], quiet=True)
 run(['npm', 'run', 'build', '--silent'], quiet=True)
