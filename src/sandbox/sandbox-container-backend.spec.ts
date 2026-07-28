@@ -311,7 +311,7 @@ describe('strong sandbox container backend unit boundaries', () => {
   })
 
   it('enforces output limits, timeouts, and explicit cancellation', async () => {
-    const flooding = await fixture({ execution: { floodBytes: 4_096, sleepMs: 5_000 } })
+    const flooding = await fixture({ execution: { floodBytes: 4_096 } })
     const limited = await executeStrongSandboxContainer(
       input(flooding, { limits: { maxOutputBytes: 128, timeoutMs: 1_000 } }),
     )
