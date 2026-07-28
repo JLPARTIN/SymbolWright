@@ -12,6 +12,27 @@ export interface ServeCommandArgs {
   readonly corsOrigin?: string
 }
 
+function parseBoolean(value: string | undefined, name: string): boolean | undefined {
+  if (value === undefined) return undefined
+  const normalized = value.trim().toLowerCase()
+  if (normalized === 'true' || normalized === '1') return true
+  if (normalized === 'false' || normalized === '0') return false
+  throw new Error(`${name} must be true/false or 1/0.`)
+}
+
+function parsePositiveInteger(value: string | undefined, name: string): number | undefined {
+  if (value === undefined || value.trim().length === 0) return undefined
+  const normalized = value.trim()
+  if (!/^[1-9]\d*$/.test(normalized)) {
+    throw new Error(`${name} must be a positive integer.`)
+  }
+  const parsed = Number(normalized)
+  if (!Number.isSafeInteger(parsed)) {
+    throw new Error(`${name} must be a positive safe integer.`)
+  }
+  return parsed
+}
+
 function parsePort(value: string): number {
   const parsed = Number.parseInt(value, 10)
   if (!Number.isFinite(parsed) || parsed < 1 || parsed > 65535) {
@@ -88,6 +109,31 @@ export function resolveChatServerOptions(
     args.corsOrigin ?? readCompatEnv(env, 'SYMBOLWRIGHT_CORS_ORIGIN', 'CODEMIND_CORS_ORIGIN')
   const tlsCertFile = readCompatEnv(env, 'SYMBOLWRIGHT_TLS_CERT_FILE', 'CODEMIND_TLS_CERT_FILE')
   const tlsKeyFile = readCompatEnv(env, 'SYMBOLWRIGHT_TLS_KEY_FILE', 'CODEMIND_TLS_KEY_FILE')
+  const deploymentModeValue = env['SYMBOLWRIGHT_DEPLOYMENT_MODE']?.trim()
+  const deploymentMode =
+    deploymentModeValue === undefined || deploymentModeValue.length === 0
+      ? undefined
+      : (deploymentModeValue as 'local' | 'hosted')
+  const trustedProxyCidrs = env['SYMBOLWRIGHT_TRUSTED_PROXY_CIDRS']
+    ?.split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+  const allowUnencryptedNonLoopback = parseBoolean(
+    env['SYMBOLWRIGHT_ALLOW_UNENCRYPTED_NON_LOOPBACK'],
+    'SYMBOLWRIGHT_ALLOW_UNENCRYPTED_NON_LOOPBACK',
+  )
+  const maxProviderConcurrency = parsePositiveInteger(
+    env['SYMBOLWRIGHT_MAX_PROVIDER_CONCURRENCY'],
+    'SYMBOLWRIGHT_MAX_PROVIDER_CONCURRENCY',
+  )
+  const maxSseStreams = parsePositiveInteger(
+    env['SYMBOLWRIGHT_MAX_SSE_STREAMS'],
+    'SYMBOLWRIGHT_MAX_SSE_STREAMS',
+  )
+  const maxAutonomousExecutions = parsePositiveInteger(
+    env['SYMBOLWRIGHT_MAX_AUTONOMOUS_EXECUTIONS'],
+    'SYMBOLWRIGHT_MAX_AUTONOMOUS_EXECUTIONS',
+  )
 
   return {
     apiKey,
@@ -96,6 +142,12 @@ export function resolveChatServerOptions(
     ...(corsOrigin !== undefined ? { corsOrigin } : {}),
     ...(tlsCertFile !== undefined ? { tlsCertFile } : {}),
     ...(tlsKeyFile !== undefined ? { tlsKeyFile } : {}),
+    ...(deploymentMode !== undefined ? { deploymentMode } : {}),
+    ...(trustedProxyCidrs === undefined ? {} : { trustedProxyCidrs }),
+    ...(allowUnencryptedNonLoopback === undefined ? {} : { allowUnencryptedNonLoopback }),
+    ...(maxProviderConcurrency === undefined ? {} : { maxProviderConcurrency }),
+    ...(maxSseStreams === undefined ? {} : { maxSseStreams }),
+    ...(maxAutonomousExecutions === undefined ? {} : { maxAutonomousExecutions }),
   }
 }
 
@@ -108,7 +160,9 @@ export function renderServeBanner(server: StartedUnifiedServer): string {
     'Routes:',
     '- GET  /                          unified app shell (dashboard, workspace, agent, tools, memory, checkpoints, settings)',
     '- GET  /workspace                 redirects to /#/workspace (bookmark compatibility)',
-    '- GET  /api/health                public health check',
+    '- GET  /api/health                public liveness check',
+    '- GET  /readyz                    public coarse readiness check',
+    '- GET  /api/metrics               operator-only process metrics',
     '- GET  /api/status                runtime status (auth required)',
     '- GET  /api/workspace/languages   Universal Workspace language/runner registry',
     '- POST /api/workspace/run         run code through a server-side runner',

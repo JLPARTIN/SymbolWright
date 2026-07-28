@@ -2,10 +2,17 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import {
   assertChatServerCanStart,
-  buildChatServerWarnings,
   createChatServerRequestListener,
 } from '../../server/symbolwright-chat-server.js'
 import { createAndStartHttpServer, ShutdownLifecycle } from './http-bootstrap.js'
+import { resolveDeploymentSecurity } from '../../server/deployment-mode.js'
+import { MetricsRegistry } from '../../server/metrics-registry.js'
+import { prepareOperationalServerOptions } from '../../server/operational-bootstrap.js'
+import {
+  applyOperationalSecurityHeaders,
+  resolveRequestSecurity,
+  sendRequestSecurityRejection,
+} from '../../server/trusted-proxy.js'
 import { tryHandleUnifiedRoute } from './route-table.js'
 import type { StartedUnifiedServer, UnifiedServerOptions } from './route-types.js'
 
@@ -31,7 +38,9 @@ export type { StartedUnifiedServer, UnifiedServerOptions } from './route-types.j
 export function createUnifiedRequestListener(
   options: UnifiedServerOptions,
 ): (req: IncomingMessage, res: ServerResponse) => void {
-  const chatListener = createChatServerRequestListener(options)
+  const metricsRegistry = options.metricsRegistry ?? new MetricsRegistry()
+  const chatListener = createChatServerRequestListener({ ...options, metricsRegistry })
+  const deploymentSecurity = resolveDeploymentSecurity(options)
 
   return (req, res) => {
     void handleRequest(req, res)
@@ -39,6 +48,13 @@ export function createUnifiedRequestListener(
 
   async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const url = new URL(req.url ?? '/', 'http://localhost')
+    metricsRegistry.trackResponse(req, res)
+    applyOperationalSecurityHeaders(res)
+    const requestSecurity = resolveRequestSecurity(req, deploymentSecurity)
+    if (requestSecurity.rejection !== undefined) {
+      sendRequestSecurityRejection(res, requestSecurity.rejection)
+      return
+    }
 
     if (await tryHandleUnifiedRoute(req, res, url, options.apiKey)) {
       return
@@ -52,7 +68,9 @@ export async function startUnifiedServer(
   options: UnifiedServerOptions,
 ): Promise<StartedUnifiedServer> {
   assertChatServerCanStart(options)
-  const warnings = buildChatServerWarnings(options)
+  const prepared = await prepareOperationalServerOptions(options)
+  options = prepared.options
+  const warnings = prepared.warnings
   // Same single-resolution convention as `startChatServer` -- see its comment for why this must
   // not be independently defaulted in two places.
   const shutdownLifecycle = options.shutdownLifecycle ?? new ShutdownLifecycle()

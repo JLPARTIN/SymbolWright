@@ -112,6 +112,18 @@ describe('resolveChatServerOptions', () => {
     spy.mockRestore()
   })
 
+  it('rejects malformed hosted concurrency limits instead of partially parsing them', () => {
+    expect(() =>
+      resolveChatServerOptions(
+        {},
+        {
+          SYMBOLWRIGHT_API_KEY: 'k',
+          SYMBOLWRIGHT_MAX_PROVIDER_CONCURRENCY: '3junk',
+        },
+      ),
+    ).toThrow('SYMBOLWRIGHT_MAX_PROVIDER_CONCURRENCY must be a positive integer')
+  })
+
   it('reads canonical SYMBOLWRIGHT_* host/port/cors/TLS vars', () => {
     const options = resolveChatServerOptions(
       {},

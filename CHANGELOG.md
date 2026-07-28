@@ -6,6 +6,15 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ### Fixed
 
+- **Network and operational hardening (Bundle #12 PR 5)**: adds explicit local/hosted
+  deployment modes; fail-closed non-loopback plaintext behavior; direct-TLS or
+  trusted-reverse-proxy HTTPS enforcement; right-to-left trusted `X-Forwarded-For`
+  resolution with IPv4-mapped IPv6 normalization; strict immediate-proxy forwarded-protocol
+  validation and conflict rejection; coarse public `/readyz` plus operator-only readiness
+  diagnostics and metrics; startup detection of stale missions, corrupt sandbox state, and
+  external-repository retention work; and hosted-mode startup refusal when the governance
+  ledger, process concurrency caps, or delegated-agent execution/session/cost limits are
+  missing.
 - **GitHub repository intake — grant attribution and mission-create authorization bypass**:
   `POST /api/github/intake` was gated only by the low-level `symbolwright.repository.index`
   capability, so a read-only Repository Analyst grant (no `symbolwright.mission.create`) could
