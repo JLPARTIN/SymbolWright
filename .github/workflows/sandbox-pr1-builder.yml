@@ -36,8 +36,29 @@ jobs:
       - name: Apply builder part 2
         run: node scripts/sandbox-pr1-builder-part2.mjs
 
-      - name: Apply builder part 3
-        run: node scripts/sandbox-pr1-builder-part3.mjs
+      - name: Apply builder part 3 operation 0
+        run: node scripts/sandbox-pr1-builder-part3.mjs 0
+
+      - name: Apply builder part 3 operation 1
+        run: node scripts/sandbox-pr1-builder-part3.mjs 1
+
+      - name: Apply builder part 3 operation 2
+        run: node scripts/sandbox-pr1-builder-part3.mjs 2
+
+      - name: Apply builder part 3 operation 3
+        run: node scripts/sandbox-pr1-builder-part3.mjs 3
+
+      - name: Apply builder part 3 operation 4
+        run: node scripts/sandbox-pr1-builder-part3.mjs 4
+
+      - name: Apply builder part 3 operation 5
+        run: node scripts/sandbox-pr1-builder-part3.mjs 5
+
+      - name: Apply builder part 3 operation 6
+        run: node scripts/sandbox-pr1-builder-part3.mjs 6
+
+      - name: Apply builder part 3 operation 7
+        run: node scripts/sandbox-pr1-builder-part3.mjs 7
 
       - name: Apply builder part 4
         run: node scripts/sandbox-pr1-builder-part4.mjs
