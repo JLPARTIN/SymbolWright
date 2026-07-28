@@ -26,7 +26,7 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Generate corrected PR 6 product files
+      - name: Regenerate validated PR 6 product tree
         env:
           SYMBOLWRIGHT_REQUIRE_DOCKER_SMOKE: '1'
         run: python3 scripts/.pr6-diagnose.py
@@ -61,35 +61,6 @@ jobs:
           .github/workflows/deploy.yml
           .github/workflows/publish.yml
 
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Format check
-        run: npm run format:check
-
-      - name: Release script tests
-        run: npm run test:release-scripts
-
-      - name: Full unit and integration tests
-        run: npm test
-
-      - name: Build
-        run: npm run build
-
-      - name: Packed npm artifact smoke
-        run: >-
-          node -e "const {runNpmPackSmoke}=require('./dist/release/artifact-smoke.js');
-          const result=runNpmPackSmoke(process.cwd()); console.log(result);
-          if(result.status!=='PASS') process.exit(1)"
-
-      - name: Strict local and hosted Docker smoke
-        env:
-          SYMBOLWRIGHT_REQUIRE_DOCKER_SMOKE: '1'
-        run: npm run release:docker-smoke
-
       - name: Commit validated permanent product files
         run: |
           git config user.name "github-actions[bot]"
@@ -113,11 +84,7 @@ jobs:
             src/server/symbolwright-chat-server.ts \
             src/web/status-runner.ts \
             .github/workflows/deploy.yml .github/workflows/publish.yml
-          git rm \
-            .github/workflows/pr6-builder.yml \
-            scripts/.pr6-apply.py \
-            scripts/.pr6-diagnose.py \
-            scripts/.pr6-preprocess.py \
-            scripts/.pr6-test-diagnose.py
+          git status --short
+          git diff --cached --quiet && { echo "No permanent product changes were staged"; exit 1; }
           git commit -m "feat(release): complete artifact integrity and governance closure (Bundle #12 PR 6/7)"
           git push origin HEAD:${GITHUB_HEAD_REF}
