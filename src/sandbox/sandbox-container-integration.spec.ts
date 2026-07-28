@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { runnerAvailability, STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID } from './sandbox-registry.js'
 import { buildSandboxInventory } from './sandbox-registry.js'
 import { SandboxService } from './sandbox-service.js'
+import type { SandboxExecutionResult } from './sandbox-types.js'
 
 const RUN_INTEGRATION = process.env['SYMBOLWRIGHT_RUN_STRONG_CONTAINER_INTEGRATION'] === 'true'
 const CHECKED_AT = '2026-07-28T00:00:00.000Z'
@@ -45,6 +46,21 @@ integration('strong offline container execution', () => {
     })
   }
 
+  function resultDiagnostic(result: SandboxExecutionResult): string {
+    return JSON.stringify(
+      {
+        status: result.status,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        diagnostics: result.diagnostics,
+        cleanup: result.cleanup,
+        evidence: result.evidence,
+      },
+      null,
+      2,
+    )
+  }
+
   it('runs as non-root with a read-only root, no host mounts, and quarantined artifacts', async () => {
     const result = await service('sandbox-isolation').execute(
       {
@@ -67,7 +83,7 @@ integration('strong offline container execution', () => {
       { mode: 'APPROVED_EXECUTION' },
     )
 
-    expect(result.status).toBe('passed')
+    expect(result.status, resultDiagnostic(result)).toBe('passed')
     const proof = JSON.parse(result.stdout.trim()) as {
       readonly uid: number
       readonly rootBlocked: boolean
@@ -102,7 +118,7 @@ integration('strong offline container execution', () => {
       { mode: 'APPROVED_EXECUTION' },
     )
 
-    expect(result.status).toBe('passed')
+    expect(result.status, resultDiagnostic(result)).toBe('passed')
     expect(result.stdout).toContain('network-blocked')
     expect(result.stderr).not.toContain('network-connected')
   }, 30_000)
@@ -119,7 +135,7 @@ integration('strong offline container execution', () => {
       { mode: 'APPROVED_EXECUTION' },
     )
 
-    expect(result.status).toBe('resource-limit')
+    expect(result.status, resultDiagnostic(result)).toBe('resource-limit')
     expect(result.outputTruncated).toBe(true)
     expect(Buffer.byteLength(result.stdout) + Buffer.byteLength(result.stderr)).toBeLessThanOrEqual(
       2_048,
@@ -137,7 +153,7 @@ integration('strong offline container execution', () => {
       },
       { mode: 'APPROVED_EXECUTION' },
     )
-    expect(timedOut.status).toBe('timeout')
+    expect(timedOut.status, resultDiagnostic(timedOut)).toBe('timeout')
     expect(timedOut.cleanup.succeeded).toBe(true)
 
     const cancellable = service('sandbox-cancel')
@@ -155,7 +171,7 @@ integration('strong offline container execution', () => {
     const cancellation = await cancellable.cancelExecution('sandbox-cancel')
     const cancelled = await execution
     expect(cancellation.status).toBe('cancelled')
-    expect(cancelled.status).toBe('cancelled')
+    expect(cancelled.status, resultDiagnostic(cancelled)).toBe('cancelled')
     expect(cancelled.cleanup.succeeded).toBe(true)
   }, 45_000)
 
@@ -180,7 +196,10 @@ integration('strong offline container execution', () => {
       },
       { mode: 'APPROVED_EXECUTION' },
     )
-    expect(['passed', 'resource-limit', 'runtime-error']).toContain(processPressure.status)
+    expect(
+      ['passed', 'resource-limit', 'runtime-error'],
+      resultDiagnostic(processPressure),
+    ).toContain(processPressure.status)
 
     const diskPressure = await service('sandbox-disk').execute(
       {
@@ -206,7 +225,10 @@ integration('strong offline container execution', () => {
       },
       { mode: 'APPROVED_EXECUTION' },
     )
-    expect(['resource-limit', 'runtime-error']).toContain(diskPressure.status)
+    expect(
+      ['resource-limit', 'runtime-error'],
+      resultDiagnostic(diskPressure),
+    ).toContain(diskPressure.status)
     expect(diskPressure.stderr).toMatch(/ENOSPC|space|quota|memory/i)
   }, 45_000)
 })
