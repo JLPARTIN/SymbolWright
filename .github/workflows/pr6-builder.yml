@@ -13,137 +13,63 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Apply PR 6 patch and expose exact failure
+      - name: Checkout PR head branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply current-repository PR 6 implementation
         run: |
-          curl --fail --silent --show-error --location \
-            "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
-            | tar -xz --strip-components=1
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          path = Path('scripts/.pr6-apply.py')
-          text = path.read_text()
-          old = '''replace_once(
-              'src/orchestration/orchestration-types.ts',
-              "import type { ApprovalPolicy, PrincipalType, RepositoryScope } from '../access/access-types.js'",
-              "import {\\n  parseMicrodollars,\\n  serializeMicrodollars,\\n  usdToMicrodollars,\\n} from '../access/microdollars.js'\\nimport type { ApprovalPolicy, PrincipalType, RepositoryScope } from '../access/access-types.js'",
-          )'''
-          new = '''replace_once(
-              'src/orchestration/orchestration-types.ts',
-              " */\\n\\nexport const AGENT_PROVIDER_KINDS",
-              " */\\n\\nimport {\\n  parseMicrodollars,\\n  serializeMicrodollars,\\n  usdToMicrodollars,\\n} from '../access/microdollars.js'\\n\\nexport const AGENT_PROVIDER_KINDS",
-          )'''
-          if old not in text:
-              raise SystemExit('PR 6 generator import-anchor block missing')
-          text = text.replace(old, new, 1)
-          docker_block = '''# Docker image must give the non-root process a real writable state root.
-          replace_once(
-              'Dockerfile',
-              """COPY --from=build /app/dist/ ./dist/
-
-          RUN addgroup -S symbolwright && adduser -S symbolwright -G symbolwright
-          USER symbolwright
-
-          ENTRYPOINT [\"node\", \"dist/cli.js\"]
-          """,
-              """COPY --from=build /app/dist/ ./dist/
-
-          RUN addgroup -S symbolwright \\
-            && adduser -S symbolwright -G symbolwright \\
-            && mkdir -p /data \\
-            && chown symbolwright:symbolwright /data
-          USER symbolwright
-          WORKDIR /data
-          EXPOSE 8787
-          VOLUME [\"/data\"]
-
-          ENTRYPOINT [\"node\", \"/app/dist/cli.js\"]
-          """,
-          )
-
-          '''
-          text, count = re.subn(
-              r"# Docker image must give the non-root process a real writable state root\..*?# Package scripts and native node:test coverage for release tooling\.",
-              lambda _match: docker_block + '# Package scripts and native node:test coverage for release tooling.',
-              text,
-              count=1,
-              flags=re.DOTALL,
-          )
-          if count != 1:
-              raise SystemExit(f'Expected one Docker generator block, replaced {count}')
-          workflow_block = '''# Workflows: immutable verification, strict smoke, exact pushed digest validation.
-          replace_once(
-              '.github/workflows/publish.yml',
-              """      - name: Checkout repository
-                  uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-          """,
-              """      - name: Checkout repository
-                  uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-                  with:
-                    ref: ${{ github.event.release.tag_name || github.ref_name }}
-          """,
-          )
-          replace_once(
-              '.github/workflows/publish.yml',
-              """      - name: Validate release proof
-                  run: npm run validate
-          """,
-              """      - name: Verify immutable tag inputs
-                  run: npm run release:verify-tag -- \"${GITHUB_REF_NAME}\"
-
-                - name: Validate release proof
-                  env:
-                    SYMBOLWRIGHT_REQUIRE_DOCKER_SMOKE: '1'
-                  run: npm run validate
-          """,
-          )
-          replace_once(
-              '.github/workflows/deploy.yml',
-              """      - name: Validate release proof
-                  run: npm run validate
-          """,
-              """      - name: Validate release proof
-                  env:
-                    SYMBOLWRIGHT_REQUIRE_DOCKER_SMOKE: '1'
-                  run: npm run validate
-          """,
-          )
-          replace_once(
-              '.github/workflows/deploy.yml',
-              """      - name: Build and push image
-                  uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-          """,
-              """      - name: Build and push image
-                  id: build
-                  uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-          """,
-          )
-          replace_once(
-              '.github/workflows/deploy.yml',
-              """          cache-to: type=gha,mode=max
-          """,
-              """          cache-to: type=gha,mode=max
-
-                - name: Pull and smoke-test the exact pushed digest
-                  env:
-                    SYMBOLWRIGHT_REQUIRE_DOCKER_SMOKE: '1'
-                  run: |
-                    image=\"${{ env.REGISTRY }}/${{ steps.image.outputs.name }}@${{ steps.build.outputs.digest }}\"
-                    docker pull \"$image\"
-                    npm run release:docker-smoke -- --image \"$image\"
-          """,
-          )
-
-          '''
-          text, count = re.subn(
-              r"# Workflows: immutable verification, strict smoke, exact pushed digest validation\..*?# Focused changelog entry only\.",
-              lambda _match: workflow_block + '# Focused changelog entry only.',
-              text,
-              count=1,
-              flags=re.DOTALL,
-          )
-          if count != 1:
-              raise SystemExit(f'Expected one workflow generator block, replaced {count}')
-          path.write_text(text)
-          PY
+          python3 scripts/.pr6-preprocess.py
           python3 scripts/.pr6-apply.py
+          npm install --package-lock-only --ignore-scripts
+
+      - name: Format TypeScript, scripts, JSON, and workflows
+        run: >-
+          npx prettier --write
+          CHANGELOG.md
+          package.json
+          package-lock.json
+          scripts/docker-smoke.mjs
+          scripts/extract-release-notes.mjs
+          scripts/release-prepare.mjs
+          scripts/verify-release-tag.mjs
+          scripts/lib/changelog-release.mjs
+          scripts/lib/changelog-release.test.mjs
+          src/app/api/mission-routes.ts
+          src/autonomy/autonomous-budget-governance.spec.ts
+          src/autonomy/autonomous-mission-coordinator.ts
+          src/autonomy/autonomous-mission-runtime.ts
+          src/autonomy/server-autonomy-runtime.ts
+          src/cli-release-readiness.ts
+          src/cli-release-readiness.spec.ts
+          src/orchestration/orchestration-money.spec.ts
+          src/orchestration/orchestration-store.ts
+          src/orchestration/orchestration-types.ts
+          src/orchestration/team-service.ts
+          src/release/artifact-smoke.ts
+          src/server/symbolwright-chat-server.ts
+          .github/workflows/deploy.yml
+          .github/workflows/publish.yml
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
