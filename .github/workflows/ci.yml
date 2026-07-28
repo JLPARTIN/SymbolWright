@@ -26,20 +26,41 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Apply streamed copy-in patch
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: |
+          node scripts/apply-sandbox-pr3-stream-copy-in.mjs
+          npx prettier --write \
+            src/sandbox/sandbox-container-backend.ts \
+            src/sandbox/sandbox-container-transfer.ts \
+            src/sandbox/sandbox-container-command-plan.ts \
+            src/sandbox/sandbox-container-command-plan.spec.ts \
+            src/sandbox/sandbox-container-integration.spec.ts
+          npm run typecheck
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix(sandbox): stream copy-in to read-only container tmpfs"
+          git push origin "HEAD:${HEAD_BRANCH}"
       - name: Prepare digest-pinned strong sandbox image
         run: docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66
-      - name: Capture strong sandbox integration output
+      - name: Validate strong sandbox integration
         env:
           HEAD_BRANCH: ${{ github.head_ref }}
           SYMBOLWRIGHT_RUN_STRONG_CONTAINER_INTEGRATION: 'true'
         run: |
           set +e
-          npx vitest run src/sandbox/sandbox-container-integration.spec.ts --reporter=verbose > sandbox-pr3-container-diagnostic.txt 2>&1
+          npx vitest run src/sandbox/sandbox-container-integration.spec.ts --reporter=verbose > /tmp/sandbox-pr3-container.log 2>&1
           status=$?
           set -e
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add sandbox-pr3-container-diagnostic.txt
-          git commit -m "chore(sandbox): capture strong-container integration diagnostic"
-          git push origin "HEAD:${HEAD_BRANCH}"
+          if [ "$status" -ne 0 ]; then
+            cp /tmp/sandbox-pr3-container.log sandbox-pr3-container-diagnostic.txt
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add sandbox-pr3-container-diagnostic.txt
+            git commit -m "chore(sandbox): capture strong-container integration diagnostic"
+            git push origin "HEAD:${HEAD_BRANCH}"
+          fi
+          cat /tmp/sandbox-pr3-container.log
           exit "$status"
