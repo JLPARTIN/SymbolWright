@@ -6,24 +6,118 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Verify status route stays static
+      - name: Checkout PR head branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Generate corrected PR 6 product files
         env:
           SYMBOLWRIGHT_REQUIRE_DOCKER_SMOKE: '1'
+        run: python3 scripts/.pr6-diagnose.py
+
+      - name: Format permanent product files
+        run: >-
+          npx prettier --write
+          CHANGELOG.md
+          package.json
+          package-lock.json
+          scripts/docker-smoke.mjs
+          scripts/extract-release-notes.mjs
+          scripts/release-prepare.mjs
+          scripts/verify-release-tag.mjs
+          scripts/lib/changelog-release.mjs
+          scripts/lib/changelog-release.test.mjs
+          src/app/api/mission-routes.ts
+          src/autonomy/autonomous-budget-governance.spec.ts
+          src/autonomy/autonomous-mission-coordinator.ts
+          src/autonomy/autonomous-mission-runtime.ts
+          src/autonomy/server-autonomy-runtime.ts
+          src/cli.ts
+          src/cli-release-readiness.ts
+          src/cli-release-readiness.spec.ts
+          src/orchestration/orchestration-money.spec.ts
+          src/orchestration/orchestration-store.ts
+          src/orchestration/orchestration-types.ts
+          src/orchestration/team-service.ts
+          src/release/artifact-smoke.ts
+          src/server/symbolwright-chat-server.ts
+          src/web/status-runner.ts
+          .github/workflows/deploy.yml
+          .github/workflows/publish.yml
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Release script tests
+        run: npm run test:release-scripts
+
+      - name: Full unit and integration tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Packed npm artifact smoke
+        run: >-
+          node -e "const {runNpmPackSmoke}=require('./dist/release/artifact-smoke.js');
+          const result=runNpmPackSmoke(process.cwd()); console.log(result);
+          if(result.status!=='PASS') process.exit(1)"
+
+      - name: Strict local and hosted Docker smoke
+        env:
+          SYMBOLWRIGHT_REQUIRE_DOCKER_SMOKE: '1'
+        run: npm run release:docker-smoke
+
+      - name: Commit validated permanent product files
         run: |
-          curl --fail --silent --show-error --location \
-            "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
-            | tar -xz --strip-components=1
-          git init -q
-          git config user.name test
-          git config user.email test@example.com
-          git add .
-          git commit -qm baseline
-          python3 scripts/.pr6-diagnose.py >/tmp/pr6-generate.log
-          npx vitest run src/app/server/unified-server.spec.ts
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            CHANGELOG.md Dockerfile package.json package-lock.json \
+            scripts/docker-smoke.mjs scripts/extract-release-notes.mjs \
+            scripts/release-prepare.mjs scripts/verify-release-tag.mjs \
+            scripts/lib/changelog-release.mjs scripts/lib/changelog-release.test.mjs \
+            src/app/api/mission-routes.ts \
+            src/autonomy/autonomous-budget-governance.spec.ts \
+            src/autonomy/autonomous-mission-coordinator.ts \
+            src/autonomy/autonomous-mission-runtime.ts \
+            src/autonomy/server-autonomy-runtime.ts \
+            src/cli.ts src/cli-release-readiness.ts src/cli-release-readiness.spec.ts \
+            src/orchestration/orchestration-money.spec.ts \
+            src/orchestration/orchestration-store.ts \
+            src/orchestration/orchestration-types.ts \
+            src/orchestration/team-service.ts \
+            src/release/artifact-smoke.ts \
+            src/server/symbolwright-chat-server.ts \
+            src/web/status-runner.ts \
+            .github/workflows/deploy.yml .github/workflows/publish.yml
+          git rm \
+            .github/workflows/pr6-builder.yml \
+            scripts/.pr6-apply.py \
+            scripts/.pr6-diagnose.py \
+            scripts/.pr6-preprocess.py \
+            scripts/.pr6-test-diagnose.py
+          git commit -m "feat(release): complete artifact integrity and governance closure (Bundle #12 PR 6/7)"
+          git push origin HEAD:${GITHUB_HEAD_REF}
