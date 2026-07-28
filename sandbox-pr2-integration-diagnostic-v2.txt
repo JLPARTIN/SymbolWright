@@ -1,0 +1,3 @@
+integration_exit_status=1
+
+docs/runtime/SYMBOLWRIGHT_UNIVERSAL_SANDBOX.md: expected one occurrence, found 0: '## Current execution architecture\n'
