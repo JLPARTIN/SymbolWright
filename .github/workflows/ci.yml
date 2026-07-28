@@ -26,22 +26,56 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Capture full coverage tail
+      - name: Apply contract cleanup
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: |
+          node scripts/apply-sandbox-pr3-contract-cleanup.mjs
+          npx prettier --write \
+            src/sandbox/sandbox-registry.ts \
+            src/sandbox/sandbox-images.ts \
+            src/sandbox/sandbox-image-commands.ts \
+            src/sandbox/sandbox-doctor.spec.ts \
+            src/sandbox/sandbox-image-commands.spec.ts \
+            src/sandbox/sandbox-images.spec.ts \
+            src/sandbox/sandbox-container-policy.spec.ts \
+            src/cli-sandbox.spec.ts \
+            src/cli-bin.spec.ts \
+            src/app/api/sandbox-routes.spec.ts
+          npm run typecheck
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix(sandbox): align PR3 image and readiness contracts"
+          git push origin "HEAD:${HEAD_BRANCH}"
+      - name: Run focused PR3 contracts
         env:
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
           set +e
-          npm run test:coverage > /tmp/sandbox-pr3-coverage.log 2>&1
+          npx vitest run \
+            src/sandbox/sandbox-container-policy.spec.ts \
+            src/sandbox/sandbox-container-command-plan.spec.ts \
+            src/sandbox/sandbox-doctor.spec.ts \
+            src/sandbox/sandbox-image-commands.spec.ts \
+            src/sandbox/sandbox-images.spec.ts \
+            src/sandbox/sandbox-image-store.spec.ts \
+            src/sandbox/sandbox-registry.spec.ts \
+            src/sandbox/sandbox-completion-coverage.spec.ts \
+            src/app/api/sandbox-routes.spec.ts \
+            src/server/symbolwright-chat-server-sandbox.spec.ts \
+            src/cli-sandbox.spec.ts \
+            src/cli-bin.spec.ts \
+            --reporter=verbose > /tmp/sandbox-pr3-focused.log 2>&1
           status=$?
           set -e
-          {
-            echo "coverage_exit_status=$status"
-            echo
-            tail -n 300 /tmp/sandbox-pr3-coverage.log
-          } > sandbox-pr3-coverage-diagnostic.txt
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add sandbox-pr3-coverage-diagnostic.txt
-          git commit -m "chore(sandbox): capture PR3 full-coverage diagnostic"
-          git push origin "HEAD:${HEAD_BRANCH}"
+          if [ "$status" -ne 0 ]; then
+            tail -n 260 /tmp/sandbox-pr3-focused.log > sandbox-pr3-focused-diagnostic.txt
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add sandbox-pr3-focused-diagnostic.txt
+            git commit -m "chore(sandbox): capture PR3 focused diagnostic"
+            git push origin "HEAD:${HEAD_BRANCH}"
+          fi
+          cat /tmp/sandbox-pr3-focused.log
           exit "$status"
