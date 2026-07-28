@@ -286,6 +286,11 @@ export const SYMBOLWRIGHT_CLI_COMMANDS = [
     description:
       'Start the SymbolWright Chat API + browser UI, routed through the provider gateway (requires SYMBOLWRIGHT_API_KEY)',
   },
+  {
+    name: 'prune-repos [--quarantine-only|--finalize-only] [--json]',
+    description:
+      'Retention sweep for acquired external-repository workspaces: quarantines anything no retained mission references, then finalizes (deletes, or restores if referenced again) whatever has aged past its grace window',
+  },
 ] as const
 
 export function renderHelp(): string {

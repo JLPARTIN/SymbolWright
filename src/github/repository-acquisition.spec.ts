@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -164,6 +164,106 @@ describe('repository acquisition', () => {
       })
       const root = resolveAcquisitionRoot(workspaceRoot)
       expect(result.workspacePath.startsWith(`${root}/`)).toBe(true)
+    })
+
+    describe('acquisition caps and cleanup', () => {
+      it('rejects and cleans up when the workspace file count exceeds the configured limit', async () => {
+        const result = await acquireExternalRepository({
+          target: target({ canonicalHttpsUrl: `file://${sourceRepo}` }),
+          workspaceRoot,
+          mode: 'writable',
+          limits: { maxFileCount: 1 },
+        })
+        expect(result.acquired).toBe(false)
+        expect(result.error).toMatch(/file count/)
+        expect(existsSync(result.workspacePath)).toBe(false)
+      })
+
+      it('rejects and cleans up when the workspace byte size exceeds the configured limit', async () => {
+        const result = await acquireExternalRepository({
+          target: target({ canonicalHttpsUrl: `file://${sourceRepo}` }),
+          workspaceRoot,
+          mode: 'writable',
+          limits: { maxWorkspaceBytes: 1 },
+        })
+        expect(result.acquired).toBe(false)
+        expect(result.error).toMatch(/exceeds the configured limit/)
+        expect(existsSync(result.workspacePath)).toBe(false)
+      })
+
+      it('rejects and cleans up when a single file exceeds the configured max file size', async () => {
+        writeFileSync(join(sourceRepo, 'big.txt'), 'x'.repeat(1000))
+        await runGitCommand(['add', 'big.txt'], sourceRepo)
+        await runGitCommand(['commit', '-m', 'big file'], sourceRepo)
+
+        const result = await acquireExternalRepository({
+          target: target({ canonicalHttpsUrl: `file://${sourceRepo}` }),
+          workspaceRoot,
+          mode: 'writable',
+          limits: { maxFileBytes: 100 },
+        })
+        expect(result.acquired).toBe(false)
+        expect(result.error).toMatch(/exceeds the configured limit/)
+        expect(existsSync(result.workspacePath)).toBe(false)
+      })
+
+      it('rejects and cleans up when the git object count exceeds the configured limit', async () => {
+        const result = await acquireExternalRepository({
+          target: target({ canonicalHttpsUrl: `file://${sourceRepo}` }),
+          workspaceRoot,
+          mode: 'writable',
+          limits: { maxGitObjects: 0 },
+        })
+        expect(result.acquired).toBe(false)
+        expect(result.error).toMatch(/Git object count/)
+        expect(existsSync(result.workspacePath)).toBe(false)
+      })
+
+      it('rejects and cleans up when the overall acquisition wall-clock budget is exceeded', async () => {
+        const result = await acquireExternalRepository({
+          target: target({ canonicalHttpsUrl: `file://${sourceRepo}` }),
+          workspaceRoot,
+          mode: 'writable',
+          limits: { maxAcquisitionDurationMs: 0 },
+        })
+        expect(result.acquired).toBe(false)
+        expect(result.error).toMatch(/wall-clock budget/)
+        expect(existsSync(result.workspacePath)).toBe(false)
+      })
+
+      it('rejects up front, before any clone I/O, when free-disk headroom is insufficient', async () => {
+        const result = await acquireExternalRepository({
+          target: target({ canonicalHttpsUrl: `file://${sourceRepo}` }),
+          workspaceRoot,
+          mode: 'writable',
+          limits: { minFreeDiskBytes: Number.MAX_SAFE_INTEGER },
+        })
+        expect(result.acquired).toBe(false)
+        expect(result.error).toMatch(/free disk space/)
+        expect(result.evidence.some((line) => line.includes('Clone completed'))).toBe(false)
+        expect(existsSync(result.workspacePath)).toBe(false)
+      })
+
+      it('cleans up the partial destination after a checkout failure', async () => {
+        const result = await acquireExternalRepository({
+          target: target({ canonicalHttpsUrl: `file://${sourceRepo}` }),
+          workspaceRoot,
+          mode: 'writable',
+          ref: 'does-not-exist',
+        })
+        expect(result.acquired).toBe(false)
+        expect(existsSync(result.workspacePath)).toBe(false)
+      })
+
+      it('an acquisition well within every default limit still succeeds', async () => {
+        const result = await acquireExternalRepository({
+          target: target({ canonicalHttpsUrl: `file://${sourceRepo}` }),
+          workspaceRoot,
+          mode: 'writable',
+        })
+        expect(result.acquired).toBe(true)
+        expect(existsSync(result.workspacePath)).toBe(true)
+      })
     })
   })
 

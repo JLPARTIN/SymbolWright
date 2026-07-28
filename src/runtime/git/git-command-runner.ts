@@ -18,12 +18,14 @@ export function runGitCommand(
   args: readonly string[],
   cwd: string,
   timeoutMs = 60_000,
+  env?: NodeJS.ProcessEnv,
 ): Promise<GitCommandResult> {
   return new Promise((resolve) => {
     const child = spawn('git', args as string[], {
       cwd,
       timeout: timeoutMs,
       stdio: ['ignore', 'pipe', 'pipe'],
+      ...(env === undefined ? {} : { env }),
     })
 
     const stdoutChunks: Buffer[] = []

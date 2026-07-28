@@ -1,10 +1,11 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { MissionService } from '../mission/mission-service.js'
 import { runGitCommand } from '../runtime/git/git-command-runner.js'
+import { resolveAcquisitionRoot } from './repository-acquisition.js'
 import { performExternalRepositoryIntake } from './external-repository-intake.js'
 import { createGitHubOperationsPolicy } from './github-operations-policy.js'
 import type { GitHubRepositoryTarget } from './github-repository-target.js'
@@ -174,6 +175,24 @@ describe('performExternalRepositoryIntake', () => {
       runtimeMode: 'READ_ONLY',
     })
     expect(result.mission?.repository.rootPath.startsWith(workspaceRoot)).toBe(true)
+  })
+
+  it('cleans up the acquired workspace when mission creation fails', async () => {
+    const acquisitionRoot = resolveAcquisitionRoot(workspaceRoot)
+    vi.spyOn(missionService, 'create').mockRejectedValueOnce(new Error('boom'))
+
+    await expect(
+      performExternalRepositoryIntake({
+        target: target({ canonicalHttpsUrl: `file://${sourceRepo}` }),
+        workspaceRoot,
+        missionService,
+        mode: 'writable',
+        objective: 'Fix the bug',
+        runtimeMode: 'READ_ONLY',
+      }),
+    ).rejects.toThrow('boom')
+
+    expect(existsSync(acquisitionRoot) ? readdirSync(acquisitionRoot) : []).toHaveLength(0)
   })
 
   it('respects an explicitly enabled write policy when reporting profile flags on the created mission path', async () => {
