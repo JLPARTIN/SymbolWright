@@ -51,12 +51,9 @@ function service(): SandboxService {
 
 async function execute(body: unknown): Promise<MockResponse> {
   const res = response()
-  await handleSandboxRoute(
-    request(body),
-    res,
-    new URL('http://localhost/api/sandbox/execute'),
-    { service: service() },
-  )
+  await handleSandboxRoute(request(body), res, new URL('http://localhost/api/sandbox/execute'), {
+    service: service(),
+  })
   return res
 }
 
