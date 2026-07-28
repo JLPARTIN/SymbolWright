@@ -30,11 +30,69 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Capture coverage failure tail
+      - name: Run complete test suite without coverage
+        run: npm test
+
+      - name: Measure exact coverage result
+        id: coverage
         run: |
           set +e
           npm run test:coverage > /tmp/symbolwright-coverage.log 2>&1
           status=$?
           set -e
-          tail -n 400 /tmp/symbolwright-coverage.log
-          exit "$status"
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          if grep -Eq 'Test Files.*failed' /tmp/symbolwright-coverage.log; then
+            echo "tests_failed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tests_failed=false" >> "$GITHUB_OUTPUT"
+          fi
+          node <<'NODE' >> "$GITHUB_OUTPUT"
+          const fs = require('node:fs')
+          const path = 'coverage/coverage-final.json'
+          const zero = { statements: [0, 0], branches: [0, 0], functions: [0, 0], lines: [0, 0] }
+          if (!fs.existsSync(path)) {
+            for (const key of Object.keys(zero)) console.log(`${key}=unavailable`)
+            process.exit(0)
+          }
+          const coverage = JSON.parse(fs.readFileSync(path, 'utf8'))
+          let statementsTotal = 0, statementsCovered = 0
+          let branchesTotal = 0, branchesCovered = 0
+          let functionsTotal = 0, functionsCovered = 0
+          const lineHits = new Map()
+          for (const file of Object.values(coverage)) {
+            for (const hits of Object.values(file.s ?? {})) {
+              statementsTotal += 1
+              if (hits > 0) statementsCovered += 1
+            }
+            for (const hits of Object.values(file.b ?? {})) {
+              for (const hit of hits) {
+                branchesTotal += 1
+                if (hit > 0) branchesCovered += 1
+              }
+            }
+            for (const hits of Object.values(file.f ?? {})) {
+              functionsTotal += 1
+              if (hits > 0) functionsCovered += 1
+            }
+            for (const [id, location] of Object.entries(file.statementMap ?? {})) {
+              const line = location.start.line
+              const key = `${file.path}:${line}`
+              lineHits.set(key, Math.max(lineHits.get(key) ?? 0, file.s[id] ?? 0))
+            }
+          }
+          const linesTotal = lineHits.size
+          const linesCovered = [...lineHits.values()].filter((hits) => hits > 0).length
+          const pct = (covered, total) => total === 0 ? '100.00' : ((covered / total) * 100).toFixed(2)
+          console.log(`statements=${pct(statementsCovered, statementsTotal)}`)
+          console.log(`branches=${pct(branchesCovered, branchesTotal)}`)
+          console.log(`functions=${pct(functionsCovered, functionsTotal)}`)
+          console.log(`lines=${pct(linesCovered, linesTotal)}`)
+          NODE
+
+      - name: Test failures under coverage
+        if: steps.coverage.outputs.tests_failed == 'true'
+        run: exit 1
+
+      - name: Coverage result — S ${{ steps.coverage.outputs.statements }} B ${{ steps.coverage.outputs.branches }} F ${{ steps.coverage.outputs.functions }} L ${{ steps.coverage.outputs.lines }}
+        if: steps.coverage.outputs.tests_failed != 'true'
+        run: exit "${{ steps.coverage.outputs.status }}"
