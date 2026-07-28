@@ -101,6 +101,20 @@ describe('runNpmPackSmoke', () => {
     )
   })
 
+  it('fails when npm pack returns no tarball filename', () => {
+    installSuccessfulCommandMocks()
+    execFileSyncMock.mockImplementation((command, args) => {
+      const argv = Array.isArray(args) ? args.map(String) : []
+      if (command === 'npm' && argv[0] === 'pack') return '[]'
+      return ''
+    })
+
+    expect(runNpmPackSmoke(process.cwd())).toEqual({
+      status: 'FAIL',
+      detail: 'npm pack did not return a tarball filename.',
+    })
+  })
+
   it('returns an Error message when package creation fails', () => {
     execFileSyncMock.mockImplementation(() => {
       throw new Error('pack failed')
@@ -199,6 +213,33 @@ describe('runDockerSmoke', () => {
     expect(result.status).toBe('FAIL')
     expect(result.detail).toContain('Container runs as root.')
     expect(result.detail).toContain('captured container log')
+  })
+
+  it('normalizes non-Error Docker failures when log streams are unavailable', () => {
+    spawnSyncMock.mockImplementation((command, args) => {
+      const argv = Array.isArray(args) ? args.map(String) : []
+      if (command === 'docker' && argv[0] === '--version') return spawnResult(0)
+      if (command === 'docker' && argv[0] === 'logs') {
+        return {
+          ...spawnResult(0),
+          stdout: undefined,
+          stderr: undefined,
+        } as unknown as ReturnType<typeof spawnSync>
+      }
+      return spawnResult(0)
+    })
+    execFileSyncMock.mockImplementation((command, args) => {
+      const argv = Array.isArray(args) ? args.map(String) : []
+      if (command === process.execPath) return '43123'
+      if (command === 'docker' && argv[0] === 'run') throw 'docker run failed'
+      return ''
+    })
+
+    const result = runDockerSmoke(process.cwd(), 'symbolwright:test')
+
+    expect(result.status).toBe('FAIL')
+    expect(result.detail).toContain('docker run failed')
+    expect(result.detail).toContain('Container logs:')
   })
 
   it('fails the hosted profile when OpenSSL is unavailable', () => {
