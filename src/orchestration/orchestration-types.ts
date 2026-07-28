@@ -8,6 +8,12 @@
  * through `AuthorizationService` using the member's own grant.
  */
 
+import {
+  parseMicrodollars,
+  serializeMicrodollars,
+  usdToMicrodollars,
+} from '../access/microdollars.js'
+
 export const AGENT_PROVIDER_KINDS = [
   'symbolwright-native',
   'openai',
@@ -87,7 +93,8 @@ export type TeamMemberStatus = (typeof TEAM_MEMBER_STATUSES)[number]
 export interface AgentResourceLimits {
   readonly maxWallClockMinutes?: number
   readonly maxModelTokens?: number
-  readonly maxEstimatedCostUsd?: number
+  /** Canonical base-10 microdollar string at JSON/API boundaries. */
+  readonly maxEstimatedCostMicrodollars?: string
   readonly maxToolInvocations?: number
   readonly maxDiffLines?: number
   readonly maxFilesChanged?: number
@@ -99,7 +106,8 @@ export interface TeamBudget {
   readonly maxAgentRuns: number
   readonly maxConcurrentAgents: number
   readonly maxModelTokens?: number
-  readonly maxEstimatedCostUsd?: number
+  /** Canonical base-10 microdollar string at JSON/API boundaries. */
+  readonly maxEstimatedCostMicrodollars?: string
   readonly maxSandboxMinutes: number
   readonly maxRepairAttempts: number
   readonly maxCandidateImplementationsPerTask: number
@@ -121,7 +129,7 @@ export interface TeamBudgetUsage {
   wallClockMinutesUsed: number
   sandboxMinutesUsed: number
   repairAttemptsUsed: number
-  estimatedCostUsd: number
+  estimatedCostMicrodollars: string
   modelTokensUsed: number
 }
 
@@ -131,8 +139,78 @@ export function zeroBudgetUsage(): TeamBudgetUsage {
     wallClockMinutesUsed: 0,
     sandboxMinutesUsed: 0,
     repairAttemptsUsed: 0,
-    estimatedCostUsd: 0,
+    estimatedCostMicrodollars: '0',
     modelTokensUsed: 0,
+  }
+}
+
+interface LegacyMoneyFields {
+  readonly maxEstimatedCostUsd?: unknown
+  readonly estimatedCostUsd?: unknown
+}
+
+function legacyUsdToSerializedMicrodollars(value: unknown): string | undefined {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
+    ? serializeMicrodollars(usdToMicrodollars(value))
+    : undefined
+}
+
+export function normalizeAgentResourceLimits(
+  raw: AgentResourceLimits & LegacyMoneyFields,
+): AgentResourceLimits {
+  const legacy = legacyUsdToSerializedMicrodollars(raw.maxEstimatedCostUsd)
+  const configured = raw.maxEstimatedCostMicrodollars
+  const normalized =
+    configured === undefined ? legacy : serializeMicrodollars(parseMicrodollars(configured))
+  const { maxEstimatedCostUsd: _legacy, ...rest } = raw as AgentResourceLimits &
+    LegacyMoneyFields &
+    Record<string, unknown>
+  return {
+    ...rest,
+    ...(normalized === undefined ? {} : { maxEstimatedCostMicrodollars: normalized }),
+  } as AgentResourceLimits
+}
+
+export function normalizeTeamBudget(raw: TeamBudget & LegacyMoneyFields): TeamBudget {
+  const legacy = legacyUsdToSerializedMicrodollars(raw.maxEstimatedCostUsd)
+  const configured = raw.maxEstimatedCostMicrodollars
+  const normalized =
+    configured === undefined ? legacy : serializeMicrodollars(parseMicrodollars(configured))
+  const { maxEstimatedCostUsd: _legacy, ...rest } = raw as TeamBudget &
+    LegacyMoneyFields &
+    Record<string, unknown>
+  return {
+    ...rest,
+    ...(normalized === undefined ? {} : { maxEstimatedCostMicrodollars: normalized }),
+  } as TeamBudget
+}
+
+export function normalizeTeamBudgetUsage(
+  raw: TeamBudgetUsage & LegacyMoneyFields,
+): TeamBudgetUsage {
+  const legacy = legacyUsdToSerializedMicrodollars(raw.estimatedCostUsd)
+  const configured = raw.estimatedCostMicrodollars
+  const normalized = serializeMicrodollars(parseMicrodollars(configured ?? legacy ?? '0'))
+  const { estimatedCostUsd: _legacy, ...rest } = raw as TeamBudgetUsage &
+    LegacyMoneyFields &
+    Record<string, unknown>
+  return { ...rest, estimatedCostMicrodollars: normalized } as TeamBudgetUsage
+}
+
+export function normalizePersistedAgentTeam(team: AgentTeam): AgentTeam {
+  return {
+    ...team,
+    budget: normalizeTeamBudget(team.budget as TeamBudget & LegacyMoneyFields),
+    usage: normalizeTeamBudgetUsage(team.usage as TeamBudgetUsage & LegacyMoneyFields),
+  }
+}
+
+export function normalizePersistedAgentTeamMember(member: AgentTeamMember): AgentTeamMember {
+  return {
+    ...member,
+    resourceLimits: normalizeAgentResourceLimits(
+      member.resourceLimits as AgentResourceLimits & LegacyMoneyFields,
+    ),
   }
 }
 

@@ -6,6 +6,12 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ### Fixed
 
+- **Release integrity, artifact smoke, and remaining governance closure (Bundle #12 PR 6)**:
+  adds human-only clean-tree `release:prepare`, immutable tag/package/lock/changelog verification,
+  real packed-tarball bin execution, mandatory local and hosted Docker boot smoke in release CI,
+  exact GHCR digest pullback verification, a writable non-root container state root, fixed-point
+  orchestration budget persistence with legacy migration, and live autonomous budget-stop wiring to
+  the durable governance ledger.
 - **Network and operational hardening (Bundle #12 PR 5)**: adds explicit local/hosted
   deployment modes; fail-closed non-loopback plaintext behavior; direct-TLS or
   trusted-reverse-proxy HTTPS enforcement; right-to-left trusted `X-Forwarded-For`
@@ -51,8 +57,8 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 - **`AccessGrantService.narrowGrant` could widen a grant despite its one-directional contract**:
   the method's own doc comment says a PATCH "can never add a capability, widen repository/branch
   scope, or extend expiry," but `executionLimits`/`sessionLimits`/`clientConstraints` were merged
-  with a plain `{ ...current, ...patch }` object spread, which accepted a *larger*
-  `maxConcurrentMissions`, a *longer* `maxSessionDurationMinutes`, flipping `allowDirectPush` from
+  with a plain `{ ...current, ...patch }` object spread, which accepted a _larger_
+  `maxConcurrentMissions`, a _longer_ `maxSessionDurationMinutes`, flipping `allowDirectPush` from
   `false` to `true`, flipping `requirePullRequest` from `true` to `false`, adding new entries to
   `allowedCommands`/`allowedIpCidrs`/`allowedClientIds`, or clearing an existing IP/client
   allowlist by replacing it with an empty one. New `src/access/grant-narrowing.ts` makes every
@@ -64,8 +70,8 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 - **`POST /api/repository/branches` never validated the requested branch name against the calling
   grant's `branchScope`**: the route-level authorization dispatch in `symbolwright-chat-server.ts`
   resolves branch context (for the `branchScope.allowedPatterns`/`deniedPatterns` check) from the
-  *currently checked-out* branch, before the request body is read — irrelevant for branch
-  *creation*, since the branch being created doesn't exist yet, and `repo.branch.create` wasn't
+  _currently checked-out_ branch, before the request body is read — irrelevant for branch
+  _creation_, since the branch being created doesn't exist yet, and `repo.branch.create` wasn't
   even in the route-level set that triggers that resolution. `AuthorizationService`'s branch-scope
   check only runs when a branch is present on the request, so it was silently skipped entirely,
   and the route handler's own check (`evaluateGitToolRequest`) only consults a fixed global
@@ -79,7 +85,7 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   requested name once the body is parsed.
 - **`executionLimits.sandboxNetworkAccess: true` was silently stored but never honored**: the
   sandbox runner (`src/runtime/sandbox/sandbox-runner.ts`) only ever executes with `network:
-  none` — there is no code path anywhere that grants a sandboxed process network egress. Setting
+none` — there is no code path anywhere that grants a sandboxed process network egress. Setting
   `sandboxNetworkAccess: true` on a grant (at creation or via `narrowGrant`) would have let an
   operator believe network access had been enabled when nothing downstream honored it.
   `POST /api/v1/access-grants` and `PATCH /api/v1/access-grants/:id` now reject `true` explicitly
@@ -131,7 +137,7 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   tier for public repos — no paid GHAS license required. Actions pinned to commit SHAs, matching
   every other workflow.
 - **No resource-instance ownership check on mission-linked routes (Bundle #12 PR 1)**: every
-  mission-linked surface checked only that a caller held the right *capability class* (e.g.
+  mission-linked surface checked only that a caller held the right _capability class_ (e.g.
   `symbolwright.mission.read`), never that the specific resource belonged to them. A delegated
   grant could read, mutate, or control another grant's missions by simply supplying that
   mission's id: `GET /api/missions` returned every mission unfiltered; `handleAutonomousMissionRoute`
@@ -147,7 +153,7 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   the verified mission. New `src/access/mission-access-guard.ts` (`canAccessMission`,
   `resolveMissionVisibility`) and `src/access/team-access-guard.ts` (`checkTeamAccess`) establish
   one shared relationship/operation model — `operator | mission_owner | team_owner | team_member |
-  none`, checked against `read | contribute | execute | manage | destructive` — applied uniformly
+none`, checked against `read | contribute | execute | manage | destructive` — applied uniformly
   across missions, autonomy actions, `/api/agent`, sandbox executions (with new
   `SandboxExecutionOwnership` tracking on every history record), checkpoints, mission import
   (grantId now stripped and reassigned to the importing caller), and the full `/api/v1/agent-teams`
@@ -440,7 +446,7 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 - **`POST /api/agent`**: `codemind serve` now runs the real `codemind agent` tool-execution loop over HTTP/SSE — the model can read files, search the repo, and (in more permissive modes) edit files, run shell commands, and more, iterating until done. Backed by `LLMProvider` implementations for Anthropic (native `tool_use`), the whole OpenAI-compatible family (OpenAI, Groq, OpenRouter, GitHub Models, Ollama, DeepSeek, custom — one implementation covers all of them since they share one streaming `tools`/`tool_calls` wire format), and Google Gemini (`functionDeclarations`/`functionCall`, a third distinct wire format implemented separately). Defaults to `READ_ONLY` mode (narrower than the platform-wide `APPROVED_EXECUTION` default, since this is a new HTTP surface any authenticated caller can hit), with `mode` in the request body to opt into more. Streaming responses emit one SSE frame per agent event (`iteration_start`, `text_delta`, `tool_call_start`, `tool_call_end`, `loop_end`, `result`, `done`); the `result` frame's `finalMessages` can be passed back as `priorMessages` to continue the conversation with tool-call context intact (`AgentLoopResult` grew a `finalMessages` field for this). The `/` chat page has an **Agent mode** toggle that drives this endpoint directly — tool calls render as their own transcript entries and the page keeps `finalMessages` for cross-turn continuity. See `docs/runtime/CODEMIND_CHAT_SERVER.md`.
 - **Gemini and DeepSeek added to `/api/chat` streaming**: `google-gemini` now streams real token deltas via `streamGenerateContent?alt=sse` instead of falling back to one full-text chunk. **DeepSeek** is a new first-class provider (`DEEPSEEK_API_KEY`, `https://api.deepseek.com`, OpenAI-compatible wire format) alongside the existing eight.
 - **README**: Added a "Getting Started" section with install/build steps and a concrete example for each of the four ways to run CodeMind (terminal, browser, MCP plugin config, direct HTTP) — the CLI/capability lists mentioned these but never showed how to actually start and use them.
-- **`codemind mcp-server`**: CodeMind now runs as a real Model Context Protocol *server* over stdio (newline-delimited JSON-RPC 2.0, negotiating `2025-11-25`/`2025-06-18`/`2024-11-05`), so any MCP-compatible LLM client (Claude Desktop, Claude Code, other agent frameworks) can add it as a plugin and call its real tools. Exposes the same statically-wired runtime tool registry `codemind agent` runs on (`assembleAgentTools()`), gated by the same runtime-mode-to-capability mapping (`bridgeToolsForProvider`) — defaults to `READ_ONLY` (a deliberately narrower default than the platform-wide `APPROVED_EXECUTION`, since this is a background process any connected client can drive), with `--mode` to opt into `PROPOSAL_ONLY` or `APPROVED_EXECUTION`. A misbehaving or unwired tool call always returns a normal `isError: true` result instead of crashing the server. See `docs/runtime/CODEMIND_MCP_SERVER.md`.
+- **`codemind mcp-server`**: CodeMind now runs as a real Model Context Protocol _server_ over stdio (newline-delimited JSON-RPC 2.0, negotiating `2025-11-25`/`2025-06-18`/`2024-11-05`), so any MCP-compatible LLM client (Claude Desktop, Claude Code, other agent frameworks) can add it as a plugin and call its real tools. Exposes the same statically-wired runtime tool registry `codemind agent` runs on (`assembleAgentTools()`), gated by the same runtime-mode-to-capability mapping (`bridgeToolsForProvider`) — defaults to `READ_ONLY` (a deliberately narrower default than the platform-wide `APPROVED_EXECUTION`, since this is a background process any connected client can drive), with `--mode` to opt into `PROPOSAL_ONLY` or `APPROVED_EXECUTION`. A misbehaving or unwired tool call always returns a normal `isError: true` result instead of crashing the server. See `docs/runtime/CODEMIND_MCP_SERVER.md`.
 - **`codemind serve`**: A real chat HTTP server and browser UI, backed by the provider gateway. Bearer-auth (`CODEMIND_API_KEY`) gates every `/api/*` route except the public `/api/health`; `POST /api/providers/register` lets an operator point any preset provider (or the `custom` slot) at any base URL/API key/model at runtime, in memory only, without redeploying; `POST /api/chat` supports real token-level SSE streaming for the OpenAI-compatible provider family and Anthropic. Includes a same-origin browser chat page at `/`, a fixed-window rate limiter, optional direct TLS via `CODEMIND_TLS_CERT_FILE`/`CODEMIND_TLS_KEY_FILE`, and a startup warning when binding a non-loopback host without TLS. See `docs/runtime/CODEMIND_CHAT_SERVER.md`.
 - **Cognitive memory tools**: `memory_recall` and `memory_store` are now live runtime tools backed by the local-first cognitive memory architecture (episodic/lexical/procedural storage, retrieval, decay, and consolidation). `codemind agent` initializes a per-session memory store, migrates any legacy `.codemind/ci-failure-ledger.json` into episodic memory on first use, and runs decay/consolidation maintenance each turn.
 - **`codemind preflight [changed-file...]`**: Runs the PR preflight evidence pipeline (changed-file classification, failure-ledger matching, validation planning, sandboxed command evidence) and reports a `READY`/`NEEDS_WORK`/`BLOCKED` verdict with a push recommendation. Available as both a CLI command and a `preflight` runtime tool. Wired into CI as a fast-fail signal ahead of the full validate chain.

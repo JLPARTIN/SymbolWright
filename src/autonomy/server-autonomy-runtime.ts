@@ -1,4 +1,5 @@
 import type { AccessRuntime } from '../access/access-runtime.js'
+import type { GovernanceStore } from '../access/governance-store.js'
 import { ProjectMemory, resolveProjectMemoryDir } from '../memory/project-memory.js'
 import type { MissionService } from '../mission/mission-service.js'
 import type { SymbolWrightMission } from '../mission/mission-types.js'
@@ -54,6 +55,7 @@ export interface ServerAutonomyRuntimeOptions {
    * `executionLimits.maxRepairAttempts`/`maxMissionDurationMinutes`. Absent for
    * local-operator-only deployments. */
   readonly accessRuntime?: AccessRuntime
+  readonly getGovernanceStore?: () => GovernanceStore
   /** Global fallback mission-duration cap (minutes); see `accessRuntime` for the per-grant
    * override rule (grant can only tighten, never loosen). */
   readonly maxMissionDurationMinutes?: number
@@ -128,6 +130,9 @@ export function createServerAutonomyRuntime(
       ? {}
       : { maxDurationMinutes: options.maxMissionDurationMinutes }),
     ...(options.accessRuntime === undefined ? {} : { accessRuntime: options.accessRuntime }),
+    ...(options.getGovernanceStore === undefined
+      ? {}
+      : { getGovernanceStore: options.getGovernanceStore }),
   })
 }
 

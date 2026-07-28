@@ -11,6 +11,7 @@ import { buildUniversalApiContractReport } from './api/universal-api-contract.js
 import { buildProviderAdapterContractReport } from './providers/provider-adapter-contract.js'
 import { assessBrowserWorkspaceReadiness } from './workspace/browser-workspace-contract.js'
 import { assessRuntimeModeTruth } from './runtime/runtime-mode-truth-gate.js'
+import { runDockerSmoke, runNpmPackSmoke } from './release/artifact-smoke.js'
 
 export const RELEASE_READINESS_BLOCK_ID = 'SYMBOLWRIGHT-RELEASE-01' as const
 
@@ -33,6 +34,8 @@ export type ReleaseGateCode =
   | 'VALIDATE_SCRIPT'
   | 'WORKFLOW_RELEASE_PROOF'
   | 'BUILD_LEDGER_CONSISTENT'
+  | 'NPM_PACK_SMOKE'
+  | 'DOCKER_RUNTIME_SMOKE'
 
 export type ReleaseGateStatus = 'PASS' | 'FAIL'
 
@@ -556,7 +559,14 @@ function checkBuildLedgerConsistent(workspaceRoot: string): ReleaseGate {
   }
 }
 
-export function assessReleaseReadiness(workspaceRoot: string): ReleaseReadinessReport {
+export interface ReleaseReadinessOptions {
+  readonly runArtifactSmoke?: boolean
+}
+
+export function assessReleaseReadiness(
+  workspaceRoot: string,
+  options: ReleaseReadinessOptions = {},
+): ReleaseReadinessReport {
   const doctorReport = runDoctor(workspaceRoot)
 
   const gates: ReleaseGate[] = [
@@ -577,6 +587,33 @@ export function assessReleaseReadiness(workspaceRoot: string): ReleaseReadinessR
     checkWorkflowReleaseProof(workspaceRoot),
     checkBuildLedgerConsistent(workspaceRoot),
   ]
+  if (options.runArtifactSmoke === true) {
+    const pack = runNpmPackSmoke(workspaceRoot)
+    gates.push({
+      code: 'NPM_PACK_SMOKE',
+      status: pack.status === 'PASS' ? 'PASS' : 'FAIL',
+      detail: pack.detail,
+    })
+    const docker = runDockerSmoke(workspaceRoot)
+    gates.push({
+      code: 'DOCKER_RUNTIME_SMOKE',
+      status: docker.status === 'FAIL' ? 'FAIL' : 'PASS',
+      detail: docker.detail,
+    })
+  } else {
+    gates.push(
+      {
+        code: 'NPM_PACK_SMOKE',
+        status: 'PASS',
+        detail: 'Deferred by library caller; release-readiness CLI runs the real gate.',
+      },
+      {
+        code: 'DOCKER_RUNTIME_SMOKE',
+        status: 'PASS',
+        detail: 'Deferred by library caller; release-readiness CLI runs the real gate.',
+      },
+    )
+  }
 
   const passCount = gates.filter((g) => g.status === 'PASS').length
   const failCount = gates.filter((g) => g.status === 'FAIL').length
@@ -615,7 +652,10 @@ export function renderReleaseReadinessReport(report: ReleaseReadinessReport): st
   return lines.join('\n')
 }
 
-export function renderReleaseReadinessCommand(workspaceRoot: string): string {
-  const report = assessReleaseReadiness(workspaceRoot)
+export function renderReleaseReadinessCommand(
+  workspaceRoot: string,
+  options: ReleaseReadinessOptions = { runArtifactSmoke: true },
+): string {
+  const report = assessReleaseReadiness(workspaceRoot, options)
   return renderReleaseReadinessReport(report)
 }

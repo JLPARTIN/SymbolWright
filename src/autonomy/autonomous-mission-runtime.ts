@@ -1,6 +1,7 @@
 import path from 'node:path'
 
 import type { AccessRuntime } from '../access/access-runtime.js'
+import type { GovernanceStore } from '../access/governance-store.js'
 import type { MissionService } from '../mission/mission-service.js'
 import { AutonomousMissionControl } from './autonomous-mission-control.js'
 import { AutonomousMissionCoordinator } from './autonomous-mission-coordinator.js'
@@ -36,6 +37,7 @@ export interface AutonomousMissionRuntimeOptions {
    * `AutonomousMissionCoordinatorOptions` for the resolution rule. */
   readonly maxDurationMinutes?: number
   readonly accessRuntime?: AccessRuntime
+  readonly getGovernanceStore?: () => GovernanceStore
   readonly now?: () => Date
 }
 
@@ -102,6 +104,9 @@ export function createAutonomousMissionRuntime(
       ? {}
       : { maxDurationMinutes: options.maxDurationMinutes }),
     ...(options.accessRuntime === undefined ? {} : { accessRuntime: options.accessRuntime }),
+    ...(options.getGovernanceStore === undefined
+      ? {}
+      : { getGovernanceStore: options.getGovernanceStore }),
     multiAgentTracker,
     abortRegistry,
     ...clockOptions,

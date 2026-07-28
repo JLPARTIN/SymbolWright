@@ -512,6 +512,7 @@ export function createChatServerRequestListener(
     service: missionService,
     cwd,
     accessRuntime,
+    getGovernanceStore,
     teamSource: teamVisibilitySource,
     shutdownLifecycle,
   }

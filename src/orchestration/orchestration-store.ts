@@ -13,7 +13,13 @@ import {
 } from 'node:fs'
 import path from 'node:path'
 
-import type { AgentTeam, AgentTeamMember, OrchestrationAuditEvent } from './orchestration-types.js'
+import {
+  normalizePersistedAgentTeam,
+  normalizePersistedAgentTeamMember,
+  type AgentTeam,
+  type AgentTeamMember,
+  type OrchestrationAuditEvent,
+} from './orchestration-types.js'
 import type { CollaborativeTask, AgentAssignmentDecision } from './collaborative-task-types.js'
 import type { AgentWorkspace } from './agent-workspace-types.js'
 import type { SharedContextEntry, CollaborationMessage } from './shared-context-types.js'
@@ -34,7 +40,10 @@ function assertValidId(id: string, label: string): void {
  * because that class is module-private there, matching how `MissionStore` also owns its own copy.
  */
 class AtomicJsonDirectory<T> {
-  public constructor(private readonly dir: string) {
+  public constructor(
+    private readonly dir: string,
+    private readonly normalize: (value: T) => T = (value) => value,
+  ) {
     mkdirSync(this.dir, { recursive: true, mode: 0o700 })
   }
 
@@ -59,12 +68,12 @@ class AtomicJsonDirectory<T> {
     const targetPath = this.pathFor(id)
     if (!existsSync(targetPath)) return undefined
     try {
-      return JSON.parse(readFileSync(targetPath, 'utf8')) as T
+      return this.normalize(JSON.parse(readFileSync(targetPath, 'utf8')) as T)
     } catch {
       const previousPath = `${targetPath}.previous`
       if (existsSync(previousPath)) {
         try {
-          return JSON.parse(readFileSync(previousPath, 'utf8')) as T
+          return this.normalize(JSON.parse(readFileSync(previousPath, 'utf8')) as T)
         } catch {
           return undefined
         }
@@ -117,8 +126,11 @@ export class OrchestrationStore {
 
   public constructor(options: OrchestrationStoreOptions) {
     const root = path.join(path.resolve(options.workspaceRoot), '.symbolwright', 'orchestration')
-    this.teams = new AtomicJsonDirectory(path.join(root, 'teams'))
-    this.members = new AtomicJsonDirectory(path.join(root, 'members'))
+    this.teams = new AtomicJsonDirectory(path.join(root, 'teams'), normalizePersistedAgentTeam)
+    this.members = new AtomicJsonDirectory(
+      path.join(root, 'members'),
+      normalizePersistedAgentTeamMember,
+    )
     this.tasks = new AtomicJsonDirectory(path.join(root, 'tasks'))
     this.assignmentDecisions = new AtomicJsonDirectory(path.join(root, 'assignment-decisions'))
     this.workspaces = new AtomicJsonDirectory(path.join(root, 'workspaces'))

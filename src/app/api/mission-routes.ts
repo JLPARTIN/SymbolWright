@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { AccessRuntime } from '../../access/access-runtime.js'
+import type { GovernanceStore } from '../../access/governance-store.js'
 import {
   canAccessMission,
   resolveMissionVisibility,
@@ -52,6 +53,7 @@ export interface MissionRouteContext {
    * mission's repair loop. Distinct from `grantId` above, which is per-request and only used at
    * mission-creation time. */
   readonly accessRuntime?: AccessRuntime
+  readonly getGovernanceStore?: () => GovernanceStore
   /** Read-only view onto the orchestration store's teams, used to resolve which missions a
    * delegated caller can see via active team membership (see `mission-access-guard.ts`). Stable
    * across requests, like `accessRuntime`. Omitted entirely, visibility degrades to
@@ -133,6 +135,9 @@ function autonomyRuntime(context: MissionRouteContext) {
     missionService: context.service,
     hasGitHubToken: process.env['GITHUB_TOKEN'] !== undefined,
     ...(context.accessRuntime === undefined ? {} : { accessRuntime: context.accessRuntime }),
+    ...(context.getGovernanceStore === undefined
+      ? {}
+      : { getGovernanceStore: context.getGovernanceStore }),
   })
   AUTONOMY_RUNTIMES.set(context.service, runtime)
   // Registered once per runtime, not per request -- a graceful shutdown must reach every mission
