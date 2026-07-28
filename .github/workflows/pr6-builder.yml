@@ -18,4 +18,22 @@ jobs:
           curl --fail --silent --show-error --location \
             "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
             | tar -xz --strip-components=1
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/.pr6-apply.py')
+          text = path.read_text()
+          old = '''replace_once(
+              'src/orchestration/orchestration-types.ts',
+              "import type { ApprovalPolicy, PrincipalType, RepositoryScope } from '../access/access-types.js'",
+              "import {\\n  parseMicrodollars,\\n  serializeMicrodollars,\\n  usdToMicrodollars,\\n} from '../access/microdollars.js'\\nimport type { ApprovalPolicy, PrincipalType, RepositoryScope } from '../access/access-types.js'",
+          )'''
+          new = '''replace_once(
+              'src/orchestration/orchestration-types.ts',
+              " */\\n\\nexport const AGENT_PROVIDER_KINDS",
+              " */\\n\\nimport {\\n  parseMicrodollars,\\n  serializeMicrodollars,\\n  usdToMicrodollars,\\n} from '../access/microdollars.js'\\n\\nexport const AGENT_PROVIDER_KINDS",
+          )'''
+          if old not in text:
+              raise SystemExit('PR 6 generator import-anchor block missing')
+          path.write_text(text.replace(old, new, 1))
+          PY
           python3 scripts/.pr6-apply.py
