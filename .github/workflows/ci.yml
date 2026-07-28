@@ -2,65 +2,78 @@ name: CI
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
     name: Validate SymbolWright
     runs-on: ubuntu-24.04
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.head_ref }}
           fetch-depth: 0
+
       - name: Setup Node.js 22
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - name: Apply streamed copy-out patch
-        env:
-          HEAD_BRANCH: ${{ github.head_ref }}
-        run: |
-          node scripts/apply-sandbox-pr3-stream-copy-out.mjs
-          npx prettier --write \
-            src/sandbox/sandbox-container-backend.ts \
-            src/sandbox/sandbox-container-transfer.ts \
-            src/sandbox/sandbox-container-command-plan.ts \
-            src/sandbox/sandbox-container-command-plan.spec.ts \
-            src/sandbox/sandbox-container-integration.spec.ts
-          npm run typecheck
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "fix(sandbox): stream bounded copy-out from container tmpfs"
-          git push origin "HEAD:${HEAD_BRANCH}"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies
+        run: npm run audit
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Sandbox runner contract tests
+        run: npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
+
       - name: Prepare digest-pinned strong sandbox image
         run: docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66
-      - name: Validate strong sandbox integration
+
+      - name: Strong sandbox adversarial integration
         env:
-          HEAD_BRANCH: ${{ github.head_ref }}
           SYMBOLWRIGHT_RUN_STRONG_CONTAINER_INTEGRATION: 'true'
+        run: npx vitest run src/sandbox/sandbox-container-integration.spec.ts
+
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Build
+        run: npm run build
+
+      - name: Compute changed files for preflight
         run: |
-          set +e
-          npx vitest run src/sandbox/sandbox-container-integration.spec.ts --reporter=verbose > /tmp/sandbox-pr3-container.log 2>&1
-          status=$?
-          set -e
-          if [ "$status" -ne 0 ]; then
-            cp /tmp/sandbox-pr3-container.log sandbox-pr3-container-diagnostic.txt
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add sandbox-pr3-container-diagnostic.txt
-            git commit -m "chore(sandbox): capture strong-container integration diagnostic"
-            git push origin "HEAD:${HEAD_BRANCH}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --name-only "origin/${{ github.event.pull_request.base.ref }}...HEAD" > /tmp/symbolwright-changed-files.txt
+          else
+            git diff --name-only HEAD~1 HEAD > /tmp/symbolwright-changed-files.txt || true
           fi
-          cat /tmp/sandbox-pr3-container.log
-          exit "$status"
+
+      - name: PR preflight
+        run: |
+          mapfile -t files < /tmp/symbolwright-changed-files.txt
+          node dist/cli.js preflight "${files[@]}"
+
+      - name: Validate
+        run: npm run validate
