@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 
 function replaceOnce(path, before, after) {
   const text = readFileSync(path, 'utf8')
@@ -126,17 +126,3 @@ operator-opt-in backend. Unsupported ecosystems remain fail-closed pending later
 runtime profiles.
 `,
 )
-
-let workflow = readFileSync('.github/workflows/ci.yml', 'utf8')
-workflow = workflow.replace('permissions:\n  contents: write', 'permissions:\n  contents: read')
-workflow = workflow.replace(
-  `        with:\n          ref: \${{ github.head_ref }}\n          fetch-depth: 0`,
-  `        with:\n          fetch-depth: 0`,
-)
-workflow = workflow.replace(
-  /\n      - name: Apply guarded PR3 final patches[\s\S]*?\n      - name: Audit dependencies/,
-  '\n      - name: Audit dependencies',
-)
-writeFileSync('.github/workflows/ci.yml', workflow)
-if (existsSync('sandbox-pr3-patch-diagnostic.txt')) rmSync('sandbox-pr3-patch-diagnostic.txt')
-rmSync('scripts/apply-sandbox-pr3-final-patches.mjs')
