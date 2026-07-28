@@ -477,8 +477,11 @@ export function createChatServerRequestListener(
   const orchestrationRuntime = new OrchestrationRuntime({ workspaceRoot: cwd, accessRuntime })
   const sandboxService = new SandboxService({
     historyStore: new SandboxHistoryStore({ workspaceRoot: cwd, env }),
+    workspaceRoot: cwd,
     env,
   })
+  void sandboxService.reconcileContainerOrphans().catch(() => undefined)
+  shutdownLifecycle.onBeforeShutdown(() => sandboxService.shutdown())
   // Prefers a real GitHub App installation token (minted per-repository, short-lived) over the
   // static GITHUB_TOKEN PAT — see docs/security/DELEGATED_AGENT_ACCESS.md Section 6. Falls back to
   // the PAT automatically only when no App is configured at all; never widens silently when an

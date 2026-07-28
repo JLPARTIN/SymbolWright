@@ -65,6 +65,7 @@ export function finalizeSandboxExecutionEvidence(
               networkMode: policy.network.mode,
               dependencyMode: policy.dependencies.mode,
               workspaceMode: policy.workspace.mode,
+              ...(policy.container === undefined ? {} : { container: policy.container }),
               sourceVersions: Object.fromEntries(
                 policy.sources.map((source) => [evidencePolicySourceId(source), source.version]),
               ),

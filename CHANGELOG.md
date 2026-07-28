@@ -6,6 +6,15 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ### Added
 
+- **Strong offline container executor (Sandbox Bundle PR 3/7)**: adds an opt-in,
+  digest-pinned JavaScript container runner with normal-execution `--pull=never`, physical
+  `--network none`, a read-only root filesystem, numeric non-root execution, dropped Linux
+  capabilities, no-new-privileges, private PID/IPC namespaces, CPU/memory/PID/tmpfs/time/output
+  quotas, symlink-safe copy-in materialization outside the canonical repository, bounded copy-out
+  artifact quarantine and patch generation, cancellation, mandatory cleanup, and boot-time orphan
+  reaping. No dependency acquisition, runtime egress, arbitrary image selection, repository bind
+  mount, or container-to-guarded-host fallback is introduced.
+
 - **Authoritative sandbox execution broker and effective policy model (Sandbox Bundle PR 2/7)**:
   adds one structured-execution broker, a deeply immutable versioned policy record, strict
   narrowing across global/profile/runner/grant/mission/request authority, split offline/dependency/

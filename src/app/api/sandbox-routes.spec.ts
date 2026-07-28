@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { MissionService } from '../../mission/mission-service.js'
 import { SandboxHistoryStore } from '../../sandbox/sandbox-history.js'
+import { STRONG_SANDBOX_NODE_IMAGE_ID } from '../../sandbox/sandbox-images.js'
 import { buildSandboxInventory, runnerAvailability } from '../../sandbox/sandbox-registry.js'
 import { SandboxService } from '../../sandbox/sandbox-service.js'
 import type { SandboxRunnerAvailability } from '../../sandbox/sandbox-types.js'
@@ -131,7 +132,7 @@ describe('sandbox API route handler', () => {
     const body = res.json<{
       images: readonly { id: string; image: string; enabled: boolean; installed?: boolean }[]
     }>()
-    expect(body.images.map((image) => image.id)).toContain('python-3-12-slim')
+    expect(body.images.map((image) => image.id)).toContain(STRONG_SANDBOX_NODE_IMAGE_ID)
     expect(body.images.every((image) => image.enabled === false)).toBe(true)
     expect(body.images.some((image) => image.image === 'evil/random:latest')).toBe(false)
   })

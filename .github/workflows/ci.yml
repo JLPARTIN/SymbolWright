@@ -48,8 +48,124 @@ jobs:
       - name: Sandbox runner contract tests
         run: npx vitest run src/runtime/sandbox/sandbox-runner.spec.ts
 
-      - name: Test with coverage
-        run: npm run test:coverage
+      - name: Prepare digest-pinned strong sandbox image
+        run: docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66
+
+      - name: Strong sandbox adversarial integration
+        env:
+          SYMBOLWRIGHT_RUN_STRONG_CONTAINER_INTEGRATION: 'true'
+        run: npx vitest run src/sandbox/sandbox-container-integration.spec.ts --reporter=verbose
+
+      - name: Capture coverage result
+        id: coverage
+        run: |
+          : "${GITHUB_OUTPUT:?GITHUB_OUTPUT missing}"
+          set +e
+          npm run test:coverage > /tmp/symbolwright-coverage.log 2>&1
+          status=$?
+          set -e
+
+          clean_log=/tmp/symbolwright-coverage-clean.log
+          files=""
+          if [ -f /tmp/symbolwright-coverage.log ]; then
+            perl -pe 's/\e\[[0-9;]*[A-Za-z]//g' /tmp/symbolwright-coverage.log > "$clean_log" || cp /tmp/symbolwright-coverage.log "$clean_log" || true
+            files=$(grep -oE 'FAIL +src/[^ >]+' "$clean_log" 2>/dev/null | sed -E 's/^FAIL +//' | sort -u | paste -sd, - || true)
+          fi
+          if [ -z "$files" ]; then
+            files=none
+          fi
+          files=${files:0:160}
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          echo "files=$files" >> "$GITHUB_OUTPUT"
+
+          node <<'NODE' >> "$GITHUB_OUTPUT"
+          const fs = require('node:fs')
+          const path = require('node:path')
+          const coveragePath = 'coverage/coverage-final.json'
+          const unavailable = () => {
+            console.log('statements=unavailable')
+            console.log('branches=unavailable')
+            console.log('functions=unavailable')
+            console.log('lines=unavailable')
+            console.log('hotspots=unavailable')
+          }
+          if (!fs.existsSync(coveragePath)) {
+            unavailable()
+            process.exit(0)
+          }
+          const coverage = JSON.parse(fs.readFileSync(coveragePath, 'utf8'))
+          let statementsTotal = 0
+          let statementsCovered = 0
+          let branchesTotal = 0
+          let branchesCovered = 0
+          let functionsTotal = 0
+          let functionsCovered = 0
+          const lineHits = new Map()
+          const branchFiles = []
+          for (const file of Object.values(coverage)) {
+            let fileTotal = 0
+            let fileMissed = 0
+            const missedLines = []
+            for (const hits of Object.values(file.s ?? {})) {
+              statementsTotal += 1
+              if (hits > 0) statementsCovered += 1
+            }
+            for (const [branchId, hits] of Object.entries(file.b ?? {})) {
+              const locations = file.branchMap?.[branchId]?.locations ?? []
+              hits.forEach((hit, index) => {
+                branchesTotal += 1
+                fileTotal += 1
+                if (hit > 0) {
+                  branchesCovered += 1
+                } else {
+                  fileMissed += 1
+                  const line = locations[index]?.start?.line
+                  if (Number.isInteger(line)) missedLines.push(line)
+                }
+              })
+            }
+            for (const hits of Object.values(file.f ?? {})) {
+              functionsTotal += 1
+              if (hits > 0) functionsCovered += 1
+            }
+            for (const [id, location] of Object.entries(file.statementMap ?? {})) {
+              const key = `${file.path}:${location.start.line}`
+              lineHits.set(key, Math.max(lineHits.get(key) ?? 0, file.s[id] ?? 0))
+            }
+            if (fileMissed > 0) {
+              branchFiles.push({
+                name: path.basename(file.path),
+                missed: fileMissed,
+                total: fileTotal,
+                lines: [...new Set(missedLines)].slice(0, 5),
+              })
+            }
+          }
+          const linesTotal = lineHits.size
+          const linesCovered = [...lineHits.values()].filter((hits) => hits > 0).length
+          const pct = (covered, total) =>
+            total === 0 ? '100.00' : ((covered / total) * 100).toFixed(2)
+          const hotspots = branchFiles
+            .sort((a, b) => b.missed - a.missed || a.name.localeCompare(b.name))
+            .slice(0, 3)
+            .map((entry) => `${entry.name}:${entry.missed}/${entry.total}@${entry.lines.join('.') || 'n/a'}`)
+            .join(';')
+            .slice(0, 220)
+          console.log(`statements=${pct(statementsCovered, statementsTotal)}`)
+          console.log(`branches=${pct(branchesCovered, branchesTotal)}`)
+          console.log(`functions=${pct(functionsCovered, functionsTotal)}`)
+          console.log(`lines=${pct(linesCovered, linesTotal)}`)
+          console.log(`hotspots=${hotspots || 'none'}`)
+          NODE
+
+      - name: Coverage gate — S ${{ steps.coverage.outputs.statements }} B ${{ steps.coverage.outputs.branches }} F ${{ steps.coverage.outputs.functions }} L ${{ steps.coverage.outputs.lines }} — ${{ steps.coverage.outputs.hotspots }} — tests ${{ steps.coverage.outputs.files }}
+        run: |
+          status="${{ steps.coverage.outputs.status }}"
+          if ! printf '%s' "$status" | grep -Eq '^[0-9]+$'; then
+            echo "Coverage step returned an invalid status: $status" >&2
+            exit 1
+          fi
+          exit "$status"
 
       - name: Build
         run: npm run build

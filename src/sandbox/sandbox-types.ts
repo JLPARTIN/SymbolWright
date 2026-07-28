@@ -17,7 +17,6 @@ export const SANDBOX_BACKEND_KINDS = [
 ] as const
 
 export type SandboxBackendKind = (typeof SANDBOX_BACKEND_KINDS)[number]
-
 export type SandboxRuntimeAvailabilityStatus = 'available' | 'unavailable' | 'misconfigured'
 export type SandboxExecutionMode = 'run' | 'compile' | 'test'
 /** Legacy runner-level state. The authoritative broker uses the richer network-mode evidence below. */
@@ -82,6 +81,17 @@ export interface SandboxImageDefinition {
   readonly sizeBytes?: number
 }
 
+export interface SandboxContainerRunnerConfiguration {
+  readonly engine: 'docker' | 'podman'
+  readonly imageId: string
+  readonly image: string
+  readonly digest: string
+  readonly user: string
+  readonly pullPolicy: 'never'
+  readonly networkMode: 'none'
+  readonly workspaceMode: 'copy-in-tmpfs-copy-out'
+}
+
 export interface SandboxRunnerDefinition {
   readonly id: string
   readonly languageIds: readonly string[]
@@ -93,6 +103,7 @@ export interface SandboxRunnerDefinition {
   readonly limits: SandboxLimits
   readonly networkPolicy: SandboxNetworkPolicy
   readonly dependencyState: SandboxDependencyState
+  readonly container?: SandboxContainerRunnerConfiguration
   readonly notes: readonly string[]
 }
 
@@ -152,6 +163,15 @@ export interface SandboxPolicyEvidence {
   readonly networkMode: 'disabled' | 'dependency-broker-only' | 'allowlisted-egress' | 'unsupported'
   readonly dependencyMode: 'disabled' | 'brokered' | 'unsupported'
   readonly workspaceMode: 'managed-mission' | 'temporary-copy' | 'trusted-local-host'
+  readonly container?: {
+    readonly engine: 'docker' | 'podman'
+    readonly imageId: string
+    readonly imageDigest: string
+    readonly user: string
+    readonly pullPolicy: 'never'
+    readonly networkMode: 'none'
+    readonly workspaceMode: 'copy-in-tmpfs-copy-out'
+  }
   readonly sourceVersions: Readonly<Record<string, number>>
 }
 

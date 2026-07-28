@@ -24,6 +24,7 @@ export interface SandboxRuntimeDoctorEntry {
 export interface SandboxImageDoctorEntry {
   readonly id: string
   readonly image: string
+  readonly digest?: string
   readonly languages: readonly string[]
   readonly enabled: boolean
   readonly installed: boolean
@@ -34,8 +35,9 @@ export interface SandboxDoctorReport {
   readonly blockId: typeof SANDBOX_DOCTOR_BLOCK_ID
   readonly generatedAt: string
   readonly readOnly: true
-  readonly executionEnabled: false
+  readonly executionEnabled: boolean
   readonly guardedHostOptIn: boolean
+  readonly strongContainerOptIn: boolean
   readonly containerEngine: SandboxContainerEngineStatus
   readonly runtimes: readonly SandboxRuntimeDoctorEntry[]
   readonly images: readonly SandboxImageDoctorEntry[]
@@ -80,6 +82,7 @@ function imageEntry(
   return {
     id: image.id,
     image: image.image,
+    ...(image.digest === undefined ? {} : { digest: image.digest }),
     languages: image.languages,
     enabled: image.enabled,
     installed: image.installed === true,
@@ -113,15 +116,22 @@ export async function buildSandboxDoctorReport(
     now,
     commandAvailability,
   })
-  const imagePolicy = buildSandboxImagePolicy(commandAvailability)
+  const imagePolicy = buildSandboxImagePolicy(commandAvailability, env)
   const images = imagePolicy.images.map((image) => imageEntry(imagePolicy.engine, image))
+  const executionEnabled = inventory.runners.some(
+    (runner) =>
+      runner.backend === 'container' &&
+      runner.trustClass === 'container-isolated' &&
+      runner.availability.status === 'available',
+  )
 
   return {
     blockId: SANDBOX_DOCTOR_BLOCK_ID,
     generatedAt: now().toISOString(),
     readOnly: true,
-    executionEnabled: false,
+    executionEnabled,
     guardedHostOptIn: env['SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION'] === 'true',
+    strongContainerOptIn: env['SYMBOLWRIGHT_ENABLE_STRONG_CONTAINER_EXECUTION'] === 'true',
     containerEngine: imagePolicy.engine,
     runtimes: inventory.runners.map(runtimeEntry),
     images,
@@ -141,7 +151,8 @@ function renderImage(entry: SandboxImageDoctorEntry): string {
     entry.preparationCommand === undefined
       ? 'no preparation command until an engine is detected'
       : entry.preparationCommand
-  return `  - ${entry.id}: ${entry.image}; enabled=${entry.enabled}; installed=${entry.installed}; languages=${entry.languages.join(', ')}; prepare=${command}`
+  const digest = entry.digest === undefined ? 'unpinned' : entry.digest
+  return `  - ${entry.id}: ${entry.image}; digest=${digest}; enabled=${entry.enabled}; installed=${entry.installed}; languages=${entry.languages.join(', ')}; prepare=${command}`
 }
 
 export function renderSandboxDoctorReport(report: SandboxDoctorReport): string {
@@ -150,8 +161,9 @@ export function renderSandboxDoctorReport(report: SandboxDoctorReport): string {
     '',
     `Block: ${report.blockId}`,
     `Generated: ${report.generatedAt}`,
-    `Mode: READ-ONLY`,
-    `Execution enabled: ${report.executionEnabled}`,
+    `Mode: READ-ONLY DIAGNOSTIC`,
+    `Strong container execution ready: ${report.executionEnabled}`,
+    `Strong-container opt-in: ${report.strongContainerOptIn}`,
     `Guarded-host opt-in: ${report.guardedHostOptIn}`,
     '',
     'Container engine:',
@@ -190,6 +202,7 @@ export function renderSandboxImagesReport(report: SandboxDoctorReport): string {
     'SymbolWright Sandbox Images',
     '',
     `Container engine: ${report.containerEngine.engine} (${report.containerEngine.status})`,
+    `Strong container execution ready: ${report.executionEnabled}`,
     'Images:',
     ...report.images.map(renderImage),
     '',

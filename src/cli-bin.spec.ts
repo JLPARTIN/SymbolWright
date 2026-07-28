@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { renderSymbolWrightBinCommand } from './cli-bin.js'
+import { STRONG_SANDBOX_NODE_IMAGE_ID } from './sandbox/sandbox-images.js'
 import { runnerAvailability } from './sandbox/sandbox-registry.js'
 
 const CHECKED_AT = '2026-07-20T00:00:00.000Z'
@@ -23,17 +24,17 @@ describe('symbolwright bin sandbox routing', () => {
 
     expect(rendered).toContain('SymbolWright Sandbox Doctor')
     expect(rendered).toContain('Mode: READ-ONLY')
-    expect(rendered).toContain('Execution enabled: false')
+    expect(rendered).toContain('Strong container execution ready: false')
   })
 
   it('routes top-level sandbox image inspection without enabling execution', async () => {
     const rendered = await renderSymbolWrightBinCommand(
-      ['sandbox', 'inspect', 'node-22-bookworm-slim'],
+      ['sandbox', 'inspect', STRONG_SANDBOX_NODE_IMAGE_ID],
       SANDBOX_OPTIONS,
     )
 
     expect(rendered).toContain('SymbolWright Sandbox Image Inspection')
-    expect(rendered).toContain('Image ID: node-22-bookworm-slim')
+    expect(rendered).toContain(`Image ID: ${STRONG_SANDBOX_NODE_IMAGE_ID}`)
     expect(rendered).toContain('does not acquire, run, or mutate images')
   })
 

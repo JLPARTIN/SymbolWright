@@ -8,6 +8,7 @@ import {
   listSandboxRunnerIds,
   runnerAvailability,
   STATIC_SANDBOX_INVENTORY_FOR_TESTS,
+  STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID,
 } from './sandbox-registry.js'
 import {
   containsRepresentativeSandboxSecret,
@@ -19,7 +20,7 @@ import { SandboxService } from './sandbox-service.js'
 const CHECKED_AT = '2026-07-20T00:00:00.000Z'
 
 describe('sandbox runtime inventory', () => {
-  it('registers browser-isolated existing runners without promoting edit-only languages', () => {
+  it('registers browser-isolated existing runners without promoting edit-only languages by default', () => {
     const inventory = STATIC_SANDBOX_INVENTORY_FOR_TESTS
     const javascript = findSandboxRunner(inventory, 'javascript')
     const python = findSandboxRunner(inventory, 'python')
@@ -30,11 +31,13 @@ describe('sandbox runtime inventory', () => {
     expect(go).toBeUndefined()
     expect(listSandboxLanguageIds()).toContain('rust')
     expect(listSandboxRunnerIds(inventory)).toContain('guarded-host-go')
+    expect(listSandboxRunnerIds(inventory)).toContain(STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID)
   })
 
-  it('includes explicit container image policy without enabling image execution', () => {
+  it('exposes one digest-pinned image without enabling execution by default', () => {
     const inventory = buildSandboxInventory({
       now: () => new Date(CHECKED_AT),
+      env: {},
       commandAvailability: new Map([
         [
           'docker',
@@ -45,11 +48,44 @@ describe('sandbox runtime inventory', () => {
       ]),
     })
 
-    expect(inventory.images.map((image) => image.id)).toContain('node-22-bookworm-slim')
-    expect(inventory.images.every((image) => image.enabled === false)).toBe(true)
-    expect(inventory.images.every((image) => image.installed === false)).toBe(true)
-    expect(inventory.warnings.join('\n')).toContain('arbitrary image names')
-    expect(inventory.warnings.join('\n')).toContain('docker was detected')
+    expect(inventory.images.map((image) => image.id)).toEqual(['node-26-alpine-pinned'])
+    expect(inventory.images[0]?.image).toContain('@sha256:')
+    expect(inventory.images[0]?.enabled).toBe(false)
+    expect(inventory.images[0]?.installed).toBe(false)
+    const runner = inventory.runners.find(
+      (candidate) => candidate.id === STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID,
+    )
+    expect(runner?.availability.status).toBe('unavailable')
+    expect(runner?.availability.reason).toContain('disabled by operator policy')
+    expect(inventory.warnings.join('\n')).toContain('digest-pinned')
+    expect(inventory.warnings.join('\n')).toContain('--pull=never')
+  })
+
+  it('enables the strong JavaScript runner only with operator opt-in and an available engine', () => {
+    const inventory = buildSandboxInventory({
+      now: () => new Date(CHECKED_AT),
+      env: { SYMBOLWRIGHT_ENABLE_STRONG_CONTAINER_EXECUTION: 'true' },
+      commandAvailability: new Map([
+        [
+          'docker',
+          runnerAvailability('available', CHECKED_AT, {
+            version: '27.0.0',
+          }),
+        ],
+      ]),
+    })
+    const runner = inventory.runners.find(
+      (candidate) => candidate.id === STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID,
+    )
+    expect(runner?.availability.status).toBe('available')
+    expect(runner?.container).toMatchObject({
+      engine: 'docker',
+      imageId: 'node-26-alpine-pinned',
+      pullPolicy: 'never',
+      networkMode: 'none',
+      workspaceMode: 'copy-in-tmpfs-copy-out',
+    })
+    expect(findSandboxRunner(inventory, 'javascript')?.id).toBe(STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID)
   })
 
   it('keeps guarded-host unavailable unless explicitly opted in', () => {
@@ -91,6 +127,7 @@ describe('sandbox runtime inventory', () => {
 describe('sandbox policy and service foundation', () => {
   const inventory = buildSandboxInventory({
     now: () => new Date(CHECKED_AT),
+    env: {},
   })
   const request = {
     languageId: 'javascript',
@@ -115,7 +152,7 @@ describe('sandbox policy and service foundation', () => {
     expect(proposal.evidence.policyReason).toContain('PROPOSAL_ONLY')
   })
 
-  it('does not fake execution before a backend is wired', async () => {
+  it('does not fake browser execution through the server backend', async () => {
     const service = new SandboxService({
       inventory,
       now: () => new Date(CHECKED_AT),

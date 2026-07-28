@@ -137,6 +137,15 @@ export interface EffectiveSandboxPolicy {
   readonly runnerId: string
   readonly backend: SandboxBackendKind
   readonly trustClass: SandboxTrustClass
+  readonly container?: {
+    readonly engine: 'docker' | 'podman'
+    readonly imageId: string
+    readonly imageDigest: string
+    readonly user: string
+    readonly pullPolicy: 'never'
+    readonly networkMode: 'none'
+    readonly workspaceMode: 'copy-in-tmpfs-copy-out'
+  }
   readonly allowedLanguageIds: readonly string[]
   readonly allowedModes: readonly SandboxExecutionMode[]
   readonly allowedCommands: readonly string[]
@@ -468,6 +477,19 @@ export function resolveEffectiveSandboxPolicy(
     runnerId: runner.id,
     backend: runner.backend,
     trustClass: runner.trustClass,
+    ...(runner.container === undefined
+      ? {}
+      : {
+          container: {
+            engine: runner.container.engine,
+            imageId: runner.container.imageId,
+            imageDigest: runner.container.digest,
+            user: runner.container.user,
+            pullPolicy: runner.container.pullPolicy,
+            networkMode: runner.container.networkMode,
+            workspaceMode: runner.container.workspaceMode,
+          },
+        }),
     allowedLanguageIds,
     allowedModes,
     allowedCommands,

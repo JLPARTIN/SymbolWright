@@ -1,4 +1,4 @@
-import { stat, readFile } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 
 import { renderNotYetActive } from './cli-commands.js'
@@ -9,6 +9,7 @@ import {
 } from './sandbox/sandbox-doctor.js'
 import { SandboxHistoryStore } from './sandbox/sandbox-history.js'
 import { renderSandboxImageInspectCommand } from './sandbox/sandbox-image-commands.js'
+import { STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID } from './sandbox/sandbox-registry.js'
 import { SandboxService } from './sandbox/sandbox-service.js'
 import type { SandboxExecutionResult } from './sandbox/sandbox-types.js'
 
@@ -117,10 +118,12 @@ async function executeFile(
   const languageId = languageForPath(absolutePath)
   if (languageId === undefined) return `Sandbox error: unsupported file extension for ${filePath}.`
 
+  const env = options.env ?? process.env
   const historyStore = new SandboxHistoryStore({ workspaceRoot })
   const service = new SandboxService({
     historyStore,
-    ...(options.env === undefined ? {} : { env: options.env }),
+    workspaceRoot,
+    env,
     ...(options.now === undefined ? {} : { now: options.now }),
     ...(options.discoverCommandAvailability === undefined
       ? {}
@@ -128,12 +131,16 @@ async function executeFile(
   })
   await service.refreshInventory()
   const content = await readFile(absolutePath, 'utf8')
+  const requestedRunnerId =
+    languageId === 'javascript' && env['SYMBOLWRIGHT_ENABLE_STRONG_CONTAINER_EXECUTION'] === 'true'
+      ? STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID
+      : `guarded-host-${languageId}`
   const result = await service.execute(
     {
       languageId,
       mode,
       source: content,
-      requestedRunnerId: `guarded-host-${languageId}`,
+      requestedRunnerId,
     },
     { mode: 'APPROVED_EXECUTION' },
   )
@@ -176,6 +183,7 @@ function renderSandboxExecutionResult(result: SandboxExecutionResult): string {
     ...(result.exitCode === undefined ? [] : [`Exit code: ${result.exitCode}`]),
     `Cleanup: ${result.cleanup.attempted}/${result.cleanup.succeeded}`,
     `Output truncated: ${result.outputTruncated}`,
+    `Artifacts: ${result.artifacts.length}`,
     '',
     'STDOUT:',
     result.stdout.length === 0 ? '(empty)' : result.stdout,
