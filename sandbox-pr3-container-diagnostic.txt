@@ -1,7 +1,7 @@
 
 [1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/home/runner/work/SymbolWright/SymbolWright[39m
 
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mruns as non-root with a read-only root, no host mounts, and quarantined artifacts[33m 436[2mms[22m[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mruns as non-root with a read-only root, no host mounts, and quarantined artifacts[32m 288[2mms[22m[39m
 [31m   → {
   "status": "internal-error",
   "stdout": "",
@@ -56,7 +56,7 @@
     }
   }
 }: expected 'internal-error' to be 'passed' // Object.is equality[39m
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mphysically blocks outbound networking[33m 370[2mms[22m[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mphysically blocks outbound networking[32m 196[2mms[22m[39m
 [31m   → {
   "status": "internal-error",
   "stdout": "",
@@ -111,7 +111,7 @@
     }
   }
 }: expected 'internal-error' to be 'passed' // Object.is equality[39m
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mterminates output floods at the effective byte limit[33m 350[2mms[22m[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22mterminates output floods at the effective byte limit[32m 197[2mms[22m[39m
 [31m   → {
   "status": "internal-error",
   "stdout": "",
@@ -166,7 +166,7 @@
     }
   }
 }: expected 'internal-error' to be 'resource-limit' // Object.is equality[39m
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces wall-time and explicit cancellation with container cleanup[33m 662[2mms[22m[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces wall-time and explicit cancellation with container cleanup[32m 187[2mms[22m[39m
 [31m   → {
   "status": "internal-error",
   "stdout": "",
@@ -221,7 +221,7 @@
     }
   }
 }: expected 'internal-error' to be 'timeout' // Object.is equality[39m
- [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces PID and tmpfs disk pressure without escaping the container[33m 498[2mms[22m[39m
+ [31m×[39m src/sandbox/sandbox-container-integration.spec.ts[2m > [22mstrong offline container execution[2m > [22menforces PID and tmpfs disk pressure without escaping the container[32m 199[2mms[22m[39m
 [31m   → {
   "status": "internal-error",
   "stdout": "",
@@ -623,6 +623,6 @@ Received: [31m"internal-error"[39m
 
 [2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
 [2m      Tests [22m [1m[31m5 failed[39m[22m[90m (5)[39m
-[2m   Start at [22m 16:59:53
-[2m   Duration [22m 2.63s[2m (transform 158ms, setup 0ms, import 196ms, tests 2.32s, environment 0ms)[22m
+[2m   Start at [22m 17:01:44
+[2m   Duration [22m 1.42s[2m (transform 183ms, setup 0ms, import 227ms, tests 1.07s, environment 0ms)[22m
 
