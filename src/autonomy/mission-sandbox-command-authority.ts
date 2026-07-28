@@ -14,7 +14,7 @@ export function resolveMissionSandboxCommandAuthority(input: {
   readonly accessRuntime?: AccessRuntime
   readonly env?: NodeJS.ProcessEnv
 }): MissionSandboxCommandAuthority {
-  const deploymentMode =
+  const deploymentMode: SandboxAuthorizationContext['deploymentMode'] =
     input.env?.['SYMBOLWRIGHT_DEPLOYMENT_MODE']?.trim().toLowerCase() === 'hosted'
       ? 'hosted'
       : 'local'
@@ -52,7 +52,9 @@ export function resolveMissionSandboxCommandAuthority(input: {
             grantVersion: grant.version,
             principalId: grant.principalId,
             grantAllowedCommands: grant.executionLimits.allowedCommands ?? [],
-            grantPolicyReferences: grant.sandboxPolicyReferences,
+            ...(grant.sandboxPolicyReferences === undefined
+              ? {}
+              : { grantPolicyReferences: grant.sandboxPolicyReferences }),
           }),
     },
   }
