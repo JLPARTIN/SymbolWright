@@ -77,7 +77,12 @@ export async function executeValidationCommand(
     }
   }
 
-  const runner = sandboxRunner ?? new DockerSandboxRunner({ authorization, workspaceTrust })
+  const runner =
+    sandboxRunner ??
+    new DockerSandboxRunner({
+      workspaceTrust,
+      ...(authorization === undefined ? {} : { authorization }),
+    })
   const result = await runner.runCommand({
     ...parsedCommand,
     workspaceRoot: cwd,
