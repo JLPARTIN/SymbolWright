@@ -1,6 +1,9 @@
 import { excerptSandboxOutput, sha256Text } from './sandbox-redaction.js'
 import type { SandboxBrokerDecision } from './sandbox-execution-broker.js'
-import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
+import type {
+  SandboxAuthorizationContext,
+  SandboxPolicySourceEvidence,
+} from './sandbox-policy-model.js'
 import type {
   SandboxExecutionRequest,
   SandboxExecutionResult,
@@ -63,7 +66,10 @@ export function finalizeSandboxExecutionEvidence(
               dependencyMode: policy.dependencies.mode,
               workspaceMode: policy.workspace.mode,
               sourceVersions: Object.fromEntries(
-                policy.sources.map((source) => [source.id, source.version]),
+                policy.sources.map((source) => [
+                  evidencePolicySourceId(source),
+                  source.version,
+                ]),
               ),
             },
           }),
@@ -124,6 +130,13 @@ function sourceFileEvidenceDescriptor(file: SandboxSourceFile): Record<string, u
     bytes: byteLength(file.content),
     sha256: sha256Text(file.content),
   }
+}
+
+function evidencePolicySourceId(source: SandboxPolicySourceEvidence): string {
+  if (source.kind === 'grant' || source.kind === 'mission') {
+    return `${source.kind}:${sha256Text(source.id)}`
+  }
+  return source.id
 }
 
 function byteLength(value: string): number {
