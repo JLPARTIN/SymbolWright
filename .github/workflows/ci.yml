@@ -66,9 +66,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [ "$status" -ne 0 ]; then
             git reset --hard HEAD
-            cp /tmp/sandbox-pr3-finalize.log sandbox-pr3-patch-diagnostic.txt
-            git add sandbox-pr3-patch-diagnostic.txt
-            git commit -m "chore(sandbox): capture PR3 finalization diagnostic"
+            diagnostic="sandbox-pr3-patch-diagnostic-${GITHUB_RUN_ID}.txt"
+            cp /tmp/sandbox-pr3-finalize.log "$diagnostic"
+            git add "$diagnostic"
+            git commit -m "chore(sandbox): capture PR3 finalization diagnostic ${GITHUB_RUN_ID}"
             git push origin "HEAD:${HEAD_BRANCH}"
             exit "$status"
           fi
