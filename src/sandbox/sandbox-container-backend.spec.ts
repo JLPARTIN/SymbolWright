@@ -134,7 +134,8 @@ exit(0)
     (candidate) => candidate.id === STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID,
   )
   const image = inventory.images.find((candidate) => candidate.id === runner?.container?.imageId)
-  if (runner === undefined || image === undefined) throw new Error('Strong sandbox fixture unavailable')
+  if (runner === undefined || image === undefined)
+    throw new Error('Strong sandbox fixture unavailable')
 
   return {
     root,
@@ -211,16 +212,28 @@ describe('strong sandbox container backend unit boundaries', () => {
     const value = await fixture()
     const { container: _container, ...withoutContainer } = value.runner
     const cases: readonly ExecuteStrongSandboxContainerInput[] = [
-      input(value, {}, {
-        runner: { ...value.runner, backend: 'browser', trustClass: 'browser-isolated' },
-      }),
+      input(
+        value,
+        {},
+        {
+          runner: { ...value.runner, backend: 'browser', trustClass: 'browser-isolated' },
+        },
+      ),
       input(value, {}, { runner: withoutContainer as SandboxRunnerDefinition }),
-      input(value, {}, {
-        engine: { ...value.engine, engine: 'podman' },
-      }),
-      input(value, {}, {
-        image: { ...value.image, id: 'wrong-image' },
-      }),
+      input(
+        value,
+        {},
+        {
+          engine: { ...value.engine, engine: 'podman' },
+        },
+      ),
+      input(
+        value,
+        {},
+        {
+          image: { ...value.image, id: 'wrong-image' },
+        },
+      ),
     ]
 
     for (const candidate of cases) {
@@ -267,9 +280,9 @@ describe('strong sandbox container backend unit boundaries', () => {
     expect((await executeStrongSandboxContainer(input(runtime))).status).toBe('runtime-error')
 
     const compile = await fixture({ execution: { exitCode: 2, stderr: 'syntax' } })
-    expect(
-      (await executeStrongSandboxContainer(input(compile, { mode: 'compile' }))).status,
-    ).toBe('compile-error')
+    expect((await executeStrongSandboxContainer(input(compile, { mode: 'compile' }))).status).toBe(
+      'compile-error',
+    )
 
     const resource = await fixture({ execution: { exitCode: 137 } })
     expect((await executeStrongSandboxContainer(input(resource))).status).toBe('resource-limit')
@@ -277,12 +290,14 @@ describe('strong sandbox container backend unit boundaries', () => {
     const copyOut = await fixture({ failStage: 'copy-out' })
     const copyOutResult = await executeStrongSandboxContainer(input(copyOut))
     expect(copyOutResult.status).toBe('passed')
-    expect(copyOutResult.diagnostics.some((entry) => entry.message.includes('copy-out failed'))).toBe(
-      true,
-    )
+    expect(
+      copyOutResult.diagnostics.some((entry) => entry.message.includes('copy-out failed')),
+    ).toBe(true)
 
     const invalidPayload = await fixture({ copyOut: 'invalid' })
-    expect((await executeStrongSandboxContainer(input(invalidPayload))).status).toBe('policy-blocked')
+    expect((await executeStrongSandboxContainer(input(invalidPayload))).status).toBe(
+      'policy-blocked',
+    )
 
     const cleanup = await fixture({ failStage: 'remove' })
     const cleanupResult = await executeStrongSandboxContainer(input(cleanup))
@@ -308,11 +323,15 @@ describe('strong sandbox container backend unit boundaries', () => {
     const cancellable = await fixture({ execution: { sleepMs: 5_000 } })
     let cancel: (() => void) | undefined
     const pending = executeStrongSandboxContainer(
-      input(cancellable, { limits: { timeoutMs: 2_000 } }, {
-        onStart: (controller) => {
-          cancel = () => controller.cancel()
+      input(
+        cancellable,
+        { limits: { timeoutMs: 2_000 } },
+        {
+          onStart: (controller) => {
+            cancel = () => controller.cancel()
+          },
         },
-      }),
+      ),
     )
     await new Promise((resolve) => setTimeout(resolve, 25))
     cancel?.()
