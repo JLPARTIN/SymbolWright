@@ -146,6 +146,7 @@ volume_replacements = [
 """,
         """    spawnSync('docker', ['rm', '-f', name], { stdio: 'ignore' })
     spawnSync('docker', ['volume', 'rm', '-f', volume], { stdio: 'ignore' })
+    spawnSync('chmod', ['0700', certs], { stdio: 'ignore' })
     rmSync(certs, { recursive: true, force: true })
 """,
     ),
