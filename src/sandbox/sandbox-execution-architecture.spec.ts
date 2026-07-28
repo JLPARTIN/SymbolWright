@@ -74,6 +74,6 @@ describe('sandbox execution architecture', () => {
     expect(asynchronousSpawnIndex).toBeGreaterThan(authorizationIndex)
     expect(synchronousSpawnIndex).toBeGreaterThan(authorizationIndex)
     expect(backend).not.toContain('execSync(')
-    expect(backend).not.toContain("shell: true")
+    expect(backend).not.toContain('shell: true')
   })
 })
