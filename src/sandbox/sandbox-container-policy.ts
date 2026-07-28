@@ -103,7 +103,7 @@ export function buildSandboxContainerPolicyPlan(
     controls: DEFAULT_SANDBOX_CONTAINER_CONTROLS,
     blockedReasons,
     warnings: [
-      'The strong container backend is offline and never pulls images during execution.',
+      'The strong container backend is offline and enforces --pull=never during execution.',
       'Only a dedicated temporary tmpfs workspace is writable inside the container.',
       'Generated files are copied to bounded quarantine and never applied to the repository automatically.',
       'Container cleanup and boot-time orphan reaping are mandatory.',

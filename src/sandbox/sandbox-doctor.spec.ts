@@ -84,11 +84,10 @@ describe('sandbox doctor', () => {
     expect(rendered).toContain('Strong-container opt-in: false')
     expect(rendered).toContain('Guarded-host opt-in: false')
     expect(rendered).toContain(`docker pull ${STRONG_SANDBOX_NODE_IMAGE}`)
-    expect(rendered).toContain('does not pull images automatically')
-
     const images = renderSandboxImagesReport(report)
     expect(images).toContain('SymbolWright Sandbox Images')
     expect(images).toContain('Preparation commands are shown for operator review only')
+    expect(images).toContain('does not pull images automatically')
   })
 
   it('withholds image preparation commands when no container engine is available', async () => {

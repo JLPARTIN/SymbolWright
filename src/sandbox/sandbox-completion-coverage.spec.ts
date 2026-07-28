@@ -187,7 +187,7 @@ describe('sandbox completion coverage', () => {
     )
 
     expect(result.status).toBe('unavailable')
-    expect(result.evidence.policyReason).toContain('No executable backend')
+    expect(result.evidence.policyReason).toContain('immutable image configuration')
   })
 
   it('covers guarded-host file, test, compile, timeout, and truncation branches', async () => {

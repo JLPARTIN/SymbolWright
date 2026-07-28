@@ -51,7 +51,7 @@ describe('sandbox runtime inventory', () => {
     expect(inventory.images.map((image) => image.id)).toEqual(['node-26-alpine-pinned'])
     expect(inventory.images[0]?.image).toContain('@sha256:')
     expect(inventory.images[0]?.enabled).toBe(false)
-    expect(inventory.images[0]?.installed).toBeUndefined()
+    expect(inventory.images[0]?.installed).toBe(false)
     const runner = inventory.runners.find(
       (candidate) => candidate.id === STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID,
     )
