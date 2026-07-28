@@ -17,6 +17,11 @@ jobs:
           curl --fail --silent --show-error --location \
             "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
             | tar -xz --strip-components=1
+          git init -q
+          git config user.name coverage-test
+          git config user.email coverage-test@example.com
+          git add .
+          git commit -qm baseline
           npm ci --silent
           set +e
           npm run test:coverage > /tmp/coverage.log 2>&1
