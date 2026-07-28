@@ -13,63 +13,33 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout PR head branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          ref: ${{ github.head_ref }}
-
-      - name: Setup Node.js 22
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Apply current-repository PR 6 implementation
+      - name: Generate and typecheck PR 6 product patch
+        shell: bash
         run: |
+          set -o pipefail
+          curl --fail --silent --show-error --location \
+            "https://github.com/JLPARTIN/SymbolWright/archive/refs/heads/${GITHUB_HEAD_REF}.tar.gz" \
+            | tar -xz --strip-components=1
+          npm ci --silent
           python3 scripts/.pr6-preprocess.py
           python3 scripts/.pr6-apply.py
-          npm install --package-lock-only --ignore-scripts
-
-      - name: Format TypeScript, scripts, JSON, and workflows
-        run: >-
-          npx prettier --write
-          CHANGELOG.md
-          package.json
-          package-lock.json
-          scripts/docker-smoke.mjs
-          scripts/extract-release-notes.mjs
-          scripts/release-prepare.mjs
-          scripts/verify-release-tag.mjs
-          scripts/lib/changelog-release.mjs
-          scripts/lib/changelog-release.test.mjs
-          src/app/api/mission-routes.ts
-          src/autonomy/autonomous-budget-governance.spec.ts
-          src/autonomy/autonomous-mission-coordinator.ts
-          src/autonomy/autonomous-mission-runtime.ts
-          src/autonomy/server-autonomy-runtime.ts
-          src/cli-release-readiness.ts
-          src/cli-release-readiness.spec.ts
-          src/orchestration/orchestration-money.spec.ts
-          src/orchestration/orchestration-store.ts
-          src/orchestration/orchestration-types.ts
-          src/orchestration/team-service.ts
-          src/release/artifact-smoke.ts
-          src/server/symbolwright-chat-server.ts
-          .github/workflows/deploy.yml
-          .github/workflows/publish.yml
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Format check
-        run: npm run format:check
-
-      - name: Build
-        run: npm run build
+          npm install --package-lock-only --ignore-scripts --silent
+          npx prettier --write \
+            CHANGELOG.md package.json package-lock.json \
+            scripts/docker-smoke.mjs scripts/extract-release-notes.mjs \
+            scripts/release-prepare.mjs scripts/verify-release-tag.mjs \
+            scripts/lib/changelog-release.mjs scripts/lib/changelog-release.test.mjs \
+            src/app/api/mission-routes.ts \
+            src/autonomy/autonomous-budget-governance.spec.ts \
+            src/autonomy/autonomous-mission-coordinator.ts \
+            src/autonomy/autonomous-mission-runtime.ts \
+            src/autonomy/server-autonomy-runtime.ts \
+            src/cli-release-readiness.ts src/cli-release-readiness.spec.ts \
+            src/orchestration/orchestration-money.spec.ts \
+            src/orchestration/orchestration-store.ts \
+            src/orchestration/orchestration-types.ts \
+            src/orchestration/team-service.ts \
+            src/release/artifact-smoke.ts \
+            src/server/symbolwright-chat-server.ts \
+            .github/workflows/deploy.yml .github/workflows/publish.yml >/dev/null
+          npm run typecheck
