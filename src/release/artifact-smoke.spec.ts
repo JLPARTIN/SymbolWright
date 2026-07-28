@@ -90,7 +90,10 @@ describe('runNpmPackSmoke', () => {
     }))
     expect(invocations).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ command: 'npm', args: expect.arrayContaining(['pack', '--json']) }),
+        expect.objectContaining({
+          command: 'npm',
+          args: expect.arrayContaining(['pack', '--json']),
+        }),
         expect.objectContaining({ command: 'npm', args: expect.arrayContaining(['install']) }),
         expect.objectContaining({ args: ['--help'] }),
         expect.objectContaining({ args: ['--json'] }),
@@ -209,10 +212,7 @@ describe('runDockerSmoke', () => {
 
   it('fails when graceful shutdown does not stop the container', () => {
     installSuccessfulCommandMocks({ runningState: 'true' })
-    vi.spyOn(Date, 'now')
-      .mockReturnValueOnce(0)
-      .mockReturnValueOnce(20_000)
-      .mockReturnValue(20_000)
+    vi.spyOn(Date, 'now').mockReturnValueOnce(0).mockReturnValueOnce(20_000).mockReturnValue(20_000)
 
     const result = runDockerSmoke(process.cwd(), 'symbolwright:test')
 
