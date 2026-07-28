@@ -26,11 +26,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Apply streamed copy-in patch
+      - name: Apply streamed copy-out patch
         env:
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
-          node scripts/apply-sandbox-pr3-stream-copy-in.mjs
+          node scripts/apply-sandbox-pr3-stream-copy-out.mjs
           npx prettier --write \
             src/sandbox/sandbox-container-backend.ts \
             src/sandbox/sandbox-container-transfer.ts \
@@ -41,7 +41,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "fix(sandbox): stream copy-in to read-only container tmpfs"
+          git commit -m "fix(sandbox): stream bounded copy-out from container tmpfs"
           git push origin "HEAD:${HEAD_BRANCH}"
       - name: Prepare digest-pinned strong sandbox image
         run: docker pull node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66
