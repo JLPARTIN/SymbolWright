@@ -1,7 +1,13 @@
 import { randomUUID } from 'node:crypto'
 
+import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../access/sandbox-capabilities.js'
 import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
 import { DEFAULT_SANDBOX_DISCOVERY_PROBES, discoverRuntimeCommands } from './sandbox-discovery.js'
+import { finalizeSandboxExecutionEvidence } from './sandbox-evidence.js'
+import {
+  SandboxExecutionBroker,
+  type SandboxBrokerDecision,
+} from './sandbox-execution-broker.js'
 import {
   executeGuardedHostRequest,
   type GuardedHostExecutionController,
@@ -13,7 +19,7 @@ import type {
   SandboxHistoryStore,
 } from './sandbox-history.js'
 import { normalizeSandboxLimits } from './sandbox-limits.js'
-import { evaluateSandboxPolicy } from './sandbox-policy.js'
+import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
 import { validateSandboxExecutionRequest } from './sandbox-request.js'
 import {
   buildSandboxInventory,
@@ -43,6 +49,7 @@ export interface SandboxServiceOptions {
     ReadonlyMap<string, SandboxRunnerAvailability>
   >
   readonly historyStore?: SandboxHistoryStore
+  readonly broker?: SandboxExecutionBroker
   readonly now?: () => Date
   readonly generateExecutionId?: () => string
   readonly env?: NodeJS.ProcessEnv
@@ -50,8 +57,13 @@ export interface SandboxServiceOptions {
 
 export interface SandboxExecutionContext {
   readonly mode: SymbolWrightRuntimeMode
-  /** Who is running this execution -- recorded on the history entry so ownership can be
-   * enforced later on list/get/cancel. Absent means an operator-initiated execution. */
+  /**
+   * Server-derived authority. HTTP and delegated callers must provide this explicitly. Direct
+   * internal calls without it retain the legacy local-operator behavior and are resolved as an
+   * offline, local operator execution.
+   */
+  readonly authorization?: SandboxAuthorizationContext
+  /** Who is running this execution -- recorded on the history entry for list/get/cancel guards. */
   readonly ownership?: SandboxExecutionOwnership
 }
 
@@ -70,6 +82,7 @@ export class SandboxService {
     ReadonlyMap<string, SandboxRunnerAvailability>
   >
   private readonly historyStore: SandboxHistoryStore | undefined
+  private readonly broker: SandboxExecutionBroker
   private readonly now: () => Date
   private readonly generateExecutionId: () => string
   private readonly env: NodeJS.ProcessEnv
@@ -91,6 +104,7 @@ export class SandboxService {
     this.inventory = options.inventory ?? this.buildInventory()
     this.historyStore = options.historyStore
     this.now = options.now ?? (() => new Date())
+    this.broker = options.broker ?? new SandboxExecutionBroker({ env: this.env, now: this.now })
     this.generateExecutionId = options.generateExecutionId ?? (() => `sandbox_${randomUUID()}`)
   }
 
@@ -148,101 +162,122 @@ export class SandboxService {
     const started = Date.parse(startedAt)
     const request = this.validateRequest(raw)
     const runner = findSandboxRunner(this.inventory, request.languageId, request.requestedRunnerId)
+    const authorization =
+      context.authorization ?? this.localOperatorAuthorization(request, context.mode)
+    const decision = this.broker.authorize(request, runner, authorization)
+    const selectedRunner = decision.effectiveRunner ?? runner ?? unavailableRunner(request)
 
-    if (runner === undefined) {
-      return this.persistResult(
-        request,
-        this.result(executionId, request, unavailableRunner(request), startedAt, 'unavailable', {
-          policyDecision: 'blocked',
-          policyReason: `No available runner for language ${request.languageId}.`,
-        }),
-        context.ownership,
-      )
-    }
-
-    const effectiveRunner: SandboxRunnerDefinition = {
-      ...runner,
-      limits: normalizeSandboxLimits(request.limits),
-    }
-    const decision = evaluateSandboxPolicy(request, effectiveRunner, {
-      mode: context.mode,
-      env: this.env,
-    })
     if (!decision.allowed) {
       return this.persistResult(
         request,
-        this.result(executionId, request, effectiveRunner, startedAt, 'policy-blocked', {
-          policyDecision: 'blocked',
-          policyReason: decision.reason,
-        }),
+        this.result(
+          executionId,
+          request,
+          selectedRunner,
+          startedAt,
+          decision.reasonCode === 'SANDBOX_RUNNER_NOT_FOUND' ? 'unavailable' : 'policy-blocked',
+          {
+            policyDecision: 'blocked',
+            policyReason: decision.reason,
+          },
+        ),
         context.ownership,
+        decision,
+        authorization,
       )
     }
 
-    if (effectiveRunner.backend === 'guarded-host') {
+    if (selectedRunner.backend === 'guarded-host') {
       const result = await executeGuardedHostRequest({
         executionId,
         request,
-        runner: effectiveRunner,
+        runner: selectedRunner,
         startedAt,
         now: this.now,
         env: this.env,
         onStart: (controller) => this.activeExecutions.set(executionId, controller),
       })
       this.activeExecutions.delete(executionId)
-      return this.persistResult(request, result, context.ownership)
-    }
-
-    if (effectiveRunner.backend === 'browser') {
       return this.persistResult(
         request,
-        this.result(executionId, request, effectiveRunner, startedAt, 'policy-blocked', {
-          policyDecision: 'blocked',
-          policyReason:
-            'No execution backend: Browser-isolated runners execute in the browser runtime, not through the server sandbox API.',
-          durationStartedAt: started,
-        }),
+        result,
         context.ownership,
+        decision,
+        authorization,
       )
     }
 
+    if (selectedRunner.backend === 'browser') {
+      const blockedDecision = blockAuthorizedExecution(
+        decision,
+        'SANDBOX_BACKEND_NOT_SERVER_EXECUTABLE',
+        'Browser-isolated runners execute in the browser runtime, not through the server sandbox API.',
+      )
+      return this.persistResult(
+        request,
+        this.result(executionId, request, selectedRunner, startedAt, 'policy-blocked', {
+          policyDecision: 'blocked',
+          policyReason: blockedDecision.reason,
+          durationStartedAt: started,
+        }),
+        context.ownership,
+        blockedDecision,
+        authorization,
+      )
+    }
+
+    const unavailableDecision = blockAuthorizedExecution(
+      decision,
+      'SANDBOX_BACKEND_NOT_WIRED',
+      `No executable backend is wired for ${selectedRunner.backend}.`,
+    )
     return this.persistResult(
       request,
-      this.result(executionId, request, effectiveRunner, startedAt, 'unavailable', {
+      this.result(executionId, request, selectedRunner, startedAt, 'unavailable', {
         policyDecision: 'blocked',
-        policyReason: `No executable backend is wired for ${effectiveRunner.backend}.`,
+        policyReason: unavailableDecision.reason,
         durationStartedAt: started,
       }),
       context.ownership,
+      unavailableDecision,
+      authorization,
     )
   }
 
   private persistResult(
     request: SandboxExecutionRequest,
     result: SandboxExecutionResult,
-    ownership?: SandboxExecutionOwnership,
+    ownership: SandboxExecutionOwnership | undefined,
+    decision: SandboxBrokerDecision,
+    authorization: SandboxAuthorizationContext,
   ): SandboxExecutionResult {
-    const finalized = this.finalizeResult(request, result)
+    const finalized = finalizeSandboxExecutionEvidence({
+      request,
+      result,
+      decision,
+      authorization,
+    })
     this.historyStore?.record(finalized, request.missionId, ownership)
     return finalized
   }
 
-  private finalizeResult(
+  private localOperatorAuthorization(
     request: SandboxExecutionRequest,
-    result: SandboxExecutionResult,
-  ): SandboxExecutionResult {
-    const outputExcerpt = excerptSandboxOutput(result.stdout, result.stderr)
+    mode: SymbolWrightRuntimeMode,
+  ): SandboxAuthorizationContext {
+    const deploymentMode =
+      this.env['SYMBOLWRIGHT_DEPLOYMENT_MODE']?.trim().toLowerCase() === 'hosted'
+        ? 'hosted'
+        : 'local'
     return {
-      ...result,
-      outputTruncated: result.outputTruncated || outputExcerpt.includes('[TRUNCATED]'),
-      evidence: {
-        ...result.evidence,
-        inputHash: sha256Text(JSON.stringify(request)),
-        ...(result.stdout.length === 0 && result.stderr.length === 0
-          ? {}
-          : { outputHash: sha256Text(`${result.stdout}\n${result.stderr}`) }),
-        ...(outputExcerpt.length === 0 ? {} : { outputExcerpt }),
-      },
+      deploymentMode,
+      callerKind: 'operator',
+      runtimeMode: mode,
+      approvedCapabilityIds: [SANDBOX_OFFLINE_EXECUTE_CAPABILITY],
+      repositoryId: request.repository?.rootPath ?? 'inline-source',
+      workspaceId: request.missionId ?? request.repository?.rootPath ?? 'inline-source',
+      ...(request.missionId === undefined ? {} : { missionId: request.missionId }),
+      intent: 'offline-execution',
     }
   }
 
@@ -297,6 +332,19 @@ export class SandboxService {
       },
       cleanup: { attempted: false, succeeded: true },
     }
+  }
+}
+
+function blockAuthorizedExecution(
+  decision: SandboxBrokerDecision,
+  reasonCode: string,
+  reason: string,
+): SandboxBrokerDecision {
+  return {
+    ...decision,
+    allowed: false,
+    reasonCode,
+    reason,
   }
 }
 
