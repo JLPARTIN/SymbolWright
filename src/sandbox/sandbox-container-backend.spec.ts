@@ -156,6 +156,10 @@ function input(
   request: Partial<SandboxExecutionRequest> = {},
   overrides: Partial<ExecuteStrongSandboxContainerInput> = {},
 ): ExecuteStrongSandboxContainerInput {
+  const runner =
+    request.limits === undefined
+      ? value.runner
+      : { ...value.runner, limits: { ...value.runner.limits, ...request.limits } }
   return {
     executionId: 'backend-unit',
     request: {
@@ -164,7 +168,7 @@ function input(
       source: "console.log('unit')",
       ...request,
     },
-    runner: value.runner,
+    runner,
     image: value.image,
     engine: value.engine,
     startedAt: STARTED_AT,
