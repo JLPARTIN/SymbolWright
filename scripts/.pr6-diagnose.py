@@ -73,6 +73,26 @@ if count != 1:
     raise SystemExit('extractReleaseNotes function anchor missing')
 changelog_path.write_text(changelog_text)
 
+artifact_path = Path('src/release/artifact-smoke.ts')
+artifact_text = artifact_path.read_text()
+old_bins = """    for (const bin of ['symbolwright', 'symbolwright-workspace', 'codemind', 'codemind-workspace']) {
+      run(path.join(projectDir, 'node_modules', '.bin', bin), ['--help'], { cwd: projectDir })
+    }
+"""
+new_bins = """    const binInvocations = [
+      ['symbolwright', ['--help']],
+      ['symbolwright-workspace', ['--json']],
+      ['codemind', ['--help']],
+      ['codemind-workspace', ['--json']],
+    ] as const
+    for (const [bin, args] of binInvocations) {
+      run(path.join(projectDir, 'node_modules', '.bin', bin), args, { cwd: projectDir })
+    }
+"""
+if old_bins not in artifact_text:
+    raise SystemExit('Packed-bin invocation anchor missing')
+artifact_path.write_text(artifact_text.replace(old_bins, new_bins, 1))
+
 run(['npm', 'install', '--package-lock-only', '--ignore-scripts', '--silent'], quiet=True)
 run(['npm', 'run', 'build', '--silent'], quiet=True)
 
