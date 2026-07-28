@@ -37,15 +37,34 @@ jobs:
           npm test > /tmp/symbolwright-tests.log 2>&1
           status=$?
           set -e
+
           clean_log=/tmp/symbolwright-tests-clean.log
-          perl -pe 's/\e\[[0-9;]*[A-Za-z]//g' /tmp/symbolwright-tests.log > "$clean_log"
-          files=$(grep -oE 'FAIL +src/[^ >]+' "$clean_log" | sed -E 's/^FAIL +//' | sort -u | paste -sd, - || true)
+          files=""
+
+          if [ -f /tmp/symbolwright-tests.log ]; then
+            perl -pe 's/\e\[[0-9;]*[A-Za-z]//g' /tmp/symbolwright-tests.log > "$clean_log" || cp /tmp/symbolwright-tests.log "$clean_log" || true
+            files=$(grep -oE 'FAIL +src/[^ >]+' "$clean_log" 2>/dev/null | sed -E 's/^FAIL +//' | sort -u | paste -sd, - || true)
+          fi
+
           if [ -z "$files" ]; then
             files=unknown
           fi
+
           files=${files:0:240}
-          echo "status=$status" >> "$GITHUB_OUTPUT"
-          echo "files=$files" >> "$GITHUB_OUTPUT"
+
+          if [ -n "${GITHUB_OUTPUT:-}" ]; then
+            echo "status=$status" >> "$GITHUB_OUTPUT"
+            echo "files=$files" >> "$GITHUB_OUTPUT"
+          else
+            echo "GITHUB_OUTPUT not set — printing outputs to stdout"
+            echo "status=$status"
+            echo "files=$files"
+          fi
 
       - name: Failing specs — ${{ steps.tests.outputs.files }}
-        run: exit "${{ steps.tests.outputs.status }}"
+        run: |
+          status="${{ steps.tests.outputs.status }}"
+          if ! printf '%s' "$status" | grep -Eq '^[0-9]+$'; then
+            status=1
+          fi
+          exit "$status"
