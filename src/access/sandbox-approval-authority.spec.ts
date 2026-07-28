@@ -85,6 +85,10 @@ describe('sandbox approval authority binding', () => {
 
   it('binds an approval to the current grant and sorted policy-version snapshot', async () => {
     const grant = createDependencyGrant()
+    expect(grant.sandboxPolicyReferences?.dependency).toEqual({
+      id: 'npm-acquisition',
+      version: 2,
+    })
     const versions = {
       ...POLICY_VERSIONS,
       [`grant:${grant.id}`]: grant.version,
