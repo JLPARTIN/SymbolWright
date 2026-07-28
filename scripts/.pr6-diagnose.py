@@ -157,6 +157,67 @@ for before, after in volume_replacements:
     artifact_text = artifact_text.replace(before, after, 1)
 artifact_path.write_text(artifact_text)
 
+# The normal status API must remain a cheap diagnostic surface. Strict artifact execution stays the
+# default for the release-readiness CLI, while the status collector opts into static gates only.
+release_path = Path('src/cli-release-readiness.ts')
+release_text = release_path.read_text()
+release_before = """export function renderReleaseReadinessCommand(workspaceRoot: string): string {
+  const report = assessReleaseReadiness(workspaceRoot, { runArtifactSmoke: true })
+  return renderReleaseReadinessReport(report)
+}
+"""
+release_after = """export function renderReleaseReadinessCommand(
+  workspaceRoot: string,
+  options: ReleaseReadinessOptions = { runArtifactSmoke: true },
+): string {
+  const report = assessReleaseReadiness(workspaceRoot, options)
+  return renderReleaseReadinessReport(report)
+}
+"""
+if release_before not in release_text:
+    raise SystemExit('Release command options anchor missing')
+release_path.write_text(release_text.replace(release_before, release_after, 1))
+
+cli_path = Path('src/cli.ts')
+cli_text = cli_path.read_text()
+cli_before = """    case 'release-readiness':
+      console.log(renderReleaseReadinessCommand(process.cwd()))
+      break
+"""
+cli_after = """    case 'release-readiness':
+      console.log(
+        renderReleaseReadinessCommand(process.cwd(), {
+          runArtifactSmoke: !rest.includes('--static'),
+        }),
+      )
+      break
+"""
+if cli_before not in cli_text:
+    raise SystemExit('Release-readiness CLI anchor missing')
+cli_path.write_text(cli_text.replace(cli_before, cli_after, 1))
+
+status_path = Path('src/web/status-runner.ts')
+status_text = status_path.read_text()
+status_replacements = [
+    (
+        "export function runScript(name: string, script: string): Promise<ScriptOutput> {",
+        "export function runScript(\n  name: string,\n  script: string,\n  args: readonly string[] = [],\n): Promise<ScriptOutput> {",
+    ),
+    (
+        "spawn(npmCommand, ['run', script, '--silent'], {",
+        "spawn(npmCommand, ['run', script, '--silent', ...(args.length === 0 ? [] : ['--', ...args])], {",
+    ),
+    (
+        "runScript('release-readiness', 'release-readiness'),",
+        "runScript('release-readiness', 'release-readiness', ['--static']),",
+    ),
+]
+for before, after in status_replacements:
+    if before not in status_text:
+        raise SystemExit(f'Status runner anchor missing: {before}')
+    status_text = status_text.replace(before, after, 1)
+status_path.write_text(status_text)
+
 run(['npm', 'install', '--package-lock-only', '--ignore-scripts', '--silent'], quiet=True)
 run(['npm', 'run', 'build', '--silent'], quiet=True)
 
