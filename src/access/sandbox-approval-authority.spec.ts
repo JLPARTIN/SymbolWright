@@ -100,7 +100,11 @@ describe('sandbox approval authority binding', () => {
       policyVersions: versions,
     })
 
-    store.writeApproval({ ...approval!, status: 'approved', approverId: 'operator-1' })
+    store.writeApproval({
+      ...approval!,
+      status: 'approved',
+      approverId: 'operator-1',
+    })
     const reorderedVersions = Object.fromEntries(Object.entries(versions).reverse())
     const approved = await authorization.evaluate(
       requestFor(grant, 'mission-1', reorderedVersions),
@@ -116,7 +120,11 @@ describe('sandbox approval authority binding', () => {
     }
     const first = await authorization.evaluate(requestFor(grant, 'mission-2', versions))
     const approval = store.readApproval(first.approvalId as string)
-    store.writeApproval({ ...approval!, status: 'approved', approverId: 'operator-1' })
+    store.writeApproval({
+      ...approval!,
+      status: 'approved',
+      approverId: 'operator-1',
+    })
     store.writeGrant({ ...grant, version: grant.version + 1 })
 
     const afterGrantUpdate = await authorization.evaluate(
@@ -165,7 +173,11 @@ describe('sandbox approval authority binding', () => {
       const first = await authorization.evaluate(requestFor(grant, missionId, malformed))
       const approval = store.readApproval(first.approvalId as string)
       expect(approval?.policyVersions).toBeUndefined()
-      store.writeApproval({ ...approval!, status: 'approved', approverId: 'operator-1' })
+      store.writeApproval({
+        ...approval!,
+        status: 'approved',
+        approverId: 'operator-1',
+      })
       const second = await authorization.evaluate(requestFor(grant, missionId, malformed))
       expect(second.allowed).toBe(true)
     }
