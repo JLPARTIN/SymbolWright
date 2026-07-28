@@ -149,11 +149,7 @@ export interface SandboxPolicyEvidence {
   readonly version: number
   readonly fingerprint: string
   readonly intent: 'offline-execution' | 'dependency-acquisition' | 'egress-execution'
-  readonly networkMode:
-    | 'disabled'
-    | 'dependency-broker-only'
-    | 'allowlisted-egress'
-    | 'unsupported'
+  readonly networkMode: 'disabled' | 'dependency-broker-only' | 'allowlisted-egress' | 'unsupported'
   readonly dependencyMode: 'disabled' | 'brokered' | 'unsupported'
   readonly workspaceMode: 'managed-mission' | 'temporary-copy' | 'trusted-local-host'
   readonly sourceVersions: Readonly<Record<string, number>>

@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  ALL_CAPABILITIES,
-  expandNonHighRiskWildcard,
-} from './access-capability-catalog.js'
+import { ALL_CAPABILITIES, expandNonHighRiskWildcard } from './access-capability-catalog.js'
 import type { AgentAccessGrant } from './access-types.js'
 import {
   SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,

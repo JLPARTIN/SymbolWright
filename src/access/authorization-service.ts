@@ -6,6 +6,11 @@ import {
   isKnownCapability,
 } from './access-capability-catalog.js'
 import { matchesAnyRepositoryPattern } from './access-branch-match.js'
+import {
+  SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
+  canonicalSandboxCapabilityId,
+  sandboxCapabilityAliases,
+} from './sandbox-capabilities.js'
 import { checkBranchScope as checkBranchScopeViolation } from './branch-scope-guard.js'
 import type { AccessStore } from './access-store.js'
 import type {
@@ -75,6 +80,47 @@ function isBranchSensitiveCapability(capability: string): boolean {
   return BRANCH_SENSITIVE_CAPABILITIES.has(capability)
 }
 
+function sandboxPolicyVersionsFromRequest(
+  request: AuthorizationRequest,
+): Readonly<Record<string, number>> | undefined {
+  const value = request.metadata?.['sandboxPolicyVersions']
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined
+  const entries = Object.entries(value as Record<string, unknown>)
+  if (
+    !entries.every(
+      ([key, version]) =>
+        key.length > 0 &&
+        typeof version === 'number' &&
+        Number.isSafeInteger(version) &&
+        version > 0,
+    )
+  ) {
+    return undefined
+  }
+  return Object.fromEntries(entries) as Readonly<Record<string, number>>
+}
+
+function policyVersionsMatch(
+  expected: Readonly<Record<string, number>> | undefined,
+  actual: Readonly<Record<string, number>> | undefined,
+): boolean {
+  if (expected === undefined || actual === undefined) return expected === actual
+  const expectedEntries = Object.entries(expected).sort(([left], [right]) =>
+    left.localeCompare(right),
+  )
+  const actualEntries = Object.entries(actual).sort(([left], [right]) => left.localeCompare(right))
+  return JSON.stringify(expectedEntries) === JSON.stringify(actualEntries)
+}
+
+function approvalMatchesCurrentAuthority(
+  approval: ApprovalRequest,
+  grant: AgentAccessGrant,
+  request: AuthorizationRequest,
+): boolean {
+  if (approval.grantVersion !== undefined && approval.grantVersion !== grant.version) return false
+  return policyVersionsMatch(approval.policyVersions, sandboxPolicyVersionsFromRequest(request))
+}
+
 function decision(
   partial: Omit<AuthorizationDecision, 'correlationId' | 'evaluatedPolicies'> & {
     evaluatedPolicies?: readonly string[]
@@ -89,14 +135,22 @@ function decision(
 }
 
 function boundOperationKey(request: AuthorizationRequest): string {
+  const policyVersions = sandboxPolicyVersionsFromRequest(request)
+  const serializedPolicyVersions =
+    policyVersions === undefined
+      ? ''
+      : JSON.stringify(
+          Object.entries(policyVersions).sort(([left], [right]) => left.localeCompare(right)),
+        )
   const parts = [
     request.grantId,
-    request.capability,
+    canonicalSandboxCapabilityId(request.capability),
     request.repository ?? '',
     request.branch ?? '',
     request.missionId ?? '',
+    serializedPolicyVersions,
   ]
-  return createHash('sha256').update(parts.join('')).digest('hex')
+  return createHash('sha256').update(parts.join('\u0001')).digest('hex')
 }
 
 function matchApprovalRequirement(
@@ -104,9 +158,11 @@ function matchApprovalRequirement(
   capability: string,
 ): ApprovalRequirement {
   const rules = grant.approvalPolicy.rules
-  const exact = rules.find((rule) => rule.match === capability)
+  const aliases = sandboxCapabilityAliases(capability)
+  const exact = rules.find((rule) => aliases.includes(rule.match))
   if (exact !== undefined) return exact.requirement
-  if (isHighRiskCapability(capability)) {
+  const canonicalCapability = canonicalSandboxCapabilityId(capability)
+  if (isHighRiskCapability(canonicalCapability)) {
     const highRisk = rules.find((rule) => rule.match === 'high-risk')
     if (highRisk !== undefined) return highRisk.requirement
   }
@@ -191,10 +247,11 @@ export class AuthorizationService {
     correlationId: string,
     evaluatedPolicies: string[],
   ): AuthorizationDecision {
-    const riskLevel = capabilityRiskLevel(request.capability) ?? 'critical'
+    const canonicalCapability = canonicalSandboxCapabilityId(request.capability)
+    const riskLevel = capabilityRiskLevel(canonicalCapability) ?? 'critical'
 
     evaluatedPolicies.push('capability-known')
-    if (!isKnownCapability(request.capability)) {
+    if (!isKnownCapability(canonicalCapability)) {
       return decision(
         {
           allowed: false,
@@ -384,12 +441,14 @@ export class AuthorizationService {
     riskLevel: RiskLevel,
     evaluatedPolicies: string[],
   ): AuthorizationDecision | undefined {
-    if (grant.deniedCapabilities.includes(capability)) {
+    const canonicalCapability = canonicalSandboxCapabilityId(capability)
+    const aliases = sandboxCapabilityAliases(canonicalCapability)
+    if (aliases.some((alias) => grant.deniedCapabilities.includes(alias))) {
       return decision(
         {
           allowed: false,
           reasonCode: 'CAPABILITY_DENIED',
-          reason: `This agent is explicitly denied "${capability}".`,
+          reason: `This agent is explicitly denied "${canonicalCapability}".`,
           requiresApproval: false,
           grantVersion: grant.version,
           riskLevel,
@@ -399,15 +458,16 @@ export class AuthorizationService {
       )
     }
 
-    const granted =
-      grant.symbolWrightCapabilities.includes(capability) ||
-      grant.githubCapabilities.includes(capability)
+    const granted = aliases.some(
+      (alias) =>
+        grant.symbolWrightCapabilities.includes(alias) || grant.githubCapabilities.includes(alias),
+    )
     if (!granted) {
       return decision(
         {
           allowed: false,
           reasonCode: 'CAPABILITY_NOT_GRANTED',
-          reason: `This agent is not permitted to use "${capability}".`,
+          reason: `This agent is not permitted to use "${canonicalCapability}".`,
           requiresApproval: false,
           grantVersion: grant.version,
           riskLevel,
@@ -417,11 +477,8 @@ export class AuthorizationService {
       )
     }
 
-    if (isHighRiskCapability(capability)) {
+    if (isHighRiskCapability(canonicalCapability)) {
       evaluatedPolicies.push('high-risk-explicit-selection')
-      // Membership above already required explicit inclusion (no wildcard ever expands to
-      // high-risk capabilities — see `expandNonHighRiskWildcard`), so reaching here means the
-      // operator explicitly selected it. Nothing further to deny here; approval policy still applies.
     }
 
     return undefined
@@ -470,7 +527,7 @@ export class AuthorizationService {
       )
     }
 
-    if (request.capability === 'symbolwright.sandbox.execute') {
+    if (canonicalSandboxCapabilityId(request.capability) === SANDBOX_OFFLINE_EXECUTE_CAPABILITY) {
       const allowedCommands = grant.executionLimits.allowedCommands
       if (allowedCommands !== undefined && allowedCommands.length > 0) {
         const command = request.metadata?.['command']
@@ -614,7 +671,8 @@ export class AuthorizationService {
         (entry) =>
           entry.boundOperationKey === key &&
           entry.status === 'approved' &&
-          new Date(entry.expiresAt).getTime() > Date.now(),
+          new Date(entry.expiresAt).getTime() > Date.now() &&
+          approvalMatchesCurrentAuthority(entry, grant, request),
       )
 
     if (existing !== undefined) {
@@ -641,7 +699,8 @@ export class AuthorizationService {
         (entry) =>
           entry.boundOperationKey === key &&
           entry.status === 'pending' &&
-          new Date(entry.expiresAt).getTime() > Date.now(),
+          new Date(entry.expiresAt).getTime() > Date.now() &&
+          approvalMatchesCurrentAuthority(entry, grant, request),
       )
     const approvalId = pending?.id ?? this.createPendingApproval(grant, request, key)
 
@@ -667,20 +726,24 @@ export class AuthorizationService {
   ): string {
     const now = new Date()
     const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+    const canonicalCapability = canonicalSandboxCapabilityId(request.capability)
+    const policyVersions = sandboxPolicyVersionsFromRequest(request)
     const approval: ApprovalRequest = {
       id: randomUUID(),
       grantId: grant.id,
-      capability: request.capability,
+      capability: canonicalCapability,
       ...(request.repository === undefined ? {} : { repository: request.repository }),
       ...(request.branch === undefined ? {} : { branch: request.branch }),
       ...(request.missionId === undefined ? {} : { missionId: request.missionId }),
-      summary: `${request.capability}${request.repository ? ` on ${request.repository}` : ''}${
+      summary: `${canonicalCapability}${request.repository ? ` on ${request.repository}` : ''}${
         request.branch ? ` (branch ${request.branch})` : ''
       }`,
       createdAt: now.toISOString(),
       expiresAt: expires.toISOString(),
       status: 'pending',
       boundOperationKey: boundKey,
+      grantVersion: grant.version,
+      ...(policyVersions === undefined ? {} : { policyVersions }),
     }
     this.store.writeApproval(approval)
     this.store.appendAuditEvent({
@@ -689,7 +752,7 @@ export class AuthorizationService {
       timestamp: now.toISOString(),
       grantId: grant.id,
       principalId: grant.principalId,
-      capability: request.capability,
+      capability: canonicalCapability,
       ...(request.repository === undefined ? {} : { repository: request.repository }),
       ...(request.branch === undefined ? {} : { branch: request.branch }),
       ...(request.missionId === undefined ? {} : { missionId: request.missionId }),
@@ -719,7 +782,7 @@ export class AuthorizationService {
       ...(request.repository === undefined ? {} : { repository: request.repository }),
       ...(request.branch === undefined ? {} : { branch: request.branch }),
       ...(request.toolName === undefined ? {} : { toolName: request.toolName }),
-      capability: request.capability,
+      capability: canonicalSandboxCapabilityId(request.capability),
       decision: decisionLabel,
       reasonCode: result.reasonCode,
       ...(result.approvalId === undefined ? {} : { approvalId: result.approvalId }),
@@ -727,14 +790,14 @@ export class AuthorizationService {
     }
     this.store.appendAuditEvent(event)
 
-    if (isHighRiskCapability(request.capability)) {
+    if (isHighRiskCapability(canonicalSandboxCapabilityId(request.capability))) {
       this.store.appendAuditEvent({
         id: randomUUID(),
         type: 'high_risk_operation.attempted',
         timestamp: new Date().toISOString(),
         principalId: request.principalId,
         grantId: request.grantId,
-        capability: request.capability,
+        capability: canonicalSandboxCapabilityId(request.capability),
         decision: decisionLabel,
         reasonCode: result.reasonCode,
         correlationId: result.correlationId,

@@ -9,6 +9,14 @@ SymbolWright presently has two different categories of server-side execution:
 
 The guarded-host backend is **not a strong sandbox**. It does not create container, virtual-machine, WASM, filesystem-jail, or network-namespace isolation. It must remain disabled for hosted or delegated untrusted execution. The current forensic build plan for replacing these divergent paths with one authoritative strong-sandbox broker is `docs/security/SANDBOX_LARGE_PR_BUNDLE_BUILD_PLAN.md`.
 
+## Current execution architecture
+
+Structured server sandbox requests now pass through `SandboxExecutionBroker`, which resolves an
+immutable `EffectiveSandboxPolicy` from server-owned deployment, caller, grant, mission, workspace,
+runner, resource, and request-tightening authority. The broker currently resolves the offline
+profile only. Dependency acquisition and allowlisted egress remain explicit unsupported future
+profiles; no network access is enabled by this architecture slice.
+
 ## Current implemented slices
 
 - Shared sandbox request/result/policy model.

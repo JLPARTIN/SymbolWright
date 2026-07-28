@@ -4,7 +4,17 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ## [Unreleased]
 
+### Added
+
+- **Authoritative sandbox execution broker and effective policy model (Sandbox Bundle PR 2/7)**:
+  adds one structured-execution broker, a deeply immutable versioned policy record, strict
+  narrowing across global/profile/runner/grant/mission/request authority, split offline/dependency/
+  egress capabilities, legacy offline-only grant migration, current-version approval binding, a
+  global emergency disable switch, and one redacted evidence boundary. This slice does not add
+  dependency downloads, container networking, or runtime egress.
+
 ### Fixed
+
 - **Sandbox guarded-host truth boundary (Sandbox Bundle PR 1/7)**: reclassifies
   guarded-host as trusted local operator break-glass execution rather than a strong sandbox,
   forbids it in hosted mode and through the HTTP sandbox API or `sandbox_execute` agent tool,

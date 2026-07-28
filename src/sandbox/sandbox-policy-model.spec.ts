@@ -20,9 +20,7 @@ const REQUEST: SandboxExecutionRequest = {
   source: "console.log('ok')",
 }
 
-function runner(
-  overrides: Partial<SandboxRunnerDefinition> = {},
-): SandboxRunnerDefinition {
+function runner(overrides: Partial<SandboxRunnerDefinition> = {}): SandboxRunnerDefinition {
   return {
     id: 'container-javascript',
     languageIds: ['javascript'],

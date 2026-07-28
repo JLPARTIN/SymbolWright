@@ -27,6 +27,7 @@ import type {
   MissionExecutionLimits,
   PrincipalType,
   RepositoryScope,
+  SandboxPolicyReferences,
   SessionLimits,
 } from './access-types.js'
 
@@ -51,6 +52,7 @@ export interface CreateGrantInput {
   readonly deniedCapabilities?: readonly string[]
   readonly approvalPolicy?: ApprovalPolicy
   readonly executionLimits?: MissionExecutionLimits
+  readonly sandboxPolicyReferences?: SandboxPolicyReferences
   readonly sessionLimits?: SessionLimits
   readonly clientConstraints?: ClientConstraints
   readonly expiresInHours?: number
@@ -96,6 +98,21 @@ function mergeBranchScope(
   }
 }
 
+function validateSandboxPolicyReferences(references: SandboxPolicyReferences | undefined): void {
+  if (references === undefined) return
+  for (const [kind, reference] of Object.entries(references)) {
+    if (reference === undefined) continue
+    if (reference.id.trim().length === 0) {
+      throw new GrantValidationError(`sandboxPolicyReferences.${kind}.id must be non-empty.`)
+    }
+    if (!Number.isSafeInteger(reference.version) || reference.version <= 0) {
+      throw new GrantValidationError(
+        `sandboxPolicyReferences.${kind}.version must be a positive integer.`,
+      )
+    }
+  }
+}
+
 export class AccessGrantService {
   public constructor(
     private readonly store: AccessStore,
@@ -103,6 +120,7 @@ export class AccessGrantService {
   ) {}
 
   public createGrant(input: CreateGrantInput): CreatedGrant {
+    validateSandboxPolicyReferences(input.sandboxPolicyReferences)
     const profile = getPermissionProfile(input.profileId)
     if (profile === undefined) {
       throw new GrantValidationError(`Unknown permission profile "${input.profileId}".`)
@@ -184,6 +202,9 @@ export class AccessGrantService {
       deniedCapabilities: [...hardDenied, ...explicitlyDenied],
       approvalPolicy: input.approvalPolicy ?? profile.defaultApprovalPolicy,
       executionLimits: { ...profile.defaultExecutionLimits, ...input.executionLimits },
+      ...(input.sandboxPolicyReferences === undefined
+        ? {}
+        : { sandboxPolicyReferences: input.sandboxPolicyReferences }),
       sessionLimits: input.sessionLimits ?? {},
       ...(input.clientConstraints === undefined
         ? {}

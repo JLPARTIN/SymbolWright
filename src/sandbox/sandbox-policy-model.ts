@@ -63,8 +63,7 @@ export const SANDBOX_ARTIFACT_EXPORT_POLICIES = [
   'quarantine-only',
   'approved-export',
 ] as const
-export type SandboxArtifactExportPolicy =
-  (typeof SANDBOX_ARTIFACT_EXPORT_POLICIES)[number]
+export type SandboxArtifactExportPolicy = (typeof SANDBOX_ARTIFACT_EXPORT_POLICIES)[number]
 
 export interface SandboxPolicyReference {
   readonly id: string
@@ -193,12 +192,7 @@ export const DEFAULT_OFFLINE_SANDBOX_POLICY: SandboxPolicyProfile = {
   deploymentModes: ['local', 'hosted'],
   callerKinds: ['operator', 'delegated-grant', 'team-member', 'system'],
   allowedBackends: ['browser', 'container', 'wasm', 'guarded-host'],
-  allowedTrustClasses: [
-    'browser-isolated',
-    'container-isolated',
-    'wasm-isolated',
-    'guarded-host',
-  ],
+  allowedTrustClasses: ['browser-isolated', 'container-isolated', 'wasm-isolated', 'guarded-host'],
   networkModes: ['disabled'],
   dependencyModes: ['disabled'],
   workspaceModes: ['managed-mission', 'temporary-copy', 'trusted-local-host'],
@@ -226,9 +220,7 @@ export class SandboxPolicyCatalog {
   }
 
   public resolve(reference: SandboxPolicyReference): SandboxPolicyProfile | undefined {
-    return this.profiles
-      .get(reference.id)
-      ?.find((profile) => profile.version === reference.version)
+    return this.profiles.get(reference.id)?.find((profile) => profile.version === reference.version)
   }
 
   public latest(id: string): SandboxPolicyProfile | undefined {
@@ -321,10 +313,7 @@ export function resolveEffectiveSandboxPolicy(
     return blocked('SANDBOX_POLICY_DISABLED', 'The selected sandbox policy is disabled.')
   }
 
-  const globalVersion = positiveInteger(
-    env['SYMBOLWRIGHT_SANDBOX_GLOBAL_POLICY_VERSION'],
-    1,
-  )
+  const globalVersion = positiveInteger(env['SYMBOLWRIGHT_SANDBOX_GLOBAL_POLICY_VERSION'], 1)
   const sources: SandboxPolicySourceEvidence[] = [
     { id: SANDBOX_GLOBAL_POLICY_ID, version: globalVersion, kind: 'global' },
     { id: profile.id, version: profile.version, kind: 'operator-profile' },
@@ -342,10 +331,7 @@ export function resolveEffectiveSandboxPolicy(
   }
   sources.push({ id: 'request-tightening', version: 1, kind: 'request' })
 
-  const staleExpected = findStaleVersion(
-    sources,
-    input.authorization.expectedPolicyVersions,
-  )
+  const staleExpected = findStaleVersion(sources, input.authorization.expectedPolicyVersions)
   if (staleExpected !== undefined) {
     return blocked(
       'SANDBOX_POLICY_VERSION_STALE',
@@ -408,10 +394,7 @@ export function resolveEffectiveSandboxPolicy(
     }
   }
 
-  const allowedLanguageIds = intersectDefined([
-    runner.languageIds,
-    profile.allowedLanguageIds,
-  ])
+  const allowedLanguageIds = intersectDefined([runner.languageIds, profile.allowedLanguageIds])
   if (!allowedLanguageIds.includes(input.request.languageId)) {
     return blocked(
       'SANDBOX_LANGUAGE_NOT_ALLOWED',
@@ -478,7 +461,8 @@ export function resolveEffectiveSandboxPolicy(
     allowedLanguageIds,
     allowedModes,
     allowedCommands,
-    commandPolicy: allowedCommands.length === 0 ? ('runner-defined' as const) : ('allowlist' as const),
+    commandPolicy:
+      allowedCommands.length === 0 ? ('runner-defined' as const) : ('allowlist' as const),
     limits,
     workspace: {
       mode: workspaceMode,
@@ -597,11 +581,16 @@ function supportedRunnerModes(runner: SandboxRunnerDefinition): readonly Sandbox
   return modes
 }
 
-function intersectSandboxLimits(layers: readonly (Partial<SandboxLimits> | undefined)[]): SandboxLimits {
+function intersectSandboxLimits(
+  layers: readonly (Partial<SandboxLimits> | undefined)[],
+): SandboxLimits {
   const values = <K extends keyof SandboxLimits>(key: K): number[] =>
     layers
       .map((layer) => layer?.[key])
-      .filter((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0)
+      .filter(
+        (value): value is number =>
+          typeof value === 'number' && Number.isFinite(value) && value > 0,
+      )
 
   const required = <K extends Exclude<keyof SandboxLimits, 'maxCpuPercent'>>(key: K): number =>
     Math.floor(Math.min(...values(key)))

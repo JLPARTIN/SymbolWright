@@ -108,6 +108,17 @@ export interface MissionExecutionLimits {
   readonly maxDailyEstimatedCostUsd?: number
 }
 
+export interface VersionedSandboxPolicyReference {
+  readonly id: string
+  readonly version: number
+}
+
+export interface SandboxPolicyReferences {
+  readonly offline?: VersionedSandboxPolicyReference
+  readonly dependency?: VersionedSandboxPolicyReference
+  readonly egress?: VersionedSandboxPolicyReference
+}
+
 export interface SessionLimits {
   readonly maxConcurrentSessions?: number
   readonly maxSessionDurationMinutes?: number
@@ -164,6 +175,9 @@ export interface AgentAccessGrant {
 
   readonly approvalPolicy: ApprovalPolicy
   readonly executionLimits: MissionExecutionLimits
+  /** Operator-selected, versioned policy references. An absent field is read through the
+   * legacy-offline compatibility resolver and never implies dependency acquisition or egress. */
+  readonly sandboxPolicyReferences?: SandboxPolicyReferences
   readonly sessionLimits: SessionLimits
   readonly clientConstraints?: ClientConstraints
 
@@ -202,6 +216,9 @@ export interface ApprovalRequest {
   readonly expiresAt: string
   readonly status: 'pending' | 'approved' | 'denied' | 'expired' | 'consumed'
   readonly boundOperationKey: string
+  /** Authority snapshot that prevents an approval surviving a grant or sandbox-policy revision. */
+  readonly grantVersion?: number
+  readonly policyVersions?: Readonly<Record<string, number>>
   readonly approverId?: string
   readonly decidedAt?: string
   readonly operatorComment?: string

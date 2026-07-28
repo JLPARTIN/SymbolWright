@@ -1,3 +1,5 @@
+import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from './sandbox-capabilities.js'
+
 /**
  * Maps HTTP entry points to the capability an agent-token-authenticated caller needs before the
  * request may proceed. This is the fail-closed allowlist for agent principals: a route with no
@@ -62,9 +64,9 @@ const RULES: readonly RouteCapabilityRule[] = [
   {
     method: 'POST',
     matcher: /^\/api\/sandbox\/execute$/,
-    capability: 'symbolwright.sandbox.execute',
+    capability: SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
   },
-  { method: 'GET', matcher: /^\/api\/sandbox.*$/, capability: 'symbolwright.sandbox.execute' },
+  { method: 'GET', matcher: /^\/api\/sandbox.*$/, capability: SANDBOX_OFFLINE_EXECUTE_CAPABILITY },
   {
     method: 'POST',
     matcher: /^\/api\/github\/intake$/,

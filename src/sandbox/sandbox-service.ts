@@ -4,10 +4,7 @@ import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../access/sandbox-capabiliti
 import type { SymbolWrightRuntimeMode } from '../runtime/types.js'
 import { DEFAULT_SANDBOX_DISCOVERY_PROBES, discoverRuntimeCommands } from './sandbox-discovery.js'
 import { finalizeSandboxExecutionEvidence } from './sandbox-evidence.js'
-import {
-  SandboxExecutionBroker,
-  type SandboxBrokerDecision,
-} from './sandbox-execution-broker.js'
+import { SandboxExecutionBroker, type SandboxBrokerDecision } from './sandbox-execution-broker.js'
 import {
   executeGuardedHostRequest,
   type GuardedHostExecutionController,
@@ -198,13 +195,7 @@ export class SandboxService {
         onStart: (controller) => this.activeExecutions.set(executionId, controller),
       })
       this.activeExecutions.delete(executionId)
-      return this.persistResult(
-        request,
-        result,
-        context.ownership,
-        decision,
-        authorization,
-      )
+      return this.persistResult(request, result, context.ownership, decision, authorization)
     }
 
     if (selectedRunner.backend === 'browser') {

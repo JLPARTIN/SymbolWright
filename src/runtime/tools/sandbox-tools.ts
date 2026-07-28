@@ -80,6 +80,20 @@ function asToolRequest(input: unknown, context: RuntimeToolContext): unknown {
   }
 }
 
+function executionContext(context: RuntimeToolContext, mode: RuntimeToolContext['policy']['mode']) {
+  return {
+    mode,
+    ...(context.sandboxAuthorization === undefined
+      ? {}
+      : {
+          authorization: {
+            ...context.sandboxAuthorization,
+            runtimeMode: mode,
+          },
+        }),
+  }
+}
+
 function renderExecutionResult(result: SandboxExecutionResult): string {
   return JSON.stringify(
     {
@@ -103,6 +117,9 @@ function renderExecutionResult(result: SandboxExecutionResult): string {
         outputHash: result.evidence.outputHash,
         policyDecision: result.evidence.policyDecision,
         policyReason: result.evidence.policyReason,
+        decisionCode: result.evidence.decisionCode,
+        authorization: result.evidence.authorization,
+        policy: result.evidence.policy,
       },
     },
     null,
@@ -181,7 +198,7 @@ export const sandboxExecuteTool: RuntimeToolDefinition = {
     const request = service.validateRequest(rawRequest)
 
     if (context.policy.mode === 'PLAN_ONLY' || context.policy.mode === 'READ_ONLY') {
-      const result = await service.execute(request, { mode: context.policy.mode })
+      const result = await service.execute(request, executionContext(context, context.policy.mode))
       context.recordSandboxExecution?.(request, result)
       return renderExecutionResult(result)
     }
@@ -190,7 +207,7 @@ export const sandboxExecuteTool: RuntimeToolDefinition = {
       return proposalFor(request)
     }
 
-    const result = await service.execute(request, { mode: 'APPROVED_EXECUTION' })
+    const result = await service.execute(request, executionContext(context, 'APPROVED_EXECUTION'))
     context.recordSandboxExecution?.(request, result)
     return renderExecutionResult(result)
   },

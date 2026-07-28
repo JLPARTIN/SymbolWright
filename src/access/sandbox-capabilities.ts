@@ -1,8 +1,6 @@
 export const LEGACY_SANDBOX_EXECUTE_CAPABILITY = 'symbolwright.sandbox.execute' as const
-export const SANDBOX_OFFLINE_EXECUTE_CAPABILITY =
-  'symbolwright.sandbox.execute.offline' as const
-export const SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY =
-  'symbolwright.dependencies.acquire' as const
+export const SANDBOX_OFFLINE_EXECUTE_CAPABILITY = 'symbolwright.sandbox.execute.offline' as const
+export const SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY = 'symbolwright.dependencies.acquire' as const
 export const SANDBOX_EGRESS_CAPABILITY = 'symbolwright.sandbox.egress' as const
 
 export const SANDBOX_CAPABILITY_IDS = [

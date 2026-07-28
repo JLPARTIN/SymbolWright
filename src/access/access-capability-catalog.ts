@@ -1,4 +1,10 @@
 import type { RiskLevel } from './access-types.js'
+import {
+  LEGACY_SANDBOX_EXECUTE_CAPABILITY,
+  SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+  SANDBOX_EGRESS_CAPABILITY,
+  SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
+} from './sandbox-capabilities.js'
 
 export type CapabilityCategory =
   | 'repo-read'
@@ -7,6 +13,7 @@ export type CapabilityCategory =
   | 'ci-workflow'
   | 'high-risk'
   | 'orchestration'
+  | 'sandbox'
 
 export interface CapabilityDescriptor {
   readonly id: string
@@ -102,12 +109,6 @@ const SYMBOLWRIGHT_INTELLIGENCE: readonly CapabilityDescriptor[] = [
     'Run the autonomous repair loop.',
   ),
   cap(
-    'symbolwright.sandbox.execute',
-    'symbolwright-intelligence',
-    'low',
-    'Execute code in the sandbox.',
-  ),
-  cap(
     'symbolwright.checkpoint.create',
     'symbolwright-intelligence',
     'low',
@@ -118,6 +119,35 @@ const SYMBOLWRIGHT_INTELLIGENCE: readonly CapabilityDescriptor[] = [
     'symbolwright-intelligence',
     'write',
     'Restore a checkpoint (mutates the workspace).',
+  ),
+]
+
+const SANDBOX: readonly CapabilityDescriptor[] = [
+  cap(
+    LEGACY_SANDBOX_EXECUTE_CAPABILITY,
+    'sandbox',
+    'low',
+    'Compatibility alias for offline sandbox execution only.',
+  ),
+  cap(
+    SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
+    'sandbox',
+    'low',
+    'Execute code under a server-owned offline sandbox policy.',
+  ),
+  cap(
+    SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+    'sandbox',
+    'high',
+    'Acquire approved dependencies through a governed acquisition broker.',
+    true,
+  ),
+  cap(
+    SANDBOX_EGRESS_CAPABILITY,
+    'sandbox',
+    'critical',
+    'Execute with operator-profiled, broker-enforced allowlisted egress.',
+    true,
   ),
 ]
 
@@ -220,6 +250,7 @@ const HIGH_RISK: readonly CapabilityDescriptor[] = [
 export const ALL_CAPABILITIES: readonly CapabilityDescriptor[] = [
   ...REPO_READ,
   ...SYMBOLWRIGHT_INTELLIGENCE,
+  ...SANDBOX,
   ...ORCHESTRATION,
   ...REPO_MUTATION,
   ...CI_WORKFLOW,

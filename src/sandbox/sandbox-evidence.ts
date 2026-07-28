@@ -25,8 +25,7 @@ export function finalizeSandboxExecutionEvidence(
   const policy = input.decision.policy
   return {
     ...input.result,
-    outputTruncated:
-      input.result.outputTruncated || outputExcerpt.includes('[TRUNCATED]'),
+    outputTruncated: input.result.outputTruncated || outputExcerpt.includes('[TRUNCATED]'),
     evidence: {
       ...input.result.evidence,
       schemaVersion: 1,
@@ -112,9 +111,7 @@ function requestEvidenceDescriptor(request: SandboxExecutionRequest): Record<str
           },
         }),
     ...(request.limits === undefined ? {} : { requestedLimits: request.limits }),
-    ...(request.missionId === undefined
-      ? {}
-      : { missionIdHash: sha256Text(request.missionId) }),
+    ...(request.missionId === undefined ? {} : { missionIdHash: sha256Text(request.missionId) }),
     ...(request.requestedRunnerId === undefined
       ? {}
       : { requestedRunnerId: request.requestedRunnerId }),

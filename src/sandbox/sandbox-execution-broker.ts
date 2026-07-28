@@ -6,10 +6,7 @@ import {
   type SandboxAuthorizationContext,
   type SandboxPolicyResolution,
 } from './sandbox-policy-model.js'
-import type {
-  SandboxExecutionRequest,
-  SandboxRunnerDefinition,
-} from './sandbox-types.js'
+import type { SandboxExecutionRequest, SandboxRunnerDefinition } from './sandbox-types.js'
 
 export interface SandboxBrokerDecision {
   readonly allowed: boolean
