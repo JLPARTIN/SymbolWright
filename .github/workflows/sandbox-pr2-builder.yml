@@ -1,0 +1,494 @@
+name: Sandbox PR2 Integration Builder
+
+on:
+  push:
+    branches:
+      - symbolwright/sandbox-pr2-unified-execution-broker
+
+permissions:
+  contents: write
+
+jobs:
+  integrate-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: symbolwright/sandbox-pr2-unified-execution-broker
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Wire broker authority through access, API, tools, and server
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          def read(path):
+              return Path(path).read_text()
+
+          def write(path, content):
+              Path(path).write_text(content)
+
+          def replace_once(path, old, new):
+              text = read(path)
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one occurrence, found {count}: {old[:120]!r}')
+              write(path, text.replace(old, new, 1))
+
+          def regex_once(path, pattern, replacement, flags=0):
+              text = read(path)
+              updated, count = re.subn(pattern, replacement, text, count=1, flags=flags)
+              if count != 1:
+                  raise SystemExit(f'{path}: regex expected one occurrence, found {count}: {pattern[:120]!r}')
+              write(path, updated)
+
+          # ------------------------------------------------------------------
+          # Access type model and grant-owned policy references.
+          # ------------------------------------------------------------------
+          replace_once(
+              'src/access/access-types.ts',
+              """export interface SessionLimits {\n""",
+              """export interface VersionedSandboxPolicyReference {\n  readonly id: string\n  readonly version: number\n}\n\nexport interface SandboxPolicyReferences {\n  readonly offline?: VersionedSandboxPolicyReference\n  readonly dependency?: VersionedSandboxPolicyReference\n  readonly egress?: VersionedSandboxPolicyReference\n}\n\nexport interface SessionLimits {\n""",
+          )
+          replace_once(
+              'src/access/access-types.ts',
+              """  readonly approvalPolicy: ApprovalPolicy\n  readonly executionLimits: MissionExecutionLimits\n  readonly sessionLimits: SessionLimits\n""",
+              """  readonly approvalPolicy: ApprovalPolicy\n  readonly executionLimits: MissionExecutionLimits\n  /** Operator-selected, versioned policy references. An absent field is read through the\n   * legacy-offline compatibility resolver and never implies dependency acquisition or egress. */\n  readonly sandboxPolicyReferences?: SandboxPolicyReferences\n  readonly sessionLimits: SessionLimits\n""",
+          )
+          replace_once(
+              'src/access/access-types.ts',
+              """  readonly status: 'pending' | 'approved' | 'denied' | 'expired' | 'consumed'\n  readonly boundOperationKey: string\n  readonly approverId?: string\n""",
+              """  readonly status: 'pending' | 'approved' | 'denied' | 'expired' | 'consumed'\n  readonly boundOperationKey: string\n  /** Authority snapshot that prevents an approval surviving a grant or sandbox-policy revision. */\n  readonly grantVersion?: number\n  readonly policyVersions?: Readonly<Record<string, number>>\n  readonly approverId?: string\n""",
+          )
+
+          # ------------------------------------------------------------------
+          # Capability catalog: compatibility alias + three explicit surfaces.
+          # ------------------------------------------------------------------
+          replace_once(
+              'src/access/access-capability-catalog.ts',
+              """import type { RiskLevel } from './access-types.js'\n""",
+              """import type { RiskLevel } from './access-types.js'\nimport {\n  LEGACY_SANDBOX_EXECUTE_CAPABILITY,\n  SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,\n  SANDBOX_EGRESS_CAPABILITY,\n  SANDBOX_OFFLINE_EXECUTE_CAPABILITY,\n} from './sandbox-capabilities.js'\n""",
+          )
+          replace_once(
+              'src/access/access-capability-catalog.ts',
+              """  | 'high-risk'\n  | 'orchestration'\n""",
+              """  | 'high-risk'\n  | 'orchestration'\n  | 'sandbox'\n""",
+          )
+          replace_once(
+              'src/access/access-capability-catalog.ts',
+              """  cap(\n    'symbolwright.sandbox.execute',\n    'symbolwright-intelligence',\n    'low',\n    'Execute code in the sandbox.',\n  ),\n""",
+              '',
+          )
+          replace_once(
+              'src/access/access-capability-catalog.ts',
+              """/**\n * Multi-agent orchestration (`src/orchestration/`, Large PR Bundle #11): every collaborative-team\n""",
+              """const SANDBOX: readonly CapabilityDescriptor[] = [\n  cap(\n    LEGACY_SANDBOX_EXECUTE_CAPABILITY,\n    'sandbox',\n    'low',\n    'Compatibility alias for offline sandbox execution only.',\n  ),\n  cap(\n    SANDBOX_OFFLINE_EXECUTE_CAPABILITY,\n    'sandbox',\n    'low',\n    'Execute code under a server-owned offline sandbox policy.',\n  ),\n  cap(\n    SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,\n    'sandbox',\n    'high',\n    'Acquire approved dependencies through a governed acquisition broker.',\n    true,\n  ),\n  cap(\n    SANDBOX_EGRESS_CAPABILITY,\n    'sandbox',\n    'critical',\n    'Execute with operator-profiled, broker-enforced allowlisted egress.',\n    true,\n  ),\n]\n\n/**\n * Multi-agent orchestration (`src/orchestration/`, Large PR Bundle #11): every collaborative-team\n""",
+          )
+          replace_once(
+              'src/access/access-capability-catalog.ts',
+              """  ...SYMBOLWRIGHT_INTELLIGENCE,\n  ...ORCHESTRATION,\n""",
+              """  ...SYMBOLWRIGHT_INTELLIGENCE,\n  ...SANDBOX,\n  ...ORCHESTRATION,\n""",
+          )
+
+          # ------------------------------------------------------------------
+          # Authorization aliases, current-version approval binding, and command limits.
+          # ------------------------------------------------------------------
+          replace_once(
+              'src/access/authorization-service.ts',
+              """import { matchesAnyRepositoryPattern } from './access-branch-match.js'\n""",
+              """import { matchesAnyRepositoryPattern } from './access-branch-match.js'\nimport {\n  SANDBOX_OFFLINE_EXECUTE_CAPABILITY,\n  canonicalSandboxCapabilityId,\n  sandboxCapabilityAliases,\n} from './sandbox-capabilities.js'\n""",
+          )
+          replace_once(
+              'src/access/authorization-service.ts',
+              """function isBranchSensitiveCapability(capability: string): boolean {\n  return BRANCH_SENSITIVE_CAPABILITIES.has(capability)\n}\n\n""",
+              """function isBranchSensitiveCapability(capability: string): boolean {\n  return BRANCH_SENSITIVE_CAPABILITIES.has(capability)\n}\n\nfunction sandboxPolicyVersionsFromRequest(\n  request: AuthorizationRequest,\n): Readonly<Record<string, number>> | undefined {\n  const value = request.metadata?.['sandboxPolicyVersions']\n  if (typeof value !== 'object' || value === null || Array.isArray(value)) return undefined\n  const entries = Object.entries(value as Record<string, unknown>)\n  if (\n    !entries.every(\n      ([key, version]) =>\n        key.length > 0 &&\n        typeof version === 'number' &&\n        Number.isSafeInteger(version) &&\n        version > 0,\n    )\n  ) {\n    return undefined\n  }\n  return Object.fromEntries(entries) as Readonly<Record<string, number>>\n}\n\nfunction policyVersionsMatch(\n  expected: Readonly<Record<string, number>> | undefined,\n  actual: Readonly<Record<string, number>> | undefined,\n): boolean {\n  if (expected === undefined || actual === undefined) return expected === actual\n  const expectedEntries = Object.entries(expected).sort(([left], [right]) =>\n    left.localeCompare(right),\n  )\n  const actualEntries = Object.entries(actual).sort(([left], [right]) =>\n    left.localeCompare(right),\n  )\n  return JSON.stringify(expectedEntries) === JSON.stringify(actualEntries)\n}\n\nfunction approvalMatchesCurrentAuthority(\n  approval: ApprovalRequest,\n  grant: AgentAccessGrant,\n  request: AuthorizationRequest,\n): boolean {\n  if (approval.grantVersion !== undefined && approval.grantVersion !== grant.version) return false\n  return policyVersionsMatch(\n    approval.policyVersions,\n    sandboxPolicyVersionsFromRequest(request),\n  )\n}\n\n""",
+          )
+          regex_once(
+              'src/access/authorization-service.ts',
+              r"function boundOperationKey\(request: AuthorizationRequest\): string \{.*?\n\}",
+              """function boundOperationKey(request: AuthorizationRequest): string {\n  const policyVersions = sandboxPolicyVersionsFromRequest(request)\n  const serializedPolicyVersions =\n    policyVersions === undefined\n      ? ''\n      : JSON.stringify(\n          Object.entries(policyVersions).sort(([left], [right]) => left.localeCompare(right)),\n        )\n  const parts = [\n    request.grantId,\n    canonicalSandboxCapabilityId(request.capability),\n    request.repository ?? '',\n    request.branch ?? '',\n    request.missionId ?? '',\n    serializedPolicyVersions,\n  ]\n  return createHash('sha256').update(parts.join('\\u0001')).digest('hex')\n}""",
+              re.S,
+          )
+          regex_once(
+              'src/access/authorization-service.ts',
+              r"function matchApprovalRequirement\(.*?\n\}",
+              """function matchApprovalRequirement(\n  grant: AgentAccessGrant,\n  capability: string,\n): ApprovalRequirement {\n  const rules = grant.approvalPolicy.rules\n  const aliases = sandboxCapabilityAliases(capability)\n  const exact = rules.find((rule) => aliases.includes(rule.match))\n  if (exact !== undefined) return exact.requirement\n  const canonicalCapability = canonicalSandboxCapabilityId(capability)\n  if (isHighRiskCapability(canonicalCapability)) {\n    const highRisk = rules.find((rule) => rule.match === 'high-risk')\n    if (highRisk !== undefined) return highRisk.requirement\n  }\n  const wildcard = rules.find((rule) => rule.match === '*')\n  return wildcard?.requirement ?? 'every-high-risk-operation'\n}""",
+              re.S,
+          )
+          replace_once(
+              'src/access/authorization-service.ts',
+              """    const riskLevel = capabilityRiskLevel(request.capability) ?? 'critical'\n\n    evaluatedPolicies.push('capability-known')\n    if (!isKnownCapability(request.capability)) {\n""",
+              """    const canonicalCapability = canonicalSandboxCapabilityId(request.capability)\n    const riskLevel = capabilityRiskLevel(canonicalCapability) ?? 'critical'\n\n    evaluatedPolicies.push('capability-known')\n    if (!isKnownCapability(canonicalCapability)) {\n""",
+          )
+          regex_once(
+              'src/access/authorization-service.ts',
+              r"  private checkCapabilityMembership\(.*?\n  \}\n\n  /\*\*\n   \* Covers the subset",
+              """  private checkCapabilityMembership(\n    grant: AgentAccessGrant,\n    capability: string,\n    correlationId: string,\n    riskLevel: RiskLevel,\n    evaluatedPolicies: string[],\n  ): AuthorizationDecision | undefined {\n    const canonicalCapability = canonicalSandboxCapabilityId(capability)\n    const aliases = sandboxCapabilityAliases(canonicalCapability)\n    if (aliases.some((alias) => grant.deniedCapabilities.includes(alias))) {\n      return decision(\n        {\n          allowed: false,\n          reasonCode: 'CAPABILITY_DENIED',\n          reason: `This agent is explicitly denied "${canonicalCapability}".`,\n          requiresApproval: false,\n          grantVersion: grant.version,\n          riskLevel,\n          evaluatedPolicies,\n        },\n        correlationId,\n      )\n    }\n\n    const granted = aliases.some(\n      (alias) =>\n        grant.symbolWrightCapabilities.includes(alias) ||\n        grant.githubCapabilities.includes(alias),\n    )\n    if (!granted) {\n      return decision(\n        {\n          allowed: false,\n          reasonCode: 'CAPABILITY_NOT_GRANTED',\n          reason: `This agent is not permitted to use "${canonicalCapability}".`,\n          requiresApproval: false,\n          grantVersion: grant.version,\n          riskLevel,\n          evaluatedPolicies,\n        },\n        correlationId,\n      )\n    }\n\n    if (isHighRiskCapability(canonicalCapability)) {\n      evaluatedPolicies.push('high-risk-explicit-selection')\n    }\n\n    return undefined\n  }\n\n  /**\n   * Covers the subset""",
+              re.S,
+          )
+          replace_once(
+              'src/access/authorization-service.ts',
+              """    if (request.capability === 'symbolwright.sandbox.execute') {\n""",
+              """    if (\n      canonicalSandboxCapabilityId(request.capability) ===\n      SANDBOX_OFFLINE_EXECUTE_CAPABILITY\n    ) {\n""",
+          )
+          replace_once(
+              'src/access/authorization-service.ts',
+              """          entry.status === 'approved' &&\n          new Date(entry.expiresAt).getTime() > Date.now(),\n""",
+              """          entry.status === 'approved' &&\n          new Date(entry.expiresAt).getTime() > Date.now() &&\n          approvalMatchesCurrentAuthority(entry, grant, request),\n""",
+          )
+          replace_once(
+              'src/access/authorization-service.ts',
+              """          entry.status === 'pending' &&\n          new Date(entry.expiresAt).getTime() > Date.now(),\n""",
+              """          entry.status === 'pending' &&\n          new Date(entry.expiresAt).getTime() > Date.now() &&\n          approvalMatchesCurrentAuthority(entry, grant, request),\n""",
+          )
+          replace_once(
+              'src/access/authorization-service.ts',
+              """    const approval: ApprovalRequest = {\n      id: randomUUID(),\n      grantId: grant.id,\n      capability: request.capability,\n""",
+              """    const canonicalCapability = canonicalSandboxCapabilityId(request.capability)\n    const policyVersions = sandboxPolicyVersionsFromRequest(request)\n    const approval: ApprovalRequest = {\n      id: randomUUID(),\n      grantId: grant.id,\n      capability: canonicalCapability,\n""",
+          )
+          replace_once(
+              'src/access/authorization-service.ts',
+              """      summary: `${request.capability}${request.repository ? ` on ${request.repository}` : ''}${\n        request.branch ? ` (branch ${request.branch})` : ''\n      }`,\n      createdAt: now.toISOString(),\n""",
+              """      summary: `${canonicalCapability}${request.repository ? ` on ${request.repository}` : ''}${\n        request.branch ? ` (branch ${request.branch})` : ''\n      }`,\n      createdAt: now.toISOString(),\n""",
+          )
+          replace_once(
+              'src/access/authorization-service.ts',
+              """      status: 'pending',\n      boundOperationKey: boundKey,\n""",
+              """      status: 'pending',\n      boundOperationKey: boundKey,\n      grantVersion: grant.version,\n      ...(policyVersions === undefined ? {} : { policyVersions }),\n""",
+          )
+          replace_once(
+              'src/access/authorization-service.ts',
+              """      capability: request.capability,\n      ...(request.repository === undefined ? {} : { repository: request.repository }),\n""",
+              """      capability: canonicalCapability,\n      ...(request.repository === undefined ? {} : { repository: request.repository }),\n""",
+          )
+          replace_once(
+              'src/access/authorization-service.ts',
+              """      capability: request.capability,\n      decision: decisionLabel,\n""",
+              """      capability: canonicalSandboxCapabilityId(request.capability),\n      decision: decisionLabel,\n""",
+          )
+          replace_once(
+              'src/access/authorization-service.ts',
+              """    if (isHighRiskCapability(request.capability)) {\n""",
+              """    if (isHighRiskCapability(canonicalSandboxCapabilityId(request.capability))) {\n""",
+          )
+          replace_once(
+              'src/access/authorization-service.ts',
+              """        capability: request.capability,\n        decision: decisionLabel,\n""",
+              """        capability: canonicalSandboxCapabilityId(request.capability),\n        decision: decisionLabel,\n""",
+          )
+
+          # ------------------------------------------------------------------
+          # Grant creation supports immutable server-owned policy references.
+          # ------------------------------------------------------------------
+          replace_once(
+              'src/access/access-grant-service.ts',
+              """  RepositoryScope,\n  SessionLimits,\n""",
+              """  RepositoryScope,\n  SandboxPolicyReferences,\n  SessionLimits,\n""",
+          )
+          replace_once(
+              'src/access/access-grant-service.ts',
+              """  readonly executionLimits?: MissionExecutionLimits\n  readonly sessionLimits?: SessionLimits\n""",
+              """  readonly executionLimits?: MissionExecutionLimits\n  readonly sandboxPolicyReferences?: SandboxPolicyReferences\n  readonly sessionLimits?: SessionLimits\n""",
+          )
+          replace_once(
+              'src/access/access-grant-service.ts',
+              """export class AccessGrantService {\n""",
+              """function validateSandboxPolicyReferences(\n  references: SandboxPolicyReferences | undefined,\n): void {\n  if (references === undefined) return\n  for (const [kind, reference] of Object.entries(references)) {\n    if (reference === undefined) continue\n    if (reference.id.trim().length === 0) {\n      throw new GrantValidationError(`sandboxPolicyReferences.${kind}.id must be non-empty.`)\n    }\n    if (!Number.isSafeInteger(reference.version) || reference.version <= 0) {\n      throw new GrantValidationError(\n        `sandboxPolicyReferences.${kind}.version must be a positive integer.`,\n      )\n    }\n  }\n}\n\nexport class AccessGrantService {\n""",
+          )
+          replace_once(
+              'src/access/access-grant-service.ts',
+              """  public createGrant(input: CreateGrantInput): CreatedGrant {\n    const profile = getPermissionProfile(input.profileId)\n""",
+              """  public createGrant(input: CreateGrantInput): CreatedGrant {\n    validateSandboxPolicyReferences(input.sandboxPolicyReferences)\n    const profile = getPermissionProfile(input.profileId)\n""",
+          )
+          replace_once(
+              'src/access/access-grant-service.ts',
+              """      executionLimits: { ...profile.defaultExecutionLimits, ...input.executionLimits },\n      sessionLimits: input.sessionLimits ?? {},\n""",
+              """      executionLimits: { ...profile.defaultExecutionLimits, ...input.executionLimits },\n      ...(input.sandboxPolicyReferences === undefined\n        ? {}\n        : { sandboxPolicyReferences: input.sandboxPolicyReferences }),\n      sessionLimits: input.sessionLimits ?? {},\n""",
+          )
+
+          # ------------------------------------------------------------------
+          # Operator grant API parses versioned policy references; PATCH cannot alter them.
+          # ------------------------------------------------------------------
+          replace_once(
+              'src/app/api/access-routes.ts',
+              """  RepositoryScope,\n  SessionLimits,\n""",
+              """  RepositoryScope,\n  SandboxPolicyReferences,\n  SessionLimits,\n""",
+          )
+          replace_once(
+              'src/app/api/access-routes.ts',
+              """function parseSessionLimits(value: unknown): SessionLimits | undefined {\n""",
+              """function parseSandboxPolicyReferences(\n  value: unknown,\n): SandboxPolicyReferences | undefined {\n  if (value === undefined) return undefined\n  if (typeof value !== 'object' || value === null || Array.isArray(value)) {\n    throw new GrantValidationError('sandboxPolicyReferences must be an object.')\n  }\n  const record = value as Record<string, unknown>\n  const result: Record<string, { id: string; version: number }> = {}\n  for (const kind of ['offline', 'dependency', 'egress'] as const) {\n    const raw = record[kind]\n    if (raw === undefined) continue\n    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {\n      throw new GrantValidationError(`sandboxPolicyReferences.${kind} must be an object.`)\n    }\n    const reference = raw as Record<string, unknown>\n    const id = reference['id']\n    const version = reference['version']\n    if (typeof id !== 'string' || id.trim().length === 0) {\n      throw new GrantValidationError(\n        `sandboxPolicyReferences.${kind}.id must be a non-empty string.`,\n      )\n    }\n    if (typeof version !== 'number' || !Number.isSafeInteger(version) || version <= 0) {\n      throw new GrantValidationError(\n        `sandboxPolicyReferences.${kind}.version must be a positive integer.`,\n      )\n    }\n    result[kind] = { id: id.trim(), version }\n  }\n  return result as SandboxPolicyReferences\n}\n\nfunction parseSessionLimits(value: unknown): SessionLimits | undefined {\n""",
+          )
+          replace_once(
+              'src/app/api/access-routes.ts',
+              """      const executionLimits = parseMissionExecutionLimits(body['executionLimits'])\n      const sessionLimits = parseSessionLimits(body['sessionLimits'])\n""",
+              """      const executionLimits = parseMissionExecutionLimits(body['executionLimits'])\n      const sandboxPolicyReferences = parseSandboxPolicyReferences(\n        body['sandboxPolicyReferences'],\n      )\n      const sessionLimits = parseSessionLimits(body['sessionLimits'])\n""",
+          )
+          replace_once(
+              'src/app/api/access-routes.ts',
+              """        ...(executionLimits === undefined ? {} : { executionLimits }),\n        ...(sessionLimits === undefined ? {} : { sessionLimits }),\n""",
+              """        ...(executionLimits === undefined ? {} : { executionLimits }),\n        ...(sandboxPolicyReferences === undefined ? {} : { sandboxPolicyReferences }),\n        ...(sessionLimits === undefined ? {} : { sessionLimits }),\n""",
+          )
+
+          # ------------------------------------------------------------------
+          # Profiles use the canonical offline capability and deny broader surfaces by default.
+          # ------------------------------------------------------------------
+          replace_once(
+              'src/access/access-profiles.ts',
+              """import {\n  DEFAULT_ALLOWED_BRANCH_PATTERNS,\n""",
+              """import {\n  LEGACY_SANDBOX_EXECUTE_CAPABILITY,\n  SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,\n  SANDBOX_EGRESS_CAPABILITY,\n  SANDBOX_OFFLINE_EXECUTE_CAPABILITY,\n} from './sandbox-capabilities.js'\nimport {\n  DEFAULT_ALLOWED_BRANCH_PATTERNS,\n""",
+          )
+          replace_once(
+              'src/access/access-profiles.ts',
+              """    'symbolwright.mission.execute',\n  ],\n""",
+              """    'symbolwright.mission.execute',\n    LEGACY_SANDBOX_EXECUTE_CAPABILITY,\n    SANDBOX_OFFLINE_EXECUTE_CAPABILITY,\n    SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,\n    SANDBOX_EGRESS_CAPABILITY,\n  ],\n""",
+          )
+          replace_once(
+              'src/access/access-profiles.ts',
+              """    'symbolwright.sandbox.execute',\n""",
+              """    SANDBOX_OFFLINE_EXECUTE_CAPABILITY,\n""",
+          )
+          replace_once(
+              'src/access/access-profiles.ts',
+              """    'repo.branch.delete',\n    'repo.branch.update',\n  ],\n""",
+              """    'repo.branch.delete',\n    'repo.branch.update',\n    SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,\n    SANDBOX_EGRESS_CAPABILITY,\n  ],\n""",
+          )
+          replace_once(
+              'src/access/access-profiles.ts',
+              """    'repo.organization.manage',\n  ],\n  defaultBranchScope: STANDARD_BRANCH_SCOPE,\n""",
+              """    'repo.organization.manage',\n    SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,\n    SANDBOX_EGRESS_CAPABILITY,\n  ],\n  defaultBranchScope: STANDARD_BRANCH_SCOPE,\n""",
+          )
+
+          # ------------------------------------------------------------------
+          # Route/tool authorization now asks for canonical offline execution.
+          # ------------------------------------------------------------------
+          replace_once(
+              'src/access/tool-permission-catalog.ts',
+              """import type { ApprovalRequirement, RiskLevel } from './access-types.js'\n""",
+              """import type { ApprovalRequirement, RiskLevel } from './access-types.js'\nimport { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from './sandbox-capabilities.js'\n""",
+          )
+          text = read('src/access/tool-permission-catalog.ts')
+          text = text.replace("tool('symbolwright.sandbox.execute', 'write')", "tool(SANDBOX_OFFLINE_EXECUTE_CAPABILITY, 'write')")
+          text = text.replace("['symbolwright.sandbox.execute']", "[SANDBOX_OFFLINE_EXECUTE_CAPABILITY]")
+          text = text.replace("tool('symbolwright.sandbox.execute', 'read')", "tool(SANDBOX_OFFLINE_EXECUTE_CAPABILITY, 'read')")
+          text = text.replace("tool('symbolwright.sandbox.execute', 'low')", "tool(SANDBOX_OFFLINE_EXECUTE_CAPABILITY, 'low')")
+          if "'symbolwright.sandbox.execute'" in text:
+              raise SystemExit('tool-permission-catalog.ts still contains the legacy sandbox capability')
+          write('src/access/tool-permission-catalog.ts', text)
+
+          replace_once(
+              'src/access/route-capability-map.ts',
+              """/**\n * Maps HTTP entry points to the capability an agent-token-authenticated caller needs before the\n""",
+              """import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from './sandbox-capabilities.js'\n\n/**\n * Maps HTTP entry points to the capability an agent-token-authenticated caller needs before the\n""",
+          )
+          text = read('src/access/route-capability-map.ts').replace(
+              "capability: 'symbolwright.sandbox.execute'",
+              'capability: SANDBOX_OFFLINE_EXECUTE_CAPABILITY',
+          )
+          if "'symbolwright.sandbox.execute'" in text:
+              raise SystemExit('route-capability-map.ts still contains the legacy sandbox capability')
+          write('src/access/route-capability-map.ts', text)
+
+          # ------------------------------------------------------------------
+          # Runtime tool context carries server-derived sandbox authority.
+          # ------------------------------------------------------------------
+          replace_once(
+              'src/runtime/types.ts',
+              """import type { SandboxExecutionRequest, SandboxExecutionResult } from '../sandbox/sandbox-types.js'\n""",
+              """import type { SandboxExecutionRequest, SandboxExecutionResult } from '../sandbox/sandbox-types.js'\nimport type { SandboxAuthorizationContext } from '../sandbox/sandbox-policy-model.js'\n""",
+          )
+          replace_once(
+              'src/runtime/types.ts',
+              """  readonly sandboxService?: SandboxService\n  readonly recordSandboxExecution?: (\n""",
+              """  readonly sandboxService?: SandboxService\n  /** Immutable authority resolved by the server; tool input cannot supply or widen it. */\n  readonly sandboxAuthorization?: SandboxAuthorizationContext\n  readonly recordSandboxExecution?: (\n""",
+          )
+
+          # ------------------------------------------------------------------
+          # Structured sandbox tool consumes the same service/broker and exposes policy evidence.
+          # ------------------------------------------------------------------
+          replace_once(
+              'src/runtime/tools/sandbox-tools.ts',
+              """function renderExecutionResult(result: SandboxExecutionResult): string {\n""",
+              """function executionContext(\n  context: RuntimeToolContext,\n  mode: RuntimeToolContext['policy']['mode'],\n) {\n  return {\n    mode,\n    ...(context.sandboxAuthorization === undefined\n      ? {}\n      : {\n          authorization: {\n            ...context.sandboxAuthorization,\n            runtimeMode: mode,\n          },\n        }),\n  }\n}\n\nfunction renderExecutionResult(result: SandboxExecutionResult): string {\n""",
+          )
+          replace_once(
+              'src/runtime/tools/sandbox-tools.ts',
+              """        policyDecision: result.evidence.policyDecision,\n        policyReason: result.evidence.policyReason,\n""",
+              """        policyDecision: result.evidence.policyDecision,\n        policyReason: result.evidence.policyReason,\n        decisionCode: result.evidence.decisionCode,\n        authorization: result.evidence.authorization,\n        policy: result.evidence.policy,\n""",
+          )
+          replace_once(
+              'src/runtime/tools/sandbox-tools.ts',
+              """      const result = await service.execute(request, { mode: context.policy.mode })\n""",
+              """      const result = await service.execute(\n        request,\n        executionContext(context, context.policy.mode),\n      )\n""",
+          )
+          replace_once(
+              'src/runtime/tools/sandbox-tools.ts',
+              """    const result = await service.execute(request, { mode: 'APPROVED_EXECUTION' })\n""",
+              """    const result = await service.execute(\n      request,\n      executionContext(context, 'APPROVED_EXECUTION'),\n    )\n""",
+          )
+
+          # ------------------------------------------------------------------
+          # HTTP sandbox route derives grant/profile/workspace authority and records broker evidence.
+          # ------------------------------------------------------------------
+          replace_once(
+              'src/app/api/sandbox-routes.ts',
+              """import type { IncomingMessage, ServerResponse } from 'node:http'\n\n""",
+              """import type { IncomingMessage, ServerResponse } from 'node:http'\n\nimport type { AccessRuntime } from '../../access/access-runtime.js'\nimport { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../../access/sandbox-capabilities.js'\nimport { resolveGrantSandboxPolicyReferences } from '../../access/sandbox-policy-compat.js'\n""",
+          )
+          replace_once(
+              'src/app/api/sandbox-routes.ts',
+              """import { MissionNotFoundError, type MissionService } from '../../mission/mission-service.js'\n""",
+              """import { MissionNotFoundError, type MissionService } from '../../mission/mission-service.js'\nimport type { SymbolWrightMission } from '../../mission/mission-types.js'\n""",
+          )
+          replace_once(
+              'src/app/api/sandbox-routes.ts',
+              """  readonly service: SandboxService\n  readonly missionService?: MissionService\n""",
+              """  readonly service: SandboxService\n  readonly missionService?: MissionService\n  readonly accessRuntime?: AccessRuntime\n  readonly deploymentMode?: 'local' | 'hosted'\n  readonly repositoryId?: string\n""",
+          )
+          replace_once(
+              'src/app/api/sandbox-routes.ts',
+              """      verificationLevel: result.evidence.verificationLevel,\n""",
+              """      verificationLevel: result.evidence.verificationLevel,\n      ...(result.evidence.decisionCode === undefined\n        ? {}\n        : { decisionCode: result.evidence.decisionCode }),\n      ...(result.evidence.policy === undefined\n        ? {}\n        : {\n            sandboxPolicy: {\n              id: result.evidence.policy.id,\n              version: result.evidence.policy.version,\n              fingerprint: result.evidence.policy.fingerprint,\n              intent: result.evidence.policy.intent,\n              networkMode: result.evidence.policy.networkMode,\n              dependencyMode: result.evidence.policy.dependencyMode,\n            },\n          }),\n""",
+          )
+          replace_once(
+              'src/app/api/sandbox-routes.ts',
+              """      const missionId = requestedMissionId(record)\n      let missionWorkspaceRoot: string | undefined\n      let effectiveRuntimeMode = context.runtimeMode ?? 'APPROVED_EXECUTION'\n""",
+              """      const missionId = requestedMissionId(record)\n      let mission: SymbolWrightMission | undefined\n      let missionWorkspaceRoot: string | undefined\n      let callerKind: 'operator' | 'delegated-grant' | 'team-member' =\n        context.callerGrantId === undefined ? 'operator' : 'delegated-grant'\n      let effectiveRuntimeMode = context.runtimeMode ?? 'APPROVED_EXECUTION'\n""",
+          )
+          replace_once(
+              'src/app/api/sandbox-routes.ts',
+              """        const mission = context.missionService.get(missionId)\n""",
+              """        mission = context.missionService.get(missionId)\n""",
+          )
+          replace_once(
+              'src/app/api/sandbox-routes.ts',
+              """        if (!access.allowed) {\n""",
+              """        if (access.relationship === 'team_member' || access.relationship === 'team_owner') {\n          callerKind = 'team-member'\n        }\n        if (!access.allowed) {\n""",
+          )
+          replace_once(
+              'src/app/api/sandbox-routes.ts',
+              """      const securedRecord = bindRepositoryToMissionWorkspace(record, missionWorkspaceRoot)\n      const request = context.service.validateRequest(securedRecord)\n      const result = await context.service.execute(request, {\n        mode: effectiveRuntimeMode,\n""",
+              """      const securedRecord = bindRepositoryToMissionWorkspace(record, missionWorkspaceRoot)\n      const request = context.service.validateRequest(securedRecord)\n      const callerGrant =\n        context.callerGrantId === undefined\n          ? undefined\n          : context.accessRuntime?.grantService.getGrant(context.callerGrantId)\n      if (context.callerGrantId !== undefined && callerGrant === undefined) {\n        sendJson(res, 403, {\n          error: 'authorization_denied',\n          reasonCode: 'SANDBOX_GRANT_NOT_FOUND',\n          message: 'The delegated sandbox grant no longer exists.',\n        })\n        return true\n      }\n      const resolvedReferences =\n        callerGrant === undefined ? undefined : resolveGrantSandboxPolicyReferences(callerGrant)\n      if (resolvedReferences?.unsupportedReason !== undefined) {\n        sendJson(res, 403, {\n          error: 'authorization_denied',\n          reasonCode: 'SANDBOX_LEGACY_NETWORK_UNSUPPORTED',\n          message: resolvedReferences.unsupportedReason,\n        })\n        return true\n      }\n      const offlineReference = resolvedReferences?.references.offline\n      const approvedCapabilityIds =\n        callerGrant !== undefined && offlineReference === undefined\n          ? []\n          : [SANDBOX_OFFLINE_EXECUTE_CAPABILITY]\n      const authorization = {\n        deploymentMode: context.deploymentMode ?? 'local',\n        callerKind,\n        runtimeMode: effectiveRuntimeMode,\n        approvedCapabilityIds,\n        repositoryId:\n          context.repositoryId ??\n          mission?.repository.remoteUrl ??\n          missionWorkspaceRoot ??\n          'inline-source',\n        workspaceId: missionId ?? missionWorkspaceRoot ?? 'inline-source',\n        ...(missionId === undefined ? {} : { missionId }),\n        ...(context.callerPrincipalId === undefined\n          ? {}\n          : { principalId: context.callerPrincipalId }),\n        ...(callerGrant === undefined\n          ? {}\n          : {\n              grantId: callerGrant.id,\n              grantVersion: callerGrant.version,\n              grantAllowedCommands: callerGrant.executionLimits.allowedCommands,\n            }),\n        ...(offlineReference === undefined ? {} : { policyReference: offlineReference }),\n        intent: 'offline-execution' as const,\n      }\n      const result = await context.service.execute(request, {\n        mode: effectiveRuntimeMode,\n        authorization,\n""",
+          )
+
+          # ------------------------------------------------------------------
+          # Server shares one SandboxService and supplies deployment/grant policy authority.
+          # ------------------------------------------------------------------
+          replace_once(
+              'src/server/symbolwright-chat-server.ts',
+              """import { checkConcurrentMissionLimit } from '../access/mission-concurrency-guard.js'\n""",
+              """import { checkConcurrentMissionLimit } from '../access/mission-concurrency-guard.js'\nimport { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../access/sandbox-capabilities.js'\nimport { resolveGrantSandboxPolicyReferences } from '../access/sandbox-policy-compat.js'\n""",
+          )
+          replace_once(
+              'src/server/symbolwright-chat-server.ts',
+              """  const sandboxContext = {\n    service: sandboxService,\n    missionService,\n    teamSource: teamVisibilitySource,\n  }\n""",
+              """  const sandboxContext = {\n    service: sandboxService,\n    missionService,\n    accessRuntime,\n    teamSource: teamVisibilitySource,\n    deploymentMode: deploymentSecurity.deploymentMode,\n    repositoryId: cwd,\n  }\n""",
+          )
+          replace_once(
+              'src/server/symbolwright-chat-server.ts',
+              """          concurrencyGuard,\n          principal.kind === 'agent' ? { principal, accessRuntime } : undefined,\n          teamVisibilitySource,\n""",
+              """          concurrencyGuard,\n          sandboxService,\n          deploymentSecurity.deploymentMode,\n          principal.kind === 'agent' ? { principal, accessRuntime } : undefined,\n          teamVisibilitySource,\n""",
+          )
+          replace_once(
+              'src/server/symbolwright-chat-server.ts',
+              """  concurrencyGuard: ProviderConcurrencyGuard,\n  agentPrincipal?: { readonly principal: RequestPrincipal; readonly accessRuntime: AccessRuntime },\n""",
+              """  concurrencyGuard: ProviderConcurrencyGuard,\n  sandboxService: SandboxService,\n  deploymentMode: 'local' | 'hosted',\n  agentPrincipal?: { readonly principal: RequestPrincipal; readonly accessRuntime: AccessRuntime },\n""",
+          )
+          replace_once(
+              'src/server/symbolwright-chat-server.ts',
+              """  const policy = createRuntimePolicyForMode(parsed.mode, {\n    hasGitHubToken: env['GITHUB_TOKEN'] !== undefined,\n  })\n  const toolCwd = mission?.repository.rootPath ?? defaultCwd\n  const toolAccessControl = await buildToolAccessControl(agentPrincipal, toolCwd)\n  const toolContext: RuntimeToolContext = {\n    cwd: toolCwd,\n    policy,\n    ...(mission === undefined ? {} : { sessionId: mission.id }),\n    ...(toolAccessControl === undefined ? {} : { accessControl: toolAccessControl }),\n  }\n  const tools = assembleAgentTools()\n  const priorMessages = parsed.priorMessages ?? mission?.agent.messages\n\n  const callerGrantId = agentPrincipal?.principal.grantId\n  const callerGrant =\n    callerGrantId === undefined\n      ? undefined\n      : agentPrincipal?.accessRuntime.grantService.getGrant(callerGrantId)\n""",
+              """  const policy = createRuntimePolicyForMode(parsed.mode, {\n    hasGitHubToken: env['GITHUB_TOKEN'] !== undefined,\n  })\n  const toolCwd = mission?.repository.rootPath ?? defaultCwd\n  const callerGrantId = agentPrincipal?.principal.grantId\n  const callerGrant =\n    callerGrantId === undefined\n      ? undefined\n      : agentPrincipal?.accessRuntime.grantService.getGrant(callerGrantId)\n  const resolvedSandboxReferences =\n    callerGrant === undefined ? undefined : resolveGrantSandboxPolicyReferences(callerGrant)\n  const offlineReference = resolvedSandboxReferences?.references.offline\n  const sandboxAuthorization = {\n    deploymentMode,\n    callerKind: callerGrant === undefined ? ('operator' as const) : ('delegated-grant' as const),\n    runtimeMode: parsed.mode,\n    approvedCapabilityIds:\n      callerGrant !== undefined &&\n      (resolvedSandboxReferences?.unsupportedReason !== undefined || offlineReference === undefined)\n        ? []\n        : [SANDBOX_OFFLINE_EXECUTE_CAPABILITY],\n    repositoryId: mission?.repository.remoteUrl ?? toolCwd,\n    workspaceId: mission?.id ?? toolCwd,\n    ...(mission === undefined ? {} : { missionId: mission.id }),\n    ...(agentPrincipal?.principal.principalId === undefined\n      ? {}\n      : { principalId: agentPrincipal.principal.principalId }),\n    ...(callerGrant === undefined\n      ? {}\n      : {\n          grantId: callerGrant.id,\n          grantVersion: callerGrant.version,\n          grantAllowedCommands: callerGrant.executionLimits.allowedCommands,\n        }),\n    ...(offlineReference === undefined ? {} : { policyReference: offlineReference }),\n    intent: 'offline-execution' as const,\n  }\n  const toolAccessControl = await buildToolAccessControl(agentPrincipal, toolCwd)\n  const toolContext: RuntimeToolContext = {\n    cwd: toolCwd,\n    policy,\n    sandboxService,\n    sandboxAuthorization,\n    ...(mission === undefined ? {} : { sessionId: mission.id }),\n    ...(toolAccessControl === undefined ? {} : { accessControl: toolAccessControl }),\n  }\n  const tools = assembleAgentTools()\n  const priorMessages = parsed.priorMessages ?? mission?.agent.messages\n""",
+          )
+
+          # ------------------------------------------------------------------
+          # Existing test expectation follows the canonical offline capability.
+          # ------------------------------------------------------------------
+          text = read('src/runtime/tools/authorized-tool-execution.spec.ts').replace(
+              "'symbolwright.sandbox.execute', 'bash'",
+              "'symbolwright.sandbox.execute.offline', 'bash'",
+          )
+          write('src/runtime/tools/authorized-tool-execution.spec.ts', text)
+
+          # ------------------------------------------------------------------
+          # Environment, docs, and changelog truth.
+          # ------------------------------------------------------------------
+          replace_once(
+              '.env.example',
+              """# No container failure ever falls back to this path automatically.\nSYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION=\n""",
+              """# No container failure ever falls back to this path automatically.\nSYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION=\n\n# Emergency kill switch. Set true to refuse every structured sandbox execution before backend\n# selection. Keep false/unset during normal operation.\nSYMBOLWRIGHT_DISABLE_SANDBOX_EXECUTION=false\n\n# Increment when the global sandbox authority changes. Version-bound approvals and policy evidence\n# fail closed when they reference a stale value.\nSYMBOLWRIGHT_SANDBOX_GLOBAL_POLICY_VERSION=1\n""",
+          )
+          replace_once(
+              'CHANGELOG.md',
+              """## [Unreleased]\n\n### Fixed\n""",
+              """## [Unreleased]\n\n### Added\n- **Authoritative sandbox execution broker and effective policy model (Sandbox Bundle PR 2/7)**:\n  adds one structured-execution broker, a deeply immutable versioned policy record, strict\n  narrowing across global/profile/runner/grant/mission/request authority, split offline/dependency/\n  egress capabilities, legacy offline-only grant migration, current-version approval binding, a\n  global emergency disable switch, and one redacted evidence boundary. This slice does not add\n  dependency downloads, container networking, or runtime egress.\n\n### Fixed\n""",
+          )
+          replace_once(
+              'docs/runtime/SYMBOLWRIGHT_UNIVERSAL_SANDBOX.md',
+              """## Current execution architecture\n""",
+              """## Current execution architecture\n\nStructured server sandbox requests now pass through `SandboxExecutionBroker`, which resolves an\nimmutable `EffectiveSandboxPolicy` from server-owned deployment, caller, grant, mission, workspace,\nrunner, resource, and request-tightening authority. The broker currently resolves the offline\nprofile only. Dependency acquisition and allowlisted egress remain explicit unsupported future\nprofiles; no network access is enabled by this architecture slice.\n""",
+          )
+          PY
+      - name: Format implementation
+        run: |
+          npx prettier --write \
+            src/access/access-types.ts \
+            src/access/access-capability-catalog.ts \
+            src/access/authorization-service.ts \
+            src/access/access-grant-service.ts \
+            src/access/access-profiles.ts \
+            src/access/tool-permission-catalog.ts \
+            src/access/route-capability-map.ts \
+            src/app/api/access-routes.ts \
+            src/app/api/sandbox-routes.ts \
+            src/runtime/types.ts \
+            src/runtime/tools/sandbox-tools.ts \
+            src/runtime/tools/authorized-tool-execution.spec.ts \
+            src/server/symbolwright-chat-server.ts \
+            .env.example CHANGELOG.md docs/runtime/SYMBOLWRIGHT_UNIVERSAL_SANDBOX.md \
+            src/access/sandbox-capabilities.ts \
+            src/access/sandbox-policy-compat.ts \
+            src/access/sandbox-policy-compat.spec.ts \
+            src/sandbox/sandbox-policy-model.ts \
+            src/sandbox/sandbox-policy-model.spec.ts \
+            src/sandbox/sandbox-execution-broker.ts \
+            src/sandbox/sandbox-execution-broker.spec.ts \
+            src/sandbox/sandbox-evidence.ts \
+            src/sandbox/sandbox-service.ts \
+            src/sandbox/sandbox-types.ts
+      - name: Commit integrated implementation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add . ':!.github/workflows/sandbox-pr2-builder.yml'
+          git diff --cached --check
+          git commit -m "feat(sandbox): unify execution authority and policy resolution"
+          git push origin HEAD:symbolwright/sandbox-pr2-unified-execution-broker
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Focused broker and access tests
+        run: |
+          npx vitest run \
+            src/sandbox/sandbox-policy-model.spec.ts \
+            src/sandbox/sandbox-execution-broker.spec.ts \
+            src/access/sandbox-policy-compat.spec.ts \
+            src/access/access-grant-service.spec.ts \
+            src/access/authorization-service.spec.ts \
+            src/app/api/sandbox-routes.spec.ts \
+            src/runtime/tools/sandbox-tools.spec.ts \
+            src/runtime/tools/authorized-tool-execution.spec.ts \
+            --reporter=verbose
+      - name: Full coverage
+        run: npm run test:coverage
+      - name: Build
+        run: npm run build
+      - name: Full validation
+        run: npm run validate
