@@ -21,8 +21,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout exact release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref_name }}
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -33,7 +35,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify immutable tag inputs
+        run: npm run release:verify-tag -- "${{ github.event.release.tag_name || github.ref_name }}"
+
       - name: Validate release proof
+        env:
+          SYMBOLWRIGHT_REQUIRE_DOCKER_SMOKE: '1'
         run: npm run validate
 
       - name: Dry-run publish
@@ -45,8 +52,10 @@ jobs:
     needs: validate
 
     steps:
-      - name: Checkout repository
+      - name: Checkout exact release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref_name }}
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -57,6 +66,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Verify immutable tag inputs
+        run: npm run release:verify-tag -- "${{ github.event.release.tag_name || github.ref_name }}"
 
       - name: Build
         run: npm run build
