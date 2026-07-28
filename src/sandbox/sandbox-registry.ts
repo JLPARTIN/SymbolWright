@@ -3,9 +3,13 @@ import {
   UNIVERSAL_LANGUAGE_REGISTRY,
   type CodeRunnerDefinition,
 } from '../workspace/language-registry.js'
-import { buildSandboxImagePolicy } from './sandbox-images.js'
+import {
+  STRONG_SANDBOX_NODE_IMAGE_ID,
+  buildSandboxImagePolicy,
+} from './sandbox-images.js'
 import { DEFAULT_SANDBOX_LIMITS } from './sandbox-limits.js'
 import type {
+  SandboxImageDefinition,
   SandboxInventory,
   SandboxNetworkPolicy,
   SandboxRunnerAvailability,
@@ -14,6 +18,7 @@ import type {
 } from './sandbox-types.js'
 
 const AVAILABLE_NOW = '1970-01-01T00:00:00.000Z'
+export const STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID = 'container-javascript-node26'
 
 const BROWSER_CAPABILITIES: SandboxRunnerCapabilities = {
   run: true,
@@ -36,6 +41,16 @@ const PREVIEW_CAPABILITIES: SandboxRunnerCapabilities = {
 }
 
 const GUARDED_HOST_CAPABILITIES: SandboxRunnerCapabilities = {
+  run: true,
+  compile: true,
+  test: true,
+  stdin: true,
+  multiFile: true,
+  repository: true,
+  network: false,
+}
+
+const STRONG_CONTAINER_CAPABILITIES: SandboxRunnerCapabilities = {
   run: true,
   compile: true,
   test: true,
@@ -88,6 +103,53 @@ function browserRunner(runner: CodeRunnerDefinition, now: string): SandboxRunner
     networkPolicy: 'disabled',
     dependencyState: 'ready',
     notes: runner.safetyRestrictions,
+  }
+}
+
+function strongContainerRunner(options: {
+  readonly image: SandboxImageDefinition
+  readonly engine: ReturnType<typeof buildSandboxImagePolicy>['engine']
+  readonly generatedAt: string
+}): SandboxRunnerDefinition {
+  const available = options.image.enabled && options.engine.status === 'available'
+  const engine = options.engine.engine === 'podman' ? 'podman' : 'docker'
+  const reason = !options.image.enabled
+    ? 'Strong container execution is disabled by operator policy.'
+    : options.engine.status !== 'available'
+      ? options.engine.reason
+      : 'The container engine is available; the preinstalled image digest is verified before every execution.'
+  return {
+    id: STRONG_SANDBOX_JAVASCRIPT_RUNNER_ID,
+    languageIds: ['javascript'],
+    displayName: 'Strong Offline JavaScript Container',
+    trustClass: 'container-isolated',
+    backend: 'container',
+    availability: runnerAvailability(available ? 'available' : options.engine.status, options.generatedAt, {
+      ...(options.engine.version === undefined ? {} : { version: options.engine.version }),
+      reason,
+    }),
+    capabilities: STRONG_CONTAINER_CAPABILITIES,
+    limits: DEFAULT_SANDBOX_LIMITS,
+    networkPolicy: 'disabled',
+    dependencyState: 'ready',
+    container: {
+      engine,
+      imageId: options.image.id,
+      image: options.image.image,
+      digest: options.image.digest!,
+      user: '65532:65532',
+      pullPolicy: 'never',
+      networkMode: 'none',
+      workspaceMode: 'copy-in-tmpfs-copy-out',
+    },
+    notes: [
+      'Uses a digest-pinned image with --pull=never.',
+      'The canonical repository is copied into a private bounded workspace and is never mounted.',
+      'The container root filesystem is read-only; only /workspace and /tmp are quota-bounded tmpfs mounts.',
+      'Runs as a numeric non-root user with all capabilities dropped and no-new-privileges.',
+      'Network, host PID/IPC, engine sockets, host home, provider credentials, and ambient proxy variables are unavailable.',
+      'Generated files are copied only to bounded artifact quarantine.',
+    ],
   }
 }
 
@@ -156,9 +218,14 @@ export function buildSandboxInventory(
   const generatedAt = now().toISOString()
   const commandAvailability =
     options.commandAvailability ?? new Map<string, SandboxRunnerAvailability>()
-  const imagePolicy = buildSandboxImagePolicy(commandAvailability)
-  const guardedHostOptIn = options.env?.['SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION'] === 'true'
+  const env = options.env ?? process.env
+  const imagePolicy = buildSandboxImagePolicy(commandAvailability, env)
+  const guardedHostOptIn = env['SYMBOLWRIGHT_ALLOW_GUARDED_HOST_EXECUTION'] === 'true'
+  const strongImage = imagePolicy.images.find((image) => image.id === STRONG_SANDBOX_NODE_IMAGE_ID)!
 
+  const containerRunners = [
+    strongContainerRunner({ image: strongImage, engine: imagePolicy.engine, generatedAt }),
+  ]
   const browserRunners = CODE_RUNNER_DEFINITIONS.filter(
     (runner) => runner.id !== 'server-typescript-node',
   ).map((runner) => browserRunner(runner, generatedAt))
@@ -191,7 +258,7 @@ export function buildSandboxInventory(
   return {
     schemaVersion: 1,
     generatedAt,
-    runners: [...browserRunners, ...guardedRunners],
+    runners: [...containerRunners, ...browserRunners, ...guardedRunners],
     images: imagePolicy.images,
     warnings: [
       ...imagePolicy.warnings,
