@@ -23,6 +23,22 @@ jobs:
           npm ci --silent
           python3 scripts/.pr6-preprocess.py
           python3 scripts/.pr6-apply.py
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('src/autonomy/autonomous-budget-governance.spec.ts')
+          text = path.read_text()
+          old = """        repositoryPath: workspaceRoot,
+                  runtimeMode: 'APPROVED_EXECUTION',
+          """
+          new = """        repositoryPath: workspaceRoot,
+                  workspaceKind: 'repository',
+                  labels: [],
+                  runtimeMode: 'APPROVED_EXECUTION',
+          """
+          if old not in text:
+              raise SystemExit('Generated mission input anchor missing')
+          path.write_text(text.replace(old, new, 1))
+          PY
           npm install --package-lock-only --ignore-scripts --silent
           npx prettier --write \
             CHANGELOG.md package.json package-lock.json \
