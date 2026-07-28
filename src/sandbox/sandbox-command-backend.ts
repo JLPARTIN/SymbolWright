@@ -116,6 +116,12 @@ export type SandboxCommandSpawnSync = (
   },
 ) => SpawnSyncReturns<string>
 
+const DEFAULT_SPAWN_PROCESS: SandboxCommandSpawn = (command, args, options) =>
+  spawn(command, [...args], options)
+
+const DEFAULT_SPAWN_SYNC_PROCESS: SandboxCommandSpawnSync = (command, args, options) =>
+  spawnSync(command, [...args], options)
+
 export interface DockerSandboxRunnerOptions {
   readonly dockerBinary?: string
   readonly image?: string
@@ -389,7 +395,7 @@ export class DockerSandboxRunner implements SandboxRunner {
     this.options = options
     this.env = options.env ?? process.env
     this.broker = options.broker ?? new SandboxExecutionBroker({ env: this.env })
-    this.spawnProcess = options.spawnProcess ?? spawn
+    this.spawnProcess = options.spawnProcess ?? DEFAULT_SPAWN_PROCESS
   }
 
   public async runCommand(request: SandboxCommandRequest): Promise<SandboxRunnerResult> {
@@ -494,7 +500,7 @@ export class DockerSandboxFileWriter implements SandboxFileWriter {
     this.options = options
     this.env = options.env ?? process.env
     this.broker = options.broker ?? new SandboxExecutionBroker({ env: this.env })
-    this.spawnSyncProcess = options.spawnSyncProcess ?? spawnSync
+    this.spawnSyncProcess = options.spawnSyncProcess ?? DEFAULT_SPAWN_SYNC_PROCESS
   }
 
   public writeFile(request: SandboxFileWriteRequest): SandboxFileWriteResult {
