@@ -161,9 +161,7 @@ describe('dependency acquisition service', () => {
     expect(first.acquiredArtifacts).toHaveLength(1)
     expect(first.report.evidenceSha256).toMatch(/^[a-f0-9]{64}$/)
     expect(first.evidencePath).toBeDefined()
-    await expect(fs.readFile(first.evidencePath!, 'utf8')).resolves.not.toContain(
-      '104.16.24.34',
-    )
+    await expect(fs.readFile(first.evidencePath!, 'utf8')).resolves.not.toContain('104.16.24.34')
     expect(requester.get).toHaveBeenCalledTimes(1)
   })
 
@@ -217,9 +215,7 @@ describe('dependency acquisition service', () => {
     })
 
     expect(result.report.status).toBe('failed')
-    expect(result.report.decisionCode).toMatch(
-      /DEPENDENCY_(ARCHIVE_INVALID|INTEGRITY_MISMATCH)/,
-    )
+    expect(result.report.decisionCode).toMatch(/DEPENDENCY_(ARCHIVE_INVALID|INTEGRITY_MISMATCH)/)
     expect(result.acquiredArtifacts).toHaveLength(0)
   })
 
