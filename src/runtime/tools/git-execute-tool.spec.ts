@@ -111,10 +111,7 @@ describe('executeGitTool', () => {
 
   it('denies host Git for an externally acquired untrusted repository', async () => {
     await expect(
-      executeGitTool(
-        { operation: 'status' },
-        makeContext({ untrustedRepositoryContent: true }),
-      ),
+      executeGitTool({ operation: 'status' }, makeContext({ untrustedRepositoryContent: true })),
     ).rejects.toThrow(/TRUSTED_OPERATOR_GIT_REQUIRED/)
   })
 
