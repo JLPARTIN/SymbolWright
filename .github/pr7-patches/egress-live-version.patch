@@ -1,0 +1,36 @@
+diff --git a/src/sandbox/egress-broker.ts b/src/sandbox/egress-broker.ts
+--- a/src/sandbox/egress-broker.ts
++++ b/src/sandbox/egress-broker.ts
+@@ -21,6 +21,7 @@ import {
+   type EgressRequestDescriptor,
+ } from './egress-policy.js'
+ import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
++import { readPolicyVersion } from './policy-version.js'
+ import { ensureSecureStateDirectory } from './secure-state-directory.js'
+@@ -892,15 +893,15 @@ export class EnvironmentEgressPolicyRevisionSource implements EgressPolicyRevisionSource {
+   public read(policy: EffectiveEgressPolicy): EgressPolicyRevisionSnapshot {
+     return {
+-      globalVersion: positiveInteger(
++      globalVersion: readPolicyVersion(
+         this.env['SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION'],
+         sourceVersion(policy, EGRESS_GLOBAL_POLICY_ID),
+-      ),
+-      policyVersion: positiveInteger(
++      ).value,
++      policyVersion: readPolicyVersion(
+         this.env[`SYMBOLWRIGHT_EGRESS_POLICY_VERSION_${environmentKey(policy.policyId)}`],
+         policy.policyVersion,
+-      ),
++      ).value,
+@@ -1040,12 +1041,6 @@ function environmentKey(value: string): string {
+   return value.toUpperCase().replace(/[^A-Z0-9]/g, '_')
+ }
+ 
+-function positiveInteger(value: string | undefined, fallback: number): number {
+-  if (value === undefined || !/^[1-9]\d*$/.test(value)) return fallback
+-  const parsed = Number(value)
+-  return Number.isSafeInteger(parsed) ? parsed : fallback
+-}
+-
+ function isDnsNoData(error: unknown): boolean {
+   if (typeof error !== 'object' || error === null || !('code' in error)) return false
