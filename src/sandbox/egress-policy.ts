@@ -267,10 +267,7 @@ export function resolveEffectiveEgressPolicy(
     )
   }
 
-  const globalVersion = readPolicyVersion(
-    env['SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION'],
-    1,
-  )
+  const globalVersion = readPolicyVersion(env['SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION'], 1)
   if (!globalVersion.valid) {
     return blocked(
       'EGRESS_GLOBAL_POLICY_VERSION_INVALID',

@@ -5,9 +5,7 @@ import {
   SANDBOX_EGRESS_CAPABILITY,
   SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
 } from '../access/sandbox-capabilities.js'
-import {
-  EnvironmentDependencyPolicyRevisionSource,
-} from './dependency-acquisition-service.js'
+import { EnvironmentDependencyPolicyRevisionSource } from './dependency-acquisition-service.js'
 import {
   DEFAULT_DEPENDENCY_ACQUISITION_LIMITS,
   DEPENDENCY_GLOBAL_POLICY_ID,

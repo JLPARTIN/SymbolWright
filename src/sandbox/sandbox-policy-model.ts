@@ -326,10 +326,7 @@ export function resolveEffectiveSandboxPolicy(
     return blocked('SANDBOX_POLICY_DISABLED', 'The selected sandbox policy is disabled.')
   }
 
-  const globalVersion = readPolicyVersion(
-    env['SYMBOLWRIGHT_SANDBOX_GLOBAL_POLICY_VERSION'],
-    1,
-  )
+  const globalVersion = readPolicyVersion(env['SYMBOLWRIGHT_SANDBOX_GLOBAL_POLICY_VERSION'], 1)
   if (!globalVersion.valid) {
     return blocked(
       'SANDBOX_GLOBAL_POLICY_VERSION_INVALID',

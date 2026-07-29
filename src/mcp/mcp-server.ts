@@ -43,9 +43,7 @@ export function runSymbolWrightMcpServer(options: McpServerRuntimeOptions): Runn
     ...(options.agentToken === undefined ? {} : { agentToken: options.agentToken }),
     ...(options.repository === undefined ? {} : { repository: options.repository }),
     ...(options.branch === undefined ? {} : { branch: options.branch }),
-    ...(options.isDefaultBranch === undefined
-      ? {}
-      : { isDefaultBranch: options.isDefaultBranch }),
+    ...(options.isDefaultBranch === undefined ? {} : { isDefaultBranch: options.isDefaultBranch }),
     ...(options.missionId === undefined ? {} : { missionId: options.missionId }),
   })
   const serverInfo = options.serverInfo ?? DEFAULT_SERVER_INFO

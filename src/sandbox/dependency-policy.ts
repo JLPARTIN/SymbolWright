@@ -199,10 +199,7 @@ export function resolveEffectiveDependencyPolicy(
     )
   }
 
-  const globalVersion = readPolicyVersion(
-    env['SYMBOLWRIGHT_DEPENDENCY_GLOBAL_POLICY_VERSION'],
-    1,
-  )
+  const globalVersion = readPolicyVersion(env['SYMBOLWRIGHT_DEPENDENCY_GLOBAL_POLICY_VERSION'], 1)
   if (!globalVersion.valid) {
     return blocked(
       'DEPENDENCY_GLOBAL_POLICY_VERSION_INVALID',

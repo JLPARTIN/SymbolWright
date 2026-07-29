@@ -58,7 +58,12 @@ export function createSymbolWrightMcpToolHandler(
   if (options.agentToken !== undefined) {
     const repository = options.repository?.trim()
     const branch = options.branch?.trim()
-    if (repository === undefined || repository.length === 0 || branch === undefined || branch.length === 0) {
+    if (
+      repository === undefined ||
+      repository.length === 0 ||
+      branch === undefined ||
+      branch.length === 0
+    ) {
       throw new McpAgentTokenAuthenticationError(
         'Delegated MCP requires explicit repository and branch context so scope checks cannot be skipped.',
       )
