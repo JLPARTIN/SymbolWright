@@ -143,7 +143,7 @@ describe('npm dependency acquisition plan', () => {
         policy: POLICY,
       }),
     ).toThrowError(
-      expect.objectContaining<NpmDependencyPlanError>({
+      expect.objectContaining({
         code: 'NPM_LOCKFILE_DEPENDENCY_DRIFT',
       }),
     )
@@ -213,7 +213,7 @@ describe('npm dependency acquisition plan', () => {
         policy: restrictivePolicy,
       }),
     ).toThrowError(
-      expect.objectContaining<NpmDependencyPlanError>({
+      expect.objectContaining({
         code: 'NPM_PACKAGE_QUOTA_EXCEEDED',
       }),
     )
@@ -270,18 +270,14 @@ describe('npm dependency acquisition plan', () => {
         packageJsonText: `${PACKAGE_JSON}\n`,
         packageLockText: lockText,
       }),
-    ).toThrowError(
-      expect.objectContaining<NpmDependencyPlanError>({ code: 'NPM_PACKAGE_JSON_DRIFT' }),
-    )
+    ).toThrowError(expect.objectContaining({ code: 'NPM_PACKAGE_JSON_DRIFT' }))
     expect(() =>
       assertNpmDependencyPlanInputsUnchanged({
         plan,
         packageJsonText: PACKAGE_JSON,
         packageLockText: `${lockText}\n`,
       }),
-    ).toThrowError(
-      expect.objectContaining<NpmDependencyPlanError>({ code: 'NPM_LOCKFILE_DRIFT' }),
-    )
+    ).toThrowError(expect.objectContaining({ code: 'NPM_LOCKFILE_DRIFT' }))
   })
 })
 
