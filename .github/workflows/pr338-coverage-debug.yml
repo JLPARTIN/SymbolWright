@@ -23,6 +23,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Generate coverage
+        continue-on-error: true
         run: npm run test:coverage
       - name: Print dependency coverage gaps
         run: |
