@@ -1,0 +1,102 @@
+diff --git a/src/sandbox/dependency-https-fetcher.ts b/src/sandbox/dependency-https-fetcher.ts
+index fc4ee4a..47089d9 100644
+--- a/src/sandbox/dependency-https-fetcher.ts
++++ b/src/sandbox/dependency-https-fetcher.ts
+@@ -14,7 +14,10 @@ export interface DependencyResolvedAddress {
+ }
+ 
+ export interface DependencyDnsResolver {
+-  readonly resolve: (hostname: string) => Promise<readonly DependencyResolvedAddress[]>
++  readonly resolve: (
++    hostname: string,
++    signal?: AbortSignal,
++  ) => Promise<readonly DependencyResolvedAddress[]>
+ }
+ 
+ export interface DependencyHttpResponse {
+@@ -76,6 +79,7 @@ export class DependencyHttpsFetcher {
+   public async fetch(input: {
+     readonly url: string
+     readonly policy: EffectiveDependencyPolicy
++    readonly checkpoint?: () => void
+     readonly signal?: AbortSignal
+   }): Promise<DependencyFetchResult> {
+     const startedAt = Date.now()
+@@ -85,6 +89,7 @@ export class DependencyHttpsFetcher {
+ 
+     for (;;) {
+       assertNotCancelled(input.signal)
++      input.checkpoint?.()
+       requestCount += 1
+       if (requestCount > input.policy.limits.maxRequests) {
+         throw new DependencyFetchError(
+@@ -100,7 +105,11 @@ export class DependencyHttpsFetcher {
+         )
+       }
+ 
+-      const resolved = uniqueAddresses(await this.resolver.resolve(current.hostname))
++      const resolved = uniqueAddresses(
++        await abortable(this.resolver.resolve(current.hostname, input.signal), input.signal),
++      )
++      assertNotCancelled(input.signal)
++      input.checkpoint?.()
+       if (resolved.length === 0) {
+         throw new DependencyFetchError(
+           'DEPENDENCY_DNS_EMPTY',
+@@ -121,6 +130,8 @@ export class DependencyHttpsFetcher {
+         )
+       }
+ 
++      assertNotCancelled(input.signal)
++      input.checkpoint?.()
+       const response = await this.requester.get({
+         url: current,
+         pinnedAddress: selected,
+@@ -129,6 +140,7 @@ export class DependencyHttpsFetcher {
+         ...(input.signal === undefined ? {} : { signal: input.signal }),
+       })
+       assertNotCancelled(input.signal)
++      input.checkpoint?.()
+ 
+       if (REDIRECT_STATUS_CODES.has(response.statusCode)) {
+         redirectCount += 1
+@@ -189,7 +201,10 @@ export function isPublicDependencyAddress(value: DependencyResolvedAddress): boo
+ }
+ 
+ class SystemDependencyDnsResolver implements DependencyDnsResolver {
+-  public async resolve(hostname: string): Promise<readonly DependencyResolvedAddress[]> {
++  public async resolve(
++    hostname: string,
++    _signal?: AbortSignal,
++  ): Promise<readonly DependencyResolvedAddress[]> {
+     let addresses: LookupAddress[]
+     try {
+       addresses = await dns.lookup(hostname, { all: true, verbatim: true })
+@@ -367,6 +382,27 @@ function normalizeHeaders(
+   )
+ }
+ 
++async function abortable<T>(operation: Promise<T>, signal: AbortSignal | undefined): Promise<T> {
++  if (signal === undefined) return operation
++  assertNotCancelled(signal)
++  return new Promise<T>((resolve, reject) => {
++    const onAbort = (): void => {
++      reject(new DependencyFetchError('DEPENDENCY_FETCH_CANCELLED', 'Dependency fetch cancelled.'))
++    }
++    signal.addEventListener('abort', onAbort, { once: true })
++    operation.then(
++      (value) => {
++        signal.removeEventListener('abort', onAbort)
++        resolve(value)
++      },
++      (error: unknown) => {
++        signal.removeEventListener('abort', onAbort)
++        reject(error)
++      },
++    )
++  })
++}
++
+ function assertNotCancelled(signal: AbortSignal | undefined): void {
+   if (signal?.aborted === true) {
+     throw new DependencyFetchError('DEPENDENCY_FETCH_CANCELLED', 'Dependency fetch cancelled.')
