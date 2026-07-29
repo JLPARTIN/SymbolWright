@@ -47,7 +47,7 @@ describe('mcp-call-tool', () => {
     expect(mcpCallTool.capability).toBe('MCP_TOOL')
   })
 
-  it('calls the fixture server and renders a status=ok result', async () => {
+  it('calls the fixture server for a trusted local operator', async () => {
     const output = await executeMcpCallTool(
       { server: 'fixture', tool: 'echo', arguments: { text: 'hello from the tool' } },
       contextFor('APPROVED_EXECUTION'),
@@ -74,6 +74,32 @@ describe('mcp-call-tool', () => {
     )
 
     expect(output).toContain('Status: blocked')
+  })
+
+  it('denies delegated callers before repository-controlled MCP config can spawn', async () => {
+    const delegated: RuntimeToolContext = {
+      ...contextFor('APPROVED_EXECUTION'),
+      accessControl: {
+        principalId: 'principal-1',
+        grantId: 'grant-1',
+        requireAuthorized: async () => undefined,
+      },
+    }
+
+    await expect(
+      executeMcpCallTool({ server: 'fixture', tool: 'echo' }, delegated),
+    ).rejects.toThrow(/TRUSTED_OPERATOR_MCP_REQUIRED/)
+  })
+
+  it('denies MCP execution for an externally acquired untrusted repository', async () => {
+    const untrusted: RuntimeToolContext = {
+      ...contextFor('APPROVED_EXECUTION'),
+      untrustedRepositoryContent: true,
+    }
+
+    await expect(
+      executeMcpCallTool({ server: 'fixture', tool: 'echo' }, untrusted),
+    ).rejects.toThrow(/TRUSTED_OPERATOR_MCP_REQUIRED/)
   })
 
   it('rejects missing required fields before touching the runtime', async () => {
