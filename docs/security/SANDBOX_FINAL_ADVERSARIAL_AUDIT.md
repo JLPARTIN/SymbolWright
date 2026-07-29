@@ -3,7 +3,7 @@
 **Audit date:** 2026-07-29  
 **Repository:** `JLPARTIN/SymbolWright`  
 **Sandbox bundle base:** `7990209993ed891efa3e5cfdd83adfd2434929dd`  
-**Audited code SHA:** `629f694fbc52ba7e71299805feeef7d574da8c14`  
+**Audited code SHA:** `e98bf556d980bdcefe994ed26bcf547f71c19a15`  
 **Release verdict:** **PASS**
 
 ## 1. Scope and evidence rules
