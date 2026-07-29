@@ -147,9 +147,8 @@ export class EgressPolicyCatalog {
           'Egress approval is stale for the current grant version.',
         )
       }
-      const approvedGrantVersion = authorization.approval.policyVersions[
-        `grant:${authorization.grantId ?? ''}`
-      ]
+      const approvedGrantVersion =
+        authorization.approval.policyVersions[`grant:${authorization.grantId ?? ''}`]
       if (approvedGrantVersion !== authorization.grantVersion) {
         throw new EgressPolicyError(
           'EGRESS_APPROVAL_GRANT_POLICY_STALE',
