@@ -23,6 +23,9 @@ interface TarEntryFixture {
   readonly content?: string | Uint8Array
 }
 
+const TAR_BLOCK_BYTES = 512
+const SECOND_HEADER_OFFSET = TAR_BLOCK_BYTES * 2
+
 describe('npm tarball inspector', () => {
   it('accepts a bounded npm tarball without extracting it', () => {
     const archive = tarGzip([
@@ -52,9 +55,32 @@ describe('npm tarball inspector', () => {
     expect(Object.isFrozen(report.entries)).toBe(true)
   })
 
+  it('rejects compressed and expanded archive quota violations', () => {
+    const archive = tarGzip([{ name: 'package/package.json', content: '{}' }])
+
+    expect(() =>
+      inspectNpmTarball(archive, { ...LIMITS, maxArchiveBytes: archive.byteLength - 1 }),
+    ).toThrowError(expect.objectContaining({ code: 'DEPENDENCY_ARCHIVE_QUOTA_EXCEEDED' }))
+
+    expect(() =>
+      inspectNpmTarball(archive, { ...LIMITS, maxExpandedBytes: 1_200 }),
+    ).toThrowError(expect.objectContaining({ code: 'DEPENDENCY_EXPANDED_QUOTA_EXCEEDED' }))
+  })
+
+  it('rejects invalid gzip and unaligned tar streams', () => {
+    expect(() => inspectNpmTarball(Buffer.from('not-a-gzip-stream'), LIMITS)).toThrowError(
+      expect.objectContaining({ code: 'DEPENDENCY_ARCHIVE_INVALID' }),
+    )
+    expect(() => inspectNpmTarball(gzipSync(Buffer.alloc(513)), LIMITS)).toThrowError(
+      expect.objectContaining({ code: 'DEPENDENCY_TAR_INVALID' }),
+    )
+  })
+
   it.each([
     '../escape',
     'package/../../escape',
+    'package//alias',
+    'package/./alias',
     '/absolute/path',
     'C:/windows/path',
     'other-root/package.json',
@@ -71,14 +97,127 @@ describe('npm tarball inspector', () => {
     )
   })
 
-  it('rejects symbolic and hard-link-style package content', () => {
-    const archive = tarGzip([
+  it('normalizes backslashes and ustar prefixes without accepting aliases', () => {
+    const raw = tar([
+      { name: 'package/package.json', content: '{}' },
+      { name: 'package/placeholder', content: '' },
+      { name: 'package\\windows.js', content: '' },
+    ])
+    const secondHeader = raw.subarray(SECOND_HEADER_OFFSET, SECOND_HEADER_OFFSET + TAR_BLOCK_BYTES)
+    secondHeader.fill(0, 0, 100)
+    secondHeader.fill(0, 345, 500)
+    Buffer.from('a'.repeat(100), 'ascii').copy(secondHeader, 0)
+    Buffer.from('package', 'ascii').copy(secondHeader, 345)
+    recomputeChecksum(raw, SECOND_HEADER_OFFSET)
+
+    const report = inspectNpmTarball(gzipSync(raw), LIMITS)
+
+    expect(report.entries.map((entry) => entry.path)).toEqual([
+      'package/package.json',
+      `package/${'a'.repeat(100)}`,
+      'package/windows.js',
+    ])
+  })
+
+  it('rejects empty, control-character, and invalid UTF-8 paths', () => {
+    expect(() =>
+      inspectNpmTarball(
+        tarGzip([
+          { name: '', content: '' },
+          { name: 'package/package.json', content: '{}' },
+        ]),
+        LIMITS,
+      ),
+    ).toThrowError(expect.objectContaining({ code: 'DEPENDENCY_ARCHIVE_PATH_INVALID' }))
+
+    expect(() =>
+      inspectNpmTarball(
+        tarGzip([
+          { name: 'package/package.json', content: '{}' },
+          { name: 'package/\u0001control', content: '' },
+        ]),
+        LIMITS,
+      ),
+    ).toThrowError(expect.objectContaining({ code: 'DEPENDENCY_ARCHIVE_PATH_INVALID' }))
+
+    const invalidUtf8 = tar([{ name: 'package/package.json', content: '{}' }])
+    invalidUtf8[0] = 0xff
+    recomputeChecksum(invalidUtf8, 0)
+    expect(() => inspectNpmTarball(gzipSync(invalidUtf8), LIMITS)).toThrowError(
+      expect.objectContaining({ code: 'DEPENDENCY_ARCHIVE_PATH_INVALID' }),
+    )
+  })
+
+  it.each([49, 50])('rejects archive link type %i', (typeFlag) => {
+    const raw = tar([
       { name: 'package/package.json', content: '{}' },
       { name: 'package/link', type: 'symlink' },
     ])
+    raw[SECOND_HEADER_OFFSET + 156] = typeFlag
+    recomputeChecksum(raw, SECOND_HEADER_OFFSET)
 
-    expect(() => inspectNpmTarball(archive, LIMITS)).toThrowError(
+    expect(() => inspectNpmTarball(gzipSync(raw), LIMITS)).toThrowError(
       expect.objectContaining({ code: 'DEPENDENCY_ARCHIVE_LINK_FORBIDDEN' }),
+    )
+  })
+
+  it.each([
+    [51, 'DEPENDENCY_ARCHIVE_SPECIAL_FILE_FORBIDDEN'],
+    [52, 'DEPENDENCY_ARCHIVE_SPECIAL_FILE_FORBIDDEN'],
+    [54, 'DEPENDENCY_ARCHIVE_SPECIAL_FILE_FORBIDDEN'],
+    [55, 'DEPENDENCY_TAR_TYPE_UNSUPPORTED'],
+  ] as const)('rejects special or unsupported archive type %i', (typeFlag, code) => {
+    const raw = tar([
+      { name: 'package/package.json', content: '{}' },
+      { name: 'package/device', content: '' },
+    ])
+    raw[SECOND_HEADER_OFFSET + 156] = typeFlag
+    recomputeChecksum(raw, SECOND_HEADER_OFFSET)
+
+    expect(() => inspectNpmTarball(gzipSync(raw), LIMITS)).toThrowError(
+      expect.objectContaining({ code }),
+    )
+  })
+
+  it('accepts the legacy null regular-file type flag and an empty numeric size field', () => {
+    const raw = tar([{ name: 'package/package.json', content: '' }])
+    raw[156] = 0
+    raw.fill(0, 124, 136)
+    recomputeChecksum(raw, 0)
+
+    const report = inspectNpmTarball(gzipSync(raw), LIMITS)
+
+    expect(report.entries).toEqual([{ path: 'package/package.json', type: 'file', size: 0 }])
+  })
+
+  it('rejects binary and invalid-octal tar sizes', () => {
+    const binary = tar([{ name: 'package/package.json', content: '{}' }])
+    binary.fill(0, 124, 136)
+    binary[124] = 0x80
+    recomputeChecksum(binary, 0)
+    expect(() => inspectNpmTarball(gzipSync(binary), LIMITS)).toThrowError(
+      expect.objectContaining({ code: 'DEPENDENCY_TAR_NUMBER_UNSUPPORTED' }),
+    )
+
+    const invalidOctal = tar([{ name: 'package/package.json', content: '{}' }])
+    invalidOctal.fill(0, 124, 136)
+    Buffer.from('00000000008', 'ascii').copy(invalidOctal, 124)
+    recomputeChecksum(invalidOctal, 0)
+    expect(() => inspectNpmTarball(gzipSync(invalidOctal), LIMITS)).toThrowError(
+      expect.objectContaining({ code: 'DEPENDENCY_TAR_INVALID' }),
+    )
+  })
+
+  it('rejects a directory that declares file content', () => {
+    const raw = tar([
+      { name: 'package/', type: 'directory' },
+      { name: 'package/package.json', content: '{}' },
+    ])
+    writeOctal(raw, 124, 12, 1)
+    recomputeChecksum(raw, 0)
+
+    expect(() => inspectNpmTarball(gzipSync(raw), LIMITS)).toThrowError(
+      expect.objectContaining({ code: 'DEPENDENCY_TAR_INVALID' }),
     )
   })
 
@@ -108,7 +247,7 @@ describe('npm tarball inspector', () => {
     )
   })
 
-  it('rejects gzip expansion beyond the full archive limit', () => {
+  it('rejects gzip expansion beyond the decompressor limit', () => {
     const archive = tarGzip([
       { name: 'package/package.json', content: '{}' },
       { name: 'package/compressible', content: 'x'.repeat(20_000) },
@@ -119,7 +258,39 @@ describe('npm tarball inspector', () => {
     )
   })
 
-  it('rejects archive checksum corruption and missing package manifest', () => {
+  it('rejects truncated entries and missing terminal records', () => {
+    const oversizedEntry = tar([{ name: 'package/package.json', content: '{}' }])
+    writeOctal(oversizedEntry, 124, 12, 4_096)
+    recomputeChecksum(oversizedEntry, 0)
+    expect(() =>
+      inspectNpmTarball(gzipSync(oversizedEntry), {
+        ...LIMITS,
+        maxFileBytes: 10_000,
+        maxTotalBytes: 10_000,
+      }),
+    ).toThrowError(expect.objectContaining({ code: 'DEPENDENCY_TAR_TRUNCATED' }))
+
+    const noEndRecords = tar([{ name: 'package/package.json', content: '{}' }]).subarray(0, 1_024)
+    expect(() => inspectNpmTarball(gzipSync(noEndRecords), LIMITS)).toThrowError(
+      expect.objectContaining({ code: 'DEPENDENCY_TAR_TRUNCATED' }),
+    )
+  })
+
+  it('rejects data after the first end-of-archive record', () => {
+    const first = tar([{ name: 'package/package.json', content: '{}' }]).subarray(0, 1_024)
+    const late = tar([{ name: 'package/late.js', content: 'late' }]).subarray(0, 1_024)
+    const raw = Buffer.concat([first, Buffer.alloc(512), late, Buffer.alloc(1_024)])
+
+    expect(() => inspectNpmTarball(gzipSync(raw), LIMITS)).toThrowError(
+      expect.objectContaining({ code: 'DEPENDENCY_TAR_INVALID' }),
+    )
+  })
+
+  it('rejects empty archives, checksum corruption, and missing package manifests', () => {
+    expect(() => inspectNpmTarball(gzipSync(Buffer.alloc(1_024)), LIMITS)).toThrowError(
+      expect.objectContaining({ code: 'DEPENDENCY_TAR_EMPTY' }),
+    )
+
     const raw = tar([
       { name: 'package/package.json', content: '{}' },
       { name: 'package/index.js', content: 'ok' },
@@ -172,6 +343,16 @@ function tar(entries: readonly TarEntryFixture[]): Buffer {
   }
   blocks.push(Buffer.alloc(1024))
   return Buffer.concat(blocks)
+}
+
+function recomputeChecksum(raw: Buffer, headerOffset: number): void {
+  const header = raw.subarray(headerOffset, headerOffset + TAR_BLOCK_BYTES)
+  header.fill(32, 148, 156)
+  const checksum = header.reduce((sum, byte) => sum + byte, 0)
+  const checksumText = checksum.toString(8).padStart(6, '0')
+  header.write(checksumText, 148, 6, 'ascii')
+  header[154] = 0
+  header[155] = 32
 }
 
 function writeText(buffer: Buffer, offset: number, length: number, value: string): void {
