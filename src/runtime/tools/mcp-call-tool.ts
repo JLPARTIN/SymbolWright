@@ -38,6 +38,19 @@ function parseMcpCallInput(input: unknown): McpCallToolInput {
   }
 }
 
+function assertTrustedOperatorMcpExecution(context: RuntimeToolContext): void {
+  if (
+    context.accessControl !== undefined ||
+    context.untrustedRepositoryContent === true ||
+    (context.sandboxAuthorization !== undefined &&
+      context.sandboxAuthorization.callerKind !== 'operator')
+  ) {
+    throw new Error(
+      'authorization_denied[TRUSTED_OPERATOR_MCP_REQUIRED]: mcp_call spawns a configured host process and is restricted to a trusted local operator checkout. Delegated and untrusted-repository callers must not execute repository-controlled MCP server definitions.',
+    )
+  }
+}
+
 export function renderMcpCallEvidence(evidence: McpCallEvidence): string {
   const lines = [
     'SymbolWright mcp_call',
@@ -74,6 +87,7 @@ export async function executeMcpCallTool(
   input: McpCallToolInput,
   context: RuntimeToolContext,
 ): Promise<string> {
+  assertTrustedOperatorMcpExecution(context)
   const config = loadMcpConfig(context.cwd, input.configPath)
 
   const evidence = await callMcpTool({
@@ -91,7 +105,7 @@ export async function executeMcpCallTool(
 export const mcpCallTool: RuntimeToolDefinition = {
   name: 'mcp_call',
   description:
-    'Invoke a tool on a configured MCP stdio server through the SymbolWright policy gate.',
+    'Invoke a configured MCP stdio server only from a trusted local operator checkout. Delegated and untrusted-repository callers are denied before process creation.',
   capability: 'MCP_TOOL',
   execute: async (input, context) => executeMcpCallTool(parseMcpCallInput(input), context),
 }
