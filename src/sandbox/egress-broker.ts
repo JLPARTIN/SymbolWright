@@ -707,7 +707,7 @@ export class SandboxEgressSession {
           ...(input.statusCode === undefined ? {} : { statusCode: input.statusCode }),
         }),
       )
-    } catch (error) {
+    } catch {
       throw new EgressBrokerError(
         'EGRESS_AUDIT_WRITE_FAILED',
         'Brokered egress audit persistence failed.',
