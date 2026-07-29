@@ -1,0 +1,11 @@
+--- a/src/sandbox/egress-broker.ts
++++ b/src/sandbox/egress-broker.ts
+@@ -707,7 +707,7 @@
+           ...(input.statusCode === undefined ? {} : { statusCode: input.statusCode }),
+         }),
+       )
+-    } catch (error) {
++    } catch {
+       throw new EgressBrokerError(
+         'EGRESS_AUDIT_WRITE_FAILED',
+         'Brokered egress audit persistence failed.',
