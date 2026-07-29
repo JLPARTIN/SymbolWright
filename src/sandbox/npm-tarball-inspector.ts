@@ -267,13 +267,21 @@ function readTarString(field: Buffer): string {
   const zero = field.indexOf(0)
   const bytes = zero < 0 ? field : field.subarray(0, zero)
   const value = bytes.toString('utf8')
-  if (value.includes('\uFFFD') || /[\u0000-\u001f\u007f]/.test(value)) {
+  if (value.includes('\uFFFD') || containsControlCharacter(value)) {
     throw new NpmTarballInspectionError(
       'DEPENDENCY_ARCHIVE_PATH_INVALID',
       'Dependency tar contains invalid path text.',
     )
   }
   return value
+}
+
+function containsControlCharacter(value: string): boolean {
+  for (const character of value) {
+    const code = character.charCodeAt(0)
+    if (code <= 31 || code === 127) return true
+  }
+  return false
 }
 
 function isZeroBlock(block: Buffer): boolean {
