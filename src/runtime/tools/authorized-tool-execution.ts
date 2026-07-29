@@ -2,6 +2,7 @@ import {
   operationCapabilitiesForTool,
   resolveToolPermissionDescriptor,
 } from '../../access/tool-permission-catalog.js'
+import { getOrCreateApplicationSandboxNetworkRuntime } from '../../sandbox/sandbox-network-runtime.js'
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 
 /**
@@ -11,12 +12,18 @@ import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
  * check before the tool runs — fail closed on any tool without a permission descriptor. When
  * `context.accessControl` is absent (the legacy local operator, authenticated via
  * `SYMBOLWRIGHT_API_KEY`), the tool runs unrestricted, matching today's behavior exactly.
+ *
+ * The same chokepoint also resolves the one application-owned sandbox network runtime for the
+ * authorized workspace before any tool executes. Server and MCP startup normally create it first;
+ * CLI and autonomous paths converge here and receive the same fail-closed policy validation.
  */
 export async function runAuthorizedTool<TInput>(
   tool: RuntimeToolDefinition<TInput>,
   input: TInput,
   context: RuntimeToolContext,
 ): Promise<string> {
+  getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot: context.cwd })
+
   const accessControl = context.accessControl
   if (accessControl !== undefined) {
     const descriptor = resolveToolPermissionDescriptor(tool.name)
