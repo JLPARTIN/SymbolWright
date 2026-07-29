@@ -18,6 +18,7 @@ import {
   type AutonomousMissionRuntime,
 } from './autonomous-mission-runtime.js'
 import { JsonAutonomousRepairLoopStore } from './autonomous-repair-loop.js'
+import { resolveMissionSandboxCommandAuthority } from './mission-sandbox-command-authority.js'
 import type {
   MissionTaskExecutionResult,
   MissionTaskExecutor,
@@ -47,17 +48,9 @@ export interface ServerAutonomyRuntimeOptions {
   readonly portableRunner?: PortableValidationRunner
   readonly editExecutor?: AutonomousEditTaskExecutor
   readonly validationCommands?: readonly string[]
-  /** Global fallback repair-attempt cap. When a mission was created by a delegated-access grant
-   * (has `grantId`) and `accessRuntime` is supplied, the effective cap is the smaller of this and
-   * that grant's `executionLimits.maxRepairAttempts`. */
   readonly maxRepairAttempts?: number
-  /** Used to look up a mission's owning grant (via `mission.grantId`) to source a per-grant
-   * `executionLimits.maxRepairAttempts`/`maxMissionDurationMinutes`. Absent for
-   * local-operator-only deployments. */
   readonly accessRuntime?: AccessRuntime
   readonly getGovernanceStore?: () => GovernanceStore
-  /** Global fallback mission-duration cap (minutes); see `accessRuntime` for the per-grant
-   * override rule (grant can only tighten, never loosen). */
   readonly maxMissionDurationMinutes?: number
   readonly enablePortabilityWebResearch?: boolean
   readonly webSearchProvider?: WebSearchProvider
@@ -65,10 +58,6 @@ export interface ServerAutonomyRuntimeOptions {
   readonly overrideStore?: ProviderRuntimeOverrideStore
 }
 
-/**
- * Assembles the live server autonomy runtime. Validation is discovered from the
- * mission repository unless the operator supplies an explicit command list.
- */
 export function createServerAutonomyRuntime(
   options: ServerAutonomyRuntimeOptions,
 ): AutonomousMissionRuntime {
@@ -136,14 +125,6 @@ export function createServerAutonomyRuntime(
   })
 }
 
-/**
- * The effective repair-attempt cap is the smaller of the global option and the mission's owning
- * grant's `executionLimits.maxRepairAttempts`, when both apply — a grant can only tighten the
- * global default, never loosen it. Clamped to `PersistentMissionRepairController`'s accepted
- * [0, 10] range so an out-of-range value an operator set on a grant can't crash mission
- * preparation. Exported as a standalone pure function so it's testable without constructing the
- * full autonomy runtime.
- */
 export function resolveMaxRepairAttempts(
   mission: SymbolWrightMission,
   options: Pick<ServerAutonomyRuntimeOptions, 'maxRepairAttempts' | 'accessRuntime'>,
@@ -183,9 +164,18 @@ class MissionBoundTaskExecutor implements MissionTaskExecutor {
     const policy = createRuntimePolicyForMode(mission.agent.runtimeMode, {
       hasGitHubToken: this.#options.hasGitHubToken,
     })
+    const sandboxAuthority = resolveMissionSandboxCommandAuthority({
+      mission,
+      ...(this.#options.accessRuntime === undefined
+        ? {}
+        : { accessRuntime: this.#options.accessRuntime }),
+      env: this.#env,
+    })
     const validationRunner = new RuntimeAutonomousValidationRunner({
       policy,
       reason: 'Autonomous mission validation',
+      authorization: sandboxAuthority.authorization,
+      workspaceTrust: sandboxAuthority.workspaceTrust,
       ...(this.#options.sandboxRunner === undefined
         ? {}
         : { sandboxRunner: this.#options.sandboxRunner }),

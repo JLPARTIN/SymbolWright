@@ -1,14 +1,16 @@
-import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import type { SandboxCommandWorkspaceTrust } from '../../sandbox/sandbox-command-policy.js'
+import type { SandboxAuthorizationContext } from '../../sandbox/sandbox-policy-model.js'
 import type { SandboxRunner } from '../sandbox/sandbox-runner.js'
+import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
 import {
   executeValidationCommand,
   type ValidationCommandExecutionResult,
 } from './validation-command-runner.js'
-import { redactValidationOutput } from './validation-output-redactor.js'
 import {
   createValidationTranscript,
   type ValidationCommandTranscript,
 } from './validation-command-transcript.js'
+import { redactValidationOutput } from './validation-output-redactor.js'
 
 export type ValidationExecutorOutcome = 'BLOCKED' | 'DRY_RUN' | 'PASS' | 'FAIL' | 'ERROR'
 
@@ -54,6 +56,8 @@ export async function runValidationCommand(
   policy: RuntimePolicySnapshot,
   approval: RuntimeApproval | undefined,
   sandboxRunner?: SandboxRunner,
+  authorization?: SandboxAuthorizationContext,
+  workspaceTrust: SandboxCommandWorkspaceTrust = 'trusted-local',
 ): Promise<ValidationExecutorResult> {
   const startMs = Date.now()
 
@@ -63,14 +67,14 @@ export async function runValidationCommand(
     policy,
     approval,
     sandboxRunner,
+    authorization,
+    workspaceTrust,
   )
 
   const elapsedMs = Date.now() - startMs
   const outcome = deriveOutcome(result)
-
   const redactedStdout = redactValidationOutput(result.stdout)
   const redactedStderr = redactValidationOutput(result.stderr)
-
   const transcript = createValidationTranscript({
     command,
     reason,
@@ -108,18 +112,13 @@ export function renderValidationExecutorResult(result: ValidationExecutorResult)
 
   if (result.transcript.blockReasons.length > 0) {
     lines.push('', 'Block reasons:')
-    for (const reason of result.transcript.blockReasons) {
-      lines.push(`- ${reason}`)
-    }
+    for (const reason of result.transcript.blockReasons) lines.push(`- ${reason}`)
   }
-
   if (result.redactedStdout.length > 0) {
     lines.push('', 'stdout (redacted):', result.redactedStdout)
   }
-
   if (result.redactedStderr.length > 0) {
     lines.push('', 'stderr (redacted):', result.redactedStderr)
   }
-
   return lines.join('\n')
 }

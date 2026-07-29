@@ -145,7 +145,7 @@ export function buildChildPolicy(
   }
 }
 
-function buildChildContext(
+export function buildChildContext(
   parentContext: RuntimeToolContext,
   childSessionId: string,
   governedToolsEnabled: boolean,
@@ -156,17 +156,35 @@ function buildChildContext(
     sessionId: childSessionId,
     ...(parentContext.memoryTools !== undefined ? { memoryTools: parentContext.memoryTools } : {}),
     ...(parentContext.workspace !== undefined ? { workspace: parentContext.workspace } : {}),
+    ...(parentContext.embeddingProvider !== undefined
+      ? { embeddingProvider: parentContext.embeddingProvider }
+      : {}),
+    ...(parentContext.untrustedRepositoryContent === undefined
+      ? {}
+      : { untrustedRepositoryContent: parentContext.untrustedRepositoryContent }),
     ...(governedToolsEnabled && parentContext.sandboxRunner !== undefined
       ? { sandboxRunner: parentContext.sandboxRunner }
       : {}),
     ...(governedToolsEnabled && parentContext.sandboxFileWriter !== undefined
       ? { sandboxFileWriter: parentContext.sandboxFileWriter }
       : {}),
+    ...(governedToolsEnabled && parentContext.sandboxService !== undefined
+      ? { sandboxService: parentContext.sandboxService }
+      : {}),
+    ...(governedToolsEnabled && parentContext.sandboxAuthorization !== undefined
+      ? { sandboxAuthorization: parentContext.sandboxAuthorization }
+      : {}),
+    ...(governedToolsEnabled && parentContext.recordSandboxExecution !== undefined
+      ? { recordSandboxExecution: parentContext.recordSandboxExecution }
+      : {}),
     ...(governedToolsEnabled && parentContext.githubClients !== undefined
       ? { githubClients: parentContext.githubClients }
       : {}),
     ...(governedToolsEnabled && parentContext.approval !== undefined
       ? { approval: parentContext.approval }
+      : {}),
+    ...(governedToolsEnabled && parentContext.accessControl !== undefined
+      ? { accessControl: parentContext.accessControl }
       : {}),
   }
 }

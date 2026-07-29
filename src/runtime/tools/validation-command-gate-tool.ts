@@ -1,10 +1,10 @@
+import { renderAuditEvents } from '../audit/runtime-audit-log.js'
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
+import { createValidationCommandAuditEvent } from '../validation/validation-command-audit.js'
 import {
   renderValidationCommandGateResult,
   type ValidationCommandRequest,
 } from '../validation/validation-command-gate.js'
-import { createValidationCommandAuditEvent } from '../validation/validation-command-audit.js'
-import { renderAuditEvents } from '../audit/runtime-audit-log.js'
 import {
   executeValidationCommand,
   renderValidationCommandExecutionResult,
@@ -42,11 +42,10 @@ function parseValidationCommandGateToolInput(input: unknown): ValidationCommandG
 
 export const validationCommandGateTool: RuntimeToolDefinition = {
   name: 'validation_command_gate',
-  description: 'Run an approved validation command through the sandbox runner.',
+  description: 'Run an approved validation command through the authoritative sandbox broker.',
   capability: 'VALIDATION_COMMAND',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const parsed = parseValidationCommandGateToolInput(input)
-
     const request: ValidationCommandRequest = {
       command: parsed.command,
       reason: parsed.reason,
@@ -59,6 +58,8 @@ export const validationCommandGateTool: RuntimeToolDefinition = {
       context.policy,
       context.approval,
       context.sandboxRunner,
+      context.sandboxAuthorization,
+      context.untrustedRepositoryContent ? 'external-untrusted' : 'trusted-local',
     )
     const gateOutput = renderValidationCommandGateResult(result.gateResult)
     const runOutput = renderValidationCommandExecutionResult(result)

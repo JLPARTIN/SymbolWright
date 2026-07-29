@@ -1,3 +1,8 @@
+import {
+  resolveEffectiveSandboxCommandPolicy,
+  type EffectiveSandboxCommandPolicy,
+  type SandboxCommandPolicyRequest,
+} from './sandbox-command-policy.js'
 import { evaluateSandboxPolicy } from './sandbox-policy.js'
 import {
   SandboxPolicyCatalog,
@@ -16,6 +21,13 @@ export interface SandboxBrokerDecision {
   readonly effectiveRunner?: SandboxRunnerDefinition
 }
 
+export interface SandboxCommandBrokerDecision {
+  readonly allowed: boolean
+  readonly reasonCode: string
+  readonly reason: string
+  readonly policy?: EffectiveSandboxCommandPolicy
+}
+
 export interface SandboxExecutionBrokerOptions {
   readonly env?: NodeJS.ProcessEnv
   readonly catalog?: SandboxPolicyCatalog
@@ -23,9 +35,9 @@ export interface SandboxExecutionBrokerOptions {
 }
 
 /**
- * The sole policy-authority entry point for structured sandbox execution. It resolves the immutable
- * effective policy first, then applies runner-specific compatibility checks. Executors receive only
- * the resulting effective runner and policy; they do not re-interpret caller JSON or grant fields.
+ * The sole policy-authority entry point for sandbox execution. Structured code requests and
+ * compatibility command requests both resolve immutable policy here before an executor sees them.
+ * Executors never re-interpret caller JSON, grant fields, deployment posture, or workspace trust.
  */
 export class SandboxExecutionBroker {
   private readonly env: NodeJS.ProcessEnv
@@ -58,8 +70,8 @@ export class SandboxExecutionBroker {
     const effectiveRunner: SandboxRunnerDefinition = {
       ...runner,
       limits: resolution.policy.limits,
-      // PR 2 supports only the offline execution profile. Dependency acquisition and egress are
-      // separate future broker paths and never turn into direct runner networking here.
+      // Offline execution is the only executable profile today. Dependency acquisition and egress
+      // are separate future broker paths and never turn into direct runner networking here.
       networkPolicy: 'disabled',
       capabilities: { ...runner.capabilities, network: false },
     }
@@ -84,6 +96,18 @@ export class SandboxExecutionBroker {
       policy: resolution.policy,
       effectiveRunner,
     }
+  }
+
+  public authorizeCommand(
+    request: SandboxCommandPolicyRequest,
+    authorization: SandboxAuthorizationContext,
+  ): SandboxCommandBrokerDecision {
+    return resolveEffectiveSandboxCommandPolicy({
+      request,
+      authorization,
+      env: this.env,
+      now: this.now,
+    })
   }
 }
 

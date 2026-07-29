@@ -1,9 +1,11 @@
-import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
+import type { SandboxCommandWorkspaceTrust } from '../../sandbox/sandbox-command-policy.js'
+import type { SandboxAuthorizationContext } from '../../sandbox/sandbox-policy-model.js'
 import {
   DockerSandboxRunner,
   parseWorkspaceCommand,
   type SandboxRunner,
 } from '../sandbox/sandbox-runner.js'
+import type { RuntimeApproval, RuntimePolicySnapshot } from '../types.js'
 import {
   evaluateValidationCommandGate,
   type ValidationCommandGateResult,
@@ -26,7 +28,9 @@ export async function executeValidationCommand(
   cwd: string,
   policy: RuntimePolicySnapshot,
   approval: RuntimeApproval | undefined,
-  sandboxRunner: SandboxRunner = new DockerSandboxRunner(),
+  sandboxRunner?: SandboxRunner,
+  authorization?: SandboxAuthorizationContext,
+  workspaceTrust: SandboxCommandWorkspaceTrust = 'trusted-local',
 ): Promise<ValidationCommandExecutionResult> {
   const gateResult = evaluateValidationCommandGate(request, policy, approval)
 
@@ -73,9 +77,17 @@ export async function executeValidationCommand(
     }
   }
 
-  const result = await sandboxRunner.runCommand({
+  const runner =
+    sandboxRunner ??
+    new DockerSandboxRunner({
+      workspaceTrust,
+      ...(authorization === undefined ? {} : { authorization }),
+    })
+  const result = await runner.runCommand({
     ...parsedCommand,
     workspaceRoot: cwd,
+    workspaceTrust,
+    ...(authorization === undefined ? {} : { authorization }),
   })
 
   if (result.outcome === 'BLOCKED') {
@@ -115,26 +127,14 @@ export function renderValidationCommandExecutionResult(
     sections.push('', 'Block reasons:')
     sections.push(...result.gateResult.blockReasons.map((reason) => `- ${reason}`))
   }
-
   if (result.outcome === 'DRY_RUN') {
     sections.push('', 'Dry-run only. No command has been executed.')
   }
-
   if (result.outcome === 'EXECUTED') {
-    sections.push('', 'Approved validation command executed in the sandbox runner.')
+    sections.push('', 'Approved validation command executed through the sandbox broker.')
   }
-
-  if (result.stdout.length > 0) {
-    sections.push('', 'stdout:', result.stdout)
-  }
-
-  if (result.stderr.length > 0) {
-    sections.push('', 'stderr:', result.stderr)
-  }
-
-  if (result.error !== null) {
-    sections.push('', `Error: ${result.error}`)
-  }
-
+  if (result.stdout.length > 0) sections.push('', 'stdout:', result.stdout)
+  if (result.stderr.length > 0) sections.push('', 'stderr:', result.stderr)
+  if (result.error !== null) sections.push('', `Error: ${result.error}`)
   return sections.join('\n')
 }

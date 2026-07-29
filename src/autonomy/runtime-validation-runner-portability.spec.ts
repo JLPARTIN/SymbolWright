@@ -30,6 +30,7 @@ describe('RuntimeAutonomousValidationRunner portability', () => {
       repositoryRoot: path.join(repositoryRoot, 'services/api'),
       command: 'python -m pytest',
       policy: expect.objectContaining({ allowShell: true }),
+      workspaceTrust: 'trusted-local',
     })
     expect(result).toEqual({
       phase: 'test',

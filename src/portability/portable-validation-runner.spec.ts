@@ -1,33 +1,59 @@
-import { EventEmitter } from 'node:events'
-import { PassThrough } from 'node:stream'
+import { describe, expect, it, vi } from 'vitest'
 
-import { afterEach, describe, expect, it, vi } from 'vitest'
-
+import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../access/sandbox-capabilities.js'
 import {
   createDefaultRuntimePolicy,
   createRuntimePolicyForMode,
 } from '../runtime/policy/runtime-policy.js'
+import type {
+  SandboxCommandRequest,
+  SandboxRunner,
+  SandboxRunnerResult,
+} from '../sandbox/sandbox-command-backend.js'
+import type { SandboxAuthorizationContext } from '../sandbox/sandbox-policy-model.js'
 import {
+  commandProfileForPortableValidation,
   DockerPortableValidationRunner,
-  type PortableSpawn,
-  type PortableSpawnedProcess,
 } from './portable-validation-runner.js'
 
-class FakePortableProcess extends EventEmitter implements PortableSpawnedProcess {
-  readonly stdout = new PassThrough()
-  readonly stderr = new PassThrough()
-  readonly kill = vi.fn(() => true)
+const AUTHORIZATION: SandboxAuthorizationContext = {
+  deploymentMode: 'local',
+  callerKind: 'system',
+  runtimeMode: 'APPROVED_EXECUTION',
+  approvedCapabilityIds: [SANDBOX_OFFLINE_EXECUTE_CAPABILITY],
+  repositoryId: 'repository-1',
+  workspaceId: 'workspace-1',
+  intent: 'offline-execution',
 }
 
-afterEach(() => {
-  vi.restoreAllMocks()
-  vi.unstubAllEnvs()
-})
+function capturingRunner(
+  captured: SandboxCommandRequest[],
+  result: Partial<SandboxRunnerResult> = {},
+): SandboxRunner {
+  return {
+    runCommand: vi.fn(async (request): Promise<SandboxRunnerResult> => {
+      captured.push(request)
+      const resolved: SandboxRunnerResult = {
+        outcome: 'EXECUTED',
+        runner: 'docker',
+        command: [request.binary, ...request.args].join(' '),
+        stdout: 'completed',
+        stderr: '',
+        exitCode: 0,
+        reason: null,
+        ...result,
+      }
+      return resolved
+    }),
+  }
+}
 
 describe('DockerPortableValidationRunner', () => {
   it('blocks execution when shell policy is disabled', async () => {
-    const spawnProcess = vi.fn<PortableSpawn>()
-    const runner = new DockerPortableValidationRunner('docker', spawnProcess)
+    const captured: SandboxCommandRequest[] = []
+    const runner = new DockerPortableValidationRunner({
+      sandboxRunner: capturingRunner(captured),
+    })
 
     const result = await runner.run({
       repositoryRoot: '/tmp/repository',
@@ -40,12 +66,14 @@ describe('DockerPortableValidationRunner', () => {
       exitCode: null,
       reason: 'Shell execution is disabled by runtime policy.',
     })
-    expect(spawnProcess).not.toHaveBeenCalled()
+    expect(captured).toEqual([])
   })
 
   it('blocks commands outside the portable validation allowlist', async () => {
-    const spawnProcess = vi.fn<PortableSpawn>()
-    const runner = new DockerPortableValidationRunner('docker', spawnProcess)
+    const captured: SandboxCommandRequest[] = []
+    const runner = new DockerPortableValidationRunner({
+      sandboxRunner: capturingRunner(captured),
+    })
 
     const result = await runner.run({
       repositoryRoot: '/tmp/repository',
@@ -55,16 +83,19 @@ describe('DockerPortableValidationRunner', () => {
 
     expect(result.outcome).toBe('BLOCKED')
     expect(result.reason).toContain('not allowlisted')
-    expect(spawnProcess).not.toHaveBeenCalled()
+    expect(captured).toEqual([])
   })
 
-  it('runs an allowlisted command in the selected networkless image and redacts output', async () => {
-    const { child, spawnProcess } = completedProcess({
-      stdout: `completed with sk-${'a'.repeat(48)}`,
-      stderr: 'clean diagnostic',
-      code: 0,
+  it('routes an allowlisted command through the brokered command adapter', async () => {
+    const captured: SandboxCommandRequest[] = []
+    const runner = new DockerPortableValidationRunner({
+      sandboxRunner: capturingRunner(captured, {
+        stdout: 'completed with [REDACTED]',
+        stderr: 'clean diagnostic',
+      }),
+      authorization: AUTHORIZATION,
+      workspaceTrust: 'trusted-local',
     })
-    const runner = new DockerPortableValidationRunner('podman', spawnProcess)
 
     const result = await runner.run({
       repositoryRoot: '/tmp/repository',
@@ -81,55 +112,37 @@ describe('DockerPortableValidationRunner', () => {
       stderr: 'clean diagnostic',
     })
     expect(result.stdout).toContain('[REDACTED]')
-    expect(spawnProcess).toHaveBeenCalledWith(
-      'podman',
-      expect.arrayContaining([
-        'run',
-        '--network',
-        'none',
-        '--cap-drop=ALL',
-        'python:3.12-bookworm',
-        'python',
-        '-m',
-        'pytest',
-      ]),
-      { timeout: 5_000, stdio: ['ignore', 'pipe', 'pipe'] },
-    )
-    expect(child.kill).not.toHaveBeenCalled()
+    expect(captured).toEqual([
+      expect.objectContaining({
+        workspaceRoot: '/tmp/repository',
+        binary: 'python',
+        args: ['-m', 'pytest'],
+        profileId: 'trusted-local-portable-python',
+        authorization: AUTHORIZATION,
+        workspaceTrust: 'trusted-local',
+        timeoutMs: 5_000,
+      }),
+    ])
   })
 
-  it('uses configured Docker resource limits and binary overrides', async () => {
-    vi.stubEnv('SYMBOLWRIGHT_SANDBOX_DOCKER_BINARY', 'custom-docker')
-    vi.stubEnv('SYMBOLWRIGHT_SANDBOX_MEMORY', '512m')
-    vi.stubEnv('SYMBOLWRIGHT_SANDBOX_CPUS', '2')
-    const { spawnProcess } = completedProcess({ code: 0 })
-    const runner = new DockerPortableValidationRunner(undefined, spawnProcess)
+  it('selects only server-owned profiles for portable ecosystems', () => {
+    expect(commandProfileForPortableValidation('npm test')).toBe('trusted-local-portable-node')
+    expect(commandProfileForPortableValidation('go test ./...')).toBe('trusted-local-portable-go')
+    expect(commandProfileForPortableValidation('cargo test --all')).toBe(
+      'trusted-local-portable-rust',
+    )
+    expect(commandProfileForPortableValidation('composer validate --strict')).toBe(
+      'trusted-local-portable-php',
+    )
+  })
 
-    await runner.run({
-      repositoryRoot: '/tmp/repository',
-      command: 'composer validate --strict',
-      policy: createDefaultRuntimePolicy(),
+  it('reports a nonzero brokered command exit as a validation failure', async () => {
+    const runner = new DockerPortableValidationRunner({
+      sandboxRunner: capturingRunner([], {
+        exitCode: 2,
+        stderr: 'tests failed',
+      }),
     })
-
-    expect(spawnProcess).toHaveBeenCalledWith(
-      'custom-docker',
-      expect.arrayContaining([
-        '--memory',
-        '512m',
-        '--cpus',
-        '2',
-        'composer:2',
-        'composer',
-        'validate',
-        '--strict',
-      ]),
-      expect.any(Object),
-    )
-  })
-
-  it('reports a nonzero container exit as a validation failure', async () => {
-    const { spawnProcess } = completedProcess({ stderr: 'tests failed', code: 2 })
-    const runner = new DockerPortableValidationRunner('docker', spawnProcess)
 
     const result = await runner.run({
       repositoryRoot: '/tmp/repository',
@@ -140,13 +153,16 @@ describe('DockerPortableValidationRunner', () => {
     expect(result).toMatchObject({ outcome: 'FAIL', exitCode: 2, stderr: 'tests failed' })
   })
 
-  it('does not fall back to the host when the container runner is unavailable', async () => {
-    const child = new FakePortableProcess()
-    const spawnProcess = vi.fn<PortableSpawn>(() => {
-      queueMicrotask(() => child.emit('error', new Error('docker not found')))
-      return child
+  it('does not fall back to the host when the centralized backend is unavailable', async () => {
+    const runner = new DockerPortableValidationRunner({
+      sandboxRunner: capturingRunner([], {
+        outcome: 'BLOCKED',
+        stdout: '',
+        exitCode: null,
+        reason: 'Sandbox runner unavailable; host execution is not allowed. docker not found',
+        reasonCode: 'SANDBOX_COMMAND_BACKEND_UNAVAILABLE',
+      }),
     })
-    const runner = new DockerPortableValidationRunner('docker', spawnProcess)
 
     const result = await runner.run({
       repositoryRoot: '/tmp/repository',
@@ -156,12 +172,17 @@ describe('DockerPortableValidationRunner', () => {
 
     expect(result).toMatchObject({ outcome: 'ERROR', exitCode: null, stdout: '', stderr: '' })
     expect(result.reason).toContain('host execution is not allowed')
-    expect(result.reason).toContain('docker not found')
   })
 
-  it('kills and blocks a container that exceeds the bounded output limit', async () => {
-    const { child, spawnProcess } = completedProcess({ stdout: '0123456789', code: null })
-    const runner = new DockerPortableValidationRunner('docker', spawnProcess)
+  it('preserves centralized output-limit blocking', async () => {
+    const runner = new DockerPortableValidationRunner({
+      sandboxRunner: capturingRunner([], {
+        outcome: 'BLOCKED',
+        exitCode: null,
+        reason: 'Sandbox output limit exceeded.',
+        reasonCode: 'SANDBOX_COMMAND_OUTPUT_LIMIT',
+      }),
+    })
 
     const result = await runner.run({
       repositoryRoot: '/tmp/repository',
@@ -170,28 +191,10 @@ describe('DockerPortableValidationRunner', () => {
       maxOutputBytes: 4,
     })
 
-    expect(child.kill).toHaveBeenCalledWith('SIGKILL')
     expect(result).toMatchObject({
       outcome: 'BLOCKED',
       exitCode: null,
-      reason: 'Portable sandbox output limit exceeded.',
+      reason: 'Sandbox output limit exceeded.',
     })
   })
 })
-
-function completedProcess(input: {
-  readonly stdout?: string
-  readonly stderr?: string
-  readonly code: number | null
-}): { readonly child: FakePortableProcess; readonly spawnProcess: PortableSpawn } {
-  const child = new FakePortableProcess()
-  const spawnProcess = vi.fn<PortableSpawn>(() => {
-    queueMicrotask(() => {
-      if (input.stdout !== undefined) child.stdout.write(Buffer.from(input.stdout))
-      if (input.stderr !== undefined) child.stderr.write(Buffer.from(input.stderr))
-      child.emit('close', input.code)
-    })
-    return child
-  })
-  return { child, spawnProcess }
-}
