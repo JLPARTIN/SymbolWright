@@ -257,10 +257,10 @@ export function resolveEffectiveSandboxCommandPolicy(input: {
     limits: { timeoutMs, maxOutputBytes },
     controls: {
       shell: false as const,
-      readWriteRepositoryBind: true,
-      hostFallback: false,
-      dependencyAcquisition: false,
-      egress: false,
+      readWriteRepositoryBind: true as const,
+      hostFallback: false as const,
+      dependencyAcquisition: false as const,
+      egress: false as const,
     },
   }
   const policy: EffectiveSandboxCommandPolicy = Object.freeze({
