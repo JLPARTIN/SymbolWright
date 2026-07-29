@@ -283,8 +283,14 @@ describe('governed dependency policy', () => {
 
     expect(current.allowed).toBe(true)
     expect(current.policy?.sources[0]?.version).toBe(9)
-    expect(invalidRevision.allowed).toBe(true)
-    expect(unsafeRevision.allowed).toBe(true)
+    expect(invalidRevision).toMatchObject({
+      allowed: false,
+      reasonCode: 'DEPENDENCY_GLOBAL_POLICY_VERSION_INVALID',
+    })
+    expect(unsafeRevision).toMatchObject({
+      allowed: false,
+      reasonCode: 'DEPENDENCY_GLOBAL_POLICY_VERSION_INVALID',
+    })
   })
 
   it('rejects registries outside the exact operator-owned HTTPS path', () => {
