@@ -14,12 +14,16 @@ describe('sandbox network composition architecture', () => {
     expect(constructors).toEqual(['src/sandbox/sandbox-network-runtime.ts'])
   })
 
-  it('composes the workspace runtime before server and MCP work begins', () => {
+  it('composes the workspace runtime before server, MCP, and tool work begins', () => {
     const operationalBootstrap = readFileSync(
       path.resolve(process.cwd(), 'src/server/operational-bootstrap.ts'),
       'utf8',
     )
     const mcpCommand = readFileSync(path.resolve(process.cwd(), 'src/cli-mcp-server.ts'), 'utf8')
+    const authorizedToolExecution = readFileSync(
+      path.resolve(process.cwd(), 'src/runtime/tools/authorized-tool-execution.ts'),
+      'utf8',
+    )
 
     expect(operationalBootstrap).toContain('getOrCreateApplicationSandboxNetworkRuntime')
     expect(operationalBootstrap).toContain("setCheck(\n    'sandbox_network_gateway'")
@@ -27,6 +31,12 @@ describe('sandbox network composition architecture', () => {
     expect(mcpCommand.indexOf('getOrCreateApplicationSandboxNetworkRuntime')).toBeLessThan(
       mcpCommand.indexOf('runSymbolWrightMcpServer({'),
     )
+    expect(authorizedToolExecution).toContain(
+      'getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot: context.cwd })',
+    )
+    expect(
+      authorizedToolExecution.indexOf('getOrCreateApplicationSandboxNetworkRuntime'),
+    ).toBeLessThan(authorizedToolExecution.indexOf('return tool.execute(input, context)'))
   })
 
   it('does not weaken the strong-container network-none invariant', () => {
