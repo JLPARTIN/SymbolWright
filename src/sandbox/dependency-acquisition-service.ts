@@ -12,8 +12,8 @@ import {
   type DependencyFetchResult,
 } from './dependency-https-fetcher.js'
 import {
-  DependencyPolicyCatalog,
   resolveEffectiveDependencyPolicy,
+  type DependencyPolicyCatalog,
   type DependencyPolicyRequest,
   type EffectiveDependencyPolicy,
 } from './dependency-policy.js'
