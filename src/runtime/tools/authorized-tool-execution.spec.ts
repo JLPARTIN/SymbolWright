@@ -1,13 +1,22 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { runAuthorizedTool } from './authorized-tool-execution.js'
 import { createRuntimePolicyForMode } from '../policy/runtime-policy.js'
 import type { RuntimeToolContext, RuntimeToolDefinition, ToolAccessControl } from '../types.js'
+import { runAuthorizedTool } from './authorized-tool-execution.js'
 
 function bashTool(execute: RuntimeToolDefinition['execute']): RuntimeToolDefinition {
   return {
     name: 'bash',
     description: 'test bash tool',
+    capability: 'APPROVED_COMMAND',
+    execute,
+  }
+}
+
+function gitTool(execute: RuntimeToolDefinition['execute']): RuntimeToolDefinition {
+  return {
+    name: 'git',
+    description: 'test git tool',
     capability: 'APPROVED_COMMAND',
     execute,
   }
@@ -55,6 +64,54 @@ describe('runAuthorizedTool', () => {
     expect(execute).toHaveBeenCalledOnce()
   })
 
+  it('requires repo.commit.push in addition to baseline Git authority for push', async () => {
+    const requireAuthorized = vi.fn(async () => undefined)
+    const execute = vi.fn(async () => 'ok')
+    const metadata = { operation: 'push', args: ['origin', 'agent/topic'] }
+
+    await runAuthorizedTool(
+      gitTool(execute),
+      metadata,
+      contextWith({ principalId: 'p1', grantId: 'g1', requireAuthorized }),
+    )
+
+    expect(requireAuthorized).toHaveBeenNthCalledWith(1, 'repo.commit.create', 'git', metadata)
+    expect(requireAuthorized).toHaveBeenNthCalledWith(2, 'repo.commit.push', 'git', metadata)
+    expect(execute).toHaveBeenCalledOnce()
+  })
+
+  it('requires branch and content authority for checkout_new and add', async () => {
+    const requireAuthorized = vi.fn(async () => undefined)
+    const execute = vi.fn(async () => 'ok')
+    const accessControl: ToolAccessControl = {
+      principalId: 'p1',
+      grantId: 'g1',
+      requireAuthorized,
+    }
+
+    await runAuthorizedTool(
+      gitTool(execute),
+      { operation: 'checkout_new', args: ['agent/topic'] },
+      contextWith(accessControl),
+    )
+    await runAuthorizedTool(
+      gitTool(execute),
+      { operation: 'add', args: ['src/file.ts'] },
+      contextWith(accessControl),
+    )
+
+    expect(requireAuthorized).toHaveBeenCalledWith(
+      'repo.branch.create',
+      'git',
+      expect.objectContaining({ operation: 'checkout_new' }),
+    )
+    expect(requireAuthorized).toHaveBeenCalledWith(
+      'repo.content.update',
+      'git',
+      expect.objectContaining({ operation: 'add' }),
+    )
+  })
+
   it('does not run the tool when requireAuthorized rejects', async () => {
     const requireAuthorized = vi.fn(async () => {
       throw new Error('authorization_denied[COMMAND_NOT_ALLOWED]: nope')
@@ -73,6 +130,24 @@ describe('runAuthorizedTool', () => {
         contextWith(accessControl),
       ),
     ).rejects.toThrow('COMMAND_NOT_ALLOWED')
+    expect(execute).not.toHaveBeenCalled()
+  })
+
+  it('does not run git push when push-specific authority is denied', async () => {
+    const requireAuthorized = vi.fn(async (capability: string) => {
+      if (capability === 'repo.commit.push') {
+        throw new Error('authorization_denied[DIRECT_PUSH_DISABLED]: nope')
+      }
+    })
+    const execute = vi.fn(async () => 'ok')
+
+    await expect(
+      runAuthorizedTool(
+        gitTool(execute),
+        { operation: 'push', args: ['origin', 'agent/topic'] },
+        contextWith({ principalId: 'p1', grantId: 'g1', requireAuthorized }),
+      ),
+    ).rejects.toThrow('DIRECT_PUSH_DISABLED')
     expect(execute).not.toHaveBeenCalled()
   })
 
