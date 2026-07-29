@@ -30,11 +30,11 @@ describe('sandbox network composition architecture', () => {
   })
 
   it('does not weaken the strong-container network-none invariant', () => {
-    const backend = readFileSync(
-      path.resolve(process.cwd(), 'src/sandbox/sandbox-container-backend.ts'),
+    const commandPlan = readFileSync(
+      path.resolve(process.cwd(), 'src/sandbox/sandbox-container-command-plan.ts'),
       'utf8',
     )
-    expect(backend).toContain("'--network',\n    'none'")
+    expect(commandPlan).toContain("'--network',\n      'none'")
   })
 })
 
