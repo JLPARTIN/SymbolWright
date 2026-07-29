@@ -3,6 +3,10 @@ import { GovernanceStore, resolveGovernanceStorePath } from '../access/governanc
 import { grantMissingHostedDelegatedLimits } from '../access/hosted-limit-policy.js'
 import { ProviderConcurrencyGuard } from '../access/provider-concurrency-guard.js'
 import { MissionService } from '../mission/mission-service.js'
+import {
+  getOrCreateApplicationSandboxNetworkRuntime,
+  sandboxNetworkReadinessDetail,
+} from '../sandbox/sandbox-network-runtime.js'
 import type { ChatServerOptions } from './symbolwright-chat-server.js'
 import { runBootSweep } from './boot-sweep.js'
 import { DeploymentConfigError, resolveDeploymentSecurity } from './deployment-mode.js'
@@ -19,6 +23,7 @@ export async function prepareOperationalServerOptions(
 ): Promise<PreparedOperationalServer> {
   const security = resolveDeploymentSecurity(options)
   const workspaceRoot = options.cwd ?? process.cwd()
+  const env = options.env ?? process.env
   const missionService =
     options.missionService ??
     new MissionService({
@@ -29,6 +34,21 @@ export async function prepareOperationalServerOptions(
   const readinessRegistry = options.readinessRegistry ?? new ReadinessRegistry()
   const metricsRegistry = options.metricsRegistry ?? new MetricsRegistry()
   const concurrencyGuard = options.concurrencyGuard ?? new ProviderConcurrencyGuard()
+  const sandboxNetworkRuntime = getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot, env })
+  readinessRegistry.setCheck(
+    'sandbox_network_gateway',
+    true,
+    sandboxNetworkReadinessDetail(sandboxNetworkRuntime.status),
+  )
+  metricsRegistry.setGauge(
+    'sandbox_network_configured',
+    sandboxNetworkRuntime.status.mode === 'configured' ? 1 : 0,
+  )
+  metricsRegistry.setGauge(
+    'sandbox_dependency_policy_profiles',
+    sandboxNetworkRuntime.status.dependencyProfileCount,
+  )
+  metricsRegistry.setGauge('sandbox_egress_policy_profiles', sandboxNetworkRuntime.status.egressProfileCount)
 
   if (security.maxProviderConcurrency !== undefined) {
     concurrencyGuard.configurePool('provider', security.maxProviderConcurrency)
