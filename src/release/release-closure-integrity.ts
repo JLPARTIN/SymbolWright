@@ -38,8 +38,9 @@ const FORBIDDEN_RELEASE_FILENAME =
   /(?:^|[_-])(DO_NOT_MERGE|DRAFT_MARKER|TEMPORARY_FILE_MANIFEST)(?:[-_.]|$)/i
 const CONTENTS_WRITE_PATTERN = /^\s*contents:\s*write(?:\s+#.*)?$/m
 const PINNED_ACTION_REF_PATTERN = /^[0-9a-f]{40}$/i
-const AUDITED_SHA_PATTERN = /Audited code SHA:\s*`[0-9a-f]{40}`/
-const RELEASE_VERDICT_PATTERN = /Release verdict:\s*\*\*(PASS|FAIL|BLOCKED|NOT RUN)\*\*/
+const AUDITED_SHA_PATTERN = /\*{0,2}Audited code SHA:\*{0,2}\s*`[0-9a-f]{40}`/
+const RELEASE_VERDICT_PATTERN =
+  /\*{0,2}Release verdict:\*{0,2}\s*\*\*(PASS|FAIL|BLOCKED|NOT RUN)\*\*/
 
 /**
  * Verifies that a release candidate does not contain temporary audit machinery and that its final
