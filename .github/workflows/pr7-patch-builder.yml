@@ -4,10 +4,8 @@ on:
   push:
     branches:
       - symbolwright/sandbox-pr7-final-adversarial-audit
-
-concurrency:
-  group: pr7-patch-builder
-  cancel-in-progress: true
+    paths:
+      - .github/pr7-format-trigger
 
 permissions:
   contents: write
@@ -59,6 +57,7 @@ jobs:
 
           rm -rf .github/pr7-patches
           rm -f .github/pr7-patch-trigger
+          rm -f .github/pr7-format-trigger
           rm -f .github/workflows/pr7-patch-builder.yml
 
           git config user.name 'github-actions[bot]'
