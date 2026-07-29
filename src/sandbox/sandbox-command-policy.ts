@@ -4,7 +4,6 @@ import {
   SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
   canonicalSandboxCapabilityId,
 } from '../access/sandbox-capabilities.js'
-import { DEFAULT_SANDBOX_LIMITS } from './sandbox-limits.js'
 import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
 
 export const SANDBOX_COMMAND_POLICY_SCHEMA_VERSION = 1 as const
@@ -222,15 +221,16 @@ export function resolveEffectiveSandboxCommandPolicy(input: {
     )
   }
 
+  // This trusted-local compatibility path is governed by its server-owned command profile.
+  // Generic strong-sandbox defaults must not silently override that profile; callers, missions,
+  // and grants may still tighten the profile limits through minimum-only intersection.
   const timeoutMs = minimumPositive([
-    DEFAULT_SANDBOX_LIMITS.timeoutMs,
     profile.timeoutMs,
     input.authorization.grantLimits?.timeoutMs,
     input.authorization.missionLimits?.timeoutMs,
     input.request.timeoutMs,
   ])
   const maxOutputBytes = minimumPositive([
-    DEFAULT_SANDBOX_LIMITS.maxOutputBytes,
     profile.maxOutputBytes,
     input.authorization.grantLimits?.maxOutputBytes,
     input.authorization.missionLimits?.maxOutputBytes,
@@ -257,10 +257,10 @@ export function resolveEffectiveSandboxCommandPolicy(input: {
     limits: { timeoutMs, maxOutputBytes },
     controls: {
       shell: false as const,
-      readWriteRepositoryBind: true as const,
-      hostFallback: false as const,
-      dependencyAcquisition: false as const,
-      egress: false as const,
+      readWriteRepositoryBind: true,
+      hostFallback: false,
+      dependencyAcquisition: false,
+      egress: false,
     },
   }
   const policy: EffectiveSandboxCommandPolicy = Object.freeze({
