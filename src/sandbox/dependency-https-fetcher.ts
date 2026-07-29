@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { promises as dns } from 'node:dns'
+import { promises as dns, type LookupAddress } from 'node:dns'
 import https from 'node:https'
 import { BlockList, isIP, type LookupFunction } from 'node:net'
 
@@ -100,22 +100,20 @@ export class DependencyHttpsFetcher {
         )
       }
 
-      const resolved = await this.resolver.resolve(current.hostname)
+      const resolved = uniqueAddresses(await this.resolver.resolve(current.hostname))
       if (resolved.length === 0) {
         throw new DependencyFetchError(
           'DEPENDENCY_DNS_EMPTY',
           `Dependency registry hostname did not resolve: ${current.hostname}`,
         )
       }
-      const normalized = uniqueAddresses(resolved)
-      const forbidden = normalized.find((entry) => !isPublicDependencyAddress(entry))
-      if (forbidden !== undefined) {
+      if (resolved.some((entry) => !isPublicDependencyAddress(entry))) {
         throw new DependencyFetchError(
           'DEPENDENCY_DNS_DESTINATION_FORBIDDEN',
           `Dependency registry DNS included a forbidden destination class for ${current.hostname}.`,
         )
       }
-      const selected = normalized[0]
+      const selected = resolved[0]
       if (selected === undefined) {
         throw new DependencyFetchError(
           'DEPENDENCY_DNS_EMPTY',
@@ -147,16 +145,15 @@ export class DependencyHttpsFetcher {
             'Dependency registry redirect did not include a Location header.',
           )
         }
-        let redirected: URL
         try {
-          redirected = new URL(location, current)
-        } catch {
+          current = parseAuthorizedUrl(new URL(location, current).toString(), input.policy)
+        } catch (error) {
+          if (error instanceof DependencyFetchError) throw error
           throw new DependencyFetchError(
             'DEPENDENCY_REDIRECT_INVALID',
             'Dependency registry returned an invalid redirect URL.',
           )
         }
-        current = parseAuthorizedUrl(redirected.toString(), input.policy)
         continue
       }
 
@@ -172,7 +169,6 @@ export class DependencyHttpsFetcher {
           `Dependency response exceeded ${input.policy.limits.maxArchiveBytes} bytes.`,
         )
       }
-
       return {
         bytes: response.body,
         finalUrl: current.toString(),
@@ -194,7 +190,7 @@ export function isPublicDependencyAddress(value: DependencyResolvedAddress): boo
 
 class SystemDependencyDnsResolver implements DependencyDnsResolver {
   public async resolve(hostname: string): Promise<readonly DependencyResolvedAddress[]> {
-    let addresses: Awaited<ReturnType<typeof dns.lookup>>
+    let addresses: LookupAddress[]
     try {
       addresses = await dns.lookup(hostname, { all: true, verbatim: true })
     } catch (error) {
@@ -249,14 +245,13 @@ class NodeDependencyHttpsRequester implements DependencyHttpRequester {
             if (settled) return
             total += chunk.byteLength
             if (total > input.maxBytes) {
-              settled = true
-              request.destroy()
-              reject(
+              fail(
                 new DependencyFetchError(
                   'DEPENDENCY_RESPONSE_QUOTA_EXCEEDED',
                   `Dependency response exceeded ${input.maxBytes} bytes.`,
                 ),
               )
+              request.destroy()
               return
             }
             chunks.push(chunk)
