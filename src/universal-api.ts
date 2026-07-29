@@ -51,4 +51,11 @@ export type {
   SymbolWrightBrowserWorkspaceReadinessReport,
 } from './workspace/browser-workspace-contract.js'
 
+export { SandboxNetworkGateway } from './sandbox/sandbox-network-gateway.js'
+export type {
+  SandboxBrokeredEgressInput,
+  SandboxDependencyAcquisitionInput,
+  SandboxNetworkGatewayOptions,
+} from './sandbox/sandbox-network-gateway.js'
+
 export { renderUniversalApiContractCommand } from './cli-universal-api-contract.js'
