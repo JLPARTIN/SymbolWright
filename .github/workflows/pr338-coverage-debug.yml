@@ -1,0 +1,60 @@
+name: PR338 Dependency Coverage Debug
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-coverage:
+    if: github.event.pull_request.number == 338
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Setup Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate coverage
+        run: npm run test:coverage
+      - name: Print dependency coverage gaps
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs')
+          const path = require('node:path')
+          const coverage = JSON.parse(fs.readFileSync('coverage/coverage-final.json', 'utf8'))
+          const rows = []
+          for (const file of Object.values(coverage)) {
+            const base = path.basename(file.path)
+            if (!/(?:dependency|npm-)/.test(base) || !file.path.includes('/src/sandbox/')) continue
+            let total = 0
+            let covered = 0
+            const missed = []
+            for (const [id, hits] of Object.entries(file.b ?? {})) {
+              const locations = file.branchMap?.[id]?.locations ?? []
+              hits.forEach((hit, index) => {
+                total += 1
+                if (hit > 0) covered += 1
+                else {
+                  const line = locations[index]?.start?.line
+                  if (Number.isInteger(line)) missed.push(line)
+                }
+              })
+            }
+            rows.push({
+              file: base,
+              branches: `${covered}/${total}`,
+              pct: total === 0 ? 100 : Number(((covered / total) * 100).toFixed(2)),
+              missed: [...new Set(missed)].slice(0, 40).join(','),
+            })
+          }
+          rows.sort((a, b) => a.pct - b.pct || a.file.localeCompare(b.file))
+          console.table(rows)
+          NODE
