@@ -111,6 +111,13 @@ describe('dependency HTTPS fetcher', () => {
     expect(isPublicDependencyAddress({ address, family })).toBe(false)
   })
 
+  it('classifies family mismatches as invalid and public IPv6 destinations as allowed', () => {
+    expect(isPublicDependencyAddress({ address: '104.16.24.34', family: 6 })).toBe(false)
+    expect(isPublicDependencyAddress({ address: '2606:4700::6810:1822', family: 6 })).toBe(true)
+    expect(isPublicDependencyAddress({ address: '::ffff:104.16.24.34', family: 6 })).toBe(true)
+    expect(isPublicDependencyAddress({ address: '::ffff:6810:1822', family: 6 })).toBe(true)
+  })
+
   it('fails closed when DNS mixes public and private answers', async () => {
     const fetcher = new DependencyHttpsFetcher({
       resolver: resolver({
@@ -128,6 +135,26 @@ describe('dependency HTTPS fetcher', () => {
         policy: POLICY,
       }),
     ).rejects.toMatchObject({ code: 'DEPENDENCY_DNS_DESTINATION_FORBIDDEN' })
+  })
+
+  it('fails closed on empty DNS answers and rejected HTTP statuses', async () => {
+    const emptyDns = new DependencyHttpsFetcher({
+      resolver: resolver({}),
+      requester: requester([]),
+    })
+    await expect(
+      emptyDns.fetch({ url: 'https://registry.npmjs.org/archive.tgz', policy: POLICY }),
+    ).rejects.toMatchObject({ code: 'DEPENDENCY_DNS_EMPTY' })
+
+    const rejectedStatus = new DependencyHttpsFetcher({
+      resolver: resolver({
+        'registry.npmjs.org': [{ address: '104.16.24.34', family: 4 }],
+      }),
+      requester: requester([response(503)]),
+    })
+    await expect(
+      rejectedStatus.fetch({ url: 'https://registry.npmjs.org/archive.tgz', policy: POLICY }),
+    ).rejects.toMatchObject({ code: 'DEPENDENCY_HTTP_STATUS_REJECTED' })
   })
 
   it('re-runs URL and DNS policy for every redirect', async () => {
@@ -151,6 +178,58 @@ describe('dependency HTTPS fetcher', () => {
     expect(http.get).toHaveBeenCalledTimes(2)
   })
 
+  it('handles array redirect headers and deterministically sorts deduplicated addresses', async () => {
+    const http = requester([
+      response(302, Buffer.alloc(0), { location: ['/archive.tgz'] }),
+      response(200, Buffer.from('archive')),
+    ])
+    const fetcher = new DependencyHttpsFetcher({
+      resolver: resolver({
+        'registry.npmjs.org': [
+          { address: '2606:4700::6810:1822', family: 6 },
+          { address: '104.16.25.34', family: 4 },
+          { address: '104.16.24.34', family: 4 },
+          { address: '104.16.24.34', family: 4 },
+        ],
+      }),
+      requester: http,
+    })
+
+    const result = await fetcher.fetch({
+      url: 'https://registry.npmjs.org/start#ignored',
+      policy: POLICY,
+    })
+
+    expect(result.finalUrl).toBe('https://registry.npmjs.org/archive.tgz')
+    expect(http.get).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        pinnedAddress: { address: '104.16.24.34', family: 4 },
+      }),
+    )
+  })
+
+  it('rejects redirects without a location and malformed redirect targets', async () => {
+    const publicResolver = resolver({
+      'registry.npmjs.org': [{ address: '104.16.24.34', family: 4 }],
+    })
+    const missingLocation = new DependencyHttpsFetcher({
+      resolver: publicResolver,
+      requester: requester([response(302)]),
+    })
+    await expect(
+      missingLocation.fetch({ url: 'https://registry.npmjs.org/start', policy: POLICY }),
+    ).rejects.toMatchObject({ code: 'DEPENDENCY_REDIRECT_INVALID' })
+
+    const malformedLocation = new DependencyHttpsFetcher({
+      resolver: publicResolver,
+      requester: requester([response(302, Buffer.alloc(0), { location: 'https://[' })]),
+    })
+    await expect(
+      malformedLocation.fetch({ url: 'https://registry.npmjs.org/start', policy: POLICY }),
+    ).rejects.toMatchObject({ code: 'DEPENDENCY_REDIRECT_INVALID' })
+  })
+
   it('rejects redirect pivots outside the registry policy', async () => {
     const http = requester([
       response(302, Buffer.alloc(0), { location: 'https://evil.example/archive.tgz' }),
@@ -167,10 +246,14 @@ describe('dependency HTTPS fetcher', () => {
     ).rejects.toMatchObject({ code: 'DEPENDENCY_URL_NOT_ALLOWED' })
   })
 
-  it('rejects direct IP, embedded credentials, non-HTTPS, and alternate ports', async () => {
+  it('rejects malformed, direct-IP, credentialed, non-HTTPS, and alternate-port URLs', async () => {
     const fetcher = new DependencyHttpsFetcher({
       resolver: resolver({}),
       requester: requester([]),
+    })
+
+    await expect(fetcher.fetch({ url: 'not a URL', policy: POLICY })).rejects.toMatchObject({
+      code: 'DEPENDENCY_URL_INVALID',
     })
 
     for (const url of [
@@ -185,10 +268,34 @@ describe('dependency HTTPS fetcher', () => {
     }
   })
 
-  it('enforces request, response, and redirect quotas', async () => {
+  it('enforces request, response, redirect, and wall-time quotas', async () => {
     const publicResolver = resolver({
       'registry.npmjs.org': [{ address: '104.16.24.34', family: 4 }],
     })
+    const noRequests = requester([])
+    const requestLimited = new DependencyHttpsFetcher({
+      resolver: publicResolver,
+      requester: noRequests,
+    })
+    await expect(
+      requestLimited.fetch({
+        url: 'https://registry.npmjs.org/archive.tgz',
+        policy: { ...POLICY, limits: { ...POLICY.limits, maxRequests: 0 } },
+      }),
+    ).rejects.toMatchObject({ code: 'DEPENDENCY_REQUEST_QUOTA_EXCEEDED' })
+    expect(noRequests.get).not.toHaveBeenCalled()
+
+    const timeoutLimited = new DependencyHttpsFetcher({
+      resolver: publicResolver,
+      requester: noRequests,
+    })
+    await expect(
+      timeoutLimited.fetch({
+        url: 'https://registry.npmjs.org/archive.tgz',
+        policy: { ...POLICY, limits: { ...POLICY.limits, timeoutMs: 0 } },
+      }),
+    ).rejects.toMatchObject({ code: 'DEPENDENCY_FETCH_TIMEOUT' })
+
     const redirecting = new DependencyHttpsFetcher({
       resolver: publicResolver,
       requester: requester([
@@ -230,5 +337,31 @@ describe('dependency HTTPS fetcher', () => {
       }),
     ).rejects.toMatchObject({ code: 'DEPENDENCY_FETCH_CANCELLED' })
     expect(http.get).not.toHaveBeenCalled()
+  })
+
+  it('passes cancellation authority to transport and rechecks it after the response', async () => {
+    const controller = new AbortController()
+    const get = vi.fn(
+      async (input: Parameters<DependencyHttpRequester['get']>[0]): Promise<DependencyHttpResponse> => {
+        expect(input.signal).toBe(controller.signal)
+        controller.abort()
+        return response(200, Buffer.from('must-not-return'))
+      },
+    )
+    const fetcher = new DependencyHttpsFetcher({
+      resolver: resolver({
+        'registry.npmjs.org': [{ address: '104.16.24.34', family: 4 }],
+      }),
+      requester: { get },
+    })
+
+    await expect(
+      fetcher.fetch({
+        url: 'https://registry.npmjs.org/archive.tgz',
+        policy: POLICY,
+        signal: controller.signal,
+      }),
+    ).rejects.toMatchObject({ code: 'DEPENDENCY_FETCH_CANCELLED' })
+    expect(get).toHaveBeenCalledTimes(1)
   })
 })
