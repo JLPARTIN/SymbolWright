@@ -36,7 +36,7 @@ describe('npm tarball inspector', () => {
     expect(report.fileCount).toBe(2)
     expect(report.expandedBytes).toBeGreaterThan(0)
     expect(report.entries).toEqual([
-      { path: 'package/', type: 'directory', size: 0 },
+      { path: 'package', type: 'directory', size: 0 },
       {
         path: 'package/package.json',
         type: 'file',
