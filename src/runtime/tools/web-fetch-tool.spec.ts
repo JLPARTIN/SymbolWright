@@ -60,7 +60,7 @@ describe('web-fetch-tool', () => {
     expect(output).toContain('Title: Local Docs')
   })
 
-  it('works in READ_ONLY mode by default (read-only network is always on)', async () => {
+  it('works in READ_ONLY mode for the trusted local operator', async () => {
     const output = await executeWebFetchTool({ url: `${baseUrl}/` }, contextFor('READ_ONLY'))
     expect(output).toContain('Status: ok')
   })
@@ -71,6 +71,20 @@ describe('web-fetch-tool', () => {
       contextFor('APPROVED_EXECUTION'),
     )
     expect(output).toContain('Status: ok')
+  })
+
+  it('denies delegated callers so direct research network cannot bypass brokered egress', async () => {
+    const delegated: RuntimeToolContext = {
+      ...contextFor('APPROVED_EXECUTION'),
+      accessControl: {
+        principalId: 'principal-1',
+        grantId: 'grant-1',
+        requireAuthorized: async () => undefined,
+      },
+    }
+    await expect(
+      executeWebFetchTool({ url: `${baseUrl}/` }, delegated),
+    ).rejects.toThrow(/BROKERED_EGRESS_REQUIRED/)
   })
 
   it('rejects missing url before touching the network', async () => {
