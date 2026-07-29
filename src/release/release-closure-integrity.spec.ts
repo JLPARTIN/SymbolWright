@@ -73,6 +73,23 @@ describe('assessReleaseClosureIntegrity', () => {
     )
   })
 
+  it('fails when the final audit verdict is not PASS', () => {
+    const workspace = createWorkspace()
+    const auditPath = path.join(workspace, FINAL_SANDBOX_AUDIT_RELATIVE_PATH)
+    const content = fs.readFileSync(auditPath, 'utf8').replace(
+      'Release verdict: **PASS**',
+      'Release verdict: **BLOCKED**',
+    )
+    fs.writeFileSync(auditPath, content)
+
+    const report = assessReleaseClosureIntegrity(workspace)
+
+    expect(report.status).toBe('FAIL')
+    expect(report.findings).toContain(
+      'Final sandbox adversarial audit release verdict is BLOCKED, not PASS',
+    )
+  })
+
   it('fails when temporary PR audit residue remains', () => {
     const workspace = createWorkspace()
     const marker = path.join(workspace, 'docs', 'security', 'PR7_DO_NOT_MERGE.md')
