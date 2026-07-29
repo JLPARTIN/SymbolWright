@@ -6,6 +6,17 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ### Added
 
+- **Governed npm dependency acquisition (Sandbox Bundle PR 5/7)**: adds lockfile-bound immutable
+  planning, operator-owned policy profiles, bounded HTTPS retrieval, integrity verification,
+  tarball inspection, lifecycle-script suppression, content-addressed caching, live policy
+  revocation, cancellation, quotas, and mandatory durable redacted evidence while strong execution
+  containers remain offline.
+
+- **Policy-profile brokered HTTPS egress (Sandbox Bundle PR 6/7)**: adds operator-owned allowlists,
+  address-pinned TLS, DNS/CNAME/redirect SSRF controls, request and byte quotas, cancellation, live
+  kill switches and policy revisions, redacted append-only audit evidence, metrics, and a production
+  `SandboxNetworkGateway` package boundary without enabling container bridge networking.
+
 - **Strong offline container executor (Sandbox Bundle PR 3/7)**: adds an opt-in,
   digest-pinned JavaScript container runner with normal-execution `--pull=never`, physical
   `--network none`, a read-only root filesystem, numeric non-root execution, dropped Linux
@@ -22,7 +33,21 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
   global emergency disable switch, and one redacted evidence boundary. This slice does not add
   dependency downloads, container networking, or runtime egress.
 
+### Changed
+
+- **Authoritative execution caller migration (Sandbox Bundle PR 4/7)**: routes Bash, validation,
+  portability, autonomy, MCP, Git, and related structured command callers through the sandbox
+  broker and reduces the legacy runtime Docker runner to a brokered compatibility adapter.
+
 ### Fixed
+
+- **Sandbox final adversarial audit and release-truth closure (Sandbox Bundle PR 7/7 and correction
+  PR #342)**: fixes mandatory dependency evidence failure handling, request audit coverage,
+  post-DNS cancellation and policy-revision checks, secure audit-directory ancestry, and production
+  network-gateway construction; removes all temporary PR #7 markers, triggers, source-export and
+  self-modifying workflows, workplans, and draft ledgers; adds the exact-revision final audit plus a
+  release-closure gate that rejects temporary residue, missing or non-PASS audit evidence, unpinned
+  Action references, and `contents: write` workflows.
 
 - **Sandbox guarded-host truth boundary (Sandbox Bundle PR 1/7)**: reclassifies
   guarded-host as trusted local operator break-glass execution rather than a strong sandbox,
