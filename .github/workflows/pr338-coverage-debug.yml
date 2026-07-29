@@ -23,14 +23,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Format coverage tests
-        run: npx prettier --write src/sandbox/dependency-https-fetcher.spec.ts src/sandbox/npm-tarball-inspector.spec.ts
-      - name: Run focused hostile-input tests
-        run: npx vitest run src/sandbox/dependency-https-fetcher.spec.ts src/sandbox/npm-tarball-inspector.spec.ts --reporter=verbose
+        run: |
+          npx prettier --write \
+            src/sandbox/dependency-https-fetcher.spec.ts \
+            src/sandbox/dependency-policy.spec.ts \
+            src/sandbox/npm-tarball-inspector.spec.ts
+      - name: Run focused dependency boundary tests
+        run: |
+          npx vitest run \
+            src/sandbox/dependency-https-fetcher.spec.ts \
+            src/sandbox/dependency-policy.spec.ts \
+            src/sandbox/npm-tarball-inspector.spec.ts \
+            --reporter=verbose
       - name: Verify full coverage gate
         run: npm run test:coverage
       - name: Commit verified coverage tests
         run: |
-          git add src/sandbox/dependency-https-fetcher.spec.ts src/sandbox/npm-tarball-inspector.spec.ts
+          git add \
+            src/sandbox/dependency-https-fetcher.spec.ts \
+            src/sandbox/dependency-policy.spec.ts \
+            src/sandbox/npm-tarball-inspector.spec.ts
           if git diff --cached --quiet; then
             echo "No formatting changes remain."
             exit 0
