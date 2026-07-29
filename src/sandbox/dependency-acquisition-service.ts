@@ -3,14 +3,8 @@ import { promises as fs } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-import {
-  DependencyArtifactCache,
-  type DependencyCacheEntry,
-} from './dependency-artifact-cache.js'
-import {
-  DependencyHttpsFetcher,
-  type DependencyFetchResult,
-} from './dependency-https-fetcher.js'
+import { DependencyArtifactCache, type DependencyCacheEntry } from './dependency-artifact-cache.js'
+import { DependencyHttpsFetcher, type DependencyFetchResult } from './dependency-https-fetcher.js'
 import {
   resolveEffectiveDependencyPolicy,
   type DependencyPolicyCatalog,
@@ -111,8 +105,7 @@ export class DependencyAcquisitionService {
       options.stateRoot ?? path.join(os.tmpdir(), 'symbolwright-dependency-acquisition'),
     )
     this.cache =
-      options.cache ??
-      new DependencyArtifactCache({ root: path.join(this.stateRoot, 'cache') })
+      options.cache ?? new DependencyArtifactCache({ root: path.join(this.stateRoot, 'cache') })
     this.fetcher = options.fetcher ?? new DependencyHttpsFetcher()
     this.now = options.now ?? (() => new Date())
     this.generateAcquisitionId =
