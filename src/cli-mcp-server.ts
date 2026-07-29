@@ -1,6 +1,10 @@
 import { runSymbolWrightMcpServer } from './mcp/mcp-server.js'
 import { normalizeSymbolWrightRuntimeMode } from './runtime/policy/runtime-policy.js'
 import type { SymbolWrightRuntimeMode } from './runtime/types.js'
+import {
+  getOrCreateApplicationSandboxNetworkRuntime,
+  sandboxNetworkReadinessDetail,
+} from './sandbox/sandbox-network-runtime.js'
 
 /**
  * Deliberately more conservative than `DEFAULT_SYMBOLWRIGHT_RUNTIME_MODE`
@@ -57,9 +61,15 @@ export async function runMcpServerCommand(
   cwd: string = process.cwd(),
 ): Promise<void> {
   const { mode } = parseMcpServerArgs(args)
+  const sandboxNetworkRuntime = getOrCreateApplicationSandboxNetworkRuntime({
+    workspaceRoot: cwd,
+    env: process.env,
+  })
 
   // stdout is the JSON-RPC wire — all diagnostics must go to stderr.
-  console.error(`SymbolWright MCP server starting in ${mode} mode (stdio)`)
+  console.error(
+    `SymbolWright MCP server starting in ${mode} mode (stdio); sandbox network gateway: ${sandboxNetworkReadinessDetail(sandboxNetworkRuntime.status)}`,
+  )
 
   const agentToken = optionalEnvironmentValue('SYMBOLWRIGHT_AGENT_TOKEN')
   const repository = optionalEnvironmentValue('SYMBOLWRIGHT_MCP_REPOSITORY')
