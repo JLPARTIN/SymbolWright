@@ -147,7 +147,7 @@ function verifyWorkflowIntegrity(root: string, findings: string[]): void {
 function actionReferences(content: string): readonly string[] {
   const references: string[] = []
   for (const line of content.split(/\r?\n/)) {
-    const match = /^\s*uses:\s*(.+?)\s*$/.exec(line)
+    const match = /^\s*(?:-\s*)?uses:\s*(.+?)\s*$/.exec(line)
     if (match === null) continue
     const withoutComment = (match[1] ?? '').replace(/\s+#.*$/, '').trim()
     const unquoted = withoutComment.replace(/^(['"])(.*)\1$/, '$2')
