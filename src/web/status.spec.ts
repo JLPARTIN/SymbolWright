@@ -59,6 +59,7 @@ Runtime phases: complete
 Tool registry: complete
 Provider gateway: configured
 Sandbox readiness: ready
+Sandbox egress: dependency-only
 Session directory: present
 Project memory: ready`)
     const release = script('Outcome: RELEASE_READY')
@@ -67,8 +68,9 @@ Project memory: ready`)
 
     expect(view.overallState).toBe('pass')
     expect(Number.isNaN(Date.parse(view.generatedAt))).toBe(false)
-    expect(view.cards).toHaveLength(8)
+    expect(view.cards).toHaveLength(9)
     expect(view.cards.map((card) => card.label)).toContain('Project memory')
+    expect(view.cards.map((card) => card.label)).toContain('Sandbox egress')
     expect(view.scripts).toEqual([doctor, release])
   })
 })

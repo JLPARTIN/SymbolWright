@@ -76,6 +76,15 @@ describe('runDoctor', () => {
     expect(readinessCheck?.status).not.toBe('FAIL')
   })
 
+  it('reports brokered egress state without enabling direct sandbox networking', () => {
+    const report = runDoctor(WORKSPACE)
+    const egressCheck = report.checks.find((check) => check.name === 'Sandbox egress')
+
+    expect(egressCheck).toBeDefined()
+    expect(egressCheck?.status).not.toBe('FAIL')
+    expect(egressCheck?.detail).toMatch(/^(dependency-only|disabled|allowlisted):/)
+  })
+
   it('detects missing workspace', () => {
     const report = runDoctor('/nonexistent/path')
 
@@ -107,6 +116,7 @@ describe('renderDoctorReport', () => {
 
     expect(output).toContain('Sandbox configuration')
     expect(output).toContain('Sandbox readiness')
+    expect(output).toContain('Sandbox egress')
     expect(output).toContain('network=none')
   })
 })

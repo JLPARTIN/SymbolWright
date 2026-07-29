@@ -1,0 +1,27 @@
+[
+  {
+    "id": "runtime-api",
+    "version": 1,
+    "enabled": false,
+    "deploymentModes": ["local", "hosted"],
+    "callerKinds": ["operator", "delegated-grant"],
+    "allowedHosts": ["api.example.com"],
+    "allowedMethods": ["GET", "HEAD", "POST"],
+    "allowedRequestHeaders": ["accept", "content-type", "x-request-id"],
+    "allowedPorts": [443],
+    "redirectPolicy": "same-host",
+    "credentialPolicy": "none",
+    "requireTls": true,
+    "auditRetentionDays": 30,
+    "limits": {
+      "maxRequests": 16,
+      "maxRequestBytes": 1048576,
+      "maxResponseBytes": 8388608,
+      "maxTotalSentBytes": 4194304,
+      "maxTotalReceivedBytes": 33554432,
+      "timeoutMs": 60000,
+      "maxConcurrency": 2,
+      "maxRedirects": 2
+    }
+  }
+]

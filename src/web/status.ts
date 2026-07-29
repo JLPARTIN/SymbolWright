@@ -94,6 +94,12 @@ export function buildRuntimeStatusView(
       value: extractValue(doctor.output, /Sandbox readiness:\s*([^\n]+)/i),
       state: doctorState,
     },
+
+    {
+      label: 'Sandbox egress',
+      value: extractValue(doctor.output, /Sandbox egress:\s*([^\n]+)/i),
+      state: doctorState,
+    },
     {
       label: 'Session directory',
       value: extractValue(doctor.output, /Session directory:\s*([^\n]+)/i),
