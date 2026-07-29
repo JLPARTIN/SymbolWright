@@ -1,0 +1,44 @@
+name: PR7 Security Fix Builder
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply-security-fixes:
+    if: github.head_ref == 'symbolwright/sandbox-pr7-final-adversarial-audit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Apply staged security corrections
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          patches=(.github/pr7-patches/*.patch)
+          if (( ${#patches[@]} == 0 )); then
+            echo 'No staged PR 7 patches remain.'
+            exit 0
+          fi
+          for patch in "${patches[@]}"; do
+            git apply --check "$patch"
+          done
+          for patch in "${patches[@]}"; do
+            git apply "$patch"
+          done
+          rm -rf .github/pr7-patches
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'security(sandbox): close adversarial audit findings'
+          git push origin HEAD:${{ github.head_ref }}
