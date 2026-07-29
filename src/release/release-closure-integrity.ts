@@ -1,4 +1,4 @@
-import fs from 'node:fs'
+import fs, { type Dirent } from 'node:fs'
 import path from 'node:path'
 
 export const FINAL_SANDBOX_AUDIT_RELATIVE_PATH = path.join(
@@ -46,7 +46,9 @@ const RELEASE_VERDICT_PATTERN = /Release verdict:\s*\*\*(PASS|FAIL|BLOCKED|NOT R
  * Verifies that a release candidate does not contain temporary audit machinery and that its final
  * security evidence is present, exact-revision-bound, and backed by immutable workflow actions.
  */
-export function assessReleaseClosureIntegrity(workspaceRoot: string): ReleaseClosureIntegrityReport {
+export function assessReleaseClosureIntegrity(
+  workspaceRoot: string,
+): ReleaseClosureIntegrityReport {
   const findings: string[] = []
   const root = path.resolve(workspaceRoot)
 
@@ -83,7 +85,9 @@ function findTemporaryReleaseArtifacts(root: string, findings: string[]): void {
 function verifyFinalSandboxAudit(root: string, findings: string[]): void {
   const auditPath = path.join(root, FINAL_SANDBOX_AUDIT_RELATIVE_PATH)
   if (!isFile(auditPath)) {
-    findings.push(`Final sandbox adversarial audit is missing: ${FINAL_SANDBOX_AUDIT_RELATIVE_PATH}`)
+    findings.push(
+      `Final sandbox adversarial audit is missing: ${FINAL_SANDBOX_AUDIT_RELATIVE_PATH}`,
+    )
     return
   }
 
@@ -91,15 +95,23 @@ function verifyFinalSandboxAudit(root: string, findings: string[]): void {
   try {
     content = fs.readFileSync(auditPath, 'utf8')
   } catch {
-    findings.push(`Final sandbox adversarial audit cannot be read: ${FINAL_SANDBOX_AUDIT_RELATIVE_PATH}`)
+    findings.push(
+      `Final sandbox adversarial audit cannot be read: ${FINAL_SANDBOX_AUDIT_RELATIVE_PATH}`,
+    )
     return
   }
 
   if (!AUDITED_SHA_PATTERN.test(content)) {
-    findings.push('Final sandbox adversarial audit does not record an exact 40-character audited code SHA')
+    findings.push(
+      'Final sandbox adversarial audit does not record an exact 40-character audited code SHA',
+    )
   }
-  if (!RELEASE_VERDICT_PATTERN.test(content)) {
+
+  const verdict = RELEASE_VERDICT_PATTERN.exec(content)?.[1]
+  if (verdict === undefined) {
     findings.push('Final sandbox adversarial audit does not record a valid release verdict')
+  } else if (verdict !== 'PASS') {
+    findings.push(`Final sandbox adversarial audit release verdict is ${verdict}, not PASS`)
   }
 }
 
@@ -151,7 +163,7 @@ function isImmutableActionReference(reference: string): boolean {
   return PINNED_ACTION_REF_PATTERN.test(reference.slice(separator + 1))
 }
 
-function readDirectory(directory: string): readonly fs.Dirent[] {
+function readDirectory(directory: string): readonly Dirent[] {
   try {
     return fs.readdirSync(directory, { withFileTypes: true })
   } catch {
