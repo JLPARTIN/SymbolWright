@@ -62,9 +62,9 @@ describe('npm tarball inspector', () => {
       inspectNpmTarball(archive, { ...LIMITS, maxArchiveBytes: archive.byteLength - 1 }),
     ).toThrowError(expect.objectContaining({ code: 'DEPENDENCY_ARCHIVE_QUOTA_EXCEEDED' }))
 
-    expect(() =>
-      inspectNpmTarball(archive, { ...LIMITS, maxExpandedBytes: 1_200 }),
-    ).toThrowError(expect.objectContaining({ code: 'DEPENDENCY_EXPANDED_QUOTA_EXCEEDED' }))
+    expect(() => inspectNpmTarball(archive, { ...LIMITS, maxExpandedBytes: 1_200 })).toThrowError(
+      expect.objectContaining({ code: 'DEPENDENCY_EXPANDED_QUOTA_EXCEEDED' }),
+    )
   })
 
   it('rejects invalid gzip and unaligned tar streams', () => {

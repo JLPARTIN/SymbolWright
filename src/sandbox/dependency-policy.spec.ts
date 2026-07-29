@@ -191,7 +191,8 @@ describe('governed dependency policy', () => {
         },
       }),
     })
-    const { [PROFILE.id]: omitted, ...incompleteVersions } = authorization().approval!.policyVersions
+    const { [PROFILE.id]: omitted, ...incompleteVersions } =
+      authorization().approval!.policyVersions
     void omitted
     const incomplete = resolve({
       authorization: authorization({
@@ -324,9 +325,14 @@ describe('governed dependency policy', () => {
     )
     expect(isUrlAllowedByRegistryPolicy('https://127.0.0.1/private/pkg.tgz', allowed)).toBe(false)
     expect(
-      isUrlAllowedByRegistryPolicy('https://user:secret@registry.npmjs.org/private/pkg.tgz', allowed),
+      isUrlAllowedByRegistryPolicy(
+        'https://user:secret@registry.npmjs.org/private/pkg.tgz',
+        allowed,
+      ),
     ).toBe(false)
-    expect(isUrlAllowedByRegistryPolicy('https://evil.example/private/pkg.tgz', allowed)).toBe(false)
+    expect(isUrlAllowedByRegistryPolicy('https://evil.example/private/pkg.tgz', allowed)).toBe(
+      false,
+    )
     expect(isUrlAllowedByRegistryPolicy('https://registry.npmjs.org/public/pkg.tgz', allowed)).toBe(
       false,
     )

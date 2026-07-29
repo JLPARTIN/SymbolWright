@@ -342,7 +342,9 @@ describe('dependency HTTPS fetcher', () => {
   it('passes cancellation authority to transport and rechecks it after the response', async () => {
     const controller = new AbortController()
     const get = vi.fn(
-      async (input: Parameters<DependencyHttpRequester['get']>[0]): Promise<DependencyHttpResponse> => {
+      async (
+        input: Parameters<DependencyHttpRequester['get']>[0],
+      ): Promise<DependencyHttpResponse> => {
         expect(input.signal).toBe(controller.signal)
         controller.abort()
         return response(200, Buffer.from('must-not-return'))
