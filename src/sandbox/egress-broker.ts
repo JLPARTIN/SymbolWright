@@ -400,7 +400,7 @@ export class SandboxEgressSession {
     let current = auditUrl
     let method = auditRequestMethod
     let headers: Readonly<Record<string, string>> = Object.freeze({})
-    let currentBody = new Uint8Array()
+    let currentBody: Uint8Array = new Uint8Array()
     let hopCount = 0
     let operationRequestCount = 0
     let operationSent = 0
