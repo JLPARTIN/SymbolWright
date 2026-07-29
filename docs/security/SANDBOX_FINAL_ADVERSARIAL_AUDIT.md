@@ -4,6 +4,7 @@
 **Repository:** `JLPARTIN/SymbolWright`  
 **Sandbox bundle base:** `7990209993ed891efa3e5cfdd83adfd2434929dd`  
 **Audited code SHA:** `c8cac044fdc78e0642015de5faaf0d171830a87f`  
+**Correction validation head:** `70efb83e1976be723ea04f6421a01e40b4b7190b`  
 **Release verdict:** **PASS**
 
 ## 1. Scope and evidence rules
@@ -69,7 +70,7 @@ The exact PR #341 merge input completed the following GitHub Actions workflows s
 - Dependency Review
 - PR7 Source Export, which was temporary and has now been removed
 
-The CI job reported:
+The PR #341 CI job reported:
 
 - 561 passing test files and 1 skipped file;
 - 4,259 passing tests and 6 skipped tests;
@@ -78,6 +79,24 @@ The CI job reported:
 - 92.91% function coverage;
 - 88.71% line coverage;
 - successful TypeScript, ESLint, Prettier, build, preflight, npm audit, package smoke, and Docker smoke gates.
+
+The release-truth correction was then fully validated at PR head `70efb83e1976be723ea04f6421a01e40b4b7190b`:
+
+- CI / Validate SymbolWright: **PASS**;
+- CodeQL: **PASS**;
+- Dependency Review: **PASS**;
+- PR preflight: **PASS**;
+- full `npm run validate`: **PASS**;
+- strong-container adversarial integration: **PASS**;
+- release-closure regression tests: **PASS**.
+
+The correction CI reported:
+
+- 87.67% statement coverage;
+- 80.06% branch coverage;
+- 92.91% function coverage;
+- 88.69% line coverage;
+- no failing test files.
 
 The dedicated strong-container integration proved:
 
@@ -90,11 +109,11 @@ The release-truth correction adds focused regression coverage for:
 
 - missing final audit evidence;
 - temporary PR audit residue;
-- moving GitHub Action tags;
+- moving GitHub Action tags, including list-style `- uses:` workflow steps;
 - unexpected `contents: write` workflow permissions;
 - non-PASS audit verdicts.
 
-The correction PR must re-run the full repository validation before merge. Until those branch checks complete, this document's source verdict is PASS and its post-correction CI evidence is pending at the pull-request level.
+Validation evidence is bound to the correction validation head above. Any later commit must re-run CI, CodeQL, and Dependency Review successfully before merge.
 
 ## 6. Release-closure enforcement
 
@@ -125,4 +144,4 @@ The seven-part sandbox implementation is accepted for SymbolWright's documented 
 
 **Release verdict:** **PASS**
 
-The correction PR itself must remain unmerged until its CI, CodeQL, and Dependency Review checks are green and the changed-file review confirms that no temporary audit machinery remains.
+The correction PR must not merge unless its current head has green CI, CodeQL, and Dependency Review checks and changed-file review confirms that no temporary audit machinery remains.
