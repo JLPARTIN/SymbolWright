@@ -44,7 +44,7 @@
     "format:check": "prettier --check src/",
     "audit": "npm audit --omit=dev --audit-level=high",
     "doctor": "node dist/cli.js doctor",
-    "release-readiness": "node dist/cli.js release-readiness",
+    "release-readiness": "node dist/cli-release-closure.js && node dist/cli.js release-readiness",
     "build-ledger": "node dist/cli.js build-ledger",
     "dev": "npm run serve",
     "serve": "npm run build && node dist/cli.js serve",
