@@ -6,7 +6,8 @@ import type { DependencyPolicyProfile } from './dependency-policy.js'
 import type { EgressPolicyProfile } from './egress-policy.js'
 import { SandboxNetworkGateway } from './sandbox-network-gateway.js'
 
-export const SANDBOX_NETWORK_POLICY_FILE_ENV = 'SYMBOLWRIGHT_SANDBOX_NETWORK_POLICY_FILE' as const
+export const SANDBOX_NETWORK_POLICY_FILE_ENV =
+  'SYMBOLWRIGHT_SANDBOX_NETWORK_POLICY_FILE' as const
 export const SANDBOX_NETWORK_POLICY_SCHEMA_VERSION = 1 as const
 const MAX_POLICY_FILE_BYTES = 1024 * 1024
 
@@ -94,7 +95,9 @@ function loadPolicyDocument(
   const policyFile = path.resolve(workspaceRoot, configured)
   const stat = lstatSync(policyFile)
   if (stat.isSymbolicLink()) {
-    throw new Error(`${SANDBOX_NETWORK_POLICY_FILE_ENV} must reference a regular file, not a symlink.`)
+    throw new Error(
+      `${SANDBOX_NETWORK_POLICY_FILE_ENV} must reference a regular file, not a symlink.`,
+    )
   }
   if (!stat.isFile()) {
     throw new Error(`${SANDBOX_NETWORK_POLICY_FILE_ENV} must reference a regular file.`)
