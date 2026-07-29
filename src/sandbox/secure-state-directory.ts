@@ -29,7 +29,9 @@ export async function ensureSecureStateDirectory(directory: string): Promise<voi
   }
 }
 
-async function safeLstat(target: string): Promise<Awaited<ReturnType<typeof fs.lstat>> | undefined> {
+async function safeLstat(
+  target: string,
+): Promise<Awaited<ReturnType<typeof fs.lstat>> | undefined> {
   try {
     return await fs.lstat(target)
   } catch (error) {

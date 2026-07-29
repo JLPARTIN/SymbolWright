@@ -82,9 +82,9 @@ describe('web-fetch-tool', () => {
         requireAuthorized: async () => undefined,
       },
     }
-    await expect(
-      executeWebFetchTool({ url: `${baseUrl}/` }, delegated),
-    ).rejects.toThrow(/BROKERED_EGRESS_REQUIRED/)
+    await expect(executeWebFetchTool({ url: `${baseUrl}/` }, delegated)).rejects.toThrow(
+      /BROKERED_EGRESS_REQUIRED/,
+    )
   })
 
   it('rejects missing url before touching the network', async () => {

@@ -13,6 +13,7 @@ import type {
   SandboxPolicyReference,
   SandboxPolicySourceEvidence,
 } from './sandbox-policy-model.js'
+import { readPolicyVersion } from './policy-version.js'
 
 export const DEPENDENCY_POLICY_SCHEMA_VERSION = 1 as const
 export const DEPENDENCY_GLOBAL_POLICY_ID = 'dependency-global' as const
@@ -198,8 +199,17 @@ export function resolveEffectiveDependencyPolicy(
     )
   }
 
-  const globalVersion = positiveInteger(env['SYMBOLWRIGHT_DEPENDENCY_GLOBAL_POLICY_VERSION'], 1)
-  const sources = dependencyPolicySources(input.authorization, profile, globalVersion)
+  const globalVersion = readPolicyVersion(
+    env['SYMBOLWRIGHT_DEPENDENCY_GLOBAL_POLICY_VERSION'],
+    1,
+  )
+  if (!globalVersion.valid) {
+    return blocked(
+      'DEPENDENCY_GLOBAL_POLICY_VERSION_INVALID',
+      'The global dependency policy version must be a positive safe integer.',
+    )
+  }
+  const sources = dependencyPolicySources(input.authorization, profile, globalVersion.value)
   const approvalFailure = validateApproval(
     input.authorization.approval,
     input.authorization.grantVersion,
@@ -405,12 +415,6 @@ function validateProfile(profile: DependencyPolicyProfile): void {
     throw new Error('Dependency cache namespace must not be empty.')
   }
   for (const registry of profile.allowedRegistries) normalizeRegistryUrl(registry)
-}
-
-function positiveInteger(value: string | undefined, fallback: number): number {
-  if (value === undefined || !/^[1-9]\d*$/.test(value)) return fallback
-  const parsed = Number(value)
-  return Number.isSafeInteger(parsed) ? parsed : fallback
 }
 
 function uniqueSorted(values: readonly string[]): readonly string[] {

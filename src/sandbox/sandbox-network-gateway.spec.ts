@@ -122,9 +122,7 @@ describe('SandboxNetworkGateway', () => {
       decisionCode: 'DEPENDENCY_POLICY_NOT_FOUND',
     })
     expect(result.evidencePath).toBeDefined()
-    expect(await fs.readFile(result.evidencePath!, 'utf8')).toContain(
-      'DEPENDENCY_POLICY_NOT_FOUND',
-    )
+    expect(await fs.readFile(result.evidencePath!, 'utf8')).toContain('DEPENDENCY_POLICY_NOT_FOUND')
   })
 
   it('keeps egress broker-only, closes the session, and writes durable redacted evidence', async () => {

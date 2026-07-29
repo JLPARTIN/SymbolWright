@@ -20,6 +20,7 @@ import {
   type EgressRequestDescriptor,
 } from './egress-policy.js'
 import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
+import { readPolicyVersion } from './policy-version.js'
 import { ensureSecureStateDirectory } from './secure-state-directory.js'
 
 export interface EgressResolvedAddress {
@@ -431,10 +432,7 @@ export class SandboxEgressSession {
         operationRequestCount += 1
         operationSent += currentBody.byteLength
 
-        const resolution = await abortableDns(
-          this.resolver.resolve(current.hostname),
-          input.signal,
-        )
+        const resolution = await abortableDns(this.resolver.resolve(current.hostname), input.signal)
         assertNotCancelled(input.signal)
         this.assertPolicyCurrent()
         this.assertWithinDuration()
@@ -890,14 +888,14 @@ export class EnvironmentEgressPolicyRevisionSource implements EgressPolicyRevisi
 
   public read(policy: EffectiveEgressPolicy): EgressPolicyRevisionSnapshot {
     return {
-      globalVersion: positiveInteger(
+      globalVersion: readPolicyVersion(
         this.env['SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION'],
         sourceVersion(policy, EGRESS_GLOBAL_POLICY_ID),
-      ),
-      policyVersion: positiveInteger(
+      ).value,
+      policyVersion: readPolicyVersion(
         this.env[`SYMBOLWRIGHT_EGRESS_POLICY_VERSION_${environmentKey(policy.policyId)}`],
         policy.policyVersion,
-      ),
+      ).value,
       emergencyDisabled:
         this.env[`SYMBOLWRIGHT_DISABLE_EGRESS_POLICY_${environmentKey(policy.policyId)}`] ===
         'true',
@@ -1028,12 +1026,6 @@ function mapToBrokerError(error: unknown): EgressBrokerError {
 
 function environmentKey(value: string): string {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, '_')
-}
-
-function positiveInteger(value: string | undefined, fallback: number): number {
-  if (value === undefined || !/^[1-9]\d*$/.test(value)) return fallback
-  const parsed = Number(value)
-  return Number.isSafeInteger(parsed) ? parsed : fallback
 }
 
 function isDnsNoData(error: unknown): boolean {

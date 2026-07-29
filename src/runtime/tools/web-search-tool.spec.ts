@@ -49,9 +49,9 @@ describe('web-search-tool', () => {
         requireAuthorized: async () => undefined,
       },
     }
-    await expect(
-      executeWebSearchTool({ query: 'vitest' }, delegated),
-    ).rejects.toThrow(/BROKERED_EGRESS_REQUIRED/)
+    await expect(executeWebSearchTool({ query: 'vitest' }, delegated)).rejects.toThrow(
+      /BROKERED_EGRESS_REQUIRED/,
+    )
   })
 
   it('rejects missing query before touching the network', async () => {

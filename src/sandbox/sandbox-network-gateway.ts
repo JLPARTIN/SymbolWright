@@ -69,9 +69,7 @@ export class SandboxNetworkGateway {
       catalog: new DependencyPolicyCatalog(options.dependencyProfiles ?? []),
       stateRoot: path.join(stateRoot, 'dependencies'),
       env,
-      ...(options.dependencyFetcher === undefined
-        ? {}
-        : { fetcher: options.dependencyFetcher }),
+      ...(options.dependencyFetcher === undefined ? {} : { fetcher: options.dependencyFetcher }),
     })
     this.egressBroker = new SandboxEgressBroker({
       catalog: new EgressPolicyCatalog(options.egressProfiles ?? []),
@@ -85,7 +83,9 @@ export class SandboxNetworkGateway {
     })
   }
 
-  public acquireNpm(input: SandboxDependencyAcquisitionInput): Promise<DependencyAcquisitionSession> {
+  public acquireNpm(
+    input: SandboxDependencyAcquisitionInput,
+  ): Promise<DependencyAcquisitionSession> {
     return this.dependencyService.acquireNpm(input)
   }
 

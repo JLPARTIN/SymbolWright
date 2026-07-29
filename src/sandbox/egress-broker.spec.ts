@@ -241,7 +241,12 @@ describe('sandbox egress broker', () => {
     const dns = resolver({})
     const http = requester([response(200, 'must-not-run')])
     const metrics = new EgressMetrics()
-    const session = broker({ resolver: dns, requester: http, auditSink: audit, metrics }).openSession({
+    const session = broker({
+      resolver: dns,
+      requester: http,
+      auditSink: audit,
+      metrics,
+    }).openSession({
       authorization: authorization(),
       sessionId: 'request-policy-denial',
     })

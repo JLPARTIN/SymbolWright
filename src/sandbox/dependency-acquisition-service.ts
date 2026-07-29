@@ -12,6 +12,7 @@ import {
   type EffectiveDependencyPolicy,
 } from './dependency-policy.js'
 import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
+import { readPolicyVersion } from './policy-version.js'
 import { ensureSecureStateDirectory } from './secure-state-directory.js'
 import {
   createNpmDependencyPlan,
@@ -93,26 +94,23 @@ export interface DependencyAcquisitionReportSink {
   readonly persist: (report: DependencyAcquisitionReport) => Promise<string>
 }
 
-export class EnvironmentDependencyPolicyRevisionSource
-  implements DependencyPolicyRevisionSource
-{
+export class EnvironmentDependencyPolicyRevisionSource implements DependencyPolicyRevisionSource {
   public constructor(private readonly env: NodeJS.ProcessEnv) {}
 
   public read(policy: EffectiveDependencyPolicy): DependencyPolicyRevisionSnapshot {
     return {
-      globalVersion: positiveInteger(
+      globalVersion: readPolicyVersion(
         this.env['SYMBOLWRIGHT_DEPENDENCY_GLOBAL_POLICY_VERSION'],
         sourceVersion(policy, 'dependency-global'),
-      ),
-      policyVersion: positiveInteger(
+      ).value,
+      policyVersion: readPolicyVersion(
         this.env[`SYMBOLWRIGHT_DEPENDENCY_POLICY_VERSION_${environmentKey(policy.policyId)}`],
         policy.policyVersion,
-      ),
+      ).value,
       emergencyDisabled:
         this.env['SYMBOLWRIGHT_DISABLE_DEPENDENCY_ACQUISITION'] === 'true' ||
-        this.env[
-          `SYMBOLWRIGHT_DISABLE_DEPENDENCY_POLICY_${environmentKey(policy.policyId)}`
-        ] === 'true',
+        this.env[`SYMBOLWRIGHT_DISABLE_DEPENDENCY_POLICY_${environmentKey(policy.policyId)}`] ===
+          'true',
     }
   }
 }
@@ -513,12 +511,6 @@ function sourceVersion(policy: EffectiveDependencyPolicy, id: string): number {
 
 function environmentKey(value: string): string {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, '_')
-}
-
-function positiveInteger(value: string | undefined, fallback: number): number {
-  if (value === undefined || !/^[1-9]\d*$/.test(value)) return fallback
-  const parsed = Number(value)
-  return Number.isSafeInteger(parsed) ? parsed : fallback
 }
 
 function sha256(value: string): string {

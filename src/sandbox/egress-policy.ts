@@ -13,6 +13,7 @@ import type {
   SandboxPolicyReference,
   SandboxPolicySourceEvidence,
 } from './sandbox-policy-model.js'
+import { readPolicyVersion } from './policy-version.js'
 
 export const EGRESS_POLICY_SCHEMA_VERSION = 1 as const
 export const EGRESS_GLOBAL_POLICY_ID = 'egress-global' as const
@@ -266,8 +267,18 @@ export function resolveEffectiveEgressPolicy(
     )
   }
 
-  const globalVersion = positiveInteger(env['SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION'], 1)
-  const sources = egressPolicySources(input.authorization, profile, globalVersion)
+  const globalVersion = readPolicyVersion(
+    env['SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION'],
+    1,
+  )
+  if (!globalVersion.valid) {
+    return blocked(
+      'EGRESS_GLOBAL_POLICY_VERSION_INVALID',
+      'The global egress policy version must be a positive safe integer.',
+      'denied',
+    )
+  }
+  const sources = egressPolicySources(input.authorization, profile, globalVersion.value)
   const approvalFailure = validateApproval(
     input.authorization.approval,
     input.authorization.grantVersion,
@@ -635,12 +646,6 @@ function cloneProfile(profile: EgressPolicyProfile): EgressPolicyProfile {
     allowedPorts: [...profile.allowedPorts],
     limits: { ...profile.limits },
   }
-}
-
-function positiveInteger(value: string | undefined, fallback: number): number {
-  if (value === undefined || !/^[1-9]\d*$/.test(value)) return fallback
-  const parsed = Number(value)
-  return Number.isSafeInteger(parsed) ? parsed : fallback
 }
 
 function uniqueSorted<T extends string>(values: readonly T[]): readonly T[] {
