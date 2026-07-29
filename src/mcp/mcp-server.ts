@@ -16,6 +16,10 @@ export interface McpServerRuntimeOptions {
   readonly onProtocolWarning?: (line: string) => void
   /** A `sw_agent_...` delegated-agent-access token — see `McpServerToolsOptions.agentToken`. */
   readonly agentToken?: string
+  readonly repository?: string
+  readonly branch?: string
+  readonly isDefaultBranch?: boolean
+  readonly missionId?: string
 }
 
 export interface RunningMcpServer {
@@ -37,6 +41,12 @@ export function runSymbolWrightMcpServer(options: McpServerRuntimeOptions): Runn
     cwd: options.cwd,
     ...(options.hasGitHubToken === undefined ? {} : { hasGitHubToken: options.hasGitHubToken }),
     ...(options.agentToken === undefined ? {} : { agentToken: options.agentToken }),
+    ...(options.repository === undefined ? {} : { repository: options.repository }),
+    ...(options.branch === undefined ? {} : { branch: options.branch }),
+    ...(options.isDefaultBranch === undefined
+      ? {}
+      : { isDefaultBranch: options.isDefaultBranch }),
+    ...(options.missionId === undefined ? {} : { missionId: options.missionId }),
   })
   const serverInfo = options.serverInfo ?? DEFAULT_SERVER_INFO
   const input = options.input ?? process.stdin
