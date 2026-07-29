@@ -4,7 +4,7 @@ import {
   DependencyAcquisitionService,
   type DependencyAcquisitionSession,
 } from './dependency-acquisition-service.js'
-import { DependencyHttpsFetcher } from './dependency-https-fetcher.js'
+import type { DependencyHttpsFetcher } from './dependency-https-fetcher.js'
 import {
   DependencyPolicyCatalog,
   type DependencyPolicyProfile,
