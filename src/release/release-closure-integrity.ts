@@ -30,8 +30,7 @@ const FORBIDDEN_DIRECTORY_RULES: readonly ForbiddenDirectoryRule[] = [
   },
   {
     relativeDirectory: path.join('docs', 'security'),
-    isForbidden: (name) =>
-      name.startsWith('PR7_') || name === 'SANDBOX_PR7_AUDIT_WORKPLAN.md',
+    isForbidden: (name) => name.startsWith('PR7_') || name === 'SANDBOX_PR7_AUDIT_WORKPLAN.md',
   },
 ]
 
