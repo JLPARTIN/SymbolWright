@@ -61,14 +61,26 @@ export async function runMcpServerCommand(
   // stdout is the JSON-RPC wire — all diagnostics must go to stderr.
   console.error(`SymbolWright MCP server starting in ${mode} mode (stdio)`)
 
-  const agentToken = process.env['SYMBOLWRIGHT_AGENT_TOKEN']
+  const agentToken = optionalEnvironmentValue('SYMBOLWRIGHT_AGENT_TOKEN')
+  const repository = optionalEnvironmentValue('SYMBOLWRIGHT_MCP_REPOSITORY')
+  const branch = optionalEnvironmentValue('SYMBOLWRIGHT_MCP_BRANCH')
+  const missionId = optionalEnvironmentValue('SYMBOLWRIGHT_MCP_MISSION_ID')
 
   const server = runSymbolWrightMcpServer({
     mode,
     cwd,
     hasGitHubToken: process.env['GITHUB_TOKEN'] !== undefined,
-    ...(agentToken === undefined || agentToken.trim().length === 0 ? {} : { agentToken }),
+    ...(agentToken === undefined ? {} : { agentToken }),
+    ...(repository === undefined ? {} : { repository }),
+    ...(branch === undefined ? {} : { branch }),
+    isDefaultBranch: process.env['SYMBOLWRIGHT_MCP_IS_DEFAULT_BRANCH'] === 'true',
+    ...(missionId === undefined ? {} : { missionId }),
   })
 
   await server.closed
+}
+
+function optionalEnvironmentValue(name: string): string | undefined {
+  const value = process.env[name]?.trim()
+  return value === undefined || value.length === 0 ? undefined : value
 }

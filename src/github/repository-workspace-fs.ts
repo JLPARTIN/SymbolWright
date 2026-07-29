@@ -111,6 +111,24 @@ export interface DiskHeadroomResult {
   readonly freeBytes: number
 }
 
+export interface AvailableDiskStats {
+  readonly bavail: number | bigint
+  readonly bsize: number | bigint
+}
+
+/**
+ * Computes bytes available to the current unprivileged process. `bavail` intentionally excludes
+ * filesystem blocks reserved for the superuser; `bfree` would overstate the space SymbolWright can
+ * actually consume. Normalize through BigInt so Node's number and bigint statfs variants behave
+ * identically.
+ */
+export function computeAvailableDiskBytes(stats: AvailableDiskStats): number {
+  const availableBlocks =
+    typeof stats.bavail === 'bigint' ? stats.bavail : BigInt(Math.trunc(stats.bavail))
+  const blockSize = typeof stats.bsize === 'bigint' ? stats.bsize : BigInt(Math.trunc(stats.bsize))
+  return Number(availableBlocks * blockSize)
+}
+
 /** Checks free-disk headroom on the filesystem containing `existingPath` before any clone I/O
  * starts, so acquisition can reject up front instead of filling the disk mid-clone. */
 export async function checkDiskHeadroom(
@@ -118,6 +136,6 @@ export async function checkDiskHeadroom(
   minFreeBytes: number,
 ): Promise<DiskHeadroomResult> {
   const stats = await statfs(existingPath)
-  const freeBytes = stats.bavail * stats.bsize
+  const freeBytes = computeAvailableDiskBytes(stats)
   return { ok: freeBytes >= minFreeBytes, freeBytes }
 }

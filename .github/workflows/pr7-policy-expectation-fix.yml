@@ -1,0 +1,94 @@
+name: PR7 Policy Expectation Fix
+
+on:
+  push:
+    branches:
+      - symbolwright/sandbox-pr7-final-adversarial-audit
+    paths:
+      - .github/pr7-policy-expectation-fix-trigger
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout latest branch head
+        uses: actions/checkout@v4
+        with:
+          ref: symbolwright/sandbox-pr7-final-adversarial-audit
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Update fail-closed policy expectations
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          dependency = Path('src/sandbox/dependency-policy.spec.ts')
+          source = dependency.read_text()
+          old = """    expect(invalidRevision.allowed).toBe(true)
+    expect(unsafeRevision.allowed).toBe(true)
+"""
+          new = """    expect(invalidRevision).toMatchObject({
+      allowed: false,
+      reasonCode: 'DEPENDENCY_GLOBAL_POLICY_VERSION_INVALID',
+    })
+    expect(unsafeRevision).toMatchObject({
+      allowed: false,
+      reasonCode: 'DEPENDENCY_GLOBAL_POLICY_VERSION_INVALID',
+    })
+"""
+          if old not in source:
+              raise SystemExit('Expected stale dependency policy assertions were not found.')
+          dependency.write_text(source.replace(old, new, 1))
+
+          egress = Path('src/sandbox/egress-policy.spec.ts')
+          source = egress.read_text()
+          old = """    expect(resolve({ env: { SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION: 'invalid' } }).allowed).toBe(
+      true,
+    )
+"""
+          new = """    expect(
+      resolve({ env: { SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION: 'invalid' } }),
+    ).toMatchObject({
+      allowed: false,
+      reasonCode: 'EGRESS_GLOBAL_POLICY_VERSION_INVALID',
+      state: 'denied',
+    })
+"""
+          if old not in source:
+              raise SystemExit('Expected stale egress policy assertion was not found.')
+          egress.write_text(source.replace(old, new, 1))
+          PY
+
+          npm ci
+          npx prettier --write \
+            src/sandbox/dependency-policy.spec.ts \
+            src/sandbox/egress-policy.spec.ts
+          npx vitest run \
+            src/sandbox/dependency-policy.spec.ts \
+            src/sandbox/egress-policy.spec.ts
+          npm run typecheck
+          npm run lint
+          npm run format:check
+
+          rm -f .github/pr7-policy-expectation-fix-trigger
+          rm -f .github/workflows/pr7-policy-expectation-fix.yml
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'test(sandbox): align policy tests with fail-closed versions'
+          git pull --rebase origin symbolwright/sandbox-pr7-final-adversarial-audit
+          git push origin HEAD:symbolwright/sandbox-pr7-final-adversarial-audit

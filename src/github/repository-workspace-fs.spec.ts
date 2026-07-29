@@ -1,11 +1,11 @@
 import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
-import { statfs } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import {
   checkDiskHeadroom,
+  computeAvailableDiskBytes,
   computeWorkspaceStats,
   removeWorkspaceSafely,
   WorkspaceLimitExceededError,
@@ -153,10 +153,15 @@ describe('repository-workspace-fs', () => {
       expect(result.ok).toBe(false)
     })
 
-    it('matches a direct statfs computation', async () => {
-      const stats = await statfs(root)
-      const result = await checkDiskHeadroom(root, 0)
-      expect(result.freeBytes).toBe(stats.bavail * stats.bsize)
+    it('computes unprivileged free space from bavail rather than bfree', () => {
+      const stats = { bavail: 22, bfree: 24, bsize: 4096 }
+
+      expect(computeAvailableDiskBytes(stats)).toBe(stats.bavail * stats.bsize)
+      expect(computeAvailableDiskBytes(stats)).not.toBe(stats.bfree * stats.bsize)
+    })
+
+    it('normalizes bigint statfs values deterministically', () => {
+      expect(computeAvailableDiskBytes({ bavail: 22n, bsize: 4096n })).toBe(90_112)
     })
   })
 })

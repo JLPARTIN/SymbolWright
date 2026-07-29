@@ -1,6 +1,7 @@
 import { loadWebConfig } from '../../web/web-config.js'
 import { performWebSearch, type WebSearchEvidence } from '../../web/web-search.js'
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
+import { assertTrustedOperatorResearchNetwork } from './operator-research-network.js'
 
 export interface WebSearchToolInput {
   readonly query: string
@@ -61,6 +62,7 @@ export async function executeWebSearchTool(
   input: WebSearchToolInput,
   context: RuntimeToolContext,
 ): Promise<string> {
+  assertTrustedOperatorResearchNetwork(context, 'web_search')
   const webConfig = loadWebConfig(context.cwd, {
     ...(input.configPath !== undefined ? { configPath: input.configPath } : {}),
   })
@@ -78,7 +80,7 @@ export async function executeWebSearchTool(
 export const webSearchTool: RuntimeToolDefinition = {
   name: 'web_search',
   description:
-    'Search the public web through the SymbolWright policy gate. Works out of the box with a default DuckDuckGo adapter, no API key required.',
+    'Trusted local-operator web search. Delegated callers are denied so search traffic cannot bypass governed sandbox egress.',
   capability: 'WEB_ACCESS',
   execute: async (input, context) => executeWebSearchTool(parseWebSearchInput(input), context),
 }

@@ -7,10 +7,10 @@ import {
 } from '../access/access-grant-service.js'
 import { requiredCapabilitiesForTool } from '../access/tool-permission-catalog.js'
 import { bridgeToolsForProvider } from '../agent/tool-schema-bridge.js'
+import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { runAuthorizedTool } from '../runtime/tools/authorized-tool-execution.js'
-import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
-import type { SymbolWrightRuntimeMode, RuntimeToolContext } from '../runtime/types.js'
+import type { RuntimeToolContext, SymbolWrightRuntimeMode } from '../runtime/types.js'
 import type { McpServerToolHandler } from './mcp-server-protocol.js'
 
 export class McpAgentTokenAuthenticationError extends Error {}
@@ -28,6 +28,12 @@ export interface McpServerToolsOptions {
    * caller gets the full mode-gated tool set.
    */
   readonly agentToken?: string
+  /** Required for delegated MCP so repository-scope checks cannot be skipped. */
+  readonly repository?: string
+  /** Required for delegated MCP so branch-scope checks cannot be skipped. */
+  readonly branch?: string
+  readonly isDefaultBranch?: boolean
+  readonly missionId?: string
 }
 
 /**
@@ -50,6 +56,19 @@ export function createSymbolWrightMcpToolHandler(
   let grantedCapabilities: ReadonlySet<string> | undefined
 
   if (options.agentToken !== undefined) {
+    const repository = options.repository?.trim()
+    const branch = options.branch?.trim()
+    if (
+      repository === undefined ||
+      repository.length === 0 ||
+      branch === undefined ||
+      branch.length === 0
+    ) {
+      throw new McpAgentTokenAuthenticationError(
+        'Delegated MCP requires explicit repository and branch context so scope checks cannot be skipped.',
+      )
+    }
+
     const runtime = new AccessRuntime({ workspaceRoot: options.cwd })
     let authenticated: ReturnType<typeof runtime.grantService.authenticateAgentToken>
     try {
@@ -81,6 +100,10 @@ export function createSymbolWrightMcpToolHandler(
             grantId: grant.id,
             sessionId: session.id,
             capability,
+            repository,
+            branch,
+            isDefaultBranch: options.isDefaultBranch === true,
+            ...(options.missionId === undefined ? {} : { missionId: options.missionId }),
             toolName,
             ...(metadata === undefined ? {} : { metadata }),
           })

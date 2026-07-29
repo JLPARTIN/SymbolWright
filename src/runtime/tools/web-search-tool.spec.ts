@@ -40,6 +40,20 @@ describe('web-search-tool', () => {
     expect(output).toContain('web.search.enabled is false')
   })
 
+  it('denies delegated callers so direct research network cannot bypass brokered egress', async () => {
+    const delegated: RuntimeToolContext = {
+      ...contextFor('APPROVED_EXECUTION'),
+      accessControl: {
+        principalId: 'principal-1',
+        grantId: 'grant-1',
+        requireAuthorized: async () => undefined,
+      },
+    }
+    await expect(executeWebSearchTool({ query: 'vitest' }, delegated)).rejects.toThrow(
+      /BROKERED_EGRESS_REQUIRED/,
+    )
+  })
+
   it('rejects missing query before touching the network', async () => {
     await expect(webSearchTool.execute({}, contextFor('APPROVED_EXECUTION'))).rejects.toThrow(
       /non-empty "query"/,

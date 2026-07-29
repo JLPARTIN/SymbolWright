@@ -12,6 +12,8 @@ import {
   type EffectiveDependencyPolicy,
 } from './dependency-policy.js'
 import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
+import { readPolicyVersion } from './policy-version.js'
+import { ensureSecureStateDirectory } from './secure-state-directory.js'
 import {
   createNpmDependencyPlan,
   type NpmDependencyArtifact,
@@ -78,10 +80,48 @@ export interface DependencyAcquisitionSession {
   readonly evidencePath?: string
 }
 
+export interface DependencyPolicyRevisionSnapshot {
+  readonly globalVersion: number
+  readonly policyVersion: number
+  readonly emergencyDisabled: boolean
+}
+
+export interface DependencyPolicyRevisionSource {
+  readonly read: (policy: EffectiveDependencyPolicy) => DependencyPolicyRevisionSnapshot
+}
+
+export interface DependencyAcquisitionReportSink {
+  readonly persist: (report: DependencyAcquisitionReport) => Promise<string>
+}
+
+export class EnvironmentDependencyPolicyRevisionSource implements DependencyPolicyRevisionSource {
+  public constructor(private readonly env: NodeJS.ProcessEnv) {}
+
+  public read(policy: EffectiveDependencyPolicy): DependencyPolicyRevisionSnapshot {
+    return {
+      globalVersion: readPolicyVersion(
+        this.env['SYMBOLWRIGHT_DEPENDENCY_GLOBAL_POLICY_VERSION'],
+        sourceVersion(policy, 'dependency-global'),
+      ).value,
+      policyVersion: readPolicyVersion(
+        this.env[`SYMBOLWRIGHT_DEPENDENCY_POLICY_VERSION_${environmentKey(policy.policyId)}`],
+        policy.policyVersion,
+      ).value,
+      emergencyDisabled:
+        this.env['SYMBOLWRIGHT_DISABLE_DEPENDENCY_ACQUISITION'] === 'true' ||
+        this.env[`SYMBOLWRIGHT_DISABLE_DEPENDENCY_POLICY_${environmentKey(policy.policyId)}`] ===
+          'true',
+    }
+  }
+}
+
 export interface DependencyAcquisitionServiceOptions {
   readonly catalog: DependencyPolicyCatalog
   readonly cache?: DependencyArtifactCache
   readonly fetcher?: DependencyHttpsFetcher
+  readonly env?: NodeJS.ProcessEnv
+  readonly revisionSource?: DependencyPolicyRevisionSource
+  readonly reportSink?: DependencyAcquisitionReportSink
   readonly stateRoot?: string
   readonly now?: () => Date
   readonly generateAcquisitionId?: () => string
@@ -95,6 +135,9 @@ export class DependencyAcquisitionService {
   private readonly catalog: DependencyPolicyCatalog
   private readonly cache: DependencyArtifactCache
   private readonly fetcher: DependencyHttpsFetcher
+  private readonly env: NodeJS.ProcessEnv
+  private readonly revisionSource: DependencyPolicyRevisionSource
+  private readonly reportSink: DependencyAcquisitionReportSink
   private readonly stateRoot: string
   private readonly now: () => Date
   private readonly generateAcquisitionId: () => string
@@ -107,6 +150,10 @@ export class DependencyAcquisitionService {
     this.cache =
       options.cache ?? new DependencyArtifactCache({ root: path.join(this.stateRoot, 'cache') })
     this.fetcher = options.fetcher ?? new DependencyHttpsFetcher()
+    this.env = options.env ?? process.env
+    this.revisionSource =
+      options.revisionSource ?? new EnvironmentDependencyPolicyRevisionSource(this.env)
+    this.reportSink = options.reportSink ?? { persist: (report) => this.persistReport(report) }
     this.now = options.now ?? (() => new Date())
     this.generateAcquisitionId =
       options.generateAcquisitionId ?? (() => `dependency_${randomUUID()}`)
@@ -126,6 +173,7 @@ export class DependencyAcquisitionService {
       request: { ecosystem: 'npm', ...(input.request ?? {}) },
       authorization: input.authorization,
       catalog: this.catalog,
+      env: this.env,
       now: this.now,
     })
     if (!policyDecision.allowed || policyDecision.policy === undefined) {
@@ -141,6 +189,7 @@ export class DependencyAcquisitionService {
     }
 
     const policy = policyDecision.policy
+    this.assertPolicyCurrent(policy)
     let plan: NpmDependencyPlan
     try {
       plan = createNpmDependencyPlan({
@@ -171,6 +220,7 @@ export class DependencyAcquisitionService {
       for (;;) {
         if (terminalError !== undefined) return
         assertNotCancelled(input.signal)
+        this.assertPolicyCurrent(policy)
         const index = nextIndex
         nextIndex += 1
         const artifact = plan.artifacts[index]
@@ -262,6 +312,7 @@ export class DependencyAcquisitionService {
     readonly evidence: DependencyAcquisitionArtifactEvidence
   }> {
     assertNotCancelled(input.signal)
+    this.assertPolicyCurrent(input.policy)
     let cacheEntry = await this.cache.getNpmArtifact({
       artifact: input.artifact,
       policy: input.policy,
@@ -272,6 +323,7 @@ export class DependencyAcquisitionService {
       fetchResult = await this.fetcher.fetch({
         url: input.artifact.resolvedUrl,
         policy: input.policy,
+        checkpoint: () => this.assertPolicyCurrent(input.policy),
         ...(input.signal === undefined ? {} : { signal: input.signal }),
       })
       bytes = fetchResult.bytes
@@ -279,8 +331,11 @@ export class DependencyAcquisitionService {
       bytes = await fs.readFile(cacheEntry.artifactPath)
     }
 
+    assertNotCancelled(input.signal)
+    this.assertPolicyCurrent(input.policy)
     const inspection = inspectNpmTarball(bytes, input.policy.limits)
     if (cacheEntry === undefined) {
+      this.assertPolicyCurrent(input.policy)
       cacheEntry = await this.cache.putNpmArtifact({
         artifact: input.artifact,
         bytes,
@@ -359,24 +414,41 @@ export class DependencyAcquisitionService {
       ...material,
       evidenceSha256: sha256(stableJson(material)),
     })
-    let evidencePath: string | undefined
+    let evidencePath: string
     try {
-      evidencePath = await this.persistReport(report)
+      evidencePath = await this.reportSink.persist(report)
     } catch {
-      // Acquisition evidence remains available to the caller even if durable storage is unavailable.
+      throw codedError(
+        'DEPENDENCY_EVIDENCE_WRITE_FAILED',
+        'Dependency acquisition evidence could not be durably persisted.',
+      )
     }
     return {
       report,
       ...(input.plan === undefined ? {} : { plan: input.plan }),
       ...(input.policy === undefined ? {} : { policy: input.policy }),
       acquiredArtifacts: Object.freeze([...(input.acquiredArtifacts ?? [])]),
-      ...(evidencePath === undefined ? {} : { evidencePath }),
+      evidencePath,
+    }
+  }
+
+  private assertPolicyCurrent(policy: EffectiveDependencyPolicy): void {
+    const current = this.revisionSource.read(policy)
+    if (
+      current.emergencyDisabled ||
+      current.globalVersion !== sourceVersion(policy, 'dependency-global') ||
+      current.policyVersion !== policy.policyVersion
+    ) {
+      throw codedError(
+        'DEPENDENCY_POLICY_REVOKED',
+        'The operator-owned dependency policy changed or was revoked while acquisition was active.',
+      )
     }
   }
 
   private async persistReport(report: DependencyAcquisitionReport): Promise<string> {
     const evidenceRoot = path.join(this.stateRoot, 'evidence')
-    await fs.mkdir(evidenceRoot, { recursive: true, mode: 0o700 })
+    await ensureSecureStateDirectory(evidenceRoot)
     const safeId = report.acquisitionId.replace(/[^A-Za-z0-9._-]/g, '_').slice(0, 128)
     const finalPath = path.join(evidenceRoot, `${safeId}.json`)
     const tempPath = `${finalPath}.tmp-${process.pid}-${Date.now().toString(36)}`
@@ -431,6 +503,14 @@ function safeReason(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error)
   const normalized = message.replace(/[\r\n\t]+/g, ' ').trim()
   return normalized.length <= 500 ? normalized : `${normalized.slice(0, 500)}…`
+}
+
+function sourceVersion(policy: EffectiveDependencyPolicy, id: string): number {
+  return policy.sources.find((source) => source.id === id)?.version ?? 0
+}
+
+function environmentKey(value: string): string {
+  return value.toUpperCase().replace(/[^A-Z0-9]/g, '_')
 }
 
 function sha256(value: string): string {

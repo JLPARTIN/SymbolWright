@@ -1,6 +1,7 @@
 import { loadWebConfig } from '../../web/web-config.js'
 import { performWebFetch, type WebFetchEvidence } from '../../web/web-fetch.js'
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
+import { assertTrustedOperatorResearchNetwork } from './operator-research-network.js'
 
 export interface WebFetchToolInput {
   readonly url: string
@@ -68,6 +69,7 @@ export async function executeWebFetchTool(
   input: WebFetchToolInput,
   context: RuntimeToolContext,
 ): Promise<string> {
+  assertTrustedOperatorResearchNetwork(context, 'web_fetch')
   const webConfig = loadWebConfig(context.cwd, {
     ...(input.configPath !== undefined ? { configPath: input.configPath } : {}),
   })
@@ -85,7 +87,7 @@ export async function executeWebFetchTool(
 export const webFetchTool: RuntimeToolDefinition = {
   name: 'web_fetch',
   description:
-    'Fetch a public web page or API resource through the SymbolWright policy gate. Works out of the box for public URLs; private/internal targets are blocked by default.',
+    'Trusted local-operator web research. Delegated callers are denied and must use the governed SandboxNetworkGateway egress path.',
   capability: 'WEB_ACCESS',
   execute: async (input, context) => executeWebFetchTool(parseWebFetchInput(input), context),
 }

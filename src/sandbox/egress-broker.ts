@@ -20,6 +20,8 @@ import {
   type EgressRequestDescriptor,
 } from './egress-policy.js'
 import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
+import { readPolicyVersion } from './policy-version.js'
+import { ensureSecureStateDirectory } from './secure-state-directory.js'
 
 export interface EgressResolvedAddress {
   readonly address: string
@@ -359,52 +361,81 @@ export class SandboxEgressSession {
     if (this.closed) {
       throw new EgressBrokerError('EGRESS_SESSION_CLOSED', 'The egress session is closed.')
     }
+
+    const operationStartedAt = this.monotonicNow()
+    const auditUrl = auditUrlFor(input.url)
+    const auditRequestMethod = auditMethodFor(input.method)
     if (this.activeRequests >= this.policy.limits.maxConcurrency) {
       this.metrics.requestStarted()
-      this.metrics.requestFinished({
-        allowed: false,
-        code: 'EGRESS_CONCURRENCY_EXCEEDED',
-        bytesSent: 0,
-        bytesReceived: 0,
-      })
-      throw new EgressBrokerError(
+      let failure = new EgressBrokerError(
         'EGRESS_CONCURRENCY_EXCEEDED',
         `Egress session concurrency exceeds ${this.policy.limits.maxConcurrency}.`,
       )
+      try {
+        await this.appendAudit({
+          url: auditUrl,
+          method: auditRequestMethod,
+          decision: 'denied',
+          decisionCode: failure.code,
+          requestCount: 0,
+          bytesSent: 0,
+          bytesReceived: 0,
+          durationMs: this.monotonicNow() - operationStartedAt,
+          resolvedAddressClass: 'unresolved',
+        })
+      } catch (error) {
+        failure = mapToBrokerError(error)
+      }
+      this.metrics.requestFinished({
+        allowed: false,
+        code: failure.code,
+        bytesSent: 0,
+        bytesReceived: 0,
+      })
+      throw failure
     }
 
-    const body = toBytes(input.body)
-    const descriptor: EgressRequestDescriptor = {
-      url: input.url,
-      ...(input.method === undefined ? {} : { method: input.method }),
-      ...(input.headers === undefined ? {} : { headers: input.headers }),
-      bodyBytes: body.byteLength,
-    }
-    const authorized = mapPolicyError(() => authorizeEgressRequest(this.policy, descriptor))
-    const operationStartedAt = this.monotonicNow()
     this.activeRequests += 1
     this.metrics.requestStarted()
 
-    let current = authorized.url
-    let method = authorized.method
-    let headers = authorized.headers
-    let currentBody = body
+    let current = auditUrl
+    let method = auditRequestMethod
+    let headers: Readonly<Record<string, string>> = Object.freeze({})
+    let currentBody: Uint8Array = new Uint8Array()
     let hopCount = 0
+    let operationRequestCount = 0
     let operationSent = 0
     let operationReceived = 0
     let selectedAddressClass: EgressAuditRecord['resolvedAddressClass'] = 'unresolved'
     let statusCode: number | undefined
-    let decisionCode = 'EGRESS_REQUEST_ALLOWED'
+    let metricsFinished = false
 
     try {
+      const body = toBytes(input.body)
+      const descriptor: EgressRequestDescriptor = {
+        url: input.url,
+        ...(input.method === undefined ? {} : { method: input.method }),
+        ...(input.headers === undefined ? {} : { headers: input.headers }),
+        bodyBytes: body.byteLength,
+      }
+      const authorized = mapPolicyError(() => authorizeEgressRequest(this.policy, descriptor))
+      current = authorized.url
+      method = authorized.method
+      headers = authorized.headers
+      currentBody = body
+
       for (;;) {
         assertNotCancelled(input.signal)
         this.assertPolicyCurrent()
         this.assertWithinDuration()
         this.reserveRequest(currentBody.byteLength)
+        operationRequestCount += 1
         operationSent += currentBody.byteLength
 
-        const resolution = await this.resolver.resolve(current.hostname)
+        const resolution = await abortableDns(this.resolver.resolve(current.hostname), input.signal)
+        assertNotCancelled(input.signal)
+        this.assertPolicyCurrent()
+        this.assertWithinDuration()
         validateCnameChain(resolution.cnameChain, this.policy)
         const addresses = uniqueAddresses(resolution.addresses)
         if (addresses.length === 0) {
@@ -429,6 +460,9 @@ export class SandboxEgressSession {
           )
         }
 
+        assertNotCancelled(input.signal)
+        this.assertPolicyCurrent()
+        this.assertWithinDuration()
         const remainingMs = this.remainingDurationMs()
         const response = await this.requester.request({
           url: current,
@@ -442,6 +476,7 @@ export class SandboxEgressSession {
         })
         assertNotCancelled(input.signal)
         this.assertPolicyCurrent()
+        this.assertWithinDuration()
         statusCode = response.statusCode
         operationReceived += response.body.byteLength
         this.bytesReceived += response.body.byteLength
@@ -505,13 +540,12 @@ export class SandboxEgressSession {
           continue
         }
 
-        decisionCode = 'EGRESS_REQUEST_ALLOWED'
         await this.appendAudit({
           url: current,
           method,
           decision: 'allowed',
-          decisionCode,
-          requestCount: hopCount + 1,
+          decisionCode: 'EGRESS_REQUEST_ALLOWED',
+          requestCount: operationRequestCount,
           bytesSent: operationSent,
           bytesReceived: operationReceived,
           durationMs: this.monotonicNow() - operationStartedAt,
@@ -520,41 +554,50 @@ export class SandboxEgressSession {
         })
         this.metrics.requestFinished({
           allowed: true,
-          code: decisionCode,
+          code: 'EGRESS_REQUEST_ALLOWED',
           bytesSent: operationSent,
           bytesReceived: operationReceived,
         })
+        metricsFinished = true
         return Object.freeze({
           statusCode: response.statusCode,
           headers: response.headers,
           body: response.body,
           finalUrl: current.toString(),
-          requestCount: hopCount + 1,
+          requestCount: operationRequestCount,
           bytesSent: operationSent,
           bytesReceived: operationReceived,
         })
       }
     } catch (error) {
-      const brokerError = mapToBrokerError(error)
-      decisionCode = brokerError.code
-      await this.appendAudit({
-        url: current,
-        method,
-        decision: 'denied',
-        decisionCode,
-        requestCount: Math.max(1, hopCount + 1),
-        bytesSent: operationSent,
-        bytesReceived: operationReceived,
-        durationMs: this.monotonicNow() - operationStartedAt,
-        resolvedAddressClass: selectedAddressClass,
-        ...(statusCode === undefined ? {} : { statusCode }),
-      })
-      this.metrics.requestFinished({
-        allowed: false,
-        code: decisionCode,
-        bytesSent: operationSent,
-        bytesReceived: operationReceived,
-      })
+      let brokerError = mapToBrokerError(error)
+      if (brokerError.code !== 'EGRESS_AUDIT_WRITE_FAILED') {
+        try {
+          await this.appendAudit({
+            url: current,
+            method,
+            decision: 'denied',
+            decisionCode: brokerError.code,
+            requestCount: operationRequestCount,
+            bytesSent: operationSent,
+            bytesReceived: operationReceived,
+            durationMs: this.monotonicNow() - operationStartedAt,
+            resolvedAddressClass: selectedAddressClass,
+            ...(statusCode === undefined ? {} : { statusCode }),
+          })
+        } catch (auditError) {
+          brokerError = mapToBrokerError(auditError)
+        }
+      }
+      if (!metricsFinished) {
+        this.metrics.requestFinished({
+          allowed: false,
+          code: brokerError.code,
+          bytesSent: operationSent,
+          bytesReceived: operationReceived,
+        })
+        metricsFinished = true
+      }
       throw brokerError
     } finally {
       this.activeRequests = Math.max(0, this.activeRequests - 1)
@@ -662,10 +705,10 @@ export class SandboxEgressSession {
           ...(input.statusCode === undefined ? {} : { statusCode: input.statusCode }),
         }),
       )
-    } catch (error) {
+    } catch {
       throw new EgressBrokerError(
         'EGRESS_AUDIT_WRITE_FAILED',
-        `Brokered egress audit persistence failed: ${errorMessage(error)}`,
+        'Brokered egress audit persistence failed.',
       )
     }
   }
@@ -845,14 +888,14 @@ export class EnvironmentEgressPolicyRevisionSource implements EgressPolicyRevisi
 
   public read(policy: EffectiveEgressPolicy): EgressPolicyRevisionSnapshot {
     return {
-      globalVersion: positiveInteger(
+      globalVersion: readPolicyVersion(
         this.env['SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION'],
         sourceVersion(policy, EGRESS_GLOBAL_POLICY_ID),
-      ),
-      policyVersion: positiveInteger(
+      ).value,
+      policyVersion: readPolicyVersion(
         this.env[`SYMBOLWRIGHT_EGRESS_POLICY_VERSION_${environmentKey(policy.policyId)}`],
         policy.policyVersion,
-      ),
+      ).value,
       emergencyDisabled:
         this.env[`SYMBOLWRIGHT_DISABLE_EGRESS_POLICY_${environmentKey(policy.policyId)}`] ===
         'true',
@@ -923,6 +966,44 @@ function toBytes(value: string | Uint8Array | undefined): Uint8Array {
   return typeof value === 'string' ? Buffer.from(value, 'utf8') : value
 }
 
+function auditUrlFor(value: string): URL {
+  try {
+    const parsed = new URL(value)
+    parsed.username = ''
+    parsed.password = ''
+    parsed.hash = ''
+    return parsed.protocol === 'https:' ? parsed : new URL('https://invalid.invalid/')
+  } catch {
+    return new URL('https://invalid.invalid/')
+  }
+}
+
+function auditMethodFor(value: string | undefined): EgressHttpMethod {
+  const normalized = (value ?? 'GET').toUpperCase()
+  return normalized === 'HEAD' || normalized === 'POST' ? normalized : 'GET'
+}
+
+async function abortableDns<T>(operation: Promise<T>, signal: AbortSignal | undefined): Promise<T> {
+  if (signal === undefined) return operation
+  assertNotCancelled(signal)
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = (): void => {
+      reject(new EgressBrokerError('EGRESS_CANCELLED', 'Brokered egress request was cancelled.'))
+    }
+    signal.addEventListener('abort', onAbort, { once: true })
+    operation.then(
+      (value) => {
+        signal.removeEventListener('abort', onAbort)
+        resolve(value)
+      },
+      (error: unknown) => {
+        signal.removeEventListener('abort', onAbort)
+        reject(error)
+      },
+    )
+  })
+}
+
 function assertNotCancelled(signal: AbortSignal | undefined): void {
   if (signal?.aborted === true) {
     throw new EgressBrokerError('EGRESS_CANCELLED', 'Brokered egress request was cancelled.')
@@ -947,12 +1028,6 @@ function environmentKey(value: string): string {
   return value.toUpperCase().replace(/[^A-Z0-9]/g, '_')
 }
 
-function positiveInteger(value: string | undefined, fallback: number): number {
-  if (value === undefined || !/^[1-9]\d*$/.test(value)) return fallback
-  const parsed = Number(value)
-  return Number.isSafeInteger(parsed) ? parsed : fallback
-}
-
 function isDnsNoData(error: unknown): boolean {
   if (typeof error !== 'object' || error === null || !('code' in error)) return false
   const code = String((error as NodeJS.ErrnoException).code)
@@ -960,12 +1035,12 @@ function isDnsNoData(error: unknown): boolean {
 }
 
 async function ensureSafeAuditParent(directory: string): Promise<void> {
-  await fs.mkdir(directory, { recursive: true, mode: 0o700 })
-  const stat = await fs.lstat(directory)
-  if (!stat.isDirectory() || stat.isSymbolicLink()) {
+  try {
+    await ensureSecureStateDirectory(directory)
+  } catch {
     throw new EgressBrokerError(
       'EGRESS_AUDIT_PATH_UNSAFE',
-      'Brokered egress audit parent must be a real directory.',
+      'Brokered egress audit parent must contain only real directories.',
     )
   }
 }

@@ -1,4 +1,7 @@
-import { resolveToolPermissionDescriptor } from '../../access/tool-permission-catalog.js'
+import {
+  operationCapabilitiesForTool,
+  resolveToolPermissionDescriptor,
+} from '../../access/tool-permission-catalog.js'
 import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 
 /**
@@ -26,8 +29,12 @@ export async function runAuthorizedTool<TInput>(
       typeof input === 'object' && input !== null && !Array.isArray(input)
         ? (input as Record<string, unknown>)
         : undefined
-    const capabilities = [descriptor.capability, ...(descriptor.additionalCapabilities ?? [])]
-    for (const capability of capabilities) {
+    const capabilities = [
+      descriptor.capability,
+      ...(descriptor.additionalCapabilities ?? []),
+      ...operationCapabilitiesForTool(tool.name, metadata),
+    ]
+    for (const capability of [...new Set(capabilities)]) {
       await accessControl.requireAuthorized(capability, tool.name, metadata)
     }
   }

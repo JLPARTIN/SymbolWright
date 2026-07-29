@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY } from '../access/sandbox-capabilities.js'
 import {
   DependencyAcquisitionService,
+  type DependencyAcquisitionReportSink,
   type DependencyAcquisitionSession,
 } from './dependency-acquisition-service.js'
 import { DependencyHttpsFetcher } from './dependency-https-fetcher.js'
@@ -217,6 +218,103 @@ describe('dependency acquisition service', () => {
     expect(result.report.status).toBe('failed')
     expect(result.report.decisionCode).toMatch(/DEPENDENCY_(ARCHIVE_INVALID|INTEGRITY_MISMATCH)/)
     expect(result.acquiredArtifacts).toHaveLength(0)
+  })
+
+  it('fails closed when mandatory evidence persistence fails', async () => {
+    const data = await fixture()
+    const reportSink: DependencyAcquisitionReportSink = {
+      persist: vi.fn(async () => {
+        throw new Error('disk unavailable')
+      }),
+    }
+    const service = new DependencyAcquisitionService({
+      catalog: new DependencyPolicyCatalog([PROFILE]),
+      fetcher: new DependencyHttpsFetcher({
+        resolver: { resolve: async () => [{ address: '104.16.24.34', family: 4 }] },
+        requester: {
+          get: async () => ({ statusCode: 200, headers: {}, body: data.archive }),
+        },
+      }),
+      reportSink,
+      stateRoot: path.join(data.root, 'state'),
+    })
+
+    await expect(
+      service.acquireNpm({
+        packageJsonText: data.packageJsonText,
+        packageLockText: data.packageLockText,
+        authorization: authorization(),
+      }),
+    ).rejects.toMatchObject({ code: 'DEPENDENCY_EVIDENCE_WRITE_FAILED' })
+    expect(reportSink.persist).toHaveBeenCalledTimes(1)
+  })
+
+  it('rechecks live dependency policy after DNS and before transport', async () => {
+    const data = await fixture()
+    const env: NodeJS.ProcessEnv = {}
+    const requester = { get: vi.fn() }
+    const service = new DependencyAcquisitionService({
+      catalog: new DependencyPolicyCatalog([PROFILE]),
+      env,
+      fetcher: new DependencyHttpsFetcher({
+        resolver: {
+          resolve: async () => {
+            env['SYMBOLWRIGHT_DISABLE_DEPENDENCY_ACQUISITION'] = 'true'
+            return [{ address: '104.16.24.34', family: 4 as const }]
+          },
+        },
+        requester,
+      }),
+      stateRoot: path.join(data.root, 'state'),
+    })
+
+    const result = await service.acquireNpm({
+      packageJsonText: data.packageJsonText,
+      packageLockText: data.packageLockText,
+      authorization: authorization(),
+    })
+
+    expect(result.report).toMatchObject({
+      status: 'failed',
+      decisionCode: 'DEPENDENCY_POLICY_REVOKED',
+    })
+    expect(requester.get).not.toHaveBeenCalled()
+  })
+
+  it('honors cancellation while dependency DNS is pending', async () => {
+    const data = await fixture()
+    let resolveStarted!: () => void
+    const started = new Promise<void>((resolve) => {
+      resolveStarted = resolve
+    })
+    const requester = { get: vi.fn() }
+    const service = new DependencyAcquisitionService({
+      catalog: new DependencyPolicyCatalog([PROFILE]),
+      fetcher: new DependencyHttpsFetcher({
+        resolver: {
+          resolve: async () => {
+            resolveStarted()
+            return new Promise<never>(() => undefined)
+          },
+        },
+        requester,
+      }),
+      stateRoot: path.join(data.root, 'state'),
+    })
+    const controller = new AbortController()
+    const pending = service.acquireNpm({
+      packageJsonText: data.packageJsonText,
+      packageLockText: data.packageLockText,
+      authorization: authorization(),
+      signal: controller.signal,
+    })
+    await started
+    controller.abort()
+
+    await expect(pending).resolves.toMatchObject({
+      report: { status: 'cancelled', decisionCode: 'DEPENDENCY_ACQUISITION_CANCELLED' },
+    })
+    expect(requester.get).not.toHaveBeenCalled()
   })
 
   it('records cancellation without making a dependency request', async () => {

@@ -1,12 +1,12 @@
 import { runGitCommand } from '../git/git-command-runner.js'
-import type { RuntimeToolDefinition, RuntimeToolContext } from '../types.js'
+import { renderRuntimeBoundary } from '../renderers/runtime-renderers.js'
+import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
 import {
   evaluateGitToolRequest,
   renderGitToolResult,
-  type GitToolInput,
   type GitOperation,
+  type GitToolInput,
 } from './git-tool.js'
-import { renderRuntimeBoundary } from '../renderers/runtime-renderers.js'
 
 const VALID_OPERATIONS = new Set<string>([
   'status',
@@ -62,6 +62,19 @@ function buildGitArgs(input: GitToolInput): string[] {
   return args
 }
 
+function assertTrustedOperatorGitExecution(context: RuntimeToolContext): void {
+  if (
+    context.accessControl !== undefined ||
+    context.untrustedRepositoryContent === true ||
+    (context.sandboxAuthorization !== undefined &&
+      context.sandboxAuthorization.callerKind !== 'operator')
+  ) {
+    throw new Error(
+      'authorization_denied[TRUSTED_OPERATOR_GIT_REQUIRED]: the git runtime tool launches a host Git process and is restricted to a trusted local operator checkout. Delegated and untrusted-repository callers must use governed GitHub write tools or isolated repository workflows.',
+    )
+  }
+}
+
 export async function executeGitTool(input: unknown, context: RuntimeToolContext): Promise<string> {
   const parsed = parseGitExecuteInput(input)
   const policyResult = evaluateGitToolRequest(parsed, context.policy)
@@ -70,6 +83,7 @@ export async function executeGitTool(input: unknown, context: RuntimeToolContext
     return renderGitToolResult(policyResult)
   }
 
+  assertTrustedOperatorGitExecution(context)
   const args = buildGitArgs(parsed)
   const result = await runGitCommand(args, context.cwd, 60_000)
 
@@ -93,7 +107,7 @@ export async function executeGitTool(input: unknown, context: RuntimeToolContext
 export const gitExecuteTool: RuntimeToolDefinition = {
   name: 'git',
   description:
-    'Execute git operations (status, diff, log, add, commit, push, checkout -b) in the active workspace.',
+    'Execute a narrow Git operation only from a trusted local operator checkout. Delegated and untrusted-repository callers are denied before host process creation.',
   capability: 'APPROVED_COMMAND',
   execute: executeGitTool,
 }

@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest'
 import type { RuntimePolicySnapshot } from '../types.js'
 import {
   evaluateGitToolRequest,
-  renderGitToolResult,
   READ_OPERATIONS,
+  renderGitToolResult,
   WRITE_OPERATIONS,
 } from './git-tool.js'
 
@@ -79,30 +79,53 @@ describe('evaluateGitToolRequest', () => {
       expect(result.blockReasons.length).toBeGreaterThan(0)
     })
 
-    it('blocks force push', () => {
-      const result = evaluateGitToolRequest({ operation: 'push', args: ['--force'] }, makePolicy())
-      expect(result.allowed).toBe(false)
-      expect(result.blockReasons).toContain('Force push is not allowed.')
+    it('blocks force push variants and leading-plus refspecs', () => {
+      for (const args of [
+        ['--force', 'origin', 'HEAD'],
+        ['--force-with-lease=refs/heads/topic', 'origin', 'HEAD'],
+        ['origin', '+HEAD'],
+      ]) {
+        const result = evaluateGitToolRequest({ operation: 'push', args }, makePolicy())
+        expect(result.allowed).toBe(false)
+        expect(result.blockReasons).toContain('Force push is not allowed.')
+      }
     })
 
-    it('blocks push to main', () => {
-      const result = evaluateGitToolRequest(
-        { operation: 'push', args: ['origin', 'main'] },
-        makePolicy(),
-      )
-      expect(result.allowed).toBe(false)
-      expect(result.blockReasons[0]).toContain('main')
+    it('blocks protected branches in direct and canonical ref forms', () => {
+      for (const target of ['main', 'refs/heads/main', 'master']) {
+        const result = evaluateGitToolRequest(
+          { operation: 'push', args: ['origin', target] },
+          makePolicy(),
+        )
+        expect(result.allowed).toBe(false)
+        expect(result.blockReasons.join(' ')).toContain('protected branch')
+      }
     })
 
-    it('blocks push to master', () => {
-      const result = evaluateGitToolRequest(
-        { operation: 'push', args: ['origin', 'master'] },
-        makePolicy(),
-      )
-      expect(result.allowed).toBe(false)
+    it('blocks refspec, URL, aggregate, delete, and repository-override push forms', () => {
+      for (const args of [
+        ['origin', 'HEAD:main'],
+        ['https://evil.example/repository.git', 'HEAD'],
+        ['--all', 'origin'],
+        ['--mirror', 'origin'],
+        ['--delete', 'origin', 'topic'],
+        ['--repo=https://evil.example/repository.git', 'origin', 'HEAD'],
+      ]) {
+        expect(evaluateGitToolRequest({ operation: 'push', args }, makePolicy()).allowed).toBe(
+          false,
+        )
+      }
     })
 
-    it('allows push to feature branch', () => {
+    it('requires the explicit origin remote', () => {
+      expect(
+        evaluateGitToolRequest({ operation: 'push', args: ['upstream', 'topic'] }, makePolicy())
+          .allowed,
+      ).toBe(false)
+      expect(evaluateGitToolRequest({ operation: 'push' }, makePolicy()).allowed).toBe(false)
+    })
+
+    it('allows a narrow push to a feature branch', () => {
       const result = evaluateGitToolRequest(
         { operation: 'push', args: ['-u', 'origin', 'feature/my-branch'] },
         makePolicy(),
@@ -110,12 +133,13 @@ describe('evaluateGitToolRequest', () => {
       expect(result.allowed).toBe(true)
     })
 
-    it('blocks checkout to protected branch', () => {
-      const result = evaluateGitToolRequest(
-        { operation: 'checkout_new', args: ['main'] },
-        makePolicy(),
-      )
-      expect(result.allowed).toBe(false)
+    it('blocks checkout to protected or revision-shaped branches', () => {
+      for (const branch of ['main', '--orphan', '../escape', 'topic..other']) {
+        expect(
+          evaluateGitToolRequest({ operation: 'checkout_new', args: [branch] }, makePolicy())
+            .allowed,
+        ).toBe(false)
+      }
     })
   })
 
@@ -145,7 +169,10 @@ describe('renderGitToolResult', () => {
   })
 
   it('renders blocked result with reasons', () => {
-    const result = evaluateGitToolRequest({ operation: 'push', args: ['--force'] }, makePolicy())
+    const result = evaluateGitToolRequest(
+      { operation: 'push', args: ['--force', 'origin', 'HEAD'] },
+      makePolicy(),
+    )
     const rendered = renderGitToolResult(result)
     expect(rendered).toContain('Allowed: no')
     expect(rendered).toContain('Force push')

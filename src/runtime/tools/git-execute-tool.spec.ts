@@ -7,7 +7,6 @@ import { describe, expect, it } from 'vitest'
 
 import { createDefaultRuntimePolicy } from '../policy/runtime-policy.js'
 import type { RuntimeApproval, RuntimeToolContext } from '../types.js'
-
 import { executeGitTool } from './git-execute-tool.js'
 
 function makeContext(overrides: Partial<RuntimeToolContext> = {}): RuntimeToolContext {
@@ -73,7 +72,7 @@ describe('executeGitTool', () => {
     expect(output).toContain('requires write permission')
   })
 
-  it('executes git add without approval when writes are allowed', async () => {
+  it('executes git add for a trusted local operator when writes are allowed', async () => {
     const workspace = makeGitWorkspace()
     try {
       const output = await executeGitTool(
@@ -95,7 +94,28 @@ describe('executeGitTool', () => {
     }
   })
 
-  it('executes read operations in read-only mode', async () => {
+  it('denies delegated callers before a host Git process can run', async () => {
+    await expect(
+      executeGitTool(
+        { operation: 'status' },
+        makeContext({
+          accessControl: {
+            principalId: 'principal-1',
+            grantId: 'grant-1',
+            requireAuthorized: async () => undefined,
+          },
+        }),
+      ),
+    ).rejects.toThrow(/TRUSTED_OPERATOR_GIT_REQUIRED/)
+  })
+
+  it('denies host Git for an externally acquired untrusted repository', async () => {
+    await expect(
+      executeGitTool({ operation: 'status' }, makeContext({ untrustedRepositoryContent: true })),
+    ).rejects.toThrow(/TRUSTED_OPERATOR_GIT_REQUIRED/)
+  })
+
+  it('executes read operations in read-only mode for a trusted operator', async () => {
     const output = await executeGitTool({ operation: 'status' }, makeContext())
 
     expect(output).toContain('Git operation: status')
@@ -138,7 +158,7 @@ describe('executeGitTool', () => {
 
   it('blocks force push', async () => {
     const output = await executeGitTool(
-      { operation: 'push', args: ['--force'] },
+      { operation: 'push', args: ['--force', 'origin', 'HEAD'] },
       makeApprovedContext(),
     )
 
@@ -160,13 +180,15 @@ describe('executeGitTool', () => {
     const workspace = makeGitWorkspace()
     try {
       const branchName = 'test-branch-' + Date.now()
-      const ctx: RuntimeToolContext = {
+      const context: RuntimeToolContext = {
         ...makeApprovedContext(),
         cwd: workspace,
       }
 
-      const output = await executeGitTool({ operation: 'checkout_new', args: [branchName] }, ctx)
-
+      const output = await executeGitTool(
+        { operation: 'checkout_new', args: [branchName] },
+        context,
+      )
       expect(output).toContain('Git operation: checkout_new')
       expect(output).toContain('Command: git checkout -b')
 
