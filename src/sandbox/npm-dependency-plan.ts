@@ -337,7 +337,10 @@ function parseSubresourceIntegrity(value: string): {
       const encoded = match[2]
       if (encoded === undefined || encoded.length === 0) return undefined
       const bytes = Buffer.from(encoded, 'base64')
-      if (bytes.byteLength === 0 || bytes.toString('base64').replace(/=+$/, '') !== encoded.replace(/=+$/, '')) {
+      if (
+        bytes.byteLength === 0 ||
+        bytes.toString('base64').replace(/=+$/, '') !== encoded.replace(/=+$/, '')
+      ) {
         return undefined
       }
       return { algorithm, digestHex: bytes.toString('hex') }
@@ -439,11 +442,7 @@ function parseLockfileVersion(value: unknown): 2 | 3 {
   )
 }
 
-function parseJsonObject<T extends object>(
-  text: string,
-  code: string,
-  label: string,
-): T {
+function parseJsonObject<T extends object>(text: string, code: string, label: string): T {
   let value: unknown
   try {
     value = JSON.parse(text) as unknown
@@ -495,11 +494,7 @@ function optionalNonEmptyString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim().length > 0 ? value : undefined
 }
 
-function requiredNonEmptyString(
-  value: unknown,
-  code: string,
-  message: string,
-): string {
+function requiredNonEmptyString(value: unknown, code: string, message: string): string {
   const parsed = optionalNonEmptyString(value)
   if (parsed === undefined) throw new NpmDependencyPlanError(code, message)
   return parsed

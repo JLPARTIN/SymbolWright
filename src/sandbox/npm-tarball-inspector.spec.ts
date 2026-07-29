@@ -100,12 +100,12 @@ describe('npm tarball inspector', () => {
       { name: 'package/large', content: 'x'.repeat(100) },
     ])
 
-    expect(() =>
-      inspectNpmTarball(archive, { ...LIMITS, maxFileBytes: 50 }),
-    ).toThrowError(expect.objectContaining({ code: 'DEPENDENCY_FILE_QUOTA_EXCEEDED' }))
-    expect(() =>
-      inspectNpmTarball(archive, { ...LIMITS, maxTotalBytes: 50 }),
-    ).toThrowError(expect.objectContaining({ code: 'DEPENDENCY_TOTAL_BYTES_QUOTA_EXCEEDED' }))
+    expect(() => inspectNpmTarball(archive, { ...LIMITS, maxFileBytes: 50 })).toThrowError(
+      expect.objectContaining({ code: 'DEPENDENCY_FILE_QUOTA_EXCEEDED' }),
+    )
+    expect(() => inspectNpmTarball(archive, { ...LIMITS, maxTotalBytes: 50 })).toThrowError(
+      expect.objectContaining({ code: 'DEPENDENCY_TOTAL_BYTES_QUOTA_EXCEEDED' }),
+    )
   })
 
   it('rejects gzip expansion beyond the full archive limit', () => {
@@ -114,9 +114,9 @@ describe('npm tarball inspector', () => {
       { name: 'package/compressible', content: 'x'.repeat(20_000) },
     ])
 
-    expect(() =>
-      inspectNpmTarball(archive, { ...LIMITS, maxExpandedBytes: 2_000 }),
-    ).toThrowError(expect.objectContaining({ code: 'DEPENDENCY_EXPANDED_QUOTA_EXCEEDED' }))
+    expect(() => inspectNpmTarball(archive, { ...LIMITS, maxExpandedBytes: 2_000 })).toThrowError(
+      expect.objectContaining({ code: 'DEPENDENCY_EXPANDED_QUOTA_EXCEEDED' }),
+    )
   })
 
   it('rejects archive checksum corruption and missing package manifest', () => {
@@ -144,10 +144,7 @@ function tar(entries: readonly TarEntryFixture[]): Buffer {
   const blocks: Buffer[] = []
   for (const entry of entries) {
     const type = entry.type ?? 'file'
-    const content =
-      type === 'file'
-        ? Buffer.from(entry.content ?? '')
-        : Buffer.alloc(0)
+    const content = type === 'file' ? Buffer.from(entry.content ?? '') : Buffer.alloc(0)
     const header = Buffer.alloc(512)
     writeText(header, 0, 100, entry.name)
     writeOctal(header, 100, 8, type === 'directory' ? 0o755 : 0o644)
@@ -183,12 +180,7 @@ function writeText(buffer: Buffer, offset: number, length: number, value: string
   bytes.copy(buffer, offset)
 }
 
-function writeOctal(
-  buffer: Buffer,
-  offset: number,
-  length: number,
-  value: number,
-): void {
+function writeOctal(buffer: Buffer, offset: number, length: number, value: number): void {
   const text = value.toString(8).padStart(length - 1, '0')
   buffer.write(text, offset, length - 1, 'ascii')
   buffer[offset + length - 1] = 0

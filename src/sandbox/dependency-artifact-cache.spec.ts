@@ -18,7 +18,10 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => fs.rm(root, { recursive: true, force: true })))
 })
 
-async function createCache(): Promise<{ readonly root: string; readonly cache: DependencyArtifactCache }> {
+async function createCache(): Promise<{
+  readonly root: string
+  readonly cache: DependencyArtifactCache
+}> {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'symbolwright-dependency-cache-'))
   roots.push(root)
   return {
@@ -53,7 +56,9 @@ function fixture(bytes: Uint8Array = Buffer.from('fixture tarball')): {
   }
 }
 
-function policy(overrides: Partial<EffectiveDependencyPolicy['limits']> = {}): EffectiveDependencyPolicy {
+function policy(
+  overrides: Partial<EffectiveDependencyPolicy['limits']> = {},
+): EffectiveDependencyPolicy {
   return {
     schemaVersion: 1,
     policyId: 'npm-production',
@@ -116,9 +121,7 @@ describe('dependency artifact cache', () => {
     const { artifact, bytes } = fixture()
 
     const results = await Promise.all(
-      Array.from({ length: 8 }, () =>
-        cache.putNpmArtifact({ artifact, bytes, policy: policy() }),
-      ),
+      Array.from({ length: 8 }, () => cache.putNpmArtifact({ artifact, bytes, policy: policy() })),
     )
 
     expect(results.filter((entry) => !entry.cacheHit)).toHaveLength(1)
@@ -189,9 +192,9 @@ describe('dependency artifact cache', () => {
     const cache = new DependencyArtifactCache({ root: symlinkRoot })
     const { artifact, bytes } = fixture()
 
-    await expect(
-      cache.putNpmArtifact({ artifact, bytes, policy: policy() }),
-    ).rejects.toMatchObject({ code: 'DEPENDENCY_CACHE_PATH_UNSAFE' })
+    await expect(cache.putNpmArtifact({ artifact, bytes, policy: policy() })).rejects.toMatchObject(
+      { code: 'DEPENDENCY_CACHE_PATH_UNSAFE' },
+    )
 
     const unsafePolicy = { ...policy(), cacheNamespace: '../escape' }
     await expect(

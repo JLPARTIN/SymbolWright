@@ -43,7 +43,9 @@ const POLICY: EffectiveDependencyPolicy = {
 }
 
 function resolver(
-  entries: Readonly<Record<string, readonly { readonly address: string; readonly family: 4 | 6 }[]>>,
+  entries: Readonly<
+    Record<string, readonly { readonly address: string; readonly family: 4 | 6 }[]>
+  >,
 ): DependencyDnsResolver {
   return {
     resolve: vi.fn(async (hostname: string) => entries[hostname] ?? []),

@@ -115,7 +115,10 @@ export class DependencyArtifactCache {
         await fs.rename(artifactTemp, paths.artifactPath)
         await fs.rename(metadataTemp, paths.metadataPath)
       } catch (error) {
-        await Promise.allSettled([fs.rm(artifactTemp, { force: true }), fs.rm(metadataTemp, { force: true })])
+        await Promise.allSettled([
+          fs.rm(artifactTemp, { force: true }),
+          fs.rm(metadataTemp, { force: true }),
+        ])
         if (isAlreadyExists(error)) {
           const raced = await this.readVerifiedEntry({
             paths,
@@ -164,7 +167,10 @@ export class DependencyArtifactCache {
     })
   }
 
-  private pathsFor(namespace: string, artifact: NpmDependencyArtifact): {
+  private pathsFor(
+    namespace: string,
+    artifact: NpmDependencyArtifact,
+  ): {
     readonly lockKey: string
     readonly namespaceRoot: string
     readonly algorithmRoot: string
@@ -351,7 +357,9 @@ async function writeExclusive(filePath: string, bytes: Uint8Array, mode: number)
   }
 }
 
-async function safeLstat(filePath: string): Promise<Awaited<ReturnType<typeof fs.lstat>> | undefined> {
+async function safeLstat(
+  filePath: string,
+): Promise<Awaited<ReturnType<typeof fs.lstat>> | undefined> {
   try {
     return await fs.lstat(filePath)
   } catch (error) {

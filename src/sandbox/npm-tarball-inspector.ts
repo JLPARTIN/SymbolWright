@@ -190,9 +190,7 @@ function parseEntryPath(header: Buffer): string {
   const prefix = readTarString(header.subarray(345, 500))
   const combined = prefix.length === 0 ? name : `${prefix}/${name}`
   const slashNormalized = combined.replace(/\\/g, '/')
-  const normalized = slashNormalized.endsWith('/')
-    ? slashNormalized.slice(0, -1)
-    : slashNormalized
+  const normalized = slashNormalized.endsWith('/') ? slashNormalized.slice(0, -1) : slashNormalized
   if (normalized.length === 0 || normalized.length > 512) {
     throw new NpmTarballInspectionError(
       'DEPENDENCY_ARCHIVE_PATH_INVALID',

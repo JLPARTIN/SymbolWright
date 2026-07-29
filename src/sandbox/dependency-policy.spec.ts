@@ -58,9 +58,7 @@ function authorization(
   }
 }
 
-function withoutPolicyReference(
-  value: SandboxAuthorizationContext,
-): SandboxAuthorizationContext {
+function withoutPolicyReference(value: SandboxAuthorizationContext): SandboxAuthorizationContext {
   const { policyReference, ...rest } = value
   void policyReference
   return rest
@@ -72,19 +70,19 @@ function withoutApproval(value: SandboxAuthorizationContext): SandboxAuthorizati
   return rest
 }
 
-function resolve(overrides: {
-  readonly authorization?: SandboxAuthorizationContext
-  readonly catalog?: DependencyPolicyCatalog
-  readonly registryUrls?: readonly string[]
-  readonly env?: NodeJS.ProcessEnv
-  readonly limits?: { readonly maxPackages?: number; readonly timeoutMs?: number }
-} = {}) {
+function resolve(
+  overrides: {
+    readonly authorization?: SandboxAuthorizationContext
+    readonly catalog?: DependencyPolicyCatalog
+    readonly registryUrls?: readonly string[]
+    readonly env?: NodeJS.ProcessEnv
+    readonly limits?: { readonly maxPackages?: number; readonly timeoutMs?: number }
+  } = {},
+) {
   return resolveEffectiveDependencyPolicy({
     request: {
       ecosystem: 'npm',
-      ...(overrides.registryUrls === undefined
-        ? {}
-        : { registryUrls: overrides.registryUrls }),
+      ...(overrides.registryUrls === undefined ? {} : { registryUrls: overrides.registryUrls }),
       ...(overrides.limits === undefined ? {} : { limits: overrides.limits }),
     },
     authorization: overrides.authorization ?? authorization(),
@@ -136,10 +134,7 @@ describe('governed dependency policy', () => {
       authorization: authorization({
         policyReference: { id: PROFILE.id, version: PROFILE.version - 1 },
       }),
-      catalog: new DependencyPolicyCatalog([
-        PROFILE,
-        { ...PROFILE, version: PROFILE.version - 1 },
-      ]),
+      catalog: new DependencyPolicyCatalog([PROFILE, { ...PROFILE, version: PROFILE.version - 1 }]),
     })
     const staleApproval = resolve({
       authorization: authorization({
@@ -167,9 +162,7 @@ describe('governed dependency policy', () => {
       authorization: authorization({ callerKind: 'team-member' }),
     })
     const localOnly = resolve({
-      catalog: new DependencyPolicyCatalog([
-        { ...PROFILE, deploymentModes: ['local'] },
-      ]),
+      catalog: new DependencyPolicyCatalog([{ ...PROFILE, deploymentModes: ['local'] }]),
     })
     const readOnly = resolve({
       authorization: authorization({ runtimeMode: 'READ_ONLY' }),
@@ -209,20 +202,16 @@ describe('governed dependency policy', () => {
   })
 
   it('normalizes registry URLs and evaluates package URLs without leaking credentials', () => {
-    expect(normalizeRegistryUrl('https://registry.npmjs.org')).toBe(
-      'https://registry.npmjs.org/',
-    )
+    expect(normalizeRegistryUrl('https://registry.npmjs.org')).toBe('https://registry.npmjs.org/')
     expect(
-      isUrlAllowedByRegistryPolicy(
-        'https://registry.npmjs.org/pkg/-/pkg-1.0.0.tgz',
-        ['https://registry.npmjs.org/'],
-      ),
+      isUrlAllowedByRegistryPolicy('https://registry.npmjs.org/pkg/-/pkg-1.0.0.tgz', [
+        'https://registry.npmjs.org/',
+      ]),
     ).toBe(true)
     expect(
-      isUrlAllowedByRegistryPolicy(
-        'https://user:secret@registry.npmjs.org/pkg.tgz',
-        ['https://registry.npmjs.org/'],
-      ),
+      isUrlAllowedByRegistryPolicy('https://user:secret@registry.npmjs.org/pkg.tgz', [
+        'https://registry.npmjs.org/',
+      ]),
     ).toBe(false)
   })
 

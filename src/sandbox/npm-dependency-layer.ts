@@ -133,7 +133,11 @@ export async function materializeNpmDependencyLayer(input: {
       }
     }
 
-    const files = await manifestLayerFiles(tempRoot, policy.limits.maxFiles, policy.limits.maxTotalBytes)
+    const files = await manifestLayerFiles(
+      tempRoot,
+      policy.limits.maxFiles,
+      policy.limits.maxTotalBytes,
+    )
     const manifestMaterial: NpmDependencyLayerManifest = {
       schemaVersion: NPM_DEPENDENCY_LAYER_SCHEMA_VERSION,
       layerId: input.layerId,
@@ -226,7 +230,11 @@ export async function cleanupNpmDependencyLayer(
 
 async function extractInspectedTarball(input: {
   readonly archive: Uint8Array
-  readonly entries: readonly { readonly path: string; readonly type: 'file' | 'directory'; readonly size: number }[]
+  readonly entries: readonly {
+    readonly path: string
+    readonly type: 'file' | 'directory'
+    readonly size: number
+  }[]
   readonly packageRoot: string
   readonly destinations: Set<string>
   readonly maxTotalBytes: number
@@ -584,7 +592,10 @@ function containedPath(root: string, relativePath: string): string {
 function safeLayerId(value: string): string {
   const safe = value.replace(/[^A-Za-z0-9._-]/g, '_').slice(0, 128)
   if (safe.length === 0 || safe === '.' || safe === '..') {
-    throw new NpmDependencyLayerError('DEPENDENCY_LAYER_ID_INVALID', 'Dependency layer id is invalid.')
+    throw new NpmDependencyLayerError(
+      'DEPENDENCY_LAYER_ID_INVALID',
+      'Dependency layer id is invalid.',
+    )
   }
   return safe
 }

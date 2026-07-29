@@ -163,7 +163,7 @@ async function createAcquisitionFixture(options: {
     name: options.packageName,
     version: options.packageVersion,
     bin: { 'alpha-cli': 'cli.js' },
-    scripts: { install: 'node -e "require(\'fs\').writeFileSync(\'INSTALL_SCRIPT_RAN\',\'bad\')"' },
+    scripts: { install: "node -e \"require('fs').writeFileSync('INSTALL_SCRIPT_RAN','bad')\"" },
   })
   const archive = tarGzip([
     { name: 'package/', type: 'directory' },

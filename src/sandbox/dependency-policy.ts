@@ -124,9 +124,7 @@ export class DependencyPolicyCatalog {
   }
 
   public resolve(reference: SandboxPolicyReference): DependencyPolicyProfile | undefined {
-    return this.profiles
-      .get(reference.id)
-      ?.find((profile) => profile.version === reference.version)
+    return this.profiles.get(reference.id)?.find((profile) => profile.version === reference.version)
   }
 }
 
@@ -200,10 +198,7 @@ export function resolveEffectiveDependencyPolicy(
     )
   }
 
-  const globalVersion = positiveInteger(
-    env['SYMBOLWRIGHT_DEPENDENCY_GLOBAL_POLICY_VERSION'],
-    1,
-  )
+  const globalVersion = positiveInteger(env['SYMBOLWRIGHT_DEPENDENCY_GLOBAL_POLICY_VERSION'], 1)
   const sources = dependencyPolicySources(input.authorization, profile, globalVersion)
   const approvalFailure = validateApproval(
     input.authorization.approval,
@@ -348,8 +343,7 @@ function validateApproval(
     )
   }
   if (
-    canonicalSandboxCapabilityId(approval.capabilityId) !==
-    SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY
+    canonicalSandboxCapabilityId(approval.capabilityId) !== SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY
   ) {
     return blocked(
       'DEPENDENCY_APPROVAL_CAPABILITY_MISMATCH',
