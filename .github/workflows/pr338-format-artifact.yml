@@ -1,0 +1,47 @@
+name: PR338 Format Artifact
+
+on:
+  push:
+    branches:
+      - symbolwright/sandbox-pr5-governed-dependency-acquisition
+
+permissions:
+  contents: read
+
+jobs:
+  format-artifact:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Format PR338 sources
+        run: |
+          npx prettier --write \
+            src/sandbox/dependency-acquisition-service.spec.ts \
+            src/sandbox/dependency-acquisition-service.ts \
+            src/sandbox/dependency-artifact-cache.spec.ts \
+            src/sandbox/dependency-artifact-cache.ts \
+            src/sandbox/dependency-https-fetcher.spec.ts \
+            src/sandbox/dependency-https-fetcher.ts \
+            src/sandbox/dependency-policy.spec.ts \
+            src/sandbox/dependency-policy.ts \
+            src/sandbox/npm-dependency-layer.spec.ts \
+            src/sandbox/npm-dependency-layer.ts \
+            src/sandbox/npm-dependency-plan.spec.ts \
+            src/sandbox/npm-dependency-plan.ts \
+            src/sandbox/npm-tarball-inspector.spec.ts \
+            src/sandbox/npm-tarball-inspector.ts
+      - name: Upload formatted sources
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pr338-formatted-sources
+          path: src/sandbox
+          if-no-files-found: error
+          retention-days: 1
