@@ -685,7 +685,7 @@ export async function handleRepositoryPush(
     return
   }
 
-  if (BLOCKED_REFS.includes(currentBranch)) {
+  if (BLOCKED_REFS.some((blockedRef) => blockedRef === currentBranch)) {
     sendJson(res, 403, { error: `Cannot push directly from protected branch "${currentBranch}".` })
     return
   }
