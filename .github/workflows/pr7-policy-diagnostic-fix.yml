@@ -1,0 +1,101 @@
+name: PR7 Policy Diagnostic Fix
+
+on:
+  push:
+    branches:
+      - symbolwright/sandbox-pr7-final-adversarial-audit
+    paths:
+      - .github/pr7-policy-diagnostic-fix-trigger
+
+permissions:
+  contents: write
+
+jobs:
+  fix-and-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout latest branch head
+        uses: actions/checkout@v4
+        with:
+          ref: symbolwright/sandbox-pr7-final-adversarial-audit
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Apply corrections and publish targeted test result
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          dependency = Path('src/sandbox/dependency-policy.spec.ts')
+          source = dependency.read_text()
+          old = """    expect(invalidRevision.allowed).toBe(true)
+    expect(unsafeRevision.allowed).toBe(true)
+"""
+          new = """    expect(invalidRevision).toMatchObject({
+      allowed: false,
+      reasonCode: 'DEPENDENCY_GLOBAL_POLICY_VERSION_INVALID',
+    })
+    expect(unsafeRevision).toMatchObject({
+      allowed: false,
+      reasonCode: 'DEPENDENCY_GLOBAL_POLICY_VERSION_INVALID',
+    })
+"""
+          if old in source:
+              dependency.write_text(source.replace(old, new, 1))
+
+          egress = Path('src/sandbox/egress-policy.spec.ts')
+          source = egress.read_text()
+          old = """    expect(resolve({ env: { SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION: 'invalid' } }).allowed).toBe(
+      true,
+    )
+"""
+          new = """    expect(
+      resolve({ env: { SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION: 'invalid' } }),
+    ).toMatchObject({
+      allowed: false,
+      reasonCode: 'EGRESS_GLOBAL_POLICY_VERSION_INVALID',
+      state: 'denied',
+    })
+"""
+          if old in source:
+              egress.write_text(source.replace(old, new, 1))
+          PY
+
+          npm ci
+          npx prettier --write \
+            src/sandbox/dependency-policy.spec.ts \
+            src/sandbox/egress-policy.spec.ts
+
+          set +e
+          npx vitest run \
+            src/sandbox/dependency-policy.spec.ts \
+            src/sandbox/egress-policy.spec.ts \
+            --reporter=verbose > /tmp/pr7-policy-tests.log 2>&1
+          status=$?
+          set -e
+
+          {
+            echo "status=$status"
+            cat /tmp/pr7-policy-tests.log
+          } > .github/pr7-policy-diagnostic.log
+
+          rm -f .github/pr7-policy-expectation-fix-trigger
+          rm -f .github/workflows/pr7-policy-expectation-fix.yml
+          rm -f .github/pr7-policy-diagnostic-fix-trigger
+          rm -f .github/workflows/pr7-policy-diagnostic-fix.yml
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'test(sandbox): align fail-closed policy expectations'
+          git pull --rebase origin symbolwright/sandbox-pr7-final-adversarial-audit
+          git push origin HEAD:symbolwright/sandbox-pr7-final-adversarial-audit
