@@ -22,9 +22,9 @@ function createWorkspace(): string {
     [
       '# Final Sandbox Adversarial Audit',
       '',
-      'Audited code SHA: `0123456789abcdef0123456789abcdef01234567`',
+      '**Audited code SHA:** `0123456789abcdef0123456789abcdef01234567`',
       '',
-      'Release verdict: **PASS**',
+      '**Release verdict:** **PASS**',
       '',
     ].join('\n'),
   )
@@ -78,7 +78,7 @@ describe('assessReleaseClosureIntegrity', () => {
     const auditPath = path.join(workspace, FINAL_SANDBOX_AUDIT_RELATIVE_PATH)
     const content = fs
       .readFileSync(auditPath, 'utf8')
-      .replace('Release verdict: **PASS**', 'Release verdict: **BLOCKED**')
+      .replace('**Release verdict:** **PASS**', '**Release verdict:** **BLOCKED**')
     fs.writeFileSync(auditPath, content)
 
     const report = assessReleaseClosureIntegrity(workspace)
