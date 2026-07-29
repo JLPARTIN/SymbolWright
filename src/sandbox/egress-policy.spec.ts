@@ -225,9 +225,13 @@ describe('brokered egress policy', () => {
     expect(resolve({ env: { SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION: '2' } }).reasonCode).toBe(
       'EGRESS_APPROVAL_POLICY_STALE',
     )
-    expect(resolve({ env: { SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION: 'invalid' } }).allowed).toBe(
-      true,
-    )
+    expect(
+      resolve({ env: { SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION: 'invalid' } }),
+    ).toMatchObject({
+      allowed: false,
+      reasonCode: 'EGRESS_GLOBAL_POLICY_VERSION_INVALID',
+      state: 'denied',
+    })
   })
 
   it('allows request limits only to tighten the operator profile', () => {
