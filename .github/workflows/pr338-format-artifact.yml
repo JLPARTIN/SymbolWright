@@ -1,9 +1,7 @@
 name: PR338 Format Artifact
 
 on:
-  push:
-    branches:
-      - symbolwright/sandbox-pr5-governed-dependency-acquisition
+  pull_request:
 
 permissions:
   contents: read
