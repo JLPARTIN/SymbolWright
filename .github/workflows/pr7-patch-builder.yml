@@ -4,48 +4,72 @@ on:
   push:
     branches:
       - symbolwright/sandbox-pr7-final-adversarial-audit
-  pull_request:
-    branches:
-      - main
+
+concurrency:
+  group: pr7-patch-builder
+  cancel-in-progress: true
 
 permissions:
   contents: write
 
 jobs:
   apply-patches:
-    if: >-
-      github.ref == 'refs/heads/symbolwright/sandbox-pr7-final-adversarial-audit' ||
-      github.head_ref == 'symbolwright/sandbox-pr7-final-adversarial-audit'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout exact branch head
+      - name: Checkout latest branch head
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: symbolwright/sandbox-pr7-final-adversarial-audit
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Apply staged PR 7 patches
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Apply patches and format audited files
         shell: bash
         run: |
           set -euo pipefail
           shopt -s nullglob
+
           patches=(.github/pr7-patches/*.patch)
-          if (( ${#patches[@]} == 0 )); then
-            echo 'No staged PR 7 patches remain.'
-            exit 0
-          fi
           for patch in "${patches[@]}"; do
-            git apply --check "$patch"
+            if git apply --check "$patch"; then
+              git apply "$patch"
+            else
+              echo "Skipping stale or already-applied patch: $patch"
+            fi
           done
-          for patch in "${patches[@]}"; do
-            git apply "$patch"
-          done
+
+          npm ci
+          npx prettier --write \
+            src/runtime/tools/web-fetch-tool.spec.ts \
+            src/runtime/tools/web-search-tool.spec.ts \
+            src/sandbox/dependency-acquisition-service.ts \
+            src/sandbox/egress-broker.spec.ts \
+            src/sandbox/egress-broker.ts \
+            src/sandbox/policy-version.ts \
+            src/sandbox/sandbox-network-gateway.spec.ts \
+            src/sandbox/sandbox-network-gateway.ts \
+            src/sandbox/secure-state-directory.ts
+
           rm -rf .github/pr7-patches
           rm -f .github/pr7-patch-trigger
+          rm -f .github/workflows/pr7-patch-builder.yml
+
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m 'ci: apply PR 7 audit corrections'
+
+          if git diff --cached --quiet; then
+            echo 'No patch or formatting changes were required.'
+            exit 0
+          fi
+
+          git commit -m 'style(sandbox): format PR 7 audit changes'
+          git pull --rebase origin symbolwright/sandbox-pr7-final-adversarial-audit
           git push origin HEAD:symbolwright/sandbox-pr7-final-adversarial-audit
