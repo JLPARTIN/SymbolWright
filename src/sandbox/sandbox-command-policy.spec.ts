@@ -81,6 +81,19 @@ describe('sandbox command policy', () => {
     expect(decision.policy?.fingerprint).toMatch(/^[a-f0-9]{64}$/)
   })
 
+  it('uses the server-owned profile limits when callers do not tighten them', () => {
+    const decision = resolveEffectiveSandboxCommandPolicy({
+      request: REQUEST,
+      authorization: authorization(),
+      env: {},
+    })
+
+    expect(decision.policy?.limits).toEqual({
+      timeoutMs: 300_000,
+      maxOutputBytes: 1024 * 1024,
+    })
+  })
+
   it('permits the trusted-system caller and canonicalizes the legacy offline alias', () => {
     const decision = resolveEffectiveSandboxCommandPolicy({
       request: REQUEST,
@@ -184,7 +197,7 @@ describe('sandbox command policy', () => {
     expect(granted.allowed).toBe(true)
   })
 
-  it('intersects request, mission, grant, profile, and global limits by minimum', () => {
+  it('intersects request, mission, grant, and profile limits by minimum', () => {
     const decision = resolveEffectiveSandboxCommandPolicy({
       request: { ...REQUEST, timeoutMs: 40_000, maxOutputBytes: 8_000 },
       authorization: authorization({
@@ -209,8 +222,8 @@ describe('sandbox command policy', () => {
 
     expect(decision.allowed).toBe(true)
     expect(decision.policy?.limits).toEqual({
-      timeoutMs: 60_000,
-      maxOutputBytes: 64_000,
+      timeoutMs: 300_000,
+      maxOutputBytes: 1024 * 1024,
     })
   })
 
