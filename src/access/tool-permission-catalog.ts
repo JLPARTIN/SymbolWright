@@ -1,6 +1,9 @@
 import type { SymbolWrightToolName } from '../runtime/types.js'
 import type { ApprovalRequirement, RiskLevel } from './access-types.js'
-import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from './sandbox-capabilities.js'
+import {
+  SANDBOX_EGRESS_CAPABILITY,
+  SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
+} from './sandbox-capabilities.js'
 
 /**
  * Every SymbolWright tool must declare the capability (or capabilities) it
@@ -71,8 +74,8 @@ export const TOOL_PERMISSION_DESCRIPTORS: Readonly<
   memory_store: tool('symbolwright.mission.execute', 'low'),
   preflight: tool('symbolwright.validation.run', 'low'),
   mcp_call: tool('symbolwright.mission.execute', 'write'),
-  web_fetch: tool('symbolwright.repository.search', 'low'),
-  web_search: tool('symbolwright.repository.search', 'low'),
+  web_fetch: tool(SANDBOX_EGRESS_CAPABILITY, 'write'),
+  web_search: tool(SANDBOX_EGRESS_CAPABILITY, 'write'),
   subagent_run: tool('symbolwright.mission.execute', 'write'),
   skill_run: tool('symbolwright.mission.execute', 'write'),
   sandbox_list_runtimes: tool(SANDBOX_OFFLINE_EXECUTE_CAPABILITY, 'read'),
