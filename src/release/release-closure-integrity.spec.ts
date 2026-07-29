@@ -76,10 +76,9 @@ describe('assessReleaseClosureIntegrity', () => {
   it('fails when the final audit verdict is not PASS', () => {
     const workspace = createWorkspace()
     const auditPath = path.join(workspace, FINAL_SANDBOX_AUDIT_RELATIVE_PATH)
-    const content = fs.readFileSync(auditPath, 'utf8').replace(
-      'Release verdict: **PASS**',
-      'Release verdict: **BLOCKED**',
-    )
+    const content = fs
+      .readFileSync(auditPath, 'utf8')
+      .replace('Release verdict: **PASS**', 'Release verdict: **BLOCKED**')
     fs.writeFileSync(auditPath, content)
 
     const report = assessReleaseClosureIntegrity(workspace)
@@ -99,11 +98,7 @@ describe('assessReleaseClosureIntegrity', () => {
 
     expect(report.status).toBe('FAIL')
     expect(report.findings).toContain(
-      `Temporary release artifact remains: ${path.join(
-        'docs',
-        'security',
-        'PR7_DO_NOT_MERGE.md',
-      )}`,
+      `Temporary release artifact remains: ${path.join('docs', 'security', 'PR7_DO_NOT_MERGE.md')}`,
     )
   })
 
