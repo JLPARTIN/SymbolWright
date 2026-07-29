@@ -1,0 +1,46 @@
+name: PR7 Patch Builder
+
+on:
+  push:
+    branches:
+      - symbolwright/sandbox-pr7-final-adversarial-audit
+
+permissions:
+  contents: write
+
+jobs:
+  apply-patches:
+    if: github.ref == 'refs/heads/symbolwright/sandbox-pr7-final-adversarial-audit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Apply staged PR 7 patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          patches=(.github/pr7-patches/*.patch)
+          if (( ${#patches[@]} == 0 )); then
+            echo 'No staged PR 7 patches remain.'
+            exit 0
+          fi
+          for patch in "${patches[@]}"; do
+            git apply --check "$patch"
+          done
+          for patch in "${patches[@]}"; do
+            git apply "$patch"
+          done
+          rm -rf .github/pr7-patches
+          rm -f .github/pr7-patch-trigger
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'ci: apply PR 7 audit corrections'
+          git push origin HEAD:symbolwright/sandbox-pr7-final-adversarial-audit
