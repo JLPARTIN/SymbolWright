@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { createSymbolWrightMcpToolHandler } from './mcp-server-tools.js'
+import {
+  McpAgentTokenAuthenticationError,
+  createSymbolWrightMcpToolHandler,
+} from './mcp-server-tools.js'
 
 describe('createSymbolWrightMcpToolHandler', () => {
   it('exposes only read-safe tools in READ_ONLY mode', () => {
@@ -26,6 +29,23 @@ describe('createSymbolWrightMcpToolHandler', () => {
     expect(names).toContain('bash')
     expect(names).toContain('local_file_write')
     expect(names).toContain('edit_file')
+  })
+
+  it('requires explicit repository and branch context before authenticating delegated MCP', () => {
+    expect(() =>
+      createSymbolWrightMcpToolHandler({
+        mode: 'APPROVED_EXECUTION',
+        cwd: process.cwd(),
+        agentToken: 'sw_agent_untrusted_fixture',
+      }),
+    ).toThrow(McpAgentTokenAuthenticationError)
+    expect(() =>
+      createSymbolWrightMcpToolHandler({
+        mode: 'APPROVED_EXECUTION',
+        cwd: process.cwd(),
+        agentToken: 'sw_agent_untrusted_fixture',
+      }),
+    ).toThrow(/explicit repository and branch context/)
   })
 
   it('every listed tool has a valid JSON-schema-shaped inputSchema', () => {
