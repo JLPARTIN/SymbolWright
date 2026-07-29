@@ -11,6 +11,7 @@ import {
   validateSymbolWrightConfig,
 } from './config/symbolwright-config.js'
 import { ProviderGateway } from './providers/provider-gateway.js'
+import { loadEgressOperatorState } from './sandbox/egress-operator-state.js'
 import { runSandboxReadinessCheck } from './runtime/sandbox/sandbox-diagnostics.js'
 import { renderDockerSandboxConfig } from './runtime/sandbox/sandbox-runner.js'
 import { assembleAgentTools } from './runtime/tools/tool-assembly.js'
@@ -220,6 +221,21 @@ function checkSandboxReadiness(): DoctorCheck {
   }
 }
 
+function checkSandboxEgress(workspaceRoot: string): DoctorCheck {
+  const state = loadEgressOperatorState(process.env, workspaceRoot)
+  const status: DoctorCheckStatus =
+    state.state === 'allowlisted'
+      ? 'PASS'
+      : state.state === 'denied' || state.state === 'unsupported'
+        ? 'FAIL'
+        : 'WARN'
+  return {
+    name: 'Sandbox egress',
+    status,
+    detail: `${state.state}: ${state.detail}`,
+  }
+}
+
 function checkToolRegistry(): DoctorCheck {
   const tools = assembleAgentTools()
   if (tools.length >= 30) {
@@ -290,6 +306,7 @@ export function runDoctor(workspaceRoot: string): DoctorReport {
     checkProviderGateway(),
     checkSandboxConfiguration(),
     checkSandboxReadiness(),
+    checkSandboxEgress(workspaceRoot),
     checkToolRegistry(),
     checkSessionsDir(workspaceRoot),
     checkMemoryDir(workspaceRoot),

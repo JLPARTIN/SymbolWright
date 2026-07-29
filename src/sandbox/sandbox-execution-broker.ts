@@ -1,4 +1,10 @@
 import {
+  EgressPolicyCatalog,
+  resolveEffectiveEgressPolicy,
+  type EgressPolicyDecision,
+  type EgressPolicyRequest,
+} from './egress-policy.js'
+import {
   resolveEffectiveSandboxCommandPolicy,
   type EffectiveSandboxCommandPolicy,
   type SandboxCommandPolicyRequest,
@@ -31,22 +37,26 @@ export interface SandboxCommandBrokerDecision {
 export interface SandboxExecutionBrokerOptions {
   readonly env?: NodeJS.ProcessEnv
   readonly catalog?: SandboxPolicyCatalog
+  readonly egressCatalog?: EgressPolicyCatalog
   readonly now?: () => Date
 }
 
 /**
- * The sole policy-authority entry point for sandbox execution. Structured code requests and
- * compatibility command requests both resolve immutable policy here before an executor sees them.
- * Executors never re-interpret caller JSON, grant fields, deployment posture, or workspace trust.
+ * The sole policy-authority entry point for sandbox execution. Structured code requests,
+ * compatibility command requests, and brokered egress requests resolve immutable policy here
+ * before an executor or network worker sees them. Executors never re-interpret caller JSON, grant
+ * fields, deployment posture, or workspace trust.
  */
 export class SandboxExecutionBroker {
   private readonly env: NodeJS.ProcessEnv
   private readonly catalog: SandboxPolicyCatalog
+  private readonly egressCatalog: EgressPolicyCatalog
   private readonly now: () => Date
 
   public constructor(options: SandboxExecutionBrokerOptions = {}) {
     this.env = options.env ?? process.env
     this.catalog = options.catalog ?? new SandboxPolicyCatalog()
+    this.egressCatalog = options.egressCatalog ?? new EgressPolicyCatalog()
     this.now = options.now ?? (() => new Date())
   }
 
@@ -70,8 +80,8 @@ export class SandboxExecutionBroker {
     const effectiveRunner: SandboxRunnerDefinition = {
       ...runner,
       limits: resolution.policy.limits,
-      // Offline execution is the only executable profile today. Dependency acquisition and egress
-      // are separate future broker paths and never turn into direct runner networking here.
+      // Direct runner networking remains impossible. Dependency downloads and runtime HTTP are
+      // separate host-side broker operations and never turn into Docker bridge access here.
       networkPolicy: 'disabled',
       capabilities: { ...runner.capabilities, network: false },
     }
@@ -105,6 +115,19 @@ export class SandboxExecutionBroker {
     return resolveEffectiveSandboxCommandPolicy({
       request,
       authorization,
+      env: this.env,
+      now: this.now,
+    })
+  }
+
+  public authorizeEgress(
+    request: EgressPolicyRequest,
+    authorization: SandboxAuthorizationContext,
+  ): EgressPolicyDecision {
+    return resolveEffectiveEgressPolicy({
+      request,
+      authorization,
+      catalog: this.egressCatalog,
       env: this.env,
       now: this.now,
     })
