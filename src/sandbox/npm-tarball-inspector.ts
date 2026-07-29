@@ -189,7 +189,10 @@ function parseEntryPath(header: Buffer): string {
   const name = readTarString(header.subarray(0, 100))
   const prefix = readTarString(header.subarray(345, 500))
   const combined = prefix.length === 0 ? name : `${prefix}/${name}`
-  const normalized = combined.replace(/\\/g, '/')
+  const slashNormalized = combined.replace(/\\/g, '/')
+  const normalized = slashNormalized.endsWith('/')
+    ? slashNormalized.slice(0, -1)
+    : slashNormalized
   if (normalized.length === 0 || normalized.length > 512) {
     throw new NpmTarballInspectionError(
       'DEPENDENCY_ARCHIVE_PATH_INVALID',
@@ -279,8 +282,12 @@ function isZeroBlock(block: Buffer): boolean {
 }
 
 function isOutputLimitError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+  const code = 'code' in error ? String((error as NodeJS.ErrnoException).code) : ''
+  const message = error.message.toLowerCase()
   return (
-    error instanceof Error &&
-    ('code' in error || error.message.toLowerCase().includes('larger than'))
+    code === 'ERR_BUFFER_TOO_LARGE' ||
+    message.includes('maxoutputlength') ||
+    message.includes('larger than')
   )
 }
