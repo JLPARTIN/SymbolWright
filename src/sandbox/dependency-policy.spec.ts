@@ -58,6 +58,20 @@ function authorization(
   }
 }
 
+function withoutPolicyReference(
+  value: SandboxAuthorizationContext,
+): SandboxAuthorizationContext {
+  const { policyReference, ...rest } = value
+  void policyReference
+  return rest
+}
+
+function withoutApproval(value: SandboxAuthorizationContext): SandboxAuthorizationContext {
+  const { approval, ...rest } = value
+  void approval
+  return rest
+}
+
 function resolve(overrides: {
   readonly authorization?: SandboxAuthorizationContext
   readonly catalog?: DependencyPolicyCatalog
@@ -106,10 +120,10 @@ describe('governed dependency policy', () => {
       authorization: authorization({ approvedCapabilityIds: [] }),
     })
     const missingReference = resolve({
-      authorization: authorization({ policyReference: undefined }),
+      authorization: withoutPolicyReference(authorization()),
     })
     const missingApproval = resolve({
-      authorization: authorization({ approval: undefined }),
+      authorization: withoutApproval(authorization()),
     })
 
     expect(missingCapability.reasonCode).toBe('DEPENDENCY_CAPABILITY_NOT_APPROVED')
