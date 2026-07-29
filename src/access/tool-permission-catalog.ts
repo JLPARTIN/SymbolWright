@@ -90,7 +90,29 @@ export function resolveToolPermissionDescriptor(
     : undefined
 }
 
-/** Every capability referenced by any tool, plus `restore_checkpoint`'s extra requirement. */
+/**
+ * Capabilities that depend on the structured operation inside a tool request. These are additive
+ * to the tool's baseline capability so an agent cannot use a broad tool surface to bypass a more
+ * specific write authority.
+ */
+export function operationCapabilitiesForTool(
+  toolName: string,
+  metadata: Readonly<Record<string, unknown>> | undefined,
+): readonly string[] {
+  if (toolName !== 'git') return []
+  switch (metadata?.['operation']) {
+    case 'checkout_new':
+      return ['repo.branch.create']
+    case 'add':
+      return ['repo.content.update']
+    case 'push':
+      return ['repo.commit.push']
+    default:
+      return []
+  }
+}
+
+/** Every baseline capability referenced by a tool. */
 export function requiredCapabilitiesForTool(toolName: string): readonly string[] {
   const descriptor = resolveToolPermissionDescriptor(toolName)
   if (descriptor === undefined) return []
