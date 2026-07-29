@@ -6,12 +6,7 @@ import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
 export const EGRESS_GLOBAL_POLICY_ID = 'sandbox-egress-global' as const
 
 export type EgressState =
-  | 'disabled'
-  | 'dependency-only'
-  | 'allowlisted'
-  | 'unsupported'
-  | 'denied'
-  | 'quota-exhausted'
+  'disabled' | 'dependency-only' | 'allowlisted' | 'unsupported' | 'denied' | 'quota-exhausted'
 
 export interface EgressPolicyLimits {
   readonly maxRequests: number
@@ -101,10 +96,16 @@ export class EgressPolicyCatalog {
   }): EffectiveEgressPolicy {
     const profile = this.profiles.get(input.profileId)
     if (profile === undefined) {
-      throw new EgressPolicyError('EGRESS_PROFILE_NOT_FOUND', 'Egress policy profile was not found.')
+      throw new EgressPolicyError(
+        'EGRESS_PROFILE_NOT_FOUND',
+        'Egress policy profile was not found.',
+      )
     }
     if (!this.globallyEnabled || !profile.enabled) {
-      throw new EgressPolicyError('EGRESS_DISABLED', 'Brokered egress is disabled by operator policy.')
+      throw new EgressPolicyError(
+        'EGRESS_DISABLED',
+        'Brokered egress is disabled by operator policy.',
+      )
     }
     const authorization = input.authorization
     if (authorization.runtimeMode !== 'APPROVED_EXECUTION') {
@@ -231,7 +232,10 @@ function assertProfile(profile: EgressPolicyProfile): void {
     throw new EgressPolicyError('EGRESS_PROFILE_ID_INVALID', 'Egress profile ID is invalid.')
   }
   if (!Number.isSafeInteger(profile.version) || profile.version <= 0) {
-    throw new EgressPolicyError('EGRESS_PROFILE_VERSION_INVALID', 'Egress profile version is invalid.')
+    throw new EgressPolicyError(
+      'EGRESS_PROFILE_VERSION_INVALID',
+      'Egress profile version is invalid.',
+    )
   }
   if (profile.destinations.length === 0) {
     throw new EgressPolicyError(
