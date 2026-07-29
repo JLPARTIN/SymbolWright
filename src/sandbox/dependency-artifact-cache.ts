@@ -334,17 +334,39 @@ function parseProvenance(value: string): DependencyCacheProvenance {
 }
 
 async function ensureSafeDirectory(directory: string, mode: number): Promise<void> {
-  const existing = await safeLstat(directory)
-  if (existing !== undefined) {
-    if (!existing.isDirectory() || existing.isSymbolicLink()) {
-      throw new DependencyArtifactCacheError(
-        'DEPENDENCY_CACHE_PATH_UNSAFE',
-        `Dependency cache path is not a real directory: ${directory}`,
-      )
+  const absolute = path.resolve(directory)
+  const filesystemRoot = path.parse(absolute).root
+  const segments = path.relative(filesystemRoot, absolute).split(path.sep).filter(Boolean)
+  let current = filesystemRoot
+
+  for (const segment of segments) {
+    current = path.join(current, segment)
+    const existing = await safeLstat(current)
+    if (existing !== undefined) {
+      assertSafeDirectory(existing, current)
+      continue
     }
-    return
+    try {
+      await fs.mkdir(current, { recursive: false, mode })
+    } catch (error) {
+      if (!isAlreadyExists(error)) throw error
+      const raced = await safeLstat(current)
+      if (raced === undefined) throw error
+      assertSafeDirectory(raced, current)
+    }
   }
-  await fs.mkdir(directory, { recursive: false, mode })
+}
+
+function assertSafeDirectory(
+  metadata: Awaited<ReturnType<typeof fs.lstat>>,
+  directory: string,
+): void {
+  if (!metadata.isDirectory() || metadata.isSymbolicLink()) {
+    throw new DependencyArtifactCacheError(
+      'DEPENDENCY_CACHE_PATH_UNSAFE',
+      `Dependency cache path is not a real directory: ${directory}`,
+    )
+  }
 }
 
 async function writeExclusive(filePath: string, bytes: Uint8Array, mode: number): Promise<void> {

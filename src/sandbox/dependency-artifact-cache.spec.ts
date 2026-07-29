@@ -183,6 +183,19 @@ describe('dependency artifact cache', () => {
     await expect(cache.getNpmArtifact({ artifact, policy: policy() })).resolves.toBeUndefined()
   })
 
+  it('creates a nested cache root while validating every ancestor', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'symbolwright-nested-cache-'))
+    roots.push(root)
+    const nestedRoot = path.join(root, 'state', 'dependency', 'cache')
+    const cache = new DependencyArtifactCache({ root: nestedRoot })
+    const { artifact, bytes } = fixture()
+
+    const stored = await cache.putNpmArtifact({ artifact, bytes, policy: policy() })
+
+    expect((await fs.lstat(nestedRoot)).isDirectory()).toBe(true)
+    await expect(fs.readFile(stored.artifactPath)).resolves.toEqual(Buffer.from(bytes))
+  })
+
   it('rejects unsafe cache namespaces and symlinked cache roots', async () => {
     const { root } = await createCache()
     const target = path.join(root, 'target')
