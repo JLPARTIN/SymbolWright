@@ -48,7 +48,10 @@ export async function prepareOperationalServerOptions(
     'sandbox_dependency_policy_profiles',
     sandboxNetworkRuntime.status.dependencyProfileCount,
   )
-  metricsRegistry.setGauge('sandbox_egress_policy_profiles', sandboxNetworkRuntime.status.egressProfileCount)
+  metricsRegistry.setGauge(
+    'sandbox_egress_policy_profiles',
+    sandboxNetworkRuntime.status.egressProfileCount,
+  )
 
   if (security.maxProviderConcurrency !== undefined) {
     concurrencyGuard.configurePool('provider', security.maxProviderConcurrency)
