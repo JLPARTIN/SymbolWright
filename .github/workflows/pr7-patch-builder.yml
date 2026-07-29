@@ -4,20 +4,25 @@ on:
   push:
     branches:
       - symbolwright/sandbox-pr7-final-adversarial-audit
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
   apply-patches:
-    if: github.ref == 'refs/heads/symbolwright/sandbox-pr7-final-adversarial-audit'
+    if: >-
+      github.ref == 'refs/heads/symbolwright/sandbox-pr7-final-adversarial-audit' ||
+      github.head_ref == 'symbolwright/sandbox-pr7-final-adversarial-audit'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout exact branch head
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: true
 
