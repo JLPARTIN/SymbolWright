@@ -17,6 +17,7 @@ export interface SandboxNetworkPolicyDocument {
   readonly dependencyProfiles?: readonly DependencyPolicyProfile[]
   readonly defaultDependencyPolicy?: SandboxPolicyReference
   readonly egressProfiles?: readonly EgressPolicyProfile[]
+  readonly defaultEgressPolicy?: SandboxPolicyReference
 }
 
 export interface SandboxNetworkRuntimeStatus {
@@ -26,12 +27,14 @@ export interface SandboxNetworkRuntimeStatus {
   readonly dependencyProfileCount: number
   readonly defaultDependencyPolicy?: string
   readonly egressProfileCount: number
+  readonly defaultEgressPolicy?: string
 }
 
 export interface ApplicationSandboxNetworkRuntime {
   readonly gateway: SandboxNetworkGateway
   readonly dependencyLayers: DependencyLayerBindingStore
   readonly defaultDependencyPolicyReference?: SandboxPolicyReference
+  readonly defaultEgressPolicyReference?: SandboxPolicyReference
   readonly status: SandboxNetworkRuntimeStatus
 }
 
@@ -60,7 +63,9 @@ export function getOrCreateApplicationSandboxNetworkRuntime(
   const dependencyProfiles = loaded.document?.dependencyProfiles ?? []
   const defaultDependencyPolicyReference = loaded.document?.defaultDependencyPolicy
   const egressProfiles = loaded.document?.egressProfiles ?? []
+  const defaultEgressPolicyReference = loaded.document?.defaultEgressPolicy
   validateDefaultDependencyPolicy(defaultDependencyPolicyReference, dependencyProfiles)
+  validateDefaultEgressPolicy(defaultEgressPolicyReference, egressProfiles)
 
   const runtime: ApplicationSandboxNetworkRuntime = {
     gateway: new SandboxNetworkGateway({
@@ -71,6 +76,7 @@ export function getOrCreateApplicationSandboxNetworkRuntime(
     }),
     dependencyLayers: new DependencyLayerBindingStore(path.join(stateRoot, 'dependency-bindings')),
     ...(defaultDependencyPolicyReference === undefined ? {} : { defaultDependencyPolicyReference }),
+    ...(defaultEgressPolicyReference === undefined ? {} : { defaultEgressPolicyReference }),
     status: Object.freeze({
       mode: loaded.policyFile === undefined ? 'offline-only' : 'configured',
       stateRoot,
@@ -82,6 +88,11 @@ export function getOrCreateApplicationSandboxNetworkRuntime(
             defaultDependencyPolicy: `${defaultDependencyPolicyReference.id}@${defaultDependencyPolicyReference.version}`,
           }),
       egressProfileCount: egressProfiles.length,
+      ...(defaultEgressPolicyReference === undefined
+        ? {}
+        : {
+            defaultEgressPolicy: `${defaultEgressPolicyReference.id}@${defaultEgressPolicyReference.version}`,
+          }),
     }),
   }
   runtimes.set(workspaceRoot, runtime)
@@ -92,7 +103,7 @@ export function sandboxNetworkReadinessDetail(status: SandboxNetworkRuntimeStatu
   if (status.mode === 'offline-only') {
     return 'offline-only; no sandbox network policy file is configured'
   }
-  return `configured; dependencyProfiles=${status.dependencyProfileCount}; defaultDependencyPolicy=${status.defaultDependencyPolicy ?? 'none'}; egressProfiles=${status.egressProfileCount}`
+  return `configured; dependencyProfiles=${status.dependencyProfileCount}; defaultDependencyPolicy=${status.defaultDependencyPolicy ?? 'none'}; egressProfiles=${status.egressProfileCount}; defaultEgressPolicy=${status.defaultEgressPolicy ?? 'none'}`
 }
 
 /** Test-only process isolation seam. Production callers must not reload authority in place. */
@@ -152,6 +163,10 @@ function loadPolicyDocument(
     'defaultDependencyPolicy',
   )
   const egressProfiles = optionalArray(record['egressProfiles'], 'egressProfiles')
+  const defaultEgressPolicy = optionalPolicyReference(
+    record['defaultEgressPolicy'],
+    'defaultEgressPolicy',
+  )
 
   return {
     policyFile,
@@ -164,6 +179,7 @@ function loadPolicyDocument(
       ...(egressProfiles === undefined
         ? {}
         : { egressProfiles: egressProfiles as readonly EgressPolicyProfile[] }),
+      ...(defaultEgressPolicy === undefined ? {} : { defaultEgressPolicy }),
     },
   }
 }
@@ -180,6 +196,22 @@ function validateDefaultDependencyPolicy(
   if (matching === undefined) {
     throw new Error(
       `${SANDBOX_NETWORK_POLICY_FILE_ENV} defaultDependencyPolicy must reference an enabled installed dependency profile.`,
+    )
+  }
+}
+
+function validateDefaultEgressPolicy(
+  reference: SandboxPolicyReference | undefined,
+  profiles: readonly EgressPolicyProfile[],
+): void {
+  if (reference === undefined) return
+  const matching = profiles.find(
+    (profile) =>
+      profile.id === reference.id && profile.version === reference.version && profile.enabled,
+  )
+  if (matching === undefined) {
+    throw new Error(
+      `${SANDBOX_NETWORK_POLICY_FILE_ENV} defaultEgressPolicy must reference an enabled installed egress profile.`,
     )
   }
 }
