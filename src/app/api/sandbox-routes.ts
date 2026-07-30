@@ -513,7 +513,9 @@ export async function handleSandboxRoute(
         ...(offlineReference === undefined ? {} : { policyReference: offlineReference }),
         intent: 'offline-execution' as const,
       }
-      const layer = await networkRuntime(context).dependencyLayers.resolve(authorization.workspaceId)
+      const layer = await networkRuntime(context).dependencyLayers.resolve(
+        authorization.workspaceId,
+      )
       const result = await runWithSandboxDependencyLayer(layer, () =>
         service.execute(request, {
           mode: effectiveRuntimeMode,
