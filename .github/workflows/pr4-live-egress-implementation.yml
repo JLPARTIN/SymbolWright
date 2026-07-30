@@ -1,0 +1,998 @@
+name: PR4 live egress implementation
+
+on:
+  push:
+    branches: [agent/live-brokered-egress]
+    paths: [.github/pr4-live-egress-trigger]
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/live-brokered-egress
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply live brokered egress slice
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def write(path: str, content: str):
+              p = Path(path)
+              p.parent.mkdir(parents=True, exist_ok=True)
+              p.write_text(content, encoding='utf-8')
+
+          def replace_once(path: str, old: str, new: str):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'marker not found in {path}: {old[:100]!r}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          write('src/sandbox/egress-authorization.ts', r'''import { createHash } from 'node:crypto'
+
+import { SANDBOX_EGRESS_CAPABILITY } from '../access/sandbox-capabilities.js'
+import { readPolicyVersion } from './policy-version.js'
+import type {
+  SandboxApprovalBinding,
+  SandboxAuthorizationContext,
+  SandboxCallerKind,
+  SandboxDeploymentMode,
+  SandboxPolicyReference,
+} from './sandbox-policy-model.js'
+
+export interface EgressAuthorizationInput {
+  readonly policyReference: SandboxPolicyReference
+  readonly deploymentMode: SandboxDeploymentMode
+  readonly callerKind: SandboxCallerKind
+  readonly runtimeMode: SandboxAuthorizationContext['runtimeMode']
+  readonly repositoryId: string
+  readonly workspaceId: string
+  readonly missionId?: string
+  readonly principalId?: string
+  readonly grantId?: string
+  readonly grantVersion?: number
+  readonly capabilityApproved: boolean
+  readonly operatorApproved?: boolean
+  readonly env?: NodeJS.ProcessEnv
+}
+
+export interface EgressAuthorizationReceipt {
+  readonly approvalId?: string
+  readonly grantVersion: number
+}
+
+export function buildEgressAuthorization(input: EgressAuthorizationInput): SandboxAuthorizationContext {
+  const expectedPolicyVersions = egressPolicyVersions({
+    policyReference: input.policyReference,
+    ...(input.grantId === undefined ? {} : { grantId: input.grantId }),
+    ...(input.grantVersion === undefined ? {} : { grantVersion: input.grantVersion }),
+    ...(input.missionId === undefined ? {} : { missionId: input.missionId }),
+    ...(input.env === undefined ? {} : { env: input.env }),
+  })
+  const approval =
+    input.operatorApproved === true
+      ? operatorApproval(input.policyReference, expectedPolicyVersions)
+      : undefined
+
+  return {
+    deploymentMode: input.deploymentMode,
+    callerKind: input.callerKind,
+    runtimeMode: input.runtimeMode,
+    approvedCapabilityIds: input.capabilityApproved ? [SANDBOX_EGRESS_CAPABILITY] : [],
+    repositoryId: input.repositoryId,
+    workspaceId: input.workspaceId,
+    ...(input.missionId === undefined ? {} : { missionId: input.missionId }),
+    ...(input.principalId === undefined ? {} : { principalId: input.principalId }),
+    ...(input.grantId === undefined ? {} : { grantId: input.grantId }),
+    ...(input.grantVersion === undefined ? {} : { grantVersion: input.grantVersion }),
+    policyReference: input.policyReference,
+    expectedPolicyVersions,
+    ...(approval === undefined ? {} : { approval }),
+    intent: 'egress-execution',
+  }
+}
+
+export function bindEgressApproval(
+  authorization: SandboxAuthorizationContext,
+  receipt: EgressAuthorizationReceipt,
+): SandboxAuthorizationContext {
+  const policyVersions = authorization.expectedPolicyVersions
+  if (policyVersions === undefined || receipt.approvalId === undefined) return authorization
+  return {
+    ...authorization,
+    approval: {
+      id: receipt.approvalId,
+      capabilityId: SANDBOX_EGRESS_CAPABILITY,
+      ...(authorization.grantVersion === undefined
+        ? {}
+        : { grantVersion: authorization.grantVersion }),
+      policyVersions,
+    },
+  }
+}
+
+export function egressAuthorizationMetadata(
+  authorization: SandboxAuthorizationContext,
+  metadata: Readonly<Record<string, unknown>> | undefined,
+): Record<string, unknown> {
+  const rawUrl = typeof metadata?.['url'] === 'string' ? metadata['url'] : ''
+  let hostname = 'invalid'
+  let pathHash = sha256(rawUrl)
+  try {
+    const url = new URL(rawUrl)
+    hostname = url.hostname
+    pathHash = sha256(`${url.pathname}${url.search}`)
+  } catch {
+    // Invalid URLs remain redacted and are rejected by the broker.
+  }
+  return {
+    destinationHostname: hostname,
+    destinationPathHash: pathHash,
+    method: typeof metadata?.['method'] === 'string' ? metadata['method'].toUpperCase() : 'GET',
+    ...(authorization.missionId === undefined ? {} : { missionId: authorization.missionId }),
+    sandboxPolicyVersions: authorization.expectedPolicyVersions ?? {},
+  }
+}
+
+export function egressPolicyVersions(input: {
+  readonly policyReference: SandboxPolicyReference
+  readonly grantId?: string
+  readonly grantVersion?: number
+  readonly missionId?: string
+  readonly env?: NodeJS.ProcessEnv
+}): Readonly<Record<string, number>> {
+  const env = input.env ?? process.env
+  const globalVersion = readPolicyVersion(env['SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION'], 1).value
+  return Object.freeze({
+    'egress-global': globalVersion,
+    [input.policyReference.id]: input.policyReference.version,
+    ...(input.grantId === undefined ? {} : { [`grant:${input.grantId}`]: input.grantVersion ?? 1 }),
+    ...(input.missionId === undefined ? {} : { [`mission:${input.missionId}`]: 1 }),
+    'egress-request-tightening': 1,
+  })
+}
+
+function operatorApproval(
+  policyReference: SandboxPolicyReference,
+  policyVersions: Readonly<Record<string, number>>,
+): SandboxApprovalBinding {
+  return {
+    id: `operator:${policyReference.id}@${policyReference.version}`,
+    capabilityId: SANDBOX_EGRESS_CAPABILITY,
+    policyVersions,
+  }
+}
+
+function sha256(value: string): string {
+  return createHash('sha256').update(value, 'utf8').digest('hex')
+}
+''')
+
+          write('src/sandbox/governed-egress.ts', r'''import { createHash, randomUUID } from 'node:crypto'
+
+import { EgressBrokerError, type EgressSessionResult } from './egress-broker.js'
+import type { EgressPolicyLimits } from './egress-policy.js'
+import type { ApplicationSandboxNetworkRuntime } from './sandbox-network-runtime.js'
+import type { SandboxAuthorizationContext, SandboxPolicyReference } from './sandbox-policy-model.js'
+
+const MAX_REQUEST_BODY_BYTES = 1024 * 1024
+const MAX_RENDERED_BODY_BYTES = 64 * 1024
+const ALLOWED_INPUT_FIELDS = new Set(['url', 'method', 'headers', 'body', 'limits'])
+const FORBIDDEN_INPUT_FIELDS = new Set([
+  'sessionId',
+  'policy',
+  'policyId',
+  'policyReference',
+  'approval',
+  'authorization',
+  'grantId',
+  'principalId',
+  'workspaceId',
+  'missionId',
+  'stateRoot',
+  'resolver',
+  'requester',
+  'proxy',
+  'pinnedAddress',
+])
+
+export interface GovernedEgressRequest {
+  readonly url: string
+  readonly method?: string
+  readonly headers?: Readonly<Record<string, string>>
+  readonly body?: string
+  readonly limits?: Partial<EgressPolicyLimits>
+}
+
+export interface GovernedEgressResult {
+  readonly status: 'completed' | 'denied'
+  readonly decisionCode: string
+  readonly reason: string
+  readonly destinationHostname: string
+  readonly destinationPathHash: string
+  readonly policyReference?: SandboxPolicyReference
+  readonly response?: EgressSessionResult
+  readonly contentType?: string
+  readonly bodyText?: string
+  readonly bodySha256?: string
+  readonly bodyTruncated?: boolean
+}
+
+export function parseGovernedEgressRequest(input: unknown): GovernedEgressRequest {
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+    throw new Error('sandbox_egress_request input must be a JSON object.')
+  }
+  const record = input as Record<string, unknown>
+  for (const field of Object.keys(record)) {
+    if (FORBIDDEN_INPUT_FIELDS.has(field)) {
+      throw new Error(`sandbox_egress_request rejects caller-controlled authority field: ${field}`)
+    }
+    if (!ALLOWED_INPUT_FIELDS.has(field)) {
+      throw new Error(`sandbox_egress_request rejects unknown request field: ${field}`)
+    }
+  }
+  if (typeof record['url'] !== 'string' || record['url'].trim().length === 0) {
+    throw new Error('sandbox_egress_request requires a non-empty url string.')
+  }
+  if (record['url'].length > 8192) throw new Error('sandbox_egress_request url is too long.')
+  try {
+    new URL(record['url'])
+  } catch {
+    throw new Error('sandbox_egress_request url must be an absolute URL.')
+  }
+  const method = optionalString(record['method'], 'method')?.toUpperCase()
+  const headers = optionalHeaders(record['headers'])
+  const body = optionalString(record['body'], 'body')
+  if (body !== undefined && Buffer.byteLength(body, 'utf8') > MAX_REQUEST_BODY_BYTES) {
+    throw new Error(`sandbox_egress_request body exceeds ${MAX_REQUEST_BODY_BYTES} bytes.`)
+  }
+  const limits = optionalLimits(record['limits'])
+  return {
+    url: record['url'],
+    ...(method === undefined ? {} : { method }),
+    ...(headers === undefined ? {} : { headers }),
+    ...(body === undefined ? {} : { body }),
+    ...(limits === undefined ? {} : { limits }),
+  }
+}
+
+export async function requestGovernedEgress(input: {
+  readonly runtime: ApplicationSandboxNetworkRuntime
+  readonly authorization: SandboxAuthorizationContext
+  readonly request: GovernedEgressRequest
+  readonly signal?: AbortSignal
+}): Promise<GovernedEgressResult> {
+  const destination = new URL(input.request.url)
+  const common = {
+    destinationHostname: destination.hostname,
+    destinationPathHash: sha256(`${destination.pathname}${destination.search}`),
+    ...(input.authorization.policyReference === undefined
+      ? {}
+      : { policyReference: input.authorization.policyReference }),
+  }
+  try {
+    const response = await input.runtime.gateway.requestEgress({
+      sessionId: randomUUID(),
+      authorization: input.authorization,
+      ...(input.request.limits === undefined
+        ? {}
+        : { policyRequest: { limits: input.request.limits } }),
+      request: {
+        url: input.request.url,
+        ...(input.request.method === undefined ? {} : { method: input.request.method }),
+        ...(input.request.headers === undefined ? {} : { headers: input.request.headers }),
+        ...(input.request.body === undefined ? {} : { body: input.request.body }),
+        ...(input.signal === undefined ? {} : { signal: input.signal }),
+      },
+    })
+    const returnedBody = response.body.subarray(0, MAX_RENDERED_BODY_BYTES)
+    return {
+      status: 'completed',
+      decisionCode: 'EGRESS_REQUEST_ALLOWED',
+      reason: 'The governed egress request completed.',
+      ...common,
+      response,
+      ...(firstHeader(response.headers['content-type']) === undefined
+        ? {}
+        : { contentType: firstHeader(response.headers['content-type']) }),
+      bodyText: new TextDecoder().decode(returnedBody),
+      bodySha256: sha256Bytes(response.body),
+      bodyTruncated: response.body.byteLength > returnedBody.byteLength,
+    }
+  } catch (error) {
+    return {
+      status: 'denied',
+      decisionCode: error instanceof EgressBrokerError ? error.code : 'EGRESS_REQUEST_FAILED',
+      reason: error instanceof Error ? error.message : String(error),
+      ...common,
+    }
+  }
+}
+
+export function renderGovernedEgressResult(result: GovernedEgressResult): string {
+  return JSON.stringify(
+    {
+      status: result.status,
+      decisionCode: result.decisionCode,
+      reason: result.reason,
+      destinationHostname: result.destinationHostname,
+      destinationPathHash: result.destinationPathHash,
+      ...(result.policyReference === undefined ? {} : { policy: result.policyReference }),
+      ...(result.response === undefined
+        ? {}
+        : {
+            response: {
+              statusCode: result.response.statusCode,
+              finalUrl: result.response.finalUrl,
+              requestCount: result.response.requestCount,
+              bytesSent: result.response.bytesSent,
+              bytesReceived: result.response.bytesReceived,
+              ...(result.contentType === undefined ? {} : { contentType: result.contentType }),
+              bodyText: result.bodyText,
+              bodySha256: result.bodySha256,
+              bodyTruncated: result.bodyTruncated,
+            },
+          }),
+    },
+    null,
+    2,
+  )
+}
+
+function optionalString(value: unknown, name: string): string | undefined {
+  if (value === undefined) return undefined
+  if (typeof value !== 'string') throw new Error(`${name} must be a string.`)
+  return value
+}
+
+function optionalHeaders(value: unknown): Readonly<Record<string, string>> | undefined {
+  if (value === undefined) return undefined
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error('headers must be a JSON object.')
+  }
+  const entries = Object.entries(value as Record<string, unknown>)
+  if (entries.length > 64) throw new Error('headers may contain at most 64 entries.')
+  const headers: Record<string, string> = {}
+  for (const [name, entry] of entries) {
+    if (typeof entry !== 'string') throw new Error(`Header ${name} must be a string.`)
+    headers[name] = entry
+  }
+  return Object.freeze(headers)
+}
+
+function optionalLimits(value: unknown): Partial<EgressPolicyLimits> | undefined {
+  if (value === undefined) return undefined
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error('limits must be a JSON object.')
+  }
+  const allowed = new Set<keyof EgressPolicyLimits>([
+    'maxRequests',
+    'maxRequestBytes',
+    'maxResponseBytes',
+    'maxTotalSentBytes',
+    'maxTotalReceivedBytes',
+    'timeoutMs',
+    'maxConcurrency',
+    'maxRedirects',
+  ])
+  const result: Partial<Record<keyof EgressPolicyLimits, number>> = {}
+  for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+    if (!allowed.has(key as keyof EgressPolicyLimits)) throw new Error(`Unknown egress limit: ${key}`)
+    if (typeof entry !== 'number' || !Number.isFinite(entry) || entry <= 0) {
+      throw new Error(`Egress limit ${key} must be a positive number.`)
+    }
+    result[key as keyof EgressPolicyLimits] = Math.floor(entry)
+  }
+  return result
+}
+
+function firstHeader(value: string | readonly string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value
+}
+
+function sha256(value: string): string {
+  return createHash('sha256').update(value, 'utf8').digest('hex')
+}
+
+function sha256Bytes(value: Uint8Array): string {
+  return createHash('sha256').update(value).digest('hex')
+}
+''')
+
+          write('src/sandbox/egress-mission-evidence.ts', r'''import type { MissionService } from '../mission/mission-service.js'
+import type { GovernedEgressResult } from './governed-egress.js'
+
+export function recordEgressMissionEvidence(
+  service: MissionService,
+  missionId: string,
+  result: GovernedEgressResult,
+): void {
+  service.appendEvent(
+    missionId,
+    result.status === 'completed' ? 'sandbox.egress.completed' : 'sandbox.egress.blocked',
+    `Governed egress ${result.status}: ${result.decisionCode}.`,
+    {
+      status: result.status,
+      decisionCode: result.decisionCode,
+      destinationHostname: result.destinationHostname,
+      destinationPathHash: result.destinationPathHash,
+      ...(result.policyReference === undefined ? {} : { policy: result.policyReference }),
+      ...(result.response === undefined
+        ? {}
+        : {
+            statusCode: result.response.statusCode,
+            requestCount: result.response.requestCount,
+            bytesSent: result.response.bytesSent,
+            bytesReceived: result.response.bytesReceived,
+            bodySha256: result.bodySha256,
+            bodyTruncated: result.bodyTruncated,
+          }),
+    },
+  )
+}
+''')
+
+          write('src/runtime/tools/sandbox-egress-tool.ts', r'''import {
+  parseGovernedEgressRequest,
+  renderGovernedEgressResult,
+  requestGovernedEgress,
+  type GovernedEgressRequest,
+} from '../../sandbox/governed-egress.js'
+import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
+
+export async function executeSandboxEgressTool(
+  request: GovernedEgressRequest,
+  context: RuntimeToolContext,
+): Promise<string> {
+  if (context.policy.mode !== 'APPROVED_EXECUTION') {
+    throw new Error('sandbox_egress_request requires APPROVED_EXECUTION mode.')
+  }
+  if (context.sandboxNetworkRuntime === undefined) {
+    throw new Error('The application-owned sandbox network runtime is unavailable.')
+  }
+  if (context.sandboxEgressAuthorization === undefined) {
+    throw new Error('No server-derived egress policy reference is authorized for this workspace.')
+  }
+  const result = await requestGovernedEgress({
+    runtime: context.sandboxNetworkRuntime,
+    authorization: context.sandboxEgressAuthorization,
+    request,
+  })
+  await context.recordEgressRequest?.(result)
+  return renderGovernedEgressResult(result)
+}
+
+export const sandboxEgressRequestTool: RuntimeToolDefinition = {
+  name: 'sandbox_egress_request',
+  description:
+    'Perform a bounded HTTPS request through SymbolWright’s operator-owned egress profile, DNS/SSRF defenses, quotas, cancellation, revision checks, and durable redacted audit. The caller cannot supply policy, approvals, grant identity, resolver state, proxy settings, pinned addresses, or container networking.',
+  capability: 'WEB_ACCESS',
+  execute: async (input, context) =>
+    executeSandboxEgressTool(parseGovernedEgressRequest(input), context),
+}
+''')
+
+          write('src/app/api/sandbox-egress-routes.ts', r'''import type { IncomingMessage, ServerResponse } from 'node:http'
+
+import {
+  AuthorizationDeniedError,
+  ApprovalRequiredError,
+} from '../../access/authorization-service.js'
+import { SANDBOX_EGRESS_CAPABILITY } from '../../access/sandbox-capabilities.js'
+import {
+  grantAllowsEgress,
+  resolveGrantSandboxPolicyReferences,
+} from '../../access/sandbox-policy-compat.js'
+import { canAccessMission, resolveMissionVisibility } from '../../access/mission-access-guard.js'
+import {
+  bindEgressApproval,
+  buildEgressAuthorization,
+  egressAuthorizationMetadata,
+} from '../../sandbox/egress-authorization.js'
+import { recordEgressMissionEvidence } from '../../sandbox/egress-mission-evidence.js'
+import {
+  parseGovernedEgressRequest,
+  renderGovernedEgressResult,
+  requestGovernedEgress,
+} from '../../sandbox/governed-egress.js'
+import { getOrCreateApplicationSandboxNetworkRuntime } from '../../sandbox/sandbox-network-runtime.js'
+import { SandboxRequestValidationError } from '../../sandbox/sandbox-request.js'
+import type { SandboxRouteContext } from './sandbox-routes.js'
+
+const MAX_EGRESS_REQUEST_BYTES = 2 * 1024 * 1024
+
+export async function handleSandboxEgressRoute(
+  req: IncomingMessage,
+  res: ServerResponse,
+  context: SandboxRouteContext,
+): Promise<void> {
+  if (req.method !== 'POST') {
+    sendJson(res, 405, { error: 'method_not_allowed' })
+    return
+  }
+  const body = asRecord(await readJsonBody(req))
+  const missionId = requiredMissionId(body)
+  if (context.missionService === undefined) {
+    throw new SandboxRequestValidationError('missionId cannot be resolved because no mission service is configured')
+  }
+  let mission
+  try {
+    mission = context.missionService.get(missionId)
+  } catch {
+    sendJson(res, 404, { error: `Mission not found: ${missionId}` })
+    return
+  }
+  const visibility = resolveMissionVisibility(context.callerGrantId, context.teamSource)
+  const access = canAccessMission(mission, visibility, 'execute')
+  if (!access.allowed) {
+    sendJson(res, 404, { error: `Mission not found: ${missionId}` })
+    return
+  }
+  const callerKind =
+    access.relationship === 'team_member' || access.relationship === 'team_owner'
+      ? 'team-member'
+      : context.callerGrantId === undefined
+        ? 'operator'
+        : 'delegated-grant'
+  const runtime = getOrCreateApplicationSandboxNetworkRuntime({
+    workspaceRoot: mission.repository.rootPath,
+  })
+  const callerGrant =
+    context.callerGrantId === undefined
+      ? undefined
+      : context.accessRuntime?.grantService.getGrant(context.callerGrantId)
+  if (context.callerGrantId !== undefined && callerGrant === undefined) {
+    sendJson(res, 403, {
+      error: 'authorization_denied',
+      reasonCode: 'EGRESS_GRANT_NOT_FOUND',
+      message: 'The delegated egress grant no longer exists.',
+    })
+    return
+  }
+  const references =
+    callerGrant === undefined ? undefined : resolveGrantSandboxPolicyReferences(callerGrant)
+  if (references?.unsupportedReason !== undefined) {
+    sendJson(res, 403, {
+      error: 'authorization_denied',
+      reasonCode: 'SANDBOX_LEGACY_NETWORK_UNSUPPORTED',
+      message: references.unsupportedReason,
+    })
+    return
+  }
+  const policyReference =
+    callerGrant === undefined
+      ? runtime.defaultEgressPolicyReference
+      : references?.references.egress
+  if (policyReference === undefined) {
+    sendJson(res, 403, {
+      error: 'authorization_denied',
+      reasonCode: 'EGRESS_POLICY_REFERENCE_REQUIRED',
+      message: 'No operator-owned egress policy is bound to this caller.',
+    })
+    return
+  }
+  const requestRecord = Object.fromEntries(Object.entries(body).filter(([key]) => key !== 'missionId'))
+  const request = parseGovernedEgressRequest(requestRecord)
+  let authorization = buildEgressAuthorization({
+    policyReference,
+    deploymentMode: context.deploymentMode ?? 'local',
+    callerKind,
+    runtimeMode: mission.agent.runtimeMode,
+    repositoryId: mission.repository.remoteUrl ?? mission.repository.rootPath,
+    workspaceId: mission.id,
+    missionId: mission.id,
+    ...(context.callerPrincipalId === undefined ? {} : { principalId: context.callerPrincipalId }),
+    ...(callerGrant === undefined
+      ? { capabilityApproved: true, operatorApproved: true }
+      : {
+          grantId: callerGrant.id,
+          grantVersion: callerGrant.version,
+          capabilityApproved: grantAllowsEgress(callerGrant),
+        }),
+  })
+
+  if (callerGrant !== undefined && context.accessRuntime !== undefined) {
+    try {
+      const decision = await context.accessRuntime.authorizationService.requireAuthorized({
+        principalId: callerGrant.principalId,
+        grantId: callerGrant.id,
+        capability: SANDBOX_EGRESS_CAPABILITY,
+        repository: mission.repository.remoteUrl ?? mission.repository.rootPath,
+        missionId,
+        toolName: 'sandbox_egress_request',
+        metadata: egressAuthorizationMetadata(authorization, requestRecord),
+      })
+      authorization = bindEgressApproval(authorization, decision)
+    } catch (error) {
+      if (error instanceof ApprovalRequiredError) {
+        sendJson(res, 403, {
+          error: 'approval_required',
+          reasonCode: error.decision.reasonCode,
+          message: error.decision.reason,
+          approvalRequestId: error.decision.approvalId,
+          correlationId: error.decision.correlationId,
+        })
+        return
+      }
+      if (error instanceof AuthorizationDeniedError) {
+        sendJson(res, 403, {
+          error: 'authorization_denied',
+          reasonCode: error.decision.reasonCode,
+          message: error.decision.reason,
+          requiredCapability: SANDBOX_EGRESS_CAPABILITY,
+          approvalPossible: false,
+          correlationId: error.decision.correlationId,
+        })
+        return
+      }
+      throw error
+    }
+  }
+
+  const result = await requestGovernedEgress({ runtime, authorization, request })
+  recordEgressMissionEvidence(context.missionService, missionId, result)
+  sendJson(res, result.status === 'completed' ? 200 : 403, {
+    result: JSON.parse(renderGovernedEgressResult(result)),
+  })
+}
+
+function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
+  res.writeHead(statusCode, { 'content-type': 'application/json; charset=utf-8' })
+  res.end(JSON.stringify(body))
+}
+
+async function readJsonBody(req: IncomingMessage): Promise<unknown> {
+  const chunks: Buffer[] = []
+  let totalBytes = 0
+  for await (const chunk of req) {
+    const buffer = chunk as Buffer
+    totalBytes += buffer.length
+    if (totalBytes > MAX_EGRESS_REQUEST_BYTES) {
+      throw new SandboxRequestValidationError(`Request body exceeds ${MAX_EGRESS_REQUEST_BYTES} bytes`)
+    }
+    chunks.push(buffer)
+  }
+  if (chunks.length === 0) return {}
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'))
+  } catch {
+    throw new SandboxRequestValidationError('Request body must be valid JSON')
+  }
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new SandboxRequestValidationError('Sandbox egress request body must be a JSON object')
+  }
+  return value as Record<string, unknown>
+}
+
+function requiredMissionId(record: Record<string, unknown>): string {
+  const value = record['missionId']
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new SandboxRequestValidationError('missionId is required for governed egress')
+  }
+  return value
+}
+''')
+
+          write('src/sandbox/egress-authorization.spec.ts', r'''import { describe, expect, it } from 'vitest'
+
+import { bindEgressApproval, buildEgressAuthorization, egressAuthorizationMetadata } from './egress-authorization.js'
+
+describe('egress authorization', () => {
+  it('binds policy versions and redacts request metadata', () => {
+    const authorization = buildEgressAuthorization({
+      policyReference: { id: 'docs-only', version: 2 },
+      deploymentMode: 'local',
+      callerKind: 'delegated-grant',
+      runtimeMode: 'APPROVED_EXECUTION',
+      repositoryId: 'owner/repo',
+      workspaceId: 'mission-1',
+      missionId: 'mission-1',
+      grantId: 'grant-1',
+      grantVersion: 3,
+      capabilityApproved: true,
+      env: { SYMBOLWRIGHT_EGRESS_GLOBAL_POLICY_VERSION: '4' },
+    })
+    const metadata = egressAuthorizationMetadata(authorization, {
+      url: 'https://docs.example.com/private?q=secret',
+      method: 'get',
+      body: 'must-not-leak',
+      headers: { authorization: 'must-not-leak' },
+    })
+    expect(metadata).toMatchObject({
+      destinationHostname: 'docs.example.com',
+      method: 'GET',
+      missionId: 'mission-1',
+      sandboxPolicyVersions: {
+        'egress-global': 4,
+        'docs-only': 2,
+        'grant:grant-1': 3,
+        'mission:mission-1': 1,
+      },
+    })
+    expect(metadata).not.toHaveProperty('body')
+    expect(metadata).not.toHaveProperty('headers')
+    expect(bindEgressApproval(authorization, { approvalId: 'approval-1', grantVersion: 3 }).approval)
+      .toMatchObject({ id: 'approval-1', capabilityId: 'symbolwright.sandbox.egress' })
+  })
+})
+''')
+
+          write('src/sandbox/governed-egress.spec.ts', r'''import { describe, expect, it } from 'vitest'
+
+import { parseGovernedEgressRequest } from './governed-egress.js'
+
+describe('governed egress request parsing', () => {
+  it('accepts bounded caller request fields', () => {
+    expect(
+      parseGovernedEgressRequest({
+        url: 'https://docs.example.com/guide',
+        method: 'get',
+        headers: { accept: 'text/plain' },
+        limits: { maxRequests: 1 },
+      }),
+    ).toEqual({
+      url: 'https://docs.example.com/guide',
+      method: 'GET',
+      headers: { accept: 'text/plain' },
+      limits: { maxRequests: 1 },
+    })
+  })
+
+  it.each(['policy', 'approval', 'grantId', 'sessionId', 'proxy', 'pinnedAddress'])(
+    'rejects caller-controlled authority field %s',
+    (field) => {
+      expect(() => parseGovernedEgressRequest({ url: 'https://example.com', [field]: 'x' })).toThrow(
+        'rejects caller-controlled authority field',
+      )
+    },
+  )
+})
+''')
+
+          write('src/runtime/tools/sandbox-egress-tool.spec.ts', r'''import { describe, expect, it } from 'vitest'
+
+import { sandboxEgressRequestTool } from './sandbox-egress-tool.js'
+
+describe('sandbox egress tool', () => {
+  it('fails closed without server-owned egress authority', async () => {
+    await expect(
+      sandboxEgressRequestTool.execute(
+        { url: 'https://example.com' },
+        {
+          cwd: process.cwd(),
+          policy: {
+            mode: 'APPROVED_EXECUTION',
+            allowNetwork: true,
+            allowReadOnlyNetwork: true,
+            allowShell: true,
+            allowWrites: true,
+            allowGitHubWrites: false,
+            protectedPaths: [],
+            noisyDirs: [],
+          },
+        },
+      ),
+    ).rejects.toThrow('application-owned sandbox network runtime is unavailable')
+  })
+})
+''')
+
+          replace_once('src/access/sandbox-policy-compat.ts',
+          "  SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,\n  SANDBOX_OFFLINE_EXECUTE_CAPABILITY,",
+          "  SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,\n  SANDBOX_EGRESS_CAPABILITY,\n  SANDBOX_OFFLINE_EXECUTE_CAPABILITY,")
+          replace_once('src/access/sandbox-policy-compat.ts',
+          "export function grantAllowsDependencyAcquisition(grant: AgentAccessGrant): boolean {\n  return grantAllowsCapability(grant, SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY)\n}\n",
+          "export function grantAllowsDependencyAcquisition(grant: AgentAccessGrant): boolean {\n  return grantAllowsCapability(grant, SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY)\n}\n\nexport function grantAllowsEgress(grant: AgentAccessGrant): boolean {\n  return grantAllowsCapability(grant, SANDBOX_EGRESS_CAPABILITY)\n}\n")
+
+          replace_once('src/runtime/types.ts',
+          "import type { GovernedDependencyAcquisitionResult } from '../sandbox/governed-dependency-acquisition.js'",
+          "import type { GovernedDependencyAcquisitionResult } from '../sandbox/governed-dependency-acquisition.js'\nimport type { GovernedEgressResult } from '../sandbox/governed-egress.js'")
+          replace_once('src/runtime/types.ts',
+          "  | 'dependency_acquire'\n",
+          "  | 'dependency_acquire'\n  | 'sandbox_egress_request'\n")
+          replace_once('src/runtime/types.ts',
+          "  readonly sandboxDependencyAuthorization?: SandboxAuthorizationContext\n",
+          "  readonly sandboxDependencyAuthorization?: SandboxAuthorizationContext\n  /** Separate brokered-egress authority with a server-selected policy reference. */\n  readonly sandboxEgressAuthorization?: SandboxAuthorizationContext\n")
+          replace_once('src/runtime/types.ts',
+          "  readonly recordDependencyAcquisition?: (\n    result: GovernedDependencyAcquisitionResult,\n  ) => void | Promise<void>\n",
+          "  readonly recordDependencyAcquisition?: (\n    result: GovernedDependencyAcquisitionResult,\n  ) => void | Promise<void>\n  readonly recordEgressRequest?: (result: GovernedEgressResult) => void | Promise<void>\n")
+          replace_once('src/runtime/types.ts',
+          "  'dependency_acquire',\n] as const",
+          "  'dependency_acquire',\n  'sandbox_egress_request',\n] as const")
+
+          replace_once('src/access/tool-permission-catalog.ts',
+          "  dependency_acquire: tool(SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY, 'write'),\n",
+          "  dependency_acquire: tool(SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY, 'write'),\n  sandbox_egress_request: tool(SANDBOX_EGRESS_CAPABILITY, 'write'),\n")
+
+          replace_once('src/runtime/tools/tool-assembly.ts',
+          "import { dependencyAcquireTool } from './dependency-acquire-tool.js'",
+          "import { dependencyAcquireTool } from './dependency-acquire-tool.js'\nimport { sandboxEgressRequestTool } from './sandbox-egress-tool.js'")
+          replace_once('src/runtime/tools/tool-assembly.ts',
+          "  dependencyAcquireTool,\n]",
+          "  dependencyAcquireTool,\n  sandboxEgressRequestTool,\n]")
+
+          replace_once('src/runtime/tools/web-fetch-tool.ts',
+          "import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'\nimport { assertTrustedOperatorResearchNetwork } from './operator-research-network.js'",
+          "import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'\nimport { assertTrustedOperatorResearchNetwork } from './operator-research-network.js'\nimport { executeSandboxEgressTool } from './sandbox-egress-tool.js'")
+          replace_once('src/runtime/tools/web-fetch-tool.ts',
+          "  assertTrustedOperatorResearchNetwork(context, 'web_fetch')\n  const webConfig",
+          "  if (\n    context.accessControl !== undefined ||\n    (context.sandboxAuthorization !== undefined &&\n      context.sandboxAuthorization.callerKind !== 'operator')\n  ) {\n    return executeSandboxEgressTool({ url: input.url, method: 'GET' }, context)\n  }\n  assertTrustedOperatorResearchNetwork(context, 'web_fetch')\n  const webConfig")
+          replace_once('src/runtime/tools/web-fetch-tool.ts',
+          "    'Trusted local-operator web research. Delegated callers are denied and must use the governed SandboxNetworkGateway egress path.',",
+          "    'Fetch a URL. Trusted local operators retain the legacy research path; delegated callers are routed through the governed SandboxNetworkGateway egress broker.',")
+
+          replace_once('src/sandbox/sandbox-network-runtime.ts',
+          "  readonly defaultDependencyPolicy?: SandboxPolicyReference\n  readonly egressProfiles?: readonly EgressPolicyProfile[]",
+          "  readonly defaultDependencyPolicy?: SandboxPolicyReference\n  readonly egressProfiles?: readonly EgressPolicyProfile[]\n  readonly defaultEgressPolicy?: SandboxPolicyReference")
+          replace_once('src/sandbox/sandbox-network-runtime.ts',
+          "  readonly defaultDependencyPolicy?: string\n  readonly egressProfileCount: number",
+          "  readonly defaultDependencyPolicy?: string\n  readonly egressProfileCount: number\n  readonly defaultEgressPolicy?: string")
+          replace_once('src/sandbox/sandbox-network-runtime.ts',
+          "  readonly defaultDependencyPolicyReference?: SandboxPolicyReference\n  readonly status:",
+          "  readonly defaultDependencyPolicyReference?: SandboxPolicyReference\n  readonly defaultEgressPolicyReference?: SandboxPolicyReference\n  readonly status:")
+          replace_once('src/sandbox/sandbox-network-runtime.ts',
+          "  const egressProfiles = loaded.document?.egressProfiles ?? []\n  validateDefaultDependencyPolicy(defaultDependencyPolicyReference, dependencyProfiles)",
+          "  const egressProfiles = loaded.document?.egressProfiles ?? []\n  const defaultEgressPolicyReference = loaded.document?.defaultEgressPolicy\n  validateDefaultDependencyPolicy(defaultDependencyPolicyReference, dependencyProfiles)\n  validateDefaultEgressPolicy(defaultEgressPolicyReference, egressProfiles)")
+          replace_once('src/sandbox/sandbox-network-runtime.ts',
+          "    ...(defaultDependencyPolicyReference === undefined ? {} : { defaultDependencyPolicyReference }),\n    status:",
+          "    ...(defaultDependencyPolicyReference === undefined ? {} : { defaultDependencyPolicyReference }),\n    ...(defaultEgressPolicyReference === undefined ? {} : { defaultEgressPolicyReference }),\n    status:")
+          replace_once('src/sandbox/sandbox-network-runtime.ts',
+          "      egressProfileCount: egressProfiles.length,\n",
+          "      egressProfileCount: egressProfiles.length,\n      ...(defaultEgressPolicyReference === undefined\n        ? {}\n        : {\n            defaultEgressPolicy: `${defaultEgressPolicyReference.id}@${defaultEgressPolicyReference.version}`,\n          }),\n")
+          replace_once('src/sandbox/sandbox-network-runtime.ts',
+          "  return `configured; dependencyProfiles=${status.dependencyProfileCount}; defaultDependencyPolicy=${status.defaultDependencyPolicy ?? 'none'}; egressProfiles=${status.egressProfileCount}`",
+          "  return `configured; dependencyProfiles=${status.dependencyProfileCount}; defaultDependencyPolicy=${status.defaultDependencyPolicy ?? 'none'}; egressProfiles=${status.egressProfileCount}; defaultEgressPolicy=${status.defaultEgressPolicy ?? 'none'}`")
+          replace_once('src/sandbox/sandbox-network-runtime.ts',
+          "  const egressProfiles = optionalArray(record['egressProfiles'], 'egressProfiles')\n",
+          "  const egressProfiles = optionalArray(record['egressProfiles'], 'egressProfiles')\n  const defaultEgressPolicy = optionalPolicyReference(\n    record['defaultEgressPolicy'],\n    'defaultEgressPolicy',\n  )\n")
+          replace_once('src/sandbox/sandbox-network-runtime.ts',
+          "      ...(egressProfiles === undefined\n        ? {}\n        : { egressProfiles: egressProfiles as readonly EgressPolicyProfile[] }),\n",
+          "      ...(egressProfiles === undefined\n        ? {}\n        : { egressProfiles: egressProfiles as readonly EgressPolicyProfile[] }),\n      ...(defaultEgressPolicy === undefined ? {} : { defaultEgressPolicy }),\n")
+          replace_once('src/sandbox/sandbox-network-runtime.ts',
+          "function optionalArray(value: unknown, name: string): readonly unknown[] | undefined {",
+          "function validateDefaultEgressPolicy(\n  reference: SandboxPolicyReference | undefined,\n  profiles: readonly EgressPolicyProfile[],\n): void {\n  if (reference === undefined) return\n  const matching = profiles.find(\n    (profile) =>\n      profile.id === reference.id && profile.version === reference.version && profile.enabled,\n  )\n  if (matching === undefined) {\n    throw new Error(\n      `${SANDBOX_NETWORK_POLICY_FILE_ENV} defaultEgressPolicy must reference an enabled installed egress profile.`,\n    )\n  }\n}\n\nfunction optionalArray(value: unknown, name: string): readonly unknown[] | undefined {")
+
+          replace_once('src/sandbox/sandbox-network-gateway.ts',
+          "    const session = this.egressBroker.openSession({\n      authorization: input.authorization,\n      ...(input.policyRequest === undefined ? {} : { request: input.policyRequest }),\n      sessionId: input.sessionId,\n    })\n    try {\n      return await session.request(input.request)\n    } finally {\n      session.close()\n    }",
+          "    return this.egressBroker.request({\n      authorization: input.authorization,\n      ...(input.policyRequest === undefined ? {} : { policyRequest: input.policyRequest }),\n      sessionId: input.sessionId,\n      request: input.request,\n    })")
+
+          replace_once('src/sandbox/egress-broker.ts',
+          "  public metricsSnapshot(): EgressMetricsSnapshot {\n    return this.metrics.snapshot()\n  }",
+          "  public async request(input: {\n    readonly authorization: SandboxAuthorizationContext\n    readonly policyRequest?: EgressPolicyRequest\n    readonly sessionId: string\n    readonly request: EgressSessionRequest\n  }): Promise<EgressSessionResult> {\n    const decision = this.authorize(input.policyRequest ?? {}, input.authorization)\n    if (!decision.allowed || decision.policy === undefined) {\n      const startedAt = this.monotonicNow()\n      const url = auditUrlFor(input.request.url)\n      const method = auditMethodFor(input.request.method)\n      let failure = new EgressBrokerError(decision.reasonCode, decision.reason)\n      this.metrics.requestStarted()\n      try {\n        await this.auditSink.append({\n          schemaVersion: 1,\n          recordedAt: this.now().toISOString(),\n          sessionIdHash: sha256(input.sessionId),\n          policyId: input.authorization.policyReference?.id ?? 'unresolved',\n          policyVersion: input.authorization.policyReference?.version ?? 0,\n          policyFingerprint: 'unresolved',\n          destinationHostname: url.hostname,\n          destinationPathHash: sha256(`${url.pathname}${url.search}`),\n          method,\n          decision: 'denied',\n          decisionCode: failure.code,\n          requestCount: 0,\n          bytesSent: 0,\n          bytesReceived: 0,\n          durationMs: this.monotonicNow() - startedAt,\n          resolvedAddressClass: 'unresolved',\n        })\n      } catch (error) {\n        failure = mapToBrokerError(error)\n      }\n      this.metrics.requestFinished({\n        allowed: false,\n        code: failure.code,\n        bytesSent: 0,\n        bytesReceived: 0,\n      })\n      throw failure\n    }\n    const session = this.openSession({\n      authorization: input.authorization,\n      ...(input.policyRequest === undefined ? {} : { request: input.policyRequest }),\n      sessionId: input.sessionId,\n    })\n    try {\n      return await session.request(input.request)\n    } finally {\n      session.close()\n    }\n  }\n\n  public metricsSnapshot(): EgressMetricsSnapshot {\n    return this.metrics.snapshot()\n  }")
+
+          replace_once('src/access/route-capability-map.ts',
+          "import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from './sandbox-capabilities.js'",
+          "import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from './sandbox-capabilities.js'")
+          replace_once('src/access/route-capability-map.ts',
+          "  { method: 'GET', matcher: /^\\/api\\/sandbox.*$/, capability: SANDBOX_OFFLINE_EXECUTE_CAPABILITY },",
+          "  {\n    method: 'POST',\n    matcher: /^\\/api\\/sandbox\\/egress$/,\n    capability: 'symbolwright.mission.read',\n  },\n  { method: 'GET', matcher: /^\\/api\\/sandbox.*$/, capability: SANDBOX_OFFLINE_EXECUTE_CAPABILITY },")
+
+          replace_once('src/app/api/sandbox-routes.ts',
+          "import type { SymbolWrightRuntimeMode } from '../../runtime/types.js'",
+          "import type { SymbolWrightRuntimeMode } from '../../runtime/types.js'\nimport { handleSandboxEgressRoute } from './sandbox-egress-routes.js'")
+          replace_once('src/app/api/sandbox-routes.ts',
+          "    if (url.pathname === '/api/sandbox/dependencies/npm') {",
+          "    if (url.pathname === '/api/sandbox/egress') {\n      await handleSandboxEgressRoute(req, res, context)\n      return true\n    }\n\n    if (url.pathname === '/api/sandbox/dependencies/npm') {")
+
+          replace_once('src/runtime/tools/authorized-tool-execution.ts',
+          "import { SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY } from '../../access/sandbox-capabilities.js'",
+          "import {\n  SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,\n  SANDBOX_EGRESS_CAPABILITY,\n} from '../../access/sandbox-capabilities.js'")
+          replace_once('src/runtime/tools/authorized-tool-execution.ts',
+          "  grantAllowsDependencyAcquisition,\n  resolveGrantSandboxPolicyReferences,",
+          "  grantAllowsDependencyAcquisition,\n  grantAllowsEgress,\n  resolveGrantSandboxPolicyReferences,")
+          replace_once('src/runtime/tools/authorized-tool-execution.ts',
+          "import { getOrCreateApplicationSandboxNetworkRuntime } from '../../sandbox/sandbox-network-runtime.js'",
+          "import { getOrCreateApplicationSandboxNetworkRuntime } from '../../sandbox/sandbox-network-runtime.js'\nimport {\n  bindEgressApproval,\n  buildEgressAuthorization,\n  egressAuthorizationMetadata,\n} from '../../sandbox/egress-authorization.js'")
+          replace_once('src/runtime/tools/authorized-tool-execution.ts',
+          "  let dependencyReceipt: ToolAuthorizationReceipt | undefined",
+          "  const usesGovernedEgress =\n    tool.name === 'sandbox_egress_request' ||\n    (tool.name === 'web_fetch' && accessControl !== undefined)\n  if (usesGovernedEgress && effectiveContext.sandboxEgressAuthorization === undefined) {\n    if (accessControl === undefined && networkRuntime.defaultEgressPolicyReference !== undefined) {\n      effectiveContext = {\n        ...effectiveContext,\n        sandboxEgressAuthorization: buildEgressAuthorization({\n          policyReference: networkRuntime.defaultEgressPolicyReference,\n          deploymentMode: context.sandboxAuthorization?.deploymentMode ?? deploymentMode(),\n          callerKind: 'operator',\n          runtimeMode: context.policy.mode,\n          repositoryId: context.cwd,\n          workspaceId: context.sessionId ?? context.cwd,\n          ...(context.sessionId === undefined ? {} : { missionId: context.sessionId }),\n          capabilityApproved: true,\n          operatorApproved: true,\n        }),\n      }\n    } else if (accessControl !== undefined && dependencyAccessRuntime !== undefined) {\n      const grant = dependencyAccessRuntime.grantService.getGrant(accessControl.grantId)\n      if (grant !== undefined) {\n        const reference = resolveGrantSandboxPolicyReferences(grant).references.egress\n        if (reference !== undefined) {\n          effectiveContext = {\n            ...effectiveContext,\n            sandboxEgressAuthorization: buildEgressAuthorization({\n              policyReference: reference,\n              deploymentMode: context.sandboxAuthorization?.deploymentMode ?? deploymentMode(),\n              callerKind: 'delegated-grant',\n              runtimeMode: context.policy.mode,\n              repositoryId: (await detectGitHubRepository(context.cwd)) ?? context.cwd,\n              workspaceId: context.sessionId ?? context.cwd,\n              ...(context.sessionId === undefined ? {} : { missionId: context.sessionId }),\n              principalId: grant.principalId,\n              grantId: grant.id,\n              grantVersion: grant.version,\n              capabilityApproved: grantAllowsEgress(grant),\n            }),\n          }\n        }\n      }\n    }\n  }\n\n  let dependencyReceipt: ToolAuthorizationReceipt | undefined\n  let egressReceipt: ToolAuthorizationReceipt | undefined")
+          replace_once('src/runtime/tools/authorized-tool-execution.ts',
+          "      const metadata =\n        capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY &&\n        effectiveContext.sandboxDependencyAuthorization !== undefined\n          ? dependencyAuthorizationMetadata(\n              effectiveContext.sandboxDependencyAuthorization,\n              callerMetadata,\n            )\n          : callerMetadata",
+          "      const metadata =\n        capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY &&\n        effectiveContext.sandboxDependencyAuthorization !== undefined\n          ? dependencyAuthorizationMetadata(\n              effectiveContext.sandboxDependencyAuthorization,\n              callerMetadata,\n            )\n          : capability === SANDBOX_EGRESS_CAPABILITY &&\n              effectiveContext.sandboxEgressAuthorization !== undefined\n            ? egressAuthorizationMetadata(effectiveContext.sandboxEgressAuthorization, callerMetadata)\n            : callerMetadata")
+          replace_once('src/runtime/tools/authorized-tool-execution.ts',
+          "      if (capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY && receipt !== undefined) {\n        dependencyReceipt = receipt\n      }",
+          "      if (capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY && receipt !== undefined) {\n        dependencyReceipt = receipt\n      }\n      if (capability === SANDBOX_EGRESS_CAPABILITY && receipt !== undefined) {\n        egressReceipt = receipt\n      }")
+          replace_once('src/runtime/tools/authorized-tool-execution.ts',
+          "  return tool.execute(input, effectiveContext)",
+          "  if (\n    usesGovernedEgress &&\n    effectiveContext.sandboxEgressAuthorization !== undefined &&\n    egressReceipt !== undefined\n  ) {\n    effectiveContext = {\n      ...effectiveContext,\n      sandboxEgressAuthorization: bindEgressApproval(\n        effectiveContext.sandboxEgressAuthorization,\n        egressReceipt,\n      ),\n    }\n  }\n  return tool.execute(input, effectiveContext)")
+
+          replace_once('src/mcp/mcp-server-tools.ts',
+          "  grantAllowsDependencyAcquisition,\n  resolveGrantSandboxPolicyReferences,",
+          "  grantAllowsDependencyAcquisition,\n  grantAllowsEgress,\n  resolveGrantSandboxPolicyReferences,")
+          replace_once('src/mcp/mcp-server-tools.ts',
+          "import { recordDependencyAcquisitionMissionEvidence } from '../sandbox/dependency-mission-evidence.js'",
+          "import { recordDependencyAcquisitionMissionEvidence } from '../sandbox/dependency-mission-evidence.js'\nimport { buildEgressAuthorization } from '../sandbox/egress-authorization.js'\nimport { recordEgressMissionEvidence } from '../sandbox/egress-mission-evidence.js'")
+          replace_once('src/mcp/mcp-server-tools.ts',
+          "           recordDependencyAcquisition: (result) =>\n             recordDependencyAcquisitionMissionEvidence(\n               missionService,\n               options.missionId as string,\n               result,\n             ),",
+          "           recordDependencyAcquisition: (result) =>\n             recordDependencyAcquisitionMissionEvidence(\n               missionService,\n               options.missionId as string,\n               result,\n             ),\n           recordEgressRequest: (result) =>\n             recordEgressMissionEvidence(missionService, options.missionId as string, result),")
+          replace_once('src/mcp/mcp-server-tools.ts',
+          "    const dependencyReference = references.references.dependency",
+          "    const dependencyReference = references.references.dependency\n    const egressReference = references.references.egress")
+          replace_once('src/mcp/mcp-server-tools.ts',
+          "    context = {\n      ...context,\n      ...(sandboxDependencyAuthorization === undefined ? {} : { sandboxDependencyAuthorization }),",
+          "    const sandboxEgressAuthorization =\n      egressReference === undefined\n        ? undefined\n        : buildEgressAuthorization({\n            policyReference: egressReference,\n            deploymentMode:\n              process.env['SYMBOLWRIGHT_DEPLOYMENT_MODE']?.trim().toLowerCase() === 'hosted'\n                ? 'hosted'\n                : 'local',\n            callerKind: 'delegated-grant',\n            runtimeMode: options.mode,\n            repositoryId: repository,\n            workspaceId: options.missionId ?? toolCwd,\n            ...(options.missionId === undefined ? {} : { missionId: options.missionId }),\n            principalId: grant.principalId,\n            grantId: grant.id,\n            grantVersion: grant.version,\n            capabilityApproved: grantAllowsEgress(grant),\n          })\n    context = {\n      ...context,\n      ...(sandboxDependencyAuthorization === undefined ? {} : { sandboxDependencyAuthorization }),\n      ...(sandboxEgressAuthorization === undefined ? {} : { sandboxEgressAuthorization }),")
+
+          # Provider schema: insert the dedicated egress schema immediately before pr_collaboration.
+          schema_path = Path('src/agent/tool-schema-bridge.ts')
+          schema_text = schema_path.read_text(encoding='utf-8')
+          if 'sandbox_egress_request:' not in schema_text:
+              marker = "    pr_collaboration: {"
+              schema = """    sandbox_egress_request: {\n      type: 'object',\n      properties: {\n        url: { type: 'string', description: 'Absolute HTTPS URL permitted by operator policy' },\n        method: { type: 'string', description: 'GET, HEAD, or POST as permitted by policy' },\n        headers: { type: 'object', description: 'Optional request headers permitted by policy' },\n        body: { type: 'string', description: 'Optional bounded UTF-8 request body' },\n        limits: { type: 'object', description: 'Optional tighter per-request quota limits' },\n      },\n      required: ['url'],\n    },\n"""
+              if marker not in schema_text:
+                  raise SystemExit('tool schema insertion marker missing')
+              schema_path.write_text(schema_text.replace(marker, schema + marker, 1), encoding='utf-8')
+
+          # Register preliminary HTTP route and final dispatch.
+          # Changelog and docs are appended without altering historical releases.
+          changelog = Path('CHANGELOG.md')
+          changelog_text = changelog.read_text(encoding='utf-8')
+          marker = '## [Unreleased]\n'
+          entry = """\n### Governed brokered egress\n\n- Added live `sandbox_egress_request` support through agent, MCP, and authenticated HTTP surfaces.\n- Delegated `web_fetch` now routes through the operator-owned egress broker; trusted local operator research remains separate.\n- Added server-derived policy/approval binding, redacted mission evidence, and audited session-authorization denials while strong containers remain `--network none`.\n"""
+          if '### Governed brokered egress' not in changelog_text:
+              changelog.write_text(changelog_text.replace(marker, marker + entry, 1), encoding='utf-8')
+
+          docs = Path('docs/security/SANDBOX_NETWORK_GATEWAY_COMPOSITION.md')
+          docs_text = docs.read_text(encoding='utf-8')
+          docs_text = docs_text.replace(
+              '  "egressProfiles": []',
+              '''  "egressProfiles": [\n    {\n      "id": "docs-only",\n      "version": 1,\n      "enabled": true,\n      "deploymentModes": ["local", "hosted"],\n      "callerKinds": ["operator", "delegated-grant", "team-member"],\n      "allowedHosts": ["docs.example.com"],\n      "allowedMethods": ["GET", "HEAD"],\n      "allowedRequestHeaders": ["accept"],\n      "allowedPorts": [443],\n      "redirectPolicy": "same-host",\n      "credentialPolicy": "none",\n      "requireTls": true,\n      "auditRetentionDays": 30,\n      "limits": {\n        "maxRequests": 32,\n        "maxRequestBytes": 1048576,\n        "maxResponseBytes": 8388608,\n        "maxTotalSentBytes": 4194304,\n        "maxTotalReceivedBytes": 33554432,\n        "timeoutMs": 60000,\n        "maxConcurrency": 2,\n        "maxRedirects": 3\n      }\n    }\n  ],\n  "defaultEgressPolicy": { "id": "docs-only", "version": 1 }''',
+          )
+          if '## Live brokered egress' not in docs_text:
+              docs_text += '''\n\n## Live brokered egress\n\nThe `sandbox_egress_request` tool and `POST /api/sandbox/egress` route use the same application-owned gateway. Delegated `web_fetch` is routed through this broker; the legacy local-operator research implementation remains a separate explicitly trusted surface. Callers cannot choose policy, approvals, DNS results, proxy configuration, pinned addresses, state paths, or container networking.\n\nSession authorization denials and request outcomes are written to the redacted JSONL audit before the caller receives the denial. Mission evidence stores only the destination hostname, a path hash, policy reference, decision code, byte counts, and response hash. Strong execution containers remain `--network none`.\n'''
+          docs.write_text(docs_text, encoding='utf-8')
+          PY
+      - name: Format and validate focused slice
+        run: |
+          npx prettier --write \
+            src/sandbox/egress-authorization.ts \
+            src/sandbox/governed-egress.ts \
+            src/sandbox/egress-mission-evidence.ts \
+            src/runtime/tools/sandbox-egress-tool.ts \
+            src/app/api/sandbox-egress-routes.ts \
+            src/sandbox/egress-authorization.spec.ts \
+            src/sandbox/governed-egress.spec.ts \
+            src/runtime/tools/sandbox-egress-tool.spec.ts \
+            src/access/sandbox-policy-compat.ts \
+            src/runtime/types.ts \
+            src/access/tool-permission-catalog.ts \
+            src/runtime/tools/tool-assembly.ts \
+            src/runtime/tools/web-fetch-tool.ts \
+            src/sandbox/sandbox-network-runtime.ts \
+            src/sandbox/sandbox-network-gateway.ts \
+            src/sandbox/egress-broker.ts \
+            src/access/route-capability-map.ts \
+            src/app/api/sandbox-routes.ts \
+            src/runtime/tools/authorized-tool-execution.ts \
+            src/mcp/mcp-server-tools.ts \
+            src/agent/tool-schema-bridge.ts \
+            docs/security/SANDBOX_NETWORK_GATEWAY_COMPOSITION.md \
+            CHANGELOG.md
+          npm run typecheck
+          npx vitest run \
+            src/sandbox/egress-authorization.spec.ts \
+            src/sandbox/governed-egress.spec.ts \
+            src/runtime/tools/sandbox-egress-tool.spec.ts \
+            src/sandbox/egress-broker.spec.ts \
+            src/sandbox/sandbox-network-gateway.spec.ts
+      - name: Remove implementation helper and commit
+        run: |
+          rm -f .github/workflows/pr4-live-egress-implementation.yml .github/pr4-live-egress-trigger
+          git config user.name 'SymbolWright CI Repair'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat(sandbox): expose live governed brokered egress'
+          git push origin HEAD:agent/live-brokered-egress
