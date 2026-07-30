@@ -152,7 +152,7 @@ export function renderGovernedEgressResult(result: GovernedEgressResult): string
         : {
             response: {
               statusCode: result.response.statusCode,
-              finalUrl: result.response.finalUrl,
+              finalHostname: safeHostname(result.response.finalUrl),
               requestCount: result.response.requestCount,
               bytesSent: result.response.bytesSent,
               bytesReceived: result.response.bytesReceived,
@@ -206,7 +206,8 @@ function optionalLimits(value: unknown): Partial<EgressPolicyLimits> | undefined
   ])
   const result: Partial<Record<keyof EgressPolicyLimits, number>> = {}
   for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
-    if (!allowed.has(key as keyof EgressPolicyLimits)) throw new Error(`Unknown egress limit: ${key}`)
+    if (!allowed.has(key as keyof EgressPolicyLimits))
+      throw new Error(`Unknown egress limit: ${key}`)
     if (typeof entry !== 'number' || !Number.isFinite(entry) || entry <= 0) {
       throw new Error(`Egress limit ${key} must be a positive number.`)
     }
@@ -222,6 +223,15 @@ function firstHeader(value: string | readonly string[] | undefined): string | un
 
 function sha256(value: string): string {
   return createHash('sha256').update(value, 'utf8').digest('hex')
+}
+
+/** Redacts a redirect-following broker's final URL down to its hostname; never returns raw path/query. */
+function safeHostname(url: string): string {
+  try {
+    return new URL(url).hostname
+  } catch {
+    return 'invalid'
+  }
 }
 
 function sha256Bytes(value: Uint8Array): string {
