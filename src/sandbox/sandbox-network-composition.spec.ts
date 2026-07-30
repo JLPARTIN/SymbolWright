@@ -36,7 +36,7 @@ describe('sandbox network composition architecture', () => {
     )
     expect(
       authorizedToolExecution.indexOf('getOrCreateApplicationSandboxNetworkRuntime'),
-    ).toBeLessThan(authorizedToolExecution.indexOf('return tool.execute(input, context)'))
+    ).toBeLessThan(authorizedToolExecution.indexOf('return tool.execute(input, effectiveContext)'))
   })
 
   it('does not weaken the strong-container network-none invariant', () => {

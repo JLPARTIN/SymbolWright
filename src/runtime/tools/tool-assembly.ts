@@ -46,6 +46,7 @@ import { mcpCallTool } from './mcp-call-tool.js'
 import { webFetchTool } from './web-fetch-tool.js'
 import { webSearchTool } from './web-search-tool.js'
 import { sandboxExecuteTool, sandboxListRuntimesTool } from './sandbox-tools.js'
+import { dependencyAcquireTool } from './dependency-acquire-tool.js'
 
 const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   readFileTool,
@@ -91,6 +92,7 @@ const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   webSearchTool,
   sandboxListRuntimesTool,
   sandboxExecuteTool,
+  dependencyAcquireTool,
 ]
 
 export const DYNAMICALLY_WIRED_TOOLS: readonly SymbolWrightToolName[] = [

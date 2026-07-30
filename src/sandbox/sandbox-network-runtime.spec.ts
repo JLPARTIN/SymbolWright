@@ -74,6 +74,7 @@ describe('application sandbox network runtime', () => {
             limits: DEFAULT_DEPENDENCY_ACQUISITION_LIMITS,
           },
         ],
+        defaultDependencyPolicy: { id: 'npm-public', version: 1 },
         egressProfiles: [
           {
             id: 'docs-only',
@@ -101,15 +102,17 @@ describe('application sandbox network runtime', () => {
       env: { [SANDBOX_NETWORK_POLICY_FILE_ENV]: policyFile },
     })
 
+    expect(runtime.defaultDependencyPolicyReference).toEqual({ id: 'npm-public', version: 1 })
     expect(runtime.status).toEqual({
       mode: 'configured',
       stateRoot: path.join(workspaceRoot, '.symbolwright', 'sandbox-network'),
       policyFile,
       dependencyProfileCount: 1,
+      defaultDependencyPolicy: 'npm-public@1',
       egressProfileCount: 1,
     })
     expect(sandboxNetworkReadinessDetail(runtime.status)).toBe(
-      'configured; dependencyProfiles=1; egressProfiles=1',
+      'configured; dependencyProfiles=1; defaultDependencyPolicy=npm-public@1; egressProfiles=1',
     )
   })
 

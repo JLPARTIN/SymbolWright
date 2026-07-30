@@ -2,80 +2,128 @@
 
 ## Status
 
-This document describes the production composition delivered after the seven-part sandbox bundle.
-It does not claim that dependency acquisition or brokered egress is already exposed as an HTTP,
-MCP, or agent tool. Those vertical product paths remain separate follow-up slices.
+SymbolWright now exposes governed npm dependency acquisition through the authenticated HTTP API,
+the agent tool registry, and MCP. General brokered HTTPS egress remains a separate follow-up.
+Strong execution containers remain offline.
 
-## One application-owned runtime
+## Application-owned runtime
 
-Each SymbolWright process creates at most one `ApplicationSandboxNetworkRuntime` per resolved
-workspace root. The runtime owns the existing `SandboxNetworkGateway`, which in turn owns the
-governed npm dependency-acquisition service and the SSRF-resistant HTTPS egress broker.
+Each resolved workspace has one process-local `ApplicationSandboxNetworkRuntime`. It owns the
+`SandboxNetworkGateway`, dependency evidence/cache/layer state, egress audit state, and durable
+workspace-to-layer bindings. Policy is loaded once for the process lifetime; restart SymbolWright to
+activate a new revision.
 
-The unified server composes this runtime during operational startup. The MCP command composes the
-same runtime before accepting JSON-RPC input. Server agent turns and autonomous missions execute in
-the same process and therefore share the workspace-bound runtime rather than constructing their own
-network brokers.
-
-Policy is loaded once for the life of the process. Changing the environment or policy file after
-startup does not silently widen authority beneath active work; restart SymbolWright to activate a
-new policy revision.
+Every production tool call resolves this application-owned runtime through the authorized-tool
+chokepoint. The unified server and MCP also compose it before accepting work.
 
 ## Offline default
 
-When `SYMBOLWRIGHT_SANDBOX_NETWORK_POLICY_FILE` is absent, SymbolWright starts successfully in
-`offline-only` mode with zero dependency and egress profiles. Strong execution remains physically
-network-disabled. No fallback policy or permissive default is synthesized.
+Without `SYMBOLWRIGHT_SANDBOX_NETWORK_POLICY_FILE`, startup succeeds in explicit `offline-only`
+mode with zero dependency and egress profiles. Dependency acquisition is unavailable, and no
+permissive fallback is synthesized.
 
 ## Operator policy file
 
 Set `SYMBOLWRIGHT_SANDBOX_NETWORK_POLICY_FILE` to an absolute path or a path relative to the
-workspace root. The target must be a regular, non-symlink file no larger than 1 MiB.
+SymbolWright process working directory. The target must be a regular, non-symlink file no larger
+than 1 MiB. Relative paths resolve from the process root so server, MCP, and mission workspaces all
+observe the same operator authority.
+
+The document must use the authoritative profile contracts from
+`src/sandbox/dependency-policy.ts` and `src/sandbox/egress-policy.ts`:
 
 ```json
 {
   "schemaVersion": 1,
-  "dependencyProfiles": [],
+  "dependencyProfiles": [
+    {
+      "id": "npm-controlled",
+      "version": 1,
+      "enabled": true,
+      "ecosystems": ["npm"],
+      "deploymentModes": ["local", "hosted"],
+      "callerKinds": ["operator", "delegated-grant", "team-member"],
+      "allowedRegistries": ["https://registry.npmjs.org/"],
+      "requireLockfile": true,
+      "allowLockfileMutation": false,
+      "suppressLifecycleScripts": true,
+      "directIpDestinations": "denied",
+      "cacheNamespace": "npm-controlled",
+      "limits": {
+        "maxPackages": 100,
+        "maxRequests": 200,
+        "maxArchiveBytes": 67108864,
+        "maxExpandedBytes": 536870912,
+        "maxFiles": 100000,
+        "maxFileBytes": 33554432,
+        "maxTotalBytes": 1073741824,
+        "timeoutMs": 300000,
+        "maxConcurrency": 4
+      }
+    }
+  ],
+  "defaultDependencyPolicy": {
+    "id": "npm-controlled",
+    "version": 1
+  },
   "egressProfiles": []
 }
 ```
 
-The profile shapes are the authoritative `DependencyPolicyProfile` and `EgressPolicyProfile`
-contracts in `src/sandbox/dependency-policy.ts` and `src/sandbox/egress-policy.ts`. Their existing
-catalog constructors perform the full validation. Invalid JSON, an unsupported schema version,
-non-array profile collections, a symlink target, or an invalid profile causes startup to fail.
+Invalid JSON, an unsupported schema version, malformed profiles, a symlink target, or a default
+reference that does not select an enabled installed profile prevents startup.
 
-## State and evidence
+## Live dependency surfaces
 
-The runtime state root is:
+The same governed workflow is available through:
+
+- `dependency_acquire` in agent execution;
+- MCP tool discovery and invocation;
+- `POST /api/sandbox/dependencies/npm` with a server-resolved `missionId`.
+
+Callers may only request tighter registry and quota limits. They cannot provide package manifest
+text, host paths, policy references, approvals, grant identity, cache paths, images, or mounts. The
+server reads `package.json` and `package-lock.json` from the authorized workspace.
+
+Delegated callers require `symbolwright.dependencies.acquire`, an explicit dependency policy
+reference on the grant, and a current single-use approval bound to all active policy versions.
+Operator calls require `defaultDependencyPolicy`.
+
+## Evidence and immutable layer
+
+Successful acquisition uses the existing lockfile planner, bounded HTTPS fetcher, integrity checks,
+archive inspection, lifecycle-script suppression, cache admission, SBOM generation, and durable
+redacted evidence. A verified immutable npm layer is then bound to the authorized workspace or
+mission by a server-owned hashed record.
+
+Before execution, the layer is reverified and sealed for non-root use:
+
+- directories: `0555`;
+- normal files: `0444`;
+- executable files: `0555`.
+
+The only container handoff is a server-selected read-only bind mount:
 
 ```text
-<workspace>/.symbolwright/sandbox-network/
+<verified-layer>/node_modules -> /workspace/node_modules:ro
 ```
 
-Dependency cache/evidence and egress audit evidence remain in separate child directories owned by
-the existing gateway implementation.
+The canonical repository is never mounted. The source workspace remains temporary. Package
+lifecycle scripts are not run. The strong container continues to use `--network none`.
 
 ## Readiness and metrics
 
-Operational server preparation records the `sandbox_network_gateway` readiness check. Missing
-policy is reported as ready but explicitly `offline-only`; malformed policy prevents startup.
+Operational startup reports `sandbox_network_gateway`. Missing policy is ready but explicitly
+`offline-only`; malformed policy fails startup. Metrics include:
 
-The metrics registry exposes:
-
-- `sandbox_network_configured`
-- `sandbox_dependency_policy_profiles`
-- `sandbox_egress_policy_profiles`
-
-Request/session/byte metrics continue to come from `SandboxNetworkGateway.egressMetricsSnapshot()`
-and will be surfaced by the live egress route/tool slice.
+- `sandbox_network_configured`;
+- `sandbox_dependency_policy_profiles`;
+- `sandbox_egress_policy_profiles`.
 
 ## Security invariants
 
-- Strong containers remain `--network none`.
-- Network policy is operator-owned and cannot be supplied by a request or tool call.
-- One process does not silently reload or widen policy.
-- Missing policy means offline-only, never open internet.
-- Invalid policy fails closed before the server or MCP process begins accepting work.
-- Dependency acquisition and egress remain host-side broker workflows; they are never implemented
-  by attaching a network interface to the execution container.
+- Network-bearing work stays in host-side brokers.
+- Strong execution remains physically offline.
+- Policy, approvals, grant identity, and layer paths are server-owned.
+- Verified layers are rechecked before use and mounted read-only.
+- Missing or invalid authority fails closed.

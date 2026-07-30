@@ -521,6 +521,21 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       },
       required: ['type', 'content'],
     },
+    dependency_acquire: {
+      type: 'object',
+      properties: {
+        registryUrls: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional registry URLs that further restrict the operator policy allowlist',
+        },
+        limits: {
+          type: 'object',
+          description:
+            'Optional positive numeric limits that further tighten operator policy quotas',
+        },
+      },
+    },
     preflight: {
       type: 'object',
       properties: {

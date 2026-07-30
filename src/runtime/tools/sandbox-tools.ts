@@ -1,4 +1,6 @@
+import { runWithSandboxDependencyLayer } from '../../sandbox/sandbox-dependency-execution-context.js'
 import { SandboxHistoryStore } from '../../sandbox/sandbox-history.js'
+import { getOrCreateApplicationSandboxNetworkRuntime } from '../../sandbox/sandbox-network-runtime.js'
 import { SandboxService } from '../../sandbox/sandbox-service.js'
 import type {
   SandboxExecutionRequest,
@@ -15,6 +17,8 @@ const FORBIDDEN_SANDBOX_TOOL_FIELDS = new Set([
   'dockerArgs',
   'podmanArgs',
   'containerArgs',
+  'dependencyLayer',
+  'dependencyNodeModulesPath',
 ])
 const GUARDED_HOST_RUNNER_PREFIX = 'guarded-host-'
 
@@ -32,6 +36,7 @@ function resolveSandboxService(context: RuntimeToolContext): SandboxService {
     context.sandboxService ??
     new SandboxService({
       historyStore: new SandboxHistoryStore({ workspaceRoot: context.cwd }),
+      workspaceRoot: context.cwd,
     })
   )
 }
@@ -92,6 +97,27 @@ function executionContext(context: RuntimeToolContext, mode: RuntimeToolContext[
           },
         }),
   }
+}
+
+async function executeWithBoundDependencies(
+  service: SandboxService,
+  request: SandboxExecutionRequest,
+  context: RuntimeToolContext,
+  mode: RuntimeToolContext['policy']['mode'],
+): Promise<SandboxExecutionResult> {
+  const runtime =
+    context.sandboxNetworkRuntime ??
+    getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot: context.cwd })
+  const workspaceId =
+    context.sandboxAuthorization?.workspaceId ??
+    request.missionId ??
+    request.repository?.rootPath ??
+    context.sessionId ??
+    context.cwd
+  const layer = await runtime.dependencyLayers.resolve(workspaceId)
+  return runWithSandboxDependencyLayer(layer, () =>
+    service.execute(request, executionContext(context, mode)),
+  )
 }
 
 function renderExecutionResult(result: SandboxExecutionResult): string {
@@ -189,7 +215,7 @@ export const sandboxListRuntimesTool: RuntimeToolDefinition = {
 export const sandboxExecuteTool: RuntimeToolDefinition = {
   name: 'sandbox_execute',
   description:
-    'Execute, compile, or test code through SymbolWright structured sandbox execution. Accepts only structured requests; raw shell commands, caller-selected repository roots, trusted local host runners, image names, and container args are rejected.',
+    'Execute, compile, or test code through SymbolWright structured sandbox execution. Accepts only structured requests; raw shell commands, caller-selected repository roots, trusted local host runners, image names, container args, and dependency mount paths are rejected.',
   capability: 'APPROVED_COMMAND',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const service = resolveSandboxService(context)
@@ -198,7 +224,12 @@ export const sandboxExecuteTool: RuntimeToolDefinition = {
     const request = service.validateRequest(rawRequest)
 
     if (context.policy.mode === 'PLAN_ONLY' || context.policy.mode === 'READ_ONLY') {
-      const result = await service.execute(request, executionContext(context, context.policy.mode))
+      const result = await executeWithBoundDependencies(
+        service,
+        request,
+        context,
+        context.policy.mode,
+      )
       context.recordSandboxExecution?.(request, result)
       return renderExecutionResult(result)
     }
@@ -207,7 +238,12 @@ export const sandboxExecuteTool: RuntimeToolDefinition = {
       return proposalFor(request)
     }
 
-    const result = await service.execute(request, executionContext(context, 'APPROVED_EXECUTION'))
+    const result = await executeWithBoundDependencies(
+      service,
+      request,
+      context,
+      'APPROVED_EXECUTION',
+    )
     context.recordSandboxExecution?.(request, result)
     return renderExecutionResult(result)
   },

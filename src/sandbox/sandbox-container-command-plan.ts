@@ -6,6 +6,7 @@ import {
   SANDBOX_CONTAINER_COPY_IN_SCRIPT,
   SANDBOX_CONTAINER_COPY_OUT_SCRIPT,
 } from './sandbox-container-transfer.js'
+import { currentSandboxDependencyLayer } from './sandbox-dependency-execution-context.js'
 import type { SandboxContainerEngineStatus } from './sandbox-images.js'
 import type { SandboxImageDefinition, SandboxLimits } from './sandbox-types.js'
 
@@ -57,6 +58,7 @@ const ALLOWED_OPTION_KEYS = new Set([
   'user',
 ])
 const SAFE_CONTAINER_PATH = '/workspace' as const
+const DEPENDENCY_CONTAINER_PATH = '/workspace/node_modules' as const
 const DEFAULT_NON_ROOT_USER = '65532:65532'
 const MINIMAL_CONTAINER_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 const MIN_WORKSPACE_TMPFS_BYTES = 8 * 1024 * 1024
@@ -71,6 +73,10 @@ export function buildSandboxContainerCommandPlan(
   assertSafeEntrypoint(options.entrypoint)
   assertSafeHostPath(options.hostWorkspacePath)
   assertSafeHostPath(options.hostOutputPath)
+  const dependencyNodeModulesPath = currentSandboxDependencyLayer()?.nodeModulesPath
+  if (dependencyNodeModulesPath !== undefined) {
+    assertSafeDependencyLayerPath(dependencyNodeModulesPath)
+  }
   const containerName = assertSafeContainerName(options.containerName)
   const user = assertSafeUser(options.user ?? DEFAULT_NON_ROOT_USER)
   const policy = buildSandboxContainerPolicyPlan({
@@ -92,6 +98,13 @@ export function buildSandboxContainerCommandPlan(
   )
   const cpuCount = Math.max(0.01, (policy.limits.maxCpuPercent ?? 100) / 100)
   const image = options.image.image
+  const dependencyMount =
+    dependencyNodeModulesPath === undefined
+      ? []
+      : [
+          '--mount',
+          `type=bind,src=${dependencyNodeModulesPath},dst=${DEPENDENCY_CONTAINER_PATH},readonly`,
+        ]
   const commonExec = [
     '--user',
     user,
@@ -141,6 +154,7 @@ export function buildSandboxContainerCommandPlan(
       `/workspace:rw,nosuid,nodev,size=${workspaceTmpfsBytes},mode=1777`,
       '--tmpfs',
       '/tmp:rw,noexec,nosuid,nodev,size=64m,mode=1777',
+      ...dependencyMount,
       '--workdir',
       SAFE_CONTAINER_PATH,
       '--hostname',
@@ -209,6 +223,11 @@ export function buildSandboxContainerCommandPlan(
       'Source and generated files cross the boundary through fixed, bounded, non-shell protocols.',
       'Normal execution uses --pull=never and requires a preinstalled digest-pinned image.',
       'Private PID isolation is enforced by excluding host and container-shared PID modes.',
+      ...(dependencyNodeModulesPath === undefined
+        ? []
+        : [
+            'The verified dependency layer is mounted read-only at /workspace/node_modules; the execution container remains network-disabled.',
+          ]),
       'Browser and model requests cannot add mounts, engine flags, environment variables, or image names.',
       ...policy.warnings,
     ],
@@ -265,6 +284,18 @@ function assertSafeHostPath(hostPath: string): string {
   ]
   if (deniedFragments.some((fragment) => normalized.includes(fragment))) {
     throw new Error('Container host path may not target host home, Git, or engine socket paths.')
+  }
+  return normalized
+}
+
+function assertSafeDependencyLayerPath(hostPath: string): string {
+  if (!path.isAbsolute(hostPath)) throw new Error('Dependency layer path must be absolute.')
+  if (/[\0\r\n,]/.test(hostPath)) {
+    throw new Error('Dependency layer path contains a forbidden mount character.')
+  }
+  const normalized = path.normalize(hostPath)
+  if (normalized === path.parse(normalized).root) {
+    throw new Error('Dependency layer path may not be the filesystem root.')
   }
   return normalized
 }
