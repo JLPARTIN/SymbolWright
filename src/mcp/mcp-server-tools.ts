@@ -57,12 +57,17 @@ export function createSymbolWrightMcpToolHandler(
   })
   const bridged = bridgeToolsForProvider(assembleAgentTools(), policy)
   const byName = new Map(bridged.map((tool) => [tool.providerTool.name, tool]))
-  const networkRuntime = getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot: options.cwd })
   const missionService =
     options.missionId === undefined ? undefined : new MissionService({ workspaceRoot: options.cwd })
+  const mission =
+    missionService === undefined || options.missionId === undefined
+      ? undefined
+      : missionService.get(options.missionId)
+  const toolCwd = mission?.repository.rootPath ?? options.cwd
+  const networkRuntime = getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot: toolCwd })
 
   let context: RuntimeToolContext = {
-    cwd: options.cwd,
+    cwd: toolCwd,
     policy,
     sandboxNetworkRuntime: networkRuntime,
     ...(options.missionId === undefined ? {} : { sessionId: options.missionId }),
@@ -126,7 +131,7 @@ export function createSymbolWrightMcpToolHandler(
             callerKind: 'delegated-grant',
             runtimeMode: options.mode,
             repositoryId: repository,
-            workspaceId: options.missionId ?? options.cwd,
+            workspaceId: options.missionId ?? toolCwd,
             ...(options.missionId === undefined ? {} : { missionId: options.missionId }),
             principalId: grant.principalId,
             grantId: grant.id,
