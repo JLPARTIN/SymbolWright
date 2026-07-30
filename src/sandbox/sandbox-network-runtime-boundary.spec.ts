@@ -13,6 +13,7 @@ import {
 
 const roots: string[] = []
 
+// Policy authority is load-once per workspace, so every test receives a fresh process-local runtime.
 afterEach(() => {
   clearApplicationSandboxNetworkRuntimesForTests()
   for (const root of roots.splice(0)) {
