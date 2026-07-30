@@ -67,7 +67,7 @@ describe('sandbox route fail-closed boundary coverage', () => {
     })
 
     expect(res.statusCode).toBe(400)
-    expect(res.json<{ error: string }>().error).toContain('missionId must be a string')
+    expect(res.json<{ error: string }>().error).toContain('missionId must be a non-empty string')
   })
 
   it('requires repository execution to have a mission-bound workspace', async () => {

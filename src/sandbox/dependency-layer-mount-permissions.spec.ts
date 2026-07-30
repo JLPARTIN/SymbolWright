@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -10,7 +10,11 @@ import type { StrongSandboxDependencyLayer } from './npm-dependency-layer.js'
 const roots: string[] = []
 
 afterEach(() => {
-  for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true })
+  for (const root of roots.splice(0)) {
+    chmodSync(path.join(root, 'node_modules', 'example'), 0o700)
+    chmodSync(path.join(root, 'node_modules'), 0o700)
+    rmSync(root, { recursive: true, force: true })
+  }
 })
 
 describe('dependency layer mount permissions', () => {
