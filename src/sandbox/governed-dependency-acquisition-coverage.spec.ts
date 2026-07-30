@@ -65,11 +65,13 @@ describe('parseGovernedDependencyAcquisitionRequest branch coverage', () => {
     expect(() => parseGovernedDependencyAcquisitionRequest({ limits: { surprise: 1 } })).toThrow(
       'Unknown dependency limit: surprise',
     )
-    expect(() => parseGovernedDependencyAcquisitionRequest({ limits: { maxPackages: '1' } })).toThrow(
-      'Dependency limit maxPackages must be a positive number.',
-    )
     expect(() =>
-      parseGovernedDependencyAcquisitionRequest({ limits: { maxPackages: Number.POSITIVE_INFINITY } }),
+      parseGovernedDependencyAcquisitionRequest({ limits: { maxPackages: '1' } }),
+    ).toThrow('Dependency limit maxPackages must be a positive number.')
+    expect(() =>
+      parseGovernedDependencyAcquisitionRequest({
+        limits: { maxPackages: Number.POSITIVE_INFINITY },
+      }),
     ).toThrow('Dependency limit maxPackages must be a positive number.')
     expect(() => parseGovernedDependencyAcquisitionRequest({ limits: { maxPackages: 0 } })).toThrow(
       'Dependency limit maxPackages must be a positive number.',
@@ -145,7 +147,11 @@ describe('acquireGovernedNpmDependencies branch coverage', () => {
       completed,
     )
     expect(harness.bind).toHaveBeenCalledWith('workspace-1', layer)
-    expect(result).toEqual({ session: completed, layer, bindingPath: '/state/bindings/workspace-1.json' })
+    expect(result).toEqual({
+      session: completed,
+      layer,
+      bindingPath: '/state/bindings/workspace-1.json',
+    })
   })
 
   it('rejects symbolic-link, directory, and oversized manifests', async () => {
@@ -190,7 +196,9 @@ describe('acquireGovernedNpmDependencies branch coverage', () => {
 
 describe('renderGovernedDependencyAcquisitionResult branch coverage', () => {
   it('omits optional policy and layer fields when unavailable', () => {
-    const rendered = JSON.parse(renderGovernedDependencyAcquisitionResult({ session: session('blocked') }))
+    const rendered = JSON.parse(
+      renderGovernedDependencyAcquisitionResult({ session: session('blocked') }),
+    )
 
     expect(rendered).not.toHaveProperty('policy')
     expect(rendered).not.toHaveProperty('dependencyLayer')
@@ -232,7 +240,10 @@ async function temporaryRoot(): Promise<string> {
   return root
 }
 
-function runtimeHarness(sessionResult: DependencyAcquisitionSession, layer = dependencyLayer()): {
+function runtimeHarness(
+  sessionResult: DependencyAcquisitionSession,
+  layer = dependencyLayer(),
+): {
   readonly runtime: ApplicationSandboxNetworkRuntime
   readonly acquireNpm: ReturnType<typeof vi.fn>
   readonly materializeNpmLayer: ReturnType<typeof vi.fn>

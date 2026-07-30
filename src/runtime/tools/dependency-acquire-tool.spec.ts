@@ -35,9 +35,9 @@ describe('dependencyAcquireTool', () => {
   })
 
   it('rejects execution outside APPROVED_EXECUTION mode', async () => {
-    await expect(
-      dependencyAcquireTool.execute({}, context({ mode: 'READ_ONLY' })),
-    ).rejects.toThrow('dependency_acquire requires APPROVED_EXECUTION mode.')
+    await expect(dependencyAcquireTool.execute({}, context({ mode: 'READ_ONLY' }))).rejects.toThrow(
+      'dependency_acquire requires APPROVED_EXECUTION mode.',
+    )
   })
 
   it('fails closed when the application-owned network runtime is unavailable', async () => {
@@ -49,7 +49,9 @@ describe('dependencyAcquireTool', () => {
   it('fails closed when no server-derived dependency authority is present', async () => {
     await expect(
       dependencyAcquireTool.execute({}, context({ includeAuthorization: false })),
-    ).rejects.toThrow('No server-derived dependency policy reference is authorized for this workspace.')
+    ).rejects.toThrow(
+      'No server-derived dependency policy reference is authorized for this workspace.',
+    )
   })
 
   it('parses, acquires, records, and renders through the authorized runtime', async () => {
@@ -83,7 +85,9 @@ function context(
     readonly mode?: SymbolWrightRuntimeMode
     readonly includeRuntime?: boolean
     readonly includeAuthorization?: boolean
-    readonly recordDependencyAcquisition?: (result: GovernedDependencyAcquisitionResult) => Promise<void>
+    readonly recordDependencyAcquisition?: (
+      result: GovernedDependencyAcquisitionResult,
+    ) => Promise<void>
   } = {},
 ): RuntimeToolContext {
   const value: Record<string, unknown> = {

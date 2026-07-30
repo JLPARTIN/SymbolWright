@@ -134,7 +134,11 @@ describe('DependencyLayerBindingStore', () => {
 
   it('rejects a binding copied under a different authorized workspace identity', async () => {
     const root = await temporaryRoot()
-    await writeBinding(root, 'workspace-1', JSON.stringify(validRecord('other-workspace', dependencyLayer())))
+    await writeBinding(
+      root,
+      'workspace-1',
+      JSON.stringify(validRecord('other-workspace', dependencyLayer())),
+    )
     const store = new DependencyLayerBindingStore(root)
 
     await expect(store.resolve('workspace-1')).rejects.toThrow(
