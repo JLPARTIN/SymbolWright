@@ -2,9 +2,11 @@ import { lstatSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { resolveStoragePaths } from '../storage/storage-paths.js'
+import { DependencyLayerBindingStore } from './dependency-layer-binding-store.js'
 import type { DependencyPolicyProfile } from './dependency-policy.js'
 import type { EgressPolicyProfile } from './egress-policy.js'
 import { SandboxNetworkGateway } from './sandbox-network-gateway.js'
+import type { SandboxPolicyReference } from './sandbox-policy-model.js'
 
 export const SANDBOX_NETWORK_POLICY_FILE_ENV = 'SYMBOLWRIGHT_SANDBOX_NETWORK_POLICY_FILE' as const
 export const SANDBOX_NETWORK_POLICY_SCHEMA_VERSION = 1 as const
@@ -13,6 +15,7 @@ const MAX_POLICY_FILE_BYTES = 1024 * 1024
 export interface SandboxNetworkPolicyDocument {
   readonly schemaVersion: typeof SANDBOX_NETWORK_POLICY_SCHEMA_VERSION
   readonly dependencyProfiles?: readonly DependencyPolicyProfile[]
+  readonly defaultDependencyPolicy?: SandboxPolicyReference
   readonly egressProfiles?: readonly EgressPolicyProfile[]
 }
 
@@ -21,11 +24,14 @@ export interface SandboxNetworkRuntimeStatus {
   readonly stateRoot: string
   readonly policyFile?: string
   readonly dependencyProfileCount: number
+  readonly defaultDependencyPolicy?: string
   readonly egressProfileCount: number
 }
 
 export interface ApplicationSandboxNetworkRuntime {
   readonly gateway: SandboxNetworkGateway
+  readonly dependencyLayers: DependencyLayerBindingStore
+  readonly defaultDependencyPolicyReference?: SandboxPolicyReference
   readonly status: SandboxNetworkRuntimeStatus
 }
 
@@ -52,7 +58,10 @@ export function getOrCreateApplicationSandboxNetworkRuntime(
   const stateRoot = path.join(resolveStoragePaths(workspaceRoot).workspaceRoot, 'sandbox-network')
   const loaded = loadPolicyDocument(workspaceRoot, env)
   const dependencyProfiles = loaded.document?.dependencyProfiles ?? []
+  const defaultDependencyPolicyReference = loaded.document?.defaultDependencyPolicy
   const egressProfiles = loaded.document?.egressProfiles ?? []
+  validateDefaultDependencyPolicy(defaultDependencyPolicyReference, dependencyProfiles)
+
   const runtime: ApplicationSandboxNetworkRuntime = {
     gateway: new SandboxNetworkGateway({
       stateRoot,
@@ -60,11 +69,20 @@ export function getOrCreateApplicationSandboxNetworkRuntime(
       egressProfiles,
       env,
     }),
+    dependencyLayers: new DependencyLayerBindingStore(path.join(stateRoot, 'dependency-bindings')),
+    ...(defaultDependencyPolicyReference === undefined
+      ? {}
+      : { defaultDependencyPolicyReference }),
     status: Object.freeze({
       mode: loaded.policyFile === undefined ? 'offline-only' : 'configured',
       stateRoot,
       ...(loaded.policyFile === undefined ? {} : { policyFile: loaded.policyFile }),
       dependencyProfileCount: dependencyProfiles.length,
+      ...(defaultDependencyPolicyReference === undefined
+        ? {}
+        : {
+            defaultDependencyPolicy: `${defaultDependencyPolicyReference.id}@${defaultDependencyPolicyReference.version}`,
+          }),
       egressProfileCount: egressProfiles.length,
     }),
   }
@@ -76,7 +94,7 @@ export function sandboxNetworkReadinessDetail(status: SandboxNetworkRuntimeStatu
   if (status.mode === 'offline-only') {
     return 'offline-only; no sandbox network policy file is configured'
   }
-  return `configured; dependencyProfiles=${status.dependencyProfileCount}; egressProfiles=${status.egressProfileCount}`
+  return `configured; dependencyProfiles=${status.dependencyProfileCount}; defaultDependencyPolicy=${status.defaultDependencyPolicy ?? 'none'}; egressProfiles=${status.egressProfileCount}`
 }
 
 /** Test-only process isolation seam. Production callers must not reload authority in place. */
@@ -126,6 +144,10 @@ function loadPolicyDocument(
     )
   }
   const dependencyProfiles = optionalArray(record['dependencyProfiles'], 'dependencyProfiles')
+  const defaultDependencyPolicy = optionalPolicyReference(
+    record['defaultDependencyPolicy'],
+    'defaultDependencyPolicy',
+  )
   const egressProfiles = optionalArray(record['egressProfiles'], 'egressProfiles')
 
   return {
@@ -135,10 +157,27 @@ function loadPolicyDocument(
       ...(dependencyProfiles === undefined
         ? {}
         : { dependencyProfiles: dependencyProfiles as readonly DependencyPolicyProfile[] }),
+      ...(defaultDependencyPolicy === undefined ? {} : { defaultDependencyPolicy }),
       ...(egressProfiles === undefined
         ? {}
         : { egressProfiles: egressProfiles as readonly EgressPolicyProfile[] }),
     },
+  }
+}
+
+function validateDefaultDependencyPolicy(
+  reference: SandboxPolicyReference | undefined,
+  profiles: readonly DependencyPolicyProfile[],
+): void {
+  if (reference === undefined) return
+  const matching = profiles.find(
+    (profile) =>
+      profile.id === reference.id && profile.version === reference.version && profile.enabled,
+  )
+  if (matching === undefined) {
+    throw new Error(
+      `${SANDBOX_NETWORK_POLICY_FILE_ENV} defaultDependencyPolicy must reference an enabled installed dependency profile.`,
+    )
   }
 }
 
@@ -148,6 +187,29 @@ function optionalArray(value: unknown, name: string): readonly unknown[] | undef
     throw new Error(`${SANDBOX_NETWORK_POLICY_FILE_ENV} field ${name} must be an array.`)
   }
   return value
+}
+
+function optionalPolicyReference(
+  value: unknown,
+  name: string,
+): SandboxPolicyReference | undefined {
+  if (value === undefined) return undefined
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error(`${SANDBOX_NETWORK_POLICY_FILE_ENV} field ${name} must be an object.`)
+  }
+  const record = value as Record<string, unknown>
+  if (
+    typeof record['id'] !== 'string' ||
+    record['id'].trim().length === 0 ||
+    typeof record['version'] !== 'number' ||
+    !Number.isSafeInteger(record['version']) ||
+    record['version'] <= 0
+  ) {
+    throw new Error(
+      `${SANDBOX_NETWORK_POLICY_FILE_ENV} field ${name} requires a non-empty id and positive integer version.`,
+    )
+  }
+  return { id: record['id'], version: record['version'] }
 }
 
 function requireNonEmpty(value: string, name: string): string {
