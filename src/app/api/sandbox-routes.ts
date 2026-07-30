@@ -26,8 +26,8 @@ import {
   buildDependencyAuthorization,
   dependencyAuthorizationMetadata,
 } from '../../sandbox/dependency-acquisition-authority.js'
-import { executeStrongSandboxContainerWithDependencies } from '../../sandbox/sandbox-dependency-container-executor.js'
-import { SandboxHistoryStore, type SandboxExecutionSummary } from '../../sandbox/sandbox-history.js'
+import { runWithSandboxDependencyLayer } from '../../sandbox/sandbox-dependency-execution-context.js'
+import type { SandboxExecutionSummary } from '../../sandbox/sandbox-history.js'
 import {
   acquireGovernedNpmDependencies,
   parseGovernedDependencyAcquisitionRequest,
@@ -221,16 +221,6 @@ function applicationWorkspaceRoot(context: SandboxRouteContext): string {
 function networkRuntime(context: SandboxRouteContext) {
   return getOrCreateApplicationSandboxNetworkRuntime({
     workspaceRoot: applicationWorkspaceRoot(context),
-  })
-}
-
-function dependencyAwareExecutionService(context: SandboxRouteContext): SandboxService {
-  const workspaceRoot = applicationWorkspaceRoot(context)
-  const runtime = networkRuntime(context)
-  return new SandboxService({
-    historyStore: new SandboxHistoryStore({ workspaceRoot }),
-    workspaceRoot,
-    executeContainer: (input) => executeStrongSandboxContainerWithDependencies(runtime, input),
   })
 }
 
@@ -466,7 +456,7 @@ export async function handleSandboxRoute(
         effectiveRuntimeMode = mission.agent.runtimeMode
       }
 
-      const service = dependencyAwareExecutionService(context)
+      const service = context.service
       const securedRecord = bindRepositoryToMissionWorkspace(record, missionWorkspaceRoot)
       await service.refreshInventory()
       const request = service.validateRequest(securedRecord)
@@ -523,20 +513,23 @@ export async function handleSandboxRoute(
         ...(offlineReference === undefined ? {} : { policyReference: offlineReference }),
         intent: 'offline-execution' as const,
       }
-      const result = await service.execute(request, {
-        mode: effectiveRuntimeMode,
-        authorization,
-        ...(context.callerGrantId === undefined
-          ? {}
-          : {
-              ownership: {
-                ownerGrantId: context.callerGrantId,
-                ...(context.callerPrincipalId === undefined
-                  ? {}
-                  : { ownerPrincipalId: context.callerPrincipalId }),
-              },
-            }),
-      })
+      const layer = await networkRuntime(context).dependencyLayers.resolve(authorization.workspaceId)
+      const result = await runWithSandboxDependencyLayer(layer, () =>
+        service.execute(request, {
+          mode: effectiveRuntimeMode,
+          authorization,
+          ...(context.callerGrantId === undefined
+            ? {}
+            : {
+                ownership: {
+                  ownerGrantId: context.callerGrantId,
+                  ...(context.callerPrincipalId === undefined
+                    ? {}
+                    : { ownerPrincipalId: context.callerPrincipalId }),
+                },
+              }),
+        }),
+      )
       recordMissionEvidence(context, request, result)
       sendJson(res, 200, { result })
       return true
