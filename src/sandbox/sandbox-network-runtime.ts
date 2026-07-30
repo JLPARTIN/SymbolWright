@@ -107,7 +107,12 @@ function loadPolicyDocument(
   const configured = env[SANDBOX_NETWORK_POLICY_FILE_ENV]?.trim()
   if (configured === undefined || configured.length === 0) return {}
 
-  const policyFile = path.resolve(workspaceRoot, configured)
+  // A single SymbolWright process may execute tools from several mission workspaces. Relative
+  // operator policy paths therefore resolve from the process root, not from the active mission
+  // checkout, so every workspace observes the same startup-owned authority document.
+  const policyFile = path.isAbsolute(configured)
+    ? configured
+    : path.resolve(process.cwd(), configured)
   const stat = lstatSync(policyFile)
   if (stat.isSymbolicLink()) {
     throw new Error(
