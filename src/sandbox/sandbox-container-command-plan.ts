@@ -6,6 +6,7 @@ import {
   SANDBOX_CONTAINER_COPY_IN_SCRIPT,
   SANDBOX_CONTAINER_COPY_OUT_SCRIPT,
 } from './sandbox-container-transfer.js'
+import { currentSandboxDependencyLayer } from './sandbox-dependency-execution-context.js'
 import type { SandboxContainerEngineStatus } from './sandbox-images.js'
 import type { SandboxImageDefinition, SandboxLimits } from './sandbox-types.js'
 
@@ -18,8 +19,6 @@ export interface SandboxContainerCommandPlanOptions {
   readonly entrypoint: readonly string[]
   readonly limits?: Partial<SandboxLimits>
   readonly user?: string
-  /** Server-verified immutable layer; never accepted from a request or model tool input. */
-  readonly dependencyNodeModulesPath?: string
 }
 
 export interface SandboxContainerCommandPlan {
@@ -57,7 +56,6 @@ const ALLOWED_OPTION_KEYS = new Set([
   'entrypoint',
   'limits',
   'user',
-  'dependencyNodeModulesPath',
 ])
 const SAFE_CONTAINER_PATH = '/workspace' as const
 const DEPENDENCY_CONTAINER_PATH = '/workspace/node_modules' as const
@@ -75,10 +73,10 @@ export function buildSandboxContainerCommandPlan(
   assertSafeEntrypoint(options.entrypoint)
   assertSafeHostPath(options.hostWorkspacePath)
   assertSafeHostPath(options.hostOutputPath)
-  const dependencyNodeModulesPath =
-    options.dependencyNodeModulesPath === undefined
-      ? undefined
-      : assertSafeDependencyLayerPath(options.dependencyNodeModulesPath)
+  const dependencyNodeModulesPath = currentSandboxDependencyLayer()?.nodeModulesPath
+  if (dependencyNodeModulesPath !== undefined) {
+    assertSafeDependencyLayerPath(dependencyNodeModulesPath)
+  }
   const containerName = assertSafeContainerName(options.containerName)
   const user = assertSafeUser(options.user ?? DEFAULT_NON_ROOT_USER)
   const policy = buildSandboxContainerPolicyPlan({
