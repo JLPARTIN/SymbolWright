@@ -135,9 +135,7 @@ export function createSymbolWrightMcpToolHandler(
           })
     context = {
       ...context,
-      ...(sandboxDependencyAuthorization === undefined
-        ? {}
-        : { sandboxDependencyAuthorization }),
+      ...(sandboxDependencyAuthorization === undefined ? {} : { sandboxDependencyAuthorization }),
       accessControl: {
         principalId: grant.principalId,
         grantId: grant.id,
