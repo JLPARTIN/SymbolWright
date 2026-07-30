@@ -29,9 +29,7 @@ describe('dependency acquisition authority', () => {
       'mission:mission-1': 1,
       'dependency-request-tightening': 1,
     })
-    expect(authorization.approval?.policyVersions).toEqual(
-      authorization.expectedPolicyVersions,
-    )
+    expect(authorization.approval?.policyVersions).toEqual(authorization.expectedPolicyVersions)
   })
 
   it('binds a consumed delegated approval receipt without allowing caller policy input', () => {
