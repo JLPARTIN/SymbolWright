@@ -32,7 +32,6 @@ function assertNoForbiddenFields(input: unknown): void {
 }
 
 function resolveSandboxService(context: RuntimeToolContext): SandboxService {
-  if (context.sandboxService !== undefined) return context.sandboxService
   const networkRuntime =
     context.sandboxNetworkRuntime ??
     getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot: context.cwd })
