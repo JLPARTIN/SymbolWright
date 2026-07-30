@@ -65,7 +65,9 @@ export async function runAuthorizedTool<TInput>(
         }),
       }
     } else if (accessControl !== undefined) {
-      dependencyAccessRuntime = new AccessRuntime({ workspaceRoot: context.cwd })
+      // The delegated grant store belongs to the SymbolWright process root. `context.cwd` may be a
+      // separately materialized mission checkout and must never become a second authority store.
+      dependencyAccessRuntime = new AccessRuntime({ workspaceRoot: process.cwd() })
       const grant = dependencyAccessRuntime.grantService.getGrant(accessControl.grantId)
       if (grant !== undefined) {
         const reference = resolveGrantSandboxPolicyReferences(grant).references.dependency
