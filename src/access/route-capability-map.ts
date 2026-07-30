@@ -66,6 +66,13 @@ const RULES: readonly RouteCapabilityRule[] = [
     matcher: /^\/api\/sandbox\/execute$/,
     capability: SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
   },
+  // Preliminary route admission only. The handler performs the real policy-version-bound
+  // `symbolwright.dependencies.acquire` authorization after resolving the mission and policy.
+  {
+    method: 'POST',
+    matcher: /^\/api\/sandbox\/dependencies\/npm$/,
+    capability: 'symbolwright.mission.read',
+  },
   { method: 'GET', matcher: /^\/api\/sandbox.*$/, capability: SANDBOX_OFFLINE_EXECUTE_CAPABILITY },
   {
     method: 'POST',
