@@ -31,7 +31,9 @@ export interface EgressAuthorizationReceipt {
   readonly grantVersion: number
 }
 
-export function buildEgressAuthorization(input: EgressAuthorizationInput): SandboxAuthorizationContext {
+export function buildEgressAuthorization(
+  input: EgressAuthorizationInput,
+): SandboxAuthorizationContext {
   const expectedPolicyVersions = egressPolicyVersions({
     policyReference: input.policyReference,
     ...(input.grantId === undefined ? {} : { grantId: input.grantId }),

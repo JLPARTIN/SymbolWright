@@ -34,6 +34,7 @@ import {
   renderGovernedDependencyAcquisitionResult,
 } from '../../sandbox/governed-dependency-acquisition.js'
 import { recordDependencyAcquisitionMissionEvidence } from '../../sandbox/dependency-mission-evidence.js'
+import { handleSandboxEgressRoute } from './sandbox-egress-routes.js'
 import { getOrCreateApplicationSandboxNetworkRuntime } from '../../sandbox/sandbox-network-runtime.js'
 import { SandboxRequestValidationError } from '../../sandbox/sandbox-request.js'
 import type { SandboxService } from '../../sandbox/sandbox-service.js'
@@ -392,6 +393,11 @@ export async function handleSandboxRoute(
   try {
     if (url.pathname === '/api/sandbox/dependencies/npm') {
       await handleDependencyAcquisition(req, res, context)
+      return true
+    }
+
+    if (url.pathname === '/api/sandbox/egress') {
+      await handleSandboxEgressRoute(req, res, context)
       return true
     }
 

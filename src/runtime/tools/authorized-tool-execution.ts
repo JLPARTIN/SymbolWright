@@ -1,7 +1,11 @@
 import { findLiveAccessRuntimeForGrant } from '../../access/access-runtime.js'
-import { SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY } from '../../access/sandbox-capabilities.js'
+import {
+  SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+  SANDBOX_EGRESS_CAPABILITY,
+} from '../../access/sandbox-capabilities.js'
 import {
   grantAllowsDependencyAcquisition,
+  grantAllowsEgress,
   resolveGrantSandboxPolicyReferences,
 } from '../../access/sandbox-policy-compat.js'
 import {
@@ -14,6 +18,11 @@ import {
   buildDependencyAuthorization,
   dependencyAuthorizationMetadata,
 } from '../../sandbox/dependency-acquisition-authority.js'
+import {
+  bindEgressApproval,
+  buildEgressAuthorization,
+  egressAuthorizationMetadata,
+} from '../../sandbox/egress-authorization.js'
 import { getOrCreateApplicationSandboxNetworkRuntime } from '../../sandbox/sandbox-network-runtime.js'
 import type {
   RuntimeToolContext,
@@ -40,7 +49,7 @@ export async function runAuthorizedTool<TInput>(
     sandboxNetworkRuntime: context.sandboxNetworkRuntime ?? networkRuntime,
   }
   const accessControl = effectiveContext.accessControl
-  const dependencyAccessRuntime =
+  const accessRuntimeForGrant =
     accessControl === undefined
       ? undefined
       : findLiveAccessRuntimeForGrant(accessControl.principalId, accessControl.grantId)
@@ -67,8 +76,8 @@ export async function runAuthorizedTool<TInput>(
           operatorApproved: true,
         }),
       }
-    } else if (accessControl !== undefined && dependencyAccessRuntime !== undefined) {
-      const grant = dependencyAccessRuntime.grantService.getGrant(accessControl.grantId)
+    } else if (accessControl !== undefined && accessRuntimeForGrant !== undefined) {
+      const grant = accessRuntimeForGrant.grantService.getGrant(accessControl.grantId)
       if (grant !== undefined) {
         const reference = resolveGrantSandboxPolicyReferences(grant).references.dependency
         if (reference !== undefined) {
@@ -93,7 +102,53 @@ export async function runAuthorizedTool<TInput>(
     }
   }
 
+  if (
+    tool.name === 'sandbox_egress_request' &&
+    effectiveContext.sandboxEgressAuthorization === undefined
+  ) {
+    if (accessControl === undefined && networkRuntime.defaultEgressPolicyReference !== undefined) {
+      effectiveContext = {
+        ...effectiveContext,
+        sandboxEgressAuthorization: buildEgressAuthorization({
+          policyReference: networkRuntime.defaultEgressPolicyReference,
+          deploymentMode: context.sandboxAuthorization?.deploymentMode ?? deploymentMode(),
+          callerKind: 'operator',
+          runtimeMode: context.policy.mode,
+          repositoryId: context.cwd,
+          workspaceId: context.sessionId ?? context.cwd,
+          ...(context.sessionId === undefined ? {} : { missionId: context.sessionId }),
+          capabilityApproved: true,
+          operatorApproved: true,
+        }),
+      }
+    } else if (accessControl !== undefined && accessRuntimeForGrant !== undefined) {
+      const grant = accessRuntimeForGrant.grantService.getGrant(accessControl.grantId)
+      if (grant !== undefined) {
+        const reference = resolveGrantSandboxPolicyReferences(grant).references.egress
+        if (reference !== undefined) {
+          effectiveContext = {
+            ...effectiveContext,
+            sandboxEgressAuthorization: buildEgressAuthorization({
+              policyReference: reference,
+              deploymentMode: context.sandboxAuthorization?.deploymentMode ?? deploymentMode(),
+              callerKind: 'delegated-grant',
+              runtimeMode: context.policy.mode,
+              repositoryId: (await detectGitHubRepository(context.cwd)) ?? context.cwd,
+              workspaceId: context.sessionId ?? context.cwd,
+              ...(context.sessionId === undefined ? {} : { missionId: context.sessionId }),
+              principalId: grant.principalId,
+              grantId: grant.id,
+              grantVersion: grant.version,
+              capabilityApproved: grantAllowsEgress(grant),
+            }),
+          }
+        }
+      }
+    }
+  }
+
   let dependencyReceipt: ToolAuthorizationReceipt | undefined
+  let egressReceipt: ToolAuthorizationReceipt | undefined
   if (accessControl !== undefined) {
     const descriptor = resolveToolPermissionDescriptor(tool.name)
     if (descriptor === undefined) {
@@ -118,19 +173,33 @@ export async function runAuthorizedTool<TInput>(
               effectiveContext.sandboxDependencyAuthorization,
               callerMetadata,
             )
-          : callerMetadata
+          : capability === SANDBOX_EGRESS_CAPABILITY &&
+              effectiveContext.sandboxEgressAuthorization !== undefined
+            ? egressAuthorizationMetadata(
+                effectiveContext.sandboxEgressAuthorization,
+                callerMetadata,
+              )
+            : callerMetadata
       const dependencyRepository = effectiveContext.sandboxDependencyAuthorization?.repositoryId
+      const egressRepository = effectiveContext.sandboxEgressAuthorization?.repositoryId
+      const capabilityRepository =
+        capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY
+          ? dependencyRepository
+          : capability === SANDBOX_EGRESS_CAPABILITY
+            ? egressRepository
+            : undefined
       const receipt =
-        capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY &&
-        dependencyAccessRuntime !== undefined
-          ? await dependencyAccessRuntime.authorizationService.requireAuthorized({
+        (capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY ||
+          capability === SANDBOX_EGRESS_CAPABILITY) &&
+        accessRuntimeForGrant !== undefined
+          ? await accessRuntimeForGrant.authorizationService.requireAuthorized({
               principalId: accessControl.principalId,
               grantId: accessControl.grantId,
               ...(accessControl.sessionId === undefined
                 ? {}
                 : { sessionId: accessControl.sessionId }),
               capability,
-              ...(dependencyRepository === undefined ? {} : { repository: dependencyRepository }),
+              ...(capabilityRepository === undefined ? {} : { repository: capabilityRepository }),
               ...(context.sessionId === undefined ? {} : { missionId: context.sessionId }),
               toolName: tool.name,
               ...(metadata === undefined ? {} : { metadata }),
@@ -138,6 +207,9 @@ export async function runAuthorizedTool<TInput>(
           : await accessControl.requireAuthorized(capability, tool.name, metadata)
       if (capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY && receipt !== undefined) {
         dependencyReceipt = receipt
+      }
+      if (capability === SANDBOX_EGRESS_CAPABILITY && receipt !== undefined) {
+        egressReceipt = receipt
       }
     }
   }
@@ -152,6 +224,19 @@ export async function runAuthorizedTool<TInput>(
       sandboxDependencyAuthorization: bindDependencyApproval(
         effectiveContext.sandboxDependencyAuthorization,
         dependencyReceipt,
+      ),
+    }
+  }
+  if (
+    tool.name === 'sandbox_egress_request' &&
+    effectiveContext.sandboxEgressAuthorization !== undefined &&
+    egressReceipt !== undefined
+  ) {
+    effectiveContext = {
+      ...effectiveContext,
+      sandboxEgressAuthorization: bindEgressApproval(
+        effectiveContext.sandboxEgressAuthorization,
+        egressReceipt,
       ),
     }
   }

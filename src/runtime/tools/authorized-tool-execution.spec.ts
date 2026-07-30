@@ -1,6 +1,15 @@
-import { describe, expect, it, vi } from 'vitest'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createRuntimePolicyForMode } from '../policy/runtime-policy.js'
+import { DEFAULT_EGRESS_POLICY_LIMITS } from '../../sandbox/egress-policy.js'
+import {
+  SANDBOX_NETWORK_POLICY_FILE_ENV,
+  clearApplicationSandboxNetworkRuntimesForTests,
+} from '../../sandbox/sandbox-network-runtime.js'
 import type { RuntimeToolContext, RuntimeToolDefinition, ToolAccessControl } from '../types.js'
 import { runAuthorizedTool } from './authorized-tool-execution.js'
 
@@ -192,6 +201,128 @@ describe('runAuthorizedTool', () => {
       'symbolwright.repository.search',
       'grep',
       undefined,
+    )
+  })
+})
+
+describe('runAuthorizedTool: sandbox_egress_request', () => {
+  const originalPolicyFileEnv = process.env[SANDBOX_NETWORK_POLICY_FILE_ENV]
+  let workspaceRoot: string
+
+  afterEach(() => {
+    clearApplicationSandboxNetworkRuntimesForTests()
+    if (workspaceRoot !== undefined) rmSync(workspaceRoot, { recursive: true, force: true })
+    if (originalPolicyFileEnv === undefined) {
+      delete process.env[SANDBOX_NETWORK_POLICY_FILE_ENV]
+    } else {
+      process.env[SANDBOX_NETWORK_POLICY_FILE_ENV] = originalPolicyFileEnv
+    }
+  })
+
+  function egressTool(execute: RuntimeToolDefinition['execute']): RuntimeToolDefinition {
+    return {
+      name: 'sandbox_egress_request',
+      description: 'test egress tool',
+      capability: 'WEB_ACCESS',
+      execute,
+    }
+  }
+
+  function configureOperatorEgressPolicy(): void {
+    workspaceRoot = mkdtempSync(path.join(tmpdir(), 'symbolwright-authorized-egress-'))
+    const policyFile = path.join(workspaceRoot, 'sandbox-network-policy.json')
+    writeFileSync(
+      policyFile,
+      JSON.stringify({
+        schemaVersion: 1,
+        egressProfiles: [
+          {
+            id: 'docs-only',
+            version: 1,
+            enabled: true,
+            deploymentModes: ['local'],
+            callerKinds: ['operator'],
+            allowedHosts: ['docs.example.com'],
+            allowedMethods: ['GET', 'HEAD'],
+            allowedRequestHeaders: ['accept'],
+            allowedPorts: [443],
+            redirectPolicy: 'same-host',
+            credentialPolicy: 'none',
+            requireTls: true,
+            auditRetentionDays: 30,
+            limits: DEFAULT_EGRESS_POLICY_LIMITS,
+          },
+        ],
+        defaultEgressPolicy: { id: 'docs-only', version: 1 },
+      }),
+      { mode: 0o600 },
+    )
+    process.env[SANDBOX_NETWORK_POLICY_FILE_ENV] = policyFile
+  }
+
+  it('builds an operator-approved egress authorization from the default policy when no accessControl is present', async () => {
+    configureOperatorEgressPolicy()
+    const execute = vi.fn(async (_input, ctx: RuntimeToolContext) => {
+      expect(ctx.sandboxEgressAuthorization).toMatchObject({
+        callerKind: 'operator',
+        approvedCapabilityIds: ['symbolwright.sandbox.egress'],
+        policyReference: { id: 'docs-only', version: 1 },
+      })
+      return 'ok'
+    })
+
+    const result = await runAuthorizedTool(
+      egressTool(execute),
+      { url: 'https://docs.example.com/guide' },
+      { cwd: workspaceRoot, policy: createRuntimePolicyForMode('APPROVED_EXECUTION') },
+    )
+
+    expect(result).toBe('ok')
+    expect(execute).toHaveBeenCalledOnce()
+  })
+
+  it('does not build egress authorization when no operator default policy is configured', async () => {
+    workspaceRoot = mkdtempSync(path.join(tmpdir(), 'symbolwright-authorized-egress-none-'))
+    const execute = vi.fn(async (_input, ctx: RuntimeToolContext) => {
+      expect(ctx.sandboxEgressAuthorization).toBeUndefined()
+      return 'ok'
+    })
+
+    await runAuthorizedTool(
+      egressTool(execute),
+      { url: 'https://docs.example.com/guide' },
+      { cwd: workspaceRoot, policy: createRuntimePolicyForMode('APPROVED_EXECUTION') },
+    )
+
+    expect(execute).toHaveBeenCalledOnce()
+  })
+
+  it('requires the egress capability for a delegated caller and refuses execution when denied', async () => {
+    workspaceRoot = mkdtempSync(path.join(tmpdir(), 'symbolwright-authorized-egress-delegated-'))
+    const requireAuthorized = vi.fn(async (capability: string) => {
+      if (capability === 'symbolwright.sandbox.egress') {
+        throw new Error('authorization_denied[EGRESS_NOT_APPROVED]: nope')
+      }
+    })
+    const execute = vi.fn(async () => 'ok')
+    const accessControl: ToolAccessControl = { principalId: 'p1', grantId: 'g1', requireAuthorized }
+
+    await expect(
+      runAuthorizedTool(
+        egressTool(execute),
+        { url: 'https://docs.example.com/guide' },
+        {
+          cwd: workspaceRoot,
+          policy: createRuntimePolicyForMode('APPROVED_EXECUTION'),
+          accessControl,
+        },
+      ),
+    ).rejects.toThrow('EGRESS_NOT_APPROVED')
+    expect(execute).not.toHaveBeenCalled()
+    expect(requireAuthorized).toHaveBeenCalledWith(
+      'symbolwright.sandbox.egress',
+      'sandbox_egress_request',
+      { url: 'https://docs.example.com/guide' },
     )
   })
 })

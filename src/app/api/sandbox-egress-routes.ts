@@ -88,9 +88,7 @@ export async function handleSandboxEgressRoute(
     return
   }
   const policyReference =
-    callerGrant === undefined
-      ? runtime.defaultEgressPolicyReference
-      : references?.references.egress
+    callerGrant === undefined ? runtime.defaultEgressPolicyReference : references?.references.egress
   if (policyReference === undefined) {
     sendJson(res, 403, {
       error: 'authorization_denied',
@@ -102,7 +100,12 @@ export async function handleSandboxEgressRoute(
   const requestRecord = Object.fromEntries(
     Object.entries(body).filter(([key]) => key !== 'missionId'),
   )
-  const request = parseGovernedEgressRequest(requestRecord)
+  let request
+  try {
+    request = parseGovernedEgressRequest(requestRecord)
+  } catch (error) {
+    throw new SandboxRequestValidationError(error instanceof Error ? error.message : String(error))
+  }
   let authorization = buildEgressAuthorization({
     policyReference,
     deploymentMode: context.deploymentMode ?? 'local',

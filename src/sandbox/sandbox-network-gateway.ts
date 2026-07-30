@@ -114,10 +114,7 @@ export class SandboxNetworkGateway {
   }
 
   public async requestEgress(input: SandboxBrokeredEgressInput): Promise<EgressSessionResult> {
-    const decision = this.egressBroker.authorize(
-      input.policyRequest ?? {},
-      input.authorization,
-    )
+    const decision = this.egressBroker.authorize(input.policyRequest ?? {}, input.authorization)
     if (!decision.allowed || decision.policy === undefined) {
       const destination = auditDestination(input.request.url)
       const failure = new EgressBrokerError(decision.reasonCode, decision.reason)
@@ -166,7 +163,10 @@ export class SandboxNetworkGateway {
   }
 }
 
-function auditDestination(rawUrl: string): { readonly hostname: string; readonly pathHash: string } {
+function auditDestination(rawUrl: string): {
+  readonly hostname: string
+  readonly pathHash: string
+} {
   try {
     const url = new URL(rawUrl)
     return { hostname: url.hostname, pathHash: sha256(`${url.pathname}${url.search}`) }
