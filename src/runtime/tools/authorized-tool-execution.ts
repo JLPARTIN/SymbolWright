@@ -46,7 +46,10 @@ export async function runAuthorizedTool<TInput>(
     tool.name === 'dependency_acquire' &&
     effectiveContext.sandboxDependencyAuthorization === undefined
   ) {
-    if (accessControl === undefined && networkRuntime.defaultDependencyPolicyReference !== undefined) {
+    if (
+      accessControl === undefined &&
+      networkRuntime.defaultDependencyPolicyReference !== undefined
+    ) {
       effectiveContext = {
         ...effectiveContext,
         sandboxDependencyAuthorization: buildDependencyAuthorization({
@@ -116,11 +119,14 @@ export async function runAuthorizedTool<TInput>(
           : callerMetadata
       const dependencyRepository = effectiveContext.sandboxDependencyAuthorization?.repositoryId
       const receipt =
-        capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY && dependencyAccessRuntime !== undefined
+        capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY &&
+        dependencyAccessRuntime !== undefined
           ? await dependencyAccessRuntime.authorizationService.requireAuthorized({
               principalId: accessControl.principalId,
               grantId: accessControl.grantId,
-              ...(accessControl.sessionId === undefined ? {} : { sessionId: accessControl.sessionId }),
+              ...(accessControl.sessionId === undefined
+                ? {}
+                : { sessionId: accessControl.sessionId }),
               capability,
               ...(dependencyRepository === undefined ? {} : { repository: dependencyRepository }),
               ...(context.sessionId === undefined ? {} : { missionId: context.sessionId }),
