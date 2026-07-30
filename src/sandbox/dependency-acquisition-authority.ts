@@ -1,4 +1,5 @@
 import { SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY } from '../access/sandbox-capabilities.js'
+import { readPolicyVersion } from './policy-version.js'
 import type {
   SandboxApprovalBinding,
   SandboxAuthorizationContext,
@@ -6,7 +7,6 @@ import type {
   SandboxDeploymentMode,
   SandboxPolicyReference,
 } from './sandbox-policy-model.js'
-import { readPolicyVersion } from './policy-version.js'
 
 export interface DependencyAuthorizationInput {
   readonly policyReference: SandboxPolicyReference
@@ -48,9 +48,7 @@ export function buildDependencyAuthorization(
     deploymentMode: input.deploymentMode,
     callerKind: input.callerKind,
     runtimeMode: input.runtimeMode,
-    approvedCapabilityIds: input.capabilityApproved
-      ? [SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY]
-      : [],
+    approvedCapabilityIds: input.capabilityApproved ? [SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY] : [],
     repositoryId: input.repositoryId,
     workspaceId: input.workspaceId,
     ...(input.missionId === undefined ? {} : { missionId: input.missionId }),
@@ -102,14 +100,14 @@ export function dependencyPolicyVersions(input: {
   readonly env?: NodeJS.ProcessEnv
 }): Readonly<Record<string, number>> {
   const env = input.env ?? process.env
-  const globalVersion = readPolicyVersion(env['SYMBOLWRIGHT_DEPENDENCY_GLOBAL_POLICY_VERSION'], 1)
-    .value
+  const globalVersion = readPolicyVersion(
+    env['SYMBOLWRIGHT_DEPENDENCY_GLOBAL_POLICY_VERSION'],
+    1,
+  ).value
   return Object.freeze({
     'dependency-global': globalVersion,
     [input.policyReference.id]: input.policyReference.version,
-    ...(input.grantId === undefined
-      ? {}
-      : { [`grant:${input.grantId}`]: input.grantVersion ?? 1 }),
+    ...(input.grantId === undefined ? {} : { [`grant:${input.grantId}`]: input.grantVersion ?? 1 }),
     ...(input.missionId === undefined ? {} : { [`mission:${input.missionId}`]: 1 }),
     'dependency-request-tightening': 1,
   })
