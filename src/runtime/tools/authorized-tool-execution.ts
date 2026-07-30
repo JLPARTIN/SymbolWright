@@ -1,30 +1,62 @@
+import { SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY } from '../../access/sandbox-capabilities.js'
 import {
   operationCapabilitiesForTool,
   resolveToolPermissionDescriptor,
 } from '../../access/tool-permission-catalog.js'
+import {
+  bindDependencyApproval,
+  buildDependencyAuthorization,
+  dependencyAuthorizationMetadata,
+} from '../../sandbox/dependency-acquisition-authority.js'
 import { getOrCreateApplicationSandboxNetworkRuntime } from '../../sandbox/sandbox-network-runtime.js'
-import type { RuntimeToolContext, RuntimeToolDefinition } from '../types.js'
+import type {
+  RuntimeToolContext,
+  RuntimeToolDefinition,
+  ToolAuthorizationReceipt,
+} from '../types.js'
 
 /**
  * The single chokepoint every production tool-execution path (`agent-loop.ts`'s LLM-driven tool
  * calls, and the MCP server's `call()`) must route through. When `context.accessControl` is
  * present (an agent-token-authenticated caller), this performs a real per-operation authorization
  * check before the tool runs — fail closed on any tool without a permission descriptor. When
- * `context.accessControl` is absent (the legacy local operator, authenticated via
- * `SYMBOLWRIGHT_API_KEY`), the tool runs unrestricted, matching today's behavior exactly.
- *
- * The same chokepoint also resolves the one application-owned sandbox network runtime for the
- * authorized workspace before any tool executes. Server and MCP startup normally create it first;
- * CLI and autonomous paths converge here and receive the same fail-closed policy validation.
+ * `context.accessControl` is absent (the legacy local operator), the tool runs under operator-owned
+ * policy and any capability-specific server-derived authority.
  */
 export async function runAuthorizedTool<TInput>(
   tool: RuntimeToolDefinition<TInput>,
   input: TInput,
   context: RuntimeToolContext,
 ): Promise<string> {
-  getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot: context.cwd })
+  const networkRuntime = getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot: context.cwd })
+  let effectiveContext: RuntimeToolContext = {
+    ...context,
+    sandboxNetworkRuntime: context.sandboxNetworkRuntime ?? networkRuntime,
+  }
 
-  const accessControl = context.accessControl
+  if (
+    tool.name === 'dependency_acquire' &&
+    effectiveContext.sandboxDependencyAuthorization === undefined &&
+    networkRuntime.defaultDependencyPolicyReference !== undefined
+  ) {
+    effectiveContext = {
+      ...effectiveContext,
+      sandboxDependencyAuthorization: buildDependencyAuthorization({
+        policyReference: networkRuntime.defaultDependencyPolicyReference,
+        deploymentMode: context.sandboxAuthorization?.deploymentMode ?? deploymentMode(),
+        callerKind: 'operator',
+        runtimeMode: context.policy.mode,
+        repositoryId: context.cwd,
+        workspaceId: context.sessionId ?? context.cwd,
+        ...(context.sessionId === undefined ? {} : { missionId: context.sessionId }),
+        capabilityApproved: true,
+        operatorApproved: true,
+      }),
+    }
+  }
+
+  const accessControl = effectiveContext.accessControl
+  let dependencyReceipt: ToolAuthorizationReceipt | undefined
   if (accessControl !== undefined) {
     const descriptor = resolveToolPermissionDescriptor(tool.name)
     if (descriptor === undefined) {
@@ -32,18 +64,49 @@ export async function runAuthorizedTool<TInput>(
         `authorization_denied[UNKNOWN_TOOL]: Tool "${tool.name}" has no registered permission descriptor and is refused for an authorized agent.`,
       )
     }
-    const metadata =
+    const callerMetadata =
       typeof input === 'object' && input !== null && !Array.isArray(input)
         ? (input as Record<string, unknown>)
         : undefined
     const capabilities = [
       descriptor.capability,
       ...(descriptor.additionalCapabilities ?? []),
-      ...operationCapabilitiesForTool(tool.name, metadata),
+      ...operationCapabilitiesForTool(tool.name, callerMetadata),
     ]
     for (const capability of [...new Set(capabilities)]) {
-      await accessControl.requireAuthorized(capability, tool.name, metadata)
+      const metadata =
+        capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY &&
+        effectiveContext.sandboxDependencyAuthorization !== undefined
+          ? dependencyAuthorizationMetadata(
+              effectiveContext.sandboxDependencyAuthorization,
+              callerMetadata,
+            )
+          : callerMetadata
+      const receipt = await accessControl.requireAuthorized(capability, tool.name, metadata)
+      if (capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY && receipt !== undefined) {
+        dependencyReceipt = receipt
+      }
     }
   }
-  return tool.execute(input, context)
+
+  if (
+    tool.name === 'dependency_acquire' &&
+    effectiveContext.sandboxDependencyAuthorization !== undefined &&
+    dependencyReceipt !== undefined
+  ) {
+    effectiveContext = {
+      ...effectiveContext,
+      sandboxDependencyAuthorization: bindDependencyApproval(
+        effectiveContext.sandboxDependencyAuthorization,
+        dependencyReceipt,
+      ),
+    }
+  }
+  return tool.execute(input, effectiveContext)
+}
+
+function deploymentMode(): 'local' | 'hosted' {
+  return process.env['SYMBOLWRIGHT_DEPLOYMENT_MODE']?.trim().toLowerCase() === 'hosted'
+    ? 'hosted'
+    : 'local'
 }
