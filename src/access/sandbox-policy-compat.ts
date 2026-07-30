@@ -1,6 +1,7 @@
 import type { AgentAccessGrant, SandboxPolicyReferences } from './access-types.js'
 import {
   SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+  SANDBOX_EGRESS_CAPABILITY,
   SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
   sandboxCapabilityAliases,
 } from './sandbox-capabilities.js'
@@ -15,6 +16,10 @@ export function grantAllowsOfflineSandbox(grant: AgentAccessGrant): boolean {
 
 export function grantAllowsDependencyAcquisition(grant: AgentAccessGrant): boolean {
   return grantAllowsCapability(grant, SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY)
+}
+
+export function grantAllowsEgress(grant: AgentAccessGrant): boolean {
+  return grantAllowsCapability(grant, SANDBOX_EGRESS_CAPABILITY)
 }
 
 export interface ResolvedGrantSandboxPolicyReferences {
