@@ -1,4 +1,6 @@
+import { executeStrongSandboxContainerWithDependencies } from '../../sandbox/sandbox-dependency-container-executor.js'
 import { SandboxHistoryStore } from '../../sandbox/sandbox-history.js'
+import { getOrCreateApplicationSandboxNetworkRuntime } from '../../sandbox/sandbox-network-runtime.js'
 import { SandboxService } from '../../sandbox/sandbox-service.js'
 import type {
   SandboxExecutionRequest,
@@ -15,6 +17,8 @@ const FORBIDDEN_SANDBOX_TOOL_FIELDS = new Set([
   'dockerArgs',
   'podmanArgs',
   'containerArgs',
+  'dependencyLayer',
+  'dependencyNodeModulesPath',
 ])
 const GUARDED_HOST_RUNNER_PREFIX = 'guarded-host-'
 
@@ -28,12 +32,16 @@ function assertNoForbiddenFields(input: unknown): void {
 }
 
 function resolveSandboxService(context: RuntimeToolContext): SandboxService {
-  return (
-    context.sandboxService ??
-    new SandboxService({
-      historyStore: new SandboxHistoryStore({ workspaceRoot: context.cwd }),
-    })
-  )
+  if (context.sandboxService !== undefined) return context.sandboxService
+  const networkRuntime =
+    context.sandboxNetworkRuntime ??
+    getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot: context.cwd })
+  return new SandboxService({
+    historyStore: new SandboxHistoryStore({ workspaceRoot: context.cwd }),
+    workspaceRoot: context.cwd,
+    executeContainer: (input) =>
+      executeStrongSandboxContainerWithDependencies(networkRuntime, input),
+  })
 }
 
 function asToolRequest(input: unknown, context: RuntimeToolContext): unknown {
@@ -189,7 +197,7 @@ export const sandboxListRuntimesTool: RuntimeToolDefinition = {
 export const sandboxExecuteTool: RuntimeToolDefinition = {
   name: 'sandbox_execute',
   description:
-    'Execute, compile, or test code through SymbolWright structured sandbox execution. Accepts only structured requests; raw shell commands, caller-selected repository roots, trusted local host runners, image names, and container args are rejected.',
+    'Execute, compile, or test code through SymbolWright structured sandbox execution. Accepts only structured requests; raw shell commands, caller-selected repository roots, trusted local host runners, image names, container args, and dependency mount paths are rejected.',
   capability: 'APPROVED_COMMAND',
   execute: async (input: unknown, context: RuntimeToolContext): Promise<string> => {
     const service = resolveSandboxService(context)
