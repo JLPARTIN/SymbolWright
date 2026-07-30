@@ -47,6 +47,7 @@ import { webFetchTool } from './web-fetch-tool.js'
 import { webSearchTool } from './web-search-tool.js'
 import { sandboxExecuteTool, sandboxListRuntimesTool } from './sandbox-tools.js'
 import { dependencyAcquireTool } from './dependency-acquire-tool.js'
+import { sandboxEgressRequestTool } from './sandbox-egress-tool.js'
 
 const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   readFileTool,
@@ -93,6 +94,7 @@ const ALL_TOOLS: readonly RuntimeToolDefinition[] = [
   sandboxListRuntimesTool,
   sandboxExecuteTool,
   dependencyAcquireTool,
+  sandboxEgressRequestTool,
 ]
 
 export const DYNAMICALLY_WIRED_TOOLS: readonly SymbolWrightToolName[] = [

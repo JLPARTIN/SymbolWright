@@ -7,6 +7,7 @@ import {
 } from '../access/access-grant-service.js'
 import {
   grantAllowsDependencyAcquisition,
+  grantAllowsEgress,
   resolveGrantSandboxPolicyReferences,
 } from '../access/sandbox-policy-compat.js'
 import { requiredCapabilitiesForTool } from '../access/tool-permission-catalog.js'
@@ -18,8 +19,13 @@ import { runAuthorizedTool } from '../runtime/tools/authorized-tool-execution.js
 import type { RuntimeToolContext, SymbolWrightRuntimeMode } from '../runtime/types.js'
 import { buildDependencyAuthorization } from '../sandbox/dependency-acquisition-authority.js'
 import { recordDependencyAcquisitionMissionEvidence } from '../sandbox/dependency-mission-evidence.js'
+import { buildEgressAuthorization } from '../sandbox/egress-authorization.js'
+import { recordEgressMissionEvidence } from '../sandbox/egress-mission-evidence.js'
 import { getOrCreateApplicationSandboxNetworkRuntime } from '../sandbox/sandbox-network-runtime.js'
 import type { McpServerToolHandler } from './mcp-server-protocol.js'
+
+/** Direct-network research tools that are a trusted local-operator surface only. */
+const OPERATOR_ONLY_DIRECT_NETWORK_TOOLS = new Set(['web_fetch', 'web_search'])
 
 export class McpAgentTokenAuthenticationError extends Error {}
 
@@ -80,9 +86,12 @@ export function createSymbolWrightMcpToolHandler(
               options.missionId as string,
               result,
             ),
+          recordEgressRequest: (result) =>
+            recordEgressMissionEvidence(missionService, options.missionId as string, result),
         }),
   }
   let grantedCapabilities: ReadonlySet<string> | undefined
+  let egressPolicyResolvable = networkRuntime.defaultEgressPolicyReference !== undefined
 
   if (options.agentToken !== undefined) {
     const repository = options.repository?.trim()
@@ -119,15 +128,16 @@ export function createSymbolWrightMcpToolHandler(
     grantedCapabilities = new Set([...grant.symbolWrightCapabilities, ...grant.githubCapabilities])
     const references = resolveGrantSandboxPolicyReferences(grant)
     const dependencyReference = references.references.dependency
+    const deploymentMode =
+      process.env['SYMBOLWRIGHT_DEPLOYMENT_MODE']?.trim().toLowerCase() === 'hosted'
+        ? 'hosted'
+        : 'local'
     const sandboxDependencyAuthorization =
       dependencyReference === undefined
         ? undefined
         : buildDependencyAuthorization({
             policyReference: dependencyReference,
-            deploymentMode:
-              process.env['SYMBOLWRIGHT_DEPLOYMENT_MODE']?.trim().toLowerCase() === 'hosted'
-                ? 'hosted'
-                : 'local',
+            deploymentMode,
             callerKind: 'delegated-grant',
             runtimeMode: options.mode,
             repositoryId: repository,
@@ -138,9 +148,28 @@ export function createSymbolWrightMcpToolHandler(
             grantVersion: grant.version,
             capabilityApproved: grantAllowsDependencyAcquisition(grant),
           })
+    const egressReference = references.references.egress
+    const sandboxEgressAuthorization =
+      egressReference === undefined
+        ? undefined
+        : buildEgressAuthorization({
+            policyReference: egressReference,
+            deploymentMode,
+            callerKind: 'delegated-grant',
+            runtimeMode: options.mode,
+            repositoryId: repository,
+            workspaceId: options.missionId ?? toolCwd,
+            ...(options.missionId === undefined ? {} : { missionId: options.missionId }),
+            principalId: grant.principalId,
+            grantId: grant.id,
+            grantVersion: grant.version,
+            capabilityApproved: grantAllowsEgress(grant),
+          })
+    egressPolicyResolvable = sandboxEgressAuthorization !== undefined
     context = {
       ...context,
       ...(sandboxDependencyAuthorization === undefined ? {} : { sandboxDependencyAuthorization }),
+      ...(sandboxEgressAuthorization === undefined ? {} : { sandboxEgressAuthorization }),
       accessControl: {
         principalId: grant.principalId,
         grantId: grant.id,
@@ -163,7 +192,11 @@ export function createSymbolWrightMcpToolHandler(
   }
 
   const isToolPermitted = (toolName: string): boolean => {
+    if (toolName === 'sandbox_egress_request' && !egressPolicyResolvable) return false
     if (grantedCapabilities === undefined) return true
+    // Delegated callers can never use the direct-network research tools — they refuse any
+    // non-operator caller and would only ever fail at call() — so don't advertise them.
+    if (OPERATOR_ONLY_DIRECT_NETWORK_TOOLS.has(toolName)) return false
     const required = requiredCapabilitiesForTool(toolName)
     if (required.length === 0) return false
     return required.every((capability) => grantedCapabilities?.has(capability) === true)

@@ -11,6 +11,7 @@ import type { SandboxExecutionRequest, SandboxExecutionResult } from '../sandbox
 import type { SandboxAuthorizationContext } from '../sandbox/sandbox-policy-model.js'
 import type { ApplicationSandboxNetworkRuntime } from '../sandbox/sandbox-network-runtime.js'
 import type { GovernedDependencyAcquisitionResult } from '../sandbox/governed-dependency-acquisition.js'
+import type { GovernedEgressResult } from '../sandbox/governed-egress.js'
 
 /** Supported execution modes from plan-only to approved execution. */
 export type SymbolWrightRuntimeMode =
@@ -67,6 +68,7 @@ export type SymbolWrightToolName =
   | 'sandbox_list_runtimes'
   | 'sandbox_execute'
   | 'dependency_acquire'
+  | 'sandbox_egress_request'
 
 /** Capability categories that determine tool availability per mode. */
 export type RuntimeToolCapability =
@@ -206,6 +208,8 @@ export interface RuntimeToolContext {
   readonly sandboxNetworkRuntime?: ApplicationSandboxNetworkRuntime
   /** Separate dependency-acquisition authority with an explicit policy reference and version set. */
   readonly sandboxDependencyAuthorization?: SandboxAuthorizationContext
+  /** Separate brokered-egress authority with a server-selected policy reference and approval. */
+  readonly sandboxEgressAuthorization?: SandboxAuthorizationContext
   readonly recordSandboxExecution?: (
     request: SandboxExecutionRequest,
     result: SandboxExecutionResult,
@@ -213,6 +217,7 @@ export interface RuntimeToolContext {
   readonly recordDependencyAcquisition?: (
     result: GovernedDependencyAcquisitionResult,
   ) => void | Promise<void>
+  readonly recordEgressRequest?: (result: GovernedEgressResult) => void | Promise<void>
   readonly memoryTools?: AgentMemoryTools
   /** Groups checkpoints under `.symbolwright/checkpoints/<sessionId>/`. Auto-generated when absent. */
   readonly sessionId?: string
@@ -307,6 +312,7 @@ export const ALL_SYMBOLWRIGHT_TOOL_NAMES = [
   'sandbox_list_runtimes',
   'sandbox_execute',
   'dependency_acquire',
+  'sandbox_egress_request',
 ] as const satisfies readonly SymbolWrightToolName[]
 
 type _AssertAllToolNames = SymbolWrightToolName extends (typeof ALL_SYMBOLWRIGHT_TOOL_NAMES)[number]

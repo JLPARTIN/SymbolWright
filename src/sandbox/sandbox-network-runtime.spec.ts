@@ -112,7 +112,7 @@ describe('application sandbox network runtime', () => {
       egressProfileCount: 1,
     })
     expect(sandboxNetworkReadinessDetail(runtime.status)).toBe(
-      'configured; dependencyProfiles=1; defaultDependencyPolicy=npm-public@1; egressProfiles=1',
+      'configured; dependencyProfiles=1; defaultDependencyPolicy=npm-public@1; egressProfiles=1; defaultEgressPolicy=none',
     )
   })
 

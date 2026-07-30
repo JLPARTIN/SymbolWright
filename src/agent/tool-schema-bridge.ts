@@ -553,6 +553,21 @@ export function buildToolInputSchema(tool: RuntimeToolDefinition): ToolInputSche
       },
       required: ['server', 'tool'],
     },
+    sandbox_egress_request: {
+      type: 'object',
+      properties: {
+        url: { type: 'string', description: 'Absolute URL to request (http/https only)' },
+        method: { type: 'string', description: 'HTTP method; defaults to GET' },
+        headers: { type: 'object', description: 'Optional bounded set of request headers' },
+        body: { type: 'string', description: 'Optional request body' },
+        limits: {
+          type: 'object',
+          description:
+            'Optional positive numeric limits that further tighten the operator policy quotas',
+        },
+      },
+      required: ['url'],
+    },
     web_fetch: {
       type: 'object',
       properties: { url: { type: 'string', description: 'Public URL to fetch (http/https only)' } },

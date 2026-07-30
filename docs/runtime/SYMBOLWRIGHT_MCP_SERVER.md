@@ -91,6 +91,21 @@ a Repository Analyst grant, for example, never sees `edit_file`, `bash`,
 it somehow guessed the tool name. Without `SYMBOLWRIGHT_AGENT_TOKEN`, behavior
 is unchanged from before delegated agent access existed.
 
+## Governed sandbox network tools
+
+`dependency_acquire` and `sandbox_egress_request` are hidden from `tools/list` on top of the
+capability gate above: the local operator only sees them once an operator default policy
+(`defaultDependencyPolicy` / `defaultEgressPolicy`) is configured, and a delegated grant only sees
+them once its grant has a bound policy reference for that capability (`sandboxPolicyReferences.
+dependency` / `.egress`). `symbolwright.sandbox.egress` is a high-risk capability — it can only be
+added to a grant through the step-up-gated `explicitHighRiskCapabilities` channel, never a profile
+default. Either way, `tools/call` re-checks authorization independently of what `tools/list`
+returned; discovery is never the security boundary.
+
+The trusted-operator research tools `web_fetch` and `web_search` are never advertised to a
+delegated (agent-token) connection — they are a local-operator-only surface and always refuse a
+delegated caller, so a delegated grant's only live network path is `sandbox_egress_request`.
+
 ## Protocol
 
 Newline-delimited JSON-RPC 2.0 over stdio, same wire format as

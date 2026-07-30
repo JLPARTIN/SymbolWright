@@ -82,6 +82,7 @@ export const TOOL_PERMISSION_DESCRIPTORS: Readonly<
   sandbox_list_runtimes: tool(SANDBOX_OFFLINE_EXECUTE_CAPABILITY, 'read'),
   sandbox_execute: tool(SANDBOX_OFFLINE_EXECUTE_CAPABILITY, 'low'),
   dependency_acquire: tool(SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY, 'write'),
+  sandbox_egress_request: tool(SANDBOX_EGRESS_CAPABILITY, 'write'),
 }
 
 export function resolveToolPermissionDescriptor(

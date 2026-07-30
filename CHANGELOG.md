@@ -6,6 +6,16 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ### Added
 
+- **Live governed brokered egress**: exposes `sandbox_egress_request` as a fully-wired governed
+  capability — reachable through the authenticated `POST /api/sandbox/egress` HTTP route, the
+  agent-loop tool-execution chokepoint, MCP tool discovery/invocation, and an explicit
+  provider-facing tool schema — with the same operator-default/delegated-grant policy resolution,
+  single-use approval binding, and mission evidence recording as governed dependency acquisition.
+  Responses never expose the raw final URL, path, or query — only a redacted destination hostname,
+  path hash, and bounded response metadata. The legacy trusted-operator `web_fetch`/`web_search`
+  tools are no longer advertised to delegated MCP callers, since they always refuse a delegated
+  caller and would otherwise appear as a false alternate network path.
+
 - **Governed npm dependency acquisition (Sandbox Bundle PR 5/7)**: adds lockfile-bound immutable
   planning, operator-owned policy profiles, bounded HTTPS retrieval, integrity verification,
   tarball inspection, lifecycle-script suppression, content-addressed caching, live policy
