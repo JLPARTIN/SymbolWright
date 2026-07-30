@@ -22,9 +22,7 @@ describe('dependency acquisition authority', () => {
       env: { SYMBOLWRIGHT_DEPENDENCY_GLOBAL_POLICY_VERSION: '3' },
     })
 
-    expect(authorization.approvedCapabilityIds).toEqual([
-      SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
-    ])
+    expect(authorization.approvedCapabilityIds).toEqual([SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY])
     expect(authorization.expectedPolicyVersions).toEqual({
       'dependency-global': 3,
       'npm-controlled': 7,
