@@ -1,4 +1,4 @@
-import { AccessRuntime } from '../../access/access-runtime.js'
+import { findLiveAccessRuntimeForGrant } from '../../access/access-runtime.js'
 import { SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY } from '../../access/sandbox-capabilities.js'
 import {
   grantAllowsDependencyAcquisition,
@@ -40,7 +40,10 @@ export async function runAuthorizedTool<TInput>(
     sandboxNetworkRuntime: context.sandboxNetworkRuntime ?? networkRuntime,
   }
   const accessControl = effectiveContext.accessControl
-  let dependencyAccessRuntime: AccessRuntime | undefined
+  const dependencyAccessRuntime =
+    accessControl === undefined
+      ? undefined
+      : findLiveAccessRuntimeForGrant(accessControl.principalId, accessControl.grantId)
 
   if (
     tool.name === 'dependency_acquire' &&
@@ -64,10 +67,7 @@ export async function runAuthorizedTool<TInput>(
           operatorApproved: true,
         }),
       }
-    } else if (accessControl !== undefined) {
-      // The delegated grant store belongs to the SymbolWright process root. `context.cwd` may be a
-      // separately materialized mission checkout and must never become a second authority store.
-      dependencyAccessRuntime = new AccessRuntime({ workspaceRoot: process.cwd() })
+    } else if (accessControl !== undefined && dependencyAccessRuntime !== undefined) {
       const grant = dependencyAccessRuntime.grantService.getGrant(accessControl.grantId)
       if (grant !== undefined) {
         const reference = resolveGrantSandboxPolicyReferences(grant).references.dependency
