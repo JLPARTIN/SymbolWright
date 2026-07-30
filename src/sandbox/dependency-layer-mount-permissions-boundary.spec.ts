@@ -20,9 +20,7 @@ afterEach(async () => {
         }),
     ),
   )
-  await Promise.all(
-    roots.splice(0).map((root) => fs.rm(root, { recursive: true, force: true })),
-  )
+  await Promise.all(roots.splice(0).map((root) => fs.rm(root, { recursive: true, force: true })))
 })
 
 describe('dependency layer mount permission boundaries', () => {
@@ -33,9 +31,9 @@ describe('dependency layer mount permission boundaries', () => {
     await fs.mkdir(layerRoot)
     await fs.mkdir(outsideNodeModules)
 
-    await expect(
-      sealDependencyLayerForMount(layer(layerRoot, outsideNodeModules)),
-    ).rejects.toThrow('Dependency node_modules path escapes its verified layer root.')
+    await expect(sealDependencyLayerForMount(layer(layerRoot, outsideNodeModules))).rejects.toThrow(
+      'Dependency node_modules path escapes its verified layer root.',
+    )
   })
 
   it('rejects symbolic links inside the dependency tree', async () => {
