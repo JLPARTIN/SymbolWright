@@ -5,12 +5,20 @@ import {
   SessionInactivityTimeoutError,
   SessionLimitExceededError,
 } from '../access/access-grant-service.js'
+import {
+  grantAllowsDependencyAcquisition,
+  resolveGrantSandboxPolicyReferences,
+} from '../access/sandbox-policy-compat.js'
 import { requiredCapabilitiesForTool } from '../access/tool-permission-catalog.js'
 import { bridgeToolsForProvider } from '../agent/tool-schema-bridge.js'
+import { MissionService } from '../mission/mission-service.js'
 import { createRuntimePolicyForMode } from '../runtime/policy/runtime-policy.js'
 import { assembleAgentTools } from '../runtime/tools/tool-assembly.js'
 import { runAuthorizedTool } from '../runtime/tools/authorized-tool-execution.js'
 import type { RuntimeToolContext, SymbolWrightRuntimeMode } from '../runtime/types.js'
+import { buildDependencyAuthorization } from '../sandbox/dependency-acquisition-authority.js'
+import { recordDependencyAcquisitionMissionEvidence } from '../sandbox/dependency-mission-evidence.js'
+import { getOrCreateApplicationSandboxNetworkRuntime } from '../sandbox/sandbox-network-runtime.js'
 import type { McpServerToolHandler } from './mcp-server-protocol.js'
 
 export class McpAgentTokenAuthenticationError extends Error {}
@@ -39,9 +47,7 @@ export interface McpServerToolsOptions {
 /**
  * Bridges SymbolWright's real runtime tool registry (the same tools
  * `symbolwright agent` uses) into an MCP tool handler, gated by the same
- * runtime-mode policy as every other SymbolWright entry point — a `READ_ONLY`
- * server only advertises read/search/plan tools; `APPROVED_EXECUTION`
- * advertises the full set, including file writes and shell execution.
+ * runtime-mode policy as every other SymbolWright entry point.
  */
 export function createSymbolWrightMcpToolHandler(
   options: McpServerToolsOptions,
@@ -51,8 +57,26 @@ export function createSymbolWrightMcpToolHandler(
   })
   const bridged = bridgeToolsForProvider(assembleAgentTools(), policy)
   const byName = new Map(bridged.map((tool) => [tool.providerTool.name, tool]))
+  const networkRuntime = getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot: options.cwd })
+  const missionService =
+    options.missionId === undefined ? undefined : new MissionService({ workspaceRoot: options.cwd })
 
-  let context: RuntimeToolContext = { cwd: options.cwd, policy }
+  let context: RuntimeToolContext = {
+    cwd: options.cwd,
+    policy,
+    sandboxNetworkRuntime: networkRuntime,
+    ...(options.missionId === undefined ? {} : { sessionId: options.missionId }),
+    ...(missionService === undefined || options.missionId === undefined
+      ? {}
+      : {
+          recordDependencyAcquisition: (result) =>
+            recordDependencyAcquisitionMissionEvidence(
+              missionService,
+              options.missionId as string,
+              result,
+            ),
+        }),
+  }
   let grantedCapabilities: ReadonlySet<string> | undefined
 
   if (options.agentToken !== undefined) {
@@ -88,14 +112,38 @@ export function createSymbolWrightMcpToolHandler(
     }
     const { grant, session } = authenticated
     grantedCapabilities = new Set([...grant.symbolWrightCapabilities, ...grant.githubCapabilities])
+    const references = resolveGrantSandboxPolicyReferences(grant)
+    const dependencyReference = references.references.dependency
+    const sandboxDependencyAuthorization =
+      dependencyReference === undefined
+        ? undefined
+        : buildDependencyAuthorization({
+            policyReference: dependencyReference,
+            deploymentMode:
+              process.env['SYMBOLWRIGHT_DEPLOYMENT_MODE']?.trim().toLowerCase() === 'hosted'
+                ? 'hosted'
+                : 'local',
+            callerKind: 'delegated-grant',
+            runtimeMode: options.mode,
+            repositoryId: repository,
+            workspaceId: options.missionId ?? options.cwd,
+            ...(options.missionId === undefined ? {} : { missionId: options.missionId }),
+            principalId: grant.principalId,
+            grantId: grant.id,
+            grantVersion: grant.version,
+            capabilityApproved: grantAllowsDependencyAcquisition(grant),
+          })
     context = {
       ...context,
+      ...(sandboxDependencyAuthorization === undefined
+        ? {}
+        : { sandboxDependencyAuthorization }),
       accessControl: {
         principalId: grant.principalId,
         grantId: grant.id,
         sessionId: session.id,
-        requireAuthorized: async (capability, toolName, metadata) => {
-          await runtime.authorizationService.requireAuthorized({
+        requireAuthorized: async (capability, toolName, metadata) =>
+          runtime.authorizationService.requireAuthorized({
             principalId: grant.principalId,
             grantId: grant.id,
             sessionId: session.id,
@@ -106,8 +154,7 @@ export function createSymbolWrightMcpToolHandler(
             ...(options.missionId === undefined ? {} : { missionId: options.missionId }),
             toolName,
             ...(metadata === undefined ? {} : { metadata }),
-          })
-        },
+          }),
       },
     }
   }
