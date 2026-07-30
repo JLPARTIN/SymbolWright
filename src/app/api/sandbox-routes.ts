@@ -36,7 +36,7 @@ import {
 import { recordDependencyAcquisitionMissionEvidence } from '../../sandbox/dependency-mission-evidence.js'
 import { getOrCreateApplicationSandboxNetworkRuntime } from '../../sandbox/sandbox-network-runtime.js'
 import { SandboxRequestValidationError } from '../../sandbox/sandbox-request.js'
-import { SandboxService } from '../../sandbox/sandbox-service.js'
+import type { SandboxService } from '../../sandbox/sandbox-service.js'
 import type {
   SandboxExecutionRequest,
   SandboxExecutionResult,
