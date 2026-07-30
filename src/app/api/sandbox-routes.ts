@@ -1,7 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { AccessRuntime } from '../../access/access-runtime.js'
-import { AuthorizationDeniedError, ApprovalRequiredError } from '../../access/authorization-service.js'
+import {
+  AuthorizationDeniedError,
+  ApprovalRequiredError,
+} from '../../access/authorization-service.js'
 import {
   SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
   SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
@@ -234,10 +237,12 @@ function dependencyAwareExecutionService(context: SandboxRouteContext): SandboxS
 function resolveMissionForExecution(
   context: SandboxRouteContext,
   missionId: string,
-): {
-  readonly mission: SymbolWrightMission
-  readonly callerKind: 'operator' | 'delegated-grant' | 'team-member'
-} | undefined {
+):
+  | {
+      readonly mission: SymbolWrightMission
+      readonly callerKind: 'operator' | 'delegated-grant' | 'team-member'
+    }
+  | undefined {
   if (context.missionService === undefined) {
     throw new SandboxRequestValidationError(
       'missionId cannot be resolved because no mission service is configured',
@@ -320,9 +325,7 @@ async function handleDependencyAcquisition(
     repositoryId: mission.repository.remoteUrl ?? mission.repository.rootPath,
     workspaceId: mission.id,
     missionId: mission.id,
-    ...(context.callerPrincipalId === undefined
-      ? {}
-      : { principalId: context.callerPrincipalId }),
+    ...(context.callerPrincipalId === undefined ? {} : { principalId: context.callerPrincipalId }),
     ...(callerGrant === undefined
       ? { capabilityApproved: true, operatorApproved: true }
       : {
