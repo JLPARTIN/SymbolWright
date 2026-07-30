@@ -25,6 +25,10 @@ import {
   type EgressPolicyProfile,
   type EgressPolicyRequest,
 } from './egress-policy.js'
+import {
+  materializeNpmDependencyLayer,
+  type StrongSandboxDependencyLayer,
+} from './npm-dependency-layer.js'
 import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
 
 export interface SandboxNetworkGatewayOptions {
@@ -61,20 +65,21 @@ export interface SandboxBrokeredEgressInput {
 export class SandboxNetworkGateway {
   private readonly dependencyService: DependencyAcquisitionService
   private readonly egressBroker: SandboxEgressBroker
+  private readonly stateRoot: string
 
   public constructor(options: SandboxNetworkGatewayOptions) {
-    const stateRoot = path.resolve(requireNonEmpty(options.stateRoot, 'stateRoot'))
+    this.stateRoot = path.resolve(requireNonEmpty(options.stateRoot, 'stateRoot'))
     const env = options.env ?? process.env
     this.dependencyService = new DependencyAcquisitionService({
       catalog: new DependencyPolicyCatalog(options.dependencyProfiles ?? []),
-      stateRoot: path.join(stateRoot, 'dependencies'),
+      stateRoot: path.join(this.stateRoot, 'dependencies'),
       env,
       ...(options.dependencyFetcher === undefined ? {} : { fetcher: options.dependencyFetcher }),
     })
     this.egressBroker = new SandboxEgressBroker({
       catalog: new EgressPolicyCatalog(options.egressProfiles ?? []),
       env,
-      auditSink: new JsonlEgressAuditSink(path.join(stateRoot, 'egress')),
+      auditSink: new JsonlEgressAuditSink(path.join(this.stateRoot, 'egress')),
       ...(options.egressResolver === undefined ? {} : { resolver: options.egressResolver }),
       ...(options.egressRequester === undefined ? {} : { requester: options.egressRequester }),
       ...(options.egressRevisionSource === undefined
@@ -87,6 +92,17 @@ export class SandboxNetworkGateway {
     input: SandboxDependencyAcquisitionInput,
   ): Promise<DependencyAcquisitionSession> {
     return this.dependencyService.acquireNpm(input)
+  }
+
+  public materializeNpmLayer(
+    layerId: string,
+    acquisition: DependencyAcquisitionSession,
+  ): Promise<StrongSandboxDependencyLayer> {
+    return materializeNpmDependencyLayer({
+      layerId,
+      acquisition,
+      stateRoot: path.join(this.stateRoot, 'dependency-layers'),
+    })
   }
 
   public async requestEgress(input: SandboxBrokeredEgressInput): Promise<EgressSessionResult> {
