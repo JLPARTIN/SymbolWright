@@ -9,6 +9,7 @@ import type { ApplicationSandboxNetworkRuntime } from './sandbox-network-runtime
 import type { SandboxAuthorizationContext } from './sandbox-policy-model.js'
 
 const MAX_MANIFEST_BYTES = 8 * 1024 * 1024
+const ALLOWED_INPUT_FIELDS = new Set(['registryUrls', 'limits'])
 const FORBIDDEN_INPUT_FIELDS = new Set([
   'packageJsonText',
   'packageLockText',
@@ -47,6 +48,9 @@ export function parseGovernedDependencyAcquisitionRequest(
   for (const field of Object.keys(record)) {
     if (FORBIDDEN_INPUT_FIELDS.has(field)) {
       throw new Error(`dependency_acquire rejects caller-controlled authority field: ${field}`)
+    }
+    if (!ALLOWED_INPUT_FIELDS.has(field)) {
+      throw new Error(`dependency_acquire rejects unknown request field: ${field}`)
     }
   }
   const registryUrls = optionalStringArray(record['registryUrls'], 'registryUrls')
