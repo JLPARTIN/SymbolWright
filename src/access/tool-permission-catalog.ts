@@ -1,6 +1,7 @@
 import type { SymbolWrightToolName } from '../runtime/types.js'
 import type { ApprovalRequirement, RiskLevel } from './access-types.js'
 import {
+  SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
   SANDBOX_EGRESS_CAPABILITY,
   SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
 } from './sandbox-capabilities.js'
@@ -80,6 +81,7 @@ export const TOOL_PERMISSION_DESCRIPTORS: Readonly<
   skill_run: tool('symbolwright.mission.execute', 'write'),
   sandbox_list_runtimes: tool(SANDBOX_OFFLINE_EXECUTE_CAPABILITY, 'read'),
   sandbox_execute: tool(SANDBOX_OFFLINE_EXECUTE_CAPABILITY, 'low'),
+  dependency_acquire: tool(SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY, 'write'),
 }
 
 export function resolveToolPermissionDescriptor(
