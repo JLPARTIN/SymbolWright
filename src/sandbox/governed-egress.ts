@@ -216,7 +216,8 @@ function optionalLimits(value: unknown): Partial<EgressPolicyLimits> | undefined
 }
 
 function firstHeader(value: string | readonly string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value
+  if (typeof value === 'string') return value
+  return value?.[0]
 }
 
 function sha256(value: string): string {
