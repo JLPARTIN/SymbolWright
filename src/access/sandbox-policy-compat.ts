@@ -1,5 +1,6 @@
 import type { AgentAccessGrant, SandboxPolicyReferences } from './access-types.js'
 import {
+  SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
   SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
   sandboxCapabilityAliases,
 } from './sandbox-capabilities.js'
@@ -9,12 +10,11 @@ import {
 } from '../sandbox/sandbox-policy-model.js'
 
 export function grantAllowsOfflineSandbox(grant: AgentAccessGrant): boolean {
-  const aliases = sandboxCapabilityAliases(SANDBOX_OFFLINE_EXECUTE_CAPABILITY)
-  if (aliases.some((alias) => grant.deniedCapabilities.includes(alias))) return false
-  return aliases.some(
-    (alias) =>
-      grant.symbolWrightCapabilities.includes(alias) || grant.githubCapabilities.includes(alias),
-  )
+  return grantAllowsCapability(grant, SANDBOX_OFFLINE_EXECUTE_CAPABILITY)
+}
+
+export function grantAllowsDependencyAcquisition(grant: AgentAccessGrant): boolean {
+  return grantAllowsCapability(grant, SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY)
 }
 
 export interface ResolvedGrantSandboxPolicyReferences {
@@ -56,4 +56,13 @@ export function resolveGrantSandboxPolicyReferences(
     },
     compatibilityMode: 'legacy-offline-only',
   }
+}
+
+function grantAllowsCapability(grant: AgentAccessGrant, capability: string): boolean {
+  const aliases = sandboxCapabilityAliases(capability)
+  if (aliases.some((alias) => grant.deniedCapabilities.includes(alias))) return false
+  return aliases.some(
+    (alias) =>
+      grant.symbolWrightCapabilities.includes(alias) || grant.githubCapabilities.includes(alias),
+  )
 }
