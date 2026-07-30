@@ -42,7 +42,10 @@ export async function runAuthorizedTool<TInput>(
   const accessControl = effectiveContext.accessControl
   let dependencyAccessRuntime: AccessRuntime | undefined
 
-  if (tool.name === 'dependency_acquire' && effectiveContext.sandboxDependencyAuthorization === undefined) {
+  if (
+    tool.name === 'dependency_acquire' &&
+    effectiveContext.sandboxDependencyAuthorization === undefined
+  ) {
     if (accessControl === undefined && networkRuntime.defaultDependencyPolicyReference !== undefined) {
       effectiveContext = {
         ...effectiveContext,
@@ -111,6 +114,7 @@ export async function runAuthorizedTool<TInput>(
               callerMetadata,
             )
           : callerMetadata
+      const dependencyRepository = effectiveContext.sandboxDependencyAuthorization?.repositoryId
       const receipt =
         capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY && dependencyAccessRuntime !== undefined
           ? await dependencyAccessRuntime.authorizationService.requireAuthorized({
@@ -118,7 +122,7 @@ export async function runAuthorizedTool<TInput>(
               grantId: accessControl.grantId,
               ...(accessControl.sessionId === undefined ? {} : { sessionId: accessControl.sessionId }),
               capability,
-              repository: effectiveContext.sandboxDependencyAuthorization?.repositoryId,
+              ...(dependencyRepository === undefined ? {} : { repository: dependencyRepository }),
               ...(context.sessionId === undefined ? {} : { missionId: context.sessionId }),
               toolName: tool.name,
               ...(metadata === undefined ? {} : { metadata }),
