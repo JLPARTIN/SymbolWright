@@ -44,13 +44,15 @@ describe('strong sandbox dependency mount', () => {
   it('mounts only the server-scoped layer as read-only and preserves network none', async () => {
     const plan = await runWithSandboxDependencyLayer(LAYER, async () => buildPlan())
     const create = plan.commands.create
+    const dependencyMounts = create.filter((part) => part.includes('dst=/workspace/node_modules'))
 
     expect(create).toEqual(expect.arrayContaining(['--network', 'none', '--mount']))
-    expect(create).toContain(
+    expect(dependencyMounts).toEqual([
       'type=bind,src=/tmp/symbolwright-dependency-layers/npm-layer-1/node_modules,dst=/workspace/node_modules,readonly',
-    )
+    ])
     expect(create.join(' ')).not.toContain('--network host')
-    expect(create.join(' ')).not.toContain(':rw')
+    expect(dependencyMounts.join(' ')).not.toContain('readonly=false')
+    expect(dependencyMounts.join(' ')).not.toContain('dst=/workspace/node_modules,rw')
   })
 
   it('does not expose a caller-selectable dependency mount option', () => {
