@@ -70,9 +70,7 @@ export function getOrCreateApplicationSandboxNetworkRuntime(
       env,
     }),
     dependencyLayers: new DependencyLayerBindingStore(path.join(stateRoot, 'dependency-bindings')),
-    ...(defaultDependencyPolicyReference === undefined
-      ? {}
-      : { defaultDependencyPolicyReference }),
+    ...(defaultDependencyPolicyReference === undefined ? {} : { defaultDependencyPolicyReference }),
     status: Object.freeze({
       mode: loaded.policyFile === undefined ? 'offline-only' : 'configured',
       stateRoot,
@@ -189,10 +187,7 @@ function optionalArray(value: unknown, name: string): readonly unknown[] | undef
   return value
 }
 
-function optionalPolicyReference(
-  value: unknown,
-  name: string,
-): SandboxPolicyReference | undefined {
+function optionalPolicyReference(value: unknown, name: string): SandboxPolicyReference | undefined {
   if (value === undefined) return undefined
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     throw new Error(`${SANDBOX_NETWORK_POLICY_FILE_ENV} field ${name} must be an object.`)
