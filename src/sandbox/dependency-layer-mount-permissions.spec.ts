@@ -11,7 +11,7 @@ const roots: string[] = []
 
 afterEach(() => {
   for (const root of roots.splice(0)) {
-    // Restore owner write permission so cleanup can remove the intentionally sealed directories.
+    // Restore owner write permission before recursively removing the intentionally sealed directories.
     chmodSync(path.join(root, 'node_modules', 'example'), 0o700)
     chmodSync(path.join(root, 'node_modules'), 0o700)
     rmSync(root, { recursive: true, force: true })
