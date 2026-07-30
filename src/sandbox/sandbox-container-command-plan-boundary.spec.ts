@@ -72,9 +72,15 @@ describe('sandbox container command plan fail-closed boundaries', () => {
   it.each([
     ['/tmp/workspace\0escape', 'Container host path may not contain null bytes.'],
     ['/', 'Container host path may not be the filesystem root.'],
-    ['/tmp/project/.git/objects', 'Container host path may not target host home, Git, or engine socket paths.'],
+    [
+      '/tmp/project/.git/objects',
+      'Container host path may not target host home, Git, or engine socket paths.',
+    ],
     ['/root/project', 'Container host path may not target host home, Git, or engine socket paths.'],
-    ['/run/podman/podman.sock', 'Container host path may not target host home, Git, or engine socket paths.'],
+    [
+      '/run/podman/podman.sock',
+      'Container host path may not target host home, Git, or engine socket paths.',
+    ],
   ])('rejects unsafe host workspace path %s', (hostWorkspacePath, message) => {
     expect(() => buildPlan({ hostWorkspacePath })).toThrow(message)
   })
@@ -91,7 +97,7 @@ describe('sandbox container command plan fail-closed boundaries', () => {
     )
   })
 
-  it.each(['sandbox-test', 'symbolwright-sandbox-', 'symbolwright-sandbox-UPPER']) (
+  it.each(['sandbox-test', 'symbolwright-sandbox-', 'symbolwright-sandbox-UPPER'])(
     'rejects invalid managed container name %s',
     (containerName) => {
       expect(() => buildPlan({ containerName })).toThrow(
