@@ -5,6 +5,7 @@ import { DEFAULT_SANDBOX_IMAGE_ALLOWLIST } from './sandbox-images.js'
 import type { SandboxContainerEngineStatus } from './sandbox-images.js'
 import type { SandboxImageDefinition } from './sandbox-types.js'
 
+// Fixtures remain server-owned and exercise only accepted planner inputs plus explicit rejection paths.
 const AVAILABLE_DOCKER: SandboxContainerEngineStatus = {
   engine: 'docker',
   status: 'available',
