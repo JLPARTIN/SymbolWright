@@ -9,6 +9,8 @@ import type { SandboxFileWriter, SandboxRunner } from './sandbox/sandbox-runner.
 import type { SandboxService } from '../sandbox/sandbox-service.js'
 import type { SandboxExecutionRequest, SandboxExecutionResult } from '../sandbox/sandbox-types.js'
 import type { SandboxAuthorizationContext } from '../sandbox/sandbox-policy-model.js'
+import type { ApplicationSandboxNetworkRuntime } from '../sandbox/sandbox-network-runtime.js'
+import type { GovernedDependencyAcquisitionResult } from '../sandbox/governed-dependency-acquisition.js'
 
 /** Supported execution modes from plan-only to approved execution. */
 export type SymbolWrightRuntimeMode =
@@ -64,6 +66,7 @@ export type SymbolWrightToolName =
   | 'skill_run'
   | 'sandbox_list_runtimes'
   | 'sandbox_execute'
+  | 'dependency_acquire'
 
 /** Capability categories that determine tool availability per mode. */
 export type RuntimeToolCapability =
@@ -158,6 +161,11 @@ export interface GitHubClientRegistry {
   readonly collaborationClient?: PrCollaborationClient
 }
 
+export interface ToolAuthorizationReceipt {
+  readonly approvalId?: string
+  readonly grantVersion: number
+}
+
 /**
  * Per-request delegated-agent-access enforcement hook. Present only when the caller authenticated
  * with a scoped agent token (see `src/access/`) rather than the legacy operator API key. Callers
@@ -178,7 +186,7 @@ export interface ToolAccessControl {
     capability: string,
     toolName: string,
     metadata?: Record<string, unknown>,
-  ) => Promise<void>
+  ) => Promise<ToolAuthorizationReceipt | void>
 }
 
 /** Context passed to every tool execution — cwd, policy, and optional execution adapters. */
@@ -192,12 +200,19 @@ export interface RuntimeToolContext {
   readonly sandboxRunner?: SandboxRunner
   readonly sandboxFileWriter?: SandboxFileWriter
   readonly sandboxService?: SandboxService
-  /** Immutable authority resolved by the server; tool input cannot supply or widen it. */
+  /** Immutable offline-execution authority resolved by the server. */
   readonly sandboxAuthorization?: SandboxAuthorizationContext
+  /** Application-owned host-side network authority; callers can never construct or replace it. */
+  readonly sandboxNetworkRuntime?: ApplicationSandboxNetworkRuntime
+  /** Separate dependency-acquisition authority with an explicit policy reference and version set. */
+  readonly sandboxDependencyAuthorization?: SandboxAuthorizationContext
   readonly recordSandboxExecution?: (
     request: SandboxExecutionRequest,
     result: SandboxExecutionResult,
   ) => void
+  readonly recordDependencyAcquisition?: (
+    result: GovernedDependencyAcquisitionResult,
+  ) => void | Promise<void>
   readonly memoryTools?: AgentMemoryTools
   /** Groups checkpoints under `.symbolwright/checkpoints/<sessionId>/`. Auto-generated when absent. */
   readonly sessionId?: string
@@ -291,6 +306,7 @@ export const ALL_SYMBOLWRIGHT_TOOL_NAMES = [
   'skill_run',
   'sandbox_list_runtimes',
   'sandbox_execute',
+  'dependency_acquire',
 ] as const satisfies readonly SymbolWrightToolName[]
 
 type _AssertAllToolNames = SymbolWrightToolName extends (typeof ALL_SYMBOLWRIGHT_TOOL_NAMES)[number]
