@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
+import { sealDependencyLayerForMount } from './dependency-layer-mount-permissions.js'
 import {
   verifyNpmDependencyLayer,
   type StrongSandboxDependencyLayer,
@@ -30,6 +31,8 @@ export class DependencyLayerBindingStore {
 
   public async bind(workspaceId: string, layer: StrongSandboxDependencyLayer): Promise<string> {
     const normalizedWorkspaceId = requireNonEmpty(workspaceId, 'workspaceId')
+    await verifyNpmDependencyLayer(layer)
+    await sealDependencyLayerForMount(layer)
     await verifyNpmDependencyLayer(layer)
     await ensureSecureStateDirectory(this.root)
     const finalPath = this.pathFor(normalizedWorkspaceId)
@@ -63,6 +66,7 @@ export class DependencyLayerBindingStore {
       throw new Error('Dependency layer binding does not match the authorized workspace identity.')
     }
     await verifyNpmDependencyLayer(record.layer)
+    await sealDependencyLayerForMount(record.layer)
     return record.layer
   }
 
