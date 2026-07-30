@@ -2,9 +2,9 @@
 
 ## Status
 
-SymbolWright now exposes governed npm dependency acquisition through the authenticated HTTP API,
-the agent tool registry, and MCP. General brokered HTTPS egress remains a separate follow-up.
-Strong execution containers remain offline.
+SymbolWright now exposes governed npm dependency acquisition and governed brokered HTTPS egress
+through the authenticated HTTP API, the agent tool registry, and MCP. Strong execution containers
+remain offline.
 
 ## Application-owned runtime
 
@@ -66,7 +66,37 @@ The document must use the authoritative profile contracts from
     "id": "npm-controlled",
     "version": 1
   },
-  "egressProfiles": []
+  "egressProfiles": [
+    {
+      "id": "docs-only",
+      "version": 1,
+      "enabled": true,
+      "deploymentModes": ["local", "hosted"],
+      "callerKinds": ["operator", "delegated-grant", "team-member"],
+      "allowedHosts": ["docs.example.com"],
+      "allowedMethods": ["GET", "HEAD"],
+      "allowedRequestHeaders": ["accept"],
+      "allowedPorts": [443],
+      "redirectPolicy": "same-host",
+      "credentialPolicy": "none",
+      "requireTls": true,
+      "auditRetentionDays": 30,
+      "limits": {
+        "maxRequests": 20,
+        "maxRequestBytes": 1048576,
+        "maxResponseBytes": 8388608,
+        "maxTotalSentBytes": 8388608,
+        "maxTotalReceivedBytes": 33554432,
+        "timeoutMs": 30000,
+        "maxConcurrency": 2,
+        "maxRedirects": 3
+      }
+    }
+  ],
+  "defaultEgressPolicy": {
+    "id": "docs-only",
+    "version": 1
+  }
 }
 ```
 
@@ -88,6 +118,32 @@ server reads `package.json` and `package-lock.json` from the authorized workspac
 Delegated callers require `symbolwright.dependencies.acquire`, an explicit dependency policy
 reference on the grant, and a current single-use approval bound to all active policy versions.
 Operator calls require `defaultDependencyPolicy`.
+
+## Live egress surfaces
+
+Bounded HTTPS requests are brokered the same way, through:
+
+- `sandbox_egress_request` in agent execution;
+- MCP tool discovery and invocation (hidden from `tools/list` when no policy is resolvable, and
+  re-checked on every `tools/call`);
+- `POST /api/sandbox/egress` with a server-resolved `missionId`.
+
+Callers may only supply `url`, `method`, `headers`, `body`, and tightening `limits`. They cannot
+supply `sessionId`, `policy`, `policyId`, `policyReference`, `approval`, `authorization`, `grantId`,
+`principalId`, `workspaceId`, `missionId`, `stateRoot`, `resolver`, `requester`, `proxy`, or
+`pinnedAddress` — the parser rejects the request outright if any of those fields are present.
+
+Delegated callers require `symbolwright.sandbox.egress` (a high-risk capability that can only be
+added to a grant through the step-up-gated `explicitHighRiskCapabilities` channel), an explicit
+egress policy reference on the grant, and a current single-use approval bound to all active policy
+versions. Operator calls require `defaultEgressPolicy`. The legacy trusted-operator `web_fetch` and
+`web_search` tools remain a separate, operator-only research surface — they are never advertised to
+a delegated caller and always refuse one, so there is exactly one live network path for delegated
+work: `sandbox_egress_request`.
+
+Every governed response is redacted before it leaves the broker: the raw final URL (including any
+redirect target) is reduced to a hostname, and only a destination hostname plus a path/query hash
+are exposed or persisted — never the raw path, query string, or credentials.
 
 ## Evidence and immutable layer
 
@@ -118,7 +174,9 @@ Operational startup reports `sandbox_network_gateway`. Missing policy is ready b
 
 - `sandbox_network_configured`;
 - `sandbox_dependency_policy_profiles`;
-- `sandbox_egress_policy_profiles`.
+- `sandbox_egress_policy_profiles`;
+- the gateway's redacted egress metrics snapshot (active sessions/requests, allowed/denied
+  requests, quota exhaustions, cancellations, policy revocations, bytes sent/received).
 
 ## Security invariants
 
