@@ -1,10 +1,4 @@
-import {
-  mkdirSync,
-  mkdtempSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -63,16 +57,13 @@ describe('application sandbox network runtime policy boundaries', () => {
     )
   })
 
-  it.each(['null', '[]', '1', '"policy"'])(
-    'rejects a non-object policy document %s',
-    (content) => {
-      const root = createWorkspace()
-      const policyFile = writePolicy(root, content)
-      expect(() => configuredRuntime(root, policyFile)).toThrow(
-        `${SANDBOX_NETWORK_POLICY_FILE_ENV} must contain a JSON object.`,
-      )
-    },
-  )
+  it.each(['null', '[]', '1', '"policy"'])('rejects a non-object policy document %s', (content) => {
+    const root = createWorkspace()
+    const policyFile = writePolicy(root, content)
+    expect(() => configuredRuntime(root, policyFile)).toThrow(
+      `${SANDBOX_NETWORK_POLICY_FILE_ENV} must contain a JSON object.`,
+    )
+  })
 
   it('rejects an unsupported document schema version', () => {
     const root = createWorkspace()
@@ -87,10 +78,7 @@ describe('application sandbox network runtime policy boundaries', () => {
     ['egressProfiles', { egressProfiles: {} }],
   ])('rejects a non-array %s field', (field, extra) => {
     const root = createWorkspace()
-    const policyFile = writePolicy(
-      root,
-      JSON.stringify({ schemaVersion: 1, ...extra }),
-    )
+    const policyFile = writePolicy(root, JSON.stringify({ schemaVersion: 1, ...extra }))
     expect(() => configuredRuntime(root, policyFile)).toThrow(
       `${SANDBOX_NETWORK_POLICY_FILE_ENV} field ${field} must be an array.`,
     )
@@ -176,11 +164,7 @@ function createWorkspace(): string {
   return root
 }
 
-function writePolicy(
-  root: string,
-  content: string,
-  name = 'sandbox-network-policy.json',
-): string {
+function writePolicy(root: string, content: string, name = 'sandbox-network-policy.json'): string {
   const policyFile = path.join(root, name)
   writeFileSync(policyFile, content, { mode: 0o600 })
   return policyFile
