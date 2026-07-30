@@ -28,10 +28,7 @@ export class DependencyLayerBindingStore {
     this.root = path.resolve(root)
   }
 
-  public async bind(
-    workspaceId: string,
-    layer: StrongSandboxDependencyLayer,
-  ): Promise<string> {
+  public async bind(workspaceId: string, layer: StrongSandboxDependencyLayer): Promise<string> {
     const normalizedWorkspaceId = requireNonEmpty(workspaceId, 'workspaceId')
     await verifyNpmDependencyLayer(layer)
     await ensureSecureStateDirectory(this.root)
@@ -91,7 +88,11 @@ function parseRecord(text: string): DependencyLayerBindingRecord {
   if (typeof record['workspaceIdSha256'] !== 'string' || typeof record['boundAt'] !== 'string') {
     throw new Error('Dependency layer binding metadata is invalid.')
   }
-  if (typeof record['layer'] !== 'object' || record['layer'] === null || Array.isArray(record['layer'])) {
+  if (
+    typeof record['layer'] !== 'object' ||
+    record['layer'] === null ||
+    Array.isArray(record['layer'])
+  ) {
     throw new Error('Dependency layer binding has no valid layer reference.')
   }
   return record as unknown as DependencyLayerBindingRecord
