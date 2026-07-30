@@ -147,7 +147,7 @@ describe('application sandbox network runtime policy boundaries', () => {
       egressProfileCount: 0,
     })
     expect(sandboxNetworkReadinessDetail(runtime.status)).toBe(
-      'configured; dependencyProfiles=0; defaultDependencyPolicy=none; egressProfiles=0',
+      'configured; dependencyProfiles=0; defaultDependencyPolicy=none; egressProfiles=0; defaultEgressPolicy=none',
     )
   })
 })
