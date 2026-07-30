@@ -1,8 +1,13 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { AccessRuntime } from '../../access/access-runtime.js'
-import { SANDBOX_OFFLINE_EXECUTE_CAPABILITY } from '../../access/sandbox-capabilities.js'
+import { AuthorizationDeniedError, ApprovalRequiredError } from '../../access/authorization-service.js'
 import {
+  SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+  SANDBOX_OFFLINE_EXECUTE_CAPABILITY,
+} from '../../access/sandbox-capabilities.js'
+import {
+  grantAllowsDependencyAcquisition,
   grantAllowsOfflineSandbox,
   resolveGrantSandboxPolicyReferences,
 } from '../../access/sandbox-policy-compat.js'
@@ -13,14 +18,27 @@ import {
 } from '../../access/mission-access-guard.js'
 import { MissionNotFoundError, type MissionService } from '../../mission/mission-service.js'
 import type { SymbolWrightMission } from '../../mission/mission-types.js'
-import type { SandboxExecutionSummary } from '../../sandbox/sandbox-history.js'
-import type { SymbolWrightRuntimeMode } from '../../runtime/types.js'
+import {
+  bindDependencyApproval,
+  buildDependencyAuthorization,
+  dependencyAuthorizationMetadata,
+} from '../../sandbox/dependency-acquisition-authority.js'
+import { executeStrongSandboxContainerWithDependencies } from '../../sandbox/sandbox-dependency-container-executor.js'
+import { SandboxHistoryStore, type SandboxExecutionSummary } from '../../sandbox/sandbox-history.js'
+import {
+  acquireGovernedNpmDependencies,
+  parseGovernedDependencyAcquisitionRequest,
+  renderGovernedDependencyAcquisitionResult,
+} from '../../sandbox/governed-dependency-acquisition.js'
+import { recordDependencyAcquisitionMissionEvidence } from '../../sandbox/dependency-mission-evidence.js'
+import { getOrCreateApplicationSandboxNetworkRuntime } from '../../sandbox/sandbox-network-runtime.js'
 import { SandboxRequestValidationError } from '../../sandbox/sandbox-request.js'
-import type { SandboxService } from '../../sandbox/sandbox-service.js'
+import { SandboxService } from '../../sandbox/sandbox-service.js'
 import type {
   SandboxExecutionRequest,
   SandboxExecutionResult,
 } from '../../sandbox/sandbox-types.js'
+import type { SymbolWrightRuntimeMode } from '../../runtime/types.js'
 
 const MAX_SANDBOX_REQUEST_BYTES = 512 * 1024
 
@@ -29,6 +47,7 @@ export interface SandboxRouteContext {
   readonly missionService?: MissionService
   readonly accessRuntime?: AccessRuntime
   readonly deploymentMode?: 'local' | 'hosted'
+  /** Application workspace root; the server currently passes its bound cwd here. */
   readonly repositoryId?: string
   readonly teamSource?: TeamVisibilitySource
   /** Undefined = operator (unrestricted), matching the convention throughout `access/`. */
@@ -38,11 +57,6 @@ export interface SandboxRouteContext {
   readonly runtimeMode?: SymbolWrightRuntimeMode
 }
 
-/** True when the caller may see an execution it doesn't directly own by grant id: the operator
- * always can; a delegated caller can when the execution is linked to a mission it can read
- * (`canAccessMission`). An execution recorded before this ownership metadata existed, or with
- * neither a `missionId` nor a matching `ownerGrantId`, is operator-only -- fail closed rather
- * than guess at who may have created it. */
 function callerCanSeeExecution(
   execution: { readonly missionId?: string; readonly ownerGrantId?: string },
   context: SandboxRouteContext,
@@ -61,9 +75,7 @@ function callerCanSeeExecution(
 }
 
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
-  res.writeHead(statusCode, {
-    'content-type': 'application/json; charset=utf-8',
-  })
+  res.writeHead(statusCode, { 'content-type': 'application/json; charset=utf-8' })
   res.end(JSON.stringify(body))
 }
 
@@ -94,11 +106,12 @@ function asRecord(value: unknown): Record<string, unknown> {
   }
   return value as Record<string, unknown>
 }
+
 function requestedMissionId(record: Record<string, unknown>): string | undefined {
   const value = record['missionId']
   if (value === undefined) return undefined
-  if (typeof value !== 'string') {
-    throw new SandboxRequestValidationError('missionId must be a string')
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new SandboxRequestValidationError('missionId must be a non-empty string')
   }
   return value
 }
@@ -130,10 +143,7 @@ function bindRepositoryToMissionWorkspace(
   }
   return {
     ...record,
-    repository: {
-      ...repository,
-      rootPath: missionWorkspaceRoot,
-    },
+    repository: { ...repository, rootPath: missionWorkspaceRoot },
   }
 }
 
@@ -152,10 +162,6 @@ function missionEventType(result: SandboxExecutionResult): string {
   return 'sandbox.execution.failed'
 }
 
-function missionEventSummary(result: SandboxExecutionResult): string {
-  return `${result.languageId} ${result.runnerId} execution ${result.status}.`
-}
-
 function recordMissionEvidence(
   context: SandboxRouteContext,
   request: SandboxExecutionRequest,
@@ -165,7 +171,7 @@ function recordMissionEvidence(
   context.missionService.appendEvent(
     request.missionId,
     missionEventType(result),
-    missionEventSummary(result),
+    `${result.languageId} ${result.runnerId} execution ${result.status}.`,
     {
       executionId: result.executionId,
       languageId: result.languageId,
@@ -205,6 +211,180 @@ function recordMissionEvidence(
   )
 }
 
+function applicationWorkspaceRoot(context: SandboxRouteContext): string {
+  return context.repositoryId ?? process.cwd()
+}
+
+function networkRuntime(context: SandboxRouteContext) {
+  return getOrCreateApplicationSandboxNetworkRuntime({
+    workspaceRoot: applicationWorkspaceRoot(context),
+  })
+}
+
+function dependencyAwareExecutionService(context: SandboxRouteContext): SandboxService {
+  const workspaceRoot = applicationWorkspaceRoot(context)
+  const runtime = networkRuntime(context)
+  return new SandboxService({
+    historyStore: new SandboxHistoryStore({ workspaceRoot }),
+    workspaceRoot,
+    executeContainer: (input) => executeStrongSandboxContainerWithDependencies(runtime, input),
+  })
+}
+
+function resolveMissionForExecution(
+  context: SandboxRouteContext,
+  missionId: string,
+): {
+  readonly mission: SymbolWrightMission
+  readonly callerKind: 'operator' | 'delegated-grant' | 'team-member'
+} | undefined {
+  if (context.missionService === undefined) {
+    throw new SandboxRequestValidationError(
+      'missionId cannot be resolved because no mission service is configured',
+    )
+  }
+  const mission = context.missionService.get(missionId)
+  const visibility = resolveMissionVisibility(context.callerGrantId, context.teamSource)
+  const access = canAccessMission(mission, visibility, 'execute')
+  const callerKind =
+    access.relationship === 'team_member' || access.relationship === 'team_owner'
+      ? 'team-member'
+      : context.callerGrantId === undefined
+        ? 'operator'
+        : 'delegated-grant'
+  return access.allowed ? { mission, callerKind } : undefined
+}
+
+async function handleDependencyAcquisition(
+  req: IncomingMessage,
+  res: ServerResponse,
+  context: SandboxRouteContext,
+): Promise<void> {
+  if (req.method !== 'POST') {
+    sendJson(res, 405, { error: 'method_not_allowed' })
+    return
+  }
+  const body = asRecord(await readJsonBody(req))
+  const missionId = requestedMissionId(body)
+  if (missionId === undefined) {
+    throw new SandboxRequestValidationError(
+      'missionId is required for governed dependency acquisition',
+    )
+  }
+  const resolved = resolveMissionForExecution(context, missionId)
+  if (resolved === undefined) {
+    sendJson(res, 404, { error: `Mission not found: ${missionId}` })
+    return
+  }
+  const { mission, callerKind } = resolved
+  const runtime = networkRuntime(context)
+  const callerGrant =
+    context.callerGrantId === undefined
+      ? undefined
+      : context.accessRuntime?.grantService.getGrant(context.callerGrantId)
+  if (context.callerGrantId !== undefined && callerGrant === undefined) {
+    sendJson(res, 403, {
+      error: 'authorization_denied',
+      reasonCode: 'DEPENDENCY_GRANT_NOT_FOUND',
+      message: 'The delegated dependency grant no longer exists.',
+    })
+    return
+  }
+  const references =
+    callerGrant === undefined ? undefined : resolveGrantSandboxPolicyReferences(callerGrant)
+  if (references?.unsupportedReason !== undefined) {
+    sendJson(res, 403, {
+      error: 'authorization_denied',
+      reasonCode: 'SANDBOX_LEGACY_NETWORK_UNSUPPORTED',
+      message: references.unsupportedReason,
+    })
+    return
+  }
+  const policyReference =
+    callerGrant === undefined
+      ? runtime.defaultDependencyPolicyReference
+      : references?.references.dependency
+  if (policyReference === undefined) {
+    sendJson(res, 403, {
+      error: 'authorization_denied',
+      reasonCode: 'DEPENDENCY_POLICY_REFERENCE_REQUIRED',
+      message: 'No operator-owned dependency policy is bound to this caller.',
+    })
+    return
+  }
+  let authorization = buildDependencyAuthorization({
+    policyReference,
+    deploymentMode: context.deploymentMode ?? 'local',
+    callerKind,
+    runtimeMode: mission.agent.runtimeMode,
+    repositoryId: mission.repository.remoteUrl ?? mission.repository.rootPath,
+    workspaceId: mission.id,
+    missionId: mission.id,
+    ...(context.callerPrincipalId === undefined
+      ? {}
+      : { principalId: context.callerPrincipalId }),
+    ...(callerGrant === undefined
+      ? { capabilityApproved: true, operatorApproved: true }
+      : {
+          grantId: callerGrant.id,
+          grantVersion: callerGrant.version,
+          capabilityApproved: grantAllowsDependencyAcquisition(callerGrant),
+        }),
+  })
+  const request = parseGovernedDependencyAcquisitionRequest(
+    Object.fromEntries(Object.entries(body).filter(([key]) => key !== 'missionId')),
+  )
+
+  if (callerGrant !== undefined && context.accessRuntime !== undefined) {
+    try {
+      const decision = await context.accessRuntime.authorizationService.requireAuthorized({
+        principalId: callerGrant.principalId,
+        grantId: callerGrant.id,
+        capability: SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+        repository: mission.repository.remoteUrl ?? mission.repository.rootPath,
+        missionId,
+        toolName: 'dependency_acquire',
+        metadata: dependencyAuthorizationMetadata(authorization, body),
+      })
+      authorization = bindDependencyApproval(authorization, decision)
+    } catch (error) {
+      if (error instanceof ApprovalRequiredError) {
+        sendJson(res, 403, {
+          error: 'approval_required',
+          reasonCode: error.decision.reasonCode,
+          message: error.decision.reason,
+          approvalRequestId: error.decision.approvalId,
+          correlationId: error.decision.correlationId,
+        })
+        return
+      }
+      if (error instanceof AuthorizationDeniedError) {
+        sendJson(res, 403, {
+          error: 'authorization_denied',
+          reasonCode: error.decision.reasonCode,
+          message: error.decision.reason,
+          requiredCapability: SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+          approvalPossible: false,
+          correlationId: error.decision.correlationId,
+        })
+        return
+      }
+      throw error
+    }
+  }
+
+  const result = await acquireGovernedNpmDependencies({
+    workspaceRoot: mission.repository.rootPath,
+    runtime,
+    authorization,
+    request,
+  })
+  if (context.missionService !== undefined) {
+    recordDependencyAcquisitionMissionEvidence(context.missionService, missionId, result)
+  }
+  sendJson(res, 200, { result: JSON.parse(renderGovernedDependencyAcquisitionResult(result)) })
+}
+
 /** Handles every authenticated `/api/sandbox` route. */
 export async function handleSandboxRoute(
   req: IncomingMessage,
@@ -217,6 +397,11 @@ export async function handleSandboxRoute(
   }
 
   try {
+    if (url.pathname === '/api/sandbox/dependencies/npm') {
+      await handleDependencyAcquisition(req, res, context)
+      return true
+    }
+
     if (url.pathname === '/api/sandbox/runtimes') {
       if (req.method !== 'GET') {
         sendJson(res, 405, { error: 'method_not_allowed' })
@@ -267,35 +452,21 @@ export async function handleSandboxRoute(
         context.callerGrantId === undefined ? 'operator' : 'delegated-grant'
       let effectiveRuntimeMode = context.runtimeMode ?? 'APPROVED_EXECUTION'
       if (missionId !== undefined) {
-        if (context.missionService === undefined) {
-          throw new SandboxRequestValidationError(
-            'missionId cannot be resolved because no mission service is configured',
-          )
-        }
-        mission = context.missionService.get(missionId)
-        const visibility = resolveMissionVisibility(context.callerGrantId, context.teamSource)
-        const access = canAccessMission(mission, visibility, 'execute')
-        if (access.relationship === 'team_member' || access.relationship === 'team_owner') {
-          callerKind = 'team-member'
-        }
-        if (!access.allowed) {
-          if (access.relationship === 'none') {
-            sendJson(res, 404, { error: `Mission not found: ${missionId}` })
-          } else {
-            sendJson(res, 403, {
-              error: 'authorization_denied',
-              reasonCode: 'MISSION_NOT_AUTHORIZED_FOR_OPERATION',
-              message: `This grant may not run a sandbox execution against mission ${missionId}.`,
-            })
-          }
+        const resolved = resolveMissionForExecution(context, missionId)
+        if (resolved === undefined) {
+          sendJson(res, 404, { error: `Mission not found: ${missionId}` })
           return true
         }
+        mission = resolved.mission
+        callerKind = resolved.callerKind
         missionWorkspaceRoot = mission.repository.rootPath
         effectiveRuntimeMode = mission.agent.runtimeMode
       }
 
+      const service = dependencyAwareExecutionService(context)
       const securedRecord = bindRepositoryToMissionWorkspace(record, missionWorkspaceRoot)
-      const request = context.service.validateRequest(securedRecord)
+      await service.refreshInventory()
+      const request = service.validateRequest(securedRecord)
       const callerGrant =
         context.callerGrantId === undefined
           ? undefined
@@ -349,7 +520,7 @@ export async function handleSandboxRoute(
         ...(offlineReference === undefined ? {} : { policyReference: offlineReference }),
         intent: 'offline-execution' as const,
       }
-      const result = await context.service.execute(request, {
+      const result = await service.execute(request, {
         mode: effectiveRuntimeMode,
         authorization,
         ...(context.callerGrantId === undefined
@@ -423,9 +594,7 @@ export async function handleSandboxRoute(
       sendJson(res, 404, { error: error.message })
       return true
     }
-    sendJson(res, 500, {
-      error: error instanceof Error ? error.message : String(error),
-    })
+    sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) })
     return true
   }
 }
