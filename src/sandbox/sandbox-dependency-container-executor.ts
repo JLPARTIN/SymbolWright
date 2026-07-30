@@ -10,8 +10,7 @@ export async function executeStrongSandboxContainerWithDependencies(
   runtime: ApplicationSandboxNetworkRuntime,
   input: ExecuteStrongSandboxContainerInput,
 ): Promise<Awaited<ReturnType<typeof executeStrongSandboxContainer>>> {
-  const workspaceId =
-    input.request.missionId ?? input.request.repository?.rootPath ?? input.requestedWorkspaceId
+  const workspaceId = input.request.missionId ?? input.request.repository?.rootPath
   const dependencyLayer =
     workspaceId === undefined ? undefined : await runtime.dependencyLayers.resolve(workspaceId)
   return executeStrongSandboxContainer({
