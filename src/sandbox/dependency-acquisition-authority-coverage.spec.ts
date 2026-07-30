@@ -34,7 +34,7 @@ describe('dependency acquisition authority optional branches', () => {
     })
   })
 
-  it('defaults an omitted grant version and rejects an invalid environment version through fallback', () => {
+  it('defaults an omitted grant version and normalizes an invalid environment version to disabled', () => {
     expect(
       dependencyPolicyVersions({
         policyReference: { id: 'npm-grant', version: 2 },
@@ -42,7 +42,7 @@ describe('dependency acquisition authority optional branches', () => {
         env: { SYMBOLWRIGHT_DEPENDENCY_GLOBAL_POLICY_VERSION: 'invalid' },
       }),
     ).toEqual({
-      'dependency-global': 1,
+      'dependency-global': 0,
       'npm-grant': 2,
       'grant:grant-1': 1,
       'dependency-request-tightening': 1,
