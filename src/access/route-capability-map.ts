@@ -73,6 +73,13 @@ const RULES: readonly RouteCapabilityRule[] = [
     matcher: /^\/api\/sandbox\/dependencies\/npm$/,
     capability: 'symbolwright.mission.read',
   },
+  // Preliminary route admission only. The handler resolves mission ownership and performs the
+  // policy-version-bound `symbolwright.sandbox.egress` authorization before network work begins.
+  {
+    method: 'POST',
+    matcher: /^\/api\/sandbox\/egress$/,
+    capability: 'symbolwright.mission.read',
+  },
   { method: 'GET', matcher: /^\/api\/sandbox.*$/, capability: SANDBOX_OFFLINE_EXECUTE_CAPABILITY },
   {
     method: 'POST',
