@@ -218,9 +218,9 @@ function applicationWorkspaceRoot(context: SandboxRouteContext): string {
   return context.repositoryId ?? process.cwd()
 }
 
-function networkRuntime(context: SandboxRouteContext) {
+function networkRuntime(context: SandboxRouteContext, workspaceRoot?: string) {
   return getOrCreateApplicationSandboxNetworkRuntime({
-    workspaceRoot: applicationWorkspaceRoot(context),
+    workspaceRoot: workspaceRoot ?? applicationWorkspaceRoot(context),
   })
 }
 
@@ -272,7 +272,7 @@ async function handleDependencyAcquisition(
     return
   }
   const { mission, callerKind } = resolved
-  const runtime = networkRuntime(context)
+  const runtime = networkRuntime(context, mission.repository.rootPath)
   const callerGrant =
     context.callerGrantId === undefined
       ? undefined
@@ -513,7 +513,7 @@ export async function handleSandboxRoute(
         ...(offlineReference === undefined ? {} : { policyReference: offlineReference }),
         intent: 'offline-execution' as const,
       }
-      const layer = await networkRuntime(context).dependencyLayers.resolve(
+      const layer = await networkRuntime(context, missionWorkspaceRoot).dependencyLayers.resolve(
         authorization.workspaceId,
       )
       const result = await runWithSandboxDependencyLayer(layer, () =>
