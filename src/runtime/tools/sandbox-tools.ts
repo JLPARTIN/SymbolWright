@@ -1,4 +1,4 @@
-import { executeStrongSandboxContainerWithDependencies } from '../../sandbox/sandbox-dependency-container-executor.js'
+import { runWithSandboxDependencyLayer } from '../../sandbox/sandbox-dependency-execution-context.js'
 import { SandboxHistoryStore } from '../../sandbox/sandbox-history.js'
 import { getOrCreateApplicationSandboxNetworkRuntime } from '../../sandbox/sandbox-network-runtime.js'
 import { SandboxService } from '../../sandbox/sandbox-service.js'
@@ -32,15 +32,13 @@ function assertNoForbiddenFields(input: unknown): void {
 }
 
 function resolveSandboxService(context: RuntimeToolContext): SandboxService {
-  const networkRuntime =
-    context.sandboxNetworkRuntime ??
-    getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot: context.cwd })
-  return new SandboxService({
-    historyStore: new SandboxHistoryStore({ workspaceRoot: context.cwd }),
-    workspaceRoot: context.cwd,
-    executeContainer: (input) =>
-      executeStrongSandboxContainerWithDependencies(networkRuntime, input),
-  })
+  return (
+    context.sandboxService ??
+    new SandboxService({
+      historyStore: new SandboxHistoryStore({ workspaceRoot: context.cwd }),
+      workspaceRoot: context.cwd,
+    })
+  )
 }
 
 function asToolRequest(input: unknown, context: RuntimeToolContext): unknown {
@@ -99,6 +97,27 @@ function executionContext(context: RuntimeToolContext, mode: RuntimeToolContext[
           },
         }),
   }
+}
+
+async function executeWithBoundDependencies(
+  service: SandboxService,
+  request: SandboxExecutionRequest,
+  context: RuntimeToolContext,
+  mode: RuntimeToolContext['policy']['mode'],
+): Promise<SandboxExecutionResult> {
+  const runtime =
+    context.sandboxNetworkRuntime ??
+    getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot: context.cwd })
+  const workspaceId =
+    context.sandboxAuthorization?.workspaceId ??
+    request.missionId ??
+    request.repository?.rootPath ??
+    context.sessionId ??
+    context.cwd
+  const layer = await runtime.dependencyLayers.resolve(workspaceId)
+  return runWithSandboxDependencyLayer(layer, () =>
+    service.execute(request, executionContext(context, mode)),
+  )
 }
 
 function renderExecutionResult(result: SandboxExecutionResult): string {
@@ -205,7 +224,12 @@ export const sandboxExecuteTool: RuntimeToolDefinition = {
     const request = service.validateRequest(rawRequest)
 
     if (context.policy.mode === 'PLAN_ONLY' || context.policy.mode === 'READ_ONLY') {
-      const result = await service.execute(request, executionContext(context, context.policy.mode))
+      const result = await executeWithBoundDependencies(
+        service,
+        request,
+        context,
+        context.policy.mode,
+      )
       context.recordSandboxExecution?.(request, result)
       return renderExecutionResult(result)
     }
@@ -214,7 +238,12 @@ export const sandboxExecuteTool: RuntimeToolDefinition = {
       return proposalFor(request)
     }
 
-    const result = await service.execute(request, executionContext(context, 'APPROVED_EXECUTION'))
+    const result = await executeWithBoundDependencies(
+      service,
+      request,
+      context,
+      'APPROVED_EXECUTION',
+    )
     context.recordSandboxExecution?.(request, result)
     return renderExecutionResult(result)
   },
