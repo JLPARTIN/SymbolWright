@@ -1,8 +1,14 @@
+import { AccessRuntime } from '../../access/access-runtime.js'
 import { SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY } from '../../access/sandbox-capabilities.js'
+import {
+  grantAllowsDependencyAcquisition,
+  resolveGrantSandboxPolicyReferences,
+} from '../../access/sandbox-policy-compat.js'
 import {
   operationCapabilitiesForTool,
   resolveToolPermissionDescriptor,
 } from '../../access/tool-permission-catalog.js'
+import { detectGitHubRepository } from '../../app/api/repository-routes.js'
 import {
   bindDependencyApproval,
   buildDependencyAuthorization,
@@ -33,29 +39,52 @@ export async function runAuthorizedTool<TInput>(
     ...context,
     sandboxNetworkRuntime: context.sandboxNetworkRuntime ?? networkRuntime,
   }
+  const accessControl = effectiveContext.accessControl
+  let dependencyAccessRuntime: AccessRuntime | undefined
 
-  if (
-    tool.name === 'dependency_acquire' &&
-    effectiveContext.sandboxDependencyAuthorization === undefined &&
-    networkRuntime.defaultDependencyPolicyReference !== undefined
-  ) {
-    effectiveContext = {
-      ...effectiveContext,
-      sandboxDependencyAuthorization: buildDependencyAuthorization({
-        policyReference: networkRuntime.defaultDependencyPolicyReference,
-        deploymentMode: context.sandboxAuthorization?.deploymentMode ?? deploymentMode(),
-        callerKind: 'operator',
-        runtimeMode: context.policy.mode,
-        repositoryId: context.cwd,
-        workspaceId: context.sessionId ?? context.cwd,
-        ...(context.sessionId === undefined ? {} : { missionId: context.sessionId }),
-        capabilityApproved: true,
-        operatorApproved: true,
-      }),
+  if (tool.name === 'dependency_acquire' && effectiveContext.sandboxDependencyAuthorization === undefined) {
+    if (accessControl === undefined && networkRuntime.defaultDependencyPolicyReference !== undefined) {
+      effectiveContext = {
+        ...effectiveContext,
+        sandboxDependencyAuthorization: buildDependencyAuthorization({
+          policyReference: networkRuntime.defaultDependencyPolicyReference,
+          deploymentMode: context.sandboxAuthorization?.deploymentMode ?? deploymentMode(),
+          callerKind: 'operator',
+          runtimeMode: context.policy.mode,
+          repositoryId: context.cwd,
+          workspaceId: context.sessionId ?? context.cwd,
+          ...(context.sessionId === undefined ? {} : { missionId: context.sessionId }),
+          capabilityApproved: true,
+          operatorApproved: true,
+        }),
+      }
+    } else if (accessControl !== undefined) {
+      dependencyAccessRuntime = new AccessRuntime({ workspaceRoot: context.cwd })
+      const grant = dependencyAccessRuntime.grantService.getGrant(accessControl.grantId)
+      if (grant !== undefined) {
+        const reference = resolveGrantSandboxPolicyReferences(grant).references.dependency
+        if (reference !== undefined) {
+          effectiveContext = {
+            ...effectiveContext,
+            sandboxDependencyAuthorization: buildDependencyAuthorization({
+              policyReference: reference,
+              deploymentMode: context.sandboxAuthorization?.deploymentMode ?? deploymentMode(),
+              callerKind: 'delegated-grant',
+              runtimeMode: context.policy.mode,
+              repositoryId: (await detectGitHubRepository(context.cwd)) ?? context.cwd,
+              workspaceId: context.sessionId ?? context.cwd,
+              ...(context.sessionId === undefined ? {} : { missionId: context.sessionId }),
+              principalId: grant.principalId,
+              grantId: grant.id,
+              grantVersion: grant.version,
+              capabilityApproved: grantAllowsDependencyAcquisition(grant),
+            }),
+          }
+        }
+      }
     }
   }
 
-  const accessControl = effectiveContext.accessControl
   let dependencyReceipt: ToolAuthorizationReceipt | undefined
   if (accessControl !== undefined) {
     const descriptor = resolveToolPermissionDescriptor(tool.name)
@@ -82,7 +111,19 @@ export async function runAuthorizedTool<TInput>(
               callerMetadata,
             )
           : callerMetadata
-      const receipt = await accessControl.requireAuthorized(capability, tool.name, metadata)
+      const receipt =
+        capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY && dependencyAccessRuntime !== undefined
+          ? await dependencyAccessRuntime.authorizationService.requireAuthorized({
+              principalId: accessControl.principalId,
+              grantId: accessControl.grantId,
+              ...(accessControl.sessionId === undefined ? {} : { sessionId: accessControl.sessionId }),
+              capability,
+              repository: effectiveContext.sandboxDependencyAuthorization?.repositoryId,
+              ...(context.sessionId === undefined ? {} : { missionId: context.sessionId }),
+              toolName: tool.name,
+              ...(metadata === undefined ? {} : { metadata }),
+            })
+          : await accessControl.requireAuthorized(capability, tool.name, metadata)
       if (capability === SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY && receipt !== undefined) {
         dependencyReceipt = receipt
       }
