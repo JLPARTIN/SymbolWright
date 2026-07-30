@@ -28,6 +28,8 @@ jobs:
               file = Path(path)
               text = file.read_text()
               if old not in text:
+                  if new in text:
+                      return
                   raise SystemExit(f'Expected text not found in {path}')
               file.write_text(text.replace(old, new, 1))
 
