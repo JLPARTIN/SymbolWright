@@ -8,7 +8,7 @@ SymbolWright exposes a provider-neutral API surface so any browser, LLM, coding 
 
 Governed tool execution is live today over two transports: `POST /api/agent` (HTTP+SSE, this server) runs the real `symbolwright agent` tool-execution loop; `symbolwright mcp-server` (see [`runtime/SYMBOLWRIGHT_MCP_SERVER.md`](runtime/SYMBOLWRIGHT_MCP_SERVER.md)) exposes the same tool registry to any MCP-compatible LLM client over stdio. Both are gated by the same runtime-mode policy as everywhere else in SymbolWright.
 
-`/api/missions`, `/api/tools/run`, `/api/sessions/:id`, and `/api/missions/:id/events` remain contract-only in `src/api/universal-api-contract.ts` — they describe a further target shape (persisted sessions, a single tool-call-at-a-time HTTP primitive, PR/audit integration) that `/api/agent` doesn't cover yet.
+`/api/missions` and `/api/missions/:id/events` are live (`src/app/api/mission-routes.ts`) — mission CRUD, import, and event-stream reads. `/api/tools/run` and `/api/sessions/:id` remain contract-only in `src/api/universal-api-contract.ts` — they describe a further target shape (a single tool-call-at-a-time HTTP primitive, generic persisted-session reads) that `/api/agent` and `/api/missions` don't cover yet.
 
 ## Security model
 
@@ -73,10 +73,12 @@ Provider Adapter
 | `POST` | `/api/sandbox/dependencies/npm` | Yes | Live | Governed npm dependency acquisition for a server-resolved `missionId`, brokered through the operator's `defaultDependencyPolicy` (operator) or the caller's bound dependency policy reference (delegated grant). See [`docs/security/SANDBOX_NETWORK_GATEWAY_COMPOSITION.md`](security/SANDBOX_NETWORK_GATEWAY_COMPOSITION.md). |
 | `POST` | `/api/sandbox/egress` | Yes | Live | Governed brokered HTTPS egress for a server-resolved `missionId` — bounded `url`/`method`/`headers`/`body`/`limits` only, redacted response (hostname + path hash, never raw query/URL). Same operator/delegated policy model as dependency acquisition. See [`docs/security/SANDBOX_NETWORK_GATEWAY_COMPOSITION.md`](security/SANDBOX_NETWORK_GATEWAY_COMPOSITION.md). |
 | `GET` | `/api/sandbox/network-status` | Operator | Live | Redacted sandbox network control-plane summary — mode, dependency/egress policy inventory, default policy references, live egress metrics, dependency-layer-binding health, egress-audit-log size, and process-wide aggregate concurrency. 404s (not 403) for a non-operator caller. Never returns state-root/policy-file paths or credentials. |
-| `POST` | `/api/missions` | Yes | Contract only | Create a governed SymbolWright mission (full agent/tool-use runtime over HTTP — not yet implemented). |
-| `POST` | `/api/tools/run` | Yes | Contract only | Run a governed tool through policy, approval, audit, and redaction gates. |
-| `GET` | `/api/sessions/:id` | Yes | Contract only | Read a persisted mission session and audit-safe state. |
-| `GET` | `/api/missions/:id/events` | Yes | Contract only | Stream mission events, tool output, terminal-safe logs, and PR readiness updates. |
+| `GET` / `POST` | `/api/missions` | Yes | Live | List (paginated, visibility-scoped for a delegated grant) or create a governed SymbolWright mission (`src/app/api/mission-routes.ts`). |
+| `GET` / `PATCH` / `DELETE` | `/api/missions/:id` | Yes | Live | Read, patch, or delete one mission by id. `DELETE` requires a matching revision and `{ confirm: true }`. |
+| `POST` | `/api/missions/import` | Yes | Live | Import a mission from an exported bundle. |
+| `GET` | `/api/missions/:id/events` | Yes | Live | Read a mission's event log, optionally filtered (`?filter=`). |
+| `POST` | `/api/tools/run` | Yes | Contract only | Run a single governed tool call through policy, approval, audit, and redaction gates outside the full `/api/agent` loop. |
+| `GET` | `/api/sessions/:id` | Yes | Contract only | Read a persisted mission session and audit-safe state via a generic session primitive (distinct from the live per-mission reads above). |
 
 ## Delegated Agent Access routes
 
