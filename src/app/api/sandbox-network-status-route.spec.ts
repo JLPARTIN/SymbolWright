@@ -55,6 +55,29 @@ describe('GET /api/sandbox/network-status', () => {
     expect(body.egress.metrics).toMatchObject({ activeSessions: 0 })
   })
 
+  it('reports empty dependency-layer-binding health, a non-existent audit log, and aggregate concurrency limits by default', async () => {
+    const server = await launch()
+    const response = await fetch(`${server.url}/api/sandbox/network-status`, {
+      headers: operatorAuth(),
+    })
+
+    expect(response.status).toBe(200)
+    const body = (await response.json()) as {
+      dependencyLayerBindings: { total: number; valid: number; missing: number; invalid: number }
+      egressAuditLog: { exists: boolean; sizeBytes: number; lastModifiedAt: string | undefined }
+      aggregateConcurrency: {
+        egress: { active: number; limit: number }
+        dependency: { active: number; limit: number }
+      }
+    }
+    expect(body.dependencyLayerBindings).toEqual({ total: 0, valid: 0, missing: 0, invalid: 0 })
+    expect(body.egressAuditLog).toEqual({ exists: false, sizeBytes: 0, lastModifiedAt: undefined })
+    expect(body.aggregateConcurrency.egress).toMatchObject({ active: 0 })
+    expect(body.aggregateConcurrency.egress.limit).toBeGreaterThan(0)
+    expect(body.aggregateConcurrency.dependency).toMatchObject({ active: 0 })
+    expect(body.aggregateConcurrency.dependency.limit).toBeGreaterThan(0)
+  })
+
   it('never exposes a state-root or policy-file filesystem path', async () => {
     const server = await launch()
     const response = await fetch(`${server.url}/api/sandbox/network-status`, {

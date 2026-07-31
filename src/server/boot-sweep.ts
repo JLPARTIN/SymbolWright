@@ -7,6 +7,9 @@ import {
   resolveQuarantineRoot,
 } from '../github/repository-acquisition-retention.js'
 import type { MissionService } from '../mission/mission-service.js'
+import { DependencyLayerBindingStore } from '../sandbox/dependency-layer-binding-store.js'
+import { reconcileDependencyLayers } from '../sandbox/dependency-layer-reconciliation.js'
+import { rotateEgressAuditLogIfNeeded } from '../sandbox/egress-audit-retention.js'
 import type { ReadinessRegistry } from './readiness-registry.js'
 
 export interface BootSweepLogger {
@@ -31,6 +34,11 @@ export interface BootSweepReport {
     readonly quarantined: number
     readonly deleted: number
     readonly restored: number
+  }
+  readonly sandboxNetwork: {
+    readonly brokenBindings: number
+    readonly orphanedTempDirsRemoved: number
+    readonly egressAuditRotated: boolean
   }
 }
 
@@ -135,6 +143,51 @@ export async function runBootSweep(options: BootSweepOptions): Promise<BootSweep
     retentionHealthy ? undefined : 'External repository retention sweep failed.',
   )
 
+  let sandboxNetworkHealthy = true
+  let sandboxNetwork = { brokenBindings: 0, orphanedTempDirsRemoved: 0, egressAuditRotated: false }
+  const sandboxNetworkRoot = path.join(
+    path.resolve(options.workspaceRoot),
+    '.symbolwright',
+    'sandbox-network',
+  )
+  if (existsSync(sandboxNetworkRoot)) {
+    try {
+      const bindingStore = new DependencyLayerBindingStore(
+        path.join(sandboxNetworkRoot, 'dependency-bindings'),
+      )
+      const reconciliation = await reconcileDependencyLayers({
+        stateRoot: path.join(sandboxNetworkRoot, 'dependency-layers'),
+        bindingStore,
+        ...(options.now === undefined ? {} : { now: options.now }),
+      })
+      const rotation = await rotateEgressAuditLogIfNeeded({
+        filePath: path.join(sandboxNetworkRoot, 'egress', 'sandbox-egress-audit.jsonl'),
+        ...(options.now === undefined ? {} : { now: options.now }),
+      })
+      const brokenBindings = reconciliation.bindings.filter((binding) => binding.status !== 'valid')
+      sandboxNetwork = {
+        brokenBindings: brokenBindings.length,
+        orphanedTempDirsRemoved: reconciliation.orphanedTempDirsRemoved,
+        egressAuditRotated: rotation.rotated,
+      }
+      for (const binding of brokenBindings) {
+        warnings.push(
+          `Boot sweep found a dependency layer binding in state "${binding.status}" (layer ${binding.layerId}, bound ${binding.boundAt}); it was not auto-repaired.`,
+        )
+      }
+    } catch (error) {
+      sandboxNetworkHealthy = false
+      warnings.push(
+        `Sandbox network reconciliation sweep failed: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+  options.readiness.setCheck(
+    'sandbox_network_reconciliation',
+    sandboxNetworkHealthy,
+    sandboxNetworkHealthy ? undefined : 'Sandbox network reconciliation sweep failed.',
+  )
+
   options.readiness.setCheck(
     'mission_store',
     missionStoreHealthy,
@@ -153,6 +206,15 @@ export async function runBootSweep(options: BootSweepOptions): Promise<BootSweep
       `Boot sweep retention: quarantined=${retention.quarantined}, deleted=${retention.deleted}, restored=${retention.restored}.`,
     )
   }
+  if (
+    sandboxNetwork.orphanedTempDirsRemoved > 0 ||
+    sandboxNetwork.egressAuditRotated ||
+    sandboxNetwork.brokenBindings > 0
+  ) {
+    logger.info(
+      `Boot sweep sandbox network: orphanedTempDirsRemoved=${sandboxNetwork.orphanedTempDirsRemoved}, egressAuditRotated=${sandboxNetwork.egressAuditRotated}, brokenBindings=${sandboxNetwork.brokenBindings}.`,
+    )
+  }
 
-  return { missionStoreHealthy, staleActiveMissionIds, warnings, retention }
+  return { missionStoreHealthy, staleActiveMissionIds, warnings, retention, sandboxNetwork }
 }

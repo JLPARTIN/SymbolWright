@@ -181,4 +181,154 @@ describe('SandboxNetworkGateway', () => {
     expect(audit).not.toContain('token=secret')
     expect(audit).not.toContain('93.184.216.34')
   })
+
+  describe('process-wide aggregate concurrency', () => {
+    function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
+      let resolve!: (value: T) => void
+      const promise = new Promise<T>((res) => {
+        resolve = res
+      })
+      return { promise, resolve }
+    }
+
+    it('reports the configured (or default) limits and zero active work before anything runs', async () => {
+      const stateRoot = await root()
+      const gateway = new SandboxNetworkGateway({
+        stateRoot,
+        env: {
+          SYMBOLWRIGHT_MAX_SANDBOX_EGRESS_CONCURRENCY: '3',
+          SYMBOLWRIGHT_MAX_SANDBOX_DEPENDENCY_CONCURRENCY: '2',
+        },
+      })
+
+      expect(gateway.aggregateConcurrencySnapshot()).toEqual({
+        egress: { active: 0, limit: 3 },
+        dependency: { active: 0, limit: 2 },
+      })
+    })
+
+    it('falls back to sane defaults for an unset or invalid concurrency env var', async () => {
+      const gateway = new SandboxNetworkGateway({
+        stateRoot: await root(),
+        env: { SYMBOLWRIGHT_MAX_SANDBOX_EGRESS_CONCURRENCY: 'not-a-number' },
+      })
+
+      const snapshot = gateway.aggregateConcurrencySnapshot()
+      expect(snapshot.egress.limit).toBeGreaterThan(0)
+      expect(snapshot.dependency.limit).toBeGreaterThan(0)
+    })
+
+    it('denies and audits a governed egress request once the process-wide egress cap is reached, then admits the next request after the first releases', async () => {
+      const stateRoot = await root()
+      const first = deferred<{
+        statusCode: number
+        headers: Record<string, string>
+        body: Buffer
+      }>()
+      const requester = {
+        request: vi
+          .fn()
+          .mockImplementationOnce(() => first.promise)
+          .mockImplementation(async () => ({
+            statusCode: 200,
+            headers: {},
+            body: Buffer.from('ok'),
+          })),
+      }
+      const gateway = new SandboxNetworkGateway({
+        stateRoot,
+        egressProfiles: [EGRESS_PROFILE],
+        env: { SYMBOLWRIGHT_MAX_SANDBOX_EGRESS_CONCURRENCY: '1' },
+        egressResolver: {
+          resolve: async () => ({
+            addresses: [{ address: '93.184.216.34', family: 4 as const }],
+            cnameChain: [],
+          }),
+        },
+        egressRequester: requester,
+      })
+      const auth = authorization(
+        SANDBOX_EGRESS_CAPABILITY,
+        { id: EGRESS_PROFILE.id, version: EGRESS_PROFILE.version },
+        {
+          'egress-global': 1,
+          [EGRESS_PROFILE.id]: EGRESS_PROFILE.version,
+          'grant:grant-1': 7,
+          'mission:mission-1': 1,
+          'egress-request-tightening': 1,
+        },
+      )
+
+      const inFlight = gateway.requestEgress({
+        sessionId: 'session-1',
+        authorization: auth,
+        request: { url: 'https://api.example.com/v1/items' },
+      })
+      await vi.waitFor(() => expect(requester.request).toHaveBeenCalledTimes(1))
+      expect(gateway.aggregateConcurrencySnapshot().egress.active).toBe(1)
+
+      await expect(
+        gateway.requestEgress({
+          sessionId: 'session-2',
+          authorization: auth,
+          request: { url: 'https://api.example.com/v1/items' },
+        }),
+      ).rejects.toMatchObject({ code: 'SANDBOX_EGRESS_PROCESS_CONCURRENCY_EXCEEDED' })
+
+      first.resolve({ statusCode: 200, headers: {}, body: Buffer.from('ok') })
+      await expect(inFlight).resolves.toMatchObject({ statusCode: 200 })
+      expect(gateway.aggregateConcurrencySnapshot().egress.active).toBe(0)
+
+      await expect(
+        gateway.requestEgress({
+          sessionId: 'session-3',
+          authorization: auth,
+          request: { url: 'https://api.example.com/v1/items' },
+        }),
+      ).resolves.toMatchObject({ statusCode: 200 })
+
+      const audit = await fs.readFile(
+        path.join(stateRoot, 'egress', 'sandbox-egress-audit.jsonl'),
+        'utf8',
+      )
+      expect(audit).toContain('SANDBOX_EGRESS_PROCESS_CONCURRENCY_EXCEEDED')
+      expect(audit).not.toContain('session-2')
+    })
+
+    it('denies a dependency acquisition once the process-wide dependency cap is reached, then admits the next after release', async () => {
+      const stateRoot = await root()
+      const gateway = new SandboxNetworkGateway({
+        stateRoot,
+        dependencyProfiles: [DEPENDENCY_PROFILE],
+        env: { SYMBOLWRIGHT_MAX_SANDBOX_DEPENDENCY_CONCURRENCY: '1' },
+      })
+      const auth = authorization(
+        SANDBOX_DEPENDENCY_ACQUIRE_CAPABILITY,
+        { id: DEPENDENCY_PROFILE.id, version: DEPENDENCY_PROFILE.version },
+        {},
+      )
+      const input = {
+        packageJsonText: '{"name":"fixture","version":"1.0.0"}',
+        packageLockText: '{"name":"fixture","version":"1.0.0","lockfileVersion":3,"packages":{}}',
+        authorization: auth,
+      }
+
+      // Exhaust the pool with a manually-acquired slot rather than racing a real acquisition, since
+      // acquireNpm's own internals resolve deterministically and too fast to race reliably here.
+      const guard = (
+        gateway as unknown as {
+          concurrencyGuard: { acquire: (pool: string) => () => void }
+        }
+      ).concurrencyGuard
+      const release = guard.acquire('sandbox-dependency')
+
+      await expect(gateway.acquireNpm(input)).rejects.toThrow(
+        'DEPENDENCY_PROCESS_CONCURRENCY_EXCEEDED',
+      )
+
+      release()
+      const result = await gateway.acquireNpm(input)
+      expect(result.report.status).not.toBe(undefined)
+    })
+  })
 })

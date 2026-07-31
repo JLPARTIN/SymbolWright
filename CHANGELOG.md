@@ -6,6 +6,22 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ### Added
 
+- **Sandbox network lifecycle and resilience**: adds boot-time reconciliation for the dependency
+  layer binding store (read-only re-verification, classifying each binding `valid` /
+  `missing-layer` / `invalid-record` without ever deleting or repairing one), a bounded sweep that
+  heals orphaned materialization staging directories left behind by a hard crash (age-gated so an
+  in-flight materialization is never raced, bounded per pass, idempotent), and bounded
+  size/age-based retention for the egress audit log (single-generation rotation to `.1`, healing
+  away a torn trailing line from a process killed mid-append rather than propagating it). Adds a
+  process-wide aggregate concurrency cap for sandbox egress
+  (`SYMBOLWRIGHT_MAX_SANDBOX_EGRESS_CONCURRENCY`, default 20) and dependency acquisition
+  (`SYMBOLWRIGHT_MAX_SANDBOX_DEPENDENCY_CONCURRENCY`, default 4), above each session's own
+  `limits.maxConcurrency`, reusing the same in-memory pool pattern already used for
+  provider/SSE/autonomous work — process-local, not restart-durable, not distributed. All of this
+  surfaces through the existing `sandbox_network_reconciliation` readiness check, `npm run doctor`,
+  and new fields on `GET /api/sandbox/network-status` and the dashboard's "Sandbox network"
+  section: dependency-layer-binding health, egress-audit-log size, and aggregate concurrency.
+
 - **Sandbox network control plane**: adds an operator-only, read-focused `GET
   /api/sandbox/network-status` route reporting the same `ApplicationSandboxNetworkRuntime`
   every HTTP, agent, and MCP caller shares — mode, dependency/egress policy inventory (ids,

@@ -90,6 +90,24 @@ export function buildDashboardClientScript(): string {
           '<div class="label">Egress requests (allowed / denied)</div>' +
           '<div class="value">' + data.egress.metrics.allowedRequests + ' / ' + data.egress.metrics.deniedRequests +
           '</div></article>';
+        const bindingsCard =
+          '<article class="card">' +
+          '<div class="label">Dependency layer bindings</div>' +
+          '<div class="value ' + (data.dependencyLayerBindings.missing + data.dependencyLayerBindings.invalid > 0 ? 'warn' : 'pass') + '">' +
+          data.dependencyLayerBindings.valid + ' valid / ' + data.dependencyLayerBindings.missing + ' missing / ' + data.dependencyLayerBindings.invalid + ' invalid' +
+          '</div></article>';
+        const auditLogCard =
+          '<article class="card">' +
+          '<div class="label">Egress audit log</div>' +
+          '<div class="value">' + (data.egressAuditLog.exists ? Math.round(data.egressAuditLog.sizeBytes / 1024) + ' KiB' : 'not yet created') +
+          '</div></article>';
+        const concurrencyCard =
+          '<article class="card">' +
+          '<div class="label">Aggregate concurrency (egress / dependency)</div>' +
+          '<div class="value">' +
+          data.aggregateConcurrency.egress.active + '/' + data.aggregateConcurrency.egress.limit + ' · ' +
+          data.aggregateConcurrency.dependency.active + '/' + data.aggregateConcurrency.dependency.limit +
+          '</div></article>';
 
         const profileRows = (label, profiles) => profiles.length === 0
           ? ''
@@ -98,7 +116,7 @@ export function buildDashboardClientScript(): string {
             ).join('') + '</ul>';
 
         el.innerHTML =
-          '<div class="grid">' + modeCard + dependencyCard + egressCard + metricsCard + '</div>' +
+          '<div class="grid">' + modeCard + dependencyCard + egressCard + metricsCard + bindingsCard + auditLogCard + concurrencyCard + '</div>' +
           profileRows('Dependency profiles', data.dependency.profiles) +
           profileRows('Egress profiles', data.egress.profiles);
       } catch (error) {
