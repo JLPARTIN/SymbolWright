@@ -19,23 +19,37 @@ interface ForbiddenDirectoryRule {
   readonly isForbidden: (name: string) => boolean
 }
 
+/**
+ * Matches any bundle-numbered temporary-release-machinery prefix (`pr7-`, `pr42_`, ...) so a future
+ * bundle's own scratch files are caught the same way earlier ones were, without hardcoding a bundle
+ * number that will eventually be wrong again.
+ */
+const NUMBERED_BUNDLE_PREFIX_PATTERN = /^pr\d+[-_]/i
+
 const FORBIDDEN_DIRECTORY_RULES: readonly ForbiddenDirectoryRule[] = [
   {
     relativeDirectory: '.github',
-    isForbidden: (name) => name.toLowerCase().startsWith('pr7-'),
+    isForbidden: (name) => NUMBERED_BUNDLE_PREFIX_PATTERN.test(name),
   },
   {
     relativeDirectory: path.join('.github', 'workflows'),
-    isForbidden: (name) => name.toLowerCase().startsWith('pr7-'),
+    isForbidden: (name) => NUMBERED_BUNDLE_PREFIX_PATTERN.test(name),
   },
   {
     relativeDirectory: path.join('docs', 'security'),
-    isForbidden: (name) => name.startsWith('PR7_') || name === 'SANDBOX_PR7_AUDIT_WORKPLAN.md',
+    isForbidden: (name) => NUMBERED_BUNDLE_PREFIX_PATTERN.test(name),
   },
 ]
 
+/**
+ * Name-based markers for temporary or self-modifying release machinery, independent of any bundle
+ * number: trigger files, workplans, "do not merge"/"not for merge" notes, draft markers, findings
+ * ledgers, and auto-commit/self-modifying automation. Deliberately narrow and keyword-anchored
+ * (not a bare substring like "temp" or "diagnostic") so a legitimate product file is never caught
+ * by an incidental word in its name.
+ */
 const FORBIDDEN_RELEASE_FILENAME =
-  /(?:^|[_-])(DO_NOT_MERGE|DRAFT_MARKER|TEMPORARY_FILE_MANIFEST)(?:[-_.]|$)/i
+  /(?:^|[_-])(DO_NOT_MERGE|NOT_FOR_MERGE|DRAFT_MARKER|TEMPORARY_FILE_MANIFEST|TRIGGER|WORKPLAN|FINDINGS_LEDGER|AUTO_COMMIT|SELF_MODIFYING)(?:[-_.]|$)/i
 const CONTENTS_WRITE_PATTERN = /^\s*contents:\s*write(?:\s+#.*)?$/m
 const PINNED_ACTION_REF_PATTERN = /^[0-9a-f]{40}$/i
 const AUDITED_SHA_PATTERN = /\*{0,2}Audited code SHA:\*{0,2}\s*`[0-9a-f]{40}`/

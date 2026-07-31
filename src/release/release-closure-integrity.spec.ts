@@ -102,6 +102,55 @@ describe('assessReleaseClosureIntegrity', () => {
     )
   })
 
+  it('catches a future bundle-numbered marker, not only pr7-, without hardcoding a bundle number', () => {
+    const workspace = createWorkspace()
+    fs.writeFileSync(path.join(workspace, '.github', 'pr42-live-egress-trigger'), 'run\n')
+    fs.writeFileSync(
+      path.join(workspace, '.github', 'workflows', 'pr42-implementation.yml'),
+      ['name: PR42 implementation', 'jobs:', '  build:', '    steps: []', ''].join('\n'),
+    )
+
+    const report = assessReleaseClosureIntegrity(workspace)
+
+    expect(report.status).toBe('FAIL')
+    expect(report.findings).toContain(
+      `Temporary release artifact remains: ${path.join('.github', 'pr42-live-egress-trigger')}`,
+    )
+    expect(report.findings).toContain(
+      `Temporary release artifact remains: ${path.join('.github', 'workflows', 'pr42-implementation.yml')}`,
+    )
+  })
+
+  it.each([
+    ['a trigger marker', 'egress-trigger.yml'],
+    ['a workplan note', 'SANDBOX_WORKPLAN.md'],
+    ['a not-for-merge note', 'NOT_FOR_MERGE.md'],
+    ['a findings ledger', 'AUDIT_FINDINGS_LEDGER.md'],
+    ['an auto-commit marker', 'AUTO_COMMIT_NOTES.md'],
+  ])('catches %s by keyword, independent of any bundle number', (_label, filename) => {
+    const workspace = createWorkspace()
+    fs.writeFileSync(path.join(workspace, 'docs', 'security', filename), 'temporary\n')
+
+    const report = assessReleaseClosureIntegrity(workspace)
+
+    expect(report.status).toBe('FAIL')
+    expect(report.findings).toContain(
+      `Temporary release artifact remains: ${path.join('docs', 'security', filename)}`,
+    )
+  })
+
+  it('does not flag a legitimate product doc that happens to contain an unrelated word', () => {
+    const workspace = createWorkspace()
+    fs.writeFileSync(
+      path.join(workspace, 'docs', 'security', 'SANDBOX_NETWORK_GATEWAY_COMPOSITION.md'),
+      '# Sandbox Network Gateway Composition\n',
+    )
+
+    const report = assessReleaseClosureIntegrity(workspace)
+
+    expect(report).toEqual({ status: 'PASS', findings: [] })
+  })
+
   it('fails moving action tags and contents-write workflows', () => {
     const workspace = createWorkspace()
     fs.writeFileSync(
