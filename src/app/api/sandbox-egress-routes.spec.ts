@@ -169,6 +169,9 @@ describe('governed egress HTTP route', () => {
 
     expect(res.statusCode).toBe(403)
     expect(res.json<{ reasonCode: string }>().reasonCode).toBe('EGRESS_POLICY_REFERENCE_REQUIRED')
+
+    const events = missionService.readEvents(mission.id).map((event) => event.type)
+    expect(events).toContain('sandbox.egress.blocked')
   })
 })
 

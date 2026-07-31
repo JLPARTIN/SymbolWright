@@ -326,7 +326,7 @@ Normal PR validation runs on Node 22 for one clear required signal. The separate
 ## Current Foundation Docs
 
 ```txt
-docs/migration/AELIB_SYMBOLWRIGHT_EXTRACTION_NOTES.md
+docs/migration/AELIB_CODEMIND_EXTRACTION_NOTES.md
 docs/security/DELEGATED_AGENT_ACCESS.md
 docs/governance/SYMBOLWRIGHT_PERMISSION_MODEL.md
 docs/governance/SYMBOLWRIGHT_THREAT_MODEL.md
@@ -365,8 +365,8 @@ docs/runtime/SYMBOLWRIGHT_CHECKPOINT_REWIND.md
 docs/ajna/SYMBOLWRIGHT_AJNA_DOCS_HUB.md
 docs/ajna/SYMBOLWRIGHT_AJNA_ROADMAP.md
 docs/ajna/SYMBOLWRIGHT_AJNA_BUILD_PLAN.md
-docs/build-state/SYMBOLWRIGHT_BUILD_LEDGER.md
-docs/build-state/SYMBOLWRIGHT_FINAL_FORENSIC_AUDIT.md
+docs/build-state/CODEMIND_BUILD_LEDGER.md
+docs/build-state/CODEMIND_FINAL_FORENSIC_AUDIT.md
 docs/autonomy/AGENT_FORENSIC_PROCESS_DOCUMENTATION.md
 docs/context/SYMBOLWRIGHT_PROJECT_CONTEXT_KERNEL.md
 ```

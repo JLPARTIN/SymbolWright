@@ -70,6 +70,7 @@ export async function handleSandboxEgressRoute(
       ? undefined
       : context.accessRuntime?.grantService.getGrant(context.callerGrantId)
   if (context.callerGrantId !== undefined && callerGrant === undefined) {
+    recordPreSessionDenial(context, missionId, 'EGRESS_GRANT_NOT_FOUND')
     sendJson(res, 403, {
       error: 'authorization_denied',
       reasonCode: 'EGRESS_GRANT_NOT_FOUND',
@@ -80,6 +81,7 @@ export async function handleSandboxEgressRoute(
   const references =
     callerGrant === undefined ? undefined : resolveGrantSandboxPolicyReferences(callerGrant)
   if (references?.unsupportedReason !== undefined) {
+    recordPreSessionDenial(context, missionId, 'SANDBOX_LEGACY_NETWORK_UNSUPPORTED')
     sendJson(res, 403, {
       error: 'authorization_denied',
       reasonCode: 'SANDBOX_LEGACY_NETWORK_UNSUPPORTED',
@@ -90,6 +92,7 @@ export async function handleSandboxEgressRoute(
   const policyReference =
     callerGrant === undefined ? runtime.defaultEgressPolicyReference : references?.references.egress
   if (policyReference === undefined) {
+    recordPreSessionDenial(context, missionId, 'EGRESS_POLICY_REFERENCE_REQUIRED')
     sendJson(res, 403, {
       error: 'authorization_denied',
       reasonCode: 'EGRESS_POLICY_REFERENCE_REQUIRED',
@@ -172,6 +175,29 @@ export async function handleSandboxEgressRoute(
 function sendJson(res: ServerResponse, statusCode: number, body: unknown): void {
   res.writeHead(statusCode, { 'content-type': 'application/json; charset=utf-8' })
   res.end(JSON.stringify(body))
+}
+
+/**
+ * Durably records a denial that happens before a governed egress session exists -- a missing or
+ * unsupported grant, or no policy reference resolvable for this caller -- so it isn't silently
+ * lost between the mission-scoped audit trail's post-session events. Best-effort: a failure here
+ * must never change or delay the 403 the caller was already about to receive.
+ */
+function recordPreSessionDenial(
+  context: SandboxRouteContext,
+  missionId: string,
+  reasonCode: string,
+): void {
+  try {
+    context.missionService?.appendEvent(
+      missionId,
+      'sandbox.egress.blocked',
+      `Governed egress denied before a session could be authorized: ${reasonCode}.`,
+      { status: 'denied', decisionCode: reasonCode },
+    )
+  } catch {
+    // Evidence recording is best-effort here; the caller still receives the 403 below.
+  }
 }
 
 async function readJsonBody(req: IncomingMessage): Promise<unknown> {
