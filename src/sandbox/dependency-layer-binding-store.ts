@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 
@@ -16,6 +16,15 @@ interface DependencyLayerBindingRecord {
   readonly workspaceIdSha256: string
   readonly boundAt: string
   readonly layer: StrongSandboxDependencyLayer
+}
+
+export type DependencyLayerBindingStatus = 'valid' | 'missing-layer' | 'invalid-record'
+
+export interface DependencyLayerBindingSummary {
+  readonly layerId: string
+  readonly boundAt: string
+  readonly status: DependencyLayerBindingStatus
+  readonly detail?: string
 }
 
 /**
@@ -36,7 +45,7 @@ export class DependencyLayerBindingStore {
     await verifyNpmDependencyLayer(layer)
     await ensureSecureStateDirectory(this.root)
     const finalPath = this.pathFor(normalizedWorkspaceId)
-    const tempPath = `${finalPath}.tmp-${process.pid}-${Date.now().toString(36)}`
+    const tempPath = `${finalPath}.tmp-${process.pid}-${Date.now().toString(36)}-${randomBytes(6).toString('hex')}`
     const record: DependencyLayerBindingRecord = {
       schemaVersion: DEPENDENCY_LAYER_BINDING_SCHEMA_VERSION,
       workspaceIdSha256: sha256(normalizedWorkspaceId),
@@ -68,6 +77,61 @@ export class DependencyLayerBindingStore {
     await verifyNpmDependencyLayer(record.layer)
     await sealDependencyLayerForMount(record.layer)
     return record.layer
+  }
+
+  /**
+   * Read-only enumeration for boot-time reconciliation and operator visibility. Never mutates,
+   * never seals a layer for mount, and never throws for an individual broken binding -- each entry
+   * is independently classified so one corrupt or dangling record can't hide the rest. A binding
+   * file that is itself a symlink (lstat-checked, never followed) is silently excluded rather than
+   * reported, since it was never a binding this store wrote.
+   */
+  public async listBindings(): Promise<readonly DependencyLayerBindingSummary[]> {
+    let entries: string[]
+    try {
+      entries = await fs.readdir(this.root)
+    } catch (error) {
+      if (isNotFound(error)) return []
+      throw error
+    }
+
+    const summaries: DependencyLayerBindingSummary[] = []
+    for (const entry of entries) {
+      if (!entry.endsWith('.json')) continue
+      const fullPath = path.join(this.root, entry)
+      const stat = await fs.lstat(fullPath).catch(() => undefined)
+      if (stat === undefined || !stat.isFile()) continue
+
+      let record: DependencyLayerBindingRecord
+      try {
+        record = parseRecord(await fs.readFile(fullPath, 'utf8'))
+      } catch (error) {
+        summaries.push({
+          layerId: 'unknown',
+          boundAt: 'unknown',
+          status: 'invalid-record',
+          detail: errorMessage(error),
+        })
+        continue
+      }
+
+      try {
+        await verifyNpmDependencyLayer(record.layer)
+        summaries.push({
+          layerId: record.layer.layerId,
+          boundAt: record.boundAt,
+          status: 'valid',
+        })
+      } catch (error) {
+        summaries.push({
+          layerId: record.layer.layerId,
+          boundAt: record.boundAt,
+          status: 'missing-layer',
+          detail: errorMessage(error),
+        })
+      }
+    }
+    return summaries
   }
 
   private pathFor(workspaceId: string): string {
@@ -119,4 +183,8 @@ function isNotFound(error: unknown): boolean {
     'code' in error &&
     (error as { readonly code?: unknown }).code === 'ENOENT'
   )
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
 }

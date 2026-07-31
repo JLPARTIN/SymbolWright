@@ -65,6 +65,24 @@ describe('DependencyLayerBindingStore', () => {
     expect(mocks.seal).toHaveBeenCalledTimes(2)
   })
 
+  it('never corrupts state under N concurrent binds to the same workspace identity -- exactly one binding survives, fully readable', async () => {
+    const root = await temporaryRoot()
+    const store = new DependencyLayerBindingStore(root)
+    const layers = Array.from({ length: 8 }, (_, index) => ({
+      ...dependencyLayer(),
+      layerId: `layer-${index}`,
+    }))
+
+    await Promise.all(layers.map((layer) => store.bind('workspace-1', layer)))
+
+    const resolved = await store.resolve('workspace-1')
+    expect(layers.map((layer) => layer.layerId)).toContain(resolved?.layerId)
+    const entries = await fs.readdir(root)
+    expect(entries.filter((entry) => entry.endsWith('.json'))).toEqual([
+      `${sha256('workspace-1')}.json`,
+    ])
+  })
+
   it('returns undefined when no binding exists', async () => {
     const store = new DependencyLayerBindingStore(await temporaryRoot())
 
@@ -144,6 +162,112 @@ describe('DependencyLayerBindingStore', () => {
     await expect(store.resolve('workspace-1')).rejects.toThrow(
       'Dependency layer binding does not match the authorized workspace identity.',
     )
+  })
+
+  describe('listBindings', () => {
+    it('returns an empty list when the store directory does not exist yet', async () => {
+      const store = new DependencyLayerBindingStore(
+        path.join(await temporaryRoot(), 'never-created'),
+      )
+      await expect(store.listBindings()).resolves.toEqual([])
+    })
+
+    it('classifies a verifiable binding as valid without sealing it for mount', async () => {
+      const root = await temporaryRoot()
+      await writeBinding(
+        root,
+        'workspace-1',
+        JSON.stringify(validRecord('workspace-1', dependencyLayer())),
+      )
+      const store = new DependencyLayerBindingStore(root)
+
+      const summaries = await store.listBindings()
+
+      expect(summaries).toEqual([
+        { layerId: 'layer-1', boundAt: expect.any(String), status: 'valid' },
+      ])
+      expect(mocks.seal).not.toHaveBeenCalled()
+    })
+
+    it('classifies a binding whose layer no longer verifies as missing-layer, without throwing', async () => {
+      const root = await temporaryRoot()
+      await writeBinding(
+        root,
+        'workspace-1',
+        JSON.stringify(validRecord('workspace-1', dependencyLayer())),
+      )
+      const store = new DependencyLayerBindingStore(root)
+      mocks.verify.mockRejectedValueOnce(new Error('layer directory is gone'))
+
+      const summaries = await store.listBindings()
+
+      expect(summaries).toEqual([
+        {
+          layerId: 'layer-1',
+          boundAt: expect.any(String),
+          status: 'missing-layer',
+          detail: 'layer directory is gone',
+        },
+      ])
+    })
+
+    it('classifies a corrupt binding record as invalid-record instead of failing the whole scan', async () => {
+      const root = await temporaryRoot()
+      await writeBinding(root, 'workspace-1', 'not-json')
+      await writeBinding(
+        root,
+        'workspace-2',
+        JSON.stringify(validRecord('workspace-2', dependencyLayer())),
+      )
+      const store = new DependencyLayerBindingStore(root)
+
+      const summaries = await store.listBindings()
+
+      expect(summaries).toHaveLength(2)
+      expect(summaries).toContainEqual(
+        expect.objectContaining({
+          status: 'invalid-record',
+          detail: 'Dependency layer binding is not valid JSON.',
+        }),
+      )
+      expect(summaries).toContainEqual(
+        expect.objectContaining({ status: 'valid', layerId: 'layer-1' }),
+      )
+    })
+
+    it('never follows a symlink planted where a binding file should be', async () => {
+      const root = await temporaryRoot()
+      await writeBinding(
+        root,
+        'workspace-1',
+        JSON.stringify(validRecord('workspace-1', dependencyLayer())),
+      )
+      const realFile = path.join(root, `${sha256('workspace-1')}.json`)
+      const linkTarget = path.join(root, 'elsewhere.data')
+      await fs.writeFile(
+        linkTarget,
+        JSON.stringify(validRecord('other', dependencyLayer())),
+        'utf8',
+      )
+      await fs.unlink(realFile)
+      await fs.symlink(linkTarget, realFile)
+      const store = new DependencyLayerBindingStore(root)
+
+      await expect(store.listBindings()).resolves.toEqual([])
+    })
+
+    it('ignores non-.json entries such as leftover .tmp- write artifacts', async () => {
+      const root = await temporaryRoot()
+      await fs.mkdir(root, { recursive: true })
+      await fs.writeFile(
+        path.join(root, `${sha256('workspace-1')}.json.tmp-1234-abc`),
+        'garbage',
+        'utf8',
+      )
+      const store = new DependencyLayerBindingStore(root)
+
+      await expect(store.listBindings()).resolves.toEqual([])
+    })
   })
 })
 
