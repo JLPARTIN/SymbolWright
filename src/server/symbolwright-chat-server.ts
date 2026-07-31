@@ -86,6 +86,7 @@ import {
   handleRepositoryTree,
 } from '../app/api/repository-routes.js'
 import { handleSandboxRoute } from '../app/api/sandbox-routes.js'
+import { buildSandboxNetworkControlPlaneStatus } from '../app/api/sandbox-network-status-route.js'
 import { MissionNotFoundError, MissionService } from '../mission/mission-service.js'
 import type { SymbolWrightMission } from '../mission/mission-types.js'
 import type { GitHubPrCreationClient } from '../runtime/github-write/github-pr-creation.js'
@@ -642,6 +643,15 @@ export function createChatServerRequestListener(
         return
       }
       sendJson(res, 200, readinessRegistry.detailedSnapshot())
+      return
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/sandbox/network-status') {
+      if (principal.kind !== 'operator') {
+        sendJson(res, 404, { error: 'not_found' })
+        return
+      }
+      sendJson(res, 200, buildSandboxNetworkControlPlaneStatus(cwd))
       return
     }
 

@@ -33,6 +33,8 @@ export interface SandboxNetworkRuntimeStatus {
 export interface ApplicationSandboxNetworkRuntime {
   readonly gateway: SandboxNetworkGateway
   readonly dependencyLayers: DependencyLayerBindingStore
+  readonly dependencyProfiles: readonly DependencyPolicyProfile[]
+  readonly egressProfiles: readonly EgressPolicyProfile[]
   readonly defaultDependencyPolicyReference?: SandboxPolicyReference
   readonly defaultEgressPolicyReference?: SandboxPolicyReference
   readonly status: SandboxNetworkRuntimeStatus
@@ -75,6 +77,8 @@ export function getOrCreateApplicationSandboxNetworkRuntime(
       env,
     }),
     dependencyLayers: new DependencyLayerBindingStore(path.join(stateRoot, 'dependency-bindings')),
+    dependencyProfiles: Object.freeze(dependencyProfiles),
+    egressProfiles: Object.freeze(egressProfiles),
     ...(defaultDependencyPolicyReference === undefined ? {} : { defaultDependencyPolicyReference }),
     ...(defaultEgressPolicyReference === undefined ? {} : { defaultEgressPolicyReference }),
     status: Object.freeze({

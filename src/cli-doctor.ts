@@ -12,6 +12,10 @@ import {
 } from './config/symbolwright-config.js'
 import { ProviderGateway } from './providers/provider-gateway.js'
 import { loadEgressOperatorState } from './sandbox/egress-operator-state.js'
+import {
+  getOrCreateApplicationSandboxNetworkRuntime,
+  sandboxNetworkReadinessDetail,
+} from './sandbox/sandbox-network-runtime.js'
 import { runSandboxReadinessCheck } from './runtime/sandbox/sandbox-diagnostics.js'
 import { renderDockerSandboxConfig } from './runtime/sandbox/sandbox-runner.js'
 import { assembleAgentTools } from './runtime/tools/tool-assembly.js'
@@ -236,6 +240,23 @@ function checkSandboxEgress(workspaceRoot: string): DoctorCheck {
   }
 }
 
+function checkSandboxNetworkRuntime(workspaceRoot: string): DoctorCheck {
+  try {
+    const runtime = getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot })
+    return {
+      name: 'Sandbox network runtime',
+      status: 'PASS',
+      detail: sandboxNetworkReadinessDetail(runtime.status),
+    }
+  } catch (error) {
+    return {
+      name: 'Sandbox network runtime',
+      status: 'FAIL',
+      detail: `Failed to load sandbox network policy: ${error instanceof Error ? error.message : String(error)}`,
+    }
+  }
+}
+
 function checkToolRegistry(): DoctorCheck {
   const tools = assembleAgentTools()
   if (tools.length >= 30) {
@@ -307,6 +328,7 @@ export function runDoctor(workspaceRoot: string): DoctorReport {
     checkSandboxConfiguration(),
     checkSandboxReadiness(),
     checkSandboxEgress(workspaceRoot),
+    checkSandboxNetworkRuntime(workspaceRoot),
     checkToolRegistry(),
     checkSessionsDir(workspaceRoot),
     checkMemoryDir(workspaceRoot),

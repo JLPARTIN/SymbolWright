@@ -30,6 +30,8 @@ describe('application sandbox network runtime', () => {
     })
 
     expect(second).toBe(first)
+    expect(first.dependencyProfiles).toEqual([])
+    expect(first.egressProfiles).toEqual([])
     expect(first.status).toEqual({
       mode: 'offline-only',
       stateRoot: path.join(workspaceRoot, '.symbolwright', 'sandbox-network'),
@@ -103,6 +105,10 @@ describe('application sandbox network runtime', () => {
     })
 
     expect(runtime.defaultDependencyPolicyReference).toEqual({ id: 'npm-public', version: 1 })
+    expect(runtime.dependencyProfiles).toHaveLength(1)
+    expect(runtime.dependencyProfiles[0]).toMatchObject({ id: 'npm-public', version: 1 })
+    expect(runtime.egressProfiles).toHaveLength(1)
+    expect(runtime.egressProfiles[0]).toMatchObject({ id: 'docs-only', version: 1 })
     expect(runtime.status).toEqual({
       mode: 'configured',
       stateRoot: path.join(workspaceRoot, '.symbolwright', 'sandbox-network'),
