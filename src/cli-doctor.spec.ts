@@ -85,6 +85,15 @@ describe('runDoctor', () => {
     expect(egressCheck?.detail).toMatch(/^(dependency-only|disabled|allowlisted):/)
   })
 
+  it('reports the sandbox network runtime as offline-only by default without failing', () => {
+    const report = runDoctor(WORKSPACE)
+    const networkCheck = report.checks.find((check) => check.name === 'Sandbox network runtime')
+
+    expect(networkCheck).toBeDefined()
+    expect(networkCheck?.status).toBe('PASS')
+    expect(networkCheck?.detail).toContain('offline-only')
+  })
+
   it('detects missing workspace', () => {
     const report = runDoctor('/nonexistent/path')
 
