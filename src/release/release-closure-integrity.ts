@@ -52,8 +52,14 @@ const FORBIDDEN_RELEASE_FILENAME =
   /(?:^|[_-])(DO_NOT_MERGE|NOT_FOR_MERGE|DRAFT_MARKER|TEMPORARY_FILE_MANIFEST|TRIGGER|WORKPLAN|FINDINGS_LEDGER|AUTO_COMMIT|SELF_MODIFYING)(?:[-_.]|$)/i
 const CONTENTS_WRITE_PATTERN = /^\s*contents:\s*write(?:\s+#.*)?$/m
 const PINNED_ACTION_REF_PATTERN = /^[0-9a-f]{40}$/i
-const AUDITED_SHA_PATTERN = /\*{0,2}Audited code SHA:\*{0,2}\s*`[0-9a-f]{40}`/
-const RELEASE_VERDICT_PATTERN =
+
+/**
+ * Shared with `release-candidate.ts`, which validates the same "`Audited code SHA:` .../
+ * `Release verdict:` ..." convention against whatever audit document a release candidate manifest
+ * references, not only the fixed sandbox audit path this module itself checks.
+ */
+export const AUDITED_SHA_PATTERN = /\*{0,2}Audited code SHA:\*{0,2}\s*`[0-9a-f]{40}`/
+export const RELEASE_VERDICT_PATTERN =
   /\*{0,2}Release verdict:\*{0,2}\s*\*\*(PASS|FAIL|BLOCKED|NOT RUN)\*\*/
 
 /**

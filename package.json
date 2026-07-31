@@ -52,6 +52,7 @@
     "release:verify-tag": "node scripts/verify-release-tag.mjs",
     "release:notes": "node scripts/extract-release-notes.mjs",
     "release:docker-smoke": "node scripts/docker-smoke.mjs",
+    "release:verify-candidate": "node dist/cli-release-candidate-verify.js",
     "test:release-scripts": "node --test scripts/lib/changelog-release.test.mjs"
   },
   "keywords": [
