@@ -1,147 +1,168 @@
 # Sandbox Final Adversarial Audit
 
-**Audit date:** 2026-07-29  
-**Repository:** `JLPARTIN/SymbolWright`  
-**Sandbox bundle base:** `7990209993ed891efa3e5cfdd83adfd2434929dd`  
-**Audited code SHA:** `c8cac044fdc78e0642015de5faaf0d171830a87f`  
-**Correction validation head:** `70efb83e1976be723ea04f6421a01e40b4b7190b`  
+**Audit date:** 2026-07-31
+**Repository:** `JLPARTIN/SymbolWright`
+**Bundle base SHA:** `ab910fe` (tip of the prior sandbox audit, PR #341)
+**Audited code SHA:** `762db17bfcf39ee0da0cb7b02c1c26e6b6d5f0fa`
+**Correction-validation SHA:** `3bf0fe5b118895228ffb05d3d730e0f7abc78fa1`
 **Release verdict:** **PASS**
 
 ## 1. Scope and evidence rules
 
-This report closes the seven-part sandbox program delivered through merged pull requests #334–#341. It replaces the temporary PR #7 workplan, draft markers, findings ledger, source-export workflow, patch workflows, triggers, and cleanup notes that were incorrectly merged with PR #341.
+This report closes Large PR Bundle #13 (merged PRs #342–#347), which took the sandbox network
+gateway from a package-boundary-only construction (delivered by the prior seven-part bundle,
+audited in this same document at PR #341) to a live, fully-wired, operationally hardened
+capability: governed dependency acquisition, governed brokered egress, an operator control plane,
+and boot-time lifecycle reconciliation.
 
-The audit distinguishes four evidence states:
+Evidence states are unchanged from the prior audit:
 
 - **PASS** — source and available runtime evidence support the claim.
 - **FAIL** — evidence disproves the claim or a release-blocking defect remains.
 - **BLOCKED** — required evidence could not be obtained.
 - **NOT RUN** — the check was outside the available execution environment or bundle scope.
 
-A PASS verdict applies to the sandbox package and its documented self-hosted technical-preview boundary. It does not claim unrestricted multi-tenant SaaS readiness.
+A PASS verdict applies to the sandbox package and its documented self-hosted, single-operator,
+BYOK technical-preview boundary. It does not claim unrestricted multi-tenant SaaS readiness.
 
-## 2. Delivered architecture
+**Audited-SHA methodology.** Every finding below was independently verified by reading the actual
+merged source at `762db17` — not by trusting a PR title, description, or an earlier report — and,
+where a defect was found, by tracing it to the exact line before writing a fix. Two categories of
+defect were found and corrected at the correction-validation SHA: one generalization gap in the
+release-closure gate itself, and one residual evidence gap explicitly flagged as future work by the
+prior audit (§7 below). No other correction was required; the bundle's own PRs (#345, #346, #347)
+were each independently re-verified as they were built, in this same session, rather than accepted
+on faith after merge.
 
-The completed sandbox architecture provides:
+## 2. Delivered architecture (this bundle)
 
-- one authoritative structured-execution broker and immutable effective-policy model;
-- guarded-host execution restricted to trusted local-operator break-glass use;
-- a digest-pinned strong offline container backend with copy-in/copy-out isolation;
-- broker-authorized Bash, validation, portability, autonomy, MCP, and related command callers;
-- governed npm dependency planning, HTTPS acquisition, archive inspection, integrity verification, content-addressed caching, lifecycle-script suppression, and durable evidence;
-- operator-owned HTTPS egress profiles with DNS classification, address-pinned TLS, redirect controls, quotas, cancellation, live policy revision, redacted audit evidence, and metrics;
-- a production `SandboxNetworkGateway` package entrypoint that constructs the dependency service and egress broker without enabling container networking.
+Building on the prior bundle's authoritative broker and immutable policy model, PRs #342–#347
+deliver:
 
-Strong execution containers remain offline. Dependency acquisition and egress are separate host-side broker capabilities and do not widen the container network namespace.
+- a production `SandboxNetworkGateway` construction boundary (#343, closing the prior bundle's
+  first residual item);
+- governed npm dependency acquisition reachable through the authenticated HTTP route, the
+  agent-loop tool-execution chokepoint, and MCP (#344);
+- governed brokered HTTPS egress reachable through the same three surfaces, with an explicit
+  provider-facing tool schema and redacted (hostname-only) responses (#345);
+- an operator-only, read-focused control-plane API and dashboard section reporting the same
+  runtime every caller shares (#346);
+- boot-time reconciliation for dependency-layer bindings and orphaned materialization staging
+  directories, bounded egress-audit-log retention with a torn-line-tolerant reader, and
+  process-wide aggregate concurrency caps for both capabilities (#347).
 
-## 3. Confirmed-finding closure
+Strong execution containers remain physically offline throughout. Dependency acquisition and
+egress remain separate host-side broker capabilities and never widen the container network
+namespace.
 
-| Finding from the PR #7 ledger | Result | Closure evidence |
+## 3. Confirmed-finding closure (this bundle's own defects, found and fixed)
+
+These are defects independently discovered in this bundle's branches *before* merge, by reading
+the actual diff rather than trusting the branch's own commit messages — not defects surviving in
+`main`.
+
+| Finding | Where found | Result | Closure evidence |
+| --- | --- | --- | --- |
+| A committed, self-modifying GitHub Actions workflow (`contents: write`, floating Action tags, a large source-generating script triggered by a marker-file push) was present on the egress branch before merge. | PR #345, pre-merge | **PASS** | Removed before merge; `assessReleaseClosureIntegrity()` (`npm run release-readiness`) reports `PASS, Findings: none` at the audited SHA. |
+| The egress HTTP route handler existed but was never dispatched — admitted by the capability map, unreachable in the real server. | PR #345, pre-merge | **PASS** | `sandbox-routes.ts` now dispatches `POST /api/sandbox/egress`; route tests cover it end to end. |
+| The shared agent-loop authorization chokepoint and MCP server never built `sandboxEgressAuthorization` — the tool was registered but non-functional through either real caller path. | PR #345, pre-merge | **PASS** | `authorized-tool-execution.ts` and `mcp-server-tools.ts` mirror the existing `dependency_acquire` treatment for egress; both paths are tested. |
+| The governed egress response returned `response.finalUrl` verbatim, including any redirect target's raw path and query. | PR #345, pre-merge | **PASS** | Redacted to a hostname; a dedicated redaction test asserts the raw path/query/token never appears in the rendered result. |
+
+## 4. Findings from this audit (PR #348) itself
+
+| Finding | Result | Closure evidence |
 | --- | --- | --- |
-| Dependency acquisition and brokered egress had no production construction boundary. | **PASS** | `SandboxNetworkGateway` now constructs `DependencyAcquisitionService` and `SandboxEgressBroker`, calls `openSession()` through `requestEgress()`, and is exported from the public universal API. First-party dashboard/tool composition remains later product-integration work, not a bypass of the sandbox boundary. |
-| Dependency acquisition could return success after evidence persistence failed. | **PASS** | `DependencyAcquisitionService.finalize()` converts persistence failure to `DEPENDENCY_EVIDENCE_WRITE_FAILED`; no completed session is returned without a durable evidence path. |
-| Egress request authorization failures could escape request audit and metrics. | **PASS** | Request parsing, method/header/body authorization, DNS, quota, redirect, transport, cancellation, and revision failures are handled inside the session audit/metrics boundary. Initial session-policy denial remains a pre-session authorization decision and grants no network authority. |
-| Egress policy and cancellation were not rechecked after DNS immediately before transport. | **PASS** | The session checks cancellation, live policy revision, and duration after DNS validation and immediately before the pinned HTTPS requester is invoked. |
-| Dependency DNS work was not cancellation-aware and live policy changes were not checked during acquisition. | **PASS** | Acquisition workers check cancellation and policy revision before work, during fetch checkpoints, after fetch, before inspection, and before cache admission. |
-| The JSONL audit path did not prove every ancestor was a real directory. | **PASS** | `ensureSecureStateDirectory()` walks each path component with `lstat`, creates private directories one component at a time, and rejects symbolic links and non-directory ancestors. |
-| Temporary audit and self-modifying workflow machinery had to be removed before release. | **PASS** | The correction removes all `.github/pr7-*`, `.github/workflows/pr7-*`, `docs/security/PR7_*`, and `SANDBOX_PR7_AUDIT_WORKPLAN.md` files. The release-closure integrity gate now blocks recurrence. |
+| The release-closure gate's temporary-artifact detection was hardcoded to the `pr7-` prefix and an exact `PR7_`/`SANDBOX_PR7_AUDIT_WORKPLAN.md` match from the *previous* bundle — a future bundle's own scratch files would not have been caught. | **PASS** | `release-closure-integrity.ts` now matches any numbered-bundle prefix (`pr\d+[-_]`) and a keyword-anchored set (trigger, workplan, not-for-merge, draft-marker, findings-ledger, auto-commit, self-modifying) scoped to `.github` and `docs/security` only. A dedicated test proves a `pr42-` marker is now caught and that a legitimate doc containing an unrelated word (`SANDBOX_NETWORK_GATEWAY_COMPOSITION.md`) is not falsely flagged. |
+| README's "Current Foundation Docs" list pointed at three `SYMBOLWRIGHT_`-prefixed filenames that were never actually created during the CodeMind→SymbolWright rebrand — the real files still carry their original `CODEMIND_`-prefixed names. | **PASS** | List corrected to the files that actually exist on disk; all entries now resolve. |
+| `docs/API_REFERENCE.md` marked `POST /api/missions` and `GET /api/missions/:id/events` "Contract only... not yet implemented", but both are real, live handlers in `src/app/api/mission-routes.ts`, wired into the running server (confirmed by tracing the dispatcher). | **PASS** | Corrected to Live; the previously-undocumented `GET`/`PATCH`/`DELETE /api/missions/:id` and `POST /api/missions/import` rows were added for the same real route file. `POST /api/tools/run` and `GET /api/sessions/:id` were verified to have zero implementation anywhere in the codebase and remain correctly marked contract-only. |
+| The prior audit's residual item #2 ("initial egress session-policy denials occur before a session exists... a later observability improvement should persist those authorization denials") was only half-closed: the *gateway-level* pre-session denial (policy rejects the destination) was already durably audited, but the *route-level* pre-policy denials (grant no longer exists, legacy-unsupported network state, no policy reference bound to this caller) recorded nothing. | **PASS** | `sandbox-egress-routes.ts` now records a `sandbox.egress.blocked` mission event for all three route-level pre-session denial branches, best-effort (never blocking or delaying the 403 response itself). A route test asserts the event is recorded for the missing-policy-reference case. |
 
-## 4. Adversarial boundary results
+## 5. Adversarial and structural verification carried out in this audit
 
-| Boundary | Result | Evidence summary |
-| --- | --- | --- |
-| Guarded-host containment | **PASS** | Hosted, HTTP, delegated agent-tool, and untrusted execution paths cannot select guarded-host execution. No container failure falls back to host execution. |
-| Container networking | **PASS** | Real Docker integration proved outbound networking is physically blocked while the strong backend runs with network disabled. |
-| Filesystem isolation | **PASS** | Canonical repositories are not mounted read-write into untrusted containers; bounded snapshots and quarantined artifacts are used instead. |
-| Process and resource isolation | **PASS** | Non-root execution, read-only root, dropped capabilities, no-new-privileges, PID/IPC isolation, CPU, memory, PID, tmpfs, timeout, output, cancellation, cleanup, and orphan reaping are enforced. |
-| Dependency integrity | **PASS** | Lockfile-bound immutable plans, registry restrictions, integrity verification, tarball inspection, quotas, content-addressed storage, and lifecycle-script suppression are enforced. |
-| SSRF and DNS rebinding controls | **PASS** | Direct IPs, private/link-local/metadata destinations, unsafe CNAME chains, mixed forbidden DNS answers, alternate ports, plaintext HTTP, and unauthorized redirects are denied. Approved addresses are pinned into TLS while hostname certificate verification is preserved. |
-| Credential boundary | **PASS** | URL credentials and credential-bearing headers are rejected; strong containers receive no provider, GitHub, proxy, Docker socket, SSH-agent, or unrelated host credentials. |
-| Policy revocation | **PASS** | Global and profile kill switches and version changes revoke active dependency or egress authority at live checkpoints. |
-| Evidence persistence and redaction | **PASS** | Required evidence failures fail closed. Audit records omit raw session IDs, paths, queries, bodies, credentials, cookies, and resolved addresses. |
-| Delegated direct-network bypass | **PASS** | Delegated direct `web_fetch`, `web_search`, host Git, MCP host-process, and related trusted-operator paths are denied unless routed through the appropriate governed capability boundary. |
+- **Cross-surface parity.** Traced (not assumed) that `runBootSweep` is wired into the real server
+  startup path (`operational-bootstrap.ts`), that HTTP/agent-loop/MCP/dashboard/doctor/readiness/
+  control-plane all resolve the same memoized `ApplicationSandboxNetworkRuntime` per workspace
+  root, and that the new `sandbox_network_reconciliation` readiness check does not collide with the
+  pre-existing `sandbox_network_gateway` check.
+- **Non-operator information leakage.** Confirmed the new aggregate-concurrency snapshot and
+  dependency-layer-binding/egress-audit-log fields are reachable only through the already-audited
+  operator-only control-plane route (404, not 403, for a non-operator caller) — no new leakage
+  surface was introduced.
+- **Reconciliation/retention attack surface.** Confirmed `reconcileDependencyLayers` and
+  `rotateEgressAuditLogIfNeeded` are only ever invoked from boot sweep (once, at process startup,
+  before the server accepts requests) — no HTTP route, tool, or MCP call can trigger either on
+  demand, so there is no caller-controlled DoS or interference surface here.
+- **Direct-network bypass.** Re-confirmed (unchanged from the prior bundle's own verification in
+  PR #345) that `web_fetch`/`web_search` remain a trusted-local-operator-only surface that always
+  refuses a delegated caller, and are no longer even advertised to one in MCP discovery, so
+  `sandbox_egress_request` remains the only live network path for a delegated grant.
+- **Symlink and special-file handling.** Every new filesystem-touching function added by #347
+  (`listBindings`, the orphan-temp-dir sweep, the egress-audit reader/rotator) uses `lstat` (never
+  follows a symlink) before treating an entry as real state; each has a dedicated test proving a
+  planted symlink is refused or silently excluded rather than followed. Not re-verified again here
+  beyond confirming the tests still pass at the audited SHA, since this was already adversarially
+  tested when #347 was built in this same session.
+- **Release-closure gate, live repository check.** `node dist/cli-release-closure.js` at the
+  correction-validation SHA reports `PASS, Findings: none` against the real repository, not only
+  the unit-test fixtures.
 
-## 5. Validation evidence
+## 6. Validation evidence
 
-The exact PR #341 merge input completed the following GitHub Actions workflows successfully:
+At the audited SHA (`762db17`, tip of #347, before any audit-report-only commit), each of PRs
+#345, #346, and #347 was independently validated in this session — full `npm run test:coverage`,
+`typecheck`, `lint`, `format:check`, `build`, and `release-readiness` — before being merged, with
+CI/CodeQL/Dependency Review confirmed green on GitHub for each PR's exact head.
 
-- CI / Validate SymbolWright
-- CodeQL
-- Dependency Review
-- PR7 Source Export, which was temporary and has now been removed
+The correction-validation SHA (`3bf0fe5`) was then validated in full:
 
-The PR #341 CI job reported:
+- `npm run audit`: **PASS** (0 vulnerabilities);
+- `npm run test:release-scripts`: **PASS**;
+- `npm run typecheck`: **PASS**;
+- `npm run lint`: **PASS**;
+- `npm run format:check`: **PASS**;
+- `npm run test:coverage`: **PASS** — 588 test files passed, 1 skipped; 4,484 tests passed, 6
+  skipped; 87.73% statement, 80.02% branch, 92.96% function, 88.72% line coverage — thresholds
+  unchanged from the audited SHA;
+- `npm run build`: **PASS**;
+- `node dist/cli-release-closure.js`: **PASS**, `Findings: none`;
+- `npm run release-readiness --static`: **PASS**, 18/18 gates, `RELEASE_READY` (the Docker-dependent
+  smoke gates are marked deferred rather than run in `--static` mode; see §7).
 
-- 561 passing test files and 1 skipped file;
-- 4,259 passing tests and 6 skipped tests;
-- 87.69% statement coverage;
-- 80.08% branch coverage;
-- 92.91% function coverage;
-- 88.71% line coverage;
-- successful TypeScript, ESLint, Prettier, build, preflight, npm audit, package smoke, and Docker smoke gates.
+## 7. Residual, non-blocking limitations
 
-The release-truth correction was then fully validated at PR head `70efb83e1976be723ea04f6421a01e40b4b7190b`:
+1. **Strong-container Docker smoke gate could not be executed in this session's sandbox** (no
+   Docker daemon available in this execution environment — confirmed by direct connection failure,
+   not assumed). This is an environment limitation of the auditing session, not a defect in the
+   gate or the code: on real GitHub Actions CI (which has Docker), the equivalent "Validate
+   SymbolWright" job passed on the exact head of PRs #345, #346, and #347. This gate must still be
+   confirmed green on the exact correction-validation head in real CI before this PR merges.
+2. **No full timing-injected concurrency chaos harness.** PR #347 added real, tested coverage for
+   N-way concurrent binds to the same workspace identity, orphaned-directory sweep races against an
+   in-flight materialization (age-gated, not timing-gated), and process-wide concurrency-cap
+   enforcement — but not a harness proving every possible interleaving under real concurrent HTTP
+   load (garbage collection racing a live reader mid-read, a policy revision landing exactly
+   mid-request). This was an explicit, documented non-goal of #347 and remains one here.
+3. **Aggregate concurrency and boot-time reconciliation are process-local, not distributed.**
+   Unchanged from the prior bundle's own documented boundary: distributed tenant isolation,
+   distributed rate limiting, customer identity, billing, and horizontally scaled service operation
+   remain outside the self-hosted technical-preview boundary this bundle documents.
+4. **No cross-grant "list all pending approvals" endpoint and no dependency-layer-binding
+   enumeration UI beyond the redacted health counts already exposed.** Neither exists anywhere in
+   the codebase; each is a genuine new capability with its own authorization-surface implications,
+   deliberately deferred rather than bolted on to this bundle (documented explicitly in PR #346).
 
-- CI / Validate SymbolWright: **PASS**;
-- CodeQL: **PASS**;
-- Dependency Review: **PASS**;
-- PR preflight: **PASS**;
-- full `npm run validate`: **PASS**;
-- strong-container adversarial integration: **PASS**;
-- release-closure regression tests: **PASS**.
-
-The correction CI reported:
-
-- 87.67% statement coverage;
-- 80.06% branch coverage;
-- 92.91% function coverage;
-- 88.69% line coverage;
-- no failing test files.
-
-The dedicated strong-container integration proved:
-
-- physical outbound-network denial;
-- output-flood termination at the configured byte limit;
-- wall-time and explicit-cancellation cleanup;
-- PID and tmpfs pressure containment without container escape.
-
-The release-truth correction adds focused regression coverage for:
-
-- missing final audit evidence;
-- temporary PR audit residue;
-- moving GitHub Action tags, including list-style `- uses:` workflow steps;
-- unexpected `contents: write` workflow permissions;
-- non-PASS audit verdicts.
-
-Validation evidence is bound to the correction validation head above. Any later commit must re-run CI, CodeQL, and Dependency Review successfully before merge.
-
-## 6. Release-closure enforcement
-
-The official `npm run release-readiness` path now executes a release-closure integrity check before the existing readiness command. The gate fails when:
-
-- the final sandbox audit is missing or unreadable;
-- the audit lacks an exact 40-character code SHA;
-- the audit verdict is absent or not PASS;
-- PR #7 temporary markers, notes, workflows, or triggers remain;
-- any workflow grants `contents: write`;
-- any external GitHub Action is referenced by a moving tag instead of a 40-character commit SHA.
-
-Because `npm run validate`, CI, deployment, publishing, and `prepublishOnly` all use the npm release-readiness path, the state that was incorrectly accepted by PR #341 can no longer pass the supported release pipeline.
-
-## 7. Residual non-blocking product work
-
-The following items are real but do not invalidate the sandbox security boundary delivered by this bundle:
-
-1. SymbolWright's first-party agent, MCP, HTTP, and dashboard surfaces do not yet expose a complete user-facing dependency-acquisition or brokered-egress workflow. The production gateway is available as a package boundary, but full product composition belongs in the next Large PR Bundle.
-2. Initial egress session-policy denials occur before a session exists. A later observability improvement should persist those authorization denials at the gateway or application layer.
-3. Distributed tenant isolation, distributed rate limiting, customer identity, billing, and horizontally scaled service operations remain outside the self-hosted technical-preview boundary.
-
-These limitations must remain documented and must not be represented as completed SaaS capabilities.
+These limitations must remain documented and must not be represented as completed distributed-SaaS
+capabilities.
 
 ## 8. Final decision
 
-The seven-part sandbox implementation is accepted for SymbolWright's documented self-hosted, single-operator, BYOK technical-preview boundary.
+Large PR Bundle #13 (PRs #342–#347) is accepted for SymbolWright's documented self-hosted,
+single-operator, BYOK technical-preview boundary. The two defects found during this audit (the
+release-closure gate's bundle-number-specific detection, and the incomplete pre-session egress
+denial evidence) were corrected and validated at the correction-validation SHA above before this
+verdict was recorded.
 
 **Release verdict:** **PASS**
 
-The correction PR must not merge unless its current head has green CI, CodeQL, and Dependency Review checks and changed-file review confirms that no temporary audit machinery remains.
+This PR must not merge unless its exact final head has green CI, CodeQL, and Dependency Review
+checks, and changed-file review confirms no temporary audit or release machinery remains.
