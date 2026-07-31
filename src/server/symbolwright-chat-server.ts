@@ -651,7 +651,7 @@ export function createChatServerRequestListener(
         sendJson(res, 404, { error: 'not_found' })
         return
       }
-      sendJson(res, 200, buildSandboxNetworkControlPlaneStatus(cwd))
+      sendJson(res, 200, await buildSandboxNetworkControlPlaneStatus(cwd))
       return
     }
 

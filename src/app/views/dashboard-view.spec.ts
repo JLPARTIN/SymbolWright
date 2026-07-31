@@ -25,6 +25,17 @@ describe('buildDashboardClientScript', () => {
     expect(fnBody).toContain('operator')
   })
 
+  it('renders dependency-layer-binding health, egress audit log size, and aggregate concurrency', () => {
+    const script = buildDashboardClientScript()
+    const fnBody = script.slice(
+      script.indexOf('async function loadSandboxNetworkStatus'),
+      script.indexOf('registerRouterViewInit'),
+    )
+    expect(fnBody).toContain('data.dependencyLayerBindings')
+    expect(fnBody).toContain('data.egressAuditLog')
+    expect(fnBody).toContain('data.aggregateConcurrency')
+  })
+
   it('registers the original loadDashboardStatus as the dashboard view initializer, which also loads sandbox network status', () => {
     const script = buildDashboardClientScript()
     expect(script).toContain("registerRouterViewInit('dashboard', loadDashboardStatus)")

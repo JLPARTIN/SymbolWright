@@ -1,3 +1,6 @@
+import { promises as fs } from 'node:fs'
+import path from 'node:path'
+
 import type { DependencyPolicyProfile } from '../../sandbox/dependency-policy.js'
 import type { EgressPolicyProfile } from '../../sandbox/egress-policy.js'
 import { getOrCreateApplicationSandboxNetworkRuntime } from '../../sandbox/sandbox-network-runtime.js'
@@ -43,6 +46,22 @@ export interface SandboxNetworkControlPlaneStatus {
       >['gateway']['egressMetricsSnapshot']
     >
   }
+  readonly dependencyLayerBindings: {
+    readonly total: number
+    readonly valid: number
+    readonly missing: number
+    readonly invalid: number
+  }
+  readonly egressAuditLog: {
+    readonly exists: boolean
+    readonly sizeBytes: number
+    readonly lastModifiedAt: string | undefined
+  }
+  readonly aggregateConcurrency: ReturnType<
+    ReturnType<
+      typeof getOrCreateApplicationSandboxNetworkRuntime
+    >['gateway']['aggregateConcurrencySnapshot']
+  >
 }
 
 function redactDependencyProfile(profile: DependencyPolicyProfile): RedactedDependencyProfile {
@@ -73,13 +92,22 @@ function redactEgressProfile(profile: EgressPolicyProfile): RedactedEgressProfil
 }
 
 /**
- * Builds the operator-only sandbox network control-plane summary: policy inventory and live
- * egress metrics, never a state-root path, policy file path, or any credential/secret material.
+ * Builds the operator-only sandbox network control-plane summary: policy inventory, live egress
+ * metrics, dependency-layer-binding health, egress-audit-log size, and aggregate concurrency --
+ * never a state-root path, policy file path, or any credential/secret material.
  */
-export function buildSandboxNetworkControlPlaneStatus(
+export async function buildSandboxNetworkControlPlaneStatus(
   workspaceRoot: string,
-): SandboxNetworkControlPlaneStatus {
+): Promise<SandboxNetworkControlPlaneStatus> {
   const runtime = getOrCreateApplicationSandboxNetworkRuntime({ workspaceRoot })
+  const bindings = await runtime.dependencyLayers.listBindings()
+  const egressAuditLogPath = path.join(
+    runtime.status.stateRoot,
+    'egress',
+    'sandbox-egress-audit.jsonl',
+  )
+  const auditStat = await fs.stat(egressAuditLogPath).catch(() => undefined)
+
   return {
     mode: runtime.status.mode,
     dependency: {
@@ -93,5 +121,17 @@ export function buildSandboxNetworkControlPlaneStatus(
       profiles: runtime.egressProfiles.map(redactEgressProfile),
       metrics: runtime.gateway.egressMetricsSnapshot(),
     },
+    dependencyLayerBindings: {
+      total: bindings.length,
+      valid: bindings.filter((binding) => binding.status === 'valid').length,
+      missing: bindings.filter((binding) => binding.status === 'missing-layer').length,
+      invalid: bindings.filter((binding) => binding.status === 'invalid-record').length,
+    },
+    egressAuditLog: {
+      exists: auditStat !== undefined,
+      sizeBytes: auditStat?.size ?? 0,
+      lastModifiedAt: auditStat?.mtime.toISOString(),
+    },
+    aggregateConcurrency: runtime.gateway.aggregateConcurrencySnapshot(),
   }
 }
