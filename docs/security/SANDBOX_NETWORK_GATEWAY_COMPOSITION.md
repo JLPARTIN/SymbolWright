@@ -178,6 +178,63 @@ Operational startup reports `sandbox_network_gateway`. Missing policy is ready b
 - the gateway's redacted egress metrics snapshot (active sessions/requests, allowed/denied
   requests, quota exhaustions, cancellations, policy revocations, bytes sent/received).
 
+`npm run doctor` additionally reports a "Sandbox network runtime" check (PASS for both
+`offline-only` and `configured` — offline-only is an explicit, safe default, not a failure).
+
+## Operator control plane
+
+`GET /api/sandbox/network-status` (operator-only; 404, not 403, for any other caller so the route's
+existence isn't revealed) returns a redacted summary of the same runtime every HTTP, agent, and MCP
+caller shares:
+
+```json
+{
+  "mode": "configured",
+  "dependency": {
+    "profileCount": 1,
+    "defaultPolicy": { "id": "npm-controlled", "version": 1 },
+    "profiles": [
+      {
+        "id": "npm-controlled",
+        "version": 1,
+        "enabled": true,
+        "ecosystems": ["npm"],
+        "deploymentModes": ["local", "hosted"],
+        "callerKinds": ["operator", "delegated-grant"],
+        "allowedRegistries": ["https://registry.npmjs.org/"]
+      }
+    ]
+  },
+  "egress": {
+    "profileCount": 1,
+    "defaultPolicy": { "id": "docs-only", "version": 1 },
+    "profiles": [
+      {
+        "id": "docs-only",
+        "version": 1,
+        "enabled": true,
+        "deploymentModes": ["local"],
+        "callerKinds": ["operator"],
+        "allowedHosts": ["docs.example.com"],
+        "allowedMethods": ["GET", "HEAD"],
+        "redirectPolicy": "same-host",
+        "credentialPolicy": "none",
+        "requireTls": true
+      }
+    ],
+    "metrics": { "activeSessions": 0, "activeRequests": 0, "allowedRequests": 0, "deniedRequests": 0 }
+  }
+}
+```
+
+This never includes the state-root filesystem path, the operator policy file path, request/response
+bodies, resolved addresses, or any credential material — only policy identity, inventory, and
+aggregate counters. The unified dashboard's "Sandbox network" section renders this same route.
+
+There is intentionally no hot-reload, kill switch, or in-process policy-widening mechanism here:
+policy is loaded once per process (see "Application-owned runtime" above), and this control plane
+is read-only. A policy change takes effect only on the next process restart.
+
 ## Security invariants
 
 - Network-bearing work stays in host-side brokers.

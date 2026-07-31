@@ -6,6 +6,15 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ### Added
 
+- **Sandbox network control plane**: adds an operator-only, read-focused `GET
+  /api/sandbox/network-status` route reporting the same `ApplicationSandboxNetworkRuntime`
+  every HTTP, agent, and MCP caller shares — mode, dependency/egress policy inventory (ids,
+  versions, enabled state, allowlists), default policy references, and live egress metrics.
+  Never returns the state-root or policy-file filesystem path, request/response bodies, or
+  any credential material; 404s (not 403) for any non-operator caller. Adds a matching
+  "Sandbox network" section to the unified dashboard and a `Sandbox network runtime` doctor
+  check (`npm run doctor`), both driven by the same route/runtime.
+
 - **Live governed brokered egress**: exposes `sandbox_egress_request` as a fully-wired governed
   capability — reachable through the authenticated `POST /api/sandbox/egress` HTTP route, the
   agent-loop tool-execution chokepoint, MCP tool discovery/invocation, and an explicit
