@@ -223,6 +223,12 @@ caller shares:
       }
     ],
     "metrics": { "activeSessions": 0, "activeRequests": 0, "allowedRequests": 0, "deniedRequests": 0 }
+  },
+  "dependencyLayerBindings": { "total": 1, "valid": 1, "missing": 0, "invalid": 0 },
+  "egressAuditLog": { "exists": true, "sizeBytes": 214, "lastModifiedAt": "2026-07-31T00:00:00.000Z" },
+  "aggregateConcurrency": {
+    "egress": { "active": 0, "limit": 20 },
+    "dependency": { "active": 0, "limit": 4 }
   }
 }
 ```
@@ -235,6 +241,51 @@ There is intentionally no hot-reload, kill switch, or in-process policy-widening
 policy is loaded once per process (see "Application-owned runtime" above), and this control plane
 is read-only. A policy change takes effect only on the next process restart.
 
+## Lifecycle and resilience
+
+Boot-time reconciliation (`runBootSweep`, invoked once at process startup, before the server
+accepts requests) inspects durable sandbox-network state and never mutates or reconstructs
+authority from what it finds:
+
+- **Dependency layer bindings**: every binding is re-verified read-only
+  (`DependencyLayerBindingStore.listBindings()`) and classified `valid` / `missing-layer` /
+  `invalid-record`. A broken binding is reported (a boot-sweep warning, and in the control-plane
+  route's `dependencyLayerBindings` counts) but never deleted or repaired automatically.
+- **Orphaned staging directories**: a materialization killed mid-write (hard crash, OOM) leaves a
+  `.{layerId}-tmp-*` staging directory under `dependency-layers/layers/` that nothing else
+  references. Boot sweep removes only directories matching that exact naming convention, and only
+  once they are older than a grace window (default one hour), so an in-flight materialization is
+  never raced. Removal is bounded per pass and idempotent.
+- **Egress audit retention**: once the audit log exceeds a size or age threshold (defaults 10 MiB /
+  30 days), its well-formed records are archived to `sandbox-egress-audit.jsonl.1` (single
+  generation — replacing whatever that held before) and the live file is reset to empty. A torn
+  trailing line from a process killed mid-append is healed away during archival rather than
+  propagated; reading tolerates a truncated tail at any point, not only at rotation time.
+
+All of this is exposed through `readiness.setCheck('sandbox_network_reconciliation', ...)`, the
+`npm run doctor` "Sandbox network runtime" check, and the `GET /api/sandbox/network-status` and
+dashboard fields shown above — the same functions boot sweep calls are what the live control-plane
+route calls, so there is one source of truth, not a stale cached report.
+
+**Process-wide aggregate concurrency.** Above each individual session's or acquisition's own
+`limits.maxConcurrency`, `SandboxNetworkGateway` caps how much of one process's capacity all
+sandbox egress (`SYMBOLWRIGHT_MAX_SANDBOX_EGRESS_CONCURRENCY`, default 20) or all dependency
+acquisition (`SYMBOLWRIGHT_MAX_SANDBOX_DEPENDENCY_CONCURRENCY`, default 4) can consume at once,
+reusing the same in-memory pool pattern already used for provider/SSE/autonomous work. Exceeding
+either cap fails closed (egress denials are durably audited the same way an authorization denial
+is); a released slot is immediately available to the next caller. **This is process-local and does
+not survive a restart, and it enforces nothing across multiple processes or hosts** — it bounds one
+process's own resource consumption, not a fleet's.
+
+**Explicitly out of scope for this lifecycle model** (deferred, not implemented): a full
+timing-injected chaos harness proving every possible interleaving (garbage collection racing a live
+reader mid-read, quota-reservation races under real concurrent HTTP load, a policy revision landing
+mid-request); distributed/cross-process rate limiting or storage quotas; and any retention pass that
+runs concurrently with live traffic rather than at boot before the server accepts requests — egress
+audit rotation in particular assumes no concurrent append during the read-archive-reset sequence,
+which boot-time-only invocation guarantees today but a future live/periodic rotation trigger would
+need to re-examine.
+
 ## Security invariants
 
 - Network-bearing work stays in host-side brokers.
@@ -242,3 +293,5 @@ is read-only. A policy change takes effect only on the next process restart.
 - Policy, approvals, grant identity, and layer paths are server-owned.
 - Verified layers are rechecked before use and mounted read-only.
 - Missing or invalid authority fails closed.
+- Boot-time reconciliation reports and heals only orphaned, unreferenced staging state — it never
+  deletes a binding record or reconstructs authority from what it observes on disk.
