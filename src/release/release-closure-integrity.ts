@@ -58,7 +58,7 @@ const PINNED_ACTION_REF_PATTERN = /^[0-9a-f]{40}$/i
  * `Release verdict:` ..." convention against whatever audit document a release candidate manifest
  * references, not only the fixed sandbox audit path this module itself checks.
  */
-export const AUDITED_SHA_PATTERN = /\*{0,2}Audited code SHA:\*{0,2}\s*`[0-9a-f]{40}`/
+export const AUDITED_SHA_PATTERN = /\*{0,2}Audited code SHA:\*{0,2}\s*`([0-9a-f]{40})`/
 export const RELEASE_VERDICT_PATTERN =
   /\*{0,2}Release verdict:\*{0,2}\s*\*\*(PASS|FAIL|BLOCKED|NOT RUN)\*\*/
 

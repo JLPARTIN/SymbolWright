@@ -9,6 +9,7 @@ import {
   type ReleaseCandidateManifest,
   assessFormalReleaseCandidate,
   assessReleaseCandidateDevelopmentState,
+  assessSourceCommitIdentity,
   loadReleaseCandidateManifest,
 } from './release-candidate.js'
 
@@ -181,6 +182,93 @@ describe('assessReleaseCandidateDevelopmentState', () => {
     expect(result.findings.some((f) => f.includes('auditDocumentPath does not exist'))).toBe(true)
   })
 
+  it('fails when the audit document records a different SHA than the manifest claims', () => {
+    const workspace = createWorkspace()
+    const otherSha = 'f'.repeat(40)
+    fs.writeFileSync(
+      path.join(workspace, RELEASE_CANDIDATE_MANIFEST_RELATIVE_PATH),
+      JSON.stringify(baseManifest({ sourceCommitSha: otherSha })),
+    )
+    const result = assessReleaseCandidateDevelopmentState(workspace)
+    expect(result.status).toBe('FAIL')
+    expect(
+      result.findings.some(
+        (f) => f.includes(VALID_SHA) && f.includes(otherSha) && f.includes('does not match'),
+      ),
+    ).toBe(true)
+  })
+
+  it('refuses an auditDocumentPath that escapes the repository root via traversal', () => {
+    const workspace = createWorkspace()
+    const outside = path.join(path.dirname(workspace), 'outside-audit.md')
+    fs.writeFileSync(
+      outside,
+      [
+        '# Outside',
+        '',
+        `**Audited code SHA:** \`${VALID_SHA}\``,
+        '',
+        '**Release verdict:** **PASS**',
+        '',
+      ].join('\n'),
+    )
+    try {
+      fs.writeFileSync(
+        path.join(workspace, RELEASE_CANDIDATE_MANIFEST_RELATIVE_PATH),
+        JSON.stringify(
+          baseManifest({ auditDocumentPath: path.join('..', path.basename(outside)) }),
+        ),
+      )
+      const result = assessReleaseCandidateDevelopmentState(workspace)
+      expect(result.status).toBe('FAIL')
+      expect(result.findings.some((f) => f.includes('escapes the repository root'))).toBe(true)
+    } finally {
+      fs.rmSync(outside, { force: true })
+    }
+  })
+
+  it('refuses an absolute auditDocumentPath', () => {
+    const workspace = createWorkspace()
+    fs.writeFileSync(
+      path.join(workspace, RELEASE_CANDIDATE_MANIFEST_RELATIVE_PATH),
+      JSON.stringify(baseManifest({ auditDocumentPath: '/etc/passwd' })),
+    )
+    const result = assessReleaseCandidateDevelopmentState(workspace)
+    expect(result.status).toBe('FAIL')
+    expect(result.findings.some((f) => f.includes('escapes the repository root'))).toBe(true)
+  })
+
+  it('refuses a symlinked auditDocumentPath instead of following it', () => {
+    const workspace = createWorkspace()
+    const real = path.join(path.dirname(workspace), 'real-audit.md')
+    fs.writeFileSync(
+      real,
+      [
+        '# Real',
+        '',
+        `**Audited code SHA:** \`${VALID_SHA}\``,
+        '',
+        '**Release verdict:** **PASS**',
+        '',
+      ].join('\n'),
+    )
+    const linkPath = path.join(workspace, 'docs', 'security', 'LINKED_AUDIT.md')
+    try {
+      fs.symlinkSync(real, linkPath)
+      fs.writeFileSync(
+        path.join(workspace, RELEASE_CANDIDATE_MANIFEST_RELATIVE_PATH),
+        JSON.stringify(
+          baseManifest({ auditDocumentPath: path.join('docs', 'security', 'LINKED_AUDIT.md') }),
+        ),
+      )
+      const result = assessReleaseCandidateDevelopmentState(workspace)
+      expect(result.status).toBe('FAIL')
+      expect(result.findings.some((f) => f.includes('must not be a symlink'))).toBe(true)
+    } finally {
+      fs.rmSync(real, { force: true })
+    }
+  })
+
   it('fails when the audit document verdict is not PASS', () => {
     const workspace = createWorkspace()
     const auditPath = path.join(workspace, 'docs', 'security', 'RELEASE_AUDIT.md')
@@ -250,6 +338,37 @@ describe('assessReleaseCandidateDevelopmentState', () => {
     const result = assessReleaseCandidateDevelopmentState(workspace)
     expect(result.status).toBe('FAIL')
     expect(result.findings.some((f) => f.includes('containerDigest'))).toBe(true)
+  })
+})
+
+describe('assessSourceCommitIdentity', () => {
+  const head = 'a'.repeat(40)
+  const headParent = 'b'.repeat(40)
+
+  it('passes when the SHA is the exact current HEAD', () => {
+    expect(assessSourceCommitIdentity(head, head, headParent)).toBeUndefined()
+  })
+
+  it('passes when the SHA is HEAD^ (manifest committed as the next commit)', () => {
+    expect(assessSourceCommitIdentity(headParent, head, headParent)).toBeUndefined()
+  })
+
+  it('fails a stale SHA that merely exists elsewhere in history', () => {
+    const stale = 'c'.repeat(40)
+    const finding = assessSourceCommitIdentity(stale, head, headParent)
+    expect(finding).toContain('is not the current HEAD')
+    expect(finding).toContain(stale)
+  })
+
+  it('fails when not running inside a git checkout', () => {
+    const finding = assessSourceCommitIdentity(head, undefined, undefined)
+    expect(finding).toContain('not running inside a git checkout')
+  })
+
+  it('fails when there is no HEAD^ (initial commit) and the SHA is not HEAD', () => {
+    const other = 'd'.repeat(40)
+    const finding = assessSourceCommitIdentity(other, head, undefined)
+    expect(finding).toContain('is not the current HEAD')
   })
 })
 
