@@ -4,12 +4,14 @@ import { redactGitHubContent, redactUnknownBody } from './github-live-read-redac
 
 describe('redactGitHubContent', () => {
   it('redacts GitHub personal access tokens (ghp_)', () => {
+    // secretlint-disable-next-line
     const input = 'token: ghp_abcdefghijklmnopqrstuvwxyz0123456789'
     expect(redactGitHubContent(input)).toContain('[REDACTED]')
     expect(redactGitHubContent(input)).not.toContain('ghp_')
   })
 
   it('redacts GitHub OAuth tokens (gho_)', () => {
+    // secretlint-disable-next-line
     const input = 'auth: gho_abcdefghijklmnopqrstuvwxyz0123456789'
     expect(redactGitHubContent(input)).toContain('[REDACTED]')
     expect(redactGitHubContent(input)).not.toContain('gho_')
@@ -53,6 +55,7 @@ describe('redactGitHubContent', () => {
 
   it('redacts multiple tokens in one string', () => {
     const input =
+      // secretlint-disable-next-line
       'token1: ghp_abcdefghijklmnopqrstuvwxyz0123456789 and token2: gho_abcdefghijklmnopqrstuvwxyz0123456789'
     const result = redactGitHubContent(input)
     expect(result).not.toContain('ghp_')
@@ -63,11 +66,13 @@ describe('redactGitHubContent', () => {
 
 describe('redactUnknownBody', () => {
   it('redacts strings', () => {
+    // secretlint-disable-next-line
     const input = 'token: ghp_abcdefghijklmnopqrstuvwxyz0123456789'
     expect(redactUnknownBody(input)).toContain('[REDACTED]')
   })
 
   it('recursively redacts arrays', () => {
+    // secretlint-disable-next-line
     const input = ['safe text', 'secret: ghp_abcdefghijklmnopqrstuvwxyz0123456789']
     const result = redactUnknownBody(input) as string[]
     expect(result[0]).toBe('safe text')
@@ -78,6 +83,7 @@ describe('redactUnknownBody', () => {
   it('recursively redacts object values', () => {
     const input = {
       title: 'PR title',
+      // secretlint-disable-next-line
       body: 'Contains ghp_abcdefghijklmnopqrstuvwxyz0123456789',
     }
     const result = redactUnknownBody(input) as Record<string, string>
@@ -102,6 +108,7 @@ describe('redactUnknownBody', () => {
 
   it('handles arrays inside objects', () => {
     const input = {
+      // secretlint-disable-next-line
       tokens: ['ghp_abcdefghijklmnopqrstuvwxyz0123456789', 'safe-value'],
     }
     const result = redactUnknownBody(input) as Record<string, string[]>

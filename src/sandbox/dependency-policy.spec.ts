@@ -311,6 +311,7 @@ describe('governed dependency policy', () => {
     expect(normalizeRegistryUrl('https://registry.npmjs.org/private')).toBe(
       'https://registry.npmjs.org/private/',
     )
+    // secretlint-disable-next-line
     expect(() => normalizeRegistryUrl('https://user:secret@registry.npmjs.org/')).toThrow(
       /credentials/,
     )
@@ -332,6 +333,7 @@ describe('governed dependency policy', () => {
     expect(isUrlAllowedByRegistryPolicy('https://127.0.0.1/private/pkg.tgz', allowed)).toBe(false)
     expect(
       isUrlAllowedByRegistryPolicy(
+        // secretlint-disable-next-line
         'https://user:secret@registry.npmjs.org/private/pkg.tgz',
         allowed,
       ),

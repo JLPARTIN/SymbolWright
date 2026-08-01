@@ -4,12 +4,14 @@ import { redactValidationOutput } from './validation-output-redactor.js'
 
 describe('redactValidationOutput', () => {
   it('redacts GitHub PAT (ghp_)', () => {
+    // secretlint-disable-next-line
     const input = 'token: ghp_ABCDEFghijklmnopqrstuvwxyz0123456789'
     expect(redactValidationOutput(input)).toContain('[REDACTED]')
     expect(redactValidationOutput(input)).not.toContain('ghp_')
   })
 
   it('redacts GitHub OAuth (gho_)', () => {
+    // secretlint-disable-next-line
     const input = 'auth: gho_ABCDEFghijklmnopqrstuvwxyz0123456789'
     expect(redactValidationOutput(input)).toContain('[REDACTED]')
     expect(redactValidationOutput(input)).not.toContain('gho_')

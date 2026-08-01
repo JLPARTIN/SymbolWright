@@ -87,11 +87,13 @@ describe('preparePrOperationPacket', () => {
           {
             command: 'npm test',
             status: 'passed',
+            // secretlint-disable-next-line
             summary: 'Auth header used token: ghp_abcdefghijklmnopqrstuvwxyzABCDEFGHIJ',
           },
         ],
       }),
     )
+    // secretlint-disable-next-line
     expect(packet.prBody).not.toContain('ghp_abcdefghijklmnopqrstuvwxyzABCDEFGHIJ')
     expect(packet.prBody).toContain('[REDACTED]')
   })

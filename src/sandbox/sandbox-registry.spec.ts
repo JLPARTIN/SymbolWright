@@ -234,6 +234,7 @@ describe('sandbox policy and service foundation', () => {
 describe('sandbox redaction', () => {
   it('redacts representative secrets before evidence can persist', () => {
     const text =
+      // secretlint-disable-next-line
       'Authorization: Bearer abcdefghijklmnop and ghp_123456789012345678901234567890123456'
     const redacted = redactSandboxText(text)
     expect(redacted).not.toContain('abcdefghijklmnop')

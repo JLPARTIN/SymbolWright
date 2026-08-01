@@ -4,6 +4,7 @@ import { redactMcpText, redactMcpToolResult } from './mcp-redaction.js'
 
 describe('redactMcpText', () => {
   it('redacts secret-shaped tokens', () => {
+    // secretlint-disable-next-line
     expect(redactMcpText('token: ghp_1234567890123456789012345678901234ab')).toContain('[REDACTED]')
   })
 

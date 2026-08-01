@@ -53,6 +53,10 @@
     "release:notes": "node scripts/extract-release-notes.mjs",
     "release:docker-smoke": "node scripts/docker-smoke.mjs",
     "release:verify-candidate": "node dist/cli-release-candidate-verify.js",
+    "secret-scan:source": "node dist/cli-secret-scan.js source",
+    "secret-scan:history": "node dist/cli-secret-scan.js git-history",
+    "secret-scan:npm-pack": "node dist/cli-secret-scan.js npm-pack",
+    "secret-scan:container": "node dist/cli-secret-scan.js container",
     "test:release-scripts": "node --test scripts/lib/changelog-release.test.mjs"
   },
   "keywords": [
@@ -75,10 +79,12 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
+    "@secretlint/secretlint-rule-preset-recommend": "13.0.4",
     "@types/node": "^26.1.2",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.8.0",
     "prettier": "^3.9.6",
+    "secretlint": "13.0.4",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.65.0",
     "vitest": "^4.1.8"

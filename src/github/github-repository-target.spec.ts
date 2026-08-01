@@ -159,6 +159,7 @@ describe('parseGitHubRepositoryTarget', () => {
 
   it('rejects embedded credentials in an https URL', () => {
     expect(() =>
+      // secretlint-disable-next-line
       parseGitHubRepositoryTarget('https://token:x-oauth-basic@github.com/JLPARTIN/SymbolWright'),
     ).toThrow(/credentials/)
   })
