@@ -74,12 +74,17 @@ which needed additional suppressions once their compiled form was actually scann
 
 ## Historical findings: a known, reviewed, non-blocking condition
 
-`npm run secret-scan:history` currently and truthfully reports **FAIL** for this repository: 53
-findings across its full reachable history. Every one was individually investigated (matched
-against the exact same intentional test-fixture strings already reviewed and suppressed in the
-current source tree — the same GitHub-token- and basic-auth-URL-shaped fixtures described above)
-or is a single benign documentation example: a literal placeholder in prose, not a credential. None
-represent a real leaked secret.
+`npm run secret-scan:history` currently and truthfully reports **FAIL** for this repository. The
+exact finding count is not pinned in this document, because it is not stable: the scan feeds the
+entire zero-context diff of every reachable commit to secretlint as a single blob, and secretlint
+deduplicates identical secret *values* within one scanned file, keeping only the first occurrence.
+Since this repository's history reuses a small number of canonical fixture strings across many
+commits, the reported count reflects the number of *distinct* fixture values secretlint has ever
+seen in history, not the number of commits that introduced or touched one. Every finding observed
+to date matches one of the same intentional, already-reviewed test-fixture shapes described above,
+or is a benign documentation placeholder, not a credential. None represent a real leaked secret —
+each new finding must still be individually confirmed as such when it appears, not assumed from
+this note.
 
 Per this bundle's own rules, **history is not rewritten to remove these without explicit operator
 instruction** — a squash or history-filtering operation is a decision for the repository owner, not

@@ -602,15 +602,20 @@ function checkSecretScanSource(workspaceRoot: string): ReleaseGate {
 export interface ReleaseReadinessOptions {
   readonly runArtifactSmoke?: boolean
   /**
-   * Controls the three heavier secret-scan surfaces (git history, npm pack tarball, container
+   * Controls all four secret-scan surfaces (source tree, git history, npm pack tarball, container
    * filesystem) independently of `runArtifactSmoke`. These are deliberately NOT tied to the same
    * flag as the Docker/npm-pack smoke tests: the git-history surface currently and truthfully
    * reports FAIL for this repository (pre-existing, already-reviewed test-fixture echoes in
    * history -- see docs/security/SECRET_SCANNING.md), and folding that into the gate the existing
    * required "Validate SymbolWright" CI job already runs unconditionally would turn every PR red
-   * for a known, non-exploitable condition rather than a real regression. A dedicated workflow
-   * runs these for real and reports the honest result without being a required merge-blocking
-   * check for the history surface specifically.
+   * for a known, non-exploitable condition rather than a real regression. Keeping the source-tree
+   * surface on this same flag (rather than `runArtifactSmoke`) also matters for timing: the
+   * self-audit "PR preflight" tool runs `npm run release-readiness` inside a resource-constrained,
+   * nested Docker sandbox with a fixed timeout, and every additional real subprocess call in the
+   * default (no-flags) path narrows that margin -- so the default path stays exactly as fast as it
+   * was before this surface existed. A dedicated workflow runs all four surfaces for real and
+   * reports the honest result without being a required merge-blocking check for the history
+   * surface specifically.
    */
   readonly runDeepSecretScan?: boolean
 }
@@ -653,7 +658,6 @@ export function assessReleaseReadiness(
       status: docker.status === 'FAIL' ? 'FAIL' : 'PASS',
       detail: docker.detail,
     })
-    gates.push(checkSecretScanSource(workspaceRoot))
   } else {
     gates.push(
       {
@@ -666,14 +670,10 @@ export function assessReleaseReadiness(
         status: 'PASS',
         detail: 'Deferred by library caller; release-readiness CLI runs the real gate.',
       },
-      {
-        code: 'SECRET_SCAN_SOURCE',
-        status: 'PASS',
-        detail: 'Deferred by library caller; release-readiness CLI runs the real gate.',
-      },
     )
   }
   if (options.runDeepSecretScan === true) {
+    gates.push(checkSecretScanSource(workspaceRoot))
     const history = runGitHistorySecretScan(workspaceRoot)
     gates.push({
       code: 'SECRET_SCAN_HISTORY',
@@ -694,6 +694,11 @@ export function assessReleaseReadiness(
     })
   } else {
     gates.push(
+      {
+        code: 'SECRET_SCAN_SOURCE',
+        status: 'PASS',
+        detail: 'Deferred by library caller; release-readiness CLI runs the real gate.',
+      },
       {
         code: 'SECRET_SCAN_HISTORY',
         status: 'PASS',
