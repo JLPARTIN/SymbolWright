@@ -279,7 +279,11 @@ describe('brokered egress policy', () => {
 
   it.each([
     ['http://api.example.com/v1', 'EGRESS_SCHEME_NOT_ALLOWED'],
-    ['https://user:secret@api.example.com/v1', 'EGRESS_CREDENTIALS_FORBIDDEN'],
+    [
+      // secretlint-disable-next-line
+      'https://user:secret@api.example.com/v1',
+      'EGRESS_CREDENTIALS_FORBIDDEN',
+    ],
     ['https://127.0.0.1/v1', 'EGRESS_DIRECT_IP_FORBIDDEN'],
     ['https://2130706433/v1', 'EGRESS_DIRECT_IP_FORBIDDEN'],
     ['https://api.example.com:8443/v1', 'EGRESS_PORT_NOT_ALLOWED'],

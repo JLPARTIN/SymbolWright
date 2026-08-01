@@ -74,6 +74,7 @@ describe('mission branch coverage contracts', () => {
       workspaceRoot: workspace,
       env: {
         SYMBOLWRIGHT_API_KEY: 'local-symbolwright-secret',
+        // secretlint-disable-next-line
         GITHUB_TOKEN: 'ghp_123456789012345678901234567890123456',
       },
       generateId: () => IDS[idIndex++]!,

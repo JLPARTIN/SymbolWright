@@ -6,6 +6,22 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ### Added
 
+- **Dedicated secret and credential exposure scanning**: adds `secretlint` (pinned exact npm
+  devDependency, integrity-hashed via `package-lock.json`) with its recommended rule preset,
+  scanning four surfaces — the current tracked source tree, the exact `npm pack` tarball, the
+  built container filesystem, and the complete reachable git history (`src/release/secret-scan.ts`,
+  `src/cli-secret-scan.ts`, `npm run secret-scan:{source,npm-pack,container,history}`). A new
+  `SECRET_SCAN_SOURCE` gate runs on every `npm run release-readiness`/`validate`; the three heavier
+  surfaces run via `--deep-secret-scan` in a new dedicated `secret-scan.yml` CI workflow. Findings
+  are reconstructed only from secretlint's own already-redacted message fields, never its
+  `sourceContent` payload (which carries the entire raw scanned file). `.map` source-map files are
+  excluded from the tarball/container surfaces (generated, non-authored, and a demonstrated
+  performance pathology). The git-history surface currently and truthfully reports its real result
+  — 53 findings, all individually verified as either already-reviewed intentional test fixtures or
+  one benign documentation example, none exploitable — and is deliberately not forced green or
+  merge-blocking without an explicit operator-authorized history rewrite; see
+  `docs/security/SECRET_SCANNING.md`.
+
 - **Release candidate identity and evidence contract**: adds a versioned `release-candidate.json`
   manifest schema (`src/release/release-candidate.ts`) recording package name, candidate version,
   source commit SHA, package-lock version, creation date, expected npm package, expected GHCR

@@ -258,6 +258,7 @@ describe('dependency HTTPS fetcher', () => {
 
     for (const url of [
       'https://127.0.0.1/archive.tgz',
+      // secretlint-disable-next-line
       'https://user:secret@registry.npmjs.org/archive.tgz',
       'http://registry.npmjs.org/archive.tgz',
       'https://registry.npmjs.org:8443/archive.tgz',

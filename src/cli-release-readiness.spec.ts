@@ -46,6 +46,10 @@ describe('assessReleaseReadiness', () => {
     expect(codes).toContain('NPM_PACK_SMOKE')
     expect(codes).toContain('DOCKER_RUNTIME_SMOKE')
     expect(codes).toContain('RELEASE_CANDIDATE_CONTRACT')
+    expect(codes).toContain('SECRET_SCAN_SOURCE')
+    expect(codes).toContain('SECRET_SCAN_HISTORY')
+    expect(codes).toContain('SECRET_SCAN_NPM_PACK')
+    expect(codes).toContain('SECRET_SCAN_CONTAINER')
   })
 
   it('includes doctor report', () => {

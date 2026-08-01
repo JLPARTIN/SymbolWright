@@ -288,6 +288,7 @@ async function main(): Promise<void> {
       console.log(
         renderReleaseReadinessCommand(process.cwd(), {
           runArtifactSmoke: !rest.includes('--static'),
+          runDeepSecretScan: rest.includes('--deep-secret-scan'),
         }),
       )
       break

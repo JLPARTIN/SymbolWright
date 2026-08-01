@@ -102,6 +102,7 @@ describe('GitHubLiveReadClient with mocked HTTP', () => {
         status: 200,
         body: {
           number: 10,
+          // secretlint-disable-next-line
           title: 'Update token ghp_abcdefghijklmnopqrstuvwxyz1234567890',
           state: 'open',
           merged: false,
@@ -183,6 +184,7 @@ describe('GitHubLiveReadClient with mocked HTTP', () => {
       http.addResponse('/repos/owner/repo/actions/runs/200', {
         status: 200,
         body: {
+          // secretlint-disable-next-line
           name: 'CI with ghp_abcdefghijklmnopqrstuvwxyz1234567890',
           conclusion: 'success',
         },
@@ -247,6 +249,7 @@ describe('GitHubLiveReadClient with mocked HTTP', () => {
 
     it('redacts secrets in file content', async () => {
       const http = new MockGitHubHttpClient()
+      // secretlint-disable-next-line
       const content = 'API_KEY=ghp_abcdefghijklmnopqrstuvwxyz1234567890'
       const encoded = Buffer.from(content).toString('base64')
       http.addResponse('/repos/owner/repo/contents/config.ts', {
