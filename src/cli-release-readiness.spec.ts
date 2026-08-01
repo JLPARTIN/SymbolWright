@@ -45,6 +45,7 @@ describe('assessReleaseReadiness', () => {
     expect(codes).toContain('BUILD_LEDGER_CONSISTENT')
     expect(codes).toContain('NPM_PACK_SMOKE')
     expect(codes).toContain('DOCKER_RUNTIME_SMOKE')
+    expect(codes).toContain('RELEASE_CANDIDATE_CONTRACT')
   })
 
   it('includes doctor report', () => {
@@ -73,6 +74,7 @@ describe('assessReleaseReadiness', () => {
     expect(gates.get('VALIDATE_SCRIPT')).toBe('PASS')
     expect(gates.get('WORKFLOW_RELEASE_PROOF')).toBe('PASS')
     expect(gates.get('BUILD_LEDGER_CONSISTENT')).toBe('PASS')
+    expect(gates.get('RELEASE_CANDIDATE_CONTRACT')).toBe('PASS')
   })
 })
 

@@ -6,6 +6,22 @@ All notable changes to SymbolWright (formerly CodeMind) are documented in this f
 
 ### Added
 
+- **Release candidate identity and evidence contract**: adds a versioned `release-candidate.json`
+  manifest schema (`src/release/release-candidate.ts`) recording package name, candidate version,
+  source commit SHA, package-lock version, creation date, expected npm package, expected GHCR
+  image, an audit-document reference, test evidence, and an overall verdict. A new
+  `RELEASE_CANDIDATE_CONTRACT` gate in `npm run release-readiness` passes normal `[Unreleased]`
+  development with no manifest present, but fails closed on a stale/malformed source commit SHA,
+  a version mismatch against `package.json`/`package-lock.json`, a missing or non-PASS audit
+  document, missing evidence fields, or a PASS verdict claiming artifacts (tarball checksum,
+  container digest) that were never actually recorded. `npm run release:verify-candidate`
+  (`src/cli-release-candidate-verify.ts`) adds a stricter, formal check for actual release
+  preparation that additionally requires the manifest to exist and confirms its source commit SHA
+  is a real, reachable commit via `git cat-file -e`. See
+  `docs/release/RELEASE_CANDIDATE_MANIFEST.md` for the full schema and lifecycle, and
+  `docs/release/LARGE_PR_BUNDLE_14_RELEASE_CANDIDATE_BUILD_PLAN.md` for the release-candidate,
+  external-proof, and public-technical-preview closure bundle this begins.
+
 - **Sandbox network lifecycle and resilience**: adds boot-time reconciliation for the dependency
   layer binding store (read-only re-verification, classifying each binding `valid` /
   `missing-layer` / `invalid-record` without ever deleting or repairing one), a bounded sweep that

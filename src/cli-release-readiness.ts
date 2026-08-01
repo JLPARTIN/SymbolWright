@@ -12,6 +12,7 @@ import { buildProviderAdapterContractReport } from './providers/provider-adapter
 import { assessBrowserWorkspaceReadiness } from './workspace/browser-workspace-contract.js'
 import { assessRuntimeModeTruth } from './runtime/runtime-mode-truth-gate.js'
 import { runDockerSmoke, runNpmPackSmoke } from './release/artifact-smoke.js'
+import { assessReleaseCandidateDevelopmentState } from './release/release-candidate.js'
 
 export const RELEASE_READINESS_BLOCK_ID = 'SYMBOLWRIGHT-RELEASE-01' as const
 
@@ -36,6 +37,7 @@ export type ReleaseGateCode =
   | 'BUILD_LEDGER_CONSISTENT'
   | 'NPM_PACK_SMOKE'
   | 'DOCKER_RUNTIME_SMOKE'
+  | 'RELEASE_CANDIDATE_CONTRACT'
 
 export type ReleaseGateStatus = 'PASS' | 'FAIL'
 
@@ -559,6 +561,25 @@ function checkBuildLedgerConsistent(workspaceRoot: string): ReleaseGate {
   }
 }
 
+function checkReleaseCandidateContract(workspaceRoot: string): ReleaseGate {
+  const assessment = assessReleaseCandidateDevelopmentState(workspaceRoot)
+  if (!assessment.manifestPresent) {
+    return {
+      code: 'RELEASE_CANDIDATE_CONTRACT',
+      status: 'PASS',
+      detail: 'No release candidate manifest present; developing on [Unreleased]',
+    }
+  }
+  return {
+    code: 'RELEASE_CANDIDATE_CONTRACT',
+    status: assessment.status === 'PASS' ? 'PASS' : 'FAIL',
+    detail:
+      assessment.status === 'PASS'
+        ? 'Release candidate manifest is internally consistent'
+        : assessment.findings.join('; '),
+  }
+}
+
 export interface ReleaseReadinessOptions {
   readonly runArtifactSmoke?: boolean
 }
@@ -586,6 +607,7 @@ export function assessReleaseReadiness(
     checkValidateScript(workspaceRoot),
     checkWorkflowReleaseProof(workspaceRoot),
     checkBuildLedgerConsistent(workspaceRoot),
+    checkReleaseCandidateContract(workspaceRoot),
   ]
   if (options.runArtifactSmoke === true) {
     const pack = runNpmPackSmoke(workspaceRoot)
