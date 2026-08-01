@@ -227,18 +227,63 @@ function validateManifestConsistency(
   return findings
 }
 
+/**
+ * Resolves `auditDocumentPath` against the workspace root and refuses anything that would let a
+ * manifest point outside its own repository: `../` traversal escaping the root, an absolute path,
+ * or a symlink anywhere on the path (checked with `lstat`, never followed) standing in for the
+ * real file. A candidate must not be able to launder an unrelated document as its own evidence.
+ */
+function resolveContainedAuditPath(
+  workspaceRoot: string,
+  manifest: ReleaseCandidateManifest,
+  findings: string[],
+): string | undefined {
+  const root = path.resolve(workspaceRoot)
+  const resolved = path.resolve(root, manifest.auditDocumentPath)
+  const relative = path.relative(root, resolved)
+  if (
+    path.isAbsolute(manifest.auditDocumentPath) ||
+    relative.startsWith(`..${path.sep}`) ||
+    relative === '..' ||
+    path.isAbsolute(relative)
+  ) {
+    findings.push(
+      `Release candidate manifest auditDocumentPath escapes the repository root: ${manifest.auditDocumentPath}`,
+    )
+    return undefined
+  }
+
+  let stat: fs.Stats
+  try {
+    stat = fs.lstatSync(resolved)
+  } catch {
+    findings.push(
+      `Release candidate manifest auditDocumentPath does not exist: ${manifest.auditDocumentPath}`,
+    )
+    return undefined
+  }
+  if (stat.isSymbolicLink()) {
+    findings.push(
+      `Release candidate manifest auditDocumentPath must not be a symlink: ${manifest.auditDocumentPath}`,
+    )
+    return undefined
+  }
+  if (!stat.isFile()) {
+    findings.push(
+      `Release candidate manifest auditDocumentPath does not exist: ${manifest.auditDocumentPath}`,
+    )
+    return undefined
+  }
+  return resolved
+}
+
 function validateAuditDocument(
   workspaceRoot: string,
   manifest: ReleaseCandidateManifest,
   findings: string[],
 ): void {
-  const auditPath = path.join(workspaceRoot, manifest.auditDocumentPath)
-  if (!fs.existsSync(auditPath) || !fs.statSync(auditPath).isFile()) {
-    findings.push(
-      `Release candidate manifest auditDocumentPath does not exist: ${manifest.auditDocumentPath}`,
-    )
-    return
-  }
+  const auditPath = resolveContainedAuditPath(workspaceRoot, manifest, findings)
+  if (auditPath === undefined) return
 
   let content: string
   try {
@@ -248,9 +293,14 @@ function validateAuditDocument(
     return
   }
 
-  if (!AUDITED_SHA_PATTERN.test(content)) {
+  const auditedSha = AUDITED_SHA_PATTERN.exec(content)?.[1]
+  if (auditedSha === undefined) {
     findings.push(
       `Release candidate audit document does not record an exact audited code SHA: ${manifest.auditDocumentPath}`,
+    )
+  } else if (auditedSha !== manifest.sourceCommitSha) {
+    findings.push(
+      `Release candidate audit document audited SHA "${auditedSha}" does not match manifest sourceCommitSha "${manifest.sourceCommitSha}": ${manifest.auditDocumentPath}`,
     )
   }
   const verdict = RELEASE_VERDICT_PATTERN.exec(content)?.[1]
@@ -333,6 +383,30 @@ export function assessReleaseCandidateDevelopmentState(
     manifestPresent: true,
     findings,
   }
+}
+
+/**
+ * Confirms the manifest's sourceCommitSha is the *exact* commit a formal verification run is
+ * checking, not merely some commit that happens to exist somewhere in the repository's history --
+ * a weaker "does this commit exist" check would let any old, unrelated, still-reachable SHA pass.
+ * The convention this repository uses for final audit documents (see
+ * docs/release/RELEASE_CANDIDATE_MANIFEST.md) is that the manifest's own commit never references
+ * itself, so the accepted identity is either the current HEAD (the manifest committed alongside
+ * the final code with nothing added afterward) or HEAD's direct parent (the manifest committed as
+ * the very next commit after the validated code). Anything else -- including a stale SHA from an
+ * earlier point in history -- fails closed. Pure so the git-independent comparison logic is
+ * directly unit-testable; the CLI caller supplies `head`/`headParent` from a real `git rev-parse`.
+ */
+export function assessSourceCommitIdentity(
+  sha: string,
+  head: string | undefined,
+  headParent: string | undefined,
+): string | undefined {
+  if (head === undefined) {
+    return `Release candidate manifest sourceCommitSha "${sha}" cannot be verified: not running inside a git checkout`
+  }
+  if (sha === head || sha === headParent) return undefined
+  return `Release candidate manifest sourceCommitSha "${sha}" is not the current HEAD (${head}) or its immediate parent -- it must reference the exact validated commit, not an arbitrary earlier one`
 }
 
 /**

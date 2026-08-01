@@ -52,7 +52,7 @@ validation SHA" pair), which likewise never point at the commit that records the
 | `createdAt` | string | ISO-8601 timestamp; must parse as a valid date. |
 | `expectedNpmPackage` | string | Must equal `package.json`'s `name`. |
 | `expectedGhcrImage` | string | Must be a valid `ghcr.io/<owner>/<repo>` reference. |
-| `auditDocumentPath` | string | Repository-relative path to the audit document backing this candidate; the file must exist and contain both an `` `Audited code SHA:` `` line and a `` `Release verdict:` `` line whose verdict is `PASS`. |
+| `auditDocumentPath` | string | Repository-relative path to the audit document backing this candidate. Must resolve to a real file *inside* the repository root (no `../` traversal, no absolute path, no symlink anywhere on the path — checked with `lstat`, never followed) and contain both an `` `Audited code SHA:` `` line whose value equals `sourceCommitSha` exactly, and a `` `Release verdict:` `` line whose verdict is `PASS`. |
 | `testEvidence` | object | `testFilesPassed`, `testsPassed`, `coverageStatementsPct`, `coverageBranchesPct`, `coverageFunctionsPct`, `coverageLinesPct` — all numeric, coverage percentages within `[0, 100]`. |
 | `packageTarballSha256` | string (optional) | 64-character lowercase hex SHA-256 of the exact `npm pack` tarball. Only set once PR 5's publish pipeline has actually produced one. |
 | `containerDigest` | string (optional) | `sha256:<64 hex>` immutable container digest. Only set once PR 5's publish pipeline has actually pushed one. |
@@ -66,10 +66,12 @@ validation SHA" pair), which likewise never point at the commit that records the
 - **`npm run release:verify-candidate`** (`src/cli-release-candidate-verify.ts`): the strict, formal
   check used during actual release preparation. A missing manifest is reported as **BLOCKED**, not
   silently passed — a formal release candidate cannot be verified without one. When a manifest is
-  present and otherwise consistent, this command additionally shells out to `git cat-file -e
-  <sha>^{commit}` to confirm `sourceCommitSha` is a real, reachable commit in this repository's
-  history, catching a stale, fabricated, or copy-pasted-from-elsewhere SHA that the pure schema
-  check alone cannot detect.
+  present and otherwise consistent, this command additionally shells out to `git rev-parse HEAD`
+  and `git rev-parse HEAD^` and requires `sourceCommitSha` to equal one of the two exactly. A
+  merely-reachable-somewhere-in-history SHA is not enough — an old, unrelated, or stale commit that
+  still exists in the repository's object database must not be able to pass as "the" validated
+  commit. Only the current HEAD (the manifest committed alongside the final code) or HEAD's direct
+  parent (the manifest committed as the very next commit after the validated code) satisfy this.
 
 Both entry points share the exact same consistency rules
 (`src/release/release-candidate.ts`'s `validateManifestConsistency`) — only what happens when the
