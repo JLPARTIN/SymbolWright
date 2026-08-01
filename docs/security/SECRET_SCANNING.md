@@ -77,10 +77,9 @@ which needed additional suppressions once their compiled form was actually scann
 `npm run secret-scan:history` currently and truthfully reports **FAIL** for this repository: 53
 findings across its full reachable history. Every one was individually investigated (matched
 against the exact same intentional test-fixture strings already reviewed and suppressed in the
-current source tree — e.g. `ghp_abcdefghijklmnopqrstuvwxyz0123456789`,
-`https://user:secret@registry.npmjs.org`) or is a single benign documentation example
-(`https://user:pass@...`, a literal placeholder in prose, not a credential). None represent a real
-leaked secret.
+current source tree — the same GitHub-token- and basic-auth-URL-shaped fixtures described above)
+or is a single benign documentation example: a literal placeholder in prose, not a credential. None
+represent a real leaked secret.
 
 Per this bundle's own rules, **history is not rewritten to remove these without explicit operator
 instruction** — a squash or history-filtering operation is a decision for the repository owner, not
