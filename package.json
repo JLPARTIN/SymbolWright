@@ -94,6 +94,6 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
-    "sql.js": "^1.10.3"
+    "sql.js": "^1.14.2"
   }
 }
