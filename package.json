@@ -87,7 +87,7 @@
     "secretlint": "13.0.4",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.65.0",
-    "vitest": "^4.1.8"
+    "vitest": "^5.0.0"
   },
   "engines": {
     "node": ">=22.5.0"
